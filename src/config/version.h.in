@@ -1,0 +1,25 @@
+﻿/*
+ * This file is generated, don't change it.
+ */
+
+#pragma once
+
+#define PROJECT_NAME "XI"
+#define PROJECT_SITE "http://galaxiaproject.org"
+#define PROJECT_COPYRIGHT "Copyright 2018, The Galaxia Project Developers"
+#define APP_VER_MAJOR @XI_VERSION_MAJOR@
+#define APP_VER_MINOR @XI_VERSION_MINOR@
+#define APP_VER_REV @XI_VERSION_PATCH@
+#define APP_VER_BUILD @XI_VERSION_TWEAK@
+
+/*
+ * Remove this for master releases.
+ */
+#define XI_DEV_VERSION
+
+#define BUILD_COMMIT_ID "@GIT_COMMIT_HASH@"
+#define BUILD_BRANCH "@GIT_BRANCH@"
+#define PROJECT_VERSION "@XI_VERSION_MAJOR@.@XI_VERSION_MINOR@.@XI_VERSION_PATCH@"
+#define PROJECT_VERSION_BUILD_NO "@XI_VERSION_TWEAK@"
+#define PROJECT_VERSION_LONG PROJECT_VERSION "." PROJECT_VERSION_BUILD_NO " (" BUILD_COMMIT_ID ")"
+#define PROJECT_DESCRIPTION PROJECT_NAME " " PROJECT_VERSION_LONG
