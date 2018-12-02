@@ -19,6 +19,12 @@ if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/DB")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/DB" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
+# unit tests
+file(GLOB_RECURSE unit_tests "${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.cpp")
+source_group("" FILES ${unit_tests})
+add_executable(TestSuite.UnitTests ${unit_tests})
+target_link_libraries(TestSuite.UnitTests PRIVATE gtest_main Common Crypto CryptoNoteCore Serialization Logging ${ROCKSDB_LIB})
+
 # integration tests
 file(GLOB_RECURSE int_tests "${CMAKE_CURRENT_SOURCE_DIR}/integration/*.cpp")
 source_group("" FILES ${int_tests})
