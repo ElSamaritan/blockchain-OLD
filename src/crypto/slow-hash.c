@@ -949,52 +949,84 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int light, int va
   slow_hash_free_state(PAGE_SIZE);
 }
 
-void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, const char* salt, uint8_t* scratchpad, uint32_t variant)
+void cn_adaptive_apply_operator(uint8_t* inPlaceOperand, const int8_t* appliedOperand, uint8_t* operation, uint32_t size)
 {
-  if (variant <= 1)
-      return;
-
-  if (variant >= 4)
+  for(uint32_t i = 0; i < size; ++i)
   {
-      uint32_t memory = 1024 * 256;
-      for (uint32_t i = 0; i < memory; i ++)
-          scratchpad[i] = scratchpad[i] ^ salt[i];
-  }
-  else if (variant >= 3)
-  {
-      uint32_t memory = 1024 * 1024;
-      uint32_t step = memory / (32 * 128);
-      uint32_t x = 0;
-      for (uint32_t i = 0; i < memory; i += step)
-          scratchpad[i] = scratchpad[i] ^ salt[x++];
-  }
-
-  for (int i = 0; i < CN_ADAPTIVE_RANDOMIZER_SIZE; i++)
-  {
-      switch (r->operators[i])
+      switch ((operation[i]) ^ (uint8_t)7) // 7 = 0b0111
       {
           case CN_ADAPTIVE_ADD:
-              scratchpad[r->indices[i]] += r->values[i];
+              inPlaceOperand[i] += appliedOperand[i];
               break;
           case CN_ADAPTIVE_SUB:
-              scratchpad[r->indices[i]] -= r->values[i];
+              inPlaceOperand[i] -= appliedOperand[i];
               break;
           case CN_ADAPTIVE_XOR:
-              scratchpad[r->indices[i]] ^= r->values[i];
+              inPlaceOperand[i] ^= appliedOperand[i];
               break;
           case CN_ADAPTIVE_OR:
-              scratchpad[r->indices[i]] |= r->values[i];
+              inPlaceOperand[i] |= appliedOperand[i];
               break;
           case CN_ADAPTIVE_AND:
-              scratchpad[r->indices[i]] &= r->values[i];
+              inPlaceOperand[i] &= appliedOperand[i];
               break;
           case CN_ADAPTIVE_COMP:
-              scratchpad[r->indices[i]] = ~r->values[i];
+              inPlaceOperand[i] = ~appliedOperand[i];
               break;
           case CN_ADAPTIVE_EQ:
-              scratchpad[r->indices[i]] = r->values[i];
+              inPlaceOperand[i] = appliedOperand[i];
               break;
       }
+
+      switch ((operation[i] >> 4) ^ (uint8_t)7) // 7 = 0b0111
+      {
+          case CN_ADAPTIVE_ADD:
+              inPlaceOperand[i] += ~appliedOperand[i];
+              break;
+          case CN_ADAPTIVE_SUB:
+              inPlaceOperand[i] -= ~appliedOperand[i];
+              break;
+          case CN_ADAPTIVE_XOR:
+              inPlaceOperand[i] ^= ~appliedOperand[i];
+              break;
+          case CN_ADAPTIVE_OR:
+              inPlaceOperand[i] |= ~appliedOperand[i];
+              break;
+          case CN_ADAPTIVE_AND:
+              inPlaceOperand[i] &= ~appliedOperand[i];
+              break;
+          case CN_ADAPTIVE_COMP:
+              inPlaceOperand[i] = appliedOperand[i];
+              break;
+          case CN_ADAPTIVE_EQ:
+              inPlaceOperand[i] = ~appliedOperand[i];
+              break;
+      }
+  }
+}
+
+void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, const char* salt, uint8_t* scratchpad, uint32_t memory, uint32_t variant)
+{
+  if (variant < 1 || variant > 1)
+      return;
+
+  if (variant == 1)
+  {
+      for (uint32_t i = 0; i < memory; i ++)
+      {
+          const uint32_t rI = i % r->size;
+          scratchpad[i] = scratchpad[i] ^ salt[rI];
+      }
+  }
+
+  for (uint32_t i = 0; i < r->size; i++)
+  {
+    const uint32_t rI = r->indices[i % r->size] % r->size;
+    const uint32_t sI = r->indices[i % r->size] % memory;
+    cn_adaptive_apply_operator(scratchpad + sI, r->values + rI, r->operators + rI, variant);
+    cn_adaptive_apply_operator(r->operators + rI, (int8_t*)(scratchpad + sI), r->operators + rI, variant);
+    cn_adaptive_apply_operator((uint8_t*)(r->indices + rI), (int8_t*)(scratchpad + sI), r->operators + rI, variant);
+    cn_adaptive_apply_operator((uint8_t*)(r->values + rI), (int8_t*)(scratchpad + sI), r->operators + rI, variant);
   }
 }
 
@@ -1025,16 +1057,10 @@ void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int vari
 
     // quick hack to make sure the pad is the right size when transitioning to the new fork
     if (memory != allocated_memory && hp_state != NULL)
-    {
-        printf("Deallocating memory %d kb\n", allocated_memory / 1024);
         slow_hash_free_state(allocated_memory);
-    }
 
     if(hp_state == NULL)
-    {
-        printf("Allocating memory %d kb\n", memory / 1024);
         slow_hash_allocate_state(memory);
-    }
 
     /* CryptoNight Step 1:  Use Keccak1600 to initialize the 'state' (and 'text') buffers from the data. */
     if (prehashed) {
@@ -1073,7 +1099,7 @@ void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int vari
         }
     }
 
-    cn_adaptive_randomize_scratchpad(r, sp_bytes, hp_state, variant);
+    cn_adaptive_randomize_scratchpad(r, sp_bytes, hp_state, memory, 1);
 
     U64(a)[0] = U64(&state.k[0])[0] ^ U64(&state.k[32])[0];
     U64(a)[1] = U64(&state.k[0])[1] ^ U64(&state.k[32])[1];
@@ -1093,48 +1119,36 @@ void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int vari
 
     if(useAes)
     {
-        if (variant <= 3)
+        for(k = 1; k < xx; k++)
         {
-            for(i = 0; i < base_iters; i++)
+            r2[0] ^= r2[1];
+            r2[1] ^= r2[2];
+            r2[2] ^= r2[3];
+            r2[3] ^= r2[4];
+            r2[4] ^= r2[5];
+            r2[5] ^= r2[0];
+
+            ADPATIVE_pre_aes();
+            _c = _mm_aesenc_si128(_c, _a);
+            ADPATIVE_post_aes(r2[0] % 2, r2[1] % 2);
+            r2[0] ^= (r2[1] ^ r2[3]);
+            r2[1] ^= (r2[0] ^ r2[2]);
+
+            for(l = 1; l < yy; l++)
             {
                 ADPATIVE_pre_aes();
                 _c = _mm_aesenc_si128(_c, _a);
-                ADPATIVE_post_aes(0, 0);
-            }
-        }
-        else
-        {
-            for(k = 1; k < xx; k++)
-            {
-                r2[0] ^= r2[1];
-                r2[1] ^= r2[2];
-                r2[2] ^= r2[3];
-                r2[3] ^= r2[4];
-                r2[4] ^= r2[5];
-                r2[5] ^= r2[0];
+                ADPATIVE_post_aes(r2[2] % 2, r2[3] % 2);
+                r2[2] ^= (r2[3] ^ r2[5]);
+                r2[3] ^= (r2[2] ^ r2[4]);
 
-                ADPATIVE_pre_aes();
-                _c = _mm_aesenc_si128(_c, _a);
-                ADPATIVE_post_aes(r2[0] % 2, r2[1] % 2);
-                r2[0] ^= (r2[1] ^ r2[3]);
-                r2[1] ^= (r2[0] ^ r2[2]);
-
-                for(l = 1; l < yy; l++)
+                for(m = 1; m < zz; m++)
                 {
                     ADPATIVE_pre_aes();
                     _c = _mm_aesenc_si128(_c, _a);
-                    ADPATIVE_post_aes(r2[2] % 2, r2[3] % 2);
-                    r2[2] ^= (r2[3] ^ r2[5]);
-                    r2[3] ^= (r2[2] ^ r2[4]);
-
-                    for(m = 1; m < zz; m++)
-                    {
-                        ADPATIVE_pre_aes();
-                        _c = _mm_aesenc_si128(_c, _a);
-                        ADPATIVE_post_aes(r2[4] % 2, r2[5] % 2);
-                        r2[4] ^= (r2[5] ^ r2[1]);
-                        r2[5] ^= (r2[4] ^ r2[0]);
-                    }
+                    ADPATIVE_post_aes(r2[4] % 2, r2[5] % 2);
+                    r2[4] ^= (r2[5] ^ r2[1]);
+                    r2[5] ^= (r2[4] ^ r2[0]);
                 }
             }
         }
@@ -1148,48 +1162,36 @@ void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int vari
     }
     else
     {
-        if (variant <= 3)
+        for(k = 1; k < xx; k++)
         {
-            for(i = 0; i < base_iters; i++)
+            r2[0] ^= r2[1];
+            r2[1] ^= r2[2];
+            r2[2] ^= r2[3];
+            r2[3] ^= r2[4];
+            r2[4] ^= r2[5];
+            r2[5] ^= r2[0];
+
+            ADPATIVE_pre_aes();
+            aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
+            ADPATIVE_post_aes(r2[0] % 2, r2[1] % 2);
+            r2[0] ^= (r2[1] ^ r2[3]);
+            r2[1] ^= (r2[0] ^ r2[2]);
+
+            for(l = 1; l < yy; l++)
             {
                 ADPATIVE_pre_aes();
                 aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
-                ADPATIVE_post_aes(0, 0);
-            }
-        }
-        else
-        {
-            for(k = 1; k < xx; k++)
-            {
-                r2[0] ^= r2[1];
-                r2[1] ^= r2[2];
-                r2[2] ^= r2[3];
-                r2[3] ^= r2[4];
-                r2[4] ^= r2[5];
-                r2[5] ^= r2[0];
+                ADPATIVE_post_aes(r2[2] % 2, r2[3] % 2);
+                r2[2] ^= (r2[3] ^ r2[5]);
+                r2[3] ^= (r2[2] ^ r2[4]);
 
-                ADPATIVE_pre_aes();
-                aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
-                ADPATIVE_post_aes(r2[0] % 2, r2[1] % 2);
-                r2[0] ^= (r2[1] ^ r2[3]);
-                r2[1] ^= (r2[0] ^ r2[2]);
-
-                for(l = 1; l < yy; l++)
+                for(m = 1; m < zz; m++)
                 {
                     ADPATIVE_pre_aes();
                     aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
-                    ADPATIVE_post_aes(r2[2] % 2, r2[3] % 2);
-                    r2[2] ^= (r2[3] ^ r2[5]);
-                    r2[3] ^= (r2[2] ^ r2[4]);
-
-                    for(m = 1; m < zz; m++)
-                    {
-                        ADPATIVE_pre_aes();
-                        aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
-                        ADPATIVE_post_aes(r2[4] % 2, r2[5] % 2);
-                        r2[4] ^= (r2[5] ^ r2[1]);
-                        r2[5] ^= (r2[4] ^ r2[0]);
-                    }
+                    ADPATIVE_post_aes(r2[4] % 2, r2[5] % 2);
+                    r2[4] ^= (r2[5] ^ r2[1]);
+                    r2[5] ^= (r2[4] ^ r2[0]);
                 }
             }
         }
