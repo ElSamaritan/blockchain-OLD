@@ -108,7 +108,7 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
   // We dont have a wrapper for the salt so we plain
   __Salt.resize(__Randomizer->size(), 0);
   std::memset(__Salt.data(), 0, __Salt.size());
-  // init_salt(data, length, __Salt.data(), __Randomizer->size(), hash, &__Randomizer->Handle, *__Twister.get());
+  init_salt(data, length, __Salt.data(), __Randomizer->size(), hash, &__Randomizer->Handle, *__Twister.get());
 
   auto xx = scratchpadSize / 2;
   auto yy = static_cast<uint16_t>(__Twister->next(1, 2));
