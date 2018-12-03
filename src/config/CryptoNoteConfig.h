@@ -70,7 +70,7 @@ xi-daemon --print-genesis-tx --genesis-block-reward-address XIv2Fyavy8CXG8BPEbNe
 * You should see your premine appear in the previously generated wallet.
 
 */
-const char     GENESIS_COINBASE_TX_HEX[]                     = "01e80201ff0001000297e09858b9cfc8c7b5920e995472172859b18a84538f256742ce215859659d3f2101e5c80d1e21bbb6308b2d09b8b4dda3c3b4f3e811dfbcb708996dbb8e91d6eccf";
+const char     GENESIS_COINBASE_TX_HEX[]                     = "01e80201ff0001f5d771029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210164b78248cce756bf40cc48fb9a79c04d5361ce3ef79e439e361b49179e79185a";
 
 /* This is the unix timestamp of the first "mined" block (technically block 2, not the genesis block)
    You can get this value by doing "print_block 2" in xi-daemon. It is used to know what timestamp
