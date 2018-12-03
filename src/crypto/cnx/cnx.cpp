@@ -28,9 +28,8 @@ void init_randomizer(const void *data, size_t length, Crypto::CN_ADAPTIVE_Random
   std::memcpy(__Data.data(), data, length);
 
   char* hashPtr = reinterpret_cast<char*>(&hash);
-  // We assume the hash has been already initialized with some values from the caller.
-  rnd.set_seed(*reinterpret_cast<uint32_t*>(hashPtr));
 
+  // We assume the hash has been already initialized with some values from the caller, as well as the seed, for initial run.
   for(uint32_t i = 0; i < randomizer->size / 32; ++i) {
     const uint32_t offset = i * 32;
 
@@ -42,11 +41,11 @@ void init_randomizer(const void *data, size_t length, Crypto::CN_ADAPTIVE_Random
 
     // Third: In order to make every iteration dependent on the previous we will update our basic __Data block with the operator
     // we just calculated.
-    __Data[0] = reinterpret_cast<uint8_t*>(randomizer->values)[0];
-    for(uint32_t j = 1; j < length; ++j) {
-      cn_adaptive_apply_operator(&__Data[j], randomizer->values + offset + (j % randomizer->size),
-                                 reinterpret_cast<uint8_t*>(randomizer->values) + offset + ((j - 1) % randomizer->size), 1);
-    }
+//    __Data[0] = reinterpret_cast<uint8_t*>(randomizer->values)[0];
+//    for(uint32_t j = 1; j < length; ++j) {
+//      cn_adaptive_apply_operator(&__Data[j], randomizer->values + ((offset + j) % randomizer->size),
+//                                 reinterpret_cast<uint8_t*>(randomizer->values) + offset + ((j - 1) % randomizer->size), 1);
+//    }
 
     // Fourth: We need to initialize the indices, we will not bother for now whether they encode legit addresses, the cn_adaptive
     // algorithm will take care of this within the implementation itself.
@@ -103,7 +102,7 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
   const uint32_t scratchpadSize = minScratchpadSize() + offset * slopeScratchpadSize();
   const uint32_t randomizerSize = maxRandomizerSize() - offset * slopeRandomizerSize();
   __Randomizer->reset(randomizerSize);
- // init_randomizer(data, length, &__Randomizer->Handle, hash, *__Twister.get());
+ init_randomizer(data, length, &__Randomizer->Handle, hash, *__Twister.get());
 
   // We dont have a wrapper for the salt so we plain
   __Salt.resize(__Randomizer->size(), 0);
