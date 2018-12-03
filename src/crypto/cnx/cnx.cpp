@@ -121,13 +121,13 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
 
     // We dont have a wrapper for the salt so we plain
     __Salt.resize(__Randomizer->size(), 0);
-    std::memset(__Salt.data(), 0, __Salt.size());
+    std::memset(__Salt.data(), 0, __Salt.size() * sizeof (char));
     //init_salt(__Salt.data(), __Randomizer->size(), hash, &__Randomizer->Handle);
     cn_fast_hash(__Salt.data(), __Randomizer->size(), reinterpret_cast<char*>(&hash));
 
     auto xx = scratchpadSize / 2;
-    auto yy = static_cast<uint16_t>(hash.data[0] & 1 + 1);
-    auto zz = static_cast<uint16_t>(hash.data[1] & 1 + 1);
+    auto yy = static_cast<uint16_t>((hash.data[0] & 1) + 1);
+    auto zz = static_cast<uint16_t>((hash.data[1] & 1) + 1);
     auto ww = static_cast<uint16_t>(hash.data[3] * 64 + 1);
     cn_adaptive_slow_hash(data, length, reinterpret_cast<char*>(&hash), variant(), false, scratchpadSize / 2,
                           ((height + 1) % 64), &__Randomizer->Handle, __Salt.data(), 8,
