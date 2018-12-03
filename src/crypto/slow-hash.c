@@ -971,13 +971,8 @@ void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, const char* s
   }
 
   for(uint32_t i = 0; i < memory / r->size; ++i) {
-    for (uint32_t j = 0; j < r->size; j++) {
-      cn_adaptive_apply_operator(scratchpad + i * r->size + j, r->values + j, r->operationsIndex, r->operators + j, 1);
-      cn_adaptive_apply_operator(r->operators + j, (int8_t*)(scratchpad + i * r->size + j), r->operationsIndex, r->operators + j, 1);
-      cn_adaptive_apply_operator((uint8_t*)(r->indices + j), (int8_t*)(scratchpad + i * r->size + j), r->operationsIndex, r->operators + j, 1);
-      cn_adaptive_apply_operator((uint8_t*)(r->values + j), (int8_t*)(scratchpad + i * r->size + j), r->operationsIndex, r->operators + j, 1);
-    }
-    cn_adaptive_apply_operator(&r->operationsIndex, (int8_t*)scratchpad + i * r->size - 1, r->operationsIndex, r->operators, 1);
+    cn_adaptive_apply_operator(scratchpad + i * r->size, r->values, r->operationsIndex, r->operators, r->size);
+    r->operationsIndex = scratchpad[i];
   }
 }
 
