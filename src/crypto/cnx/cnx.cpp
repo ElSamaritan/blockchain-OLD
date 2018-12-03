@@ -50,15 +50,15 @@ void init_randomizer(const void *data, size_t length, Crypto::CN_ADAPTIVE_Random
     // Fourth: We need to initialize the indices, we will not bother for now whether they encode legit addresses, the cn_adaptive
     // algorithm will take care of this within the implementation itself.
     // Keccak will ensure we have calculated the linear dependent hash-chain previsouly in order to conitnue.
-//    keccak(__Data.data(), static_cast<int>(length), reinterpret_cast<uint8_t*>(hashPtr), 32);
-//    for(uint32_t j = 0; j < 32; ++j) {
-//      std::memcpy(randomizer->indices + offset + j, hashPtr + j, 1);
-//      if(j > 0) {
-//        cn_adaptive_apply_operator(reinterpret_cast<uint8_t*>(randomizer->indices) + offset + j,
-//                                   reinterpret_cast<int8_t*>(randomizer->indices) + offset + j - 1,
-//                                   reinterpret_cast<uint8_t*>(hashPtr) + j, 1);
-//      }
-//    }
+    keccak(__Data.data(), static_cast<int>(length), reinterpret_cast<uint8_t*>(hashPtr), 32);
+    for(uint32_t j = 0; j < 32; ++j) {
+      std::memcpy(randomizer->indices + offset + j, hashPtr + j, 1);
+      if(j > 0) {
+        cn_adaptive_apply_operator(reinterpret_cast<uint8_t*>(randomizer->indices) + offset + j,
+                                   reinterpret_cast<int8_t*>(randomizer->indices) + offset + j - 1,
+                                   reinterpret_cast<uint8_t*>(hashPtr) + j, 1);
+      }
+    }
 
     // Last: We update our hashPtr using the updated __Data block, since we dont want someone to know which algorithm we pick
     // , next we update the seed depening on the modified hash.
