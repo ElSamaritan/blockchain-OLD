@@ -953,7 +953,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int light, int va
 void cn_adaptive_apply_operator(uint8_t* inPlaceOperand, const int8_t* appliedOperand, uint8_t operationsIndex, uint8_t* operation, uint32_t size)
 {
   for(uint32_t i = 0; i < size; ++i)
-    CN_ADAPTIVE_OP_LOOKUP[operationsIndex][operation[i]](inPlaceOperand + i, (const uint8_t*)appliedOperand + i);
+    CN_ADAPTIVE_OP_LOOKUP[operationsIndex](inPlaceOperand + i, appliedOperand + i, operation[i]);
 }
 
 void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, const char* salt, uint8_t* scratchpad, uint32_t memory, uint32_t variant)

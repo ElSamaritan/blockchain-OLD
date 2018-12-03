@@ -1,1924 +1,1034 @@
-#include "crypto/cnx/operations/cnx-operations-01111111.h"
-
-void CN_ADAPTIVE_OP_01111111_00000000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  (void)inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00000001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00000010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00000011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00000100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00000101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00000110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00000111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00001000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00001001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00001010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00001011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00001100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00001101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00001110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00001111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00010000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00010001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00010010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00010011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00010100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00010101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00010110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00010111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00011000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00011001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00011010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00011011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00011100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00011101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00011110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00011111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00100000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00100001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00100010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00100011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00100100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00100101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00100110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00100111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00101000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00101001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00101010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00101011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00101100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00101101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00101110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00101111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00110000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00110001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00110010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00110011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00110100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00110101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00110110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00110111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00111000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00111001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00111010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00111011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00111100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00111101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00111110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_00111111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01000000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01000001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01000010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01000011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01000100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01000101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01000110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01000111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01001000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01001001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01001010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01001011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01001100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01001101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01001110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01001111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01010000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01010001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01010010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01010011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01010100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01010101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01010110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01010111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01011000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01011001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01011010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01011011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01011100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01011101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01011110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01011111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01100000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01100001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01100010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01100011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01100100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01100101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01100110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01100111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01101000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01101001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01101010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01101011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01101100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01101101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01101110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01101111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01110000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01110001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01110010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01110011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01110100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01110101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01110110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01110111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01111000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01111001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
+#include "crypto/cnx/operations/cnx-operations.h"
+
+#include <inttypes.h>
 
-void CN_ADAPTIVE_OP_01111111_01111010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01111011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01111100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01111101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01111110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_01111111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10000000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10000001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10000010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10000011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10000100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10000101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10000110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10000111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10001000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10001001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10001010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10001011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10001100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10001101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10001110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10001111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10010000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10010001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10010010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10010011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10010100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10010101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10010110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10010111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10011000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10011001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10011010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10011011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10011100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10011101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10011110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10011111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10100000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10100001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10100010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10100011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10100100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10100101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10100110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10100111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10101000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10101001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10101010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10101011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10101100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10101101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10101110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10101111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10110000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10110001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10110010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10110011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10110100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10110101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10110110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
+void CN_ADAPTIVE_OPERATIONS_01111111(uint8_t* inPlaceOperand, const int8_t* appliedOperand, uint8_t op) {
+  switch(op) {
+    case 0:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 1:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 2:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 3:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 4:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 5:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 6:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 7:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 8:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 9:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 10:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 11:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 12:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 13:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 14:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 15:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 16:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 17:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 18:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 19:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 20:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 21:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 22:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 23:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 24:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 25:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 26:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 27:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 28:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 29:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 30:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 31:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 32:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 33:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 34:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 35:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 36:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 37:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 38:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 39:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 40:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 41:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 42:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 43:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 44:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 45:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 46:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 47:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 48:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 49:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 50:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 51:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 52:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 53:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 54:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 55:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 56:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 57:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 58:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 59:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 60:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 61:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 62:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 63:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 64:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 65:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 66:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 67:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 68:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 69:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 70:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 71:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 72:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 73:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 74:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 75:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 76:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 77:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 78:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 79:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 80:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 81:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 82:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 83:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 84:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 85:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 86:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 87:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 88:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 89:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 90:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 91:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 92:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 93:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 94:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 95:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 96:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 97:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 98:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 99:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 100:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 101:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 102:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 103:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 104:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 105:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 106:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 107:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 108:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 109:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 110:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 111:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 112:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 113:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 114:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 115:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 116:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 117:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 118:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 119:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 120:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 121:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 122:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 123:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 124:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 125:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 126:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 127:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 128:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 129:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 130:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 131:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 132:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 133:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 134:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 135:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 136:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 137:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 138:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 139:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 140:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 141:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 142:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 143:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 144:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 145:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 146:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 147:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 148:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 149:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 150:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 151:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 152:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 153:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 154:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 155:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 156:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 157:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 158:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 159:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 160:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 161:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 162:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 163:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 164:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 165:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 166:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 167:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 168:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 169:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 170:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 171:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 172:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 173:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 174:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 175:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 176:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 177:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 178:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 179:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 180:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 181:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 182:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 183:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 184:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 185:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 186:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 187:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 188:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 189:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 190:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 191:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
+
+    case 192:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 193:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 194:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 195:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 196:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 197:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 198:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 199:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 200:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 201:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 202:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 203:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 204:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 205:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 206:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 207:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 208:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 209:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 210:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 211:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 212:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 213:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 214:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 215:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 216:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 217:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 218:
+      *inPlaceOperand |= *appliedOperand;
+      break;
+
+    case 219:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
+
+    case 220:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 221:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 222:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 223:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 224:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 225:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 226:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 227:
+      *inPlaceOperand -= *appliedOperand;
+      break;
+
+    case 228:
+      *inPlaceOperand = *appliedOperand;
+      break;
+
+    case 229:
+      *inPlaceOperand &= *appliedOperand;
+      break;
+
+    case 230:
+      *inPlaceOperand += *appliedOperand;
+      break;
+
+    case 231:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
+
+    case 232:
+      *inPlaceOperand |= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_10110111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10111000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10111001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10111010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10111011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10111100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10111101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10111110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_10111111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11000000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11000001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11000010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11000011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11000100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11000101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11000110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11000111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11001000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11001001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11001010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11001011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11001100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11001101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11001110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11001111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11010000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11010001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11010010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11010011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11010100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11010101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
+    case 233:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11010110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11010111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11011000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11011001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11011010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11011011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11011100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11011101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11011110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11011111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11100000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11100001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11100010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11100011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11100100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11100101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11100110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11100111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11101000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
+    case 234:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11101001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
-
-void CN_ADAPTIVE_OP_01111111_11101010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
+    case 235:
+      *inPlaceOperand &= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11101011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
+    case 236:
+      *inPlaceOperand &= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11101100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
+    case 237:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11101101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-}
+    case 238:
+      *inPlaceOperand -= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11101110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
+    case 239:
+      *inPlaceOperand = *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11101111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
+    case 240:
+      *inPlaceOperand -= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11110000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
+    case 241:
+      *inPlaceOperand |= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11110001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
+    case 242:
+      *inPlaceOperand -= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11110010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
+    case 243:
+      *inPlaceOperand = ~*appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11110011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
+    case 244:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11110100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
+    case 245:
+      *inPlaceOperand |= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11110101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
+    case 246:
+      *inPlaceOperand ^= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11110110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
+    case 247:
+      *inPlaceOperand -= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11110111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
+    case 248:
+      *inPlaceOperand += *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11111000(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-}
+    case 249:
+      *inPlaceOperand &= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11111001(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-}
+    case 250:
+      *inPlaceOperand |= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11111010(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-}
+    case 251:
+      *inPlaceOperand += *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11111011(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-}
+    case 252:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11111100(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-}
+    case 253:
+      *inPlaceOperand &= *appliedOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11111101(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-}
+    case 254:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11111110(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
-}
+    case 255:
+      *inPlaceOperand = ~*inPlaceOperand;
+      break;
 
-void CN_ADAPTIVE_OP_01111111_11111111(uint8_t* inPlaceOperand, const uint8_t* appliedOperand) {
-  *inPlaceOperand &= *appliedOperand;
-  *inPlaceOperand -= *appliedOperand;
-  *inPlaceOperand = ~*inPlaceOperand;
-  (void)appliedOperand;
-  *inPlaceOperand = ~*appliedOperand;
-  *inPlaceOperand ^= *appliedOperand;
-  *inPlaceOperand = *appliedOperand;
-  *inPlaceOperand += *appliedOperand;
-  *inPlaceOperand |= *appliedOperand;
+    default:
+        break;
+  }
 }
-

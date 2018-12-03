@@ -56,16 +56,16 @@ void init_randomizer(const void *data, size_t length, Crypto::CN_ADAPTIVE_Random
 
     // Third: We need to initialize the indices, we will not bother for now whether they encode legit addresses, the cn_adaptive
     // algorithm will take care of this within the implementation itself.
-    *(reinterpret_cast<int8_t*>(randomizer->indices + offset) + 0) = *(randomizer->values + offset + 31);
-    *(reinterpret_cast<int8_t*>(randomizer->indices + offset) + 1) = *(randomizer->values + offset + 30);
-    *(reinterpret_cast<int8_t*>(randomizer->indices + offset) + 2) = *(randomizer->values + offset + 29);
-    for(uint32_t j = 2; j < 32 * sizeof(uint32_t); ++j) {
-      cn_adaptive_apply_operator(
-        reinterpret_cast<uint8_t*>(randomizer->indices + offset) + j,
-        reinterpret_cast<int8_t*>(randomizer->indices + offset) + j - 1,
-        randomizer->operationsIndex,
-        reinterpret_cast<uint8_t*>(randomizer->indices + offset) + j - 2, 1);
-    }
+//    *(reinterpret_cast<int8_t*>(randomizer->indices + offset) + 0) = *(randomizer->values + offset + 31);
+//    *(reinterpret_cast<int8_t*>(randomizer->indices + offset) + 1) = *(randomizer->values + offset + 30);
+//    *(reinterpret_cast<int8_t*>(randomizer->indices + offset) + 2) = *(randomizer->values + offset + 29);
+//    for(uint32_t j = 2; j < 32 * sizeof(uint32_t); ++j) {
+//      cn_adaptive_apply_operator(
+//        reinterpret_cast<uint8_t*>(randomizer->indices + offset) + j,
+//        reinterpret_cast<int8_t*>(randomizer->indices + offset) + j - 1,
+//        randomizer->operationsIndex,
+//        reinterpret_cast<uint8_t*>(randomizer->indices + offset) + j - 2, 1);
+//    }
 
     // Fourth we vary our data block using the initialized part of the randomizer
     for(uint16_t j = 0; j < length; ++j) {
@@ -109,11 +109,11 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
   static thread_local std::unique_ptr<Randomizer> __Randomizer = std::make_unique<Randomizer>(1 << 16);
   static thread_local std::vector<char> __Salt;
 
-  std::memset(&hash, 0, 32);
+  std::memset(&hash, 0, sizeof (hash));
   cn_fast_hash(data, length, reinterpret_cast<char*>(&hash));
 
-  for(std::size_t i = 0; i < 4; ++i) {
-    const uint32_t offset = (*reinterpret_cast<uint32_t*>(&hash)) % windowSize();
+  for(std::size_t i = 0; i < 1; ++i) {
+    const uint32_t offset = height % windowSize(); // (*reinterpret_cast<uint32_t*>(&hash)) % windowSize();
     const uint32_t scratchpadSize = minScratchpadSize() + offset * slopeScratchpadSize();
     const uint32_t randomizerSize = maxRandomizerSize() - offset * slopeRandomizerSize();
     __Randomizer->reset(randomizerSize);
