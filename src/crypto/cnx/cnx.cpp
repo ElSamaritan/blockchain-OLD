@@ -43,16 +43,16 @@ void init_randomizer(const void *data, size_t length, Crypto::CN_ADAPTIVE_Random
 
     // Second: Make the values of the randomizer dependent on the last iterations hashPtr, calculated lastly. For the first loop
     // we simply have chosen cn_fast_hash.
-    (reinterpret_cast<uint8_t*>(randomizer->values) + offset)[0] = (randomizer->operators + offset)[31];
-    (reinterpret_cast<uint8_t*>(randomizer->values) + offset)[1] = (randomizer->operators + offset)[30];
-    (reinterpret_cast<uint8_t*>(randomizer->values) + offset)[2] = (randomizer->operators + offset)[29];
-    for(uint32_t j = 2; j < 32; ++j) {
-      cn_adaptive_apply_operator(
-        reinterpret_cast<uint8_t*>(randomizer->values) + offset + j,
-        reinterpret_cast<int8_t*>(randomizer->values) + offset + j - 1,
-        randomizer->operationsIndex,
-        reinterpret_cast<uint8_t*>(randomizer->values) + offset + j - 2, 1);
-    }
+//    (reinterpret_cast<uint8_t*>(randomizer->values) + offset)[0] = (randomizer->operators + offset)[31];
+//    (reinterpret_cast<uint8_t*>(randomizer->values) + offset)[1] = (randomizer->operators + offset)[30];
+//    (reinterpret_cast<uint8_t*>(randomizer->values) + offset)[2] = (randomizer->operators + offset)[29];
+//    for(uint32_t j = 2; j < 32; ++j) {
+//      cn_adaptive_apply_operator(
+//        reinterpret_cast<uint8_t*>(randomizer->values) + offset + j,
+//        reinterpret_cast<int8_t*>(randomizer->values) + offset + j - 1,
+//        randomizer->operationsIndex,
+//        reinterpret_cast<uint8_t*>(randomizer->values) + offset + j - 2, 1);
+//    }
 
     // Third: We need to initialize the indices, we will not bother for now whether they encode legit addresses, the cn_adaptive
     // algorithm will take care of this within the implementation itself.
@@ -68,14 +68,14 @@ void init_randomizer(const void *data, size_t length, Crypto::CN_ADAPTIVE_Random
 //    }
 
     // Fourth we vary our data block using the initialized part of the randomizer
-    for(uint16_t j = 0; j < length; ++j) {
-        const uint32_t rI = offset + (j % 32);
-        cn_adaptive_apply_operator(
-              reinterpret_cast<uint8_t*>(__Data.data()) + j,
-              randomizer->values + offset + (randomizer->indices[rI] % 32),
-              randomizer->operationsIndex,
-              randomizer->operators + rI, 1);
-    }
+//    for(uint16_t j = 0; j < length; ++j) {
+//        const uint32_t rI = offset + (j % 32);
+//        cn_adaptive_apply_operator(
+//              reinterpret_cast<uint8_t*>(__Data.data()) + j,
+//              randomizer->values + offset + (randomizer->indices[rI] % 32),
+//              randomizer->operationsIndex,
+//              randomizer->operators + rI, 1);
+//    }
 
      // Lastly: In order to make every iteration dependent on the previous we will update our hash to yield the new operators
      // for the next iteration.
@@ -122,7 +122,7 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
     // We dont have a wrapper for the salt so we plain
     __Salt.resize(__Randomizer->size(), 0);
     std::memset(__Salt.data(), 0, __Salt.size() * sizeof (char));
-    //init_salt(__Salt.data(), __Randomizer->size(), hash, &__Randomizer->Handle);
+    init_salt(__Salt.data(), __Randomizer->size(), hash, &__Randomizer->Handle);
     cn_fast_hash(__Salt.data(), __Randomizer->size(), reinterpret_cast<char*>(&hash));
 
     auto xx = scratchpadSize / 2;
