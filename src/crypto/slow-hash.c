@@ -972,7 +972,7 @@ void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, const char* s
 
   for(uint32_t i = 0; i < memory / r->size; ++i) {
     for(uint32_t j = 0; j < r->size; ++j)
-      CN_ADAPTIVE_OP_LOOKUP[r->operationsIndex](scratchpad + (r->indices[j] % memory), r->values, r->operationsIndex, r->operators, 1);
+      CN_ADAPTIVE_OP_LOOKUP[r->operationsIndex](scratchpad + (r->indices[j] % memory), r->values, r->operators[j]);
     r->operationsIndex = scratchpad[i];
   }
 }
