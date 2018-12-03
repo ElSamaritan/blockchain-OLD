@@ -117,12 +117,12 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
     const uint32_t scratchpadSize = minScratchpadSize() + offset * slopeScratchpadSize();
     const uint32_t randomizerSize = maxRandomizerSize() - offset * slopeRandomizerSize();
     __Randomizer->reset(randomizerSize);
-   init_randomizer(data, length, &__Randomizer->Handle, hash);
+   //init_randomizer(data, length, &__Randomizer->Handle, hash);
 
     // We dont have a wrapper for the salt so we plain
     __Salt.resize(__Randomizer->size(), 0);
     std::memset(__Salt.data(), 0, __Salt.size());
-    init_salt(__Salt.data(), __Randomizer->size(), hash, &__Randomizer->Handle);
+    //init_salt(__Salt.data(), __Randomizer->size(), hash, &__Randomizer->Handle);
     cn_fast_hash(__Salt.data(), __Randomizer->size(), reinterpret_cast<char*>(&hash));
 
     auto xx = scratchpadSize / 2;
