@@ -1050,7 +1050,7 @@ void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int vari
         }
     }
 
-    cn_adaptive_randomize_scratchpad(r, sp_bytes, hp_state, memory, 1);
+    //cn_adaptive_randomize_scratchpad(r, sp_bytes, hp_state, memory, 1);
 
     U64(a)[0] = U64(&state.k[0])[0] ^ U64(&state.k[32])[0];
     U64(a)[1] = U64(&state.k[0])[1] ^ U64(&state.k[32])[1];
