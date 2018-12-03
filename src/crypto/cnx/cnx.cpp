@@ -111,6 +111,7 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
 
   std::memset(&hash, 0, sizeof (hash));
   cn_fast_hash(data, length, reinterpret_cast<char*>(&hash));
+  return;
 
   for(std::size_t i = 0; i < 1; ++i) {
     const uint32_t offset = height % windowSize(); // (*reinterpret_cast<uint32_t*>(&hash)) % windowSize();
