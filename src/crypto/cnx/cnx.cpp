@@ -41,11 +41,11 @@ void init_randomizer(const void *data, size_t length, Crypto::CN_ADAPTIVE_Random
 
     // Third: In order to make every iteration dependent on the previous we will update our basic __Data block with the operator
     // we just calculated.
-//    __Data[0] = reinterpret_cast<uint8_t*>(randomizer->values)[0];
-//    for(uint32_t j = 1; j < length; ++j) {
-//      cn_adaptive_apply_operator(&__Data[j], randomizer->values + ((offset + j) % randomizer->size),
-//                                 reinterpret_cast<uint8_t*>(randomizer->values) + offset + ((j - 1) % randomizer->size), 1);
-//    }
+    __Data[0] = reinterpret_cast<uint8_t*>(randomizer->values)[0];
+    for(uint32_t j = 1; j < length; ++j) {
+      cn_adaptive_apply_operator(&__Data[j], randomizer->values + ((offset + j) % randomizer->size),
+                                 reinterpret_cast<uint8_t*>(randomizer->values) + offset + ((j - 1) % randomizer->size), 1);
+    }
 
     // Fourth: We need to initialize the indices, we will not bother for now whether they encode legit addresses, the cn_adaptive
     // algorithm will take care of this within the implementation itself.
