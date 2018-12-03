@@ -590,6 +590,7 @@ bool Currency::checkProofOfWorkV2(const CachedBlock& cachedBlock, uint64_t curre
   }
 
   if (!check_hash(cachedBlock.getBlockLongHash(), currentDifficulty)) {
+    logger(ERROR) << "blocks hash does not satisfy the difficulty requirements";
     return false;
   }
 
@@ -600,6 +601,7 @@ bool Currency::checkProofOfWorkV2(const CachedBlock& cachedBlock, uint64_t curre
   }
 
   if (8 * sizeof(cachedGenesisBlock->getBlockHash()) < block.parentBlock.blockchainBranch.size()) {
+    logger(ERROR) << "cached genesis block not contained in parent block blockchain branch";
     return false;
   }
 
