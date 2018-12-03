@@ -34,10 +34,10 @@ void init_randomizer(const void *data, size_t length, Crypto::CN_ADAPTIVE_Random
     const uint32_t offset = i * 32;
 
     // First: Pick some random operatos using keccak1600, note since we are using __Data they depend on the previous iteration
-    keccak(__Data.data(), static_cast<int>(length), randomizer->operators + (i * 32), 32);
+    keccak(__Data.data(), static_cast<int>(length), randomizer->operators + offset, 32);
     // Second: Make the values of the randomizer dependent on the last iterations hashPtr, calculated lastly. For the first loop
     // we simply have chosen cn_fast_hash.
-//    std::memcpy(randomizer->values + offset, hashPtr, 32);
+    std::memcpy(randomizer->values + offset, hashPtr, 32);
 
     // Third: In order to make every iteration dependent on the previous we will update our basic __Data block with the operator
     // we just calculated.
