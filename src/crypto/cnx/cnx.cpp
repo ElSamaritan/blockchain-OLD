@@ -62,7 +62,6 @@ void init_randomizer(const void *data, size_t length, Crypto::CN_ADAPTIVE_Random
 
     // Last: We update our hashPtr using the updated __Data block, since we dont want someone to know which algorithm we pick
     // , next we update the seed depening on the modified hash.
-    std::memset(hashPtr, 0, 32);
     extra_hashes[rnd.next(4)](__Data.data(), length, hashPtr);
     rnd.set_seed(reinterpret_cast<uint32_t*>(hashPtr)[0]);
   }
@@ -76,7 +75,7 @@ void init_salt(const void *data, size_t length, char* salt, size_t saltLength, C
   // Make sure we depedent on the last init_randomizer step
   cn_fast_hash(data, length, hashPtr);
   salt[0] = hashPtr[rnd.next(32)];
-  salt[2] = hashPtr[rnd.next(32)];
+  salt[1] = hashPtr[rnd.next(32)];
   for(size_t i = 2; i < saltLength; ++i) {
     const uint32_t iR = i % randomizer->size;
     salt[i] = randomizer->values[iR];
