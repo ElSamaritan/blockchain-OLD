@@ -113,9 +113,13 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
   cn_fast_hash(data, length, reinterpret_cast<char*>(&hash));
 
   for(std::size_t i = 0; i < 1; ++i) {
-    const uint32_t offset = height % windowSize(); // (*reinterpret_cast<uint32_t*>(&hash)) % windowSize();
-    const uint32_t scratchpadSize = minScratchpadSize() + offset * slopeScratchpadSize();
-    const uint32_t randomizerSize = maxRandomizerSize() - offset * slopeRandomizerSize();
+    uint32_t base_offset = (height % windowSize());
+    int32_t offset = static_cast<int32_t>(height % (windowSize() * 2)) - static_cast<int32_t>(base_offset * 2);
+    if (offset < 0) {
+      offset = static_cast<int32_t>(base_offset);
+    }
+    const uint32_t scratchpadSize = minScratchpadSize() + static_cast<uint32_t>(offset) * slopeScratchpadSize();
+    const uint32_t randomizerSize = maxRandomizerSize() - static_cast<uint32_t>(offset) * slopeRandomizerSize();
     __Randomizer->reset(randomizerSize);
    init_randomizer(data, length, &__Randomizer->Handle, hash);
 
