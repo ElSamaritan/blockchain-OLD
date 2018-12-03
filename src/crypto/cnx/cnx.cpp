@@ -95,7 +95,7 @@ void init_salt(const void *data, size_t length, char* salt, size_t saltLength, C
 void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::Hash &hash, uint32_t height) const
 {
   static thread_local std::unique_ptr<MersenneTwister> __Twister = std::make_unique<MersenneTwister>(0);
-  static thread_local std::unique_ptr<Randomizer> __Randomizer = std::make_unique<Randomizer>(std::pow(2, 16));
+  static thread_local std::unique_ptr<Randomizer> __Randomizer = std::make_unique<Randomizer>(1 << 16);
   static thread_local std::vector<char> __Salt;
   static thread_local const uint8_t __Lookup[3] { 2, 4, 8 };
 
