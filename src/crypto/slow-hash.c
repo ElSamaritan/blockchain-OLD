@@ -970,8 +970,6 @@ void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, const char* s
       }
   }
 
-  return;
-
   for(uint32_t i = 0; i < memory / r->size; ++i) {
     for (uint32_t j = 0; j < r->size; j++) {
       cn_adaptive_apply_operator(scratchpad + i * r->size + j, r->values + j, r->operationsIndex, r->operators + j, 1);
