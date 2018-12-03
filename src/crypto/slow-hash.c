@@ -15,6 +15,7 @@
 #include "hash-ops.h"
 #include "oaes_lib.h"
 #include "variant2_int_sqrt.h"
+#include "crypto/cnx/operations/cnx-operations.h"
 
 // Standard Crypto Definitions
 #define AES_BLOCK_SIZE         16
@@ -949,60 +950,10 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int light, int va
   slow_hash_free_state(PAGE_SIZE);
 }
 
-void cn_adaptive_apply_operator(uint8_t* inPlaceOperand, const int8_t* appliedOperand, uint8_t* operation, uint32_t size)
+void cn_adaptive_apply_operator(uint8_t* inPlaceOperand, const int8_t* appliedOperand, uint8_t operationsIndex, uint8_t* operation, uint32_t size)
 {
   for(uint32_t i = 0; i < size; ++i)
-  {
-      switch ((operation[i]) ^ (uint8_t)7) // 7 = 0b0111
-      {
-          case CN_ADAPTIVE_ADD:
-              inPlaceOperand[i] += appliedOperand[i];
-              break;
-          case CN_ADAPTIVE_SUB:
-              inPlaceOperand[i] -= appliedOperand[i];
-              break;
-          case CN_ADAPTIVE_XOR:
-              inPlaceOperand[i] ^= appliedOperand[i];
-              break;
-          case CN_ADAPTIVE_OR:
-              inPlaceOperand[i] |= appliedOperand[i];
-              break;
-          case CN_ADAPTIVE_AND:
-              inPlaceOperand[i] &= appliedOperand[i];
-              break;
-          case CN_ADAPTIVE_COMP:
-              inPlaceOperand[i] = ~appliedOperand[i];
-              break;
-          case CN_ADAPTIVE_EQ:
-              inPlaceOperand[i] = appliedOperand[i];
-              break;
-      }
-
-      switch ((operation[i] >> 4) ^ (uint8_t)7) // 7 = 0b0111
-      {
-          case CN_ADAPTIVE_ADD:
-              inPlaceOperand[i] += ~appliedOperand[i];
-              break;
-          case CN_ADAPTIVE_SUB:
-              inPlaceOperand[i] -= ~appliedOperand[i];
-              break;
-          case CN_ADAPTIVE_XOR:
-              inPlaceOperand[i] ^= ~appliedOperand[i];
-              break;
-          case CN_ADAPTIVE_OR:
-              inPlaceOperand[i] |= ~appliedOperand[i];
-              break;
-          case CN_ADAPTIVE_AND:
-              inPlaceOperand[i] &= ~appliedOperand[i];
-              break;
-          case CN_ADAPTIVE_COMP:
-              inPlaceOperand[i] = appliedOperand[i];
-              break;
-          case CN_ADAPTIVE_EQ:
-              inPlaceOperand[i] = ~appliedOperand[i];
-              break;
-      }
-  }
+    CN_ADAPTIVE_OP_LOOKUP[operationsIndex][operation[i]](inPlaceOperand + i, (const uint8_t*)appliedOperand + i);
 }
 
 void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, const char* salt, uint8_t* scratchpad, uint32_t memory, uint32_t variant)
@@ -1019,14 +970,14 @@ void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, const char* s
       }
   }
 
-  for (uint32_t i = 0; i < r->size; i++)
-  {
-    const uint32_t rI = r->indices[i % r->size] % r->size;
-    const uint32_t sI = r->indices[i % r->size] % memory;
-    cn_adaptive_apply_operator(scratchpad + sI, r->values + rI, r->operators + rI, variant);
-    cn_adaptive_apply_operator(r->operators + rI, (int8_t*)(scratchpad + sI), r->operators + rI, variant);
-    cn_adaptive_apply_operator((uint8_t*)(r->indices + rI), (int8_t*)(scratchpad + sI), r->operators + rI, variant);
-    cn_adaptive_apply_operator((uint8_t*)(r->values + rI), (int8_t*)(scratchpad + sI), r->operators + rI, variant);
+  for(uint32_t i = 0; i < memory / r->size; ++i) {
+    for (uint32_t j = 0; j < r->size; j++) {
+      cn_adaptive_apply_operator(scratchpad + i * r->size + j, r->values + j, r->operationsIndex, r->operators + j, 1);
+      cn_adaptive_apply_operator(r->operators + j, (int8_t*)(scratchpad + i * r->size + j), r->operationsIndex, r->operators + j, 1);
+      cn_adaptive_apply_operator((uint8_t*)(r->indices + j), (int8_t*)(scratchpad + i * r->size + j), r->operationsIndex, r->operators + j, 1);
+      cn_adaptive_apply_operator((uint8_t*)(r->values + j), (int8_t*)(scratchpad + i * r->size + j), r->operationsIndex, r->operators + j, 1);
+    }
+    cn_adaptive_apply_operator(&r->operationsIndex, (int8_t*)scratchpad + i * r->size - 1, r->operationsIndex, r->operators, 1);
   }
 }
 

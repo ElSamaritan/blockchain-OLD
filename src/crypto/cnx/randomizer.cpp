@@ -25,7 +25,7 @@ void Crypto::CNX::Randomizer::reset(uint32_t size)
 {
   Handle.size = size;
   std::memset(_Operators.data(), 0, Handle.size);
-  std::memset(_Indices.data(), 0, Handle.size);
+  std::memset(_Indices.data(), 0, Handle.size * sizeof(uint32_t));
   std::memset(_Values.data(), 0, Handle.size);
 }
 
