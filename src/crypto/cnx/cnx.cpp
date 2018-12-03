@@ -100,6 +100,8 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
   static thread_local const uint8_t __Lookup[3] { 2, 4, 8 };
 
   cn_fast_hash(data, length, reinterpret_cast<char*>(&hash));
+  __Twister->set_seed(*reinterpret_cast<uint32_t*>(&hash));
+
   const uint32_t offset = height % (windowSize());
   const uint32_t scratchpadSize = minScratchpadSize() + offset * slopeScratchpadSize();
   const uint32_t randomizerSize = maxRandomizerSize() - offset * slopeRandomizerSize();
