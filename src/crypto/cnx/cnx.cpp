@@ -72,9 +72,6 @@ void init_salt(const void *data, size_t length, char* salt, size_t saltLength, C
                Crypto::CN_ADAPTIVE_RandomValues* randomizer, Crypto::CNX::MersenneTwister& rnd) {
   using namespace Crypto;
 
-  // We dont have a wrapper for the salt so we plain
-  std::memset(salt, 0, saltLength);
-
   char* hashPtr = reinterpret_cast<char*>(&hash);
   // Make sure we depedent on the last init_randomizer step
   cn_fast_hash(data, length, hashPtr);
@@ -106,10 +103,12 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
   const uint32_t scratchpadSize = minScratchpadSize() + offset * slopeScratchpadSize();
   const uint32_t randomizerSize = maxRandomizerSize() - offset * slopeRandomizerSize();
   __Randomizer->reset(randomizerSize);
- init_randomizer(data, length, &__Randomizer->Handle, hash, *__Twister.get());
+ // init_randomizer(data, length, &__Randomizer->Handle, hash, *__Twister.get());
 
+  // We dont have a wrapper for the salt so we plain
   __Salt.resize(__Randomizer->size(), 0);
-  init_salt(data, length, __Salt.data(), __Randomizer->size(), hash, &__Randomizer->Handle, *__Twister.get());
+  std::memset(__Salt.data(), 0, __Salt.size());
+  // init_salt(data, length, __Salt.data(), __Randomizer->size(), hash, &__Randomizer->Handle, *__Twister.get());
 
   auto xx = scratchpadSize / 2;
   auto yy = static_cast<uint16_t>(__Twister->next(1, 2));
