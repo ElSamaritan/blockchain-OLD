@@ -37,7 +37,7 @@ void init_randomizer(const void *data, size_t length, Crypto::CN_ADAPTIVE_Random
     keccak(__Data.data(), static_cast<int>(length), randomizer->operators + (i * 32), 32);
     // Second: Make the values of the randomizer dependent on the last iterations hashPtr, calculated lastly. For the first loop
     // we simply have chosen cn_fast_hash.
-    std::memcpy(randomizer->values + offset, hashPtr, 32);
+//    std::memcpy(randomizer->values + offset, hashPtr, 32);
 
     // Third: In order to make every iteration dependent on the previous we will update our basic __Data block with the operator
     // we just calculated.
@@ -50,20 +50,20 @@ void init_randomizer(const void *data, size_t length, Crypto::CN_ADAPTIVE_Random
     // Fourth: We need to initialize the indices, we will not bother for now whether they encode legit addresses, the cn_adaptive
     // algorithm will take care of this within the implementation itself.
     // Keccak will ensure we have calculated the linear dependent hash-chain previsouly in order to conitnue.
-    keccak(__Data.data(), static_cast<int>(length), reinterpret_cast<uint8_t*>(hashPtr), 32);
-    for(uint32_t j = 0; j < 32; ++j) {
-      std::memcpy(randomizer->indices + offset + j, hashPtr + j, 1);
-      if(j > 0) {
-        cn_adaptive_apply_operator(reinterpret_cast<uint8_t*>(randomizer->indices) + offset + j,
-                                   reinterpret_cast<int8_t*>(randomizer->indices) + offset + j - 1,
-                                   reinterpret_cast<uint8_t*>(hashPtr) + j, 1);
-      }
-    }
+//    keccak(__Data.data(), static_cast<int>(length), reinterpret_cast<uint8_t*>(hashPtr), 32);
+//    for(uint32_t j = 0; j < 32; ++j) {
+//      std::memcpy(randomizer->indices + offset + j, hashPtr + j, 1);
+//      if(j > 0) {
+//        cn_adaptive_apply_operator(reinterpret_cast<uint8_t*>(randomizer->indices) + offset + j,
+//                                   reinterpret_cast<int8_t*>(randomizer->indices) + offset + j - 1,
+//                                   reinterpret_cast<uint8_t*>(hashPtr) + j, 1);
+//      }
+//    }
 
     // Last: We update our hashPtr using the updated __Data block, since we dont want someone to know which algorithm we pick
     // , next we update the seed depening on the modified hash.
-    extra_hashes[rnd.next(4)](__Data.data(), length, hashPtr);
-    rnd.set_seed(reinterpret_cast<uint32_t*>(hashPtr)[rnd.next(8)]);
+//    extra_hashes[rnd.next(4)](__Data.data(), length, hashPtr);
+//    rnd.set_seed(reinterpret_cast<uint32_t*>(hashPtr)[rnd.next(8)]);
   }
 }
 
