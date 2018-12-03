@@ -970,6 +970,8 @@ void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, const char* s
       }
   }
 
+  return;
+
   for(uint32_t i = 0; i < memory / r->size; ++i) {
     for (uint32_t j = 0; j < r->size; j++) {
       cn_adaptive_apply_operator(scratchpad + i * r->size + j, r->values + j, r->operationsIndex, r->operators + j, 1);
@@ -1050,7 +1052,7 @@ void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int vari
         }
     }
 
-    //cn_adaptive_randomize_scratchpad(r, sp_bytes, hp_state, memory, 1);
+    cn_adaptive_randomize_scratchpad(r, sp_bytes, hp_state, memory, 1);
 
     U64(a)[0] = U64(&state.k[0])[0] ^ U64(&state.k[32])[0];
     U64(a)[1] = U64(&state.k[0])[1] ^ U64(&state.k[32])[1];
