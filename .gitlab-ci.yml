@@ -97,6 +97,8 @@ Windows 10 - Test:
 CppCheck:
   stage: analysis
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/cppcheck:latest
+  tags:
+    - docker
   script: "/bin/bash ./scripts/ci/CppCheck.sh"
   dependencies: []
   artifacts:
@@ -110,6 +112,8 @@ CppCheck:
 CppLint:
   stage: analysis
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/cpplint:latest
+  tags:
+    - docker
   dependencies: []
   script: "/bin/bash ./scripts/ci/CppLint.sh"
   artifacts:
