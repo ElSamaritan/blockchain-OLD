@@ -17,11 +17,13 @@ Switch ($STATUS) {
   "success" {
     $EMBED_COLOR=3066993
     $STATUS_MESSAGE="Passed"
+    $URL=$env:CI_PIPELINE_URL
     Break
   }
   "failure" {
     $EMBED_COLOR=15158332
     $STATUS_MESSAGE="Failed"
+    $URL=$env:CI_JOB_URL
     Break
   }
   default {
@@ -29,29 +31,22 @@ Switch ($STATUS) {
     Break
   }
 }
-$AVATAR="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Appveyor_logo.svg/256px-Appveyor_logo.svg.png"
+$AVATAR="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/GitLab_Logo.svg/1108px-GitLab_Logo.svg.png"
 
-if (!$env:APPVEYOR_REPO_COMMIT) {
-  $env:APPVEYOR_REPO_COMMIT="$(git log -1 --pretty="%H")"
+if (!$env:CI_COMMIT_SHA) {
+  $env:CI_COMMIT_SHA="$(git log -1 --pretty="%H")"
 }
 
-$AUTHOR_NAME="$(git log -1 "$env:APPVEYOR_REPO_COMMIT" --pretty="%aN")"
-$COMMITTER_NAME="$(git log -1 "$env:APPVEYOR_REPO_COMMIT" --pretty="%cN")"
-$COMMIT_SUBJECT="$(git log -1 "$env:APPVEYOR_REPO_COMMIT" --pretty="%s")"
-$COMMIT_MESSAGE="$(git log -1 "$env:APPVEYOR_REPO_COMMIT" --pretty="%b")"
+$AUTHOR_NAME="$(git log -1 "$env:CI_COMMIT_SHA" --pretty="%aN")"
+$COMMITTER_NAME="$(git log -1 "$env:CI_COMMIT_SHA" --pretty="%cN")"
+$COMMIT_SUBJECT="$(git log -1 "$env:CI_COMMIT_SHA" --pretty="%s")"
+$COMMIT_MESSAGE="$(git log -1 "$env:CI_COMMIT_SHA" --pretty="%b")"
 
 if ($AUTHOR_NAME -eq $COMMITTER_NAME) {
   $CREDITS="$AUTHOR_NAME authored & committed"
 }
 else {
   $CREDITS="$AUTHOR_NAME authored & $COMMITTER_NAME committed"
-}
-
-if ($env:APPVEYOR_PULL_REQUEST_NUMBER) {
-  $URL="https://github.com/$env:APPVEYOR_REPO_NAME/pull/$env:APPVEYOR_PULL_REQUEST_NUMBER"
-}
-else {
-  $URL=""
 }
 
 $BUILD_VERSION = [uri]::EscapeDataString($env:APPVEYOR_BUILD_VERSION)
@@ -62,8 +57,8 @@ $WEBHOOK_DATA="{
   ""embeds"": [ {
     ""color"": $EMBED_COLOR,
     ""author"": {
-      ""name"": ""Job #$env:APPVEYOR_JOB_NUMBER (Build #$env:APPVEYOR_BUILD_NUMBER) $STATUS_MESSAGE - $env:APPVEYOR_REPO_NAME"",
-      ""url"": ""https://ci.appveyor.com/project/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/build/$BUILD_VERSION"",
+      ""name"": ""Job #$env:CI_JOB_ID ($env:CI_JOB_NAME) $STATUS_MESSAGE - $env:CI_PROJECT_PATH_SLUG"",
+      ""url"": ""$env:CI_JOB_URL"",
       ""icon_url"": ""$AVATAR""
     },
     ""title"": ""$COMMIT_SUBJECT"",
@@ -72,12 +67,12 @@ $WEBHOOK_DATA="{
     ""fields"": [
       {
         ""name"": ""Commit"",
-        ""value"": ""[``$($env:APPVEYOR_REPO_COMMIT.substring(0, 7))``](https://github.com/$env:APPVEYOR_REPO_NAME/commit/$env:APPVEYOR_REPO_COMMIT)"",
+        ""value"": ""[``$($env:CI_COMMIT_SHA.substring(0, 7))``](https://gitlab.com/$($env:CI_PROJECT_PATH_SLUG)/commit/$($env:CI_COMMIT_SHA))"",
         ""inline"": true
       },
       {
         ""name"": ""Branch/Tag"",
-        ""value"": ""[``$env:APPVEYOR_REPO_BRANCH``](https://github.com/$env:APPVEYOR_REPO_NAME/tree/$env:APPVEYOR_REPO_BRANCH)"",
+        ""value"": ""[``$env:APPVEYOR_REPO_BRANCH``](https://gitlab.com/$($env:CI_PROJECT_PATH_SLUG)/tree/$($env:I_COMMIT_REF_SLUG))"",
         ""inline"": true
       }
     ],
