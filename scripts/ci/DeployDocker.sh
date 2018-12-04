@@ -1,5 +1,4 @@
-#!/bin/bash
-set -e
+#!/bin/sh
 
 TAG=$(head -n 1 VERSION)
 

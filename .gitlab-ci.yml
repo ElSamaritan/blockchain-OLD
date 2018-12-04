@@ -170,7 +170,7 @@ Docker:
     - dind
   dependencies: ["Ubuntu Bionic - Build"]
   before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
-  script: "/bin/bash ./scripts/ci/DeployDocker.sh"
+  script: "/bin/sh ./scripts/ci/DeployDocker.sh"
   # only:
   #   - develop
   #   - master
