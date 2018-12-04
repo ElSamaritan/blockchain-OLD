@@ -18,7 +18,7 @@ case $1 in
     EMBED_COLOR=15158332
     STATUS_MESSAGE="Failed"
     AVATAR="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/GitLab_Logo.svg/1108px-GitLab_Logo.svg.png"
-    URL="$CI_JOB_URL"
+    URL="$CI_PIPELINE_URL"
     ;;
 
   * )
@@ -57,12 +57,12 @@ WEBHOOK_DATA='{
     "fields": [
       {
         "name": "Commit",
-        "value": "'"[\`${CI_COMMIT_SHA:0:7}\`](https://gitlab.com/$CI_PROJECT_PATH_SLUG/commit/$CI_COMMIT_SHA)"'",
+        "value": "'"[\`${CI_COMMIT_SHA:0:7}\`](https://gitlab.com/galaxia-project/blockchain/xi/commit/$CI_COMMIT_SHA)"'",
         "inline": true
       },
       {
         "name": "Branch/Tag",
-        "value": "'"[\`$CI_COMMIT_REF_NAME\`](https://gitlab.com/$CI_PROJECT_PATH_SLUG/tree/$CI_COMMIT_REF_SLUG)"'",
+        "value": "'"[\`$CI_COMMIT_REF_NAME\`](https://gitlab.com/galaxia-project/blockchain/xi/tree/$CI_COMMIT_REF_SLUG)"'",
         "inline": true
       }
     ],
