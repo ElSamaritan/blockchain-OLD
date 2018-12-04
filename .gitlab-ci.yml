@@ -1,0 +1,78 @@
+stages:
+  - build
+  - test
+  - deploy
+
+# --------------------------------- Builds -------------------------------------
+
+.linux_build_template: &linux_build_definition
+  stage: build
+  tags:
+    - docker
+  before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
+  script:
+    - mkdir -p .build
+    - cd .build
+    - cmake -DCMAKE_INSTALL_PREFX=../.install -DCMAKE_BUILD_TYPE=Release -DXI_BUILD_TESTSUITE=ON ..
+    - make
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths: [.build/]
+  artifacts:
+    paths: [.build/]
+  dependencies: []
+
+Ubuntu Bionic - Build:
+  <<: *linux_build_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
+
+openSuse Leap - Build:
+  <<: *linux_build_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
+
+# --------------------------------- Tests -------------------------------------
+
+.linux_test_template: &linux_test_definition
+  stage: test
+  tags:
+    - docker
+  before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
+  script:
+    - cd ./.build
+    - ctest -VV
+
+Ubuntu Bionic - Test:
+  <<: *linux_test_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
+  dependencies: ["Ubuntu Bionic - Build"]
+
+openSuse Leap - Test:
+  <<: *linux_test_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
+  dependencies: ["openSuse Leap - Build"]
+
+# --------------------------------- Deploy -------------------------------------
+
+.linux_deploy_template: &linux_deploy_definition
+  stage: deploy
+  tags:
+    - docker
+  before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
+  script:
+    - cd ./.build
+    - make install
+    - cd ..
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    paths:
+      - .install/
+
+Ubuntu Bionic:
+  <<: *linux_deploy_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
+  dependencies: ["Ubuntu Bionic - Build"]
+
+openSuse Leap:
+  <<: *linux_deploy_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
+  dependencies: ["openSuse Leap - Build"]
