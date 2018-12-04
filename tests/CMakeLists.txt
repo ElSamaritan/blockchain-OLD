@@ -23,14 +23,6 @@ if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/DB")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/DB" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
-# integration tests
-file(GLOB_RECURSE XI_INTEGRATION_TESTS_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/integration/*.cpp")
-source_group("" FILES ${XI_INTEGRATION_TESTS_SOURCE_FILES})
-add_executable(TestSuite.Integration ${XI_INTEGRATION_TESTS_SOURCE_FILES})
-target_link_libraries(TestSuite.Integration PRIVATE gtest_main Common Crypto CryptoNoteCore Serialization Logging ${ROCKSDB_LIB})
-
-add_test(Integrity TestSuite.Integration WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
 # benchmarks
 file(GLOB_RECURSE XI_BENCHMARK_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/benchmark/*")
 source_group("" FILES ${XI_BENCHMARK_SOURCE_FILES})
