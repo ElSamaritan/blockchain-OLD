@@ -147,7 +147,7 @@ Docker:
   tags:
     - dind
   before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
-  script: bash ./scripts/ci/DeployDocker.sh
+  script: "/bin/bash ./scripts/ci/DeployDocker.sh"
   # only:
   #   - develop
   #   - master
@@ -169,13 +169,13 @@ pages:
 Discord Failure Notification:
   stage: notifications
   image: ubuntu:bionic
-  script: bash ./scripts/ci/SendDiscordNotification.sh failure $DISCORD_WEBHOOK
+  script: "/bin/bash ./scripts/ci/SendDiscordNotification.sh failure $DISCORD_WEBHOOK"
   dependencies: []
   when: on_failure
 
 Discord Success Notification:
   stage: notifications
   image: ubuntu:bionic
-  script: bash ./scripts/ci/SendDiscordNotification.sh success $DISCORD_WEBHOOK
+  script: "/bin/bash ./scripts/ci/SendDiscordNotification.sh success $DISCORD_WEBHOOK"
   dependencies: []
   when: on_success
