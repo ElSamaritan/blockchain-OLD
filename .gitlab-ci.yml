@@ -164,7 +164,7 @@ Docker:
   stage: deploy
   tags:
     - dind
-  dependencies: ["Ubuntu Bionic - Build"]
+  dependencies: ["Ubuntu Bionic"]
   before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
   script:
   - cd ./.build
