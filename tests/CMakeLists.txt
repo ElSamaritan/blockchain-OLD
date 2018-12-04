@@ -18,11 +18,6 @@ else()
     set(ROCKSDB_LIB rocksdblib)
 endif()
 
-# copy test data
-if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/DB")
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/DB" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-endif()
-
 # benchmarks
 file(GLOB_RECURSE XI_BENCHMARK_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/benchmark/*")
 source_group("" FILES ${XI_BENCHMARK_SOURCE_FILES})
