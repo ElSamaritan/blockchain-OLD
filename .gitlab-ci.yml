@@ -1,6 +1,7 @@
 stages:
   - build
   - test
+  - analysis
   - deploy
 
 # --------------------------------- Builds -------------------------------------
@@ -74,6 +75,33 @@ Windows 10 - Test:
     - cd .\.build
     - ctest -VV
 
+# --------------------------------- Analysis -----------------------------------
+
+CppCheck:
+  stage: analysis
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/cppcheck:latest
+  script: "/bin/bash ./scripts/ci/CppCheck.sh"
+  artifacts:
+    paths: 
+      - cppcheck.xml
+      - .site/
+  only:
+    - develop
+    - master
+
+CppLint:
+  stage: analysis
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/cpplint:latest
+  dependencies: []
+  script: "/bin/bash ./scripts/ci/CppLint.sh"
+  artifacts:
+    paths: 
+      - cpplint.xml
+      - .site/
+  only:
+    - develop
+    - master
+
 # --------------------------------- Deploy -------------------------------------
 
 .linux_deploy_template: &linux_deploy_definition
@@ -112,3 +140,13 @@ Windows 10:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
     paths:
       - .install/
+
+pages:
+  stage: deploy
+  dependencies:
+    - CppCheck
+    - CppLint
+  script: "mv ./.site ./public"
+  artifacts:
+    paths:
+      - public
