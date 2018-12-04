@@ -98,6 +98,7 @@ CppCheck:
   stage: analysis
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/cppcheck:latest
   script: "/bin/bash ./scripts/ci/CppCheck.sh"
+  dependencies: []
   artifacts:
     paths: 
       - cppcheck.xml
