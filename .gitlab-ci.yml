@@ -85,9 +85,9 @@ CppCheck:
     paths: 
       - cppcheck.xml
       - .site/
-  only:
-    - develop
-    - master
+  # only:
+  #   - develop
+  #   - master
 
 CppLint:
   stage: analysis
@@ -98,9 +98,9 @@ CppLint:
     paths: 
       - cpplint.xml
       - .site/
-  only:
-    - develop
-    - master
+  # only:
+  #   - develop
+  #   - master
 
 # --------------------------------- Deploy -------------------------------------
 
@@ -150,3 +150,5 @@ pages:
   artifacts:
     paths:
       - public
+  # only:
+  #   - develop
