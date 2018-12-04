@@ -142,6 +142,16 @@ Windows 10:
     paths:
       - .install/
 
+Docker:
+  image: docker:stable
+  tags:
+    - dind
+  before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
+  script: bash ./scripts/ci/DeployDocker.sh
+  # only:
+  #   - develop
+  #   - master
+
 pages:
   stage: deploy
   dependencies:
