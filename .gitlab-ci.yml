@@ -9,7 +9,6 @@ stages:
   stage: build
   tags:
     - docker
-  before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
   script:
     - mkdir -p .build
     - cd .build
@@ -36,7 +35,6 @@ openSuse Leap - Build:
   stage: test
   tags:
     - docker
-  before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
   script:
     - cd ./.build
     - ctest -VV
@@ -57,7 +55,6 @@ openSuse Leap - Test:
   stage: deploy
   tags:
     - docker
-  before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
   script:
     - cd ./.build
     - make install
