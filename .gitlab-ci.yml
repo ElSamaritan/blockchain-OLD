@@ -5,18 +5,9 @@ stages:
   - deploy
   - notifications
 
-.linux_base_template: &linux_base_definition
-  when: 
-    on_failure: bash ./scripts/ci/SendDiscordNotification.sh failure $DISCORD_WEBHOOK
-
-.windows_base_template: &windows_base_definition
-  when: 
-    on_failure: powershell -File ./scripts/ci/SendDiscordNotification.ps1 failure $env:DISCORD_WEBHOOK
-
 # --------------------------------- Builds -------------------------------------
 
 .linux_build_template: &linux_build_definition
-  <<: *linux_base_definition
   stage: build
   tags:
     - docker
@@ -41,7 +32,6 @@ openSuse Leap - Build:
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
 
 Windows 10 - Build:
-  <<: *windows_base_definition
   stage: build
   tags:
     - windows
@@ -78,7 +68,6 @@ openSuse Leap - Test:
   dependencies: ["openSuse Leap - Build"]
 
 Windows 10 - Test:
-  <<: *windows_base_definition
   stage: test
   tags:
     - windows
@@ -140,7 +129,6 @@ openSuse Leap:
   dependencies: ["openSuse Leap - Build"]
 
 Windows 10:
-  <<: *windows_base_definition
   stage: deploy
   tags:
     - windows
@@ -168,8 +156,16 @@ pages:
 
 # --------------------------------- Notifications -------------------------------------
 
-Discord:
+Discord Failure Notification:
+  stage: notifications
+  image: ubuntu:bionic
+  script: bash ./scripts/ci/SendDiscordNotification.sh failure $DISCORD_WEBHOOK
+  dependencies: []
+  when: on_failure
+
+Discord Success Notification:
   stage: notifications
   image: ubuntu:bionic
   script: bash ./scripts/ci/SendDiscordNotification.sh success $DISCORD_WEBHOOK
   dependencies: []
+  when: on_success
