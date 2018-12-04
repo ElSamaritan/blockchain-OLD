@@ -195,6 +195,8 @@ pages:
 
 Discord Failure Notification:
   stage: notifications
+  tags:
+    - docker
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/notify:latest
   script: "/bin/bash ./scripts/ci/SendDiscordNotification.sh failure $DISCORD_WEBHOOK"
   dependencies: []
@@ -202,6 +204,8 @@ Discord Failure Notification:
 
 Discord Success Notification:
   stage: notifications
+  tags:
+    - docker
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/notify:latest
   script: "/bin/bash ./scripts/ci/SendDiscordNotification.sh success $DISCORD_WEBHOOK"
   dependencies: []
