@@ -144,6 +144,7 @@ Windows 10:
 
 Docker:
   image: docker:stable
+  stage: deploy
   tags:
     - dind
   dependencies: ["Ubuntu Bionic - Build"]
