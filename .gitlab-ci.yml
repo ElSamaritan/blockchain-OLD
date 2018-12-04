@@ -174,14 +174,14 @@ pages:
 
 Discord Failure Notification:
   stage: notifications
-  image: ubuntu:bionic
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/notify:latest
   script: "/bin/bash ./scripts/ci/SendDiscordNotification.sh failure $DISCORD_WEBHOOK"
   dependencies: []
   when: on_failure
 
 Discord Success Notification:
   stage: notifications
-  image: ubuntu:bionic
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/notify:latest
   script: "/bin/bash ./scripts/ci/SendDiscordNotification.sh success $DISCORD_WEBHOOK"
   dependencies: []
   when: on_success
