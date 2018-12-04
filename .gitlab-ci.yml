@@ -181,6 +181,9 @@ Docker:
 
 pages:
   stage: deploy
+  tags:
+    - docker
+  image: ubuntu:bionic
   dependencies:
     - CppCheck
     - CppLint
