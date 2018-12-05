@@ -28,6 +28,7 @@ if (XI_BUILD_TESTSUITE)
   set_property(TARGET gtest gtest_main PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/gtest/include")
   # benchmark ======================================================================================
   set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "TestSuite of google-benchmark disabled" FORCE)
+  set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "Install tagets for google-benchmark disabled" FORCE)
   add_subdirectory(benchmark)
   set_property(TARGET benchmark benchmark_main PROPERTY FOLDER "external")
   mark_as_advanced(

@@ -1,4 +1,7 @@
 .build/
 .data/
 .install/
+.site/
+cpplint.xml
+cppcheck.xml
 CMakeLists.txt.user*
