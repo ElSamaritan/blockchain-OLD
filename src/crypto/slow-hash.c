@@ -952,33 +952,34 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int light, int va
 
 void cn_adaptive_apply_operator(uint8_t* inPlaceOperand, const int8_t* appliedOperand, uint8_t operationsIndex, uint8_t* operation, uint32_t size)
 {
+  void (*const fn)(uint8_t* inPlaceOperand, const int8_t* appliedOperand, uint8_t op) = CN_ADAPTIVE_OP_LOOKUP[operationsIndex];
   for(uint32_t i = 0; i < size; ++i)
-    CN_ADAPTIVE_OP_LOOKUP[operationsIndex](inPlaceOperand + i, appliedOperand + i, operation[i]);
+    fn(inPlaceOperand + i, appliedOperand + i, operation[i]);
 }
 
-void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, const char* salt, uint8_t* scratchpad, uint32_t memory, uint32_t variant)
+void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, char* salt, uint8_t* scratchpad, uint32_t memory, uint32_t variant)
 {
   if (variant < 1 || variant > 1)
       return;
 
-  if (variant == 1)
-  {
-      for (uint32_t i = 0; i < memory; i ++)
-      {
-          const uint32_t rI = i % r->size;
-          scratchpad[i] = scratchpad[i] ^ salt[rI];
-      }
+  for(uint32_t i = 0; i < memory / r->size; ++i) {
+    for(uint32_t j = 0; j < r->size; ++j) {
+        const uint32_t rI = i % r->size;
+        scratchpad[i] = scratchpad[i * r->size + j] ^ ((const uint8_t*)salt)[rI];
+    }
   }
 
   for(uint32_t i = 0; i < memory / r->size; ++i) {
-    for(uint32_t j = 0; j < r->size; ++j)
-      CN_ADAPTIVE_OP_LOOKUP[r->operationsIndex](scratchpad + (r->indices[j] % memory), r->values, r->operators[j]);
+    void (*const fn)(uint8_t* inPlaceOperand, const int8_t* appliedOperand, uint8_t op) = CN_ADAPTIVE_OP_LOOKUP[r->operationsIndex];
+    for(uint32_t j = 0; j < r->size; ++j) {
+      fn(scratchpad + (r->indices[j] % memory), r->values, r->operators[j]);
+    }
     r->operationsIndex = scratchpad[i];
   }
 }
 
-void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t base_iters,
-                             size_t rand_iters, CN_ADAPTIVE_RandomValues *r, const char* sp_bytes, uint8_t init_size_blk,
+void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed,
+                             size_t rand_iters, CN_ADAPTIVE_RandomValues *r, char* sp_bytes, uint8_t init_size_blk,
                              uint16_t xx, uint16_t yy, uint16_t zz, uint16_t ww, uint32_t memory)
 {
     uint32_t init_size_byte = (init_size_blk * AES_BLOCK_SIZE);

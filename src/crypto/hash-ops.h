@@ -87,9 +87,9 @@ void cn_fast_hash(const void *data, size_t length, char *hash);
 void cn_slow_hash(const void *data, size_t length, char *hash, int light, int variant, int prehashed, uint32_t page_size, uint32_t scratchpad, uint32_t iterations);
 
 void cn_adaptive_apply_operator(uint8_t* inPlaceOperand, const int8_t* appliedOperand, uint8_t operationsIndex, uint8_t* operation, uint32_t size);
-void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, const char* salt, uint8_t* scratchpad, uint32_t memory, uint32_t variant);
-void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t base_iters,
-                             size_t rand_iters, CN_ADAPTIVE_RandomValues *r, const char* sp_bytes, uint8_t init_size_blk,
+void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, char *salt, uint8_t* scratchpad, uint32_t memory, uint32_t variant);
+void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed,
+                             size_t rand_iters, CN_ADAPTIVE_RandomValues *r, char *sp_bytes, uint8_t init_size_blk,
                              uint16_t xx, uint16_t yy, uint16_t zz, uint16_t ww, uint32_t memory);
 
 void hash_extra_blake(const void *data, size_t length, char *hash);
