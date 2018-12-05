@@ -105,9 +105,9 @@ CppCheck:
     paths: 
       - cppcheck.xml
       - .site/
-  # only:
-  #   - develop
-  #   - master
+  only:
+    - develop
+    - master
 
 CppLint:
   stage: analysis
@@ -120,9 +120,9 @@ CppLint:
     paths: 
       - cpplint.xml
       - .site/
-  # only:
-  #   - develop
-  #   - master
+  only:
+    - develop
+    - master
 
 # ================================================================================================================== #
 #                                                                                                                    #
@@ -175,9 +175,9 @@ Docker:
   dependencies: ["Ubuntu Bionic - Build"]
   before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
   script: "/bin/sh ./scripts/ci/DeployDocker.sh"
-  # only:
-  #   - develop
-  #   - master
+  only:
+    - develop
+    - master
 
 pages:
   stage: deploy
@@ -191,8 +191,8 @@ pages:
   artifacts:
     paths:
       - public
-  # only:
-  #   - develop
+  only:
+    - develop
 
 # ================================================================================================================== #
 #                                                                                                                    #
