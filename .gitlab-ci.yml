@@ -48,7 +48,7 @@ Windows 10 - Build:
     - cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_INSTALL_PREFIX:PATH=../.install -DCMAKE_BUILD_TYPE=Release -DXI_BUILD_TESTSUITE=ON ..
     - cmake --build . --config Release
   cache:
-    key: "$CI_COMMIT_REF_SLUG-$CI_JOB_NAME"
+    key: "%CI_COMMIT_REF_SLUG%-%CI_JOB_NAME%"
     paths: [.build/]
   artifacts:
     paths: [.build/]
@@ -163,7 +163,7 @@ Windows 10:
     - cmake --build . --target install --config Release
     - cd ..
   artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    name: "%CI_JOB_NAME%-%CI_COMMIT_REF_NAME%"
     paths:
       - .install/
 
