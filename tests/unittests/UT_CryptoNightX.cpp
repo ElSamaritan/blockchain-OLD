@@ -23,7 +23,10 @@ TEST(CryptoNightX, HashConsistency) {
   data->resize(NumBlocks * BlockSize / 2);
   std::generate(data->begin(), data->end(), std::ref(rbe));
 
-  for(uint32_t h = 0; h <= 2 * HashFn::windowSize(); ++h) {
+  const uint32_t DesiredIterations = 16;
+  const uint32_t WaveLength = 2 * HashFn::windowSize();
+  const uint32_t Incrementor = WaveLength / DesiredIterations;
+  for(uint32_t h = 0; h <= WaveLength; h += Incrementor) {
     for(std::size_t i = 0; i < NumBlocks; ++i) {
       Crypto::Hash h0;
       HashFn{}(reinterpret_cast<uint8_t*>(data->data()) + i * BlockSize, BlockSize, h0, h);

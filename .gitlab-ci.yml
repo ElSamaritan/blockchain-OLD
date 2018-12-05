@@ -1,0 +1,219 @@
+stages:
+  - build
+  - test
+  - analysis
+  - deploy
+  - notifications
+
+# ================================================================================================================== #
+#                                                                                                                    #
+#                                                        BUILD                                                       #
+#                                                                                                                    #
+# ================================================================================================================== #
+
+.linux_build_template: &linux_build_definition
+  stage: build
+  tags:
+    - docker
+  script:
+    - mkdir -p .build
+    - cd .build
+    - cmake -DCMAKE_INSTALL_PREFIX:PATH=../.install -DCMAKE_BUILD_TYPE=Release -DXI_BUILD_TESTSUITE=ON ..
+    - make
+    - make install
+  cache:
+    key: "$CI_COMMIT_REF_SLUG-$CI_JOB_NAME"
+    paths: [.build/]
+  artifacts:
+    paths:
+      - .build/
+      - .install/
+  dependencies: []
+
+Ubuntu Bionic - Build:
+  <<: *linux_build_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
+
+openSuse Leap - Build:
+  <<: *linux_build_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
+
+Windows 10 - Build:
+  stage: build
+  tags:
+    - windows
+  script:
+    - if not exist ".\.build" mkdir .\.build
+    - cd .\.build
+    - cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_INSTALL_PREFIX:PATH=../.install -DCMAKE_BUILD_TYPE=Release -DXI_BUILD_TESTSUITE=ON ..
+    - cmake --build . --config Release
+  cache:
+    key: "%CI_COMMIT_REF_SLUG%-%CI_JOB_NAME%"
+    paths: [.build/]
+  artifacts:
+    paths: [.build/]
+  dependencies: []
+
+# ================================================================================================================== #
+#                                                                                                                    #
+#                                                      TESTS                                                         #
+#                                                                                                                    #
+# ================================================================================================================== #
+
+
+.linux_test_template: &linux_test_definition
+  stage: test
+  tags:
+    - docker
+  script:
+    - cd ./.build
+    - ctest -VV
+
+Ubuntu Bionic - Test:
+  <<: *linux_test_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
+  dependencies: ["Ubuntu Bionic - Build"]
+
+openSuse Leap - Test:
+  <<: *linux_test_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
+  dependencies: ["openSuse Leap - Build"]
+
+Windows 10 - Test:
+  stage: test
+  tags:
+    - windows
+  dependencies: ["Windows 10 - Build"]
+  script:
+    - cd .\.build
+    - ctest -VV
+
+# ================================================================================================================== #
+#                                                                                                                    #
+#                                                           ANALYSIS                                                 #
+#                                                                                                                    #
+# ================================================================================================================== #
+
+CppCheck:
+  stage: analysis
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/cppcheck:latest
+  tags:
+    - docker
+  script: "/bin/bash ./scripts/ci/CppCheck.sh"
+  dependencies: []
+  artifacts:
+    paths: 
+      - cppcheck.xml
+      - .site/
+  only:
+    - develop
+    - master
+
+CppLint:
+  stage: analysis
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/cpplint:latest
+  tags:
+    - docker
+  dependencies: []
+  script: "/bin/bash ./scripts/ci/CppLint.sh"
+  artifacts:
+    paths: 
+      - cpplint.xml
+      - .site/
+  only:
+    - develop
+    - master
+
+# ================================================================================================================== #
+#                                                                                                                    #
+#                                                       DEPLOY                                                       #
+#                                                                                                                    #
+# ================================================================================================================== #
+
+.linux_deploy_template: &linux_deploy_definition
+  stage: deploy
+  tags:
+    - docker
+  script:
+    - cd ./.build
+    - make install
+    - cd ..
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    paths:
+      - .install/
+
+Ubuntu Bionic:
+  <<: *linux_deploy_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
+  dependencies: ["Ubuntu Bionic - Build"]
+
+openSuse Leap:
+  <<: *linux_deploy_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
+  dependencies: ["openSuse Leap - Build"]
+
+Windows 10:
+  stage: deploy
+  tags:
+    - windows
+  dependencies: ["Windows 10 - Build"]
+  script:
+    - cd .\.build
+    - cmake --build . --target install --config Release
+    - cd ..
+  artifacts:
+    name: "%CI_JOB_NAME%-%CI_COMMIT_REF_NAME%"
+    paths:
+      - .install/
+
+Docker:
+  image: docker:stable
+  stage: deploy
+  tags:
+    - dind
+  dependencies: ["Ubuntu Bionic - Build"]
+  before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
+  script: "/bin/sh ./scripts/ci/DeployDocker.sh"
+  only:
+    - develop
+    - master
+
+pages:
+  stage: deploy
+  tags:
+    - docker
+  image: ubuntu:bionic
+  dependencies:
+    - CppCheck
+    - CppLint
+  script: "mv ./.site ./public"
+  artifacts:
+    paths:
+      - public
+  only:
+    - develop
+
+# ================================================================================================================== #
+#                                                                                                                    #
+#                                                     NOTIFICATIONS                                                  #
+#                                                                                                                    #
+# ================================================================================================================== #
+
+Discord Failure Notification:
+  stage: notifications
+  tags:
+    - docker
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/notify:latest
+  script: "/bin/bash ./scripts/ci/SendDiscordNotification.sh failure $DISCORD_WEBHOOK"
+  dependencies: []
+  when: on_failure
+
+Discord Success Notification:
+  stage: notifications
+  tags:
+    - docker
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/notify:latest
+  script: "/bin/bash ./scripts/ci/SendDiscordNotification.sh success $DISCORD_WEBHOOK"
+  dependencies: []
+  when: on_success
