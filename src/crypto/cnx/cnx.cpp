@@ -92,13 +92,13 @@ void init_salt(char* salt, size_t saltLength, Crypto::Hash &hash, Crypto::CN_ADA
   salt[1] = hashPtr[1];
   salt[2] = hashPtr[2];
   randomizer->operationsIndex = hash.data[3];
-  for(size_t i = 3; i < saltLength; ++i) {
+  for(size_t i = 2; i < saltLength; ++i) {
     const uint32_t iR = i % randomizer->size;
     salt[i] = randomizer->values[iR];
     // In order to make every byte very depedent to be evaulated in the sequence given we will alter the randomizer using the
     // previous byte itself, somehow like the scratchpad alters itself.
     cn_adaptive_apply_operator(reinterpret_cast<uint8_t*>(salt) + i, reinterpret_cast<int8_t*>(salt) + i - 1,
-                               *(reinterpret_cast<uint8_t*>(salt) + i - 2), reinterpret_cast<uint8_t*>(salt) + i - 3, 1);
+                               randomizer->operationsIndex, reinterpret_cast<uint8_t*>(salt) + i - 2, 1);
   }
 }
 
@@ -106,20 +106,18 @@ void init_salt(char* salt, size_t saltLength, Crypto::Hash &hash, Crypto::CN_ADA
 
 void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::Hash &hash, uint32_t height) const
 {
-  static thread_local std::unique_ptr<Randomizer> __Randomizer = std::make_unique<Randomizer>(1 << 16);
+  static thread_local std::unique_ptr<Randomizer> __Randomizer = std::make_unique<Randomizer>(maxRandomizerSize());
+  static thread_local std::unique_ptr<MersenneTwister> __Twister = std::make_unique<MersenneTwister>(0);
   static thread_local std::vector<char> __Salt;
 
   std::memset(&hash, 0, sizeof (hash));
   cn_fast_hash(data, length, reinterpret_cast<char*>(&hash));
 
   for(std::size_t i = 0; i < 1; ++i) {
-    uint32_t base_offset = (height % windowSize());
-    int32_t offset = static_cast<int32_t>(height % (windowSize() * 2)) - static_cast<int32_t>(base_offset * 2);
-    if (offset < 0) {
-      offset = static_cast<int32_t>(base_offset);
-    }
-    const uint32_t scratchpadSize = minScratchpadSize() + static_cast<uint32_t>(offset) * slopeScratchpadSize();
-    const uint32_t randomizerSize = maxRandomizerSize() - static_cast<uint32_t>(offset) * slopeRandomizerSize();
+    const uint32_t offset = offsetForHeight(height);
+    const uint32_t scratchpadSize = scratchpadSizeForOffset(offset);
+    const uint32_t randomizerSize = randomizerSizeForOffset(offset);
+
     __Randomizer->reset(randomizerSize);
    init_randomizer(data, length, &__Randomizer->Handle, hash);
 
@@ -129,12 +127,14 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
     init_salt(__Salt.data(), __Randomizer->size(), hash, &__Randomizer->Handle);
     cn_fast_hash(__Salt.data(), __Randomizer->size(), reinterpret_cast<char*>(&hash));
 
-    auto xx = scratchpadSize / 2;
-    auto yy = static_cast<uint16_t>((hash.data[0] & 1) + 1);
-    auto zz = static_cast<uint16_t>((hash.data[1] & 1) + 1);
-    auto ww = static_cast<uint16_t>(hash.data[3] * 64 + 1);
+    const uint32_t seed = (*reinterpret_cast<uint32_t*>(&hash)) ^ height;
+    __Twister->set_seed(seed);
+
+    auto xx = static_cast<uint16_t>(seed % __Twister->next(20, 80));
+    auto yy = static_cast<uint16_t>(seed % __Twister->next(20, 80));
+    auto zz = static_cast<uint16_t>(seed % __Twister->next(20, 80));
+    auto ww = static_cast<uint16_t>(seed % __Twister->next(1, 20000));
     cn_adaptive_slow_hash(data, length, reinterpret_cast<char*>(&hash), variant(), false, scratchpadSize / 2,
-                          ((height + 1) % 64), &__Randomizer->Handle, __Salt.data(), 8,
-                          static_cast<uint16_t>(xx), yy, zz, ww, scratchpadSize);
+                          &__Randomizer->Handle, __Salt.data(), 8, xx, yy, zz, ww, scratchpadSize);
   }
 }
