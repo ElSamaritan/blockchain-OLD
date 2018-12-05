@@ -31,3 +31,13 @@ source_group("" FILES ${XI_BENCHMARK_SOURCE_FILES})
 add_executable(TestSuite.Benchmark ${XI_BENCHMARK_SOURCE_FILES})
 target_link_libraries(TestSuite.Benchmark PRIVATE benchmark_main Common Crypto CryptoNoteCore Serialization Logging ${ROCKSDB_LIB})
 target_include_directories(TestSuite.Benchmark PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/benchmark")
+
+# tools
+file(GLOB XI_TOOLS_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/tools/*.cpp")
+source_group("" FILES ${XI_TOOLS_SOURCE_FILES})
+foreach(xiTool ${XI_TOOLS_SOURCE_FILES})
+  get_filename_component(xiToolName ${xiTool} NAME_WE)
+  set(xiToolTarget "TestSuite.Tools.${xiToolName}")
+  add_executable(${xiToolTarget} ${xiTool})
+  target_link_libraries(${xiToolTarget} PRIVATE Common Crypto CryptoNoteCore Serialization Logging ${ROCKSDB_LIB})
+endforeach() # xiTool
