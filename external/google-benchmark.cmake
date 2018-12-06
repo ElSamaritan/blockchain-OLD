@@ -1,0 +1,15 @@
+﻿set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "TestSuite of google-benchmark disabled" FORCE)
+set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "Install targets for google-benchmark disabled" FORCE)
+add_subdirectory(google-benchmark)
+set_property(TARGET benchmark benchmark_main PROPERTY FOLDER "external")
+mark_as_advanced(
+    BENCHMARK_ENABLE_TESTING
+    BENCHMARK_ENABLE_EXCEPTIONS
+    BENCHMARK_ENABLE_LTO
+    BENCHMARK_USE_LIBCXX
+    BENCHMARK_BUILD_32_BITS
+    BENCHMARK_ENABLE_INSTALL
+    BENCHMARK_DOWNLOAD_DEPENDENCIES
+    BENCHMARK_ENABLE_GTEST_TESTS
+    BENCHMARK_ENABLE_ASSEMBLY_TESTS
+)

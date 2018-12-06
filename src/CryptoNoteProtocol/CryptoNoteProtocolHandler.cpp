@@ -10,7 +10,6 @@
 #include <boost/scope_exit.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <System/Dispatcher.h>
-
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
