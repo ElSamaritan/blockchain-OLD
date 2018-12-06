@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Calex Developers
@@ -93,10 +93,20 @@ inline IBlockchainCache* findIndexInChain(IBlockchainCache* blockSegment, uint32
   return nullptr;
 }
 
-size_t getMaximumTransactionAllowedSize(size_t blockSizeMedian, const Currency& currency) {
-  assert(blockSizeMedian * 2 > currency.minerTxBlobReservedSize());
+size_t getMaximumTransactionAllowedSize(size_t blockSizeMedian, const Currency& currency, uint32_t height) {
+  size_t medianBasedMaxSize = blockSizeMedian * 2;
+  assert(medianBasedMaxSize > currency.minerTxBlobReservedSize());
 
-  return blockSizeMedian * 2 - currency.minerTxBlobReservedSize();
+  uint32_t maxPopulatedHeight = height + 5;
+  const size_t heightBasedMaxSize = currency.maxBlockCumulativeSize(maxPopulatedHeight)
+      - currency.minerTxBlobReservedSize();
+
+  if(medianBasedMaxSize < currency.minerTxBlobReservedSize())
+    medianBasedMaxSize = heightBasedMaxSize;
+  else
+    medianBasedMaxSize = medianBasedMaxSize - currency.minerTxBlobReservedSize();
+
+  return std::min(medianBasedMaxSize, heightBasedMaxSize);
 }
 
 BlockTemplate extractBlockTemplate(const RawBlock& block) {
@@ -831,7 +841,7 @@ void Core::actualizePoolTransactionsLite(const TransactionValidatorState& valida
 
     auto txState = extractSpentOutputs(tx);
 
-    if (hasIntersections(validatorState, txState) || tx.getTransactionBinaryArray().size() > getMaximumTransactionAllowedSize(blockMedianSize, currency)) {
+    if (hasIntersections(validatorState, txState) || tx.getTransactionBinaryArray().size() > getMaximumTransactionAllowedSize(blockMedianSize, currency, getTopBlockIndex())) {
       pool.removeTransaction(hash);
       notifyObservers(makeDelTransactionMessage({ hash }, Messages::DeleteTransaction::Reason::NotActual));
     }
@@ -1033,7 +1043,7 @@ bool Core::isTransactionValidForPool(const CachedTransaction& cachedTransaction,
     return false;
   }
 
-  auto maxTransactionSize = getMaximumTransactionAllowedSize(blockMedianSize, currency);
+  auto maxTransactionSize = getMaximumTransactionAllowedSize(blockMedianSize, currency, getTopBlockIndex());
   if (cachedTransaction.getTransactionBinaryArray().size() > maxTransactionSize) {
     logger(Logging::WARNING) << "Transaction " << cachedTransaction.getTransactionHash()
       << " is not valid. Reason: transaction is too big (" << cachedTransaction.getTransactionBinaryArray().size()
