@@ -130,11 +130,19 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
     const uint32_t seed = (*reinterpret_cast<uint32_t*>(&hash)) ^ height;
     __Twister->set_seed(seed);
 
-    auto xx = static_cast<uint16_t>(seed % __Twister->next(20, 80));
-    auto yy = static_cast<uint16_t>(seed % __Twister->next(20, 80));
-    auto zz = static_cast<uint16_t>(seed % __Twister->next(20, 80));
+    const uint8_t lookup[] { 2, 4, 8 };
+    const uint8_t tempLookup[] = {
+      lookup[__Twister->generate_uint() % sizeof(lookup)],
+      lookup[__Twister->generate_uint() % sizeof(lookup)],
+      lookup[__Twister->generate_uint() % sizeof(lookup)],
+    };
+    const uint8_t tempLookupIndex = seed % sizeof(tempLookup);
+
+    auto xx = static_cast<uint16_t>(seed % __Twister->next(20, 40) + __Twister->next(20, 40));
+    auto yy = static_cast<uint16_t>(seed % __Twister->next(20, 40) + __Twister->next(20, 40));
+    auto zz = static_cast<uint16_t>(seed % __Twister->next(20, 40) + __Twister->next(20, 40));
     auto ww = static_cast<uint16_t>(seed % __Twister->next(1, 20000));
     cn_adaptive_slow_hash(data, length, reinterpret_cast<char*>(&hash), variant(), false, scratchpadSize / 2,
-                          &__Randomizer->Handle, __Salt.data(), 8, xx, yy, zz, ww, scratchpadSize);
+                          &__Randomizer->Handle, __Salt.data(), tempLookup[tempLookupIndex], xx, yy, zz, ww, scratchpadSize);
   }
 }

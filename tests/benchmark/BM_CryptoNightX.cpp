@@ -6,7 +6,7 @@
 using HashAlgorithm = Crypto::CNX::Hash_v0;
 
 static void HeightArguments(benchmark::internal::Benchmark* b) {
-  for (uint32_t i = 0; i <= 2 * HashAlgorithm::windowSize(); i += 1)
+  for (uint32_t i = 0; i <= 2 * HashAlgorithm::windowSize(); i += 128)
       b->Args({i});
 }
 
