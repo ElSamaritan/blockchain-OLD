@@ -26,7 +26,7 @@ include(cmake/Dependencies.cmake)
 include(cmake/Platform.cmake)
 include(cmake/Version.cmake)
 
-## Enable test integration
+### Enable test integration
 if(XI_BUILD_TESTSUITE)
   enable_testing()
 endif() # XI_BUILD_TESTSUITE

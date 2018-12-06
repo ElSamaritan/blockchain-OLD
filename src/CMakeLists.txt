@@ -96,7 +96,8 @@ set(
 )
 
 foreach(xiLib ${XI_LIBRARIES})
-    target_include_directories(${xiLib} PUBLIC ${XI_INCLUDE_DIRS})
+  target_include_directories(${xiLib} PUBLIC ${XI_INCLUDE_DIRS})
+  add_dependencies(${xiLib} rocksdb)
 endforeach()
 
 if(MSVC)
@@ -116,11 +117,12 @@ target_link_libraries(
         Http
         Serialization
         System
+        rocksdb
         ${Boost_LIBRARIES}
 )
-target_link_libraries(P2P PUBLIC CryptoNoteCore upnpc-static)
+target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static)
 target_link_libraries(Rpc PUBLIC CryptoNoteCore)
-target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P upnpc-static Http Serialization CryptoNoteCore System Logging Common Crypto ${Boost_LIBRARIES})
+target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Http Serialization CryptoNoteCore System Logging Common Crypto ${Boost_LIBRARIES})
 target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI)
 
 add_dependencies(WalletService Version)
@@ -149,23 +151,21 @@ if(XI_BUILD_EXECUTABLES)
   add_executable(PGService ${service} ${XI_PG_SOURCES_OS})
 
   if(MSVC)
-    set(XI_EXTRA_OS_LIBRARIES Rpcrt4 rocksdb)
-  else()
-    set(XI_EXTRA_OS_LIBRARIES rocksdblib)
+    set(XI_EXTRA_OS_LIBRARIES Rpcrt4)
   endif()
 
-  target_link_libraries(CLIDaemon P2P Rpc Serialization System Http Logging CryptoNoteCore Crypto Common CommonCLI ${Boost_LIBRARIES} ${XI_EXTRA_OS_LIBRARIES})
+  target_link_libraries(CLIDaemon P2P Rpc Serialization System Http Logging CryptoNoteCore Crypto Common CommonCLI rocksdb ${Boost_LIBRARIES} ${XI_EXTRA_OS_LIBRARIES})
   target_link_libraries(CLIWallet CommonCLI Mnemonics Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common CommonCLI ${Boost_LIBRARIES})
   target_link_libraries(CLIMiner CommonCLI CryptoNoteCore Rpc Serialization System Http Logging Common CommonCLI Crypto ${Boost_LIBRARIES})
-  target_link_libraries(PGService WalletService JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto Rpc Http System Logging Common ${Boost_LIBRARIES} ${XI_EXTRA_OS_LIBRARIES})
+  target_link_libraries(PGService WalletService JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto Rpc Http System Logging Common rocksdb ${Boost_LIBRARIES} ${XI_EXTRA_OS_LIBRARIES})
 
   # Add dependencies means we have to build the latter before we build the former
   # In this case it's because we need to have the current version name rather
   # than a cached one
-  add_dependencies(CLIDaemon Version)
-  add_dependencies(CLIWallet Version)
-  add_dependencies(CLIMiner Version)
-  add_dependencies(PGService Version)
+  add_dependencies(CLIDaemon Version rocksdb)
+  add_dependencies(CLIWallet Version rocksdb)
+  add_dependencies(CLIMiner Version rocksdb)
+  add_dependencies(PGService Version rocksdb)
 
   # Finally build the binaries
   set_property(TARGET CLIDaemon PROPERTY OUTPUT_NAME "xi-daemon")
