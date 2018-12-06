@@ -5,6 +5,9 @@ stages:
   - deploy
   - notifications
 
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
 # ================================================================================================================== #
 #                                                                                                                    #
 #                                                        BUILD                                                       #

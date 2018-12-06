@@ -1,0 +1,43 @@
+﻿if(WIN32)
+  set(ROCKSB_EXTRA_CMAKE_ARGS -DROCKSDB_INSTALL_ON_WINDOWS=ON)
+endif()
+
+ExternalProject_Add(
+  facebook-rocksdb
+
+  PREFIX "facebook-rocksdb"
+
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
+  TEST_COMMAND ""
+
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/facebook-rocksdb"
+  INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/rocksdb
+
+  CMAKE_ARGS
+    -DWITH_MD_LIBRARY=OFF
+    -DWITH_TESTS=OFF
+    -DWITH_TOOLS=OFF
+    -DPORTABLE=ON
+    -DENABLE_PTHREAD_MUTEX_ADAPTIVE_NP=OFF
+    -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/rocksdb
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DUSE_RTTI=ON
+    ${ROCKSB_EXTRA_CMAKE_ARGS}
+
+  INSTALL_COMMAND cmake -DCOMPONENT=devel -P cmake_install.cmake
+)
+install()
+ExternalProject_Get_Property(facebook-rocksdb INSTALL_DIR)
+
+add_library(rocksdb STATIC IMPORTED GLOBAL)
+add_dependencies(rocksdb facebook-rocksdb)
+
+include(GNUInstallDirs)
+if(MSVC)
+  set_property(TARGET rocksdb PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/rocksdb${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set_property(TARGET rocksdb PROPERTY INTERFACE_LINK_LIBRARIES Shlwapi.lib)
+else()
+  set_property(TARGET rocksdb PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/librocksdb${CMAKE_STATIC_LIBRARY_SUFFIX})
+endif()
+set_property(TARGET rocksdb APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${INSTALL_DIR}/include")

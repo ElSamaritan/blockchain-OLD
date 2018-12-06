@@ -5,7 +5,7 @@
 #pragma once
 
 #include <cxxopts.hpp>
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <fstream>
 #include <sstream>
 

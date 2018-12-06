@@ -1,5 +1,5 @@
 ﻿# Enable the c++17 standard support
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -24,7 +24,6 @@ if(MSVC)
         string(REPLACE "/MT" "" ${flag} ${${flag}})
         string(REPLACE "/MDd" "" ${flag} ${${flag}})
         string(REPLACE "/MD" "" ${flag} ${${flag}})
-        string(REPLACE "/GS" "" ${flag} ${${flag}})
         string(REGEX REPLACE "/W[1234X]" "" ${flag} ${${flag}})
     endforeach()
     set(XI_CXX_FLAGS "/MP /bigobj")

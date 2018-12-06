@@ -12,15 +12,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-undef")
 endif() # GCC
 
-if(MSVC)
-    set(ROCKSDB_LIB rocksdb)
-else()
-    set(ROCKSDB_LIB rocksdblib)
-endif()
-
 # benchmarks
 file(GLOB_RECURSE XI_BENCHMARK_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/benchmark/*")
 source_group("" FILES ${XI_BENCHMARK_SOURCE_FILES})
 add_executable(TestSuite.Benchmark ${XI_BENCHMARK_SOURCE_FILES})
-target_link_libraries(TestSuite.Benchmark PRIVATE benchmark_main Common Crypto CryptoNoteCore Serialization Logging ${ROCKSDB_LIB})
+target_link_libraries(TestSuite.Benchmark PRIVATE benchmark_main Common Crypto CryptoNoteCore Serialization Logging rocksdb)
 target_include_directories(TestSuite.Benchmark PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/benchmark")
