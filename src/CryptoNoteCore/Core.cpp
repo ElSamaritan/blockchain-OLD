@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Calex Developers
@@ -1991,6 +1991,9 @@ void Core::fillBlockTemplate(BlockTemplate& block, size_t medianSize, size_t max
     if (currency.fusionTxMaxSize() < transactionsSize + transactionBlobSize) {
       continue;
     }
+    if (transactionsSize + transactionBlobSize > maxTotalSize) {
+      continue;
+    }
 
     if (!spentInputsChecker.haveSpentInputs(transaction.getTransaction())) {
       block.transactionHashes.emplace_back(transaction.getTransactionHash());
@@ -2000,7 +2003,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, size_t medianSize, size_t max
   }
 
   for (const auto& cachedTransaction : poolTransactions) {
-    size_t blockSizeLimit = (cachedTransaction.getTransactionFee() == 0) ? medianSize : maxTotalSize;
+    size_t blockSizeLimit = maxTotalSize;
 
     if (blockSizeLimit < transactionsSize + cachedTransaction.getTransactionBinaryArray().size()) {
       continue;
