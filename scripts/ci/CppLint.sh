@@ -5,6 +5,7 @@ cpplint                                                     \
   --exclude=external/*                                      \
   --output=junit                                            \
   --recursive ./src/                                        \
+  --exclude src/crypto/cnx/operations/*                     \
 2> cpplint.xml
 
 set -e
