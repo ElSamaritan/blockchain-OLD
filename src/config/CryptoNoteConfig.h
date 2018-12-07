@@ -16,12 +16,12 @@
 namespace CryptoNote {
 namespace parameters {
 
-const uint64_t DIFFICULTY_TARGET                             = 120; // seconds
+const uint64_t DIFFICULTY_TARGET                             = 10; // seconds // WARNING: Testnet
 
 const uint32_t CRYPTONOTE_MAX_BLOCK_NUMBER                   = 500000000;
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000;
 const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 1000000000;
-const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0x1bf3c9;
+const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 22583;
 const uint32_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 360;  //12 hours
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 60 * 60 * 2;
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3         = 3 * DIFFICULTY_TARGET;
@@ -41,7 +41,7 @@ const uint64_t LWMA_2_DIFFICULTY_BLOCK_INDEX_V2              = 6;
 const uint64_t LWMA_2_DIFFICULTY_BLOCK_INDEX_V3              = 7;
 const uint64_t LWMA_3_DIFFICULTY_BLOCK_INDEX                 = 8;
 
-const uint64_t DIFFICULTY_WINDOW_V3                          = 60;
+const uint64_t DIFFICULTY_WINDOW_V3                          = 64;
 const uint64_t DIFFICULTY_BLOCKS_COUNT_V3                    = DIFFICULTY_WINDOW_V3 + 1;
 
 const unsigned EMISSION_SPEED_FACTOR                         = 29;
@@ -70,7 +70,7 @@ xi-daemon --print-genesis-tx --genesis-block-reward-address XIv2Fyavy8CXG8BPEbNe
 * You should see your premine appear in the previously generated wallet.
 
 */
-const char     GENESIS_COINBASE_TX_HEX[]                     = "01e80201ff0001000297e09858b9cfc8c7b5920e995472172859b18a84538f256742ce215859659d3f2101e5c80d1e21bbb6308b2d09b8b4dda3c3b4f3e811dfbcb708996dbb8e91d6eccf";
+const char     GENESIS_COINBASE_TX_HEX[]                     = "01e80201ff0001f5d771029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210164b78248cce756bf40cc48fb9a79c04d5361ce3ef79e439e361b49179e79185a";
 
 /* This is the unix timestamp of the first "mined" block (technically block 2, not the genesis block)
    You can get this value by doing "print_block 2" in xi-daemon. It is used to know what timestamp
@@ -144,9 +144,8 @@ const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
 const uint32_t KEY_IMAGE_CHECKING_BLOCK_INDEX                = 0;
 const uint32_t UPGRADE_HEIGHT_V2                             = 1;
 const uint32_t UPGRADE_HEIGHT_V3                             = 2;
-const uint32_t UPGRADE_HEIGHT_V4                             = 3; // Upgrade height for CN-Lite Variant 1 switch.
-const uint32_t UPGRADE_HEIGHT_V5                             = 4; // Upgrade height for CN-Soft Shell Variant 1 switch.
-const uint32_t UPGRADE_HEIGHT_CURRENT                        = UPGRADE_HEIGHT_V5;
+const uint32_t UPGRADE_HEIGHT_V4                             = 3; // Upgrade height for CN-X
+const uint32_t UPGRADE_HEIGHT_CURRENT                        = UPGRADE_HEIGHT_V4;
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90;               // percent
 const uint32_t UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks
 const uint32_t UPGRADE_WINDOW                                = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks
@@ -156,17 +155,14 @@ static_assert(UPGRADE_VOTING_WINDOW > 1, "Bad UPGRADE_VOTING_WINDOW");
 /* Block heights we are going to have hard forks at */
 const uint64_t FORK_HEIGHTS[] =
 {
-    1,  // 0
-    2,  // 1
-    3,  // 2
-    4,  // 3
-    1000, // 4
-    2000, // 5
-    3000  // 6
+    1   , // 0
+    2   , // 1
+    3   , // 2
+    4     // 3
 };
 
 /* MAKE SURE TO UPDATE THIS VALUE WITH EVERY MAJOR RELEASE BEFORE A FORK */
-const uint64_t SOFTWARE_SUPPORTED_FORK_INDEX                 = 6;
+const uint64_t SOFTWARE_SUPPORTED_FORK_INDEX                 = 3;
 
 const uint64_t FORK_HEIGHTS_SIZE = sizeof(FORK_HEIGHTS) / sizeof(*FORK_HEIGHTS);
 
@@ -198,7 +194,6 @@ const uint8_t  BLOCK_MAJOR_VERSION_1                         =  1;
 const uint8_t  BLOCK_MAJOR_VERSION_2                         =  2;
 const uint8_t  BLOCK_MAJOR_VERSION_3                         =  3;
 const uint8_t  BLOCK_MAJOR_VERSION_4                         =  4;
-const uint8_t  BLOCK_MAJOR_VERSION_5                         =  5;
 const uint8_t  BLOCK_MINOR_VERSION_0                         =  0;
 const uint8_t  BLOCK_MINOR_VERSION_1                         =  1;
 
@@ -206,8 +201,8 @@ const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT        =  10000;  //by def
 const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT            =  100;    //by default, blocks count in blocks downloading
 const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT         =  1000;
 
-const int      P2P_DEFAULT_PORT                              =  21018;
-const int      RPC_DEFAULT_PORT                              =  31018;
+const int      P2P_DEFAULT_PORT                              =  22868;
+const int      RPC_DEFAULT_PORT                              =  22869;
 const int      SERVICE_DEFAULT_PORT                          =  38070;
 
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                =  1000;
@@ -242,14 +237,12 @@ const char     LICENSE_URL[]                                 = "TODO";
 const char     LATEST_VERSION_URL[]                          = "TODO";
 const static   boost::uuids::uuid CRYPTONOTE_NETWORK         =
 {
-    {  0x28, 0x63, 0x29, 0x43, 0x61, 0x6c, 0x65, 0x78, 0x44, 0x65, 0x76, 0x73, 0x32, 0x30, 0x31, 0x38  }
+    {  0x74, 0x68, 0x69, 0x73, 0x69, 0x73, 0x61, 0x74, 0x65, 0x73, 0x74, 0x66, 0x6f, 0x72, 0x63, 0x6e  }
 };
 
 const char* const SEED_NODES[] = {
-  "97.64.253.98:21018",
-  "185.17.27.100:21018",
-  "104.238.222.144:21018",
-  "185.103.97.205:21018"
+  "207.180.240.151:22868",
+  "207.180.240.152:22868"
 };
 } // CryptoNote
 

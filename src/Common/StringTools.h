@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -109,6 +109,7 @@ bool loadFileToString(const std::string& filepath, std::string& buf);
 bool saveStringToFile(const std::string& filepath, const std::string& buf);
 
 
+std::string base64Encode(std::string const& decoded_string);
 std::string base64Decode(std::string const& encoded_string);
 
 std::string ipAddressToString(uint32_t ip);
