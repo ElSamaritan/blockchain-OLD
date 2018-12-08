@@ -149,6 +149,11 @@ if(XI_BUILD_EXECUTABLES)
   add_executable(CLIWallet ${XI_CLI_WALLET_SOURCES} ${XI_CLI_WALLET_SOURCES_OS})
   add_executable(PGService ${service} ${XI_PG_SOURCES_OS})
 
+  target_include_directories(CLIDaemon PRIVATE "${XI_INCLUDE_DIRS}")
+  target_include_directories(CLIMiner PRIVATE "${XI_INCLUDE_DIRS}")
+  target_include_directories(CLIWallet PRIVATE "${XI_INCLUDE_DIRS}")
+  target_include_directories(PGService PRIVATE "${XI_INCLUDE_DIRS}")
+
   if(MSVC)
     set(XI_EXTRA_OS_LIBRARIES Rpcrt4)
   endif()
