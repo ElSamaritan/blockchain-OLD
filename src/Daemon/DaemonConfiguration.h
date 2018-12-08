@@ -62,12 +62,9 @@ namespace {
   {
     DaemonConfiguration config;
 
-    std::stringstream logfile;
-      logfile << CryptoNote::CRYPTONOTE_NAME << "d.log";
-
     config.dataDirectory = Tools::getDefaultDataDirectory();
     config.checkPoints = "default";
-    config.logFile = logfile.str();
+    config.logFile = "xi-daemon.log";
     config.logLevel = Logging::WARNING;
     config.dbMaxOpenFiles = CryptoNote::DATABASE_DEFAULT_MAX_OPEN_FILES;
     config.dbReadCacheSize = CryptoNote::DATABASE_READ_BUFFER_MB_DEFAULT_SIZE;
@@ -119,8 +116,8 @@ namespace {
       ("dump-config", "Prints the current configuration to the screen", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
       ("load-checkpoints", "Specify a file <path> containing a CSV of Blockchain checkpoints for faster sync. A value of 'default' uses the built-in checkpoints.",
         cxxopts::value<std::string>()->default_value(config.checkPoints)->implicit_value("default"), "<path>")
-      ("log-file", "Specify the <path> to the log file", cxxopts::value<std::string>()->default_value(config.logFile), "<path>")
-      ("log-level", "Specify log level", cxxopts::value<int>()->default_value(std::to_string(config.logLevel)), "#")
+      ("log-file", "Specify the <file> to store logs", cxxopts::value<std::string>()->default_value("xi-daemon.log"), "<file>")
+      ("log-level", "Specify log level. Must be 0 - 5", cxxopts::value<uint8_t>()->default_value(std::to_string(config.logLevel)), "#")
       ("no-console", "Disable daemon console commands", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
       ("save-config", "Save the configuration to the specified <file>", cxxopts::value<std::string>(), "<file>");
 
@@ -136,7 +133,7 @@ namespace {
       ("hide-my-port", "Do not announce yourself as a peerlist candidate", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
       ("p2p-bind-ip", "Interface IP address for the P2P service", cxxopts::value<std::string>()->default_value(config.p2pInterface), "<ip>")
       ("p2p-bind-port", "TCP port for the P2P service", cxxopts::value<int>()->default_value(std::to_string(config.p2pPort)), "#")
-      ("p2p-external-port", "External TCP port for the P2P service (NAT port forward)", cxxopts::value<int>()->default_value("0"), "#")
+      ("p2p-external-port", "External TCP port for the P2P service (NAT port forward)", cxxopts::value<int>()->default_value(std::to_string(config.p2pExternalPort)), "#")
       ("rpc-bind-ip", "Interface IP address for the RPC service", cxxopts::value<std::string>()->default_value(config.rpcInterface), "<ip>")
       ("rpc-bind-port", "TCP port for the RPC service", cxxopts::value<int>()->default_value(std::to_string(config.rpcPort)), "#");
 
