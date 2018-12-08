@@ -19,7 +19,7 @@ set(
     ${PROJECT_SOURCE_DIR}/external/nlohmann-json/include
     ${PROJECT_SOURCE_DIR}/external/yhirose-cpp-linenoise
     ${PROJECT_SOURCE_DIR}/external/jarro2783-cxxopts/include
-    ${PROJECT_SOURCE_DIR}/external/ruslo-leathers/source
+    ${PROJECT_SOURCE_DIR}/external/ruslo-leathers/Source
     ${PROJECT_SOURCE_DIR}/external/miniupnp                   # minpunp fails to setup includes correctly
   PARENT_SCOPE
 )
