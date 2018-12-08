@@ -97,7 +97,6 @@ set(
 
 foreach(xiLib ${XI_LIBRARIES})
   target_include_directories(${xiLib} PUBLIC ${XI_INCLUDE_DIRS})
-  add_dependencies(${xiLib} rocksdb)
 endforeach()
 
 if(MSVC)
@@ -162,10 +161,10 @@ if(XI_BUILD_EXECUTABLES)
   # Add dependencies means we have to build the latter before we build the former
   # In this case it's because we need to have the current version name rather
   # than a cached one
-  add_dependencies(CLIDaemon Version rocksdb)
-  add_dependencies(CLIWallet Version rocksdb)
-  add_dependencies(CLIMiner Version rocksdb)
-  add_dependencies(PGService Version rocksdb)
+  add_dependencies(CLIDaemon Version)
+  add_dependencies(CLIWallet Version)
+  add_dependencies(CLIMiner Version)
+  add_dependencies(PGService Version)
 
   # Finally build the binaries
   set_property(TARGET CLIDaemon PROPERTY OUTPUT_NAME "xi-daemon")

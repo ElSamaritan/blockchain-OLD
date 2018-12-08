@@ -1,8 +1,5 @@
-﻿include_directories(${CMAKE_SOURCE_DIR}/external/rocksdb/include)
-include_directories(${CMAKE_SOURCE_DIR}/external/linenoise)
-include_directories(${CMAKE_SOURCE_DIR}/include)
+﻿include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/external)
 
 foreach(flag ${CompilerFlags})
   set(${flag} "${${flag}} ${XI_CXX_FLAGS}")
