@@ -222,7 +222,7 @@ std::string createIntegratedAddress(const std::string &address,
     );
 }
 
-uint64_t getScanHeight()
+uint32_t getScanHeight()
 {
     while (true)
     {
@@ -249,14 +249,14 @@ uint64_t getScanHeight()
         /* Remove commas so user can enter height as e.g. 200,000 */
         removeCharFromString(stringHeight, ',');
 
-        if (stringHeight == "")
+        if (stringHeight == std::string{""})
         {
             return 0;
         }
 
         try
         {
-            return std::stoi(stringHeight);
+            return std::stoul(stringHeight);
         }
         catch (const std::invalid_argument &)
         {

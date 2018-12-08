@@ -68,9 +68,11 @@ extern int aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *exp
   } \
   const uint64_t tweak1_2 = (variant == 1) ? (state.hs.w[24] ^ (*((const uint64_t*)NONCE_POINTER))) : 0
 
-#define VARIANT2_INIT64() \
+#define VARIANT2_INIT64()       \
   uint64_t division_result = 0; \
-  uint64_t sqrt_result = 0; \
+  (void)division_result;        \
+  uint64_t sqrt_result = 0;     \
+  (void)sqrt_result;            \
   do if (variant == 2) \
   { \
     U64(b)[2] = state.hs.w[8] ^ state.hs.w[10]; \
@@ -142,7 +144,7 @@ extern int aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *exp
   ((uint64_t*)(b))[0] ^= division_result ^ (sqrt_result << 32); \
   { \
     const uint64_t dividend = ((uint64_t*)(ptr))[1]; \
-    const uint32_t divisor = (((uint64_t*)(ptr))[0] + (uint32_t)(sqrt_result << 1)) | 0x80000001UL; \
+    const uint32_t divisor = (uint32_t)((((uint64_t*)(ptr))[0] + (uint32_t)(sqrt_result << 1)) | 0x80000001UL); \
     division_result = ((uint32_t)(dividend / divisor)) + \
                      (((uint64_t)(dividend % divisor)) << 32); \
   } \

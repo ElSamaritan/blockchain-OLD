@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+﻿// Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 //
 // Please see the included LICENSE file for more information.
@@ -8,6 +8,7 @@
 
 #include <math.h>
 #include <float.h>
+#include <inttypes.h>
 
 #define VARIANT2_INTEGER_MATH_SQRT_STEP_SSE2() \
   do { \
@@ -63,7 +64,7 @@ static inline uint32_t integer_square_root_v2(uint64_t n)
     r >>= 1;
   }
 
-  return r * 2 + ((n > r) ? 1 : 0);
+  return (uint32_t)(r * 2 + ((n > r) ? 1 : 0)); // TODO(najmnjam) evaluate usage and if used make unit tests
 }
 
 /*

@@ -1,4 +1,10 @@
-﻿# Required for finding Threads on ARM
+﻿cmake_policy(PUSH)
+
+if(CMAKE_VERSION VERSION_GREATER "3.12")
+  cmake_policy(SET CMP0074 OLD)
+endif()
+
+# Required for finding Threads on ARM
 find_package(Threads)
 
 ## Go get us some static BOOST libraries
@@ -23,3 +29,4 @@ if(APPLE)
 elseif(NOT MSVC)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")
 endif()
+cmake_policy(POP)

@@ -1,4 +1,4 @@
-// Copyright (c) 2018, The TurtleCoin Developers
+﻿// Copyright (c) 2018, The TurtleCoin Developers
 // 
 // Please see the included LICENSE file for more information.
 
@@ -61,7 +61,7 @@ std::shared_ptr<WalletInfo> createViewWallet(CryptoNote::WalletGreen &wallet)
 
     const std::string walletPass = getWalletPassword(true, msg);
 
-    const uint64_t scanHeight = getScanHeight();
+    const uint32_t scanHeight = getScanHeight();
 
     wallet.createViewWallet(walletFileName, walletPass, address,
                             privateViewKey, scanHeight, false);
@@ -137,7 +137,7 @@ std::shared_ptr<WalletInfo> importFromKeys(CryptoNote::WalletGreen &wallet,
 
     const std::string walletPass = getWalletPassword(true, msg);
 
-    const uint64_t scanHeight = getScanHeight();
+    const uint32_t scanHeight = getScanHeight();
 
     connectingMsg();
 

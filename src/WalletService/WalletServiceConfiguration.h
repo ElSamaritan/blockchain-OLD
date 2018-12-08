@@ -5,10 +5,20 @@
 
 #pragma once
 
-#include <cxxopts.hpp>
-#include <nlohmann/json.hpp>
 #include <fstream>
 #include <string>
+
+#include <leathers/push>
+#if defined(__GNUC__)
+# pragma GCC diagnostic ignored "-Wpragmas"
+#endif
+#include <leathers/all>
+# if defined(_MSC_VER)
+#  pragma warning(disable : 4267)
+# endif
+# include <cxxopts.hpp>
+# include <nlohmann/json.hpp>
+#include <leathers/pop>
 
 #include "CommonCLI/CommonCLI.h"
 #include <config/CryptoNoteConfig.h>

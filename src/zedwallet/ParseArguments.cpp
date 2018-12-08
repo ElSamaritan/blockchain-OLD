@@ -6,7 +6,18 @@
 #include <zedwallet/ParseArguments.h>
 /////////////////////////////////////
 
-#include <cxxopts.hpp>
+
+#include <leathers/push>
+#if defined(__GNUC__)
+# pragma GCC diagnostic ignored "-Wpragmas"
+#endif
+#include <leathers/all>
+# if defined(_MSC_VER)
+#  pragma warning(disable : 4267)
+# endif
+# include <cxxopts.hpp>
+#include <leathers/pop>
+
 #include <CommonCLI/CommonCLI.h>
 #include <config/CryptoNoteConfig.h>
 #include <config/WalletConfig.h>
@@ -40,7 +51,7 @@ bool parseDaemonAddressFromString(std::string& host, int& port, const std::strin
       port = std::stoi(parts.at(1));
       return true;
     }
-    catch (std::exception& e)
+    catch (std::exception&)
     {
       return false;
     }
@@ -79,7 +90,7 @@ Config parseArguments(int argc, char **argv)
 
   try
   {
-    auto result = options.parse(argc, argv);
+    options.parse(argc, argv);
   }
   catch (const cxxopts::OptionException& e)
   {

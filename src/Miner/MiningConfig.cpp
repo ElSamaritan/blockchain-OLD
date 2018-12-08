@@ -14,9 +14,18 @@
 #include <iterator>
 #include <sstream>
 
-#include <cxxopts.hpp>
-#include <CommonCLI.h>
+#include <leathers/push>
+#if defined(__GNUC__)
+# pragma GCC diagnostic ignored "-Wpragmas"
+#endif
+#include <leathers/all>
+# if defined(_MSC_VER)
+#  pragma warning(disable : 4267)
+# endif
+# include <cxxopts.hpp>
+#include <leathers/pop>
 
+#include <CommonCLI.h>
 #include <config/CryptoNoteConfig.h>
 #include "Common/StringTools.h"
 #include <Common/Util.h>

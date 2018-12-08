@@ -1,6 +1,17 @@
 ﻿set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "TestSuite of google-benchmark disabled" FORCE)
 set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "Install targets for google-benchmark disabled" FORCE)
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-undef")
+endif()
+
 add_subdirectory(google-benchmark)
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "${_CMAKE_CXX_FLAGS}")
+endif()
+
 set_property(TARGET benchmark benchmark_main PROPERTY FOLDER "external")
 mark_as_advanced(
     BENCHMARK_ENABLE_TESTING
@@ -12,4 +23,5 @@ mark_as_advanced(
     BENCHMARK_DOWNLOAD_DEPENDENCIES
     BENCHMARK_ENABLE_GTEST_TESTS
     BENCHMARK_ENABLE_ASSEMBLY_TESTS
+    LIBRT
 )

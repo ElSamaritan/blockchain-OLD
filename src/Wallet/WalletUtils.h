@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -18,6 +18,7 @@
 #pragma once
 
 #include <string>
+#include <cinttypes>
 
 #include "IWallet.h"
 #include "CryptoNoteCore/Currency.h"
@@ -25,7 +26,7 @@
 
 namespace CryptoNote {
 
-uint64_t getDefaultMixinByHeight(const uint64_t height);
+uint16_t getDefaultMixinByHeight(const uint64_t height);
 void throwIfKeysMismatch(const Crypto::SecretKey& secretKey, const Crypto::PublicKey& expectedPublicKey, const std::string& message = "");
 bool validateAddress(const std::string& address, const CryptoNote::Currency& currency);
 

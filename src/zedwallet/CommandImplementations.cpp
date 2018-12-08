@@ -1,4 +1,4 @@
-// Copyright (c) 2018, The TurtleCoin Developers
+﻿// Copyright (c) 2018, The TurtleCoin Developers
 // 
 // Please see the included LICENSE file for more information.
 
@@ -306,7 +306,7 @@ void status(CryptoNote::INode &node, CryptoNote::WalletGreen &wallet)
 
 void reset(CryptoNote::INode &node, std::shared_ptr<WalletInfo> walletInfo)
 {
-    uint64_t scanHeight = getScanHeight();
+    uint32_t scanHeight = getScanHeight();
 
     std::cout << std::endl
               << InformationMsg("This process may take some time to complete.")
@@ -564,11 +564,11 @@ void advanced(std::shared_ptr<WalletInfo> wallet)
     if (wallet->viewWallet)
     {
         printCommands(advancedViewWalletCommands(),
-                      basicViewWalletCommands().size());
+                      static_cast<int>(basicViewWalletCommands().size()));
     }
     else
     {
         printCommands(advancedCommands(),
-                      basicCommands().size());
+                      static_cast<int>(basicCommands().size()));
     }
 }

@@ -1,4 +1,4 @@
-// Copyright 2014-2018 The Monero Developers
+﻿// Copyright 2014-2018 The Monero Developers
 // Copyright 2018 The TurtleCoin Developers
 // Copyright 2018, The Calex Developers
 //
@@ -7,6 +7,7 @@
 #include "CryptoNote.h"
 #include <tuple>
 #include <vector>
+#include <cinttypes>
 
 namespace Mnemonics
 {
@@ -20,5 +21,5 @@ namespace Mnemonics
 
     std::string GetChecksumWord(const std::vector<std::string> words);
 
-    std::vector<int> GetWordIndexes(const std::vector<std::string> words);
+    std::vector<uint32_t> GetWordIndexes(const std::vector<std::string> words);
 }

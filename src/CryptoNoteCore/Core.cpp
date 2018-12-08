@@ -1161,7 +1161,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
      https://github.com/loki-project/loki/pull/26 */
 
   /* How many blocks we look in the past to calculate the median timestamp */
-  uint64_t blockchain_timestamp_check_window;
+  uint32_t blockchain_timestamp_check_window;
 
   if (height >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX)
   {
@@ -1179,7 +1179,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
       std::vector<uint64_t> timestamps;
 
       /* For the last N blocks, get their timestamps */
-      for (size_t offset = height - blockchain_timestamp_check_window; offset < height; offset++)
+      for (uint32_t offset = height - blockchain_timestamp_check_window; offset < height; offset++)
       {
           timestamps.push_back(getBlockTimestampByIndex(offset));
       }

@@ -118,7 +118,6 @@ private:
 
   INode& node;
   Logging::LoggerRef logger;
-  IDataBase& database;
 
   AsyncContextCounter asyncContextCounter;
   PoolUpdateGuard poolUpdateGuard;

@@ -1,4 +1,4 @@
-// Copyright 2014-2018 The Monero Developers
+﻿// Copyright 2014-2018 The Monero Developers
 // Copyright 2018 The TurtleCoin Developers
 // Copyright 2018, The Calex Developers
 //
@@ -87,7 +87,7 @@ namespace Mnemonics
             const uint32_t w3 = wordIndexes[i + 2];
 
             /* Word list length */
-            const size_t wlLen = WordList::English.size();
+            const uint32_t wlLen = static_cast<uint32_t>(WordList::English.size());
 
             /* no idea what this does lol */
             const uint32_t val = w1 + wlLen * (((wlLen - w1) + w2) % wlLen) + wlLen 
@@ -128,7 +128,7 @@ namespace Mnemonics
                done the offset */
             const uint32_t val = ptr[0];
 
-            uint32_t wlLen = WordList::English.size();
+            uint32_t wlLen = static_cast<uint32_t>(WordList::English.size());
 
             const uint32_t w1 = val % wlLen;
             const uint32_t w2 = ((val / wlLen) + w1) % wlLen;
@@ -185,21 +185,14 @@ namespace Mnemonics
         return words[hash % words.size()];
     }
 
-    std::vector<int> GetWordIndexes(const std::vector<std::string> words)
+    std::vector<uint32_t> GetWordIndexes(const std::vector<std::string> words)
     {
-        std::vector<int> result;
-
-        for (const auto &word : words)
-        {
-            /* Find the iterator of our word in the wordlist */
-            const auto it = std::find(WordList::English.begin(),
-                                      WordList::English.end(), word);
-
-            /* Take it away from the beginning of the vector, giving us the
-               index of the item in the vector */
-            result.push_back(static_cast<int>(std::distance(WordList::English.begin(), it)));
-        }
-
+        std::vector<uint32_t> result;
+        result.reserve(words.size());
+        std::transform(words.begin(), words.end(), std::back_inserter(result), [](const auto& word){
+          const auto search = std::find(WordList::English.begin(), WordList::English.end(), word);
+          return static_cast<uint32_t>(std::distance(WordList::English.begin(), search));
+        });
         return result;
     }
 }

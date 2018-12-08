@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The BBSCoin Developers
 // Copyright (c) 2018, The Karbo Developers
@@ -152,7 +152,7 @@ void WalletGreen::createViewWallet(const std::string &path,
                                    const std::string &password,
                                    const std::string address,
                                    const Crypto::SecretKey &viewSecretKey,
-                                   const uint64_t scanHeight,
+                                   const uint32_t scanHeight,
                                    bool newAddress)
 {
     CryptoNote::AccountPublicAddress publicKeys;
@@ -177,7 +177,7 @@ void WalletGreen::initialize(const std::string& path, const std::string& passwor
   m_logger(INFO, BRIGHT_WHITE) << "New container initialized, public view key " << viewPublicKey;
 }
 
-void WalletGreen::initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey, const uint64_t scanHeight, bool newAddress) {
+void WalletGreen::initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight, bool newAddress) {
   Crypto::PublicKey viewPublicKey;
   if (!Crypto::secret_key_to_public_key(viewSecretKey, viewPublicKey)) {
     m_logger(ERROR, BRIGHT_RED) << "initializeWithViewKey(" << viewSecretKey << ") Failed to convert secret key to public key";
@@ -337,7 +337,7 @@ void WalletGreen::incNextIv() {
 }
 
 void WalletGreen::initWithKeys(const std::string& path, const std::string& password,
-  const Crypto::PublicKey& viewPublicKey, const Crypto::SecretKey& viewSecretKey, const uint64_t scanHeight, const bool newAddress) {
+  const Crypto::PublicKey& viewPublicKey, const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight, const bool newAddress) {
 
   if (m_state != WalletState::NOT_INITIALIZED) {
     m_logger(ERROR, BRIGHT_RED) << "Failed to initialize with keys: already initialized. Current state: " << m_state;
@@ -1005,7 +1005,7 @@ std::string WalletGreen::createAddress()
     return doCreateAddress(spendKey.publicKey, spendKey.secretKey, 0, true);
 }
 
-std::string WalletGreen::createAddress(const Crypto::SecretKey& spendSecretKey, const uint64_t scanHeight, const bool newAddress)
+std::string WalletGreen::createAddress(const Crypto::SecretKey& spendSecretKey, const uint32_t scanHeight, const bool newAddress)
 {
     Crypto::PublicKey spendPublicKey;
 
@@ -1018,7 +1018,7 @@ std::string WalletGreen::createAddress(const Crypto::SecretKey& spendSecretKey, 
     return doCreateAddress(spendPublicKey, spendSecretKey, scanHeight, newAddress);
 }
 
-std::string WalletGreen::createAddress(const Crypto::PublicKey& spendPublicKey, const uint64_t scanHeight, const bool newAddress)
+std::string WalletGreen::createAddress(const Crypto::PublicKey& spendPublicKey, const uint32_t scanHeight, const bool newAddress)
 {
     if (!Crypto::check_key(spendPublicKey))
     {
@@ -1029,7 +1029,7 @@ std::string WalletGreen::createAddress(const Crypto::PublicKey& spendPublicKey, 
     return doCreateAddress(spendPublicKey, NULL_SECRET_KEY, scanHeight, newAddress);
 }
 
-std::vector<std::string> WalletGreen::createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys, const uint64_t scanHeight, const bool newAddress)
+std::vector<std::string> WalletGreen::createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys, const uint32_t scanHeight, const bool newAddress)
 {
     std::vector<NewAddressData> addressDataList(spendSecretKeys.size());
 
@@ -1050,7 +1050,7 @@ std::vector<std::string> WalletGreen::createAddressList(const std::vector<Crypto
     return doCreateAddressList(addressDataList, scanHeight, newAddress);
 }
 
-std::string WalletGreen::doCreateAddress(const Crypto::PublicKey& spendPublicKey, const Crypto::SecretKey& spendSecretKey, const uint64_t scanHeight, const bool newAddress)
+std::string WalletGreen::doCreateAddress(const Crypto::PublicKey& spendPublicKey, const Crypto::SecretKey& spendSecretKey, const uint32_t scanHeight, const bool newAddress)
 {
     std::vector<NewAddressData> addressDataList;
 
@@ -1063,7 +1063,7 @@ std::string WalletGreen::doCreateAddress(const Crypto::PublicKey& spendPublicKey
     return addresses.front();
 }
 
-std::vector<std::string> WalletGreen::doCreateAddressList(const std::vector<NewAddressData>& addressDataList, const uint64_t scanHeight, const bool newAddress) {
+std::vector<std::string> WalletGreen::doCreateAddressList(const std::vector<NewAddressData>& addressDataList, const uint32_t scanHeight, const bool newAddress) {
   throwIfNotInitialized();
   throwIfStopped();
 
@@ -1143,7 +1143,7 @@ std::vector<std::string> WalletGreen::doCreateAddressList(const std::vector<NewA
   return addresses;
 }
 
-std::string WalletGreen::addWallet(const NewAddressData &addressData, uint64_t scanHeight, bool newAddress) {
+std::string WalletGreen::addWallet(const NewAddressData &addressData, uint32_t scanHeight, bool newAddress) {
   const SecretKey spendSecretKey = addressData.spendSecretKey;
   const PublicKey spendPublicKey = addressData.spendPublicKey;
 
@@ -1220,7 +1220,7 @@ std::string WalletGreen::addWallet(const NewAddressData &addressData, uint64_t s
   }
 }
 
-CryptoNote::BlockDetails WalletGreen::getBlock(const uint64_t blockHeight)
+CryptoNote::BlockDetails WalletGreen::getBlock(const uint32_t blockHeight)
 {
     CryptoNote::BlockDetails block;
 
@@ -1245,7 +1245,7 @@ CryptoNote::BlockDetails WalletGreen::getBlock(const uint64_t blockHeight)
     return block;
 }
 
-uint64_t WalletGreen::scanHeightToTimestamp(const uint64_t scanHeight)
+uint64_t WalletGreen::scanHeightToTimestamp(const uint32_t scanHeight)
 {
     if (scanHeight == 0)
     {
@@ -1253,7 +1253,7 @@ uint64_t WalletGreen::scanHeightToTimestamp(const uint64_t scanHeight)
     }
 
     /* Get the block timestamp from the node if the node has it */
-    uint64_t timestamp = static_cast<uint64_t>(getBlock(scanHeight).timestamp);
+    uint64_t timestamp = getBlock(scanHeight).timestamp;
 
     if (timestamp != 0)
     {
@@ -1266,7 +1266,7 @@ uint64_t WalletGreen::scanHeightToTimestamp(const uint64_t scanHeight)
 
     /* Add a bit of a buffer in case of difficulty weirdness, blocks coming
        out too fast */
-    secondsSinceLaunch *= 0.95;
+    secondsSinceLaunch = (secondsSinceLaunch * 95) / 100;
 
     /* Get the genesis block timestamp and add the time since launch */
     timestamp = CryptoNote::parameters::GENESIS_BLOCK_TIMESTAMP
@@ -1301,7 +1301,7 @@ uint64_t WalletGreen::getCurrentTimestampAdjusted()
     return time - adjust;
 }
 
-void WalletGreen::reset(const uint64_t scanHeight)
+void WalletGreen::reset(const uint32_t scanHeight)
 {
     throwIfNotInitialized();
     throwIfStopped();
@@ -2902,10 +2902,6 @@ void WalletGreen::unlockBalances(uint32_t height) {
     index.erase(index.begin(), upper);
     pushEvent(makeMoneyUnlockedEvent());
   }
-}
-
-void WalletGreen::onTransactionUpdated(ITransfersSubscription* /*object*/, const Crypto::Hash& /*transactionHash*/) {
-  // Deprecated, ignore it. New event handler is onTransactionUpdated(const Crypto::PublicKey&, const Crypto::Hash&, const std::vector<ITransfersContainer*>&)
 }
 
 void WalletGreen::onTransactionUpdated(const Crypto::PublicKey&, const Crypto::Hash& transactionHash, const std::vector<ITransfersContainer*>& containers) {

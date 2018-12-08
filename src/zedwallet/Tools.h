@@ -1,4 +1,4 @@
-// Copyright (c) 2018, The TurtleCoin Developers
+﻿// Copyright (c) 2018, The TurtleCoin Developers
 // 
 // Please see the included LICENSE file for more information.
 
@@ -50,7 +50,7 @@ std::string createIntegratedAddress(const std::string &address,
 
 uint64_t getDivisor();
 
-uint64_t getScanHeight();
+uint32_t getScanHeight();
 
 template <typename T, typename Function>
 std::vector<T> filter(const std::vector<T> &input, Function predicate)

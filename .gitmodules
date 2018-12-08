@@ -19,3 +19,6 @@
 [submodule "external/miniupnp"]
 	path = external/miniupnp
 	url = ../external/miniupnp.git
+[submodule "external/ruslo-leathers"]
+	path = external/ruslo-leathers
+	url = ../external/ruslo-leathers.git

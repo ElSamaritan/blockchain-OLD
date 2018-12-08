@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,7 +23,7 @@
 
 namespace CryptoNote {
 
-uint64_t getDefaultMixinByHeight(const uint64_t height)
+uint16_t getDefaultMixinByHeight(const uint64_t height)
 {
     if (height >= CryptoNote::parameters::MIXIN_LIMITS_V3_HEIGHT)
     {

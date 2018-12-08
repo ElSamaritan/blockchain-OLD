@@ -24,11 +24,14 @@ target_link_libraries(TestSuite.Benchmark PRIVATE benchmark_main Common Crypto C
 target_include_directories(TestSuite.Benchmark PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/benchmark")
 
 # tools
-file(GLOB XI_TOOLS_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/tools/*.cpp")
-source_group("" FILES ${XI_TOOLS_SOURCE_FILES})
-foreach(xiTool ${XI_TOOLS_SOURCE_FILES})
-  get_filename_component(xiToolName ${xiTool} NAME_WE)
-  set(xiToolTarget "TestSuite.Tools.${xiToolName}")
-  add_executable(${xiToolTarget} ${xiTool})
-  target_link_libraries(${xiToolTarget} PRIVATE Common Crypto CryptoNoteCore Serialization Logging rocksdb)
-endforeach() # xiTool
+option(XI_BUILD_TESTSUITE_TOOLS "Build a toolset for cross platform testing" ON)
+if(XI_BUILD_TESTSUITE_TOOLS)
+  file(GLOB XI_TOOLS_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/tools/*.cpp")
+  source_group("" FILES ${XI_TOOLS_SOURCE_FILES})
+  foreach(xiTool ${XI_TOOLS_SOURCE_FILES})
+    get_filename_component(xiToolName ${xiTool} NAME_WE)
+    set(xiToolTarget "TestSuite.Tools.${xiToolName}")
+    add_executable(${xiToolTarget} ${xiTool})
+    target_link_libraries(${xiToolTarget} PRIVATE Common Crypto CryptoNoteCore Serialization Logging rocksdb)
+  endforeach() # xiTool
+endif() # XI_BUILD_TESTSUITE_TOOLS
