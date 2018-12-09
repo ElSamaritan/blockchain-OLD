@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,13 +26,12 @@
 namespace CryptoNote {
 
 class IDataBase {
-public:
-  virtual ~IDataBase() {
-  }
+ public:
+  virtual ~IDataBase() {}
 
   virtual std::error_code write(IWriteBatch& batch) = 0;
   virtual std::error_code writeSync(IWriteBatch& batch) = 0;
 
   virtual std::error_code read(IReadBatch& batch) = 0;
 };
-}
+}  // namespace CryptoNote

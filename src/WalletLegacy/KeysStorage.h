@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -25,7 +25,7 @@ namespace CryptoNote {
 
 class ISerializer;
 
-//This is DTO structure. Do not change it.
+// This is DTO structure. Do not change it.
 struct KeysStorage {
   uint64_t creationTimestamp;
 
@@ -38,4 +38,4 @@ struct KeysStorage {
   void serialize(ISerializer& serializer, const std::string& name);
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

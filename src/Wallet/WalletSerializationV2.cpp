@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,17 +26,16 @@ using namespace Crypto;
 
 namespace {
 
-//DO NOT CHANGE IT
+// DO NOT CHANGE IT
 struct UnlockTransactionJobDtoV2 {
   uint32_t blockHeight;
   Hash transactionHash;
   Crypto::PublicKey walletSpendPublicKey;
 };
 
-//DO NOT CHANGE IT
+// DO NOT CHANGE IT
 struct WalletTransactionDtoV2 {
-  WalletTransactionDtoV2() {
-  }
+  WalletTransactionDtoV2() {}
 
   WalletTransactionDtoV2(const CryptoNote::WalletTransaction& wallet) {
     state = wallet.state;
@@ -63,10 +62,9 @@ struct WalletTransactionDtoV2 {
   bool isBase;
 };
 
-//DO NOT CHANGE IT
+// DO NOT CHANGE IT
 struct WalletTransferDtoV2 {
-  WalletTransferDtoV2() {
-  }
+  WalletTransferDtoV2() {}
 
   WalletTransferDtoV2(const CryptoNote::WalletTransfer& tr) {
     address = tr.address;
@@ -109,40 +107,31 @@ void serialize(WalletTransferDtoV2& value, CryptoNote::ISerializer& serializer) 
   serializer(value.type, "type");
 }
 
-}
+}  // namespace
 
 namespace CryptoNote {
 
-WalletSerializerV2::WalletSerializerV2(
-  ITransfersObserver& transfersObserver,
-  Crypto::PublicKey& viewPublicKey,
-  Crypto::SecretKey& viewSecretKey,
-  uint64_t& actualBalance,
-  uint64_t& pendingBalance,
-  WalletsContainer& walletsContainer,
-  TransfersSyncronizer& synchronizer,
-  UnlockTransactionJobs& unlockTransactions,
-  WalletTransactions& transactions,
-  WalletTransfers& transfers,
-  UncommitedTransactions& uncommitedTransactions,
-  std::string& extra,
-  uint32_t transactionSoftLockTime
-) :
-  m_transfersObserver(transfersObserver),
-  m_actualBalance(actualBalance),
-  m_pendingBalance(pendingBalance),
-  m_walletsContainer(walletsContainer),
-  m_synchronizer(synchronizer),
-  m_unlockTransactions(unlockTransactions),
-  m_transactions(transactions),
-  m_transfers(transfers),
-  m_uncommitedTransactions(uncommitedTransactions),
-  m_extra(extra),
-  m_transactionSoftLockTime(transactionSoftLockTime)
-{
-}
+WalletSerializerV2::WalletSerializerV2(ITransfersObserver& transfersObserver, uint64_t& actualBalance,
+                                       uint64_t& pendingBalance, WalletsContainer& walletsContainer,
+                                       TransfersSyncronizer& synchronizer, UnlockTransactionJobs& unlockTransactions,
+                                       WalletTransactions& transactions, WalletTransfers& transfers,
+                                       UncommitedTransactions& uncommitedTransactions, std::string& extra,
+                                       uint32_t transactionSoftLockTime)
+    : m_transfersObserver(transfersObserver),
+      m_actualBalance(actualBalance),
+      m_pendingBalance(pendingBalance),
+      m_walletsContainer(walletsContainer),
+      m_synchronizer(synchronizer),
+      m_unlockTransactions(unlockTransactions),
+      m_transactions(transactions),
+      m_transfers(transfers),
+      m_uncommitedTransactions(uncommitedTransactions),
+      m_extra(extra),
+      m_transactionSoftLockTime(transactionSoftLockTime) {}
 
 void WalletSerializerV2::load(Common::IInputStream& source, uint8_t version) {
+  if (version != WalletSerializerV2::SERIALIZATION_VERSION) throw std::runtime_error{"Unsupported wallet version."};
+
   CryptoNote::BinaryInputStreamSerializer s(source);
 
   uint8_t saveLevelValue;
@@ -187,13 +176,9 @@ void WalletSerializerV2::save(Common::IOutputStream& destination, WalletSaveLeve
   s(m_extra, "extra");
 }
 
-std::unordered_set<Crypto::PublicKey>& WalletSerializerV2::addedKeys() {
-  return m_addedKeys;
-}
+std::unordered_set<Crypto::PublicKey>& WalletSerializerV2::addedKeys() { return m_addedKeys; }
 
-std::unordered_set<Crypto::PublicKey>& WalletSerializerV2::deletedKeys() {
-  return m_deletedKeys;
-}
+std::unordered_set<Crypto::PublicKey>& WalletSerializerV2::deletedKeys() { return m_deletedKeys; }
 
 void WalletSerializerV2::loadKeyListAndBalances(CryptoNote::ISerializer& serializer, bool saveCache) {
   size_t walletCount;
@@ -207,8 +192,8 @@ void WalletSerializerV2::loadKeyListAndBalances(CryptoNote::ISerializer& seriali
   auto& index = m_walletsContainer.get<KeysIndex>();
   for (size_t i = 0; i < walletCount; ++i) {
     Crypto::PublicKey spendPublicKey;
-    uint64_t actualBalance;
-    uint64_t pendingBalance;
+    uint64_t actualBalance = 0;
+    uint64_t pendingBalance = 0;
     serializer(spendPublicKey, "spendPublicKey");
 
     if (saveCache) {
@@ -306,7 +291,8 @@ void WalletSerializerV2::loadTransfers(CryptoNote::ISerializer& serializer) {
     tr.amount = dto.amount;
     tr.type = static_cast<WalletTransferType>(dto.type);
 
-    m_transfers.emplace_back(std::piecewise_construct, std::forward_as_tuple(txId), std::forward_as_tuple(std::move(tr)));
+    m_transfers.emplace_back(std::piecewise_construct, std::forward_as_tuple(txId),
+                             std::forward_as_tuple(std::move(tr)));
   }
 }
 
@@ -387,4 +373,4 @@ void WalletSerializerV2::saveUnlockTransactionsJobs(CryptoNote::ISerializer& ser
   }
 }
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

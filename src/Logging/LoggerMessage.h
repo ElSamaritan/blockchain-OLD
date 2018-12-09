@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,14 +23,14 @@
 namespace Logging {
 
 class LoggerMessage : public std::ostream, std::streambuf {
-public:
+ public:
   LoggerMessage(ILogger& logger, const std::string& category, Level level, const std::string& color);
   ~LoggerMessage();
   LoggerMessage(const LoggerMessage&) = delete;
   LoggerMessage& operator=(const LoggerMessage&) = delete;
   LoggerMessage(LoggerMessage&& other);
 
-private:
+ private:
   int sync() override;
   std::streamsize xsputn(const char* s, std::streamsize n) override;
   int overflow(int c) override;
@@ -43,4 +43,4 @@ private:
   bool gotText;
 };
 
-}
+}  // namespace Logging

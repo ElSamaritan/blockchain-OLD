@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,7 +26,7 @@
 namespace Common {
 
 class JsonValue {
-public:
+ public:
   typedef std::string Key;
 
   typedef std::vector<JsonValue> Array;
@@ -37,15 +37,7 @@ public:
   typedef double Real;
   typedef std::string String;
 
-  enum Type {
-    ARRAY,
-    BOOL,
-    INTEGER,
-    NIL,
-    OBJECT,
-    REAL,
-    STRING
-  };
+  enum Type { ARRAY, BOOL, INTEGER, NIL, OBJECT, REAL, STRING };
 
   JsonValue();
   JsonValue(const JsonValue& other);
@@ -61,8 +53,9 @@ public:
   JsonValue(Real value);
   JsonValue(const String& value);
   JsonValue(String&& value);
-  template<size_t size> JsonValue(const char(&value)[size]) {
-    new(valueString)String(value, size - 1);
+  template <size_t size>
+  JsonValue(const char (&value)[size]) {
+    new (valueString) String(value, size - 1);
     type = STRING;
   }
 
@@ -72,7 +65,7 @@ public:
   JsonValue& operator=(JsonValue&& other);
   JsonValue& operator=(const Array& value);
   JsonValue& operator=(Array&& value);
-  //JsonValue& operator=(Bool value);
+  // JsonValue& operator=(Bool value);
   JsonValue& operator=(Integer value);
   JsonValue& operator=(Nil value);
   JsonValue& operator=(const Object& value);
@@ -80,11 +73,12 @@ public:
   JsonValue& operator=(Real value);
   JsonValue& operator=(const String& value);
   JsonValue& operator=(String&& value);
-  template<size_t size> JsonValue& operator=(const char(&value)[size]) {
+  template <size_t size>
+  JsonValue& operator=(const char (&value)[size]) {
     if (type != STRING) {
       destructValue();
       type = NIL;
-      new(valueString)String(value, size - 1);
+      new (valueString) String(value, size - 1);
       type = STRING;
     } else {
       reinterpret_cast<String*>(valueString)->assign(value, size - 1);
@@ -137,7 +131,7 @@ public:
   friend std::ostream& operator<<(std::ostream& out, const JsonValue& jsonValue);
   friend std::istream& operator>>(std::istream& in, JsonValue& jsonValue);
 
-private:
+ private:
   Type type;
   union {
     uint8_t valueArray[sizeof(Array)];
@@ -159,4 +153,4 @@ private:
   void readString(std::istream& in);
 };
 
-}
+}  // namespace Common

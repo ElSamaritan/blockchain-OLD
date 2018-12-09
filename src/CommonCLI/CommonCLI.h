@@ -3,7 +3,7 @@
 #include <string>
 
 namespace CommonCLI {
-  /*!
+/*!
  * \brief header returns an appropiate header to display including a message telling you you are
  * on a testing version, if so
  * \return a header to display at startup
@@ -23,5 +23,5 @@ bool isDevVersion();
  * If this is a development version and the --dev-mode flag is not provided it will print an
  * error message and exit the program.
  */
-void verifyDevExecution(int &argc, char** argv);
-}
+void verifyDevExecution(int& argc, char** argv);
+}  // namespace CommonCLI

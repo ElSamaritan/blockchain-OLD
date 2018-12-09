@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,7 +26,8 @@ const StringView StringView::NIL(nullptr, 0);
 
 StringView::StringView()
 #ifndef NDEBUG
-  : data(nullptr), size(INVALID) // In debug mode, fill in object with invalid state (undefined).
+    : data(nullptr),
+      size(INVALID)  // In debug mode, fill in object with invalid state (undefined).
 #endif
 {
 }
@@ -35,15 +36,13 @@ StringView::StringView(const Object* stringData, Size stringSize) : data(stringD
   assert(data != nullptr || size == 0);
 }
 
-StringView::StringView(const std::string& string) : data(string.data()), size(string.size()) {
-}
+StringView::StringView(const std::string& string) : data(string.data()), size(string.size()) {}
 
 StringView::StringView(const StringView& other) : data(other.data), size(other.size) {
   assert(data != nullptr || size == 0);
 }
 
-StringView::~StringView() {
-}
+StringView::~StringView() {}
 
 StringView& StringView::operator=(const StringView& other) {
   assert(other.data != nullptr || other.size == 0);
@@ -52,9 +51,7 @@ StringView& StringView::operator=(const StringView& other) {
   return *this;
 }
 
-StringView::operator std::string() const {
-  return std::string(data, size);
-}
+StringView::operator std::string() const { return std::string(data, size); }
 
 const StringView::Object* StringView::getData() const {
   assert(data != nullptr || size == 0);
@@ -122,9 +119,7 @@ bool StringView::operator==(StringView other) const {
   return false;
 }
 
-bool StringView::operator!=(StringView other) const {
-  return !(*this == other);
-}
+bool StringView::operator!=(StringView other) const { return !(*this == other); }
 
 bool StringView::operator<(StringView other) const {
   assert(data != nullptr || size == 0);
@@ -145,17 +140,11 @@ bool StringView::operator<(StringView other) const {
   return size < other.size;
 }
 
-bool StringView::operator<=(StringView other) const {
-  return !(other < *this);
-}
+bool StringView::operator<=(StringView other) const { return !(other < *this); }
 
-bool StringView::operator>(StringView other) const {
-  return other < *this;
-}
+bool StringView::operator>(StringView other) const { return other < *this; }
 
-bool StringView::operator>=(StringView other) const {
-  return !(*this < other);
-}
+bool StringView::operator>=(StringView other) const { return !(*this < other); }
 
 bool StringView::beginsWith(const Object& object) const {
   assert(data != nullptr || size == 0);
@@ -344,4 +333,4 @@ StringView StringView::slice(Size startIndex, Size sliceSize) const {
   return StringView(data + startIndex, sliceSize);
 }
 
-}
+}  // namespace Common

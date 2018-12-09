@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -24,10 +24,10 @@ namespace Logging {
 
 using Common::JsonValue;
 
-LoggerManager::LoggerManager() {
-}
+LoggerManager::LoggerManager() {}
 
-void LoggerManager::operator()(const std::string& category, Level level, boost::posix_time::ptime time, const std::string& body) {
+void LoggerManager::operator()(const std::string& category, Level level, boost::posix_time::ptime time,
+                               const std::string& body) {
   std::unique_lock<std::mutex> lock(reconfigureLock);
   LoggerGroup::operator()(category, level, time, body);
 }
@@ -97,12 +97,11 @@ void LoggerManager::configure(const JsonValue& val) {
           logger->setPattern(loggerConfiguration("pattern").getString());
         }
 
-        std::vector<std::string> disabledCategories;
         if (loggerConfiguration.contains("disabledCategories")) {
           auto disabledCategoriesVal = loggerConfiguration("disabledCategories");
           size_t countOfCategories = disabledCategoriesVal.size();
-          for (size_t i = 0; i < countOfCategories; ++i) {
-            auto categoryVal = disabledCategoriesVal[i];
+          for (size_t j = 0; j < countOfCategories; ++j) {
+            auto categoryVal = disabledCategoriesVal[j];
             if (categoryVal.isString()) {
               logger->disableCategory(categoryVal.getString());
             }
@@ -124,4 +123,4 @@ void LoggerManager::configure(const JsonValue& val) {
   }
 }
 
-}
+}  // namespace Logging

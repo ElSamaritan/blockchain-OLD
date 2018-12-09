@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -19,7 +19,8 @@
 
 #include <cstdint>
 
-namespace Common { namespace Console {
+namespace Common {
+namespace Console {
 
 enum class Color : uint8_t {
   Default,
@@ -44,4 +45,5 @@ enum class Color : uint8_t {
 void setTextColor(Color color);
 bool isConsoleTty();
 
-}}
+}  // namespace Console
+}  // namespace Common

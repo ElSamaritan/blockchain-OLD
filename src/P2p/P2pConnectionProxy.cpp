@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -28,11 +28,9 @@ using namespace System;
 namespace CryptoNote {
 
 P2pConnectionProxy::P2pConnectionProxy(P2pContextOwner&& ctx, IP2pNodeInternal& node)
-  : m_contextOwner(std::move(ctx)), m_context(m_contextOwner.get()), m_node(node) {}
+    : m_contextOwner(std::move(ctx)), m_context(m_contextOwner.get()), m_node(node) {}
 
-P2pConnectionProxy::~P2pConnectionProxy() {
-  m_context.stop();
-}
+P2pConnectionProxy::~P2pConnectionProxy() { m_context.stop(); }
 
 bool P2pConnectionProxy::processIncomingHandshake() {
   LevinProtocol::Command cmd;
@@ -43,13 +41,13 @@ bool P2pConnectionProxy::processIncomingHandshake() {
   if (cmd.command == COMMAND_HANDSHAKE::ID) {
     handleHandshakeRequest(cmd);
     return true;
-  } 
-  
+  }
+
   if (cmd.command == COMMAND_PING::ID) {
-    COMMAND_PING::response resp{ PING_OK_RESPONSE_STATUS_TEXT, m_node.getPeerId() };
+    COMMAND_PING::response resp{PING_OK_RESPONSE_STATUS_TEXT, m_node.getPeerId()};
     m_context.writeMessage(makeReply(COMMAND_PING::ID, LevinProtocol::encode(resp), LEVIN_PROTOCOL_RETCODE_SUCCESS));
     return false;
-  } 
+  }
 
   throw std::runtime_error("Unexpected command: " + std::to_string(cmd.command));
 }
@@ -81,7 +79,7 @@ void P2pConnectionProxy::read(P2pMessage& message) {
   }
 }
 
-void P2pConnectionProxy::write(const P2pMessage &message) {
+void P2pConnectionProxy::write(const P2pMessage& message) {
   if (message.type == COMMAND_HANDSHAKE::ID) {
     writeHandshake(message);
   } else {
@@ -93,11 +91,9 @@ void P2pConnectionProxy::ban() {
   // not implemented
 }
 
-void P2pConnectionProxy::stop() {
-  m_context.stop();
-}
+void P2pConnectionProxy::stop() { m_context.stop(); }
 
-void P2pConnectionProxy::writeHandshake(const P2pMessage &message) {
+void P2pConnectionProxy::writeHandshake(const P2pMessage& message) {
   CORE_SYNC_DATA coreSync;
   LevinProtocol::decode(message.data, coreSync);
 
@@ -107,7 +103,8 @@ void P2pConnectionProxy::writeHandshake(const P2pMessage &message) {
     res.node_data = m_node.getNodeData();
     res.payload_data = coreSync;
     res.local_peerlist = m_node.getLocalPeerList();
-    m_context.writeMessage(makeReply(COMMAND_HANDSHAKE::ID, LevinProtocol::encode(res), LEVIN_PROTOCOL_RETCODE_SUCCESS));
+    m_context.writeMessage(
+        makeReply(COMMAND_HANDSHAKE::ID, LevinProtocol::encode(res), LEVIN_PROTOCOL_RETCODE_SUCCESS));
     m_node.tryPing(m_context);
   } else {
     // request
@@ -125,8 +122,7 @@ void P2pConnectionProxy::handleHandshakeRequest(const LevinProtocol::Command& cm
   }
 
   m_node.handleNodeData(req.node_data, m_context);
-  m_readQueue.push(P2pMessage{ 
-    cmd.command, LevinProtocol::encode(req.payload_data) }); // enqueue payload info
+  m_readQueue.push(P2pMessage{cmd.command, LevinProtocol::encode(req.payload_data)});  // enqueue payload info
 }
 
 void P2pConnectionProxy::handleHandshakeResponse(const LevinProtocol::Command& cmd, P2pMessage& message) {
@@ -161,8 +157,9 @@ void P2pConnectionProxy::handleTimedSync(const LevinProtocol::Command& cmd) {
     res.local_peerlist = m_node.getLocalPeerList();
     res.payload_data = m_node.getGenesisPayload();
 
-    m_context.writeMessage(makeReply(COMMAND_TIMED_SYNC::ID, LevinProtocol::encode(res), LEVIN_PROTOCOL_RETCODE_SUCCESS));
+    m_context.writeMessage(
+        makeReply(COMMAND_TIMED_SYNC::ID, LevinProtocol::encode(res), LEVIN_PROTOCOL_RETCODE_SUCCESS));
   }
 }
 
-}
+}  // namespace CryptoNote

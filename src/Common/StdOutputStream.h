@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,13 +23,13 @@
 namespace Common {
 
 class StdOutputStream : public IOutputStream {
-public:
+ public:
   StdOutputStream(std::ostream& out);
   StdOutputStream& operator=(const StdOutputStream&) = delete;
   size_t writeSome(const void* data, size_t size) override;
 
-private:
+ private:
   std::ostream& out;
 };
 
-}
+}  // namespace Common

@@ -1,7 +1,7 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 #include "LegacyKeysImporter.h"
@@ -41,18 +41,21 @@ void loadKeysFromFile(const std::string& filename, const std::string& password, 
   std::string buf;
 
   if (!Common::loadFileToString(filename, buf)) {
-    throw std::system_error(make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR), "failed to load \"" + filename + '\"');
+    throw std::system_error(make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR),
+                            "failed to load \"" + filename + '\"');
   }
 
   if (!CryptoNote::fromBinaryArray(keys_file_data, Common::asBinaryArray(buf))) {
-    throw std::system_error(make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR), "failed to deserialize \"" + filename + '\"');
+    throw std::system_error(make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR),
+                            "failed to deserialize \"" + filename + '\"');
   }
 
   chacha8_key key;
   generate_chacha8_key(password, key);
   std::string account_data;
   account_data.resize(keys_file_data.account_data.size());
-  chacha8(keys_file_data.account_data.data(), keys_file_data.account_data.size(), key, keys_file_data.iv, &account_data[0]);
+  chacha8(keys_file_data.account_data.data(), keys_file_data.account_data.size(), key, keys_file_data.iv,
+          &account_data[0]);
 
   if (!CryptoNote::loadFromBinaryKeyValue(account, account_data)) {
     throw std::system_error(make_error_code(CryptoNote::error::WRONG_PASSWORD));
@@ -63,7 +66,7 @@ void loadKeysFromFile(const std::string& filename, const std::string& password, 
   CryptoNote::throwIfKeysMismatch(keys.spendSecretKey, keys.address.spendPublicKey);
 }
 
-}
+}  // namespace
 
 namespace CryptoNote {
 
@@ -78,4 +81,4 @@ void importLegacyKeys(const std::string& legacyKeysFilename, const std::string& 
   importer.serialize(destination, password, false, cache);
 }
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

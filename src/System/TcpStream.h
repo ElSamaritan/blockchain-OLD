@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,13 +26,13 @@ namespace System {
 class TcpConnection;
 
 class TcpStreambuf : public std::streambuf {
-public:
+ public:
   explicit TcpStreambuf(TcpConnection& connection);
   TcpStreambuf(const TcpStreambuf&) = delete;
   ~TcpStreambuf();
   TcpStreambuf& operator=(const TcpStreambuf&) = delete;
 
-private:
+ private:
   TcpConnection& connection;
   std::array<char, 4096> readBuf;
   std::array<uint8_t, 1024> writeBuf;
@@ -43,4 +43,4 @@ private:
   bool dumpBuffer(bool finalize);
 };
 
-}
+}  // namespace System

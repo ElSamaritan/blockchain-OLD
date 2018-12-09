@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,8 +26,7 @@
 namespace CryptoNote {
 
 class SynchronizationState : public IStreamSerializable {
-public:
-
+ public:
   struct CheckResult {
     bool detachRequired;
     uint32_t detachHeight;
@@ -37,9 +36,7 @@ public:
 
   typedef std::vector<Crypto::Hash> ShortHistory;
 
-  explicit SynchronizationState(const Crypto::Hash& genesisBlockHash) {
-    m_blockchain.push_back(genesisBlockHash);
-  }
+  explicit SynchronizationState(const Crypto::Hash& genesisBlockHash) { m_blockchain.push_back(genesisBlockHash); }
 
   ShortHistory getShortHistory(uint32_t localHeight) const;
   CheckResult checkInterval(const BlockchainInterval& interval) const;
@@ -56,9 +53,8 @@ public:
   // serialization
   CryptoNote::ISerializer& serialize(CryptoNote::ISerializer& s, const std::string& name);
 
-private:
-
+ private:
   std::vector<Crypto::Hash> m_blockchain;
 };
 
-}
+}  // namespace CryptoNote

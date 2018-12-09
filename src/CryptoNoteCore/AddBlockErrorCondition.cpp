@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,12 +22,9 @@ namespace error {
 
 AddBlockErrorConditionCategory AddBlockErrorConditionCategory::INSTANCE;
 
-
 std::error_condition make_error_condition(AddBlockErrorCondition e) {
-  return std::error_condition(
-      static_cast<int>(e),
-      AddBlockErrorConditionCategory::INSTANCE);
+  return std::error_condition(static_cast<int>(e), AddBlockErrorConditionCategory::INSTANCE);
 }
 
-}
-}
+}  // namespace error
+}  // namespace CryptoNote

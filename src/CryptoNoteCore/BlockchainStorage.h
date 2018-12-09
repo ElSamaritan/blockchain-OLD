@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -21,18 +21,17 @@
 
 namespace CryptoNote {
 
-//TODO: rename this class since it's not persistent blockchain storage!
+// TODO: rename this class since it's not persistent blockchain storage!
 class BlockchainStorage {
-public:
-
+ public:
   class IBlockchainStorageInternal {
-  public:
-    virtual ~IBlockchainStorageInternal() { }
+   public:
+    virtual ~IBlockchainStorageInternal() {}
 
     virtual void pushBlock(RawBlock&& rawBlock) = 0;
 
-    //Returns IBlockchainStorageInternal with elements from [splitIndex, blocks.size() - 1].
-    //Original IBlockchainStorageInternal will contain elements from [0, splitIndex - 1].
+    // Returns IBlockchainStorageInternal with elements from [splitIndex, blocks.size() - 1].
+    // Original IBlockchainStorageInternal will contain elements from [0, splitIndex - 1].
     virtual std::unique_ptr<IBlockchainStorageInternal> splitStorage(uint32_t splitIndex) = 0;
 
     virtual RawBlock getBlockByIndex(uint32_t index) const = 0;
@@ -45,17 +44,17 @@ public:
 
   virtual void pushBlock(RawBlock&& rawBlock);
 
-  //Returns BlockchainStorage with elements from [splitIndex, blocks.size() - 1].
-  //Original BlockchainStorage will contain elements from [0, splitIndex - 1].
+  // Returns BlockchainStorage with elements from [splitIndex, blocks.size() - 1].
+  // Original BlockchainStorage will contain elements from [0, splitIndex - 1].
   virtual std::unique_ptr<BlockchainStorage> splitStorage(uint32_t splitIndex);
 
   virtual RawBlock getBlockByIndex(uint32_t index) const;
   virtual uint32_t getBlockCount() const;
 
-private:
+ private:
   std::unique_ptr<IBlockchainStorageInternal> internalStorage;
 
   explicit BlockchainStorage(std::unique_ptr<IBlockchainStorageInternal> storage);
 };
 
-}
+}  // namespace CryptoNote

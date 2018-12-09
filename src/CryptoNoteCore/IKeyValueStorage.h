@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -25,11 +25,10 @@ class WriteBatch;
 class ReadBatch;
 
 class IKeyValueStorage {
-public:
-  virtual ~IKeyValueStorage() {
-  }
+ public:
+  virtual ~IKeyValueStorage() {}
 
   virtual bool insert(const WriteBatch& batch, bool sync = false) = 0;
   virtual void read(const ReadBatch& batch) const = 0;
 };
-}
+}  // namespace CryptoNote

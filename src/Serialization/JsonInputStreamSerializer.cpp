@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -30,12 +30,11 @@ Common::JsonValue getJsonValueFromStreamHelper(std::istream& stream) {
   return value;
 }
 
-}
+}  // namespace
 
-JsonInputStreamSerializer::JsonInputStreamSerializer(std::istream& stream) : JsonInputValueSerializer(getJsonValueFromStreamHelper(stream)) {
-}
+JsonInputStreamSerializer::JsonInputStreamSerializer(std::istream& stream)
+    : JsonInputValueSerializer(getJsonValueFromStreamHelper(stream)) {}
 
-JsonInputStreamSerializer::~JsonInputStreamSerializer() {
-}
+JsonInputStreamSerializer::~JsonInputStreamSerializer() {}
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

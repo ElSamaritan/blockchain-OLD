@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -32,7 +32,10 @@ static void generate_system_random_bytes(size_t n, void *result);
 
 static void generate_system_random_bytes(size_t n, void *result) {
   HCRYPTPROV prov;
-#define must_succeed(x) do if (!(x)) assert(0); while (0)
+#define must_succeed(x)  \
+  do                     \
+    if (!(x)) assert(0); \
+  while (0)
   must_succeed(CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT));
   must_succeed(CryptGenRandom(prov, (DWORD)n, result));
   must_succeed(CryptReleaseContext(prov, 0));
@@ -56,7 +59,7 @@ static void generate_system_random_bytes(size_t n, void *result) {
   }
   for (;;) {
     ssize_t res = read(fd, result, n);
-    if ((size_t) res == n) {
+    if ((size_t)res == n) {
       break;
     }
     if (res < 0) {
@@ -66,8 +69,8 @@ static void generate_system_random_bytes(size_t n, void *result) {
     } else if (res == 0) {
       errx(EXIT_FAILURE, "read /dev/urandom: end of file");
     } else {
-      result = padd(result, (size_t) res);
-      n -= (size_t) res;
+      result = padd(result, (size_t)res);
+      n -= (size_t)res;
     }
   }
   if (close(fd) < 0) {

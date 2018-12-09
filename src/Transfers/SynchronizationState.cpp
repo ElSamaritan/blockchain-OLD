@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -33,16 +33,14 @@ SynchronizationState::ShortHistory SynchronizationState::getShortHistory(uint32_
   uint32_t current_multiplier = 1;
   uint32_t sz = std::min(static_cast<uint32_t>(m_blockchain.size()), localHeight + 1);
 
-  if (!sz)
-    return history;
+  if (!sz) return history;
 
   uint32_t current_back_offset = 1;
   bool genesis_included = false;
 
   while (current_back_offset < sz) {
     history.push_back(m_blockchain[sz - current_back_offset]);
-    if (sz - current_back_offset == 0)
-      genesis_included = true;
+    if (sz - current_back_offset == 0) genesis_included = true;
     if (i < 10) {
       ++current_back_offset;
     } else {
@@ -61,7 +59,7 @@ SynchronizationState::ShortHistory SynchronizationState::getShortHistory(uint32_
 SynchronizationState::CheckResult SynchronizationState::checkInterval(const BlockchainInterval& interval) const {
   assert(interval.startHeight <= m_blockchain.size());
 
-  CheckResult result = { false, 0, false, 0 };
+  CheckResult result = {false, 0, false, 0};
 
   uint32_t intervalEnd = interval.startHeight + static_cast<uint32_t>(interval.blocks.size());
   uint32_t iterationEnd = std::min(static_cast<uint32_t>(m_blockchain.size()), intervalEnd);
@@ -96,21 +94,17 @@ void SynchronizationState::detach(uint32_t height) {
 void SynchronizationState::addBlocks(const Crypto::Hash* blockHashes, uint32_t height, uint32_t count) {
   assert(blockHashes);
   auto size = m_blockchain.size();
-  if (size) {}
+  if (size) {
+  }
   // Dummy fix for simplewallet or walletd when sync
-  if (height == 0)
-    height = 1;
-  assert( size == height);
+  if (height == 0) height = 1;
+  assert(size == height);
   m_blockchain.insert(m_blockchain.end(), blockHashes, blockHashes + count);
 }
 
-uint32_t SynchronizationState::getHeight() const {
-  return static_cast<uint32_t>(m_blockchain.size());
-}
+uint32_t SynchronizationState::getHeight() const { return static_cast<uint32_t>(m_blockchain.size()); }
 
-const std::vector<Crypto::Hash>& SynchronizationState::getKnownBlockHashes() const {
-  return m_blockchain;
-}
+const std::vector<Crypto::Hash>& SynchronizationState::getKnownBlockHashes() const { return m_blockchain; }
 
 void SynchronizationState::save(std::ostream& os) {
   StdOutputStream stream(os);
@@ -131,4 +125,4 @@ CryptoNote::ISerializer& SynchronizationState::serialize(CryptoNote::ISerializer
   return s;
 }
 
-}
+}  // namespace CryptoNote

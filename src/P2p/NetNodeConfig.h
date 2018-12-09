@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Calex Developers
 //
@@ -15,12 +15,12 @@
 namespace CryptoNote {
 
 class NetNodeConfig {
-public:
+ public:
   NetNodeConfig();
-  bool init(const std::string interface, const int port, const int external, const bool localIp,
-              const bool hidePort, const std::string dataDir, const std::vector<std::string> addPeers,
-              const std::vector<std::string> addExclusiveNodes, const std::vector<std::string> addPriorityNodes,
-              const std::vector<std::string> addSeedNodes);
+  bool init(const std::string interface, const int port, const int external, const bool localIp, const bool hidePort,
+            const std::string dataDir, const std::vector<std::string> addPeers,
+            const std::vector<std::string> addExclusiveNodes, const std::vector<std::string> addPriorityNodes,
+            const std::vector<std::string> addSeedNodes);
 
   std::string getP2pStateFilename() const;
   bool getTestnet() const;
@@ -48,7 +48,7 @@ public:
   void setHideMyPort(bool hide);
   void setConfigFolder(const std::string& folder);
 
-private:
+ private:
   std::string bindIp;
   uint16_t bindPort;
   uint16_t externalPort;
@@ -63,4 +63,4 @@ private:
   bool testnet;
 };
 
-} //namespace nodetool
+}  // namespace CryptoNote

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -20,6 +20,8 @@
 #include <cstdint>
 #include <system_error>
 
+#include <Xi/Global.h>
+
 #include "ITransaction.h"
 #include "ITransfersContainer.h"
 #include "IStreamSerializable.h"
@@ -40,22 +42,27 @@ struct AccountSubscription {
 class ITransfersSubscription;
 
 class ITransfersObserver {
-public:
-  virtual void onError(ITransfersSubscription* object,
-    uint32_t height, std::error_code ec) {
-  }
+ public:
+  virtual ~ITransfersObserver() = default;
 
-  virtual void onTransactionUpdated(ITransfersSubscription* object, const Crypto::Hash& transactionHash) {}
+  virtual void onError(ITransfersSubscription* object, uint32_t height, std::error_code ec) {
+    XI_UNUSED(object, height, ec);
+  }
+  virtual void onTransactionUpdated(ITransfersSubscription* object, const Crypto::Hash& transactionHash) {
+    XI_UNUSED(object, transactionHash);
+  }
 
   /**
    * \note The sender must guarantee that onTransactionDeleted() is called only after onTransactionUpdated() is called
    * for the same \a transactionHash.
    */
-  virtual void onTransactionDeleted(ITransfersSubscription* object, const Crypto::Hash& transactionHash) {}
+  virtual void onTransactionDeleted(ITransfersSubscription* object, const Crypto::Hash& transactionHash) {
+    XI_UNUSED(object, transactionHash);
+  }
 };
 
-class ITransfersSubscription : public IObservable < ITransfersObserver > {
-public:
+class ITransfersSubscription : public IObservable<ITransfersObserver> {
+ public:
   virtual ~ITransfersSubscription() {}
 
   virtual AccountPublicAddress getAddress() = 0;
@@ -63,18 +70,30 @@ public:
 };
 
 class ITransfersSynchronizerObserver {
-public:
-  virtual void onBlocksAdded(const Crypto::PublicKey& viewPublicKey, const std::vector<Crypto::Hash>& blockHashes) {}
-  virtual void onBlockchainDetach(const Crypto::PublicKey& viewPublicKey, uint32_t blockIndex) {}
-  virtual void onTransactionDeleteBegin(const Crypto::PublicKey& viewPublicKey, Crypto::Hash transactionHash) {}
-  virtual void onTransactionDeleteEnd(const Crypto::PublicKey& viewPublicKey, Crypto::Hash transactionHash) {}
+ public:
+  virtual ~ITransfersSynchronizerObserver() = default;
+
+  virtual void onBlocksAdded(const Crypto::PublicKey& viewPublicKey, const std::vector<Crypto::Hash>& blockHashes) {
+    XI_UNUSED(viewPublicKey, blockHashes);
+  }
+  virtual void onBlockchainDetach(const Crypto::PublicKey& viewPublicKey, uint32_t blockIndex) {
+    XI_UNUSED(viewPublicKey, blockIndex);
+  }
+  virtual void onTransactionDeleteBegin(const Crypto::PublicKey& viewPublicKey, Crypto::Hash transactionHash) {
+    XI_UNUSED(viewPublicKey, transactionHash);
+  }
+  virtual void onTransactionDeleteEnd(const Crypto::PublicKey& viewPublicKey, Crypto::Hash transactionHash) {
+    XI_UNUSED(viewPublicKey, transactionHash);
+  }
   virtual void onTransactionUpdated(const Crypto::PublicKey& viewPublicKey, const Crypto::Hash& transactionHash,
-    const std::vector<ITransfersContainer*>& containers) {}
+                                    const std::vector<ITransfersContainer*>& containers) {
+    XI_UNUSED(viewPublicKey, transactionHash, containers);
+  }
 };
 
 class ITransfersSynchronizer : public IStreamSerializable {
-public:
-  virtual ~ITransfersSynchronizer() {}
+ public:
+  virtual ~ITransfersSynchronizer() = default;
 
   virtual ITransfersSubscription& addSubscription(const AccountSubscription& acc) = 0;
   virtual bool removeSubscription(const AccountPublicAddress& acc) = 0;
@@ -84,4 +103,4 @@ public:
   virtual std::vector<Crypto::Hash> getViewKeyKnownBlocks(const Crypto::PublicKey& publicViewKey) = 0;
 };
 
-}
+}  // namespace CryptoNote

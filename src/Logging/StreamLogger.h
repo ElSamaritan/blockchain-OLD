@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,19 +23,19 @@
 namespace Logging {
 
 class StreamLogger : public CommonLogger {
-public:
+ public:
   StreamLogger(Level level = DEBUGGING);
   StreamLogger(std::ostream& stream, Level level = DEBUGGING);
   void attachToStream(std::ostream& stream);
 
-protected:
+ protected:
   virtual void doLogString(const std::string& message) override;
 
-protected:
+ protected:
   std::ostream* stream;
 
-private:
+ private:
   std::mutex mutex;
 };
 
-}
+}  // namespace Logging

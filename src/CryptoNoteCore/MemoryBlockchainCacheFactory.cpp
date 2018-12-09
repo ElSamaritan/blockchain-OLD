@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -19,23 +19,19 @@
 
 namespace CryptoNote {
 
-MemoryBlockchainCacheFactory::MemoryBlockchainCacheFactory(const std::string& filename, Logging::ILogger& logger):
-  filename(filename), logger(logger) {
-}
+MemoryBlockchainCacheFactory::MemoryBlockchainCacheFactory(const std::string& filename, Logging::ILogger& logger)
+    : filename(filename), logger(logger) {}
 
-MemoryBlockchainCacheFactory::~MemoryBlockchainCacheFactory() {
-}
+MemoryBlockchainCacheFactory::~MemoryBlockchainCacheFactory() {}
 
 std::unique_ptr<IBlockchainCache> MemoryBlockchainCacheFactory::createRootBlockchainCache(const Currency& currency) {
   return createBlockchainCache(currency, nullptr, 0);
 }
 
-std::unique_ptr<IBlockchainCache> MemoryBlockchainCacheFactory::createBlockchainCache(
-    const Currency& currency,
-    IBlockchainCache* parent,
-    uint32_t startIndex) {
-
+std::unique_ptr<IBlockchainCache> MemoryBlockchainCacheFactory::createBlockchainCache(const Currency& currency,
+                                                                                      IBlockchainCache* parent,
+                                                                                      uint32_t startIndex) {
   return std::unique_ptr<IBlockchainCache>(new BlockchainCache(filename, currency, logger, parent, startIndex));
 }
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

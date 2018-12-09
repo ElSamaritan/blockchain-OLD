@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,10 +22,8 @@
 namespace System {
 
 class InterruptedException : public std::exception {
-  public:
-    virtual const char* what() const throw() override {
-      return "interrupted";
-    }
+ public:
+  virtual const char* what() const throw() override { return "interrupted"; }
 };
 
-}
+}  // namespace System

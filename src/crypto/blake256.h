@@ -1,4 +1,4 @@
-#ifndef _BLAKE256_H_
+﻿#ifndef _BLAKE256_H_
 #define _BLAKE256_H_
 
 #include <stdint.h>

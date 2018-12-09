@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -21,15 +21,11 @@
 
 namespace Logging {
 
-StreamLogger::StreamLogger(Level level) : CommonLogger(level), stream(nullptr) {
-}
+StreamLogger::StreamLogger(Level level) : CommonLogger(level), stream(nullptr) {}
 
-StreamLogger::StreamLogger(std::ostream& stream, Level level) : CommonLogger(level), stream(&stream) {
-}
+StreamLogger::StreamLogger(std::ostream& stream, Level level) : CommonLogger(level), stream(&stream) {}
 
-void StreamLogger::attachToStream(std::ostream& stream) {
-  this->stream = &stream;
-}
+void StreamLogger::attachToStream(std::ostream& _stream) { this->stream = &_stream; }
 
 void StreamLogger::doLogString(const std::string& message) {
   if (stream != nullptr && stream->good()) {
@@ -47,4 +43,4 @@ void StreamLogger::doLogString(const std::string& message) {
   }
 }
 
-}
+}  // namespace Logging

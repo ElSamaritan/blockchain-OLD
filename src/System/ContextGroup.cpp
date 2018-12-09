@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -20,9 +20,7 @@
 
 namespace System {
 
-ContextGroup::ContextGroup(Dispatcher& dispatcher) : dispatcher(&dispatcher) {
-  contextGroup.firstContext = nullptr;
-}
+ContextGroup::ContextGroup(Dispatcher& dispatcher) : dispatcher(&dispatcher) { contextGroup.firstContext = nullptr; }
 
 ContextGroup::ContextGroup(ContextGroup&& other) : dispatcher(other.dispatcher) {
   if (dispatcher != nullptr) {
@@ -100,4 +98,4 @@ void ContextGroup::wait() {
   }
 }
 
-}
+}  // namespace System

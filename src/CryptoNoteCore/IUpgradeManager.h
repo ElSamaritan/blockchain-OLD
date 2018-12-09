@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,11 +22,11 @@
 namespace CryptoNote {
 
 class IUpgradeManager {
-public:
+ public:
   virtual ~IUpgradeManager() {}
 
   virtual void addMajorBlockVersion(uint8_t targetVersion, uint32_t upgradeHeight) = 0;
   virtual uint8_t getBlockMajorVersion(uint32_t blockIndex) const = 0;
 };
 
-}
+}  // namespace CryptoNote

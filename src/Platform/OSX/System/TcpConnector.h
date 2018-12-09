@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -27,7 +27,7 @@ class Ipv4Address;
 class TcpConnection;
 
 class TcpConnector {
-public:
+ public:
   TcpConnector();
   TcpConnector(Dispatcher& dispatcher);
   TcpConnector(const TcpConnector&) = delete;
@@ -37,9 +37,9 @@ public:
   TcpConnector& operator=(TcpConnector&& other);
   TcpConnection connect(const Ipv4Address& address, uint16_t port);
 
-private:
+ private:
   void* context;
   Dispatcher* dispatcher;
 };
 
-}
+}  // namespace System

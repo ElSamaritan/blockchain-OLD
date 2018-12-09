@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,22 +26,23 @@
 
 namespace CryptoNote {
 
-//Blocking HttpParser
+// Blocking HttpParser
 class HttpParser {
-public:
-  HttpParser() {};
+ public:
+  HttpParser(){};
 
   void receiveRequest(std::istream& stream, HttpRequest& request);
   void receiveResponse(std::istream& stream, HttpResponse& response);
   static HttpResponse::HTTP_STATUS parseResponseStatusFromString(const std::string& status);
-private:
+
+ private:
   void readWord(std::istream& stream, std::string& word);
-  void readHeaders(std::istream& stream, HttpRequest::Headers &headers);
+  void readHeaders(std::istream& stream, HttpRequest::Headers& headers);
   bool readHeader(std::istream& stream, std::string& name, std::string& value);
   size_t getBodyLen(const HttpRequest::Headers& headers);
   void readBody(std::istream& stream, std::string& body, const size_t bodyLen);
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote
 
 #endif /* HTTPPARSER_H_ */

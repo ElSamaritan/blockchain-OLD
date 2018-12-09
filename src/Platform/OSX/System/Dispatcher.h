@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -53,7 +53,7 @@ struct OperationContext {
 };
 
 class Dispatcher {
-public:
+ public:
   Dispatcher();
   Dispatcher(const Dispatcher&) = delete;
   ~Dispatcher();
@@ -80,7 +80,7 @@ public:
   static const int SIZEOF_PTHREAD_MUTEX_T = 40 + sizeof(long);
 #endif
 
-private:
+ private:
   void spawn(std::function<void()>&& procedure);
 
   int kqueue;
@@ -102,4 +102,4 @@ private:
   static void contextProcedureStatic(intptr_t context);
 };
 
-}
+}  // namespace System

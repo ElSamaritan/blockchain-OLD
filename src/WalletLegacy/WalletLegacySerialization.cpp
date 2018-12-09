@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -58,8 +58,8 @@ void serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer
   serializer(txi.unlockTime, "unlock_time");
   serializer(txi.extra, "extra");
 
-  //this field has been added later in the structure.
-  //in order to not break backward binary compatibility
+  // this field has been added later in the structure.
+  // in order to not break backward binary compatibility
   // we just set it to zero
   txi.sentTime = 0;
 }
@@ -69,4 +69,4 @@ void serialize(WalletLegacyTransfer& tr, CryptoNote::ISerializer& serializer) {
   serializer(tr.amount, "amount");
 }
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

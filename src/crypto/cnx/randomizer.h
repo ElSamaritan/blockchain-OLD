@@ -17,11 +17,11 @@ struct Randomizer {
 
   uint32_t size() const;
 
-private:
+ private:
   std::vector<uint8_t> _Operators;
   std::vector<uint32_t> _Indices;
   std::vector<int8_t> _Values;
 };
 
-}
-}
+}  // namespace CNX
+}  // namespace Crypto

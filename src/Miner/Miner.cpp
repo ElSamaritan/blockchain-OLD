@@ -19,16 +19,13 @@
 
 namespace CryptoNote {
 
-Miner::Miner(System::Dispatcher& dispatcher, Logging::ILogger& logger) :
-  m_dispatcher(dispatcher),
-  m_miningStopped(dispatcher),
-  m_state(MiningState::MINING_STOPPED),
-  m_logger(logger, "Miner") {
-}
+Miner::Miner(System::Dispatcher& dispatcher, Logging::ILogger& logger)
+    : m_dispatcher(dispatcher),
+      m_miningStopped(dispatcher),
+      m_state(MiningState::MINING_STOPPED),
+      m_logger(logger, "Miner") {}
 
-Miner::~Miner() {
-  assert(m_state != MiningState::MINING_IN_PROGRESS);
-}
+Miner::~Miner() { assert(m_state != MiningState::MINING_IN_PROGRESS); }
 
 BlockTemplate Miner::mine(const BlockMiningParameters& blockMiningParameters, size_t threadCount) {
   if (threadCount == 0) {
@@ -72,10 +69,10 @@ void Miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threa
     blockMiningParameters.blockTemplate.nonce = Crypto::rand<uint32_t>();
 
     for (size_t i = 0; i < threadCount; ++i) {
-      m_workers.emplace_back(std::unique_ptr<System::RemoteContext<void>> (
-        new System::RemoteContext<void>(m_dispatcher, std::bind(&Miner::workerFunc, this, blockMiningParameters.blockTemplate, blockMiningParameters.difficulty, static_cast<uint32_t>(threadCount))))
-      );
-	  m_logger(Logging::INFO) << "Thread " << i << " started at nonce: " << blockMiningParameters.blockTemplate.nonce;
+      m_workers.emplace_back(std::unique_ptr<System::RemoteContext<void>>(new System::RemoteContext<void>(
+          m_dispatcher, std::bind(&Miner::workerFunc, this, blockMiningParameters.blockTemplate,
+                                  blockMiningParameters.difficulty, static_cast<uint32_t>(threadCount)))));
+      m_logger(Logging::INFO) << "Thread " << i << " started at nonce: " << blockMiningParameters.blockTemplate.nonce;
 
       blockMiningParameters.blockTemplate.nonce++;
     }
@@ -142,12 +139,8 @@ bool Miner::setStateBlockFound() {
   }
 }
 
-void Miner::incrementHashCount() {
-  m_hash_count++;
-}
+void Miner::incrementHashCount() { m_hash_count++; }
 
-uint64_t Miner::getHashCount() {
-  return m_hash_count.load();
-}
+uint64_t Miner::getHashCount() { return m_hash_count.load(); }
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

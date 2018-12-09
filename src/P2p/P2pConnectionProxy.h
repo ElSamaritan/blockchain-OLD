@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -30,8 +30,7 @@ class P2pContext;
 class P2pNode;
 
 class P2pConnectionProxy : public IP2pConnection {
-public:
-
+ public:
   P2pConnectionProxy(P2pContextOwner&& ctx, IP2pNodeInternal& node);
   ~P2pConnectionProxy();
 
@@ -39,13 +38,12 @@ public:
 
   // IP2pConnection
   virtual void read(P2pMessage& message) override;
-  virtual void write(const P2pMessage &message) override;
+  virtual void write(const P2pMessage& message) override;
   virtual void ban() override;
   virtual void stop() override;
 
-private:
-
-  void writeHandshake(const P2pMessage &message);
+ private:
+  void writeHandshake(const P2pMessage& message);
   void handleHandshakeRequest(const LevinProtocol::Command& cmd);
   void handleHandshakeResponse(const LevinProtocol::Command& cmd, P2pMessage& message);
   void handleTimedSync(const LevinProtocol::Command& cmd);
@@ -56,4 +54,4 @@ private:
   IP2pNodeInternal& m_node;
 };
 
-}
+}  // namespace CryptoNote

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -55,7 +55,7 @@ bool storeToBinaryFile(const T& obj, const std::string& filename) {
     Common::StdOutputStream stream(dataFile);
     BinaryOutputStreamSerializer out(stream);
     CryptoNote::serialize(const_cast<T&>(obj), out);
-      
+
     if (dataFile.fail()) {
       return false;
     }
@@ -68,7 +68,7 @@ bool storeToBinaryFile(const T& obj, const std::string& filename) {
   return true;
 }
 
-template<class T>
+template <class T>
 bool loadFromBinaryFile(T& obj, const std::string& filename) {
   try {
     std::ifstream dataFile;
@@ -86,4 +86,4 @@ bool loadFromBinaryFile(T& obj, const std::string& filename) {
   }
 }
 
-}
+}  // namespace CryptoNote

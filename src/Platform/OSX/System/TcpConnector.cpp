@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -40,13 +40,11 @@ struct ConnectorContext : public OperationContext {
   int connection;
 };
 
-}
+}  // namespace
 
-TcpConnector::TcpConnector() : dispatcher(nullptr) {
-}
+TcpConnector::TcpConnector() : dispatcher(nullptr) {}
 
-TcpConnector::TcpConnector(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {
-}
+TcpConnector::TcpConnector(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {}
 
 TcpConnector::TcpConnector(TcpConnector&& other) : dispatcher(other.dispatcher) {
   if (other.dispatcher != nullptr) {
@@ -56,9 +54,7 @@ TcpConnector::TcpConnector(TcpConnector&& other) : dispatcher(other.dispatcher) 
   }
 }
 
-TcpConnector::~TcpConnector() {
-  assert(dispatcher == nullptr || context == nullptr);
-}
+TcpConnector::~TcpConnector() { assert(dispatcher == nullptr || context == nullptr); }
 
 TcpConnector& TcpConnector::operator=(TcpConnector&& other) {
   dispatcher = other.dispatcher;
@@ -98,7 +94,7 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
         addressData.sin_family = AF_INET;
         addressData.sin_port = htons(port);
         addressData.sin_addr.s_addr = htonl(address.getValue());
-        int result = ::connect(connection, reinterpret_cast<sockaddr *>(&addressData), sizeof addressData);
+        int result = ::connect(connection, reinterpret_cast<sockaddr*>(&addressData), sizeof addressData);
         if (result == -1) {
           if (errno == EINPROGRESS) {
             ConnectorContext connectorContext;
@@ -120,12 +116,12 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
                   if (close(connectorContext->connection) == -1) {
                     throw std::runtime_error("TcpListener::stop, close failed, " + lastErrorMessage());
                   }
-                  
+
                   dispatcher->pushContext(connectorContext->context);
                   connectorContext->interrupted = true;
-                }                
+                }
               };
-              
+
               dispatcher->dispatch();
               dispatcher->getCurrentContext()->interruptProcedure = nullptr;
               assert(dispatcher != nullptr);
@@ -165,11 +161,13 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
     }
 
     int result = close(connection);
-    if (result) {}
-    assert(result != -1);;
+    if (result) {
+    }
+    assert(result != -1);
+    ;
   }
 
   throw std::runtime_error("TcpConnector::connect, " + message);
 }
 
-}
+}  // namespace System

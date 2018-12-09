@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -29,8 +29,8 @@ using namespace Crypto;
 
 namespace CryptoNote {
 
-WalletUserTransactionsCache::WalletUserTransactionsCache(uint64_t mempoolTxLiveTime) : m_unconfirmedTransactions(mempoolTxLiveTime) {
-}
+WalletUserTransactionsCache::WalletUserTransactionsCache(uint64_t mempoolTxLiveTime)
+    : m_unconfirmedTransactions(mempoolTxLiveTime) {}
 
 bool WalletUserTransactionsCache::serialize(CryptoNote::ISerializer& s) {
   if (s.type() == CryptoNote::ISerializer::INPUT) {
@@ -61,17 +61,13 @@ uint64_t WalletUserTransactionsCache::unconfrimedOutsAmount() const {
   return m_unconfirmedTransactions.countUnconfirmedOutsAmount();
 }
 
-size_t WalletUserTransactionsCache::getTransactionCount() const {
-  return m_transactions.size();
-}
+size_t WalletUserTransactionsCache::getTransactionCount() const { return m_transactions.size(); }
 
-size_t WalletUserTransactionsCache::getTransferCount() const {
-  return m_transfers.size();
-}
+size_t WalletUserTransactionsCache::getTransferCount() const { return m_transfers.size(); }
 
-TransactionId WalletUserTransactionsCache::addNewTransaction(
-  uint64_t amount, uint64_t fee, const std::string& extra, const std::vector<WalletLegacyTransfer>& transfers, uint64_t unlockTime) {
-  
+TransactionId WalletUserTransactionsCache::addNewTransaction(uint64_t amount, uint64_t fee, const std::string& extra,
+                                                             const std::vector<WalletLegacyTransfer>& transfers,
+                                                             uint64_t unlockTime) {
   WalletLegacyTransaction transaction;
 
   transaction.firstTransferId = insertTransfers(transfers);
@@ -89,8 +85,9 @@ TransactionId WalletUserTransactionsCache::addNewTransaction(
   return insertTransaction(std::move(transaction));
 }
 
-void WalletUserTransactionsCache::updateTransaction(
-  TransactionId transactionId, const CryptoNote::Transaction& tx, uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs) {
+void WalletUserTransactionsCache::updateTransaction(TransactionId transactionId, const CryptoNote::Transaction& tx,
+                                                    uint64_t amount,
+                                                    const std::list<TransactionOutputInformation>& usedOutputs) {
   // update extra field from created transaction
   auto& txInfo = m_transactions.at(transactionId);
   txInfo.extra.assign(tx.extra.begin(), tx.extra.end());
@@ -100,15 +97,17 @@ void WalletUserTransactionsCache::updateTransaction(
 void WalletUserTransactionsCache::updateTransactionSendingState(TransactionId transactionId, std::error_code ec) {
   auto& txInfo = m_transactions.at(transactionId);
   if (ec) {
-    txInfo.state = ec.value() == error::TX_CANCELLED ? WalletLegacyTransactionState::Cancelled : WalletLegacyTransactionState::Failed;
+    txInfo.state = ec.value() == error::TX_CANCELLED ? WalletLegacyTransactionState::Cancelled
+                                                     : WalletLegacyTransactionState::Failed;
     m_unconfirmedTransactions.erase(txInfo.hash);
   } else {
-    txInfo.sentTime = time(nullptr); // update sending time
+    txInfo.sentTime = time(nullptr);  // update sending time
     txInfo.state = WalletLegacyTransactionState::Active;
   }
 }
 
-std::shared_ptr<WalletLegacyEvent> WalletUserTransactionsCache::onTransactionUpdated(const TransactionInformation& txInfo, int64_t txBalance) {
+std::shared_ptr<WalletLegacyEvent> WalletUserTransactionsCache::onTransactionUpdated(
+    const TransactionInformation& txInfo, int64_t txBalance) {
   std::shared_ptr<WalletLegacyEvent> event;
 
   TransactionId id = CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID;
@@ -177,39 +176,32 @@ std::shared_ptr<WalletLegacyEvent> WalletUserTransactionsCache::onTransactionDel
   return event;
 }
 
-TransactionId WalletUserTransactionsCache::findTransactionByTransferId(TransferId transferId) const
-{
+TransactionId WalletUserTransactionsCache::findTransactionByTransferId(TransferId transferId) const {
   TransactionId id;
   for (id = 0; id < m_transactions.size(); ++id) {
     const WalletLegacyTransaction& tx = m_transactions[id];
 
-    if (tx.firstTransferId == WALLET_LEGACY_INVALID_TRANSFER_ID || tx.transferCount == 0)
-      continue;
+    if (tx.firstTransferId == WALLET_LEGACY_INVALID_TRANSFER_ID || tx.transferCount == 0) continue;
 
-    if (transferId >= tx.firstTransferId && transferId < (tx.firstTransferId + tx.transferCount))
-      break;
+    if (transferId >= tx.firstTransferId && transferId < (tx.firstTransferId + tx.transferCount)) break;
   }
 
-  if (id == m_transactions.size())
-    return WALLET_LEGACY_INVALID_TRANSACTION_ID;
+  if (id == m_transactions.size()) return WALLET_LEGACY_INVALID_TRANSACTION_ID;
 
   return id;
 }
 
-bool WalletUserTransactionsCache::getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) const
-{
-  if (transactionId >= m_transactions.size())
-    return false;
+bool WalletUserTransactionsCache::getTransaction(TransactionId transactionId,
+                                                 WalletLegacyTransaction& transaction) const {
+  if (transactionId >= m_transactions.size()) return false;
 
   transaction = m_transactions[transactionId];
 
   return true;
 }
 
-bool WalletUserTransactionsCache::getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) const
-{
-  if (transferId >= m_transfers.size())
-    return false;
+bool WalletUserTransactionsCache::getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) const {
+  if (transferId >= m_transfers.size()) return false;
 
   transfer = m_transfers[transferId];
 
@@ -222,10 +214,10 @@ TransactionId WalletUserTransactionsCache::insertTransaction(WalletLegacyTransac
 }
 
 TransactionId WalletUserTransactionsCache::findTransactionByHash(const Hash& hash) {
-  auto it = std::find_if(m_transactions.begin(), m_transactions.end(), [&hash](const WalletLegacyTransaction& tx) { return tx.hash == hash; });
+  auto it = std::find_if(m_transactions.begin(), m_transactions.end(),
+                         [&hash](const WalletLegacyTransaction& tx) { return tx.hash == hash; });
 
-  if (it == m_transactions.end())
-    return CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID;
+  if (it == m_transactions.end()) return CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID;
 
   return std::distance(m_transactions.begin(), it);
 }
@@ -242,9 +234,8 @@ void WalletUserTransactionsCache::getGoodItems(UserTransactions& transactions, U
   size_t offset = 0;
 
   for (size_t txId = 0; txId < m_transactions.size(); ++txId) {
-    bool isGood =
-      m_transactions[txId].state != WalletLegacyTransactionState::Cancelled &&
-      m_transactions[txId].state != WalletLegacyTransactionState::Failed;
+    bool isGood = m_transactions[txId].state != WalletLegacyTransactionState::Cancelled &&
+                  m_transactions[txId].state != WalletLegacyTransactionState::Failed;
 
     if (isGood) {
       getGoodTransaction(txId, offset, transactions, transfers);
@@ -255,7 +246,8 @@ void WalletUserTransactionsCache::getGoodItems(UserTransactions& transactions, U
   }
 }
 
-void WalletUserTransactionsCache::getGoodTransaction(TransactionId txId, size_t offset, UserTransactions& transactions, UserTransfers& transfers) {
+void WalletUserTransactionsCache::getGoodTransaction(TransactionId txId, size_t offset, UserTransactions& transactions,
+                                                     UserTransfers& transfers) {
   transactions.push_back(m_transactions[txId]);
   WalletLegacyTransaction& tx = transactions.back();
 
@@ -297,7 +289,7 @@ void WalletUserTransactionsCache::updateUnconfirmedTransactions() {
 WalletLegacyTransfer& WalletUserTransactionsCache::getTransfer(TransferId transferId) {
   return m_transfers.at(transferId);
 }
-  
+
 void WalletUserTransactionsCache::reset() {
   m_transactions.clear();
   m_transfers.clear();
@@ -307,7 +299,7 @@ void WalletUserTransactionsCache::reset() {
 std::vector<TransactionId> WalletUserTransactionsCache::deleteOutdatedTransactions() {
   auto deletedTransactions = m_unconfirmedTransactions.deleteOutdatedTransactions();
 
-  for (auto id: deletedTransactions) {
+  for (auto id : deletedTransactions) {
     assert(id < m_transactions.size());
     m_transactions[id].state = WalletLegacyTransactionState::Deleted;
   }
@@ -315,4 +307,4 @@ std::vector<TransactionId> WalletUserTransactionsCache::deleteOutdatedTransactio
   return deletedTransactions;
 }
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

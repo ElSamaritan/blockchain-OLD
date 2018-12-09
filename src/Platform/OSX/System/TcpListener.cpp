@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -35,8 +35,7 @@
 
 namespace System {
 
-TcpListener::TcpListener() : dispatcher(nullptr) {
-}
+TcpListener::TcpListener() : dispatcher(nullptr) {}
 
 TcpListener::TcpListener(Dispatcher& dispatcher, const Ipv4Address& addr, uint16_t port) : dispatcher(&dispatcher) {
   std::string message;
@@ -95,7 +94,8 @@ TcpListener::~TcpListener() {
   if (dispatcher != nullptr) {
     assert(context == nullptr);
     int result = close(listener);
-    if (result) {}
+    if (result) {
+    }
     assert(result != -1);
   }
 }
@@ -131,7 +131,7 @@ TcpConnection TcpListener::accept() {
   listenerContext.context = dispatcher->getCurrentContext();
   listenerContext.interrupted = false;
   struct kevent event;
-  EV_SET(&event, listener, EVFILT_READ, EV_ADD | EV_ENABLE | EV_CLEAR , 0, SOMAXCONN, &listenerContext);
+  EV_SET(&event, listener, EVFILT_READ, EV_ADD | EV_ENABLE | EV_CLEAR, 0, SOMAXCONN, &listenerContext);
   if (kevent(dispatcher->getKqueue(), &event, 1, NULL, 0, NULL) == -1) {
     message = "kevent failed, " + lastErrorMessage();
   } else {
@@ -141,19 +141,18 @@ TcpConnection TcpListener::accept() {
       assert(context != nullptr);
       OperationContext* listenerContext = static_cast<OperationContext*>(context);
       if (!listenerContext->interrupted) {
-        
         struct kevent event;
         EV_SET(&event, listener, EVFILT_READ, EV_DELETE | EV_DISABLE, 0, 0, NULL);
-        
+
         if (kevent(dispatcher->getKqueue(), &event, 1, NULL, 0, NULL) == -1) {
           throw std::runtime_error("TcpListener::stop, kevent failed, " + lastErrorMessage());
         }
-        
+
         listenerContext->interrupted = true;
         dispatcher->pushContext(listenerContext->context);
       }
     };
-    
+
     dispatcher->dispatch();
     dispatcher->getCurrentContext()->interruptProcedure = nullptr;
     assert(dispatcher != nullptr);
@@ -183,4 +182,4 @@ TcpConnection TcpListener::accept() {
   throw std::runtime_error("TcpListener::accept, " + message);
 }
 
-}
+}  // namespace System

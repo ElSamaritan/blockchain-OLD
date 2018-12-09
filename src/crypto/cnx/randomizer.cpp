@@ -2,8 +2,7 @@
 
 #include <cmath>
 
-Crypto::CNX::Randomizer::Randomizer(uint32_t maxSize)
-{
+Crypto::CNX::Randomizer::Randomizer(uint32_t maxSize) {
   Handle.size = 0;
 
   _Operators.resize(maxSize);
@@ -16,13 +15,9 @@ Crypto::CNX::Randomizer::Randomizer(uint32_t maxSize)
   Handle.values = &_Values[0];
 }
 
-Crypto::CNX::Randomizer::~Randomizer()
-{
-  /* */
-}
+Crypto::CNX::Randomizer::~Randomizer() { /* */ }
 
-void Crypto::CNX::Randomizer::reset(uint32_t size)
-{
+void Crypto::CNX::Randomizer::reset(uint32_t size) {
   Handle.size = size;
   Handle.operationsIndex = 0;
   std::memset(_Operators.data(), 0, _Operators.size() * sizeof(uint8_t));
@@ -30,7 +25,4 @@ void Crypto::CNX::Randomizer::reset(uint32_t size)
   std::memset(_Values.data(), 0, _Values.size() * sizeof(int8_t));
 }
 
-uint32_t Crypto::CNX::Randomizer::size() const
-{
-  return Handle.size;
-}
+uint32_t Crypto::CNX::Randomizer::size() const { return Handle.size; }

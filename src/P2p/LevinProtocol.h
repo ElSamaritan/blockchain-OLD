@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -29,7 +29,7 @@ class TcpConnection;
 
 namespace CryptoNote {
 
-enum class LevinError: int32_t {
+enum class LevinError : int32_t {
   OK = 0,
   ERROR_CONNECTION = -1,
   ERROR_CONNECTION_NOT_FOUND = -2,
@@ -43,8 +43,7 @@ enum class LevinError: int32_t {
 const int32_t LEVIN_PROTOCOL_RETCODE_SUCCESS = 1;
 
 class LevinProtocol {
-public:
-
+ public:
   LevinProtocol(System::TcpConnection& connection);
 
   template <typename Request, typename Response>
@@ -58,7 +57,7 @@ public:
       return false;
     }
 
-    return decode(cmd.buf, response); 
+    return decode(cmd.buf, response);
   }
 
   template <typename Request>
@@ -103,11 +102,10 @@ public:
     return result;
   }
 
-private:
-
+ private:
   bool readStrict(uint8_t* ptr, size_t size);
   void writeStrict(const uint8_t* ptr, size_t size);
   System::TcpConnection& m_conn;
 };
 
-}
+}  // namespace CryptoNote

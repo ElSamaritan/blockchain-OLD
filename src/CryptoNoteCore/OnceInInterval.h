@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -19,16 +19,14 @@
 
 #include <time.h>
 
-namespace CryptoNote
-{
+namespace CryptoNote {
 
 class OnceInInterval {
-public:
+ public:
+  OnceInInterval(unsigned interval, bool startNow = true)
+      : m_interval(interval), m_lastCalled(startNow ? 0 : time(nullptr)) {}
 
-  OnceInInterval(unsigned interval, bool startNow = true) 
-    : m_interval(interval), m_lastCalled(startNow ? 0 : time(nullptr)) {}
-
-  template<class F>
+  template <class F>
   bool call(F func) {
     time_t currentTime = time(nullptr);
 
@@ -41,9 +39,9 @@ public:
     return true;
   }
 
-private:
+ private:
   time_t m_lastCalled;
   time_t m_interval;
 };
 
-}
+}  // namespace CryptoNote

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -33,8 +33,7 @@
 
 namespace System {
 
-TcpListener::TcpListener() : dispatcher(nullptr) {
-}
+TcpListener::TcpListener() : dispatcher(nullptr) {}
 
 TcpListener::TcpListener(Dispatcher& dispatcher, const Ipv4Address& addr, uint16_t port) : dispatcher(&dispatcher) {
   std::string message;
@@ -53,8 +52,8 @@ TcpListener::TcpListener(Dispatcher& dispatcher, const Ipv4Address& addr, uint16
         sockaddr_in address;
         address.sin_family = AF_INET;
         address.sin_port = htons(port);
-        address.sin_addr.s_addr = htonl( addr.getValue());
-        if (bind(listener, reinterpret_cast<sockaddr *>(&address), sizeof address) != 0) {
+        address.sin_addr.s_addr = htonl(addr.getValue());
+        if (bind(listener, reinterpret_cast<sockaddr*>(&address), sizeof address) != 0) {
           message = "bind failed, " + lastErrorMessage();
         } else if (listen(listener, SOMAXCONN) != 0) {
           message = "listen failed, " + lastErrorMessage();
@@ -74,7 +73,8 @@ TcpListener::TcpListener(Dispatcher& dispatcher, const Ipv4Address& addr, uint16
     }
 
     int result = close(listener);
-    if (result) {}
+    if (result) {
+    }
     assert(result != -1);
   }
 
@@ -94,7 +94,8 @@ TcpListener::~TcpListener() {
   if (dispatcher != nullptr) {
     assert(context == nullptr);
     int result = close(listener);
-    if (result) {}
+    if (result) {
+    }
     assert(result != -1);
   }
 }
@@ -142,21 +143,21 @@ TcpConnection TcpListener::accept() {
   } else {
     context = &listenerContext;
     dispatcher->getCurrentContext()->interruptProcedure = [&]() {
-        assert(dispatcher != nullptr);
-        assert(context != nullptr);
-        OperationContext* listenerContext = static_cast<OperationContext*>(context);
-        if (!listenerContext->interrupted) {
-          epoll_event listenEvent;
-          listenEvent.events = EPOLLONESHOT;
-          listenEvent.data.ptr = nullptr;
+      assert(dispatcher != nullptr);
+      assert(context != nullptr);
+      OperationContext* listenerContext = static_cast<OperationContext*>(context);
+      if (!listenerContext->interrupted) {
+        epoll_event listenEvent;
+        listenEvent.events = EPOLLONESHOT;
+        listenEvent.data.ptr = nullptr;
 
-          if (epoll_ctl(dispatcher->getEpoll(), EPOLL_CTL_MOD, listener, &listenEvent) == -1) {
-            throw std::runtime_error("TcpListener::accept, interrupt procedure, epoll_ctl failed, " + lastErrorMessage() );
-          }
-
-          listenerContext->interrupted = true;
-          dispatcher->pushContext(listenerContext->context);
+        if (epoll_ctl(dispatcher->getEpoll(), EPOLL_CTL_MOD, listener, &listenEvent) == -1) {
+          throw std::runtime_error("TcpListener::accept, interrupt procedure, epoll_ctl failed, " + lastErrorMessage());
         }
+
+        listenerContext->interrupted = true;
+        dispatcher->pushContext(listenerContext->context);
+      }
     };
 
     dispatcher->dispatch();
@@ -171,7 +172,7 @@ TcpConnection TcpListener::accept() {
       throw InterruptedException();
     }
 
-    if((listenerContext.events & (EPOLLERR | EPOLLHUP)) != 0) {
+    if ((listenerContext.events & (EPOLLERR | EPOLLHUP)) != 0) {
       throw std::runtime_error("TcpListener::accept, accepting failed");
     }
 
@@ -189,7 +190,8 @@ TcpConnection TcpListener::accept() {
       }
 
       int result = close(connection);
-      if (result) {}
+      if (result) {
+      }
       assert(result != -1);
     }
   }
@@ -197,4 +199,4 @@ TcpConnection TcpListener::accept() {
   throw std::runtime_error("TcpListener::accept, " + message);
 }
 
-}
+}  // namespace System

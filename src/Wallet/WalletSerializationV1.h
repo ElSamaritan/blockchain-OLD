@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -28,22 +28,14 @@
 namespace CryptoNote {
 
 class WalletSerializerV1 {
-public:
-  WalletSerializerV1(
-    ITransfersObserver& transfersObserver,
-    Crypto::PublicKey& viewPublicKey,
-    Crypto::SecretKey& viewSecretKey,
-    uint64_t& actualBalance,
-    uint64_t& pendingBalance,
-    WalletsContainer& walletsContainer,
-    TransfersSyncronizer& synchronizer,
-    UnlockTransactionJobs& unlockTransactions,
-    WalletTransactions& transactions,
-    WalletTransfers& transfers,
-    UncommitedTransactions& uncommitedTransactions,
-    uint32_t transactionSoftLockTime
-  );
-  
+ public:
+  WalletSerializerV1(ITransfersObserver& transfersObserver, Crypto::PublicKey& viewPublicKey,
+                     Crypto::SecretKey& viewSecretKey, uint64_t& actualBalance, uint64_t& pendingBalance,
+                     WalletsContainer& walletsContainer, TransfersSyncronizer& synchronizer,
+                     UnlockTransactionJobs& unlockTransactions, WalletTransactions& transactions,
+                     WalletTransfers& transfers, UncommitedTransactions& uncommitedTransactions,
+                     uint32_t transactionSoftLockTime);
+
   void load(const Crypto::chacha8_key& key, Common::IInputStream& source);
 
   struct CryptoContext {
@@ -53,7 +45,7 @@ public:
     void incIv();
   };
 
-private:
+ private:
   static const uint32_t SERIALIZATION_VERSION;
 
   void loadWallet(Common::IInputStream& source, const Crypto::chacha8_key& key, uint32_t version);
@@ -79,7 +71,8 @@ private:
 
   void loadWalletV1Keys(CryptoNote::BinaryInputStreamSerializer& serializer);
   void loadWalletV1Details(CryptoNote::BinaryInputStreamSerializer& serializer);
-  void addWalletV1Details(const std::vector<WalletLegacyTransaction>& txs, const std::vector<WalletLegacyTransfer>& trs);
+  void addWalletV1Details(const std::vector<WalletLegacyTransaction>& txs,
+                          const std::vector<WalletLegacyTransfer>& trs);
   void resetCachedBalance();
   void updateTransactionsBaseStatus();
   void updateTransfersSign();
@@ -98,4 +91,4 @@ private:
   uint32_t m_transactionSoftLockTime;
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -28,11 +28,7 @@
 
 namespace CryptoNote {
 
-enum class TransactionRemoveReason : uint8_t 
-{ 
-  INCLUDED_IN_BLOCK = 0, 
-  TIMEOUT = 1
-};
+enum class TransactionRemoveReason : uint8_t { INCLUDED_IN_BLOCK = 0, TIMEOUT = 1 };
 
 struct TransactionOutputDetails {
   TransactionOutput output;
@@ -55,11 +51,10 @@ struct KeyInputDetails {
   TransactionOutputReferenceDetails output;
 };
 
-
 typedef boost::variant<BaseInputDetails, KeyInputDetails> TransactionInputDetails;
 
 struct TransactionExtraDetails {
-  Crypto::PublicKey publicKey; 
+  Crypto::PublicKey publicKey;
   BinaryArray nonce;
   BinaryArray raw;
 };
@@ -106,4 +101,4 @@ struct BlockDetails {
   std::vector<TransactionDetails> transactions;
 };
 
-}
+}  // namespace CryptoNote

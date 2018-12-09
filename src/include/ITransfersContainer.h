@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -42,7 +42,6 @@ struct TransactionInformation {
   Crypto::Hash paymentId;
 };
 
-
 struct TransactionOutputInformation {
   // output info
   TransactionTypes::OutputType type;
@@ -57,7 +56,7 @@ struct TransactionOutputInformation {
   Crypto::PublicKey outputKey;
 };
 
-struct TransactionSpentOutputInformation: public TransactionOutputInformation {
+struct TransactionSpentOutputInformation : public TransactionOutputInformation {
   uint32_t spendingBlockHeight;
   uint64_t timestamp;
   Crypto::Hash spendingTransactionHash;
@@ -66,7 +65,7 @@ struct TransactionSpentOutputInformation: public TransactionOutputInformation {
 };
 
 class ITransfersContainer : public IStreamSerializable {
-public:
+ public:
   enum Flags : uint32_t {
     // state
     IncludeStateUnlocked = 0x01,
@@ -92,14 +91,17 @@ public:
   virtual size_t transfersCount() const = 0;
   virtual size_t transactionsCount() const = 0;
   virtual uint64_t balance(uint32_t flags = IncludeDefault) const = 0;
-  virtual void getOutputs(std::vector<TransactionOutputInformation>& transfers, uint32_t flags = IncludeDefault) const = 0;
+  virtual void getOutputs(std::vector<TransactionOutputInformation>& transfers,
+                          uint32_t flags = IncludeDefault) const = 0;
   virtual bool getTransactionInformation(const Crypto::Hash& transactionHash, TransactionInformation& info,
-    uint64_t* amountIn = nullptr, uint64_t* amountOut = nullptr) const = 0;
-  virtual std::vector<TransactionOutputInformation> getTransactionOutputs(const Crypto::Hash& transactionHash, uint32_t flags = IncludeDefault) const = 0;
-  //only type flags are feasible for this function
-  virtual std::vector<TransactionOutputInformation> getTransactionInputs(const Crypto::Hash& transactionHash, uint32_t flags) const = 0;
+                                         uint64_t* amountIn = nullptr, uint64_t* amountOut = nullptr) const = 0;
+  virtual std::vector<TransactionOutputInformation> getTransactionOutputs(const Crypto::Hash& transactionHash,
+                                                                          uint32_t flags = IncludeDefault) const = 0;
+  // only type flags are feasible for this function
+  virtual std::vector<TransactionOutputInformation> getTransactionInputs(const Crypto::Hash& transactionHash,
+                                                                         uint32_t flags) const = 0;
   virtual void getUnconfirmedTransactions(std::vector<Crypto::Hash>& transactions) const = 0;
   virtual std::vector<TransactionSpentOutputInformation> getSpentOutputs() const = 0;
 };
 
-}
+}  // namespace CryptoNote

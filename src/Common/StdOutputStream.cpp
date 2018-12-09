@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -19,8 +19,7 @@
 
 namespace Common {
 
-StdOutputStream::StdOutputStream(std::ostream& out) : out(out) {
-}
+StdOutputStream::StdOutputStream(std::ostream& out) : out(out) {}
 
 size_t StdOutputStream::writeSome(const void* data, size_t size) {
   out.write(static_cast<const char*>(data), size);
@@ -31,4 +30,4 @@ size_t StdOutputStream::writeSome(const void* data, size_t size) {
   return size;
 }
 
-}
+}  // namespace Common

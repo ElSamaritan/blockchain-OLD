@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -24,9 +24,8 @@
 
 namespace CryptoNote {
 
-HttpClient::HttpClient(System::Dispatcher& dispatcher, const std::string& address, uint16_t port) :
-  m_dispatcher(dispatcher), m_address(address), m_port(port) {
-}
+HttpClient::HttpClient(System::Dispatcher& dispatcher, const std::string& address, uint16_t port)
+    : m_dispatcher(dispatcher), m_address(address), m_port(port) {}
 
 HttpClient::~HttpClient() {
   if (m_connected) {
@@ -34,7 +33,7 @@ HttpClient::~HttpClient() {
   }
 }
 
-void HttpClient::request(const HttpRequest &req, HttpResponse &res) {
+void HttpClient::request(const HttpRequest& req, HttpResponse& res) {
   if (!m_connected) {
     connect();
   }
@@ -45,7 +44,7 @@ void HttpClient::request(const HttpRequest &req, HttpResponse &res) {
     stream << req;
     stream.flush();
     parser.receiveResponse(stream, res);
-  } catch (const std::exception &) {
+  } catch (const std::exception&) {
     disconnect();
     throw;
   }
@@ -62,28 +61,25 @@ void HttpClient::connect() {
   }
 }
 
-bool HttpClient::isConnected() const {
-  return m_connected;
-}
+bool HttpClient::isConnected() const { return m_connected; }
 
 void HttpClient::disconnect() {
   m_streamBuf.reset();
   try {
-    m_connection.write(nullptr, 0); //Socket shutdown.
+    m_connection.write(nullptr, 0);  // Socket shutdown.
   } catch (std::exception&) {
-    //Ignoring possible exception.
+    // Ignoring possible exception.
   }
 
   try {
     m_connection = System::TcpConnection();
   } catch (std::exception&) {
-    //Ignoring possible exception.
+    // Ignoring possible exception.
   }
 
   m_connected = false;
 }
 
-ConnectException::ConnectException(const std::string& whatArg) : std::runtime_error(whatArg.c_str()) {
-}
+ConnectException::ConnectException(const std::string& whatArg) : std::runtime_error(whatArg.c_str()) {}
 
-}
+}  // namespace CryptoNote

@@ -25,7 +25,7 @@ namespace CryptoNote {
 class P2pContext;
 
 class IP2pNodeInternal {
-public:
+ public:
   virtual ~IP2pNodeInternal() = default;
 
   virtual const CORE_SYNC_DATA& getGenesisPayload() const = 0;
@@ -38,4 +38,4 @@ public:
   virtual void tryPing(P2pContext& ctx) = 0;
 };
 
-}
+}  // namespace CryptoNote

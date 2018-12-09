@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -33,4 +33,4 @@ std::string RemoveExtension(const std::string& path);
 std::string ReplaceExtenstion(const std::string& path, const std::string& extension);
 bool HasParentPath(const std::string& path);
 
-}
+}  // namespace Common

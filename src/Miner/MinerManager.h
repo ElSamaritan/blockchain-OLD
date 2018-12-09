@@ -24,13 +24,13 @@ class Dispatcher;
 namespace Miner {
 
 class MinerManager {
-public:
+ public:
   MinerManager(System::Dispatcher& dispatcher, const CryptoNote::MiningConfig& config, Logging::ILogger& logger);
   ~MinerManager();
 
   void start();
 
-private:
+ private:
   System::Dispatcher& m_dispatcher;
   Logging::LoggerRef m_logger;
   System::ContextGroup m_contextGroup;
@@ -60,9 +60,11 @@ private:
   void stopBlockchainMonitoring();
 
   bool submitBlock(const CryptoNote::BlockTemplate& minedBlock, const std::string& daemonHost, uint16_t daemonPort);
-  CryptoNote::BlockMiningParameters requestMiningParameters(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, const std::string& miningAddress);
+  CryptoNote::BlockMiningParameters requestMiningParameters(System::Dispatcher& dispatcher,
+                                                            const std::string& daemonHost, uint16_t daemonPort,
+                                                            const std::string& miningAddress);
 
   void adjustBlockTemplate(CryptoNote::BlockTemplate& blockTemplate) const;
 };
 
-} //namespace Miner
+}  // namespace Miner

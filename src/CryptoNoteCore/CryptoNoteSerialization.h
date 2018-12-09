@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -33,7 +33,7 @@ bool serialize(Signature& sig, Common::StringView name, CryptoNote::ISerializer&
 bool serialize(EllipticCurveScalar& ecScalar, Common::StringView name, CryptoNote::ISerializer& serializer);
 bool serialize(EllipticCurvePoint& ecPoint, Common::StringView name, CryptoNote::ISerializer& serializer);
 
-}
+}  // namespace Crypto
 
 namespace CryptoNote {
 
@@ -66,4 +66,4 @@ void serialize(AccountKeys& keys, ISerializer& s);
 void serialize(KeyPair& keyPair, ISerializer& serializer);
 void serialize(RawBlock& rawBlock, ISerializer& serializer);
 
-}
+}  // namespace CryptoNote

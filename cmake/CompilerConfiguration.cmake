@@ -20,7 +20,7 @@ set(CompilerFlags
 )
 
 if(MSVC)
-    add_definitions("/D_CRT_SECURE_NO_WARNINGS /wd4996 /wd4345 /D_WIN32_WINNT=0x0600 /DWIN32_LEAN_AND_MEAN /DGTEST_HAS_TR1_TUPLE=0 /D_VARIADIC_MAX=8 /D__SSE4_1__")
+    add_definitions("/D_CRT_SECURE_NO_WARNINGS /D_WIN32_WINNT=0x0600 /DWIN32_LEAN_AND_MEAN /DGTEST_HAS_TR1_TUPLE=0 /D_VARIADIC_MAX=8 /D__SSE4_1__")
     foreach(flag ${CompilerFlags})
         string(REPLACE "/MTd" "" ${flag} ${${flag}})
         string(REPLACE "/MT" "" ${flag} ${${flag}})
@@ -28,7 +28,7 @@ if(MSVC)
         string(REPLACE "/MD" "" ${flag} ${${flag}})
         string(REGEX REPLACE "/W[1234X]" "" ${flag} ${${flag}})
     endforeach()
-    set(XI_CXX_FLAGS "/MP /bigobj")
+    set(XI_CXX_FLAGS "/W4 /WX /MP /bigobj /GS-")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
@@ -41,6 +41,9 @@ else() # NOT MSVC
     # This option has no effect in glibc version less than 2.20.
     # Since glibc 2.20 _BSD_SOURCE is deprecated, this macro is recomended instead
     add_definitions("-D_DEFAULT_SOURCE -D_GNU_SOURCE")
+  endif()
+  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(XI_CXX_FLAGS "-Wall -Wextra -Werror")
   endif()
 
   ## This is here to support building for multiple architecture types... but we all know how well that usually goes...

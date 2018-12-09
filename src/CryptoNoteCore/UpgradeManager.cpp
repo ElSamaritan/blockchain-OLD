@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -21,11 +21,9 @@
 
 namespace CryptoNote {
 
-UpgradeManager::UpgradeManager() {
-}
+UpgradeManager::UpgradeManager() {}
 
-UpgradeManager::~UpgradeManager() {
-}
+UpgradeManager::~UpgradeManager() {}
 
 void UpgradeManager::addMajorBlockVersion(uint8_t targetVersion, uint32_t upgradeHeight) {
   assert(m_upgradeDetectors.empty() || m_upgradeDetectors.back()->targetVersion() < targetVersion);
@@ -42,4 +40,4 @@ uint8_t UpgradeManager::getBlockMajorVersion(uint32_t blockIndex) const {
   return BLOCK_MAJOR_VERSION_1;
 }
 
-}
+}  // namespace CryptoNote

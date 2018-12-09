@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,12 +26,14 @@
 #include "Logging/LoggerRef.h"
 
 class BlockchainMonitor {
-public:
-  BlockchainMonitor(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, size_t pollingInterval, Logging::ILogger& logger);
+ public:
+  BlockchainMonitor(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort,
+                    size_t pollingInterval, Logging::ILogger& logger);
 
   void waitBlockchainUpdate();
   void stop();
-private:
+
+ private:
   System::Dispatcher& m_dispatcher;
   std::string m_daemonHost;
   uint16_t m_daemonPort;

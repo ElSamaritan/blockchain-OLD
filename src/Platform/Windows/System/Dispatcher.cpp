@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -27,6 +27,8 @@
 #include <winsock2.h>
 #include "ErrorMessage.h"
 
+#include <Xi/Global.h>
+
 namespace System {
 
 namespace {
@@ -37,12 +39,14 @@ struct DispatcherContext : public OVERLAPPED {
 
 const size_t STACK_SIZE = 16384;
 const size_t RESERVE_STACK_SIZE = 2097152;
-}
+}  // namespace
 
 Dispatcher::Dispatcher() {
-  static_assert(sizeof(CRITICAL_SECTION) == sizeof(Dispatcher::criticalSection), "CRITICAL_SECTION size doesn't fit sizeof(Dispatcher::criticalSection)");
+  static_assert(sizeof(CRITICAL_SECTION) == sizeof(Dispatcher::criticalSection),
+                "CRITICAL_SECTION size doesn't fit sizeof(Dispatcher::criticalSection)");
   BOOL result = InitializeCriticalSectionAndSpinCount(reinterpret_cast<LPCRITICAL_SECTION>(criticalSection), 4000);
   assert(result != FALSE);
+  (void)result;
   std::string message;
   if (ConvertThreadToFiberEx(NULL, 0) == NULL) {
     message = "ConvertThreadToFiberEx failed, " + lastErrorMessage();
@@ -79,12 +83,14 @@ Dispatcher::Dispatcher() {
 
       BOOL result2 = CloseHandle(completionPort);
       assert(result2 == TRUE);
+      (void)result2;
     }
 
     BOOL result2 = ConvertFiberToThread();
-    assert(result == TRUE);
+    assert(result2 == TRUE);
+    (void)result2;
   }
-  
+
   DeleteCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(criticalSection));
   throw std::runtime_error("Dispatcher::Dispatcher, " + message);
 }
@@ -109,6 +115,7 @@ Dispatcher::~Dispatcher() {
 
   int wsaResult = WSACleanup();
   assert(wsaResult == 0);
+  (void)wsaResult;
   BOOL result = CloseHandle(completionPort);
   assert(result == TRUE);
   result = ConvertFiberToThread();
@@ -135,7 +142,7 @@ void Dispatcher::dispatch() {
 
       assert(context->inExecutionQueue);
       context->inExecutionQueue = false;
-      
+
       break;
     }
 
@@ -161,7 +168,10 @@ void Dispatcher::dispatch() {
       break;
     }
 
-    DWORD timeout = timers.empty() ? INFINITE : static_cast<DWORD>(std::min(timers.begin()->first - currentTime, static_cast<uint64_t>(INFINITE - 1)));
+    DWORD timeout =
+        timers.empty()
+            ? INFINITE
+            : static_cast<DWORD>(std::min(timers.begin()->first - currentTime, static_cast<uint64_t>(INFINITE - 1)));
     OVERLAPPED_ENTRY entry;
     ULONG actual = 0;
     if (GetQueuedCompletionStatusEx(completionPort, &entry, 1, &actual, timeout, TRUE) == TRUE) {
@@ -204,9 +214,7 @@ NativeContext* Dispatcher::getCurrentContext() const {
   return currentContext;
 }
 
-void Dispatcher::interrupt() {
-  interrupt(currentContext);
-}
+void Dispatcher::interrupt() { interrupt(currentContext); }
 
 void Dispatcher::interrupt(NativeContext* context) {
   assert(GetCurrentThreadId() == threadId);
@@ -255,7 +263,8 @@ void Dispatcher::remoteSpawn(std::function<void()>&& procedure) {
   remoteSpawningProcedures.push(std::move(procedure));
   if (!remoteNotificationSent) {
     remoteNotificationSent = true;
-    if (PostQueuedCompletionStatus(completionPort, 0, 0, reinterpret_cast<LPOVERLAPPED>(remoteSpawnOverlapped)) == NULL) {
+    if (PostQueuedCompletionStatus(completionPort, 0, 0, reinterpret_cast<LPOVERLAPPED>(remoteSpawnOverlapped)) ==
+        NULL) {
       LeaveCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(criticalSection));
       throw std::runtime_error("Dispatcher::remoteSpawn, PostQueuedCompletionStatus failed, " + lastErrorMessage());
     };
@@ -345,9 +354,7 @@ void Dispatcher::addTimer(uint64_t time, NativeContext* context) {
   timers.insert(std::make_pair(time, context));
 }
 
-void* Dispatcher::getCompletionPort() const {
-  return completionPort;
-}
+void* Dispatcher::getCompletionPort() const { return completionPort; }
 
 NativeContext& Dispatcher::getReusableContext() {
   if (firstReusableContext == nullptr) {
@@ -380,7 +387,7 @@ void Dispatcher::interruptTimer(uint64_t time, NativeContext* context) {
   }
 
   auto range = timers.equal_range(time);
-  for (auto it = range.first; ; ++it) {
+  for (auto it = range.first;; ++it) {
     assert(it != range.second);
     if (it->second == context) {
       pushContext(context);
@@ -450,4 +457,4 @@ void __stdcall Dispatcher::contextProcedureStatic(void* context) {
   static_cast<Dispatcher*>(context)->contextProcedure();
 }
 
-}
+}  // namespace System

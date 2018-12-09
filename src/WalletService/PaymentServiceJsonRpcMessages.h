@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 //
@@ -17,9 +17,8 @@ namespace PaymentService {
 /* Forward declaration to avoid circular dependency from including "WalletService.h" */
 class WalletService;
 
-class RequestSerializationError: public std::exception {
-
-public:
+class RequestSerializationError : public std::exception {
+ public:
   virtual const char* what() const throw() override { return "Request error"; }
 };
 
@@ -329,7 +328,7 @@ struct SendTransaction {
     std::string paymentId;
     uint64_t unlockTime = 0;
 
-    void serialize(CryptoNote::ISerializer& serializer, const WalletService &service);
+    void serialize(CryptoNote::ISerializer& serializer, const WalletService& service);
   };
 
   struct Response {
@@ -350,7 +349,7 @@ struct CreateDelayedTransaction {
     std::string paymentId;
     uint64_t unlockTime = 0;
 
-    void serialize(CryptoNote::ISerializer& serializer, const WalletService &service);
+    void serialize(CryptoNote::ISerializer& serializer, const WalletService& service);
   };
 
   struct Response {
@@ -403,7 +402,7 @@ struct SendFusionTransaction {
     std::vector<std::string> addresses;
     std::string destinationAddress;
 
-    void serialize(CryptoNote::ISerializer& serializer, const WalletService &service);
+    void serialize(CryptoNote::ISerializer& serializer, const WalletService& service);
   };
 
   struct Response {
@@ -457,4 +456,4 @@ struct NodeFeeInfo {
   };
 };
 
-} //namespace PaymentService
+}  // namespace PaymentService

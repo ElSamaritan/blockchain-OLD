@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,6 +22,8 @@
 #include <system_error>
 #include <unordered_set>
 
+#include <Xi/Global.h>
+
 #include "crypto/crypto.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 
@@ -34,39 +36,56 @@ namespace CryptoNote {
 struct CompleteBlock;
 
 class IBlockchainSynchronizerObserver {
-public:
-  virtual void synchronizationProgressUpdated(uint32_t processedBlockCount, uint32_t totalBlockCount) {}
-  virtual void synchronizationCompleted(std::error_code result) {}
+ public:
+  virtual ~IBlockchainSynchronizerObserver() = default;
+  virtual void synchronizationProgressUpdated(uint32_t processedBlockCount, uint32_t totalBlockCount) {
+    XI_UNUSED(processedBlockCount, totalBlockCount);
+  }
+  virtual void synchronizationCompleted(std::error_code result) { XI_UNUSED(result); }
 };
 
 class IBlockchainConsumerObserver;
 
 class IBlockchainConsumer : public IObservable<IBlockchainConsumerObserver> {
-public:
+ public:
   virtual ~IBlockchainConsumer() {}
   virtual SynchronizationStart getSyncStart() = 0;
   virtual const std::unordered_set<Crypto::Hash>& getKnownPoolTxIds() const = 0;
   virtual void onBlockchainDetach(uint32_t height) = 0;
   virtual uint32_t onNewBlocks(const CompleteBlock* blocks, uint32_t startHeight, uint32_t count) = 0;
-  virtual std::error_code onPoolUpdated(const std::vector<std::unique_ptr<ITransactionReader>>& addedTransactions, const std::vector<Crypto::Hash>& deletedTransactions) = 0;
+  virtual std::error_code onPoolUpdated(const std::vector<std::unique_ptr<ITransactionReader>>& addedTransactions,
+                                        const std::vector<Crypto::Hash>& deletedTransactions) = 0;
 
   virtual std::error_code addUnconfirmedTransaction(const ITransactionReader& transaction) = 0;
   virtual void removeUnconfirmedTransaction(const Crypto::Hash& transactionHash) = 0;
 };
 
 class IBlockchainConsumerObserver {
-public:
-  virtual void onBlocksAdded(IBlockchainConsumer* consumer, const std::vector<Crypto::Hash>& blockHashes) {}
-  virtual void onBlockchainDetach(IBlockchainConsumer* consumer, uint32_t blockIndex) {}
-  virtual void onTransactionDeleteBegin(IBlockchainConsumer* consumer, Crypto::Hash transactionHash) {}
-  virtual void onTransactionDeleteEnd(IBlockchainConsumer* consumer, Crypto::Hash transactionHash) {}
-  virtual void onTransactionUpdated(IBlockchainConsumer* consumer, const Crypto::Hash& transactionHash, const std::vector<ITransfersContainer*>& containers) {}
+ public:
+  virtual ~IBlockchainConsumerObserver() = default;
+
+  virtual void onBlocksAdded(IBlockchainConsumer* consumer, const std::vector<Crypto::Hash>& blockHashes) {
+    XI_UNUSED(consumer, blockHashes);
+  }
+  virtual void onBlockchainDetach(IBlockchainConsumer* consumer, uint32_t blockIndex) {
+    XI_UNUSED(consumer, blockIndex);
+  }
+  virtual void onTransactionDeleteBegin(IBlockchainConsumer* consumer, Crypto::Hash transactionHash) {
+    XI_UNUSED(consumer, transactionHash);
+  }
+  virtual void onTransactionDeleteEnd(IBlockchainConsumer* consumer, Crypto::Hash transactionHash) {
+    XI_UNUSED(consumer, transactionHash);
+  }
+  virtual void onTransactionUpdated(IBlockchainConsumer* consumer, const Crypto::Hash& transactionHash,
+                                    const std::vector<ITransfersContainer*>& containers) {
+    XI_UNUSED(consumer, transactionHash, containers);
+  }
 };
 
-class IBlockchainSynchronizer :
-  public IObservable<IBlockchainSynchronizerObserver>,
-  public IStreamSerializable {
-public:
+class IBlockchainSynchronizer : public IObservable<IBlockchainSynchronizerObserver>, public IStreamSerializable {
+ public:
+  virtual ~IBlockchainSynchronizer() = default;
+
   virtual void addConsumer(IBlockchainConsumer* consumer) = 0;
   virtual bool removeConsumer(IBlockchainConsumer* consumer) = 0;
   virtual IStreamSerializable* getConsumerState(IBlockchainConsumer* consumer) const = 0;
@@ -79,4 +98,4 @@ public:
   virtual void stop() = 0;
 };
 
-}
+}  // namespace CryptoNote

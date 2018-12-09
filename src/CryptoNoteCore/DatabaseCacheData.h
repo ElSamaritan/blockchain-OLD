@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -33,9 +33,10 @@ struct KeyOutputInfo {
 
 // inherit here to avoid breaking IBlockchainCache interface
 struct ExtendedTransactionInfo : CachedTransactionInfo {
-  //CachedTransactionInfo tx;
-  std::map<IBlockchainCache::Amount, std::vector<IBlockchainCache::GlobalOutputIndex>> amountToKeyIndexes; //global key output indexes spawned in this transaction
+  // CachedTransactionInfo tx;
+  std::map<IBlockchainCache::Amount, std::vector<IBlockchainCache::GlobalOutputIndex>>
+      amountToKeyIndexes;  // global key output indexes spawned in this transaction
   void serialize(ISerializer& s);
 };
 
-}
+}  // namespace CryptoNote

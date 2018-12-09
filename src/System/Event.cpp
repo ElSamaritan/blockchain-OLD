@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -31,13 +31,11 @@ struct EventWaiter {
   NativeContext* context;
 };
 
-}
+}  // namespace
 
-Event::Event() : dispatcher(nullptr) {
-}
+Event::Event() : dispatcher(nullptr) {}
 
-Event::Event(Dispatcher& dispatcher) : dispatcher(&dispatcher), state(false), first(nullptr) {
-}
+Event::Event(Dispatcher& dispatcher) : dispatcher(&dispatcher), state(false), first(nullptr) {}
 
 Event::Event(Event&& other) : dispatcher(other.dispatcher) {
   if (dispatcher != nullptr) {
@@ -51,9 +49,7 @@ Event::Event(Event&& other) : dispatcher(other.dispatcher) {
   }
 }
 
-Event::~Event() {
-  assert(dispatcher == nullptr || state || first == nullptr);
-}
+Event::~Event() { assert(dispatcher == nullptr || state || first == nullptr); }
 
 Event& Event::operator=(Event&& other) {
   assert(dispatcher == nullptr || state || first == nullptr);
@@ -102,7 +98,7 @@ void Event::wait() {
   }
 
   if (!state) {
-    EventWaiter waiter = { false, nullptr, nullptr, dispatcher->getCurrentContext() };
+    EventWaiter waiter = {false, nullptr, nullptr, dispatcher->getCurrentContext()};
     waiter.context->interruptProcedure = [&] {
       if (waiter.next != nullptr) {
         assert(waiter.next->prev == &waiter);
@@ -112,7 +108,7 @@ void Event::wait() {
         last = waiter.prev;
       }
 
-      if (waiter.prev != nullptr) { 
+      if (waiter.prev != nullptr) {
         assert(waiter.prev->next == &waiter);
         waiter.prev->next = waiter.next;
       } else {
@@ -135,12 +131,12 @@ void Event::wait() {
     last = &waiter;
     dispatcher->dispatch();
     assert(waiter.context == dispatcher->getCurrentContext());
-    assert( waiter.context->interruptProcedure == nullptr);
+    assert(waiter.context->interruptProcedure == nullptr);
     assert(dispatcher != nullptr);
     if (waiter.interrupted) {
       throw InterruptedException();
-    } 
+    }
   }
 }
 
-}
+}  // namespace System

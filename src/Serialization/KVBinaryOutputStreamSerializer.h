@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -25,8 +25,7 @@
 namespace CryptoNote {
 
 class KVBinaryOutputStreamSerializer : public ISerializer {
-public:
-
+ public:
   KVBinaryOutputStreamSerializer();
   virtual ~KVBinaryOutputStreamSerializer() {}
 
@@ -53,46 +52,37 @@ public:
   virtual bool binary(void* value, size_t size, Common::StringView name) override;
   virtual bool binary(std::string& value, Common::StringView name) override;
 
-  template<typename T>
+  template <typename T>
   bool operator()(T& value, Common::StringView name) {
     return ISerializer::operator()(value, name);
   }
 
-private:
-
+ private:
   void writeElementPrefix(uint8_t type, Common::StringView name);
   void checkArrayPreamble(uint8_t type);
   void updateState(uint8_t type);
   MemoryStream& stream();
 
-  enum class State {
-    Root,
-    Object,
-    ArrayPrefix,
-    Array
-  };
+  enum class State { Root, Object, ArrayPrefix, Array };
 
   struct Level {
     State state;
     std::string name;
     size_t count;
 
-    Level(Common::StringView nm) :
-      name(nm), state(State::Object), count(0) {}
+    Level(Common::StringView nm) : name(nm), state(State::Object), count(0) {}
 
-    Level(Common::StringView nm, size_t arraySize) :
-      name(nm), state(State::ArrayPrefix), count(arraySize) {}
+    Level(Common::StringView nm, size_t arraySize) : name(nm), state(State::ArrayPrefix), count(arraySize) {}
 
     Level(Level&& rv) {
       state = rv.state;
       name = std::move(rv.name);
       count = rv.count;
     }
-
   };
 
   std::vector<MemoryStream> m_objectsStack;
   std::vector<Level> m_stack;
 };
 
-}
+}  // namespace CryptoNote

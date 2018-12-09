@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -31,18 +31,14 @@ namespace CryptoNote {
 class ISerializer;
 struct TransactionValidatorState;
 
-enum class ExtractOutputKeysResult {
-  SUCCESS,
-  INVALID_GLOBAL_INDEX,
-  OUTPUT_LOCKED
-};
+enum class ExtractOutputKeysResult { SUCCESS, INVALID_GLOBAL_INDEX, OUTPUT_LOCKED };
 
 union PackedOutIndex {
   struct {
     uint32_t blockIndex;
     uint16_t transactionIndex;
     uint16_t outputIndex;
-  };
+  } data;
 
   uint64_t packedValue;
 };
@@ -58,40 +54,33 @@ struct PushedBlockInfo {
 };
 
 class UseGenesis {
-public:
+ public:
   explicit UseGenesis(bool u) : use(u) {}
   // emulate boolean flag
-  operator bool() {
-    return use;
-  }
+  operator bool() { return use; }
 
-private:
+ private:
   bool use = false;
 };
-  
+
 struct CachedBlockInfo;
 struct CachedTransactionInfo;
 class ITransactionPool;
 
 class IBlockchainCache {
-public:
+ public:
   using BlockIndex = uint32_t;
   using GlobalOutputIndex = uint32_t;
   using Amount = uint64_t;
 
-  virtual ~IBlockchainCache() {}
+  virtual ~IBlockchainCache() = default;
 
   virtual RawBlock getBlockByIndex(uint32_t index) const = 0;
   virtual BinaryArray getRawTransaction(uint32_t blockIndex, uint32_t transactionIndex) const = 0;
   virtual std::unique_ptr<IBlockchainCache> split(uint32_t splitBlockIndex) = 0;
-  virtual void pushBlock(
-      const CachedBlock& cachedBlock,
-      const std::vector<CachedTransaction>& cachedTransactions,
-      const TransactionValidatorState& validatorState,
-      size_t blockSize,
-      uint64_t generatedCoins,
-      uint64_t blockDifficulty,
-      RawBlock&& rawBlock) = 0;
+  virtual void pushBlock(const CachedBlock& cachedBlock, const std::vector<CachedTransaction>& cachedTransactions,
+                         const TransactionValidatorState& validatorState, size_t blockSize, uint64_t generatedCoins,
+                         uint64_t blockDifficulty, RawBlock&& rawBlock) = 0;
   virtual PushedBlockInfo getPushedBlockInfo(uint32_t index) const = 0;
   virtual bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) const = 0;
   virtual bool checkIfSpent(const Crypto::KeyImage& keyImage) const = 0;
@@ -99,15 +88,23 @@ public:
   virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime) const = 0;
   virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const = 0;
 
-  virtual ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes, std::vector<Crypto::PublicKey>& publicKeys) const = 0;
-  virtual ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, uint32_t blockIndex, Common::ArrayView<uint32_t> globalIndexes, std::vector<Crypto::PublicKey>& publicKeys) const = 0;
+  virtual ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
+                                                       std::vector<Crypto::PublicKey>& publicKeys) const = 0;
+  virtual ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, uint32_t blockIndex,
+                                                       Common::ArrayView<uint32_t> globalIndexes,
+                                                       std::vector<Crypto::PublicKey>& publicKeys) const = 0;
 
-  virtual ExtractOutputKeysResult extractKeyOtputIndexes(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes, std::vector<PackedOutIndex>& outIndexes) const = 0;
-  virtual ExtractOutputKeysResult extractKeyOtputReferences(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes, std::vector<std::pair<Crypto::Hash, size_t>>& outputReferences) const = 0;
-  //TODO: get rid of pred in this method. return vector of KeyOutputInfo structures
+  virtual ExtractOutputKeysResult extractKeyOtputIndexes(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
+                                                         std::vector<PackedOutIndex>& outIndexes) const = 0;
+  virtual ExtractOutputKeysResult extractKeyOtputReferences(
+      uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
+      std::vector<std::pair<Crypto::Hash, size_t>>& outputReferences) const = 0;
+  // TODO: get rid of pred in this method. return vector of KeyOutputInfo structures
   virtual ExtractOutputKeysResult extractKeyOutputs(
       uint64_t amount, uint32_t blockIndex, Common::ArrayView<uint32_t> globalIndexes,
-      std::function<ExtractOutputKeysResult(const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex)> pred) const = 0;
+      std::function<ExtractOutputKeysResult(const CachedTransactionInfo& info, PackedOutIndex index,
+                                            uint32_t globalIndex)>
+          pred) const = 0;
 
   virtual uint32_t getTopBlockIndex() const = 0;
   virtual const Crypto::Hash& getTopBlockHash() const = 0;
@@ -148,15 +145,17 @@ public:
 
   virtual uint32_t getTimestampLowerBoundBlockIndex(uint64_t timestamp) const = 0;
 
-  //NOTE: shouldn't be recursive otherwise we'll get quadratic complexity
+  // NOTE: shouldn't be recursive otherwise we'll get quadratic complexity
   virtual void getRawTransactions(const std::vector<Crypto::Hash>& transactions,
-    std::vector<BinaryArray>& foundTransactions, std::vector<Crypto::Hash>& missedTransactions) const = 0;
-  virtual std::vector<BinaryArray> getRawTransactions(const std::vector<Crypto::Hash> &transactions,
-                                  std::vector<Crypto::Hash> &missedTransactions) const = 0;
-  virtual std::vector<BinaryArray> getRawTransactions(const std::vector<Crypto::Hash> &transactions) const = 0;
+                                  std::vector<BinaryArray>& foundTransactions,
+                                  std::vector<Crypto::Hash>& missedTransactions) const = 0;
+  virtual std::vector<BinaryArray> getRawTransactions(const std::vector<Crypto::Hash>& transactions,
+                                                      std::vector<Crypto::Hash>& missedTransactions) const = 0;
+  virtual std::vector<BinaryArray> getRawTransactions(const std::vector<Crypto::Hash>& transactions) const = 0;
 
-  //NOTE: not recursive!
-  virtual bool getTransactionGlobalIndexes(const Crypto::Hash& transactionHash, std::vector<uint32_t>& globalIndexes) const = 0;
+  // NOTE: not recursive!
+  virtual bool getTransactionGlobalIndexes(const Crypto::Hash& transactionHash,
+                                           std::vector<uint32_t>& globalIndexes) const = 0;
 
   virtual size_t getTransactionCount() const = 0;
 
@@ -178,4 +177,4 @@ public:
   virtual std::vector<Crypto::Hash> getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount) const = 0;
 };
 
-}
+}  // namespace CryptoNote

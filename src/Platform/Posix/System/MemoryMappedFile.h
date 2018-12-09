@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -24,7 +24,7 @@
 namespace System {
 
 class MemoryMappedFile {
-public:
+ public:
   MemoryMappedFile();
   ~MemoryMappedFile();
 
@@ -49,11 +49,11 @@ public:
 
   void swap(MemoryMappedFile& other);
 
-private:
+ private:
   int m_file;
   std::string m_path;
   uint64_t m_size;
   uint8_t* m_data;
 };
 
-}
+}  // namespace System

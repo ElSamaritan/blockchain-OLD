@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -31,7 +31,7 @@ void tree_hash(const char (*hashes)[HASH_SIZE], size_t count, char *root_hash) {
   } else {
     size_t i, j;
     size_t cnt = count - 1;
-    char (*ints)[HASH_SIZE];
+    char(*ints)[HASH_SIZE];
     for (i = 1; i < 8 * sizeof(size_t); i <<= 1) {
       cnt |= cnt >> i;
     }
@@ -69,7 +69,7 @@ void tree_branch(const char (*hashes)[HASH_SIZE], size_t count, char (*branch)[H
   size_t i, j;
   size_t cnt = 1;
   size_t depth = 0;
-  char (*ints)[HASH_SIZE];
+  char(*ints)[HASH_SIZE];
   assert(count > 0);
   for (i = sizeof(size_t) << 2; i > 0; i >>= 1) {
     if (cnt << i <= count) {
@@ -96,7 +96,8 @@ void tree_branch(const char (*hashes)[HASH_SIZE], size_t count, char (*branch)[H
   }
 }
 
-void tree_hash_from_branch(const char (*branch)[HASH_SIZE], size_t depth, const char *leaf, const void *path, char *root_hash) {
+void tree_hash_from_branch(const char (*branch)[HASH_SIZE], size_t depth, const char *leaf, const void *path,
+                           char *root_hash) {
   if (depth == 0) {
     memcpy(root_hash, leaf, HASH_SIZE);
   } else {
@@ -105,7 +106,7 @@ void tree_hash_from_branch(const char (*branch)[HASH_SIZE], size_t depth, const 
     char *leaf_path, *branch_path;
     while (depth > 0) {
       --depth;
-      if (path && (((const char *) path)[depth >> 3] & (1 << (depth & 7))) != 0) {
+      if (path && (((const char *)path)[depth >> 3] & (1 << (depth & 7))) != 0) {
         leaf_path = buffer[1];
         branch_path = buffer[0];
       } else {

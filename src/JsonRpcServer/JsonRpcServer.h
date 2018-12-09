@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Calex Developers
 //
@@ -19,7 +19,7 @@
 namespace CryptoNote {
 class HttpResponse;
 class HttpRequest;
-}
+}  // namespace CryptoNote
 
 namespace Common {
 class JsonValue;
@@ -32,13 +32,14 @@ class TcpConnection;
 namespace CryptoNote {
 
 class JsonRpcServer : HttpServer {
-public:
-  JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup, PaymentService::ConfigurationManager& config);
+ public:
+  JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup,
+                PaymentService::ConfigurationManager& config);
   JsonRpcServer(const JsonRpcServer&) = delete;
-  
+
   void start(const std::string& bindAddress, uint16_t bindPort);
 
-protected:
+ protected:
   static void makeErrorResponse(const std::error_code& ec, Common::JsonValue& resp);
   static void makeMethodNotFoundResponse(Common::JsonValue& resp);
   static void makeInvalidPasswordResponse(Common::JsonValue& resp);
@@ -49,8 +50,8 @@ protected:
 
   virtual void processJsonRpcRequest(const Common::JsonValue& req, Common::JsonValue& resp) = 0;
   PaymentService::ConfigurationManager& config;
-  
-private:
+
+ private:
   // HttpServer
   virtual void processRequest(const CryptoNote::HttpRequest& request, CryptoNote::HttpResponse& response) override;
 
@@ -59,4 +60,4 @@ private:
   Logging::LoggerRef logger;
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

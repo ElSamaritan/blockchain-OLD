@@ -36,11 +36,11 @@ PaymentGateService* ppg;
 #ifdef WIN32
 SERVICE_STATUS_HANDLE serviceStatusHandle;
 
-std::string GetLastErrorMessage(DWORD errorMessageID)
-{
+std::string GetLastErrorMessage(DWORD errorMessageID) {
   LPSTR messageBuffer = nullptr;
-  size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-    NULL, errorMessageID, 0, (LPSTR)&messageBuffer, 0, NULL);
+  size_t size =
+      FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
+                     errorMessageID, 0, (LPSTR)&messageBuffer, 0, NULL);
 
   std::string message(messageBuffer, size);
 
@@ -54,31 +54,34 @@ void __stdcall serviceHandler(DWORD fdwControl) {
     Logging::LoggerRef log(ppg->getLogger(), "serviceHandler");
     log(Logging::INFO, Logging::BRIGHT_YELLOW) << "Stop signal caught";
 
-    SERVICE_STATUS serviceStatus{ SERVICE_WIN32_OWN_PROCESS, SERVICE_STOP_PENDING, 0, NO_ERROR, 0, 0, 0 };
+    SERVICE_STATUS serviceStatus{SERVICE_WIN32_OWN_PROCESS, SERVICE_STOP_PENDING, 0, NO_ERROR, 0, 0, 0};
     SetServiceStatus(serviceStatusHandle, &serviceStatus);
 
     ppg->stop();
   }
 }
 
-void __stdcall serviceMain(DWORD dwArgc, char **lpszArgv) {
+void __stdcall serviceMain(DWORD dwArgc, char** lpszArgv) {
   Logging::LoggerRef logRef(ppg->getLogger(), "WindowsService");
 
   serviceStatusHandle = RegisterServiceCtrlHandler("PaymentGate", serviceHandler);
   if (serviceStatusHandle == NULL) {
-    logRef(Logging::FATAL, Logging::BRIGHT_RED) << "Couldn't make RegisterServiceCtrlHandler call: " << GetLastErrorMessage(GetLastError());
+    logRef(Logging::FATAL, Logging::BRIGHT_RED)
+        << "Couldn't make RegisterServiceCtrlHandler call: " << GetLastErrorMessage(GetLastError());
     return;
   }
 
-  SERVICE_STATUS serviceStatus{ SERVICE_WIN32_OWN_PROCESS, SERVICE_START_PENDING, 0, NO_ERROR, 0, 1, 3000 };
+  SERVICE_STATUS serviceStatus{SERVICE_WIN32_OWN_PROCESS, SERVICE_START_PENDING, 0, NO_ERROR, 0, 1, 3000};
   if (SetServiceStatus(serviceStatusHandle, &serviceStatus) != TRUE) {
-    logRef(Logging::FATAL, Logging::BRIGHT_RED) << "Couldn't make SetServiceStatus call: " << GetLastErrorMessage(GetLastError());
+    logRef(Logging::FATAL, Logging::BRIGHT_RED)
+        << "Couldn't make SetServiceStatus call: " << GetLastErrorMessage(GetLastError());
     return;
   }
 
-  serviceStatus = { SERVICE_WIN32_OWN_PROCESS, SERVICE_RUNNING, SERVICE_ACCEPT_STOP, NO_ERROR, 0, 0, 0 };
+  serviceStatus = {SERVICE_WIN32_OWN_PROCESS, SERVICE_RUNNING, SERVICE_ACCEPT_STOP, NO_ERROR, 0, 0, 0};
   if (SetServiceStatus(serviceStatusHandle, &serviceStatus) != TRUE) {
-    logRef(Logging::FATAL, Logging::BRIGHT_RED) << "Couldn't make SetServiceStatus call: " << GetLastErrorMessage(GetLastError());
+    logRef(Logging::FATAL, Logging::BRIGHT_RED)
+        << "Couldn't make SetServiceStatus call: " << GetLastErrorMessage(GetLastError());
     return;
   }
 
@@ -88,7 +91,7 @@ void __stdcall serviceMain(DWORD dwArgc, char **lpszArgv) {
     logRef(Logging::FATAL, Logging::BRIGHT_RED) << "Error occurred: " << ex.what();
   }
 
-  serviceStatus = { SERVICE_WIN32_OWN_PROCESS, SERVICE_STOPPED, 0, NO_ERROR, 0, 0, 0 };
+  serviceStatus = {SERVICE_WIN32_OWN_PROCESS, SERVICE_STOPPED, 0, NO_ERROR, 0, 0, 0};
   SetServiceStatus(serviceStatusHandle, &serviceStatus);
 }
 #else
@@ -96,14 +99,11 @@ int daemonize() {
   pid_t pid;
   pid = fork();
 
-  if (pid < 0)
-    return pid;
+  if (pid < 0) return pid;
 
-  if (pid > 0)
-    return pid;
+  if (pid > 0) return pid;
 
-  if (setsid() < 0)
-    return -1;
+  if (setsid() < 0) return -1;
 
   signal(SIGCHLD, SIG_IGN);
   signal(SIGHUP, SIG_IGN);
@@ -111,11 +111,9 @@ int daemonize() {
 
   pid = fork();
 
-  if (pid < 0)
-    return pid;
+  if (pid < 0) return pid;
 
-  if (pid > 0)
-    return pid;
+  if (pid > 0) return pid;
 
   umask(0);
 
@@ -126,10 +124,7 @@ int daemonize() {
 int runDaemon() {
 #ifdef WIN32
 
-  SERVICE_TABLE_ENTRY serviceTable[] {
-    { "Payment Gate", serviceMain },
-    { NULL, NULL }
-  };
+  SERVICE_TABLE_ENTRY serviceTable[]{{"Payment Gate", serviceMain}, {NULL, NULL}};
 
   Logging::LoggerRef logRef(ppg->getLogger(), "RunService");
 
@@ -145,10 +140,10 @@ int runDaemon() {
 
   int daemonResult = daemonize();
   if (daemonResult > 0) {
-    //parent
+    // parent
     return 0;
   } else if (daemonResult < 0) {
-    //error occurred
+    // error occurred
     return 1;
   }
 
@@ -171,7 +166,8 @@ int registerService() {
 
   for (;;) {
     if (GetModuleFileName(NULL, pathBuff, ARRAYSIZE(pathBuff)) == 0) {
-      logRef(Logging::FATAL, Logging::BRIGHT_RED) << "GetModuleFileName failed with error: " << GetLastErrorMessage(GetLastError());
+      logRef(Logging::FATAL, Logging::BRIGHT_RED)
+          << "GetModuleFileName failed with error: " << GetLastErrorMessage(GetLastError());
       ret = 1;
       break;
     }
@@ -183,22 +179,26 @@ int registerService() {
 
     scManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT | SC_MANAGER_CREATE_SERVICE);
     if (scManager == NULL) {
-      logRef(Logging::FATAL, Logging::BRIGHT_RED) << "OpenSCManager failed with error: " << GetLastErrorMessage(GetLastError());
+      logRef(Logging::FATAL, Logging::BRIGHT_RED)
+          << "OpenSCManager failed with error: " << GetLastErrorMessage(GetLastError());
       ret = 1;
       break;
     }
 
-    scService = CreateService(scManager, SERVICE_NAME, NULL, SERVICE_QUERY_STATUS, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START,
-      SERVICE_ERROR_NORMAL, modulePath.c_str(), NULL, NULL, NULL, NULL, NULL);
+    scService =
+        CreateService(scManager, SERVICE_NAME, NULL, SERVICE_QUERY_STATUS, SERVICE_WIN32_OWN_PROCESS,
+                      SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, modulePath.c_str(), NULL, NULL, NULL, NULL, NULL);
 
     if (scService == NULL) {
-      logRef(Logging::FATAL, Logging::BRIGHT_RED) << "CreateService failed with error: " << GetLastErrorMessage(GetLastError());
+      logRef(Logging::FATAL, Logging::BRIGHT_RED)
+          << "CreateService failed with error: " << GetLastErrorMessage(GetLastError());
       ret = 1;
       break;
     }
 
     logRef(Logging::INFO) << "Service is registered successfully";
-    logRef(Logging::INFO) << "Please make sure " << moduleDir + "payment_service.conf" << " exists";
+    logRef(Logging::INFO) << "Please make sure " << moduleDir + "payment_service.conf"
+                          << " exists";
     break;
   }
 
@@ -222,20 +222,22 @@ int unregisterService() {
 
   SC_HANDLE scManager = NULL;
   SC_HANDLE scService = NULL;
-  SERVICE_STATUS ssSvcStatus = { };
+  SERVICE_STATUS ssSvcStatus = {};
   int ret = 0;
 
   for (;;) {
     scManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if (scManager == NULL) {
-      logRef(Logging::FATAL, Logging::BRIGHT_RED) << "OpenSCManager failed with error: " << GetLastErrorMessage(GetLastError());
+      logRef(Logging::FATAL, Logging::BRIGHT_RED)
+          << "OpenSCManager failed with error: " << GetLastErrorMessage(GetLastError());
       ret = 1;
       break;
     }
 
     scService = OpenService(scManager, SERVICE_NAME, SERVICE_STOP | SERVICE_QUERY_STATUS | DELETE);
     if (scService == NULL) {
-      logRef(Logging::FATAL, Logging::BRIGHT_RED) << "OpenService failed with error: " << GetLastErrorMessage(GetLastError());
+      logRef(Logging::FATAL, Logging::BRIGHT_RED)
+          << "OpenService failed with error: " << GetLastErrorMessage(GetLastError());
       ret = 1;
       break;
     }
@@ -262,7 +264,8 @@ int unregisterService() {
     }
 
     if (!DeleteService(scService)) {
-      logRef(Logging::FATAL, Logging::BRIGHT_RED) << "DeleteService failed with error: " << GetLastErrorMessage(GetLastError());
+      logRef(Logging::FATAL, Logging::BRIGHT_RED)
+          << "DeleteService failed with error: " << GetLastErrorMessage(GetLastError());
       ret = 1;
       break;
     }
@@ -292,7 +295,7 @@ int main(int argc, char** argv) {
 
   try {
     if (!pg.init(argc, argv)) {
-      return 0; //help message requested or so
+      return 0;  // help message requested or so
     }
 
     std::cout << CommonCLI::header();

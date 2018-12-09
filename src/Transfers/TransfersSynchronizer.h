@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The BBSCoin Developers
 // Copyright (c) 2018, The Karbo Developers
 // Copyright (c) 2018, The TurtleCoin Developers
@@ -28,8 +28,9 @@ class TransfersConsumer;
 class INode;
 
 class TransfersSyncronizer : public ITransfersSynchronizer, public IBlockchainConsumerObserver {
-public:
-  TransfersSyncronizer(const CryptoNote::Currency& currency, Logging::ILogger& logger, IBlockchainSynchronizer& sync, INode& node);
+ public:
+  TransfersSyncronizer(const CryptoNote::Currency& currency, Logging::ILogger& logger, IBlockchainSynchronizer& sync,
+                       INode& node);
   virtual ~TransfersSyncronizer();
 
   void initTransactionPool(const std::unordered_set<Crypto::Hash>& uncommitedTransactions);
@@ -42,15 +43,17 @@ public:
   virtual std::vector<Crypto::Hash> getViewKeyKnownBlocks(const Crypto::PublicKey& publicViewKey) override;
 
   void subscribeConsumerNotifications(const Crypto::PublicKey& viewPublicKey, ITransfersSynchronizerObserver* observer);
-  void unsubscribeConsumerNotifications(const Crypto::PublicKey& viewPublicKey, ITransfersSynchronizerObserver* observer);
+  void unsubscribeConsumerNotifications(const Crypto::PublicKey& viewPublicKey,
+                                        ITransfersSynchronizerObserver* observer);
 
-  void addPublicKeysSeen(const AccountPublicAddress& acc, const Crypto::Hash& transactionHash, const Crypto::PublicKey& outputKey);
+  void addPublicKeysSeen(const AccountPublicAddress& acc, const Crypto::Hash& transactionHash,
+                         const Crypto::PublicKey& outputKey);
 
   // IStreamSerializable
   virtual void save(std::ostream& os) override;
   virtual void load(std::istream& in) override;
 
-private:
+ private:
   Logging::LoggerRef m_logger;
 
   // map { view public key -> consumer }
@@ -71,10 +74,10 @@ private:
   virtual void onTransactionDeleteBegin(IBlockchainConsumer* consumer, Crypto::Hash transactionHash) override;
   virtual void onTransactionDeleteEnd(IBlockchainConsumer* consumer, Crypto::Hash transactionHash) override;
   virtual void onTransactionUpdated(IBlockchainConsumer* consumer, const Crypto::Hash& transactionHash,
-    const std::vector<ITransfersContainer*>& containers) override;
+                                    const std::vector<ITransfersContainer*>& containers) override;
 
   bool findViewKeyForConsumer(IBlockchainConsumer* consumer, Crypto::PublicKey& viewKey) const;
   SubscribersContainer::const_iterator findSubscriberForConsumer(IBlockchainConsumer* consumer) const;
 };
 
-}
+}  // namespace CryptoNote

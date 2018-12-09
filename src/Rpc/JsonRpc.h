@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -29,7 +29,7 @@
 namespace CryptoNote {
 
 class HttpClient;
-  
+
 namespace JsonRpc {
 
 const int errParseError = -32700;
@@ -39,8 +39,8 @@ const int errInvalidParams = -32602;
 const int errInternalError = -32603;
 const int errInvalidPassword = -32604;
 
-class JsonRpcError: public std::exception {
-public:
+class JsonRpcError : public std::exception {
+ public:
   JsonRpcError();
   JsonRpcError(int c);
   JsonRpcError(int c, const std::string& msg);
@@ -66,8 +66,7 @@ typedef boost::optional<Common::JsonValue> OptionalId;
 typedef boost::optional<Common::JsonValue> OptionalPassword;
 
 class JsonRpcRequest {
-public:
-  
+ public:
   JsonRpcRequest() : psReq(Common::JsonValue::OBJECT) {}
 
   bool parseRequest(const std::string& requestBody) {
@@ -86,9 +85,9 @@ public:
     if (psReq.contains("id")) {
       id = psReq("id");
     }
-	
-	if (psReq.contains("password")) {
-		password = psReq("password");
+
+    if (psReq.contains("password")) {
+      password = psReq("password");
     }
 
     return true;
@@ -96,8 +95,7 @@ public:
 
   template <typename T>
   bool loadParams(T& v) const {
-    loadFromJsonValue(v, psReq.contains("params") ? 
-      psReq("params") : Common::JsonValue(Common::JsonValue::NIL));
+    loadFromJsonValue(v, psReq.contains("params") ? psReq("params") : Common::JsonValue(Common::JsonValue::NIL));
     return true;
   }
 
@@ -107,21 +105,13 @@ public:
     return true;
   }
 
-  const std::string& getMethod() const {
-    return method;
-  }
+  const std::string& getMethod() const { return method; }
 
-  void setMethod(const std::string& m) {
-    method = m;
-  }
+  void setMethod(const std::string& m) { method = m; }
 
-  const OptionalId& getId() const {
-    return id;
-  }
-  
-  const OptionalPassword& getPassword() const {
-	  return password;
-  }
+  const OptionalId& getId() const { return id; }
+
+  const OptionalPassword& getPassword() const { return password; }
 
   std::string getBody() {
     psReq.set("jsonrpc", std::string("2.0"));
@@ -129,18 +119,15 @@ public:
     return psReq.toString();
   }
 
-private:
-
+ private:
   Common::JsonValue psReq;
   OptionalId id;
   OptionalPassword password;
   std::string method;
 };
 
-
 class JsonRpcResponse {
-public:
-
+ public:
   JsonRpcResponse() : psResp(Common::JsonValue::OBJECT) {}
 
   void parse(const std::string& responseBody) {
@@ -157,9 +144,7 @@ public:
     }
   }
 
-  void setError(const JsonRpcError& err) {
-    psResp.set("error", storeToJsonValue(err));
-  }
+  void setError(const JsonRpcError& err) { psResp.set("error", storeToJsonValue(err)); }
 
   bool getError(JsonRpcError& err) const {
     if (!psResp.contains("error")) {
@@ -191,10 +176,9 @@ public:
     return true;
   }
 
-private:
+ private:
   Common::JsonValue psResp;
 };
-
 
 void invokeJsonRpcCommand(HttpClient& httpClient, JsonRpcRequest& req, JsonRpcResponse& res);
 
@@ -216,8 +200,17 @@ bool invokeMethod(const JsonRpcRequest& jsReq, JsonRpcResponse& jsRes, Handler h
   Request req;
   Response res;
 
-  if (!std::is_same<Request, CryptoNote::EMPTY_STRUCT>::value && !jsReq.loadParams(req)) {
-    throw JsonRpcError(JsonRpc::errInvalidParams);
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4127)
+#endif
+  if (!std::is_same<Request, CryptoNote::EMPTY_STRUCT>::value) {
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+    if (!jsReq.loadParams(req)) {
+      throw JsonRpcError(JsonRpc::errInvalidParams);
+    }
   }
 
   bool result = handler(req, res);
@@ -236,12 +229,10 @@ template <typename Class, typename Params, typename Result>
 JsonMemberMethod makeMemberMethod(bool (Class::*handler)(const Params&, Result&)) {
   return [handler](void* obj, const JsonRpcRequest& req, JsonRpcResponse& res) {
     return JsonRpc::invokeMethod<Params, Result>(
-      req, res, std::bind(handler, static_cast<Class*>(obj), std::placeholders::_1, std::placeholders::_2));
+        req, res, std::bind(handler, static_cast<Class*>(obj), std::placeholders::_1, std::placeholders::_2));
   };
 }
 
+}  // namespace JsonRpc
 
-}
-
-
-}
+}  // namespace CryptoNote

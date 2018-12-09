@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -38,13 +38,11 @@ struct TcpConnectorContextExt : public OperationContext {
   int connection;
 };
 
-}
+}  // namespace
 
-TcpConnector::TcpConnector() : dispatcher(nullptr) {
-}
+TcpConnector::TcpConnector() : dispatcher(nullptr) {}
 
-TcpConnector::TcpConnector(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {
-}
+TcpConnector::TcpConnector(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {}
 
 TcpConnector::TcpConnector(TcpConnector&& other) : dispatcher(other.dispatcher) {
   if (other.dispatcher != nullptr) {
@@ -54,8 +52,7 @@ TcpConnector::TcpConnector(TcpConnector&& other) : dispatcher(other.dispatcher) 
   }
 }
 
-TcpConnector::~TcpConnector() {
-}
+TcpConnector::~TcpConnector() {}
 
 TcpConnector& TcpConnector::operator=(TcpConnector&& other) {
   dispatcher = other.dispatcher;
@@ -95,10 +92,9 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
         addressData.sin_family = AF_INET;
         addressData.sin_port = htons(port);
         addressData.sin_addr.s_addr = htonl(address.getValue());
-        int result = ::connect(connection, reinterpret_cast<sockaddr *>(&addressData), sizeof addressData);
+        int result = ::connect(connection, reinterpret_cast<sockaddr*>(&addressData), sizeof addressData);
         if (result == -1) {
           if (errno == EINPROGRESS) {
-
             ContextPair contextPair;
             TcpConnectorContextExt connectorContext;
             connectorContext.interrupted = false;
@@ -142,9 +138,10 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
               if (epoll_ctl(dispatcher->getEpoll(), EPOLL_CTL_DEL, connection, NULL) == -1) {
                 message = "epoll_ctl failed, " + lastErrorMessage();
               } else {
-                if((connectorContext.events & (EPOLLERR | EPOLLHUP)) != 0) {
+                if ((connectorContext.events & (EPOLLERR | EPOLLHUP)) != 0) {
                   int result = close(connection);
-                  if (result) {}
+                  if (result) {
+                  }
                   assert(result != -1);
 
                   throw std::runtime_error("TcpConnector::connect, connection failed");
@@ -154,7 +151,7 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
                 socklen_t retValLen = sizeof(retval);
                 int s = getsockopt(connection, SOL_SOCKET, SO_ERROR, &retval, &retValLen);
                 if (s == -1) {
-                  message =  "getsockopt failed, " + lastErrorMessage();
+                  message = "getsockopt failed, " + lastErrorMessage();
                 } else {
                   if (retval != 0) {
                     message = "getsockopt failed, " + lastErrorMessage();
@@ -172,12 +169,12 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
     }
 
     int result = close(connection);
-    if (result) {}
+    if (result) {
+    }
     assert(result != -1);
   }
 
-
-  throw std::runtime_error("TcpConnector::connect, "+message);
+  throw std::runtime_error("TcpConnector::connect, " + message);
 }
 
-}
+}  // namespace System

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once 
+#pragma once
 
 #include <unordered_set>
 
@@ -33,9 +33,7 @@
 namespace CryptoNote {
 
 class HttpServer {
-
-public:
-
+ public:
   HttpServer(System::Dispatcher& dispatcher, Logging::ILogger& log);
 
   void start(const std::string& address, uint16_t port);
@@ -43,12 +41,10 @@ public:
 
   virtual void processRequest(const HttpRequest& request, HttpResponse& response) = 0;
 
-protected:
-
+ protected:
   System::Dispatcher& m_dispatcher;
 
-private:
-
+ private:
   void acceptLoop();
   void connectionHandler(System::TcpConnection&& conn);
 
@@ -58,4 +54,4 @@ private:
   std::unordered_set<System::TcpConnection*> m_connections;
 };
 
-}
+}  // namespace CryptoNote

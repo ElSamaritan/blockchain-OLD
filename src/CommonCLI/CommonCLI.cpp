@@ -22,55 +22,54 @@ const std::string DevelpmentVersionHeader = R"(
 )";
 // clang-format on
 
-std::string CommonCLI::header()
-{
+std::string CommonCLI::header() {
   std::stringstream programHeader;
   programHeader << std::endl
-    << asciiArt << std::endl
-    << " " << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << std::endl
-    << " This software is distributed under the General Public License v3.0"
-    << std::endl << std::endl
-    << " " << PROJECT_COPYRIGHT
-    << std::endl << std::endl
-    << " Additional Copyright(s) may apply, please see the included LICENSE file for more information." << std::endl
-    << " If you did not receive a copy of the LICENSE, please visit:" << std::endl
-    << " " << CryptoNote::LICENSE_URL
-    << std::endl << std::endl;
+                << asciiArt << std::endl
+                << " " << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << std::endl
+                << " This software is distributed under the General Public License v3.0" << std::endl
+                << std::endl
+                << " " << PROJECT_COPYRIGHT << std::endl
+                << std::endl
+                << " Additional Copyright(s) may apply, please see the included LICENSE file for more information."
+                << std::endl
+                << " If you did not receive a copy of the LICENSE, please visit:" << std::endl
+                << " " << CryptoNote::LICENSE_URL << std::endl
+                << std::endl;
 
-  if(isDevVersion())
-  {
+  if (isDevVersion()) {
     programHeader << DevelpmentVersionHeader << std::endl;
   }
 
   return programHeader.str();
 }
 
-bool CommonCLI::isDevVersion()
-{
+bool CommonCLI::isDevVersion() {
   return
 #ifdef XI_DEV_VERSION
       true
 #else
       false
 #endif
-   ;
+      ;
 }
 
-void CommonCLI::verifyDevExecution(int& argc, char **argv)
-{
-  const std::string devModeFlag{ "--dev-mode" };
-  for(int i = 1; i < argc; ++i) {
-      if(std::string{argv[i]} == devModeFlag) {
-        for(int k = 0; i + k < argc - 1; ++k) {
-          argv[i + k] = argv[i + k + 1];
-        }
-        argc -= 1;
-        return;
+void CommonCLI::verifyDevExecution(int& argc, char** argv) {
+  const std::string devModeFlag{"--dev-mode"};
+  for (int i = 1; i < argc; ++i) {
+    if (std::string{argv[i]} == devModeFlag) {
+      for (int k = 0; i + k < argc - 1; ++k) {
+        argv[i + k] = argv[i + k + 1];
       }
+      argc -= 1;
+      return;
+    }
   }
 
-  if(isDevVersion()) {
-    std::cout << header() << "\n You are using a development version and did not provide the --dev-mode flag. Exiting..." << std::endl;
+  if (isDevVersion()) {
+    std::cout << header()
+              << "\n You are using a development version and did not provide the --dev-mode flag. Exiting..."
+              << std::endl;
     exit(-1);
   }
 }

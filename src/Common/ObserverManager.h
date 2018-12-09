@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,9 +23,9 @@
 
 namespace Tools {
 
-template<typename T>
+template <typename T>
 class ObserverManager {
-public:
+ public:
   bool add(T* observer) {
     std::unique_lock<std::mutex> lock(m_observersMutex);
     auto it = std::find(m_observers.begin(), m_observers.end(), observer);
@@ -55,7 +55,7 @@ public:
   }
 
 #if defined(_MSC_VER)
-  template<typename F>
+  template <typename F>
   void notify(F notification) {
     std::vector<T*> observersCopy;
     {
@@ -68,7 +68,7 @@ public:
     }
   }
 
-  template<typename F, typename Arg0>
+  template <typename F, typename Arg0>
   void notify(F notification, const Arg0& arg0) {
     std::vector<T*> observersCopy;
     {
@@ -81,7 +81,7 @@ public:
     }
   }
 
-  template<typename F, typename Arg0, typename Arg1>
+  template <typename F, typename Arg0, typename Arg1>
   void notify(F notification, const Arg0& arg0, const Arg1& arg1) {
     std::vector<T*> observersCopy;
     {
@@ -94,7 +94,7 @@ public:
     }
   }
 
-  template<typename F, typename Arg0, typename Arg1, typename Arg2>
+  template <typename F, typename Arg0, typename Arg1, typename Arg2>
   void notify(F notification, const Arg0& arg0, const Arg1& arg1, const Arg2& arg2) {
     std::vector<T*> observersCopy;
     {
@@ -107,7 +107,7 @@ public:
     }
   }
 
-  template<typename F, typename Arg0, typename Arg1, typename Arg2, typename Arg3>
+  template <typename F, typename Arg0, typename Arg1, typename Arg2, typename Arg3>
   void notify(F notification, const Arg0& arg0, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3) {
     std::vector<T*> observersCopy;
     {
@@ -120,8 +120,9 @@ public:
     }
   }
 
-  template<typename F, typename Arg0, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-  void notify(F notification, const Arg0& arg0, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3, const Arg4& arg4) {
+  template <typename F, typename Arg0, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+  void notify(F notification, const Arg0& arg0, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3,
+              const Arg4& arg4) {
     std::vector<T*> observersCopy;
     {
       std::unique_lock<std::mutex> lock(m_observersMutex);
@@ -133,8 +134,9 @@ public:
     }
   }
 
-  template<typename F, typename Arg0, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-  void notify(F notification, const Arg0& arg0, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3, const Arg4& arg4, const Arg5& arg5) {
+  template <typename F, typename Arg0, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
+  void notify(F notification, const Arg0& arg0, const Arg1& arg1, const Arg2& arg2, const Arg3& arg3, const Arg4& arg4,
+              const Arg5& arg5) {
     std::vector<T*> observersCopy;
     {
       std::unique_lock<std::mutex> lock(m_observersMutex);
@@ -148,7 +150,7 @@ public:
 
 #else
 
-  template<typename F, typename... Args>
+  template <typename F, typename... Args>
   void notify(F notification, Args... args) {
     std::vector<T*> observersCopy;
     {
@@ -162,9 +164,9 @@ public:
   }
 #endif
 
-private:
+ private:
   std::vector<T*> m_observers;
   std::mutex m_observersMutex;
 };
 
-}
+}  // namespace Tools

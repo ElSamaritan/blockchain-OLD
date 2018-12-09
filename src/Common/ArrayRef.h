@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -30,8 +30,9 @@ namespace Common {
 //   'data' == 'nullptr' && 'size' > 0 - Undefined
 //   'data' != 'nullptr' && 'size' > 0 - NOTEMPTY NOTNIL
 // For signed integer 'Size', 'ArrayRef' with 'size' < 0 is undefined.
-template<class ObjectType = uint8_t, class SizeType = size_t> class ArrayRef {
-public:
+template <class ObjectType = uint8_t, class SizeType = size_t>
+class ArrayRef {
+ public:
   typedef ObjectType Object;
   typedef SizeType Size;
 
@@ -43,7 +44,8 @@ public:
   // Leaves object uninitialized. Any usage before initializing it is undefined.
   ArrayRef()
 #ifndef NDEBUG
-    : data(nullptr), size(INVALID) // In debug mode, fill in object with invalid state (undefined).
+      : data(nullptr),
+        size(INVALID)  // In debug mode, fill in object with invalid state (undefined).
 #endif
   {
   }
@@ -55,22 +57,21 @@ public:
   }
 
   // Constructor from C array.
-  // The behavior is undefined unless 'arrayData' != 'nullptr' || 'arraySize' == 0. Input state can be malformed using poiner conversions.
-  template<Size arraySize> ArrayRef(Object(&arrayData)[arraySize]) : data(arrayData), size(arraySize) {
+  // The behavior is undefined unless 'arrayData' != 'nullptr' || 'arraySize' == 0. Input state can be malformed using
+  // poiner conversions.
+  template <Size arraySize>
+  ArrayRef(Object (&arrayData)[arraySize]) : data(arrayData), size(arraySize) {
     assert(data != nullptr || size == 0);
   }
 
   // Copy constructor.
   // Performs default action - bitwise copying of source object.
   // The behavior is undefined unless 'other' 'ArrayRef' is in defined state, that is 'data' != 'nullptr' || 'size' == 0
-  ArrayRef(const ArrayRef& other) : data(other.data), size(other.size) {
-    assert(data != nullptr || size == 0);
-  }
+  ArrayRef(const ArrayRef& other) : data(other.data), size(other.size) { assert(data != nullptr || size == 0); }
 
   // Destructor.
   // No special action is performed.
-  ~ArrayRef() {
-  }
+  ~ArrayRef() {}
 
   // Copy assignment operator.
   // The behavior is undefined unless 'other' 'ArrayRef' is in defined state, that is 'data' != 'nullptr' || 'size' == 0
@@ -81,9 +82,7 @@ public:
     return *this;
   }
 
-  operator ArrayView<Object, Size>() const {
-    return ArrayView<Object, Size>(data, size);
-  }
+  operator ArrayView<Object, Size>() const { return ArrayView<Object, Size>(data, size); }
 
   Object* getData() const {
     assert(data != nullptr || size == 0);
@@ -390,7 +389,8 @@ public:
   }
 
   // Returns subarray starting at 'startIndex' and contaning 'endIndex' - 'startIndex' elements.
-  // The behavior is undefined unless 'ArrayRef' was initialized and 'startIndex' <= 'endIndex' and 'endIndex' <= 'size'.
+  // The behavior is undefined unless 'ArrayRef' was initialized and 'startIndex' <= 'endIndex' and 'endIndex' <=
+  // 'size'.
   ArrayRef range(Size startIndex, Size endIndex) const {
     assert(data != nullptr || size == 0);
     assert(startIndex <= endIndex && endIndex <= size);
@@ -398,7 +398,8 @@ public:
   }
 
   // Returns subarray starting at 'startIndex' and contaning 'sliceSize' elements.
-  // The behavior is undefined unless 'ArrayRef' was initialized and 'startIndex' <= 'size' and 'startIndex' + 'sliceSize' <= 'size'.
+  // The behavior is undefined unless 'ArrayRef' was initialized and 'startIndex' <= 'size' and 'startIndex' +
+  // 'sliceSize' <= 'size'.
   ArrayRef slice(Size startIndex, Size sliceSize) const {
     assert(data != nullptr || size == 0);
     assert(startIndex <= size && startIndex + sliceSize <= size);
@@ -429,13 +430,16 @@ public:
     return *this;
   }
 
-protected:
+ protected:
   Object* data;
   Size size;
 };
 
-template<class Object, class Size> const Size ArrayRef<Object, Size>::INVALID = std::numeric_limits<Size>::max();
-template<class Object, class Size> const ArrayRef<Object, Size> ArrayRef<Object, Size>::EMPTY(reinterpret_cast<Object*>(1), 0);
-template<class Object, class Size> const ArrayRef<Object, Size> ArrayRef<Object, Size>::NIL(nullptr, 0);
+template <class Object, class Size>
+const Size ArrayRef<Object, Size>::INVALID = std::numeric_limits<Size>::max();
+template <class Object, class Size>
+const ArrayRef<Object, Size> ArrayRef<Object, Size>::EMPTY(reinterpret_cast<Object*>(1), 0);
+template <class Object, class Size>
+const ArrayRef<Object, Size> ArrayRef<Object, Size>::NIL(nullptr, 0);
 
-}
+}  // namespace Common

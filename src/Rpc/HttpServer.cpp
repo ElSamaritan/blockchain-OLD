@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -28,9 +28,7 @@ using namespace Logging;
 namespace CryptoNote {
 
 HttpServer::HttpServer(System::Dispatcher& dispatcher, Logging::ILogger& log)
-  : m_dispatcher(dispatcher), workingContextGroup(dispatcher), logger(log, "HttpServer") {
-
-}
+    : m_dispatcher(dispatcher), workingContextGroup(dispatcher), logger(log, "HttpServer") {}
 
 void HttpServer::start(const std::string& address, uint16_t port) {
   m_listener = System::TcpListener(m_dispatcher, System::Ipv4Address(address), port);
@@ -59,8 +57,7 @@ void HttpServer::acceptLoop() {
     }
 
     m_connections.insert(&connection);
-    BOOST_SCOPE_EXIT_ALL(this, &connection) { 
-      m_connections.erase(&connection); };
+    BOOST_SCOPE_EXIT_ALL(this, &connection) { m_connections.erase(&connection); };
 
     workingContextGroup.spawn(std::bind(&HttpServer::acceptLoop, this));
 
@@ -87,7 +84,8 @@ void HttpServer::acceptLoop() {
       }
     }
 
-    logger(DEBUGGING) << "Closing connection from " << addr.first.toDottedDecimal() << ":" << addr.second << " total=" << m_connections.size();
+    logger(DEBUGGING) << "Closing connection from " << addr.first.toDottedDecimal() << ":" << addr.second
+                      << " total=" << m_connections.size();
 
   } catch (System::InterruptedException&) {
   } catch (std::exception& e) {
@@ -95,4 +93,4 @@ void HttpServer::acceptLoop() {
   }
 }
 
-}
+}  // namespace CryptoNote

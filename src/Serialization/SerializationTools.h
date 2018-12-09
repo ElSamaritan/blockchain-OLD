@@ -32,16 +32,20 @@ namespace Common {
 template <typename T>
 T getValueAs(const JsonValue& js) {
   return js;
-  //cdstatic_assert(false, "undefined conversion");
+  // cdstatic_assert(false, "undefined conversion");
 }
 
 template <>
-inline std::string getValueAs<std::string>(const JsonValue& js) { return js.getString(); }
+inline std::string getValueAs<std::string>(const JsonValue& js) {
+  return js.getString();
+}
 
 template <>
-inline uint64_t getValueAs<uint64_t>(const JsonValue& js) { return static_cast<uint64_t>(js.getInteger()); }
-
+inline uint64_t getValueAs<uint64_t>(const JsonValue& js) {
+  return static_cast<uint64_t>(js.getInteger());
 }
+
+}  // namespace Common
 
 namespace CryptoNote {
 
@@ -62,7 +66,7 @@ Common::JsonValue storeContainerToJsonValue(const T& cont) {
 }
 
 template <>
-inline Common::JsonValue storeContainerToJsonValue(const std::vector<AddressBookEntry> &cont) {
+inline Common::JsonValue storeContainerToJsonValue(const std::vector<AddressBookEntry>& cont) {
   Common::JsonValue js(Common::JsonValue::ARRAY);
   for (const auto& item : cont) {
     js.pushBack(storeToJsonValue(item));
@@ -71,13 +75,19 @@ inline Common::JsonValue storeContainerToJsonValue(const std::vector<AddressBook
 }
 
 template <typename T>
-Common::JsonValue storeToJsonValue(const std::vector<T>& v) { return storeContainerToJsonValue(v); }
+Common::JsonValue storeToJsonValue(const std::vector<T>& v) {
+  return storeContainerToJsonValue(v);
+}
 
 template <typename T>
-Common::JsonValue storeToJsonValue(const std::list<T>& v) { return storeContainerToJsonValue(v); }
+Common::JsonValue storeToJsonValue(const std::list<T>& v) {
+  return storeContainerToJsonValue(v);
+}
 
 template <>
-inline Common::JsonValue storeToJsonValue(const std::string& v) { return Common::JsonValue(v); }
+inline Common::JsonValue storeToJsonValue(const std::string& v) {
+  return Common::JsonValue(v);
+}
 
 template <typename T>
 void loadFromJsonValue(T& v, const Common::JsonValue& js) {
@@ -93,7 +103,7 @@ void loadFromJsonValue(std::vector<T>& v, const Common::JsonValue& js) {
 }
 
 template <>
-inline void loadFromJsonValue(AddressBook &v, const Common::JsonValue &js) {
+inline void loadFromJsonValue(AddressBook& v, const Common::JsonValue& js) {
   for (size_t i = 0; i < js.size(); ++i) {
     AddressBookEntry type;
     loadFromJsonValue(type, js[i]);
@@ -131,7 +141,7 @@ template <typename T>
 std::string storeToBinaryKeyValue(const T& v) {
   KVBinaryOutputStreamSerializer s;
   serialize(const_cast<T&>(v), s);
-  
+
   std::string result;
   Common::StringOutputStream stream(result);
   s.dump(stream);
@@ -150,4 +160,4 @@ bool loadFromBinaryKeyValue(T& v, const std::string& buf) {
   }
 }
 
-}
+}  // namespace CryptoNote

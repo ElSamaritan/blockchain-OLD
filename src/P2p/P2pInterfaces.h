@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -30,7 +30,7 @@ struct P2pMessage {
 };
 
 class IP2pConnection {
-public:
+ public:
   virtual ~IP2pConnection();
   virtual void read(P2pMessage &message) = 0;
   virtual void write(const P2pMessage &message) = 0;
@@ -39,9 +39,9 @@ public:
 };
 
 class IP2pNode {
-public:
+ public:
   virtual std::unique_ptr<IP2pConnection> receiveConnection() = 0;
   virtual void stop() = 0;
 };
 
-}
+}  // namespace CryptoNote

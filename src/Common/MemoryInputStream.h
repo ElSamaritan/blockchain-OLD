@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -21,18 +21,18 @@
 
 namespace Common {
 
-  class MemoryInputStream : public IInputStream {
-  public:
-    MemoryInputStream(const void* buffer, size_t bufferSize);
-    size_t getPosition() const;
-    bool endOfStream() const;
-    
-    // IInputStream
-    virtual size_t readSome(void* data, size_t size) override;
+class MemoryInputStream : public IInputStream {
+ public:
+  MemoryInputStream(const void* buffer, size_t bufferSize);
+  size_t getPosition() const;
+  bool endOfStream() const;
 
-  private:
-    const char* buffer;
-    size_t bufferSize;
-    size_t position;
-  };
-}
+  // IInputStream
+  virtual size_t readSome(void* data, size_t size) override;
+
+ private:
+  const char* buffer;
+  size_t bufferSize;
+  size_t position;
+};
+}  // namespace Common

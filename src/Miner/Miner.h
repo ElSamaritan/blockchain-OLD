@@ -25,24 +25,24 @@ struct BlockMiningParameters {
 };
 
 class Miner {
-public:
+ public:
   Miner(System::Dispatcher& dispatcher, Logging::ILogger& logger);
   ~Miner();
 
   BlockTemplate mine(const BlockMiningParameters& blockMiningParameters, size_t threadCount);
   uint64_t getHashCount();
 
-  //NOTE! this is blocking method
+  // NOTE! this is blocking method
   void stop();
 
-private:
+ private:
   System::Dispatcher& m_dispatcher;
   System::Event m_miningStopped;
 
-  enum class MiningState : uint8_t { MINING_STOPPED, BLOCK_FOUND, MINING_IN_PROGRESS};
+  enum class MiningState : uint8_t { MINING_STOPPED, BLOCK_FOUND, MINING_IN_PROGRESS };
   std::atomic<MiningState> m_state;
 
-  std::vector<std::unique_ptr<System::RemoteContext<void>>>  m_workers;
+  std::vector<std::unique_ptr<System::RemoteContext<void>>> m_workers;
 
   BlockTemplate m_block;
   std::atomic<uint64_t> m_hash_count;
@@ -55,4 +55,4 @@ private:
   void incrementHashCount();
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

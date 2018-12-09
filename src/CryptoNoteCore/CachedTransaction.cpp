@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,21 +23,18 @@
 using namespace Crypto;
 using namespace CryptoNote;
 
-CachedTransaction::CachedTransaction(Transaction&& transaction) : transaction(std::move(transaction)) {
-}
+CachedTransaction::CachedTransaction(Transaction&& transaction) : transaction(std::move(transaction)) {}
 
-CachedTransaction::CachedTransaction(const Transaction& transaction) : transaction(transaction) {
-}
+CachedTransaction::CachedTransaction(const Transaction& transaction) : transaction(transaction) {}
 
-CachedTransaction::CachedTransaction(const BinaryArray& transactionBinaryArray) : transactionBinaryArray(transactionBinaryArray) {
+CachedTransaction::CachedTransaction(const BinaryArray& transactionBinaryArray)
+    : transactionBinaryArray(transactionBinaryArray) {
   if (!fromBinaryArray<Transaction>(transaction, this->transactionBinaryArray.get())) {
     throw std::runtime_error("CachedTransaction::CachedTransaction(BinaryArray&&), deserealization error.");
   }
 }
 
-const Transaction& CachedTransaction::getTransaction() const {
-  return transaction;
-}
+const Transaction& CachedTransaction::getTransaction() const { return transaction; }
 
 const Crypto::Hash& CachedTransaction::getTransactionHash() const {
   if (!transactionHash.is_initialized()) {

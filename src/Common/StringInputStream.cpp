@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -20,8 +20,7 @@
 
 namespace Common {
 
-StringInputStream::StringInputStream(const std::string& in) : in(in), offset(0) {
-}
+StringInputStream::StringInputStream(const std::string& in) : in(in), offset(0) {}
 
 size_t StringInputStream::readSome(void* data, size_t size) {
   if (size > in.size() - offset) {
@@ -33,4 +32,4 @@ size_t StringInputStream::readSome(void* data, size_t size) {
   return size;
 }
 
-}
+}  // namespace Common

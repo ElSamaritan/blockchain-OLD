@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -30,7 +30,7 @@ namespace Common {
 //   'data' == 'nullptr' && 'size' > 0 - Undefined
 //   'data' != 'nullptr' && 'size' > 0 - NOTEMPTY NOTNIL
 class StringView {
-public:
+ public:
   typedef char Object;
   typedef size_t Size;
 
@@ -47,8 +47,10 @@ public:
   StringView(const Object* stringData, Size stringSize);
 
   // Constructor from C array.
-  // The behavior is undefined unless 'stringData' != 'nullptr' || 'stringSize' == 0. Input state can be malformed using poiner conversions.
-  template<Size stringSize> StringView(const Object(&stringData)[stringSize]) : data(stringData), size(stringSize - 1) {
+  // The behavior is undefined unless 'stringData' != 'nullptr' || 'stringSize' == 0. Input state can be malformed using
+  // poiner conversions.
+  template <Size stringSize>
+  StringView(const Object (&stringData)[stringSize]) : data(stringData), size(stringSize - 1) {
     assert(data != nullptr || size == 0);
   }
 
@@ -57,7 +59,8 @@ public:
 
   // Copy constructor.
   // Performs default action - bitwise copying of source object.
-  // The behavior is undefined unless 'other' 'StringView' is in defined state, that is 'data' != 'nullptr' || 'size' == 0
+  // The behavior is undefined unless 'other' 'StringView' is in defined state, that is 'data' != 'nullptr' || 'size' ==
+  // 0
   StringView(const StringView& other);
 
   // Destructor.
@@ -65,7 +68,8 @@ public:
   ~StringView();
 
   // Copy assignment operator.
-  // The behavior is undefined unless 'other' 'StringView' is in defined state, that is 'data' != 'nullptr' || 'size' == 0
+  // The behavior is undefined unless 'other' 'StringView' is in defined state, that is 'data' != 'nullptr' || 'size' ==
+  // 0
   StringView& operator=(const StringView& other);
 
   explicit operator std::string() const;
@@ -189,16 +193,18 @@ public:
   StringView untail(Size tailSize) const;
 
   // Returns substring starting at 'startIndex' and contaning 'endIndex' - 'startIndex' elements.
-  // The behavior is undefined unless 'StringView' was initialized and 'startIndex' <= 'endIndex' and 'endIndex' <= 'size'.
+  // The behavior is undefined unless 'StringView' was initialized and 'startIndex' <= 'endIndex' and 'endIndex' <=
+  // 'size'.
   StringView range(Size startIndex, Size endIndex) const;
 
   // Returns substring starting at 'startIndex' and contaning 'sliceSize' elements.
-  // The behavior is undefined unless 'StringView' was initialized and 'startIndex' <= 'size' and 'startIndex' + 'sliceSize' <= 'size'.
+  // The behavior is undefined unless 'StringView' was initialized and 'startIndex' <= 'size' and 'startIndex' +
+  // 'sliceSize' <= 'size'.
   StringView slice(Size startIndex, Size sliceSize) const;
 
-protected:
+ protected:
   const Object* data;
   Size size;
 };
 
-}
+}  // namespace Common

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,7 +26,8 @@
 namespace CryptoNote {
 namespace Utils {
 
-bool restoreCachedTransactions(const std::vector<BinaryArray>& binaryTransactions, std::vector<CachedTransaction>& transactions);
+bool restoreCachedTransactions(const std::vector<BinaryArray>& binaryTransactions,
+                               std::vector<CachedTransaction>& transactions);
 
-} //namespace Utils
-} //namespace CryptoNote
+}  // namespace Utils
+}  // namespace CryptoNote

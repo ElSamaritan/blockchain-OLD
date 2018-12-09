@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -19,7 +19,7 @@
 
 namespace Miner {
 
-enum class MinerEventType: uint8_t {
+enum class MinerEventType : uint8_t {
   BLOCK_MINED,
   BLOCKCHAIN_UPDATED,
 };
@@ -28,4 +28,4 @@ struct MinerEvent {
   MinerEventType type;
 };
 
-} //namespace Miner
+}  // namespace Miner

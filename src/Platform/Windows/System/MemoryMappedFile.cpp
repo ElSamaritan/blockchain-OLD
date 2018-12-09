@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,12 +26,8 @@
 
 namespace System {
 
-MemoryMappedFile::MemoryMappedFile() :
-  m_fileHandle(INVALID_HANDLE_VALUE),
-  m_mappingHandle(INVALID_HANDLE_VALUE),
-  m_size(0),
-  m_data(nullptr) {
-}
+MemoryMappedFile::MemoryMappedFile()
+    : m_fileHandle(INVALID_HANDLE_VALUE), m_mappingHandle(INVALID_HANDLE_VALUE), m_size(0), m_data(nullptr) {}
 
 MemoryMappedFile::~MemoryMappedFile() {
   std::error_code ignore;
@@ -62,9 +58,7 @@ uint8_t* MemoryMappedFile::data() {
   return m_data;
 }
 
-bool MemoryMappedFile::isOpened() const {
-  return m_data != nullptr;
-}
+bool MemoryMappedFile::isOpened() const { return m_data != nullptr; }
 
 void MemoryMappedFile::create(const std::string& path, uint64_t size, bool overwrite, std::error_code& ec) {
   if (isOpened()) {
@@ -80,20 +74,15 @@ void MemoryMappedFile::create(const std::string& path, uint64_t size, bool overw
     close(ignore);
   });
 
-  m_fileHandle = ::CreateFile(
-    path.c_str(),
-    GENERIC_READ | GENERIC_WRITE,
-    FILE_SHARE_DELETE | FILE_SHARE_READ,
-    NULL,
-    overwrite ? CREATE_ALWAYS : CREATE_NEW,
-    FILE_ATTRIBUTE_NORMAL,
-    NULL);
+  m_fileHandle = ::CreateFile(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL,
+                              overwrite ? CREATE_ALWAYS : CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
   if (m_fileHandle == INVALID_HANDLE_VALUE) {
     return;
   }
 
   LONG distanceToMoveHigh = static_cast<LONG>((size >> 32) & UINT64_C(0xffffffff));
-  DWORD filePointer = ::SetFilePointer(m_fileHandle, static_cast<LONG>(size & UINT64_C(0xffffffff)), &distanceToMoveHigh, FILE_BEGIN);
+  DWORD filePointer =
+      ::SetFilePointer(m_fileHandle, static_cast<LONG>(size & UINT64_C(0xffffffff)), &distanceToMoveHigh, FILE_BEGIN);
   if (filePointer == INVALID_SET_FILE_POINTER) {
     return;
   }
@@ -142,14 +131,8 @@ void MemoryMappedFile::open(const std::string& path, std::error_code& ec) {
     close(ignore);
   });
 
-  m_fileHandle = ::CreateFile(
-    path.c_str(),
-    GENERIC_READ | GENERIC_WRITE,
-    FILE_SHARE_DELETE | FILE_SHARE_READ,
-    NULL,
-    OPEN_EXISTING,
-    FILE_ATTRIBUTE_NORMAL,
-    NULL);
+  m_fileHandle = ::CreateFile(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL,
+                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (m_fileHandle == INVALID_HANDLE_VALUE) {
     return;
   }
@@ -290,4 +273,4 @@ void MemoryMappedFile::swap(MemoryMappedFile& other) {
   std::swap(m_size, other.m_size);
 }
 
-}
+}  // namespace System

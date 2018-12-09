@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 #include "CachedBlock.h"
@@ -13,12 +13,9 @@
 using namespace Crypto;
 using namespace CryptoNote;
 
-CachedBlock::CachedBlock(const BlockTemplate& block) : block(block) {
-}
+CachedBlock::CachedBlock(const BlockTemplate& block) : block(block) {}
 
-const BlockTemplate& CachedBlock::getBlock() const {
-  return block;
-}
+const BlockTemplate& CachedBlock::getBlock() const { return block; }
 
 const Crypto::Hash& CachedBlock::getTransactionTreeHash() const {
   if (!transactionTreeHash.is_initialized()) {

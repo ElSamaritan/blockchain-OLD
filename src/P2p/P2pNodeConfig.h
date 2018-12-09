@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,7 +23,7 @@
 namespace CryptoNote {
 
 class P2pNodeConfig : public NetNodeConfig {
-public:
+ public:
   P2pNodeConfig();
 
   // getters
@@ -48,7 +48,7 @@ public:
   void setPeerListConnectRange(size_t range);
   void setPeerListGetTryCount(size_t count);
 
-private:
+ private:
   std::chrono::nanoseconds timedSyncInterval;
   std::chrono::nanoseconds handshakeTimeout;
   std::chrono::nanoseconds connectInterval;
@@ -60,4 +60,4 @@ private:
   size_t peerListGetTryCount;
 };
 
-}
+}  // namespace CryptoNote

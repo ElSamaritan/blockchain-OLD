@@ -18,7 +18,7 @@ struct MiningConfig {
 
   std::string miningAddress;
   std::string daemonHost;
-  int daemonPort;
+  uint16_t daemonPort;
   size_t threadCount;
   size_t scanPeriod;
   uint8_t logLevel;
@@ -29,4 +29,4 @@ struct MiningConfig {
   bool version;
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -25,9 +25,9 @@
 
 namespace CryptoNote {
 
-//Simple upgrade manager version. It doesn't support voting for now.
-class UpgradeManager: public IUpgradeManager {
-public:
+// Simple upgrade manager version. It doesn't support voting for now.
+class UpgradeManager : public IUpgradeManager {
+ public:
   UpgradeManager();
   virtual ~UpgradeManager();
 
@@ -35,8 +35,8 @@ public:
 
   virtual uint8_t getBlockMajorVersion(uint32_t blockIndex) const override;
 
-private:
+ private:
   std::vector<std::unique_ptr<IUpgradeDetector>> m_upgradeDetectors;
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

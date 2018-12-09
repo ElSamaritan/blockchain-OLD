@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -28,10 +28,9 @@ const char NATIVE_PATH_SEPARATOR = '\\';
 const char NATIVE_PATH_SEPARATOR = '/';
 #endif
 
-
 std::string::size_type findExtensionPosition(const std::string& filename) {
   auto pos = filename.rfind('.');
-  
+
   if (pos != std::string::npos) {
     auto slashPos = filename.rfind(GENERIC_PATH_SEPARATOR);
     if (slashPos != std::string::npos && slashPos > pos) {
@@ -42,12 +41,19 @@ std::string::size_type findExtensionPosition(const std::string& filename) {
   return pos;
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
 namespace Common {
 
 std::string NativePathToGeneric(const std::string& nativePath) {
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4127)
+#endif
   if (GENERIC_PATH_SEPARATOR == NATIVE_PATH_SEPARATOR) {
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
     return nativePath;
   }
   std::string genericPath(nativePath);
@@ -92,7 +98,7 @@ std::string GetExtension(const std::string& path) {
   return std::string();
 }
 
-std::string RemoveExtension(const std::string& filename) { 
+std::string RemoveExtension(const std::string& filename) {
   auto pos = findExtensionPosition(filename);
 
   if (pos == std::string::npos) {
@@ -102,10 +108,6 @@ std::string RemoveExtension(const std::string& filename) {
   return filename.substr(0, pos);
 }
 
+bool HasParentPath(const std::string& path) { return path.find(GENERIC_PATH_SEPARATOR) != std::string::npos; }
 
-bool HasParentPath(const std::string& path) {
-  return path.find(GENERIC_PATH_SEPARATOR) != std::string::npos;
-}
-
-
-}
+}  // namespace Common

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -30,10 +30,8 @@ inline TransactionOutputId getOutputId(const TransactionOutputInformation& out) 
   return std::make_pair(out.transactionPublicKey, out.outputInTransaction);
 }
 
-WalletUnconfirmedTransactions::WalletUnconfirmedTransactions(uint64_t uncofirmedTransactionsLiveTime):
-  m_uncofirmedTransactionsLiveTime(uncofirmedTransactionsLiveTime) {
-
-}
+WalletUnconfirmedTransactions::WalletUnconfirmedTransactions(uint64_t uncofirmedTransactionsLiveTime)
+    : m_uncofirmedTransactionsLiveTime(uncofirmedTransactionsLiveTime) {}
 
 bool WalletUnconfirmedTransactions::serialize(ISerializer& s) {
   s(m_unconfirmedTxs, "transactions");
@@ -63,9 +61,8 @@ void WalletUnconfirmedTransactions::erase(const Hash& hash) {
   m_unconfirmedTxs.erase(it);
 }
 
-void WalletUnconfirmedTransactions::add(const Transaction& tx, TransactionId transactionId, 
-  uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs) {
-
+void WalletUnconfirmedTransactions::add(const Transaction& tx, TransactionId transactionId, uint64_t amount,
+                                        const std::list<TransactionOutputInformation>& usedOutputs) {
   UnconfirmedTransferDetails& utd = m_unconfirmedTxs[getObjectHash(tx)];
 
   utd.amount = amount;
@@ -96,8 +93,7 @@ void WalletUnconfirmedTransactions::updateTransactionId(const Hash& hash, Transa
 uint64_t WalletUnconfirmedTransactions::countUnconfirmedOutsAmount() const {
   uint64_t amount = 0;
 
-  for (auto& utx: m_unconfirmedTxs)
-    amount+= utx.second.outsAmount;
+  for (auto& utx : m_unconfirmedTxs) amount += utx.second.outsAmount;
 
   return amount;
 }
@@ -105,8 +101,7 @@ uint64_t WalletUnconfirmedTransactions::countUnconfirmedOutsAmount() const {
 uint64_t WalletUnconfirmedTransactions::countUnconfirmedTransactionsAmount() const {
   uint64_t amount = 0;
 
-  for (auto& utx: m_unconfirmedTxs)
-    amount+= utx.second.amount;
+  for (auto& utx : m_unconfirmedTxs) amount += utx.second.amount;
 
   return amount;
 }
@@ -129,7 +124,7 @@ void WalletUnconfirmedTransactions::reset() {
 }
 
 void WalletUnconfirmedTransactions::deleteUsedOutputs(const std::vector<TransactionOutputId>& usedOutputs) {
-  for (const auto& output: usedOutputs) {
+  for (const auto& output : usedOutputs) {
     m_usedOutputs.erase(output);
   }
 }

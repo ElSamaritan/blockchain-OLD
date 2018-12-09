@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Calex Developers
 //
@@ -27,14 +27,13 @@
 
 namespace CryptoNote {
 
-JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup, PaymentService::ConfigurationManager& config) :
-  HttpServer(sys, loggerGroup), 
-  system(sys),
-  stopEvent(stopEvent),
-  logger(loggerGroup, "JsonRpcServer"),
-  config(config)
-{
-}
+JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup,
+                             PaymentService::ConfigurationManager& config)
+    : HttpServer(sys, loggerGroup),
+      system(sys),
+      stopEvent(stopEvent),
+      logger(loggerGroup, "JsonRpcServer"),
+      config(config) {}
 
 void JsonRpcServer::start(const std::string& bindAddress, uint16_t bindPort) {
   HttpServer::start(bindAddress, bindPort);
@@ -90,7 +89,7 @@ void JsonRpcServer::prepareJsonResponse(const Common::JsonValue& req, Common::Js
   if (req.contains("id")) {
     resp.insert("id", req("id"));
   }
-  
+
   resp.insert("jsonrpc", "2.0");
 }
 
@@ -100,7 +99,7 @@ void JsonRpcServer::makeErrorResponse(const std::error_code& ec, Common::JsonVal
   JsonValue error(JsonValue::OBJECT);
 
   JsonValue code;
-  code = static_cast<int64_t>(CryptoNote::JsonRpc::errParseError); //Application specific error code
+  code = static_cast<int64_t>(CryptoNote::JsonRpc::errParseError);  // Application specific error code
 
   JsonValue message;
   message = ec.message();
@@ -139,7 +138,6 @@ void JsonRpcServer::makeGenericErrorReponse(Common::JsonValue& resp, const char*
   error.insert("message", message);
 
   resp.insert("error", error);
-
 }
 
 void JsonRpcServer::makeMethodNotFoundResponse(Common::JsonValue& resp) {
@@ -148,7 +146,8 @@ void JsonRpcServer::makeMethodNotFoundResponse(Common::JsonValue& resp) {
   JsonValue error(JsonValue::OBJECT);
 
   JsonValue code;
-  code = static_cast<int64_t>(CryptoNote::JsonRpc::errMethodNotFound); //ambigous declaration of JsonValue::operator= (between int and JsonValue)
+  code = static_cast<int64_t>(CryptoNote::JsonRpc::errMethodNotFound);  // ambigous declaration of JsonValue::operator=
+                                                                        // (between int and JsonValue)
 
   JsonValue message;
   message = "Method not found";
@@ -176,9 +175,7 @@ void JsonRpcServer::makeInvalidPasswordResponse(Common::JsonValue& resp) {
   resp.insert("error", error);
 }
 
-void JsonRpcServer::fillJsonResponse(const Common::JsonValue& v, Common::JsonValue& resp) {
-  resp.insert("result", v);
-}
+void JsonRpcServer::fillJsonResponse(const Common::JsonValue& v, Common::JsonValue& resp) { resp.insert("result", v); }
 
 void JsonRpcServer::makeJsonParsingErrorResponse(Common::JsonValue& resp) {
   using Common::JsonValue;
@@ -189,7 +186,8 @@ void JsonRpcServer::makeJsonParsingErrorResponse(Common::JsonValue& resp) {
 
   JsonValue error(JsonValue::OBJECT);
   JsonValue code;
-  code = static_cast<int64_t>(CryptoNote::JsonRpc::errParseError); //ambigous declaration of JsonValue::operator= (between int and JsonValue)
+  code = static_cast<int64_t>(
+      CryptoNote::JsonRpc::errParseError);  // ambigous declaration of JsonValue::operator= (between int and JsonValue)
 
   JsonValue message = "Parse error";
 
@@ -199,4 +197,4 @@ void JsonRpcServer::makeJsonParsingErrorResponse(Common::JsonValue& resp) {
   resp.insert("error", error);
 }
 
-}
+}  // namespace CryptoNote

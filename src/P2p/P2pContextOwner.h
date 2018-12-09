@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -25,8 +25,7 @@ namespace CryptoNote {
 class P2pContext;
 
 class P2pContextOwner {
-public:
-
+ public:
   typedef std::list<std::unique_ptr<P2pContext>> ContextList;
 
   P2pContextOwner(P2pContext* ctx, ContextList& contextList);
@@ -35,12 +34,11 @@ public:
   ~P2pContextOwner();
 
   P2pContext& get();
-  P2pContext* operator -> ();
+  P2pContext* operator->();
 
-private:
-
+ private:
   ContextList& contextList;
   ContextList::iterator contextIterator;
 };
 
-}
+}  // namespace CryptoNote

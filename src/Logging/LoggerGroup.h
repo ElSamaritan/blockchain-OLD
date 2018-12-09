@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,15 +23,19 @@
 namespace Logging {
 
 class LoggerGroup : public CommonLogger {
-public:
+ public:
   LoggerGroup(Level level = DEBUGGING);
+  virtual ~LoggerGroup() override = default;
 
   void addLogger(ILogger& logger);
   void removeLogger(ILogger& logger);
-  virtual void operator()(const std::string& category, Level level, boost::posix_time::ptime time, const std::string& body) override;
+  virtual void operator()(const std::string& category, Level level, boost::posix_time::ptime time,
+                          const std::string& body) override;
 
-protected:
+ protected:
+  void doLogString(const std::string& message) override;
+
   std::vector<ILogger*> loggers;
 };
 
-}
+}  // namespace Logging

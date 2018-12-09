@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -29,7 +29,7 @@ using namespace Crypto;
 
 namespace {
 
-//DO NOT CHANGE IT
+// DO NOT CHANGE IT
 struct WalletRecordDto {
   PublicKey spendPublicKey;
   SecretKey spendSecretKey;
@@ -38,7 +38,7 @@ struct WalletRecordDto {
   uint64_t creationTimestamp = 0;
 };
 
-//DO NOT CHANGE IT
+// DO NOT CHANGE IT
 struct ObsoleteSpentOutputDto {
   uint64_t amount;
   Hash transactionHash;
@@ -47,20 +47,20 @@ struct ObsoleteSpentOutputDto {
   Crypto::Hash spendingTransactionHash;
 };
 
-//DO NOT CHANGE IT
+// DO NOT CHANGE IT
 struct ObsoleteChangeDto {
   Hash txHash;
   uint64_t amount;
 };
 
-//DO NOT CHANGE IT
+// DO NOT CHANGE IT
 struct UnlockTransactionJobDto {
   uint32_t blockHeight;
   Hash transactionHash;
   uint64_t walletIndex;
 };
 
-//DO NOT CHANGE IT
+// DO NOT CHANGE IT
 struct WalletTransactionDto {
   WalletTransactionDto() {}
 
@@ -87,7 +87,7 @@ struct WalletTransactionDto {
   std::string extra;
 };
 
-//DO NOT CHANGE IT
+// DO NOT CHANGE IT
 struct WalletTransferDto {
   WalletTransferDto(uint32_t version) : version(version) {}
   WalletTransferDto(const CryptoNote::WalletTransfer& tr, uint32_t version) : WalletTransferDto(version) {
@@ -172,15 +172,16 @@ std::string decrypt(const std::string& cipher, CryptoNote::WalletSerializerV1::C
   return plain;
 }
 
-template<typename Object>
+template <typename Object>
 void deserialize(Object& obj, const std::string& name, const std::string& plain) {
   MemoryInputStream stream(plain.data(), plain.size());
   CryptoNote::BinaryInputStreamSerializer s(stream);
   s(obj, Common::StringView(name));
 }
 
-template<typename Object>
-void deserializeEncrypted(Object& obj, const std::string& name, CryptoNote::WalletSerializerV1::CryptoContext& cryptoContext, Common::IInputStream& source) {
+template <typename Object>
+void deserializeEncrypted(Object& obj, const std::string& name,
+                          CryptoNote::WalletSerializerV1::CryptoContext& cryptoContext, Common::IInputStream& source) {
   std::string cipher = readCipher(source, name);
   std::string plain = decrypt(cipher, cryptoContext);
 
@@ -213,44 +214,35 @@ CryptoNote::WalletTransfer convert(const CryptoNote::WalletLegacyTransfer& tr) {
   return mtr;
 }
 
-}
+}  // namespace
 
 namespace CryptoNote {
 
 const uint32_t WalletSerializerV1::SERIALIZATION_VERSION = 5;
 
 void WalletSerializerV1::CryptoContext::incIv() {
-  uint64_t* i = reinterpret_cast<uint64_t *>(&iv.data[0]);
+  uint64_t* i = reinterpret_cast<uint64_t*>(&iv.data[0]);
   *i = (*i == std::numeric_limits<uint64_t>::max()) ? 0 : (*i + 1);
 }
 
-WalletSerializerV1::WalletSerializerV1(
-  ITransfersObserver& transfersObserver,
-  Crypto::PublicKey& viewPublicKey,
-  Crypto::SecretKey& viewSecretKey,
-  uint64_t& actualBalance,
-  uint64_t& pendingBalance,
-  WalletsContainer& walletsContainer,
-  TransfersSyncronizer& synchronizer,
-  UnlockTransactionJobs& unlockTransactions,
-  WalletTransactions& transactions,
-  WalletTransfers& transfers,
-  UncommitedTransactions& uncommitedTransactions,
-  uint32_t transactionSoftLockTime
-) :
-  m_transfersObserver(transfersObserver),
-  m_viewPublicKey(viewPublicKey),
-  m_viewSecretKey(viewSecretKey),
-  m_actualBalance(actualBalance),
-  m_pendingBalance(pendingBalance),
-  m_walletsContainer(walletsContainer),
-  m_synchronizer(synchronizer),
-  m_unlockTransactions(unlockTransactions),
-  m_transactions(transactions),
-  m_transfers(transfers),
-  m_uncommitedTransactions(uncommitedTransactions),
-  m_transactionSoftLockTime(transactionSoftLockTime)
-{ }
+WalletSerializerV1::WalletSerializerV1(ITransfersObserver& transfersObserver, Crypto::PublicKey& viewPublicKey,
+                                       Crypto::SecretKey& viewSecretKey, uint64_t& actualBalance,
+                                       uint64_t& pendingBalance, WalletsContainer& walletsContainer,
+                                       TransfersSyncronizer& synchronizer, UnlockTransactionJobs& unlockTransactions,
+                                       WalletTransactions& transactions, WalletTransfers& transfers,
+                                       UncommitedTransactions& uncommitedTransactions, uint32_t transactionSoftLockTime)
+    : m_transfersObserver(transfersObserver),
+      m_viewPublicKey(viewPublicKey),
+      m_viewSecretKey(viewSecretKey),
+      m_actualBalance(actualBalance),
+      m_pendingBalance(pendingBalance),
+      m_walletsContainer(walletsContainer),
+      m_synchronizer(synchronizer),
+      m_unlockTransactions(unlockTransactions),
+      m_transactions(transactions),
+      m_transfers(transfers),
+      m_uncommitedTransactions(uncommitedTransactions),
+      m_transactionSoftLockTime(transactionSoftLockTime) {}
 
 void WalletSerializerV1::load(const Crypto::chacha8_key& key, Common::IInputStream& source) {
   CryptoNote::BinaryInputStreamSerializer s(source);
@@ -339,13 +331,11 @@ void WalletSerializerV1::loadWalletV1(Common::IInputStream& source, const Crypto
 
   loadWalletV1Keys(serializer);
 
-  try
-  {
+  try {
     checkKeys();
   }
   /* Remove the partially (incorrectly) parsed wallet, pass is wrong */
-  catch (const std::system_error &e)
-  {
+  catch (const std::system_error& e) {
     m_walletsContainer.clear();
     throw(e);
   }
@@ -404,7 +394,7 @@ uint32_t WalletSerializerV1::loadVersion(Common::IInputStream& source) {
 void WalletSerializerV1::loadIv(Common::IInputStream& source, Crypto::chacha8_iv& iv) {
   CryptoNote::BinaryInputStreamSerializer s(source);
 
-  s.binary(static_cast<void *>(&iv.data), sizeof(iv.data), "chacha_iv");
+  s.binary(static_cast<void*>(&iv.data), sizeof(iv.data), "chacha_iv");
 }
 
 void WalletSerializerV1::loadKeys(Common::IInputStream& source, CryptoContext& cryptoContext) {
@@ -426,11 +416,10 @@ void WalletSerializerV1::loadSecretKey(Common::IInputStream& source, CryptoConte
   cryptoContext.incIv();
 }
 
-void WalletSerializerV1::checkKeys() {
-  throwIfKeysMismatch(m_viewSecretKey, m_viewPublicKey);
-}
+void WalletSerializerV1::checkKeys() { throwIfKeysMismatch(m_viewSecretKey, m_viewPublicKey); }
 
-void WalletSerializerV1::loadFlags(bool& details, bool& cache, Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializerV1::loadFlags(bool& details, bool& cache, Common::IInputStream& source,
+                                   CryptoContext& cryptoContext) {
   deserializeEncrypted(details, "details", cryptoContext, source);
   cryptoContext.incIv();
 
@@ -454,12 +443,14 @@ void WalletSerializerV1::loadWallets(Common::IInputStream& source, CryptoContext
 
     if (i == 0) {
       isTrackingMode = dto.spendSecretKey == NULL_SECRET_KEY;
-    } else if ((isTrackingMode && dto.spendSecretKey != NULL_SECRET_KEY) || (!isTrackingMode && dto.spendSecretKey == NULL_SECRET_KEY)) {
+    } else if ((isTrackingMode && dto.spendSecretKey != NULL_SECRET_KEY) ||
+               (!isTrackingMode && dto.spendSecretKey == NULL_SECRET_KEY)) {
       throw std::system_error(make_error_code(error::BAD_ADDRESS), "All addresses must be whether tracking or not");
     }
 
     if (dto.spendSecretKey != NULL_SECRET_KEY) {
-      throwIfKeysMismatch(dto.spendSecretKey, dto.spendPublicKey, "Restored spend public key doesn't correspond to secret key");
+      throwIfKeysMismatch(dto.spendSecretKey, dto.spendPublicKey,
+                          "Restored spend public key doesn't correspond to secret key");
     } else {
       if (!Crypto::check_key(dto.spendPublicKey)) {
         throw std::system_error(make_error_code(error::WRONG_PASSWORD), "Public spend key is incorrect");
@@ -472,7 +463,8 @@ void WalletSerializerV1::loadWallets(Common::IInputStream& source, CryptoContext
     wallet.actualBalance = dto.actualBalance;
     wallet.pendingBalance = dto.pendingBalance;
     wallet.creationTimestamp = static_cast<time_t>(dto.creationTimestamp);
-    wallet.container = reinterpret_cast<CryptoNote::ITransfersContainer*>(i); //dirty hack. container field must be unique
+    wallet.container =
+        reinterpret_cast<CryptoNote::ITransfersContainer*>(i);  // dirty hack. container field must be unique
 
     index.push_back(wallet);
   }
@@ -491,11 +483,13 @@ void WalletSerializerV1::subscribeWallets() {
     sub.keys.spendSecretKey = wallet.spendSecretKey;
     sub.transactionSpendableAge = m_transactionSoftLockTime;
     sub.syncStart.height = 0;
-    sub.syncStart.timestamp = std::max(static_cast<uint64_t>(wallet.creationTimestamp), ACCOUNT_CREATE_TIME_ACCURACY) - ACCOUNT_CREATE_TIME_ACCURACY;
+    sub.syncStart.timestamp = std::max(static_cast<uint64_t>(wallet.creationTimestamp), ACCOUNT_CREATE_TIME_ACCURACY) -
+                              ACCOUNT_CREATE_TIME_ACCURACY;
 
     auto& subscription = m_synchronizer.addSubscription(sub);
-    bool r = index.modify(it, [&subscription] (WalletRecord& rec) { rec.container = &subscription.getContainer(); });
-    if (r) {}
+    bool r = index.modify(it, [&subscription](WalletRecord& rec) { rec.container = &subscription.getContainer(); });
+    if (r) {
+    }
     assert(r);
 
     subscription.addObserver(&m_transfersObserver);
@@ -537,7 +531,8 @@ void WalletSerializerV1::loadUnlockTransactionsJobs(Common::IInputStream& source
   auto& index = m_unlockTransactions.get<TransactionHashIndex>();
   auto& walletsIndex = m_walletsContainer.get<RandomAccessIndex>();
   const uint64_t walletsSize = walletsIndex.size();
-  if (walletsSize) {}
+  if (walletsSize) {
+  }
 
   uint64_t jobsCount = 0;
   deserializeEncrypted(jobsCount, "unlock_transactions_jobs_count", cryptoContext, source);
@@ -673,11 +668,12 @@ void WalletSerializerV1::loadTransfers(Common::IInputStream& source, CryptoConte
   }
 }
 
-void WalletSerializerV1::addWalletV1Details(const std::vector<WalletLegacyTransaction>& txs, const std::vector<WalletLegacyTransfer>& trs) {
+void WalletSerializerV1::addWalletV1Details(const std::vector<WalletLegacyTransaction>& txs,
+                                            const std::vector<WalletLegacyTransfer>& trs) {
   size_t txId = 0;
   m_transfers.reserve(trs.size());
 
-  for (const auto& tx: txs) {
+  for (const auto& tx : txs) {
     WalletTransaction mtx = convert(tx);
     m_transactions.get<RandomAccessIndex>().push_back(std::move(mtx));
 
@@ -699,4 +695,4 @@ void WalletSerializerV1::addWalletV1Details(const std::vector<WalletLegacyTransa
   }
 }
 
-} //namespace CryptoNote
+}  // namespace CryptoNote
