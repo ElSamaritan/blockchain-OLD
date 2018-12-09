@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,7 +23,7 @@ namespace CryptoNote {
 struct TransactionValidatorState;
 
 class ITransactionPool {
-public:
+ public:
   virtual bool pushTransaction(CachedTransaction&& tx, TransactionValidatorState&& transactionState) = 0;
   virtual const CachedTransaction& getTransaction(const Crypto::Hash& hash) const = 0;
   virtual bool removeTransaction(const Crypto::Hash& hash) = 0;
@@ -39,4 +39,4 @@ public:
   virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const = 0;
 };
 
-}
+}  // namespace CryptoNote

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,33 +23,29 @@ namespace {
 
 const char* getStatusString(CryptoNote::HttpResponse::HTTP_STATUS status) {
   switch (status) {
-  case CryptoNote::HttpResponse::STATUS_200:
-    return "200 OK";
-  case CryptoNote::HttpResponse::STATUS_404:
-    return "404 Not Found";
-  case CryptoNote::HttpResponse::STATUS_500:
-    return "500 Internal Server Error";
-  default:
-    throw std::runtime_error("Unknown HTTP status code is given");
+    case CryptoNote::HttpResponse::STATUS_200:
+      return "200 OK";
+    case CryptoNote::HttpResponse::STATUS_404:
+      return "404 Not Found";
+    case CryptoNote::HttpResponse::STATUS_500:
+      return "500 Internal Server Error";
+    default:
+      throw std::runtime_error("Unknown HTTP status code is given");
   }
-
-  return ""; //unaccessible
 }
 
 const char* getErrorBody(CryptoNote::HttpResponse::HTTP_STATUS status) {
   switch (status) {
-  case CryptoNote::HttpResponse::STATUS_404:
-    return "Requested url is not found\n";
-  case CryptoNote::HttpResponse::STATUS_500:
-    return "Internal server error is occurred\n";
-  default:
-    throw std::runtime_error("Error body for given status is not available");
+    case CryptoNote::HttpResponse::STATUS_404:
+      return "Requested url is not found\n";
+    case CryptoNote::HttpResponse::STATUS_500:
+      return "Internal server error is occurred\n";
+    default:
+      throw std::runtime_error("Error body for given status is not available");
   }
-
-  return ""; //unaccessible
 }
 
-} //namespace
+}  // namespace
 
 namespace CryptoNote {
 
@@ -66,9 +62,7 @@ void HttpResponse::setStatus(HTTP_STATUS s) {
   }
 }
 
-void HttpResponse::addHeader(const std::string& name, const std::string& value) {
-  headers[name] = value;
-}
+void HttpResponse::addHeader(const std::string& name, const std::string& value) { headers[name] = value; }
 
 void HttpResponse::setBody(const std::string& b) {
   body = b;
@@ -82,7 +76,7 @@ void HttpResponse::setBody(const std::string& b) {
 std::ostream& HttpResponse::printHttpResponse(std::ostream& os) const {
   os << "HTTP/1.1 " << getStatusString(status) << "\r\n";
 
-  for (auto pair: headers) {
+  for (auto pair : headers) {
     os << pair.first << ": " << pair.second << "\r\n";
   }
   os << "\r\n";
@@ -94,4 +88,4 @@ std::ostream& HttpResponse::printHttpResponse(std::ostream& os) const {
   return os;
 }
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

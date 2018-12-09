@@ -5,6 +5,7 @@ set(
 
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/Core/include
     ${XI_EXTERNAL_INCLUDE_DIRS}
     ${XI_VERSION_INCLUDE_DIR}
 )
@@ -46,7 +47,7 @@ endif()
 # Probably not what you need to be looking at if something isn't building
 foreach(source_file ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} ${XI_CLI_DAEMON_SOURCES} ${JsonRpcServer} ${Http} ${Logging} ${XI_CLI_MINER_SOURCES} ${Mnemonics} ${NodeRpcProxy} ${P2p} ${Rpc} ${Serialization} ${System} ${Transfers} ${Wallet} ${WalletLegacy} ${XI_CLI_WALLET_SOURCES})
   if(XI_CXX_FLAGS)
-    set_source_files_properties(${source_file} PROPERTIES COMPILE_FLAGS "${XI_CXX_FLAGS} /W3 /GS-")
+    set_source_files_properties(${source_file} PROPERTIES COMPILE_FLAGS "${XI_CXX_FLAGS}")
   endif() # XI_CXX_FLAGS
   source_group("" FILES ${source_file})
 endforeach()

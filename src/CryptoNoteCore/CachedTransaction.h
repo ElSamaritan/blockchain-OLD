@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,7 +23,7 @@
 namespace CryptoNote {
 
 class CachedTransaction {
-public:
+ public:
   explicit CachedTransaction(Transaction&& transaction);
   explicit CachedTransaction(const Transaction& transaction);
   explicit CachedTransaction(const BinaryArray& transactionBinaryArray);
@@ -33,7 +33,7 @@ public:
   const BinaryArray& getTransactionBinaryArray() const;
   uint64_t getTransactionFee() const;
 
-private:
+ private:
   Transaction transaction;
   mutable boost::optional<BinaryArray> transactionBinaryArray;
   mutable boost::optional<Crypto::Hash> transactionHash;
@@ -41,4 +41,4 @@ private:
   mutable boost::optional<uint64_t> transactionFee;
 };
 
-}
+}  // namespace CryptoNote

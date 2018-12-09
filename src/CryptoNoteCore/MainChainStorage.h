@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,8 +23,8 @@
 
 namespace CryptoNote {
 
-class MainChainStorage: public IMainChainStorage {
-public:
+class MainChainStorage : public IMainChainStorage {
+ public:
   MainChainStorage(const std::string& blocksFilame, const std::string& indexesFilename);
   virtual ~MainChainStorage();
 
@@ -36,10 +36,10 @@ public:
 
   virtual void clear() override;
 
-private:
+ private:
   mutable SwappedVector<RawBlock> storage;
 };
 
 std::unique_ptr<IMainChainStorage> createSwappedMainChainStorage(const std::string& dataDir, const Currency& currency);
 
-}
+}  // namespace CryptoNote

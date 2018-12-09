@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -29,11 +29,9 @@
 
 namespace System {
 
-Ipv4Resolver::Ipv4Resolver() : dispatcher(nullptr) {
-}
+Ipv4Resolver::Ipv4Resolver() : dispatcher(nullptr) {}
 
-Ipv4Resolver::Ipv4Resolver(Dispatcher& dispatcher) : dispatcher(&dispatcher) {
-}
+Ipv4Resolver::Ipv4Resolver(Dispatcher& dispatcher) : dispatcher(&dispatcher) {}
 
 Ipv4Resolver::Ipv4Resolver(Ipv4Resolver&& other) : dispatcher(other.dispatcher) {
   if (dispatcher != nullptr) {
@@ -41,8 +39,7 @@ Ipv4Resolver::Ipv4Resolver(Ipv4Resolver&& other) : dispatcher(other.dispatcher) 
   }
 }
 
-Ipv4Resolver::~Ipv4Resolver() {
-}
+Ipv4Resolver::~Ipv4Resolver() {}
 
 Ipv4Resolver& Ipv4Resolver::operator=(Ipv4Resolver&& other) {
   dispatcher = other.dispatcher;
@@ -59,19 +56,19 @@ Ipv4Address Ipv4Resolver::resolve(const std::string& host) {
     throw InterruptedException();
   }
 
-  addrinfo hints = { 0, AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, NULL, NULL, NULL };
+  addrinfo hints = {0, AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, NULL, NULL, NULL};
   addrinfo* addressInfos;
   int result = getaddrinfo(host.c_str(), NULL, &hints, &addressInfos);
   if (result != 0) {
     throw std::runtime_error("Ipv4Resolver::resolve, getaddrinfo failed, " + errorMessage(result));
   }
-  
+
   size_t count = 0;
   for (addrinfo* addressInfo = addressInfos; addressInfo != nullptr; addressInfo = addressInfo->ai_next) {
     ++count;
   }
 
-  std::mt19937 generator{ std::random_device()() };
+  std::mt19937 generator{std::random_device()()};
   size_t index = std::uniform_int_distribution<size_t>(0, count - 1)(generator);
   addrinfo* addressInfo = addressInfos;
   for (size_t i = 0; i < index; ++i) {
@@ -83,4 +80,4 @@ Ipv4Address Ipv4Resolver::resolve(const std::string& host) {
   return address;
 }
 
-}
+}  // namespace System

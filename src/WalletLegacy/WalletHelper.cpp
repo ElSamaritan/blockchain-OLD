@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -32,7 +32,8 @@ void openOutputFileStream(const std::string& filename, std::ofstream& file) {
   }
 }
 
-std::error_code walletSaveWrapper(CryptoNote::IWalletLegacy& wallet, std::ofstream& file, bool saveDetailes, bool saveCache) {
+std::error_code walletSaveWrapper(CryptoNote::IWalletLegacy& wallet, std::ofstream& file, bool saveDetailes,
+                                  bool saveCache) {
   CryptoNote::WalletHelper::SaveWalletResultObserver o;
 
   std::error_code e;
@@ -50,7 +51,7 @@ std::error_code walletSaveWrapper(CryptoNote::IWalletLegacy& wallet, std::ofstre
   return e;
 }
 
-}
+}  // namespace
 
 void WalletHelper::prepareFileNames(const std::string& file_path, std::string& keys_file, std::string& wallet_file) {
   if (Common::GetExtension(file_path) == ".wallet") {
@@ -65,7 +66,8 @@ void WalletHelper::prepareFileNames(const std::string& file_path, std::string& k
   }
 }
 
-void WalletHelper::SendCompleteResultObserver::sendTransactionCompleted(CryptoNote::TransactionId transactionId, std::error_code result) {
+void WalletHelper::SendCompleteResultObserver::sendTransactionCompleted(CryptoNote::TransactionId transactionId,
+                                                                        std::error_code result) {
   std::lock_guard<std::mutex> lock(m_mutex);
   m_finishedTransactions[transactionId] = result;
   m_condition.notify_one();
@@ -87,10 +89,9 @@ std::error_code WalletHelper::SendCompleteResultObserver::wait(CryptoNote::Trans
   return m_result;
 }
 
-WalletHelper::IWalletRemoveObserverGuard::IWalletRemoveObserverGuard(CryptoNote::IWalletLegacy& wallet, CryptoNote::IWalletLegacyObserver& observer) :
-  m_wallet(wallet),
-  m_observer(observer),
-  m_removed(false) {
+WalletHelper::IWalletRemoveObserverGuard::IWalletRemoveObserverGuard(CryptoNote::IWalletLegacy& wallet,
+                                                                     CryptoNote::IWalletLegacyObserver& observer)
+    : m_wallet(wallet), m_observer(observer), m_removed(false) {
   m_wallet.addObserver(&m_observer);
 }
 

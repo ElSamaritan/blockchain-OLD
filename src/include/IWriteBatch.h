@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -24,9 +24,9 @@
 namespace CryptoNote {
 
 class IWriteBatch {
-public:
+ public:
   virtual std::vector<std::pair<std::string, std::string>> extractRawDataToInsert() = 0;
   virtual std::vector<std::string> extractRawKeysToRemove() = 0;
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

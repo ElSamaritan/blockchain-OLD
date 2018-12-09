@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Calex Developers
 //
@@ -24,9 +24,8 @@ namespace CryptoNote {
 enum class CoreEvent { POOL_UPDATED, BLOCKHAIN_UPDATED };
 
 class ICore {
-public:
-  virtual ~ICore() {
-  }
+ public:
+  virtual ~ICore() {}
 
   virtual bool addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) = 0;
   virtual bool removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) = 0;
@@ -53,11 +52,11 @@ public:
   virtual bool queryBlocksLite(const std::vector<Crypto::Hash>& knownBlockHashes, uint64_t timestamp,
                                uint32_t& startIndex, uint32_t& currentIndex, uint32_t& fullOffset,
                                std::vector<BlockShortInfo>& entries) const = 0;
-  
+
   virtual bool queryBlocksDetailed(const std::vector<Crypto::Hash>& knownBlockHashes, uint64_t timestamp,
-                              uint32_t& startIndex, uint32_t& currentIndex, uint32_t& fullOffset,
-                              std::vector<BlockDetails>& entries) const = 0;  
-  
+                                   uint32_t& startIndex, uint32_t& currentIndex, uint32_t& fullOffset,
+                                   std::vector<BlockDetails>& entries) const = 0;
+
   virtual bool hasTransaction(const Crypto::Hash& transactionHash) const = 0;
   virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes,
                                std::vector<BinaryArray>& transactions,
@@ -100,4 +99,4 @@ public:
   virtual std::vector<Crypto::Hash> getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount) const = 0;
   virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const = 0;
 };
-}
+}  // namespace CryptoNote

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -36,12 +36,10 @@ enum NodeErrorCodes {
 
 // custom category:
 class NodeErrorCategory : public std::error_category {
-public:
+ public:
   static NodeErrorCategory INSTANCE;
 
-  virtual const char* name() const throw() override {
-    return "NodeErrorCategory";
-  }
+  virtual const char* name() const throw() override { return "NodeErrorCategory"; }
 
   virtual std::error_condition default_error_condition(int ev) const throw() override {
     return std::error_condition(ev, *this);
@@ -49,25 +47,32 @@ public:
 
   virtual std::string message(int ev) const override {
     switch (ev) {
-    case NOT_INITIALIZED:     return "Object was not initialized";
-    case ALREADY_INITIALIZED: return "Object has been already initialized";
-    case NETWORK_ERROR:       return "Network error";
-    case NODE_BUSY:           return "Node is busy";
-    case INTERNAL_NODE_ERROR: return "Internal node error";
-    case REQUEST_ERROR:       return "Error in request parameters";
-    case CONNECT_ERROR:       return "Can't connect to daemon";
-    default:                  return "Unknown error";
+      case NOT_INITIALIZED:
+        return "Object was not initialized";
+      case ALREADY_INITIALIZED:
+        return "Object has been already initialized";
+      case NETWORK_ERROR:
+        return "Network error";
+      case NODE_BUSY:
+        return "Node is busy";
+      case INTERNAL_NODE_ERROR:
+        return "Internal node error";
+      case REQUEST_ERROR:
+        return "Error in request parameters";
+      case CONNECT_ERROR:
+        return "Can't connect to daemon";
+      default:
+        return "Unknown error";
     }
   }
 
-private:
-  NodeErrorCategory() {
-  }
+ private:
+  NodeErrorCategory() {}
 };
 
-}
-}
- 
+}  // namespace error
+}  // namespace CryptoNote
+
 inline std::error_code make_error_code(CryptoNote::error::NodeErrorCodes e) {
   return std::error_code(static_cast<int>(e), CryptoNote::error::NodeErrorCategory::INSTANCE);
 }

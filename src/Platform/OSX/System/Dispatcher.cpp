@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -31,7 +31,7 @@
 
 namespace System {
 
-namespace{
+namespace {
 
 struct ContextMakingData {
   void* uctx;
@@ -39,7 +39,7 @@ struct ContextMakingData {
 };
 
 class MutextGuard {
-public:
+ public:
   MutextGuard(pthread_mutex_t& _mutex) : mutex(_mutex) {
     auto ret = pthread_mutex_lock(&mutex);
     if (ret != 0) {
@@ -47,17 +47,15 @@ public:
     }
   }
 
-  ~MutextGuard() {
-    pthread_mutex_unlock(&mutex);
-  }
+  ~MutextGuard() { pthread_mutex_unlock(&mutex); }
 
-private:
+ private:
   pthread_mutex_t& mutex;
 };
 
 const size_t STACK_SIZE = 64 * 1024;
 
-}
+}  // namespace
 
 static_assert(Dispatcher::SIZEOF_PTHREAD_MUTEX_T == sizeof(pthread_mutex_t), "invalid pthread mutex size");
 
@@ -76,11 +74,11 @@ Dispatcher::Dispatcher() : lastCreatedTimer(0) {
       if (kevent(kqueue, &event, 1, NULL, 0, NULL) == -1) {
         message = "kevent failed, " + lastErrorMessage();
       } else {
-        if(pthread_mutex_init(reinterpret_cast<pthread_mutex_t*>(this->mutex), NULL) == -1) {
+        if (pthread_mutex_init(reinterpret_cast<pthread_mutex_t*>(this->mutex), NULL) == -1) {
           message = "pthread_mutex_init failed, " + lastErrorMessage();
         } else {
           remoteSpawned = false;
-          
+
           mainContext.interrupted = false;
           mainContext.group = &contextGroup;
           mainContext.groupPrev = nullptr;
@@ -100,7 +98,8 @@ Dispatcher::Dispatcher() : lastCreatedTimer(0) {
     }
 
     auto result = close(kqueue);
-    if (result) {}
+    if (result) {
+    }
     assert(result == 0);
   }
 
@@ -119,14 +118,15 @@ Dispatcher::~Dispatcher() {
   assert(runningContextCount == 0);
   while (firstReusableContext != nullptr) {
     auto ucontext = static_cast<uctx*>(firstReusableContext->uctx);
-    auto stackPtr = static_cast<uint8_t *>(firstReusableContext->stackPtr);
+    auto stackPtr = static_cast<uint8_t*>(firstReusableContext->stackPtr);
     firstReusableContext = firstReusableContext->next;
     delete[] stackPtr;
     delete ucontext;
   }
-  
+
   auto result = close(kqueue);
-  if (result) {}
+  if (result) {
+  }
   assert(result != -1);
   result = pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t*>(this->mutex));
   assert(result != -1);
@@ -135,7 +135,7 @@ Dispatcher::~Dispatcher() {
 void Dispatcher::clear() {
   while (firstReusableContext != nullptr) {
     auto ucontext = static_cast<uctx*>(firstReusableContext->uctx);
-    auto stackPtr = static_cast<uint8_t *>(firstReusableContext->stackPtr);
+    auto stackPtr = static_cast<uint8_t*>(firstReusableContext->stackPtr);
     firstReusableContext = firstReusableContext->next;
     delete[] stackPtr;
     delete ucontext;
@@ -151,11 +151,11 @@ void Dispatcher::dispatch() {
 
       assert(context->inExecutionQueue);
       context->inExecutionQueue = false;
-      
+
       break;
     }
-    
-    if(remoteSpawned.load() == true) {
+
+    if (remoteSpawned.load() == true) {
       MutextGuard guard(*reinterpret_cast<pthread_mutex_t*>(this->mutex));
       while (!remoteSpawningProcedures.empty()) {
         spawn(std::move(remoteSpawningProcedures.front()));
@@ -185,7 +185,7 @@ void Dispatcher::dispatch() {
 
       if (event.filter == EVFILT_WRITE) {
         event.flags = EV_DELETE | EV_DISABLE;
-        kevent(kqueue, &event, 1, NULL, 0, NULL); // ignore error here
+        kevent(kqueue, &event, 1, NULL, 0, NULL);  // ignore error here
       }
 
       context = static_cast<OperationContext*>(event.udata)->context;
@@ -200,29 +200,24 @@ void Dispatcher::dispatch() {
         spawn(std::move(remoteSpawningProcedures.front()));
         remoteSpawningProcedures.pop();
       }
-
     }
   }
 
   if (context != currentContext) {
     uctx* oldContext = static_cast<uctx*>(currentContext->uctx);
     currentContext = context;
-    if (swapcontext(oldContext,static_cast<uctx*>(currentContext->uctx)) == -1) {
+    if (swapcontext(oldContext, static_cast<uctx*>(currentContext->uctx)) == -1) {
       throw std::runtime_error("Dispatcher::dispatch, swapcontext failed, " + lastErrorMessage());
     }
   }
 }
 
-NativeContext* Dispatcher::getCurrentContext() const {
-  return currentContext;
-}
+NativeContext* Dispatcher::getCurrentContext() const { return currentContext; }
 
-void Dispatcher::interrupt() {
-  interrupt(currentContext);
-}
+void Dispatcher::interrupt() { interrupt(currentContext); }
 
 void Dispatcher::interrupt(NativeContext* context) {
-  assert(context!=nullptr);
+  assert(context != nullptr);
   if (!context->interrupted) {
     if (context->interruptProcedure != nullptr) {
       context->interruptProcedure();
@@ -243,10 +238,9 @@ bool Dispatcher::interrupted() {
 }
 
 void Dispatcher::pushContext(NativeContext* context) {
-  assert(context!=nullptr);
+  assert(context != nullptr);
 
-  if (context->inExecutionQueue)
-    return;
+  if (context->inExecutionQueue) return;
 
   context->next = nullptr;
   context->inExecutionQueue = true;
@@ -275,7 +269,7 @@ void Dispatcher::remoteSpawn(std::function<void()>&& procedure) {
 
 void Dispatcher::spawn(std::function<void()>&& procedure) {
   NativeContext* context = &getReusableContext();
-  if(contextGroup.firstContext != nullptr) {
+  if (contextGroup.firstContext != nullptr) {
     context->groupPrev = contextGroup.lastContext;
     assert(contextGroup.lastContext->groupNext == nullptr);
     contextGroup.lastContext->groupNext = context;
@@ -294,7 +288,7 @@ void Dispatcher::spawn(std::function<void()>&& procedure) {
 }
 
 void Dispatcher::yield() {
-  struct timespec zeroTimeout = { 0, 0 };
+  struct timespec zeroTimeout = {0, 0};
   int updatesCounter = 0;
   for (;;) {
     struct kevent events[16];
@@ -313,7 +307,7 @@ void Dispatcher::yield() {
 
         if (events[i].filter == EVFILT_USER && events[i].ident == 0) {
           EV_SET(&updates[updatesCounter++], 0, EVFILT_USER, EV_ADD | EV_DISABLE, NOTE_FFNOP, 0, NULL);
-          
+
           MutextGuard guard(*reinterpret_cast<pthread_mutex_t*>(this->mutex));
           while (!remoteSpawningProcedures.empty()) {
             spawn(std::move(remoteSpawningProcedures.front()));
@@ -343,30 +337,29 @@ void Dispatcher::yield() {
   }
 }
 
-int Dispatcher::getKqueue() const {
-  return kqueue;
-}
+int Dispatcher::getKqueue() const { return kqueue; }
 
 NativeContext& Dispatcher::getReusableContext() {
-  if(firstReusableContext == nullptr) {
-   uctx* newlyCreatedContext = new uctx;
-   uint8_t* stackPointer = new uint8_t[STACK_SIZE];
-   static_cast<uctx*>(newlyCreatedContext)->uc_stack.ss_sp = stackPointer;
-   static_cast<uctx*>(newlyCreatedContext)->uc_stack.ss_size = STACK_SIZE;
-   
-   ContextMakingData makingData{ newlyCreatedContext, this};
-   makecontext(static_cast<uctx*>(newlyCreatedContext), reinterpret_cast<void(*)()>(contextProcedureStatic), reinterpret_cast<intptr_t>(&makingData));
-   
-   uctx* oldContext = static_cast<uctx*>(currentContext->uctx);
-   if (swapcontext(oldContext, newlyCreatedContext) == -1) {
-     throw std::runtime_error("Dispatcher::getReusableContext, swapcontext failed, " + lastErrorMessage());
-   }
-   
-   assert(firstReusableContext != nullptr);
-   assert(firstReusableContext->uctx == newlyCreatedContext);
-   firstReusableContext->stackPtr = stackPointer;
+  if (firstReusableContext == nullptr) {
+    uctx* newlyCreatedContext = new uctx;
+    uint8_t* stackPointer = new uint8_t[STACK_SIZE];
+    static_cast<uctx*>(newlyCreatedContext)->uc_stack.ss_sp = stackPointer;
+    static_cast<uctx*>(newlyCreatedContext)->uc_stack.ss_size = STACK_SIZE;
+
+    ContextMakingData makingData{newlyCreatedContext, this};
+    makecontext(static_cast<uctx*>(newlyCreatedContext), reinterpret_cast<void (*)()>(contextProcedureStatic),
+                reinterpret_cast<intptr_t>(&makingData));
+
+    uctx* oldContext = static_cast<uctx*>(currentContext->uctx);
+    if (swapcontext(oldContext, newlyCreatedContext) == -1) {
+      throw std::runtime_error("Dispatcher::getReusableContext, swapcontext failed, " + lastErrorMessage());
+    }
+
+    assert(firstReusableContext != nullptr);
+    assert(firstReusableContext->uctx == newlyCreatedContext);
+    firstReusableContext->stackPtr = stackPointer;
   }
-  
+
   NativeContext* context = firstReusableContext;
   firstReusableContext = firstReusableContext->next;
   return *context;
@@ -390,9 +383,7 @@ int Dispatcher::getTimer() {
   return timer;
 }
 
-void Dispatcher::pushTimer(int timer) {
-  timers.push(timer);
-}
+void Dispatcher::pushTimer(int timer) { timers.push(timer); }
 
 void Dispatcher::contextProcedure(void* ucontext) {
   assert(firstReusableContext == nullptr);
@@ -411,7 +402,7 @@ void Dispatcher::contextProcedure(void* ucontext) {
     ++runningContextCount;
     try {
       context.procedure();
-    } catch(...) {
+    } catch (...) {
     }
 
     if (context.group != nullptr) {
@@ -459,4 +450,4 @@ void Dispatcher::contextProcedureStatic(intptr_t context) {
   makingContextData->dispatcher->contextProcedure(makingContextData->uctx);
 }
 
-}
+}  // namespace System

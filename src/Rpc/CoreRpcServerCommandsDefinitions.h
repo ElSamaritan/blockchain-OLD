@@ -1,10 +1,12 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Karai Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 #pragma once
+
+#include <Xi/Global.h>
 
 #include "CryptoNoteProtocol/CryptoNoteProtocolDefinitions.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"
@@ -23,15 +25,13 @@ namespace CryptoNote {
 #define CORE_RPC_STATUS_BUSY "BUSY"
 
 struct EMPTY_STRUCT {
-  void serialize(ISerializer &s) {}
+  void serialize(ISerializer &s) { XI_UNUSED(s); }
 };
 
 struct STATUS_STRUCT {
   std::string status;
 
-  void serialize(ISerializer &s) {
-    KV_MEMBER(status)
-  }
+  void serialize(ISerializer &s) { KV_MEMBER(status) }
 };
 
 struct COMMAND_RPC_GET_HEIGHT {
@@ -51,13 +51,11 @@ struct COMMAND_RPC_GET_HEIGHT {
 };
 
 struct COMMAND_RPC_GET_BLOCKS_FAST {
-
   struct request {
-    std::vector<Crypto::Hash> block_ids; //*first 10 blocks id goes sequential, next goes in pow(2,n) offset, like 2, 4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
-    
-    void serialize(ISerializer &s) {
-      KV_MEMBER(block_ids);
-    }
+    std::vector<Crypto::Hash> block_ids;  //*first 10 blocks id goes sequential, next goes in pow(2,n) offset, like 2,
+                                          //4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
+
+    void serialize(ISerializer &s) { KV_MEMBER(block_ids); }
   };
 
   struct response {
@@ -72,20 +70,18 @@ struct COMMAND_RPC_GET_TRANSACTIONS {
   struct request {
     std::vector<std::string> txs_hashes;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(txs_hashes)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(txs_hashes) }
   };
 
   struct response {
-    std::vector<std::string> txs_as_hex; //transactions blobs as hex
-    std::vector<std::string> missed_tx;  //not found transactions
+    std::vector<std::string> txs_as_hex;  // transactions blobs as hex
+    std::vector<std::string> missed_tx;   // not found transactions
     std::string status;
 
     void serialize(ISerializer &s) {
       KV_MEMBER(txs_as_hex)
       KV_MEMBER(missed_tx)
-      KV_MEMBER(status)    
+      KV_MEMBER(status)
     }
   };
 };
@@ -103,8 +99,8 @@ struct COMMAND_RPC_GET_POOL_CHANGES {
 
   struct response {
     bool isTailBlockActual;
-    std::vector<BinaryArray> addedTxs;          // Added transactions blobs
-    std::vector<Crypto::Hash> deletedTxsIds; // IDs of not found transactions
+    std::vector<BinaryArray> addedTxs;        // Added transactions blobs
+    std::vector<Crypto::Hash> deletedTxsIds;  // IDs of not found transactions
     std::string status;
 
     void serialize(ISerializer &s) {
@@ -129,8 +125,8 @@ struct COMMAND_RPC_GET_POOL_CHANGES_LITE {
 
   struct response {
     bool isTailBlockActual;
-    std::vector<TransactionPrefixInfo> addedTxs;          // Added transactions blobs
-    std::vector<Crypto::Hash> deletedTxsIds; // IDs of not found transactions
+    std::vector<TransactionPrefixInfo> addedTxs;  // Added transactions blobs
+    std::vector<Crypto::Hash> deletedTxsIds;      // IDs of not found transactions
     std::string status;
 
     void serialize(ISerializer &s) {
@@ -144,13 +140,10 @@ struct COMMAND_RPC_GET_POOL_CHANGES_LITE {
 
 //-----------------------------------------------
 struct COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES {
-  
   struct request {
     Crypto::Hash txid;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(txid)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(txid) }
   };
 
   struct response {
@@ -178,7 +171,7 @@ struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request {
 struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_out_entry {
   uint32_t global_amount_index;
   Crypto::PublicKey out_key;
-  
+
   void serialize(ISerializer &s) {
     KV_MEMBER(global_amount_index)
     KV_MEMBER(out_key);
@@ -222,17 +215,13 @@ struct COMMAND_RPC_SEND_RAW_TX {
     request() {}
     explicit request(const Transaction &);
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(tx_as_hex)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(tx_as_hex) }
   };
 
   struct response {
     std::string status;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(status)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(status) }
   };
 };
 //-----------------------------------------------
@@ -250,9 +239,7 @@ struct COMMAND_RPC_START_MINING {
   struct response {
     std::string status;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(status)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(status) }
   };
 };
 //-----------------------------------------------
@@ -322,7 +309,7 @@ struct COMMAND_RPC_STOP_DAEMON {
 
 //
 struct COMMAND_RPC_GETBLOCKCOUNT {
-  typedef std::vector<std::string> request;
+  typedef EMPTY_STRUCT request;
 
   struct response {
     uint64_t count;
@@ -342,7 +329,7 @@ struct COMMAND_RPC_GETBLOCKHASH {
 
 struct COMMAND_RPC_GETBLOCKTEMPLATE {
   struct request {
-    uint64_t reserve_size; //max 255 bytes
+    uint64_t reserve_size;  // max 255 bytes
     std::string wallet_address;
 
     void serialize(ISerializer &s) {
@@ -374,9 +361,7 @@ struct COMMAND_RPC_GET_CURRENCY_ID {
   struct response {
     std::string currency_id_blob;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(currency_id_blob)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(currency_id_blob) }
   };
 };
 
@@ -412,8 +397,8 @@ struct block_header_response {
     KV_MEMBER(hash)
     KV_MEMBER(difficulty)
     KV_MEMBER(reward)
-	KV_MEMBER(num_txes)
-	KV_MEMBER(block_size)
+    KV_MEMBER(num_txes)
+    KV_MEMBER(block_size)
   }
 };
 
@@ -427,41 +412,37 @@ struct BLOCK_HEADER_RESPONSE {
   }
 };
 
+struct COMMAND_RPC_GET_BLOCK_HEADERS_RANGE {
+  struct request {
+    uint64_t start_height;
+    uint64_t end_height;
 
-struct COMMAND_RPC_GET_BLOCK_HEADERS_RANGE
-{
-	struct request
-	{
-		uint64_t start_height;
-		uint64_t end_height;
+    void serialize(ISerializer &s) {
+      KV_MEMBER(start_height)
+      KV_MEMBER(end_height)
+    }
+    /*BEGIN_KV_SERIALIZE_MAP()
+    KV_SERIALIZE(start_height)
+    KV_SERIALIZE(end_height)
+    END_KV_SERIALIZE_MAP()*/
+  };
 
-		void serialize(ISerializer &s) {
-			KV_MEMBER(start_height)
-			KV_MEMBER(end_height)
-		}
-		/*BEGIN_KV_SERIALIZE_MAP()
-		KV_SERIALIZE(start_height)
-		KV_SERIALIZE(end_height)
-		END_KV_SERIALIZE_MAP()*/
-	};
+  struct response {
+    std::string status;
+    std::vector<block_header_response> headers;
+    bool untrusted;
 
-	struct response
-	{
-		std::string status;
-		std::vector<block_header_response> headers;
-		bool untrusted;
-
-		void serialize(ISerializer &s) {
-			KV_MEMBER(status)
-			KV_MEMBER(headers)
-			KV_MEMBER(untrusted)
-		}
-		/*BEGIN_KV_SERIALIZE_MAP()
-		KV_SERIALIZE(status)
-		KV_SERIALIZE(headers)
-		KV_SERIALIZE(untrusted)
-		END_KV_SERIALIZE_MAP()*/
-	};
+    void serialize(ISerializer &s) {
+      KV_MEMBER(status)
+      KV_MEMBER(headers)
+      KV_MEMBER(untrusted)
+    }
+    /*BEGIN_KV_SERIALIZE_MAP()
+    KV_SERIALIZE(status)
+    KV_SERIALIZE(headers)
+    KV_SERIALIZE(untrusted)
+    END_KV_SERIALIZE_MAP()*/
+  };
 };
 
 struct f_transaction_short_response {
@@ -516,7 +497,7 @@ struct f_block_short_response {
 
 struct f_block_details_response {
   uint8_t major_version;
-  uint8_t minor_version;  
+  uint8_t minor_version;
   uint64_t timestamp;
   std::string prev_hash;
   uint32_t nonce;
@@ -570,9 +551,7 @@ struct COMMAND_RPC_GET_BLOCK_HEADER_BY_HASH {
   struct request {
     std::string hash;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(hash)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(hash) }
   };
 
   typedef BLOCK_HEADER_RESPONSE response;
@@ -582,9 +561,7 @@ struct COMMAND_RPC_GET_BLOCK_HEADER_BY_HEIGHT {
   struct request {
     uint64_t height;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(height)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(height) }
   };
 
   typedef BLOCK_HEADER_RESPONSE response;
@@ -594,13 +571,11 @@ struct F_COMMAND_RPC_GET_BLOCKS_LIST {
   struct request {
     uint64_t height;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(height)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(height) }
   };
 
   struct response {
-    std::vector<f_block_short_response> blocks; //transactions blobs as hex
+    std::vector<f_block_short_response> blocks;  // transactions blobs as hex
     std::string status;
 
     void serialize(ISerializer &s) {
@@ -614,9 +589,7 @@ struct F_COMMAND_RPC_GET_BLOCK_DETAILS {
   struct request {
     std::string hash;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(hash)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(hash) }
   };
 
   struct response {
@@ -634,9 +607,7 @@ struct F_COMMAND_RPC_GET_TRANSACTION_DETAILS {
   struct request {
     std::string hash;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(hash)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(hash) }
   };
 
   struct response {
@@ -658,7 +629,7 @@ struct F_COMMAND_RPC_GET_POOL {
   typedef EMPTY_STRUCT request;
 
   struct response {
-    std::vector<f_transaction_short_response> transactions; //transactions blobs as hex
+    std::vector<f_transaction_short_response> transactions;  // transactions blobs as hex
     std::string status;
 
     void serialize(ISerializer &s) {
@@ -669,7 +640,8 @@ struct F_COMMAND_RPC_GET_POOL {
 };
 struct COMMAND_RPC_QUERY_BLOCKS {
   struct request {
-    std::vector<Crypto::Hash> block_ids; //*first 10 blocks id goes sequential, next goes in pow(2,n) offset, like 2, 4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
+    std::vector<Crypto::Hash> block_ids;  //*first 10 blocks id goes sequential, next goes in pow(2,n) offset, like 2,
+                                          //4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
     uint64_t timestamp;
 
     void serialize(ISerializer &s) {
@@ -727,16 +699,14 @@ struct COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HEIGHTS {
   struct request {
     std::vector<uint32_t> blockHeights;
 
-    void serialize(ISerializer& s) {
-      KV_MEMBER(blockHeights);
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(blockHeights); }
   };
 
   struct response {
     std::vector<BlockDetails> blocks;
     std::string status;
 
-    void serialize(ISerializer& s) {
+    void serialize(ISerializer &s) {
       KV_MEMBER(status)
       KV_MEMBER(blocks)
     }
@@ -747,16 +717,14 @@ struct COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HASHES {
   struct request {
     std::vector<Crypto::Hash> blockHashes;
 
-    void serialize(ISerializer& s) {
-      KV_MEMBER(blockHashes);
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(blockHashes); }
   };
 
   struct response {
     std::vector<BlockDetails> blocks;
     std::string status;
 
-    void serialize(ISerializer& s) {
+    void serialize(ISerializer &s) {
       KV_MEMBER(status)
       KV_MEMBER(blocks)
     }
@@ -767,27 +735,27 @@ struct COMMAND_RPC_QUERY_BLOCKS_DETAILED {
   struct request {
     std::vector<Crypto::Hash> blockIds;
     uint64_t timestamp;
-  
-  void serialize(ISerializer &s) {
-    KV_MEMBER(blockIds);
-    KV_MEMBER(timestamp)
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(blockIds);
+      KV_MEMBER(timestamp)
     }
   };
-  
+
   struct response {
     std::string status;
     uint64_t startHeight;
     uint64_t currentHeight;
     uint64_t fullOffset;
     std::vector<BlockDetails> blocks;
-  
-  void serialize(ISerializer &s) {
-    KV_MEMBER(status)
-    KV_MEMBER(startHeight)
-    KV_MEMBER(currentHeight)
-    KV_MEMBER(fullOffset)
-    KV_MEMBER(blocks)
-  }
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(status)
+      KV_MEMBER(startHeight)
+      KV_MEMBER(currentHeight)
+      KV_MEMBER(fullOffset)
+      KV_MEMBER(blocks)
+    }
   };
 };
 
@@ -795,16 +763,14 @@ struct COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT {
   struct request {
     uint32_t blockHeight;
 
-    void serialize(ISerializer& s) {
-      KV_MEMBER(blockHeight)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(blockHeight) }
   };
 
   struct response {
     BlockDetails block;
     std::string status;
 
-    void serialize(ISerializer& s) {
+    void serialize(ISerializer &s) {
       KV_MEMBER(status)
       KV_MEMBER(block)
     }
@@ -837,9 +803,7 @@ struct COMMAND_RPC_GET_TRANSACTION_HASHES_BY_PAYMENT_ID {
   struct request {
     Crypto::Hash paymentId;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(paymentId)
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(paymentId) }
   };
 
   struct response {
@@ -857,9 +821,7 @@ struct COMMAND_RPC_GET_TRANSACTION_DETAILS_BY_HASHES {
   struct request {
     std::vector<Crypto::Hash> transactionHashes;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(transactionHashes);
-    }
+    void serialize(ISerializer &s) { KV_MEMBER(transactionHashes); }
   };
 
   struct response {
@@ -874,7 +836,7 @@ struct COMMAND_RPC_GET_TRANSACTION_DETAILS_BY_HASHES {
 };
 
 struct COMMAND_RPC_GET_PEERS {
-  //TODO useful to add option to get gray peers ?
+  // TODO useful to add option to get gray peers ?
   typedef EMPTY_STRUCT request;
 
   struct response {
@@ -896,7 +858,7 @@ struct COMMAND_RPC_GET_FEE_ADDRESS {
     uint32_t amount;
     std::string status;
 
-    void serialize(ISerializer & s) {
+    void serialize(ISerializer &s) {
       KV_MEMBER(address)
       KV_MEMBER(amount)
       KV_MEMBER(status)
@@ -904,4 +866,4 @@ struct COMMAND_RPC_GET_FEE_ADDRESS {
   };
 };
 
-}
+}  // namespace CryptoNote

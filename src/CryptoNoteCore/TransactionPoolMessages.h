@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,10 +22,7 @@
 
 namespace CryptoNote {
 
-enum class TransactionMessageType {
-  AddTransactionType,
-  DeleteTransactionType
-};
+enum class TransactionMessageType { AddTransactionType, DeleteTransactionType };
 
 // immutable messages
 struct AddTransaction {
@@ -37,7 +34,7 @@ struct DeleteTransaction {
 };
 
 class TransactionPoolMessage {
-public:
+ public:
   TransactionPoolMessage(const AddTransaction& at);
   TransactionPoolMessage(const DeleteTransaction& at);
 
@@ -46,10 +43,10 @@ public:
 
   // API with explicit type handling
   TransactionMessageType getType() const;
-  AddTransaction  getAddTransaction() const;
+  AddTransaction getAddTransaction() const;
   DeleteTransaction getDeleteTransaction() const;
 
-private:
+ private:
   const TransactionMessageType type;
   union {
     const AddTransaction addTransaction;
@@ -59,4 +56,4 @@ private:
 
 TransactionPoolMessage makeAddTransaction(const Crypto::Hash& hash);
 TransactionPoolMessage makeDelTransaction(const Crypto::Hash& hash);
-}
+}  // namespace CryptoNote

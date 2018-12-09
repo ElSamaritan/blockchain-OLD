@@ -25,7 +25,6 @@ const std::string windowsAsciiArt = R"(
 + ----------------------------------------------------------------------------------------------------- +
 )";
 
-
 const std::string nonWindowsAsciiArt = R"(
 + ----------------------------------------------------------------------------------------------------- +
 |                                                                         *                             |
@@ -45,7 +44,6 @@ const std::string nonWindowsAsciiArt = R"(
 |   *                                                                                                   |
 + ----------------------------------------------------------------------------------------------------- +
 )";
-
 
 /* Windows has some characters it won't display in a terminal. If your ascii
    art works fine on Windows and Linux terminals, just replace 'asciiArt' with

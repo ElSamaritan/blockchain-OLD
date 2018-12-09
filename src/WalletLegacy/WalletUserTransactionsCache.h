@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -30,9 +30,8 @@ class ISerializer;
 
 namespace CryptoNote {
 
-class WalletUserTransactionsCache
-{
-public:
+class WalletUserTransactionsCache {
+ public:
   explicit WalletUserTransactionsCache(uint64_t mempoolTxLiveTime = 60 * 60 * 24);
 
   bool serialize(CryptoNote::ISerializer& serializer);
@@ -42,8 +41,10 @@ public:
   size_t getTransactionCount() const;
   size_t getTransferCount() const;
 
-  TransactionId addNewTransaction(uint64_t amount, uint64_t fee, const std::string& extra, const std::vector<WalletLegacyTransfer>& transfers, uint64_t unlockTime);
-  void updateTransaction(TransactionId transactionId, const CryptoNote::Transaction& tx, uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs);
+  TransactionId addNewTransaction(uint64_t amount, uint64_t fee, const std::string& extra,
+                                  const std::vector<WalletLegacyTransfer>& transfers, uint64_t unlockTime);
+  void updateTransaction(TransactionId transactionId, const CryptoNote::Transaction& tx, uint64_t amount,
+                         const std::list<TransactionOutputInformation>& usedOutputs);
   void updateTransactionSendingState(TransactionId transactionId, std::error_code ec);
 
   std::shared_ptr<WalletLegacyEvent> onTransactionUpdated(const TransactionInformation& txInfo, int64_t txBalance);
@@ -61,8 +62,7 @@ public:
 
   std::vector<TransactionId> deleteOutdatedTransactions();
 
-private:
-
+ private:
   TransactionId findTransactionByHash(const Crypto::Hash& hash);
   TransactionId insertTransaction(WalletLegacyTransaction&& Transaction);
   TransferId insertTransfers(const std::vector<WalletLegacyTransfer>& transfers);
@@ -81,4 +81,4 @@ private:
   WalletUnconfirmedTransactions m_unconfirmedTransactions;
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

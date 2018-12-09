@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,6 +22,9 @@
 #include <ostream>
 #include <string>
 #include <system_error>
+
+#include <Xi/Global.h>
+
 #include "CryptoNote.h"
 
 namespace CryptoNote {
@@ -34,52 +37,54 @@ struct WalletLegacyTransfer {
   int64_t amount;
 };
 
-const TransactionId WALLET_LEGACY_INVALID_TRANSACTION_ID    = std::numeric_limits<TransactionId>::max();
-const TransferId WALLET_LEGACY_INVALID_TRANSFER_ID          = std::numeric_limits<TransferId>::max();
+const TransactionId WALLET_LEGACY_INVALID_TRANSACTION_ID = std::numeric_limits<TransactionId>::max();
+const TransferId WALLET_LEGACY_INVALID_TRANSFER_ID = std::numeric_limits<TransferId>::max();
 const uint32_t WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT = std::numeric_limits<uint32_t>::max();
 
 enum class WalletLegacyTransactionState : uint8_t {
-  Active,    // --> {Deleted}
-  Deleted,   // --> {Active}
+  Active,   // --> {Deleted}
+  Deleted,  // --> {Active}
 
-  Sending,   // --> {Active, Cancelled, Failed}
-  Cancelled, // --> {}
-  Failed     // --> {}
+  Sending,    // --> {Active, Cancelled, Failed}
+  Cancelled,  // --> {}
+  Failed      // --> {}
 };
 
 struct WalletLegacyTransaction {
-  TransferId       firstTransferId;
-  size_t           transferCount;
-  int64_t          totalAmount;
-  uint64_t         fee;
-  uint64_t         sentTime;
-  uint64_t         unlockTime;
-  Crypto::Hash     hash;
-  bool             isCoinbase;
-  uint32_t         blockHeight;
-  uint64_t         timestamp;
-  std::string      extra;
+  TransferId firstTransferId;
+  size_t transferCount;
+  int64_t totalAmount;
+  uint64_t fee;
+  uint64_t sentTime;
+  uint64_t unlockTime;
+  Crypto::Hash hash;
+  bool isCoinbase;
+  uint32_t blockHeight;
+  uint64_t timestamp;
+  std::string extra;
   WalletLegacyTransactionState state;
 };
 
 class IWalletLegacyObserver {
-public:
+ public:
   virtual ~IWalletLegacyObserver() {}
 
-  virtual void initCompleted(std::error_code result) {}
-  virtual void saveCompleted(std::error_code result) {}
-  virtual void synchronizationProgressUpdated(uint32_t current, uint32_t total) {}
-  virtual void synchronizationCompleted(std::error_code result) {}
-  virtual void actualBalanceUpdated(uint64_t actualBalance) {}
-  virtual void pendingBalanceUpdated(uint64_t pendingBalance) {}
-  virtual void externalTransactionCreated(TransactionId transactionId) {}
-  virtual void sendTransactionCompleted(TransactionId transactionId, std::error_code result) {}
-  virtual void transactionUpdated(TransactionId transactionId) {}
+  virtual void initCompleted(std::error_code result) { XI_UNUSED(result); }
+  virtual void saveCompleted(std::error_code result) { XI_UNUSED(result); }
+  virtual void synchronizationProgressUpdated(uint32_t current, uint32_t total) { XI_UNUSED(current, total); }
+  virtual void synchronizationCompleted(std::error_code result) { XI_UNUSED(result); }
+  virtual void actualBalanceUpdated(uint64_t actualBalance) { XI_UNUSED(actualBalance); }
+  virtual void pendingBalanceUpdated(uint64_t pendingBalance) { XI_UNUSED(pendingBalance); }
+  virtual void externalTransactionCreated(TransactionId transactionId) { XI_UNUSED(transactionId); }
+  virtual void sendTransactionCompleted(TransactionId transactionId, std::error_code result) {
+    XI_UNUSED(transactionId, result);
+  }
+  virtual void transactionUpdated(TransactionId transactionId) { XI_UNUSED(transactionId); }
 };
 
 class IWalletLegacy {
-public:
-  virtual ~IWalletLegacy() {} ;
+ public:
+  virtual ~IWalletLegacy() = default;
   virtual void addObserver(IWalletLegacyObserver* observer) = 0;
   virtual void removeObserver(IWalletLegacyObserver* observer) = 0;
 
@@ -103,16 +108,20 @@ public:
   virtual size_t getTransferCount() = 0;
 
   virtual TransactionId findTransactionByTransferId(TransferId transferId) = 0;
-  
+
   virtual bool getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) = 0;
   virtual bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) = 0;
 
-  virtual TransactionId sendTransaction(const WalletLegacyTransfer& transfer, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) = 0;
-  virtual TransactionId sendTransaction(const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) = 0;
+  virtual TransactionId sendTransaction(const WalletLegacyTransfer& transfer, uint64_t fee,
+                                        const std::string& extra = "", uint64_t mixIn = 0,
+                                        uint64_t unlockTimestamp = 0) = 0;
+  virtual TransactionId sendTransaction(const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee,
+                                        const std::string& extra = "", uint64_t mixIn = 0,
+                                        uint64_t unlockTimestamp = 0) = 0;
   virtual std::error_code cancelTransaction(size_t transferId) = 0;
 
   virtual void getAccountKeys(AccountKeys& keys) = 0;
   virtual void syncAll(bool syncWalletFromZero = 0, uint64_t height = 0) = 0;
 };
 
-}
+}  // namespace CryptoNote

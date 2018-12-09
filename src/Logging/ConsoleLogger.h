@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,14 +23,14 @@
 namespace Logging {
 
 class ConsoleLogger : public CommonLogger {
-public:
+ public:
   ConsoleLogger(Level level = DEBUGGING);
 
-protected:
+ protected:
   virtual void doLogString(const std::string& message) override;
 
-private:
+ private:
   std::mutex mutex;
 };
 
-}
+}  // namespace Logging

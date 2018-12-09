@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,13 +23,13 @@
 namespace CryptoNote {
 
 class IInputStream {
-public:
+ public:
   virtual size_t read(char* data, size_t size) = 0;
 };
 
 class IOutputStream {
-public:
+ public:
   virtual void write(const char* data, size_t size) = 0;
 };
 
-}
+}  // namespace CryptoNote

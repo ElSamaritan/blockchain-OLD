@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -24,9 +24,9 @@
 namespace CryptoNote {
 
 class BinaryInputStreamSerializer : public ISerializer {
-public:
+ public:
   BinaryInputStreamSerializer(Common::IInputStream& strm) : stream(strm) {}
-  virtual ~BinaryInputStreamSerializer() {}
+  virtual ~BinaryInputStreamSerializer() override = default;
 
   virtual ISerializer::SerializerType type() const override;
 
@@ -49,15 +49,14 @@ public:
   virtual bool binary(void* value, size_t size, Common::StringView name) override;
   virtual bool binary(std::string& value, Common::StringView name) override;
 
-  template<typename T>
+  template <typename T>
   bool operator()(T& value, Common::StringView name) {
     return ISerializer::operator()(value, name);
   }
 
-private:
-
+ private:
   void checkedRead(char* buf, size_t size);
   Common::IInputStream& stream;
 };
 
-}
+}  // namespace CryptoNote

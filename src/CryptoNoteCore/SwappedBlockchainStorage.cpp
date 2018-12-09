@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -32,29 +32,25 @@ SwappedBlockchainStorage::SwappedBlockchainStorage(const std::string& indexFileN
   }
 }
 
-SwappedBlockchainStorage::~SwappedBlockchainStorage() {
-  blocks.close();
-}
+SwappedBlockchainStorage::~SwappedBlockchainStorage() { blocks.close(); }
 
-void SwappedBlockchainStorage::pushBlock(RawBlock&& rawBlock) {
-  blocks.push_back(rawBlock);
-}
+void SwappedBlockchainStorage::pushBlock(RawBlock&& rawBlock) { blocks.push_back(rawBlock); }
 
 RawBlock SwappedBlockchainStorage::getBlockByIndex(uint32_t index) const {
   assert(index < getBlockCount());
   return blocks[index];
 }
 
-uint32_t SwappedBlockchainStorage::getBlockCount() const {
-  return static_cast<uint32_t>(blocks.size());
-}
+uint32_t SwappedBlockchainStorage::getBlockCount() const { return static_cast<uint32_t>(blocks.size()); }
 
-//Returns MemoryBlockchainStorage with elements from [splitIndex, blocks.size() - 1].
-//Original SwappedBlockchainStorage will contain elements from [0, splitIndex - 1].
-std::unique_ptr<BlockchainStorage::IBlockchainStorageInternal> SwappedBlockchainStorage::splitStorage(uint32_t splitIndex) {
+// Returns MemoryBlockchainStorage with elements from [splitIndex, blocks.size() - 1].
+// Original SwappedBlockchainStorage will contain elements from [0, splitIndex - 1].
+std::unique_ptr<BlockchainStorage::IBlockchainStorageInternal> SwappedBlockchainStorage::splitStorage(
+    uint32_t splitIndex) {
   assert(splitIndex > 0);
   assert(splitIndex < blocks.size());
-  std::unique_ptr<MemoryBlockchainStorage> newStorage = std::unique_ptr<MemoryBlockchainStorage>(new MemoryBlockchainStorage(splitIndex));
+  std::unique_ptr<MemoryBlockchainStorage> newStorage =
+      std::unique_ptr<MemoryBlockchainStorage>(new MemoryBlockchainStorage(splitIndex));
 
   uint64_t blocksCount = blocks.size();
 
@@ -69,4 +65,4 @@ std::unique_ptr<BlockchainStorage::IBlockchainStorageInternal> SwappedBlockchain
   return std::move(newStorage);
 }
 
-}
+}  // namespace CryptoNote

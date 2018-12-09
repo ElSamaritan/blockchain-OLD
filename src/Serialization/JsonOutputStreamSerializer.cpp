@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -16,8 +16,12 @@
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "JsonOutputStreamSerializer.h"
+
 #include <cassert>
 #include <stdexcept>
+
+#include <Xi/Global.h>
+
 #include "Common/StringTools.h"
 
 using Common::JsonValue;
@@ -28,7 +32,7 @@ std::ostream& operator<<(std::ostream& out, const JsonOutputStreamSerializer& en
   out << enumerator.root;
   return out;
 }
-}
+}  // namespace CryptoNote
 
 namespace {
 
@@ -41,18 +45,13 @@ void insertOrPush(JsonValue& js, Common::StringView name, const T& value) {
   }
 }
 
-}
+}  // namespace
 
-JsonOutputStreamSerializer::JsonOutputStreamSerializer() : root(JsonValue::OBJECT) {
-  chain.push_back(&root);
-}
+JsonOutputStreamSerializer::JsonOutputStreamSerializer() : root(JsonValue::OBJECT) { chain.push_back(&root); }
 
-JsonOutputStreamSerializer::~JsonOutputStreamSerializer() {
-}
+JsonOutputStreamSerializer::~JsonOutputStreamSerializer() {}
 
-ISerializer::SerializerType JsonOutputStreamSerializer::type() const {
-  return ISerializer::OUTPUT;
-}
+ISerializer::SerializerType JsonOutputStreamSerializer::type() const { return ISerializer::OUTPUT; }
 
 bool JsonOutputStreamSerializer::beginObject(Common::StringView name) {
   JsonValue& parent = *chain.back();
@@ -73,6 +72,7 @@ void JsonOutputStreamSerializer::endObject() {
 }
 
 bool JsonOutputStreamSerializer::beginArray(size_t& size, Common::StringView name) {
+  XI_UNUSED(size);
   JsonValue val(JsonValue::ARRAY);
   JsonValue& res = chain.back()->insert(std::string(name), val);
   chain.push_back(&res);

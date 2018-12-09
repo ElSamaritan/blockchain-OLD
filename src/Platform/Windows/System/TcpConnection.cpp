@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -20,12 +20,14 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <winsock2.h>
+#include <WinSock2.h>
 #include <ws2ipdef.h>
 #include <System/InterruptedException.h>
 #include <System/Ipv4Address.h>
 #include "Dispatcher.h"
 #include "ErrorMessage.h"
+
+#include <Xi/Global.h>
 
 namespace System {
 
@@ -36,10 +38,9 @@ struct TcpConnectionContext : public OVERLAPPED {
   bool interrupted;
 };
 
-}
+}  // namespace
 
-TcpConnection::TcpConnection() : dispatcher(nullptr) {
-}
+TcpConnection::TcpConnection() : dispatcher(nullptr) {}
 
 TcpConnection::TcpConnection(TcpConnection&& other) : dispatcher(other.dispatcher) {
   if (dispatcher != nullptr) {
@@ -58,6 +59,7 @@ TcpConnection::~TcpConnection() {
     assert(writeContext == nullptr);
     int result = closesocket(connection);
     assert(result == 0);
+    (void)result;
   }
 }
 
@@ -233,7 +235,7 @@ std::pair<Ipv4Address, uint16_t> TcpConnection::getPeerAddressAndPort() const {
   return std::make_pair(Ipv4Address(htonl(address.sin_addr.S_un.S_addr)), htons(address.sin_port));
 }
 
-TcpConnection::TcpConnection(Dispatcher& dispatcher, size_t connection) : dispatcher(&dispatcher), connection(connection), readContext(nullptr), writeContext(nullptr) {
-}
+TcpConnection::TcpConnection(Dispatcher& dispatcher, size_t connection)
+    : dispatcher(&dispatcher), connection(connection), readContext(nullptr), writeContext(nullptr) {}
 
-}
+}  // namespace System

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -36,17 +36,18 @@ namespace CryptoNote {
  * do recursive calls to parent.
  */
 class DatabaseBlockchainCache : public IBlockchainCache {
-public:
+ public:
   using BlockIndex = uint32_t;
   using GlobalOutputIndex = uint32_t;
   using Amount = uint64_t;
 
   /*
-   * Constructs new DatabaseBlockchainCache object. Currnetly, only factories that produce 
+   * Constructs new DatabaseBlockchainCache object. Currnetly, only factories that produce
    * BlockchainCache objects as children are supported.
    */
   DatabaseBlockchainCache(const Currency& currency, IDataBase& dataBase,
                           IBlockchainCacheFactory& blockchainCacheFactory, Logging::ILogger& logger);
+  ~DatabaseBlockchainCache() override = default;
 
   static bool checkDBSchemeVersion(IDataBase& dataBase, Logging::ILogger& logger);
 
@@ -74,9 +75,9 @@ public:
 
   ExtractOutputKeysResult extractKeyOtputIndexes(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
                                                  std::vector<PackedOutIndex>& outIndexes) const override;
-  ExtractOutputKeysResult
-  extractKeyOtputReferences(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
-                            std::vector<std::pair<Crypto::Hash, size_t>>& outputReferences) const override;
+  ExtractOutputKeysResult extractKeyOtputReferences(
+      uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
+      std::vector<std::pair<Crypto::Hash, size_t>>& outputReferences) const override;
 
   uint32_t getTopBlockIndex() const override;
   const Crypto::Hash& getTopBlockHash() const override;
@@ -149,15 +150,17 @@ public:
   virtual std::vector<Crypto::Hash> getTransactionHashes() const override;
   virtual std::vector<uint32_t> getRandomOutsByAmount(uint64_t amount, size_t count,
                                                       uint32_t blockIndex) const override;
-  virtual ExtractOutputKeysResult
-  extractKeyOutputs(uint64_t amount, uint32_t blockIndex, Common::ArrayView<uint32_t> globalIndexes,
-                    std::function<ExtractOutputKeysResult(const CachedTransactionInfo& info, PackedOutIndex index,
-                                                          uint32_t globalIndex)> pred) const override;
+  virtual ExtractOutputKeysResult extractKeyOutputs(
+      uint64_t amount, uint32_t blockIndex, Common::ArrayView<uint32_t> globalIndexes,
+      std::function<ExtractOutputKeysResult(const CachedTransactionInfo& info, PackedOutIndex index,
+                                            uint32_t globalIndex)>
+          pred) const override;
 
   virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
-  virtual std::vector<Crypto::Hash> getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount) const override;
+  virtual std::vector<Crypto::Hash> getBlockHashesByTimestamps(uint64_t timestampBegin,
+                                                               size_t secondsCount) const override;
 
-private:
+ private:
   const Currency& currency;
   IDataBase& database;
   IBlockchainCacheFactory& blockchainCacheFactory;
@@ -179,12 +182,11 @@ private:
   BlockchainReadResult readDatabase(BlockchainReadBatch& batch) const;
 
   void addSpentKeyImage(const Crypto::KeyImage& keyImage, uint32_t blockIndex);
-  void pushTransaction(const CachedTransaction& cachedTransaction,
-                       uint32_t blockIndex,
-                       uint16_t transactionBlockIndex,
+  void pushTransaction(const CachedTransaction& cachedTransaction, uint32_t blockIndex, uint16_t transactionBlockIndex,
                        BlockchainWriteBatch& batch);
 
-  uint32_t insertKeyOutputToGlobalIndex(uint64_t amount, PackedOutIndex output); //TODO not implemented. Should it be removed?
+  uint32_t insertKeyOutputToGlobalIndex(uint64_t amount,
+                                        PackedOutIndex output);  // TODO not implemented. Should it be removed?
   uint32_t updateKeyOutputCount(Amount amount, int32_t diff) const;
   void insertPaymentId(BlockchainWriteBatch& batch, const Crypto::Hash& transactionHash, const Crypto::Hash& paymentId);
   void insertBlockTimestamp(BlockchainWriteBatch& batch, uint64_t timestamp, const Crypto::Hash& blockHash);
@@ -196,19 +198,23 @@ private:
   TransactionValidatorState fillOutputsSpentByBlock(uint32_t blockIndex) const;
 
   Crypto::Hash pushBlockToAnotherCache(IBlockchainCache& segment, PushedBlockInfo&& pushedBlockInfo);
-  void requestDeleteSpentOutputs(BlockchainWriteBatch& writeBatch, uint32_t splitBlockIndex, const TransactionValidatorState& spentOutputs);
+  void requestDeleteSpentOutputs(BlockchainWriteBatch& writeBatch, uint32_t splitBlockIndex,
+                                 const TransactionValidatorState& spentOutputs);
   std::vector<Crypto::Hash> requestTransactionHashesFromBlockIndex(uint32_t splitBlockIndex);
   void requestDeleteTransactions(BlockchainWriteBatch& writeBatch, const std::vector<Crypto::Hash>& transactionHashes);
   void requestDeletePaymentIds(BlockchainWriteBatch& writeBatch, const std::vector<Crypto::Hash>& transactionHashes);
   void requestDeletePaymentId(BlockchainWriteBatch& writeBatch, const Crypto::Hash& paymentId, size_t toDelete);
-  void requestDeleteKeyOutputs(BlockchainWriteBatch& writeBatch, const std::map<IBlockchainCache::Amount, IBlockchainCache::GlobalOutputIndex>& boundaries);
-  void requestDeleteKeyOutputsAmount(BlockchainWriteBatch& writeBatch, IBlockchainCache::Amount amount, IBlockchainCache::GlobalOutputIndex boundary, uint32_t outputsCount);
+  void requestDeleteKeyOutputs(
+      BlockchainWriteBatch& writeBatch,
+      const std::map<IBlockchainCache::Amount, IBlockchainCache::GlobalOutputIndex>& boundaries);
+  void requestDeleteKeyOutputsAmount(BlockchainWriteBatch& writeBatch, IBlockchainCache::Amount amount,
+                                     IBlockchainCache::GlobalOutputIndex boundary, uint32_t outputsCount);
   void requestRemoveTimestamp(BlockchainWriteBatch& batch, uint64_t timestamp, const Crypto::Hash& blockHash);
 
-uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
+  uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
   uint64_t getCachedTransactionsCount() const;
 
   std::vector<CachedBlockInfo> getLastCachedUnits(uint32_t blockIndex, size_t count, UseGenesis useGenesis) const;
   std::vector<CachedBlockInfo> getLastDbUnits(uint32_t blockIndex, size_t count, UseGenesis useGenesis) const;
 };
-}
+}  // namespace CryptoNote

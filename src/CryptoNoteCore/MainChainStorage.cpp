@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -31,33 +31,24 @@ MainChainStorage::MainChainStorage(const std::string& blocksFilename, const std:
   }
 }
 
-MainChainStorage::~MainChainStorage() {
-  storage.close();
-}
+MainChainStorage::~MainChainStorage() { storage.close(); }
 
-void MainChainStorage::pushBlock(const RawBlock& rawBlock) {
-  storage.push_back(rawBlock);
-}
+void MainChainStorage::pushBlock(const RawBlock& rawBlock) { storage.push_back(rawBlock); }
 
-void MainChainStorage::popBlock() {
-  storage.pop_back();
-}
+void MainChainStorage::popBlock() { storage.pop_back(); }
 
 RawBlock MainChainStorage::getBlockByIndex(uint32_t index) const {
   if (index >= storage.size()) {
-    throw std::out_of_range("Block index " + std::to_string(index) + " is out of range. Blocks count: " + std::to_string(storage.size()));
+    throw std::out_of_range("Block index " + std::to_string(index) +
+                            " is out of range. Blocks count: " + std::to_string(storage.size()));
   }
 
   return storage[index];
 }
 
-uint32_t MainChainStorage::getBlockCount() const {
-  return static_cast<uint32_t>(storage.size());
-}
+uint32_t MainChainStorage::getBlockCount() const { return static_cast<uint32_t>(storage.size()); }
 
-void MainChainStorage::clear() {
-  storage.clear();
-}
+void MainChainStorage::clear() { storage.clear(); }
 
 std::unique_ptr<IMainChainStorage> createSwappedMainChainStorage(const std::string& dataDir, const Currency& currency) {
   boost::filesystem::path blocksFilename = boost::filesystem::path(dataDir) / currency.blocksFileName();
@@ -73,4 +64,4 @@ std::unique_ptr<IMainChainStorage> createSwappedMainChainStorage(const std::stri
   return storage;
 }
 
-}
+}  // namespace CryptoNote

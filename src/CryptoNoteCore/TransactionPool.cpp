@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -24,7 +24,8 @@
 namespace CryptoNote {
 
 // lhs > hrs
-bool TransactionPool::TransactionPriorityComparator::operator()(const PendingTransactionInfo& lhs, const PendingTransactionInfo& rhs) const {
+bool TransactionPool::TransactionPriorityComparator::operator()(const PendingTransactionInfo& lhs,
+                                                                const PendingTransactionInfo& rhs) const {
   const CachedTransaction& left = lhs.cachedTransaction;
   const CachedTransaction& right = rhs.cachedTransaction;
 
@@ -36,20 +37,22 @@ bool TransactionPool::TransactionPriorityComparator::operator()(const PendingTra
   uint64_t rhs_hi, rhs_lo = mul128(right.getTransactionFee(), left.getTransactionBinaryArray().size(), &rhs_hi);
 
   return
-    // prefer more profitable transactions
-    (lhs_hi >  rhs_hi) ||
-    (lhs_hi == rhs_hi && lhs_lo >  rhs_lo) ||
-    // prefer smaller
-    (lhs_hi == rhs_hi && lhs_lo == rhs_lo && left.getTransactionBinaryArray().size() <  right.getTransactionBinaryArray().size()) ||
-    // prefer older
-    (lhs_hi == rhs_hi && lhs_lo == rhs_lo && left.getTransactionBinaryArray().size() == right.getTransactionBinaryArray().size() && lhs.receiveTime < rhs.receiveTime);
+      // prefer more profitable transactions
+      (lhs_hi > rhs_hi) || (lhs_hi == rhs_hi && lhs_lo > rhs_lo) ||
+      // prefer smaller
+      (lhs_hi == rhs_hi && lhs_lo == rhs_lo &&
+       left.getTransactionBinaryArray().size() < right.getTransactionBinaryArray().size()) ||
+      // prefer older
+      (lhs_hi == rhs_hi && lhs_lo == rhs_lo &&
+       left.getTransactionBinaryArray().size() == right.getTransactionBinaryArray().size() &&
+       lhs.receiveTime < rhs.receiveTime);
 }
 
 const Crypto::Hash& TransactionPool::PendingTransactionInfo::getTransactionHash() const {
   return cachedTransaction.getTransactionHash();
 }
 
-size_t TransactionPool::PaymentIdHasher::operator() (const boost::optional<Crypto::Hash>& paymentId) const {
+size_t TransactionPool::PaymentIdHasher::operator()(const boost::optional<Crypto::Hash>& paymentId) const {
   if (!paymentId) {
     return std::numeric_limits<size_t>::max();
   }
@@ -57,18 +60,17 @@ size_t TransactionPool::PaymentIdHasher::operator() (const boost::optional<Crypt
   return std::hash<Crypto::Hash>{}(*paymentId);
 }
 
-TransactionPool::TransactionPool(Logging::ILogger& logger) :
-  transactionHashIndex(transactions.get<TransactionHashTag>()),
-  transactionCostIndex(transactions.get<TransactionCostTag>()),
-  paymentIdIndex(transactions.get<PaymentIdTag>()),
-  logger(logger, "TransactionPool") {
-}
+TransactionPool::TransactionPool(Logging::ILogger& logger)
+    : transactionHashIndex(transactions.get<TransactionHashTag>()),
+      transactionCostIndex(transactions.get<TransactionCostTag>()),
+      paymentIdIndex(transactions.get<PaymentIdTag>()),
+      logger(logger, "TransactionPool") {}
 
 bool TransactionPool::pushTransaction(CachedTransaction&& transaction, TransactionValidatorState&& transactionState) {
   auto pendingTx = PendingTransactionInfo{static_cast<uint64_t>(time(nullptr)), std::move(transaction)};
 
   Crypto::Hash paymentId;
-  if(getPaymentIdFromTxExtra(pendingTx.cachedTransaction.getTransaction().extra, paymentId)) {
+  if (getPaymentIdFromTxExtra(pendingTx.cachedTransaction.getTransaction().extra, paymentId)) {
     pendingTx.paymentId = paymentId;
   }
 
@@ -109,9 +111,7 @@ bool TransactionPool::removeTransaction(const Crypto::Hash& hash) {
   return true;
 }
 
-size_t TransactionPool::getTransactionCount() const {
-  return transactionHashIndex.size();
-}
+size_t TransactionPool::getTransactionCount() const { return transactionHashIndex.size(); }
 
 std::vector<Crypto::Hash> TransactionPool::getTransactionHashes() const {
   std::vector<Crypto::Hash> hashes;
@@ -126,15 +126,13 @@ bool TransactionPool::checkIfTransactionPresent(const Crypto::Hash& hash) const 
   return transactionHashIndex.find(hash) != transactionHashIndex.end();
 }
 
-const TransactionValidatorState& TransactionPool::getPoolTransactionValidationState() const {
-  return poolState;
-}
+const TransactionValidatorState& TransactionPool::getPoolTransactionValidationState() const { return poolState; }
 
 std::vector<CachedTransaction> TransactionPool::getPoolTransactions() const {
   std::vector<CachedTransaction> result;
   result.reserve(transactionCostIndex.size());
 
-  for (const auto& transactionItem: transactionCostIndex) {
+  for (const auto& transactionItem : transactionCostIndex) {
     result.emplace_back(transactionItem.cachedTransaction);
   }
 
@@ -161,4 +159,4 @@ std::vector<Crypto::Hash> TransactionPool::getTransactionHashesByPaymentId(const
   return transactionHashes;
 }
 
-}
+}  // namespace CryptoNote

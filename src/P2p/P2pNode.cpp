@@ -36,12 +36,8 @@ namespace CryptoNote {
 namespace {
 
 class PeerIndexGenerator {
-public:
-
-  PeerIndexGenerator(size_t maxIndex)
-    : maxIndex(maxIndex), randCount(0) {
-    assert(maxIndex > 0);
-  }
+ public:
+  PeerIndexGenerator(size_t maxIndex) : maxIndex(maxIndex), randCount(0) { assert(maxIndex > 0); }
 
   bool generate(size_t& num) {
     while (randCount < (maxIndex + 1) * 3) {
@@ -57,10 +53,9 @@ public:
     return false;
   }
 
-private:
-
+ private:
   size_t getRandomIndex() {
-    //divide by zero workaround
+    // divide by zero workaround
     if (maxIndex == 0) {
       return 0;
     }
@@ -104,19 +99,20 @@ void doWithTimeoutAndThrow(System::Dispatcher& dispatcher, std::chrono::nanoseco
   }
 }
 
-}
+}  // namespace
 
-P2pNode::P2pNode(const P2pNodeConfig& cfg, Dispatcher& dispatcher, Logging::ILogger& log, const Crypto::Hash& genesisHash, PeerIdType peerId) :
-  logger(log, "P2pNode:" + std::to_string(cfg.getBindPort())),
-  m_stopRequested(false),
-  m_cfg(cfg),
-  m_myPeerId(peerId),
-  m_genesisHash(genesisHash),
-  m_genesisPayload(CORE_SYNC_DATA{ 1, genesisHash }),
-  m_dispatcher(dispatcher),
-  workingContextGroup(dispatcher),
-  m_connectorTimer(dispatcher),
-  m_queueEvent(dispatcher) {
+P2pNode::P2pNode(const P2pNodeConfig& cfg, Dispatcher& dispatcher, Logging::ILogger& log,
+                 const Crypto::Hash& genesisHash, PeerIdType peerId)
+    : logger(log, "P2pNode:" + std::to_string(cfg.getBindPort())),
+      m_stopRequested(false),
+      m_cfg(cfg),
+      m_myPeerId(peerId),
+      m_genesisHash(genesisHash),
+      m_genesisPayload(CORE_SYNC_DATA{1, genesisHash}),
+      m_dispatcher(dispatcher),
+      workingContextGroup(dispatcher),
+      m_connectorTimer(dispatcher),
+      m_queueEvent(dispatcher) {
   m_peerlist.init(cfg.getAllowLocalIp());
   m_listener = TcpListener(m_dispatcher, Ipv4Address(m_cfg.getBindIp()), m_cfg.getBindPort());
   for (auto& peer : cfg.getPeers()) {
@@ -151,7 +147,7 @@ void P2pNode::start() {
 
 void P2pNode::stop() {
   if (m_stopRequested) {
-    return; // already stopped
+    return;  // already stopped
   }
 
   m_stopRequested = true;
@@ -190,12 +186,10 @@ void P2pNode::acceptLoop() {
   while (!m_stopRequested) {
     try {
       auto connection = m_listener.accept();
-      auto ctx = new P2pContext(m_dispatcher, std::move(connection), true,
-        getRemoteAddress(connection), m_cfg.getTimedSyncInterval(), getGenesisPayload());
+      auto ctx = new P2pContext(m_dispatcher, std::move(connection), true, getRemoteAddress(connection),
+                                m_cfg.getTimedSyncInterval(), getGenesisPayload());
       logger(INFO) << "Incoming connection from " << ctx->getRemoteAddress();
-      workingContextGroup.spawn([this, ctx] {
-        preprocessIncomingConnection(ContextPtr(ctx));
-      });
+      workingContextGroup.spawn([this, ctx] { preprocessIncomingConnection(ContextPtr(ctx)); });
     } catch (InterruptedException&) {
       break;
     } catch (const std::exception& e) {
@@ -229,7 +223,7 @@ void P2pNode::connectPeers() {
   if (m_peerlist.get_white_peers_count() == 0 && !m_cfg.getSeedNodes().empty()) {
     auto seedNodes = m_cfg.getSeedNodes();
     std::random_device random_dev;
-    std::mt19937       generator(random_dev());
+    std::mt19937 generator(random_dev());
     std::shuffle(seedNodes.begin(), seedNodes.end(), generator);
     for (const auto& seed : seedNodes) {
       auto conn = tryToConnectPeer(seed);
@@ -242,19 +236,20 @@ void P2pNode::connectPeers() {
   connectPeerList(m_cfg.getPriorityNodes());
 
   const size_t totalExpectedConnectionsCount = m_cfg.getExpectedOutgoingConnectionsCount();
-  const size_t expectedWhiteConnections = (totalExpectedConnectionsCount * m_cfg.getWhiteListConnectionsPercent()) / 100;
+  const size_t expectedWhiteConnections =
+      (totalExpectedConnectionsCount * m_cfg.getWhiteListConnectionsPercent()) / 100;
   const size_t outgoingConnections = getOutgoingConnectionsCount();
 
   if (outgoingConnections < totalExpectedConnectionsCount) {
     if (outgoingConnections < expectedWhiteConnections) {
-      //start from white list
+      // start from white list
       makeExpectedConnectionsCount(m_peerlist.getWhite(), expectedWhiteConnections);
-      //and then do grey list
+      // and then do grey list
       makeExpectedConnectionsCount(m_peerlist.getGray(), totalExpectedConnectionsCount);
     } else {
-      //start from grey list
+      // start from grey list
       makeExpectedConnectionsCount(m_peerlist.getGray(), totalExpectedConnectionsCount);
-      //and then do white list
+      // and then do white list
       makeExpectedConnectionsCount(m_peerlist.getWhite(), totalExpectedConnectionsCount);
     }
   }
@@ -287,8 +282,8 @@ bool P2pNode::makeNewConnectionFromPeerlist(const PeerlistManager::Peerlist& pee
       continue;
     }
 
-    logger(DEBUGGING) << "Selected peer: [" << peer.id << " " << peer.adr << "] last_seen: " <<
-      (peer.last_seen ? Common::timeIntervalToString(time(NULL) - peer.last_seen) : "never");
+    logger(DEBUGGING) << "Selected peer: [" << peer.id << " " << peer.adr << "] last_seen: "
+                      << (peer.last_seen ? Common::timeIntervalToString(time(NULL) - peer.last_seen) : "never");
 
     auto conn = tryToConnectPeer(peer.adr);
     if (conn.get()) {
@@ -339,7 +334,7 @@ bool P2pNode::isPeerConnected(const NetworkAddress& address) {
 
 bool P2pNode::isPeerUsed(const PeerlistEntry& peer) {
   if (m_myPeerId == peer.id) {
-    return true; //dont make connections to ourself
+    return true;  // dont make connections to ourself
   }
 
   for (const auto& c : m_contexts) {
@@ -357,14 +352,14 @@ P2pNode::ContextPtr P2pNode::tryToConnectPeer(const NetworkAddress& address) {
     TcpConnection tcpConnection;
 
     doWithTimeoutAndThrow(m_dispatcher, m_cfg.getConnectTimeout(), [&] {
-      tcpConnection = connector.connect(
-        Ipv4Address(Common::ipAddressToString(address.ip)),
-        static_cast<uint16_t>(address.port));
+      tcpConnection =
+          connector.connect(Ipv4Address(Common::ipAddressToString(address.ip)), static_cast<uint16_t>(address.port));
     });
 
     logger(DEBUGGING) << "connection established to " << address;
 
-    return ContextPtr(new P2pContext(m_dispatcher, std::move(tcpConnection), false, address, m_cfg.getTimedSyncInterval(), getGenesisPayload()));
+    return ContextPtr(new P2pContext(m_dispatcher, std::move(tcpConnection), false, address,
+                                     m_cfg.getTimedSyncInterval(), getGenesisPayload()));
   } catch (std::exception& e) {
     logger(DEBUGGING) << "Connection to " << address << " failed: " << e.what();
   }
@@ -374,7 +369,7 @@ P2pNode::ContextPtr P2pNode::tryToConnectPeer(const NetworkAddress& address) {
 
 bool P2pNode::fetchPeerList(ContextPtr connection) {
   try {
-    COMMAND_HANDSHAKE::request request{ getNodeData(), getGenesisPayload() };
+    COMMAND_HANDSHAKE::request request{getNodeData(), getGenesisPayload()};
     COMMAND_HANDSHAKE::response response;
 
     OperationTimeout<P2pContext> timeout(m_dispatcher, *connection, m_cfg.getHandshakeTimeout());
@@ -400,11 +395,12 @@ bool P2pNode::fetchPeerList(ContextPtr connection) {
     }
 
     if (response.node_data.version < CryptoNote::P2P_MINIMUM_VERSION) {
-      logger(DEBUGGING) << *connection << "COMMAND_HANDSHAKE Failed, peer is wrong version: " << std::to_string(response.node_data.version);
+      logger(DEBUGGING) << *connection << "COMMAND_HANDSHAKE Failed, peer is wrong version: "
+                        << std::to_string(response.node_data.version);
       return false;
     } else if ((response.node_data.version - CryptoNote::P2P_CURRENT_VERSION) >= CryptoNote::P2P_UPGRADE_WINDOW) {
       logger(WARNING) << *connection << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please visit: "
-        << CryptoNote::LATEST_VERSION_URL << " for the latest version.";
+                      << CryptoNote::LATEST_VERSION_URL << " for the latest version.";
     }
 
     return handleRemotePeerList(response.local_peerlist, response.node_data.local_time);
@@ -418,7 +414,7 @@ bool P2pNode::fetchPeerList(ContextPtr connection) {
 namespace {
 
 std::list<PeerlistEntry> fixTimeDelta(const std::list<PeerlistEntry>& peerlist, time_t remoteTime) {
-  //fix time delta
+  // fix time delta
   int64_t delta = time(nullptr) - remoteTime;
   std::list<PeerlistEntry> peerlistCopy(peerlist);
 
@@ -432,15 +428,13 @@ std::list<PeerlistEntry> fixTimeDelta(const std::list<PeerlistEntry>& peerlist, 
 
   return peerlistCopy;
 }
-}
+}  // namespace
 
 bool P2pNode::handleRemotePeerList(const std::list<PeerlistEntry>& peerlist, time_t remoteTime) {
   return m_peerlist.merge_peerlist(fixTimeDelta(peerlist, remoteTime));
 }
 
-const CORE_SYNC_DATA& P2pNode::getGenesisPayload() const {
-  return m_genesisPayload;
-}
+const CORE_SYNC_DATA& P2pNode::getGenesisPayload() const { return m_genesisPayload; }
 
 std::list<PeerlistEntry> P2pNode::getLocalPeerList() const {
   std::list<PeerlistEntry> peerlist;
@@ -464,9 +458,7 @@ basic_node_data P2pNode::getNodeData() const {
   return nodeData;
 }
 
-PeerIdType P2pNode::getPeerId() const {
-  return m_myPeerId;
-}
+PeerIdType P2pNode::getPeerId() const { return m_myPeerId; }
 
 size_t P2pNode::getOutgoingConnectionsCount() const {
   size_t count = 0;
@@ -481,13 +473,12 @@ size_t P2pNode::getOutgoingConnectionsCount() const {
 }
 
 std::unique_ptr<P2pConnectionProxy> P2pNode::createProxy(ContextPtr ctx) {
-  return std::unique_ptr<P2pConnectionProxy>(
-    new P2pConnectionProxy(P2pContextOwner(ctx.release(), m_contexts), *this));
+  return std::unique_ptr<P2pConnectionProxy>(new P2pConnectionProxy(P2pContextOwner(ctx.release(), m_contexts), *this));
 }
 
 void P2pNode::enqueueConnection(std::unique_ptr<P2pConnectionProxy> proxy) {
   if (m_stopRequested) {
-    return; // skip operation
+    return;  // skip operation
   }
 
   m_connectionQueue.push_back(std::move(proxy));
@@ -508,10 +499,11 @@ void P2pNode::tryPing(P2pContext& ctx) {
     TcpConnection connection;
 
     doWithTimeoutAndThrow(m_dispatcher, m_cfg.getConnectTimeout(), [&] {
-      connection = connector.connect(Ipv4Address(Common::ipAddressToString(peerAddress.ip)), static_cast<uint16_t>(peerAddress.port));
+      connection = connector.connect(Ipv4Address(Common::ipAddressToString(peerAddress.ip)),
+                                     static_cast<uint16_t>(peerAddress.port));
     });
 
-    doWithTimeoutAndThrow(m_dispatcher, m_cfg.getHandshakeTimeout(), [&]  {
+    doWithTimeoutAndThrow(m_dispatcher, m_cfg.getHandshakeTimeout(), [&] {
       LevinProtocol proto(connection);
       COMMAND_PING::request request;
       COMMAND_PING::response response;
@@ -525,7 +517,8 @@ void P2pNode::tryPing(P2pContext& ctx) {
         m_peerlist.append_with_peer_white(entry);
       } else {
         logger(Logging::DEBUGGING) << ctx << "back ping invoke wrong response \"" << response.status << "\" from"
-          << peerAddress << ", expected peerId=" << ctx.getPeerId() << ", got " << response.peer_id;
+                                   << peerAddress << ", expected peerId=" << ctx.getPeerId() << ", got "
+                                   << response.peer_id;
       }
     });
   } catch (std::exception& e) {
@@ -546,7 +539,7 @@ void P2pNode::handleNodeData(const basic_node_data& node, P2pContext& context) {
     throw std::runtime_error(msg.str());
   }
 
-  if (node.peer_id == m_myPeerId)  {
+  if (node.peer_id == m_myPeerId) {
     throw std::runtime_error("Connection to self detected");
   }
 
@@ -556,4 +549,4 @@ void P2pNode::handleNodeData(const basic_node_data& node, P2pContext& context) {
   }
 }
 
-}
+}  // namespace CryptoNote

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -32,11 +32,9 @@
 
 namespace CryptoNote {
 
-class BlockchainSynchronizer :
-  public IObservableImpl<IBlockchainSynchronizerObserver, IBlockchainSynchronizer>,
-  public INodeObserver {
-public:
-
+class BlockchainSynchronizer : public IObservableImpl<IBlockchainSynchronizerObserver, IBlockchainSynchronizer>,
+                               public INodeObserver {
+ public:
   BlockchainSynchronizer(INode& node, Logging::ILogger& logger, const Crypto::Hash& genesisBlockHash);
   ~BlockchainSynchronizer();
 
@@ -61,8 +59,7 @@ public:
   virtual void lastKnownBlockHeightUpdated(uint32_t height) override;
   virtual void poolChanged() override;
 
-private:
-
+ private:
   struct GetBlocksResponse {
     uint32_t startHeight;
     std::vector<BlockShortEntry> newBlocks;
@@ -88,21 +85,17 @@ private:
     Crypto::Hash lastKnownBlock;
   };
 
-  enum class State { //prioritized finite states
-    idle = 0,           //DO
-    poolSync = 1,       //NOT
-    blockchainSync = 2, //REORDER
-    deleteOldTxs = 3,   //!!!
-    stopped = 4         //!!!
+  enum class State {     // prioritized finite states
+    idle = 0,            // DO
+    poolSync = 1,        // NOT
+    blockchainSync = 2,  // REORDER
+    deleteOldTxs = 3,    //!!!
+    stopped = 4          //!!!
   };
 
-  enum class UpdateConsumersResult {
-    nothingChanged = 0,
-    addedNewBlocks = 1,
-    errorOccurred = 2
-  };
+  enum class UpdateConsumersResult { nothingChanged = 0, addedNewBlocks = 1, errorOccurred = 2 };
 
-  //void startSync();
+  // void startSync();
   void removeOutdatedTransactions();
   void startPoolSync();
   void startBlockchainSync();
@@ -114,8 +107,9 @@ private:
   std::error_code doAddUnconfirmedTransaction(const ITransactionReader& transaction);
   void doRemoveUnconfirmedTransaction(const Crypto::Hash& transactionHash);
 
-  ///second parameter is used only in case of errors returned into callback from INode, such as aborted or connection lost
-  bool setFutureState(State s); 
+  /// second parameter is used only in case of errors returned into callback from INode, such as aborted or connection
+  /// lost
+  bool setFutureState(State s);
   bool setFutureStateIf(State s, std::function<bool(void)>&& pred);
 
   void actualizeFutureState();
@@ -125,8 +119,9 @@ private:
   void workingProcedure();
 
   GetBlocksRequest getCommonHistory();
-  void getPoolUnionAndIntersection(std::unordered_set<Crypto::Hash>& poolUnion, std::unordered_set<Crypto::Hash>& poolIntersection) const;
-  SynchronizationState* getConsumerSynchronizationState(IBlockchainConsumer* consumer) const ;
+  void getPoolUnionAndIntersection(std::unordered_set<Crypto::Hash>& poolUnion,
+                                   std::unordered_set<Crypto::Hash>& poolIntersection) const;
+  SynchronizationState* getConsumerSynchronizationState(IBlockchainConsumer* consumer) const;
 
   typedef std::map<IBlockchainConsumer*, std::shared_ptr<SynchronizationState>> ConsumersMap;
 
@@ -150,4 +145,4 @@ private:
   bool wasStarted = false;
 };
 
-}
+}  // namespace CryptoNote

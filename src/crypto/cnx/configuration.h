@@ -5,14 +5,8 @@
 namespace Crypto {
 namespace CNX {
 
-template
-<
-  uint32_t _WindowSize,
-  uint32_t _MinRandomizerSize,
-  uint32_t _MaxRandomizerSize,
-  uint32_t _MinScratchpadSize,
-  uint32_t _MaxScratchpadSize
->
+template <uint32_t _WindowSize, uint32_t _MinRandomizerSize, uint32_t _MaxRandomizerSize, uint32_t _MinScratchpadSize,
+          uint32_t _MaxScratchpadSize>
 struct Configuration {
   static constexpr int variant() { return 1; }
   static constexpr uint32_t windowSize() { return _WindowSize; }
@@ -24,8 +18,8 @@ struct Configuration {
     return maxRandomizerSize() - offset * slopeRandomizerSize();
   }
 
-  static_assert (randomizerSizeForOffset(0) == maxRandomizerSize(), "");
-  static_assert (randomizerSizeForOffset(windowSize()) == minRandomizerSize(), "");
+  static_assert(randomizerSizeForOffset(0) == maxRandomizerSize(), "");
+  static_assert(randomizerSizeForOffset(windowSize()) == minRandomizerSize(), "");
 
   static constexpr uint32_t minScratchpadSize() { return _MinScratchpadSize; }
   static constexpr uint32_t maxScratchpadSize() { return _MaxScratchpadSize; }
@@ -34,11 +28,11 @@ struct Configuration {
     return minScratchpadSize() + offset * slopeScratchpadSize();
   }
 
-  static_assert (scratchpadSizeForOffset(0) == minScratchpadSize(), "");
-  static_assert (scratchpadSizeForOffset(windowSize()) == maxScratchpadSize(), "");
+  static_assert(scratchpadSizeForOffset(0) == minScratchpadSize(), "");
+  static_assert(scratchpadSizeForOffset(windowSize()) == maxScratchpadSize(), "");
 
-  static_assert (minScratchpadSize() % maxRandomizerSize() == 0, "Scratchpad and randomizer must align in memory.");
-  static_assert (slopeScratchpadSize() % slopeRandomizerSize() == 0, "Scratchpad and randomizer must align in memory.");
+  static_assert(minScratchpadSize() % maxRandomizerSize() == 0, "Scratchpad and randomizer must align in memory.");
+  static_assert(slopeScratchpadSize() % slopeRandomizerSize() == 0, "Scratchpad and randomizer must align in memory.");
 
   static constexpr uint32_t offsetForHeight(uint32_t height) {
     uint32_t base_offset = (height % windowSize());
@@ -49,12 +43,12 @@ struct Configuration {
     return static_cast<uint32_t>(offset);
   }
 
-  static_assert (offsetForHeight(0) == 0, "");
-  static_assert (offsetForHeight(windowSize()) == windowSize(), "");
-  static_assert (offsetForHeight(windowSize() + 1) == windowSize() - 1, "");
-  static_assert (offsetForHeight(windowSize() - 1) == windowSize() - 1, "");
-  static_assert (offsetForHeight(2 * windowSize()) == 0, "");
+  static_assert(offsetForHeight(0) == 0, "");
+  static_assert(offsetForHeight(windowSize()) == windowSize(), "");
+  static_assert(offsetForHeight(windowSize() + 1) == windowSize() - 1, "");
+  static_assert(offsetForHeight(windowSize() - 1) == windowSize() - 1, "");
+  static_assert(offsetForHeight(2 * windowSize()) == 0, "");
 };
 
-}
-}
+}  // namespace CNX
+}  // namespace Crypto

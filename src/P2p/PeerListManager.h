@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -34,30 +34,31 @@ class ISerializer;
 /*                                                                      */
 /************************************************************************/
 class PeerlistManager {
-  struct by_time{};
-  struct by_id{};
-  struct by_addr{};
+  struct by_time {};
+  struct by_id {};
+  struct by_addr {};
 
   typedef boost::multi_index_container<
-    PeerlistEntry,
-    boost::multi_index::indexed_by<
-    // access by peerlist_entry::net_adress
-    boost::multi_index::ordered_unique<boost::multi_index::tag<by_addr>, boost::multi_index::member<PeerlistEntry, NetworkAddress, &PeerlistEntry::adr> >,
-    // sort by peerlist_entry::last_seen<
-    boost::multi_index::ordered_non_unique<boost::multi_index::tag<by_time>, boost::multi_index::member<PeerlistEntry, uint64_t, &PeerlistEntry::last_seen> >
-    >
-  > peers_indexed;
+      PeerlistEntry, boost::multi_index::indexed_by<
+                         // access by peerlist_entry::net_adress
+                         boost::multi_index::ordered_unique<
+                             boost::multi_index::tag<by_addr>,
+                             boost::multi_index::member<PeerlistEntry, NetworkAddress, &PeerlistEntry::adr> >,
+                         // sort by peerlist_entry::last_seen<
+                         boost::multi_index::ordered_non_unique<
+                             boost::multi_index::tag<by_time>,
+                             boost::multi_index::member<PeerlistEntry, uint64_t, &PeerlistEntry::last_seen> > > >
+      peers_indexed;
 
-public:
-
+ public:
   class Peerlist {
-  public:
+   public:
     Peerlist(peers_indexed& peers, size_t maxSize);
     size_t count() const;
     bool get(PeerlistEntry& entry, size_t index) const;
     void trim();
 
-  private:
+   private:
     peers_indexed& m_peers;
     const size_t m_maxSize;
   };
@@ -68,7 +69,8 @@ public:
   size_t get_white_peers_count() const { return m_peers_white.size(); }
   size_t get_gray_peers_count() const { return m_peers_gray.size(); }
   bool merge_peerlist(const std::list<PeerlistEntry>& outer_bs);
-  bool get_peerlist_head(std::list<PeerlistEntry>& bs_head, uint32_t depth = CryptoNote::P2P_DEFAULT_PEERS_IN_HANDSHAKE) const;
+  bool get_peerlist_head(std::list<PeerlistEntry>& bs_head,
+                         uint32_t depth = CryptoNote::P2P_DEFAULT_PEERS_IN_HANDSHAKE) const;
   bool get_peerlist_full(std::list<PeerlistEntry>& pl_gray, std::list<PeerlistEntry>& pl_white) const;
   bool get_white_peer_by_index(PeerlistEntry& p, size_t i) const;
   bool get_gray_peer_by_index(PeerlistEntry& p, size_t i) const;
@@ -86,7 +88,7 @@ public:
   Peerlist& getWhite();
   Peerlist& getGray();
 
-private:
+ private:
   std::string m_config_folder;
   bool m_allow_local_ip;
   peers_indexed m_peers_gray;
@@ -95,4 +97,4 @@ private:
   Peerlist m_grayPeerlist;
 };
 
-}
+}  // namespace CryptoNote

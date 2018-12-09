@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -19,30 +19,27 @@
 
 #include <cassert>
 #include <stdexcept>
+
+#include <Xi/Global.h>
+
 #include "Common/StreamTools.h"
 
 using namespace Common;
 
 namespace CryptoNote {
 
-ISerializer::SerializerType BinaryOutputStreamSerializer::type() const {
-  return ISerializer::OUTPUT;
-}
+ISerializer::SerializerType BinaryOutputStreamSerializer::type() const { return ISerializer::OUTPUT; }
 
-bool BinaryOutputStreamSerializer::beginObject(Common::StringView name) {
-  return true;
-}
+bool BinaryOutputStreamSerializer::beginObject(Common::StringView name) { return true; }
 
-void BinaryOutputStreamSerializer::endObject() {
-}
+void BinaryOutputStreamSerializer::endObject() {}
 
 bool BinaryOutputStreamSerializer::beginArray(size_t& size, Common::StringView name) {
   writeVarint(stream, size);
   return true;
 }
 
-void BinaryOutputStreamSerializer::endArray() {
-}
+void BinaryOutputStreamSerializer::endArray() {}
 
 bool BinaryOutputStreamSerializer::operator()(uint8_t& value, Common::StringView name) {
   writeVarint(stream, value);
@@ -102,13 +99,10 @@ bool BinaryOutputStreamSerializer::binary(std::string& value, Common::StringView
 }
 
 bool BinaryOutputStreamSerializer::operator()(double& value, Common::StringView name) {
-  assert(false); //the method is not supported for this type of serialization
+  XI_UNUSED(value, name);
   throw std::runtime_error("double serialization is not supported in BinaryOutputStreamSerializer");
-  return false;
 }
 
-void BinaryOutputStreamSerializer::checkedWrite(const char* buf, size_t size) {
-  write(stream, buf, size);
-}
+void BinaryOutputStreamSerializer::checkedWrite(const char* buf, size_t size) { write(stream, buf, size); }
 
-}
+}  // namespace CryptoNote

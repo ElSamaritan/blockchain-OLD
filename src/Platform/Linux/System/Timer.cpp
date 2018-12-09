@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -29,11 +29,9 @@
 
 namespace System {
 
-Timer::Timer() : dispatcher(nullptr) {
-}
+Timer::Timer() : dispatcher(nullptr) {}
 
-Timer::Timer(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr), timer(-1) {
-}
+Timer::Timer(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr), timer(-1) {}
 
 Timer::Timer(Timer&& other) : dispatcher(other.dispatcher) {
   if (other.dispatcher != nullptr) {
@@ -44,9 +42,7 @@ Timer::Timer(Timer&& other) : dispatcher(other.dispatcher) {
   }
 }
 
-Timer::~Timer() {
-  assert(dispatcher == nullptr || context == nullptr);
-}
+Timer::~Timer() { assert(dispatcher == nullptr || context == nullptr); }
 
 Timer& Timer::operator=(Timer&& other) {
   assert(dispatcher == nullptr || context == nullptr);
@@ -69,7 +65,7 @@ void Timer::sleep(std::chrono::nanoseconds duration) {
     throw InterruptedException();
   }
 
-  if(duration.count() == 0 ) {
+  if (duration.count() == 0) {
     dispatcher->yield();
   } else {
     timer = dispatcher->getTimer();
@@ -96,34 +92,34 @@ void Timer::sleep(std::chrono::nanoseconds duration) {
       throw std::runtime_error("Timer::sleep, epoll_ctl failed, " + lastErrorMessage());
     }
     dispatcher->getCurrentContext()->interruptProcedure = [&]() {
-        assert(dispatcher != nullptr);
-        assert(context != nullptr);
-        OperationContext* timerContext = static_cast<OperationContext*>(context);
-        if (!timerContext->interrupted) {
-          uint64_t value = 0;
-          if(::read(timer, &value, sizeof value) == -1 ){
+      assert(dispatcher != nullptr);
+      assert(context != nullptr);
+      OperationContext* timerContext = static_cast<OperationContext*>(context);
+      if (!timerContext->interrupted) {
+        uint64_t value = 0;
+        if (::read(timer, &value, sizeof value) == -1) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wlogical-op"
-            if(errno == EAGAIN || errno == EWOULDBLOCK) {
+          if (errno == EAGAIN || errno == EWOULDBLOCK) {
 #pragma GCC diagnostic pop
-              timerContext->interrupted = true;
-              dispatcher->pushContext(timerContext->context);
-            } else {
-              throw std::runtime_error("Timer::sleep, interrupt procedure, read failed, "  + lastErrorMessage());
-            }
-          } else {
-            assert(value>0);
+            timerContext->interrupted = true;
             dispatcher->pushContext(timerContext->context);
+          } else {
+            throw std::runtime_error("Timer::sleep, interrupt procedure, read failed, " + lastErrorMessage());
           }
-
-          epoll_event timerEvent;
-          timerEvent.events = EPOLLONESHOT;
-          timerEvent.data.ptr = nullptr;
-
-          if (epoll_ctl(dispatcher->getEpoll(), EPOLL_CTL_MOD, timer, &timerEvent) == -1) {
-            throw std::runtime_error("Timer::sleep, interrupt procedure, epoll_ctl failed, " + lastErrorMessage());
-          }
+        } else {
+          assert(value > 0);
+          dispatcher->pushContext(timerContext->context);
         }
+
+        epoll_event timerEvent;
+        timerEvent.events = EPOLLONESHOT;
+        timerEvent.data.ptr = nullptr;
+
+        if (epoll_ctl(dispatcher->getEpoll(), EPOLL_CTL_MOD, timer, &timerEvent) == -1) {
+          throw std::runtime_error("Timer::sleep, interrupt procedure, epoll_ctl failed, " + lastErrorMessage());
+        }
+      }
     };
 
     context = &timerContext;
@@ -142,4 +138,4 @@ void Timer::sleep(std::chrono::nanoseconds duration) {
   }
 }
 
-}
+}  // namespace System

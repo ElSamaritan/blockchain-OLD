@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -38,13 +38,11 @@ struct TimerContext {
   bool interrupted;
 };
 
-}
+}  // namespace
 
-Timer::Timer() : dispatcher(nullptr) {
-}
+Timer::Timer() : dispatcher(nullptr) {}
 
-Timer::Timer(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {
-}
+Timer::Timer(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {}
 
 Timer::Timer(Timer&& other) : dispatcher(other.dispatcher) {
   if (dispatcher != nullptr) {
@@ -54,9 +52,7 @@ Timer::Timer(Timer&& other) : dispatcher(other.dispatcher) {
   }
 }
 
-Timer::~Timer() {
-  assert(dispatcher == nullptr || context == nullptr);
-}
+Timer::~Timer() { assert(dispatcher == nullptr || context == nullptr); }
 
 Timer& Timer::operator=(Timer&& other) {
   assert(dispatcher == nullptr || context == nullptr);
@@ -83,7 +79,7 @@ void Timer::sleep(std::chrono::nanoseconds duration) {
   QueryPerformanceFrequency(&frequency);
   uint64_t currentTime = ticks.QuadPart / (frequency.QuadPart / 1000);
   uint64_t time = currentTime + duration.count() / 1000000;
-  TimerContext timerContext{ time, dispatcher->getCurrentContext(), false };
+  TimerContext timerContext{time, dispatcher->getCurrentContext(), false};
   context = &timerContext;
   dispatcher->addTimer(time, dispatcher->getCurrentContext());
   dispatcher->getCurrentContext()->interruptProcedure = [&]() {
@@ -107,4 +103,4 @@ void Timer::sleep(std::chrono::nanoseconds duration) {
   }
 }
 
-}
+}  // namespace System

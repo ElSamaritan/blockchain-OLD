@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -25,14 +25,19 @@
 
 namespace System {
 
-template<class T = void> class RemoteContext {
-public:
+template <class T = void>
+class RemoteContext {
+ public:
   // Start a thread, execute operation in it, continue execution of current context.
   RemoteContext(Dispatcher& d, std::function<T()>&& operation)
-      : dispatcher(d), event(d), procedure(std::move(operation)), future(System::Detail::async<T>([this] { return asyncProcedure(); })), interrupted(false) {
-  }
+      : dispatcher(d),
+        event(d),
+        procedure(std::move(operation)),
+        future(System::Detail::async<T>([this] { return asyncProcedure(); })),
+        interrupted(false) {}
 
-  // Run other task on dispatcher until future is ready, then return lambda's result, or rethrow exception. UB if called more than once.
+  // Run other task on dispatcher until future is ready, then return lambda's result, or rethrow exception. UB if called
+  // more than once.
   T get() const {
     wait();
     return future.get();
@@ -69,10 +74,9 @@ public:
     }
   }
 
-private:
+ private:
   struct NotifyOnDestruction {
-    NotifyOnDestruction(Dispatcher& d, Event& e) : dispatcher(d), event(e) {
-    }
+    NotifyOnDestruction(Dispatcher& d, Event& e) : dispatcher(d), event(e) {}
 
     ~NotifyOnDestruction() {
       // make a local copy; event reference will be dead when function is called
@@ -99,4 +103,4 @@ private:
   mutable bool interrupted;
 };
 
-}
+}  // namespace System

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,7 +22,7 @@ namespace System {
 class Dispatcher;
 
 class Event {
-public:
+ public:
   Event();
   explicit Event(Dispatcher& dispatcher);
   Event(const Event&) = delete;
@@ -35,11 +35,11 @@ public:
   void set();
   void wait();
 
-private:
+ private:
   Dispatcher* dispatcher;
   bool state;
   void* first;
   void* last;
 };
 
-}
+}  // namespace System

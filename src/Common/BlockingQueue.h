@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once 
+#pragma once
 
 #include <atomic>
 #include <condition_variable>
@@ -23,14 +23,12 @@
 #include <mutex>
 #include <thread>
 
-template < typename T, typename Container = std::deque<T> >
+template <typename T, typename Container = std::deque<T> >
 class BlockingQueue {
-public:
-
+ public:
   typedef BlockingQueue<T, Container> ThisType;
 
-  BlockingQueue(size_t maxSize = 1) : 
-    m_maxSize(maxSize), m_closed(false) {}
+  BlockingQueue(size_t maxSize = 1) : m_maxSize(maxSize), m_closed(false) {}
 
   template <typename TT>
   bool push(TT&& v) {
@@ -59,7 +57,7 @@ public:
       }
       m_haveData.wait(lk);
     }
-   
+
     v = std::move(m_queue.front());
     m_queue.pop_front();
 
@@ -75,7 +73,7 @@ public:
   void close(bool wait = false) {
     std::unique_lock<std::mutex> lk(m_mutex);
     m_closed = true;
-    m_haveData.notify_all(); // wake up threads in pop()
+    m_haveData.notify_all();  // wake up threads in pop()
     m_haveSpace.notify_all();
 
     if (wait) {
@@ -90,16 +88,13 @@ public:
     return m_queue.size();
   }
 
-  size_t capacity() const {
-    return m_maxSize;
-  }
+  size_t capacity() const { return m_maxSize; }
 
-private:
-
+ private:
   const size_t m_maxSize;
   Container m_queue;
   bool m_closed;
-  
+
   std::mutex m_mutex;
   std::condition_variable m_haveData;
   std::condition_variable m_haveSpace;
@@ -107,21 +102,15 @@ private:
 
 template <typename QueueT>
 class GroupClose {
-public:
-
-  GroupClose(QueueT& queue, size_t groupSize)
-    : m_queue(queue), m_count(groupSize) {}
+ public:
+  GroupClose(QueueT& queue, size_t groupSize) : m_queue(queue), m_count(groupSize) {}
 
   void close() {
-    if (m_count == 0)
-      return;
-    if (m_count.fetch_sub(1) == 1)
-      m_queue.close();
+    if (m_count == 0) return;
+    if (m_count.fetch_sub(1) == 1) m_queue.close();
   }
 
-private:
-
+ private:
   std::atomic<size_t> m_count;
   QueueT& m_queue;
-
 };

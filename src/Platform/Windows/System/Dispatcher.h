@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -46,7 +46,7 @@ struct NativeContextGroup {
 };
 
 class Dispatcher {
-public:
+ public:
   Dispatcher();
   Dispatcher(const Dispatcher&) = delete;
   ~Dispatcher();
@@ -68,7 +68,7 @@ public:
   void pushReusableContext(NativeContext&);
   void interruptTimer(uint64_t time, NativeContext* context);
 
-private:
+ private:
   void spawn(std::function<void()>&& procedure);
   void* completionPort;
   uint8_t criticalSection[2 * sizeof(long) + 4 * sizeof(void*)];
@@ -90,4 +90,4 @@ private:
   static void __stdcall contextProcedureStatic(void* context);
 };
 
-}
+}  // namespace System

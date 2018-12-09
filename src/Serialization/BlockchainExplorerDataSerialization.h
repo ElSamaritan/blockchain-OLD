@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -35,4 +35,4 @@ void serialize(TransactionDetails& transaction, ISerializer& serializer);
 
 void serialize(BlockDetails& block, ISerializer& serializer);
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

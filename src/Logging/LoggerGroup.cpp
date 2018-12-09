@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -16,22 +16,23 @@
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "LoggerGroup.h"
+
 #include <algorithm>
+
+#include <Xi/Global.h>
 
 namespace Logging {
 
-LoggerGroup::LoggerGroup(Level level) : CommonLogger(level) {
-}
+LoggerGroup::LoggerGroup(Level level) : CommonLogger(level) {}
 
-void LoggerGroup::addLogger(ILogger& logger) {
-  loggers.push_back(&logger);
-}
+void LoggerGroup::addLogger(ILogger& logger) { loggers.push_back(&logger); }
 
 void LoggerGroup::removeLogger(ILogger& logger) {
   loggers.erase(std::remove(loggers.begin(), loggers.end(), &logger), loggers.end());
 }
 
-void LoggerGroup::operator()(const std::string& category, Level level, boost::posix_time::ptime time, const std::string& body) {
+void LoggerGroup::operator()(const std::string& category, Level level, boost::posix_time::ptime time,
+                             const std::string& body) {
   if (level <= logLevel && disabledCategories.count(category) == 0) {
     for (auto& logger : loggers) {
       (*logger)(category, level, time, body);
@@ -39,4 +40,6 @@ void LoggerGroup::operator()(const std::string& category, Level level, boost::po
   }
 }
 
-}
+void LoggerGroup::doLogString(const std::string& message) { XI_UNUSED(message); }
+
+}  // namespace Logging

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,4 +22,4 @@
 namespace System {
 std::string lastErrorMessage();
 std::string errorMessage(int);
-}
+}  // namespace System

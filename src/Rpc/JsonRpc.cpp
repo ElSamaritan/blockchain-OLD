@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,18 +26,31 @@ JsonRpcError::JsonRpcError() : code(0) {}
 
 JsonRpcError::JsonRpcError(int c) : code(c) {
   switch (c) {
-  case errParseError: message = "Parse error"; break;
-  case errInvalidRequest: message = "Invalid request"; break;
-  case errMethodNotFound: message = "Method not found"; break;
-  case errInvalidParams: message = "Invalid params"; break;
-  case errInternalError: message = "Internal error"; break;
-  case errInvalidPassword: message = "Invalid or no password supplied"; break;
-  default: message = "Unknown error"; break;
+    case errParseError:
+      message = "Parse error";
+      break;
+    case errInvalidRequest:
+      message = "Invalid request";
+      break;
+    case errMethodNotFound:
+      message = "Method not found";
+      break;
+    case errInvalidParams:
+      message = "Invalid params";
+      break;
+    case errInternalError:
+      message = "Internal error";
+      break;
+    case errInvalidPassword:
+      message = "Invalid or no password supplied";
+      break;
+    default:
+      message = "Unknown error";
+      break;
   }
 }
 
-JsonRpcError::JsonRpcError(int c, const std::string& msg) : code(c), message(msg) {
-}
+JsonRpcError::JsonRpcError(int c, const std::string& msg) : code(c), message(msg) {}
 
 void invokeJsonRpcCommand(HttpClient& httpClient, JsonRpcRequest& jsReq, JsonRpcResponse& jsRes) {
   HttpRequest httpReq;
@@ -61,6 +74,5 @@ void invokeJsonRpcCommand(HttpClient& httpClient, JsonRpcRequest& jsReq, JsonRpc
   }
 }
 
-
-}
-}
+}  // namespace JsonRpc
+}  // namespace CryptoNote

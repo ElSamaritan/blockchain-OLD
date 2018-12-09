@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -28,23 +28,19 @@ using namespace CryptoNote;
 using namespace Logging;
 
 namespace {
-  const std::string DB_NAME = "DB";
-  const std::string TESTNET_DB_NAME = "testnet_DB";
-}
+const std::string DB_NAME = "DB";
+const std::string TESTNET_DB_NAME = "testnet_DB";
+}  // namespace
 
-RocksDBWrapper::RocksDBWrapper(Logging::ILogger& logger) : logger(logger, "RocksDBWrapper"), state(NOT_INITIALIZED){
+RocksDBWrapper::RocksDBWrapper(Logging::ILogger& logger) : logger(logger, "RocksDBWrapper"), state(NOT_INITIALIZED) {}
 
-}
-
-RocksDBWrapper::~RocksDBWrapper() {
-
-}
+RocksDBWrapper::~RocksDBWrapper() {}
 
 void RocksDBWrapper::init(const DataBaseConfig& config) {
   if (state.load() != NOT_INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::DataBaseErrorCodes::ALREADY_INITIALIZED));
   }
-  
+
   std::string dataDir = getDataDir(config);
 
   logger(INFO) << "Opening DB in " << dataDir;
@@ -58,9 +54,9 @@ void RocksDBWrapper::init(const DataBaseConfig& config) {
   } else if (!status.ok() && status.IsInvalidArgument()) {
     logger(INFO) << "DB not found in " << dataDir << ". Creating new DB...";
     dbOptions.create_if_missing = true;
-    rocksdb::Status status = rocksdb::DB::Open(dbOptions, dataDir, &dbPtr);
-    if (!status.ok()) {
-      logger(ERROR) << "DB Error. DB can't be created in " << dataDir << ". Error: " << status.ToString();
+    rocksdb::Status innerStatus = rocksdb::DB::Open(dbOptions, dataDir, &dbPtr);
+    if (!innerStatus.ok()) {
+      logger(ERROR) << "DB Error. DB can't be created in " << dataDir << ". Error: " << innerStatus.ToString();
       throw std::system_error(make_error_code(CryptoNote::error::DataBaseErrorCodes::INTERNAL_ERROR));
     }
   } else if (status.IsIOError()) {

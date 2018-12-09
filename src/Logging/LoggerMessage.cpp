@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -20,15 +20,14 @@
 namespace Logging {
 
 LoggerMessage::LoggerMessage(ILogger& logger, const std::string& category, Level level, const std::string& color)
-  : std::ostream(this)
-  , std::streambuf()
-  , logger(logger)
-  , category(category)
-  , logLevel(level)
-  , message(color)
-  , timestamp(boost::posix_time::microsec_clock::local_time())
-  , gotText(false) {
-}
+    : std::ostream(this),
+      std::streambuf(),
+      logger(logger),
+      category(category),
+      logLevel(level),
+      message(color),
+      timestamp(boost::posix_time::microsec_clock::local_time()),
+      gotText(false) {}
 
 LoggerMessage::~LoggerMessage() {
   if (gotText) {
@@ -38,31 +37,31 @@ LoggerMessage::~LoggerMessage() {
 
 #ifndef __linux__
 LoggerMessage::LoggerMessage(LoggerMessage&& other)
-  : std::ostream(std::move(other))
-  , std::streambuf(std::move(other))
-  , category(other.category)
-  , logLevel(other.logLevel)
-  , logger(other.logger)
-  , message(other.message)
-  , timestamp(boost::posix_time::microsec_clock::local_time())
-  , gotText(false) {
+    : std::ostream(std::move(other)),
+      std::streambuf(std::move(other)),
+      category(other.category),
+      logLevel(other.logLevel),
+      logger(other.logger),
+      message(other.message),
+      timestamp(boost::posix_time::microsec_clock::local_time()),
+      gotText(false) {
   this->set_rdbuf(this);
 }
 #else
-LoggerMessage::LoggerMessage(LoggerMessage&& other)
-  : std::ostream(nullptr)
-  , std::streambuf()
-  , category(other.category)
-  , logLevel(other.logLevel)
-  , logger(other.logger)
-  , message(other.message)
-  , timestamp(boost::posix_time::microsec_clock::local_time())
-  , gotText(false) {
+LoggerMessage::LoggerMessage(LoggerMessage &&other)
+    : std::ostream(nullptr),
+      std::streambuf(),
+      category(other.category),
+      logLevel(other.logLevel),
+      logger(other.logger),
+      message(other.message),
+      timestamp(boost::posix_time::microsec_clock::local_time()),
+      gotText(false) {
   if (this != &other) {
     _M_tie = nullptr;
     _M_streambuf = nullptr;
 
-    //ios_base swap
+    // ios_base swap
     std::swap(_M_streambuf_state, other._M_streambuf_state);
     std::swap(_M_exception, other._M_exception);
     std::swap(_M_flags, other._M_flags);
@@ -71,17 +70,18 @@ LoggerMessage::LoggerMessage(LoggerMessage&& other)
 
     std::swap(_M_callbacks, other._M_callbacks);
     std::swap(_M_ios_locale, other._M_ios_locale);
-    //ios_base swap
+    // ios_base swap
 
-    //streambuf swap
+    // streambuf swap
     char *_Pfirst = pbase();
     char *_Pnext = pptr();
     char *_Pend = epptr();
     char *_Gfirst = eback();
     char *_Gnext = gptr();
     char *_Gend = egptr();
-    if (_Pnext) {}
-    
+    if (_Pnext) {
+    }
+
     setp(other.pbase(), other.epptr());
     other.setp(_Pfirst, _Pend);
 
@@ -89,7 +89,7 @@ LoggerMessage::LoggerMessage(LoggerMessage&& other)
     other.setg(_Gfirst, _Gnext, _Gend);
 
     std::swap(_M_buf_locale, other._M_buf_locale);
-    //streambuf swap
+    // streambuf swap
 
     std::swap(_M_fill, other._M_fill);
     std::swap(_M_tie, other._M_tie);
@@ -117,4 +117,4 @@ int LoggerMessage::overflow(int c) {
   return 0;
 }
 
-}
+}  // namespace Logging

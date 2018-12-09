@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,26 +22,17 @@
 #include "Serialization/ISerializer.h"
 #include "Transfers/TransfersSynchronizer.h"
 #include "Wallet/WalletIndices.h"
+#include "IWallet.h"
 
 namespace CryptoNote {
 
 class WalletSerializerV2 {
-public:
-  WalletSerializerV2(
-    ITransfersObserver& transfersObserver,
-    Crypto::PublicKey& viewPublicKey,
-    Crypto::SecretKey& viewSecretKey,
-    uint64_t& actualBalance,
-    uint64_t& pendingBalance,
-    WalletsContainer& walletsContainer,
-    TransfersSyncronizer& synchronizer,
-    UnlockTransactionJobs& unlockTransactions,
-    WalletTransactions& transactions,
-    WalletTransfers& transfers,
-    UncommitedTransactions& uncommitedTransactions,
-    std::string& extra,
-    uint32_t transactionSoftLockTime
-  );
+ public:
+  WalletSerializerV2(ITransfersObserver& transfersObserver, uint64_t& actualBalance, uint64_t& pendingBalance,
+                     WalletsContainer& walletsContainer, TransfersSyncronizer& synchronizer,
+                     UnlockTransactionJobs& unlockTransactions, WalletTransactions& transactions,
+                     WalletTransfers& transfers, UncommitedTransactions& uncommitedTransactions, std::string& extra,
+                     uint32_t transactionSoftLockTime);
 
   void load(Common::IInputStream& source, uint8_t version);
   void save(Common::IOutputStream& destination, WalletSaveLevel saveLevel);
@@ -52,10 +43,10 @@ public:
   static const uint8_t MIN_VERSION = 6;
   static const uint8_t SERIALIZATION_VERSION = 6;
 
-private:
+ private:
   void loadKeyListAndBalances(CryptoNote::ISerializer& serializer, bool saveCache);
   void saveKeyListAndBalances(CryptoNote::ISerializer& serializer, bool saveCache);
-    
+
   void loadTransactions(CryptoNote::ISerializer& serializer);
   void saveTransactions(CryptoNote::ISerializer& serializer);
 
@@ -84,4 +75,4 @@ private:
   std::unordered_set<Crypto::PublicKey> m_deletedKeys;
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

@@ -17,7 +17,7 @@
 #include "WalletService/WalletService.h"
 
 class PaymentGateService {
-public:
+ public:
   PaymentGateService();
 
   bool init(int argc, char** argv);
@@ -31,8 +31,7 @@ public:
 
   Logging::ILogger& getLogger() { return logger; }
 
-private:
-
+ private:
   void runInProcess(Logging::LoggerRef& log);
   void runRpcProxy(Logging::LoggerRef& log);
 

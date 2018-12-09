@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -25,8 +25,8 @@
 
 namespace CryptoNote {
 
-class TransfersSubscription : public IObservableImpl < ITransfersObserver, ITransfersSubscription > {
-public:
+class TransfersSubscription : public IObservableImpl<ITransfersObserver, ITransfersSubscription> {
+ public:
   TransfersSubscription(const CryptoNote::Currency& currency, Logging::ILogger& logger, const AccountSubscription& sub);
 
   SynchronizationStart getSyncStart();
@@ -38,17 +38,18 @@ public:
                       const std::vector<TransactionOutputInformationIn>& transfers);
 
   void deleteUnconfirmedTransaction(const Crypto::Hash& transactionHash);
-  void markTransactionConfirmed(const TransactionBlockInfo& block, const Crypto::Hash& transactionHash, const std::vector<uint32_t>& globalIndices);
+  void markTransactionConfirmed(const TransactionBlockInfo& block, const Crypto::Hash& transactionHash,
+                                const std::vector<uint32_t>& globalIndices);
 
   // ITransfersSubscription
   virtual AccountPublicAddress getAddress() override;
   virtual ITransfersContainer& getContainer() override;
 
-private:
+ private:
   Logging::LoggerRef logger;
   TransfersContainer transfers;
   AccountSubscription subscription;
   std::string m_address;
 };
 
-}
+}  // namespace CryptoNote

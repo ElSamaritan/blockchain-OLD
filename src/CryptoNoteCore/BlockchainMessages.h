@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -47,23 +47,13 @@ struct AddTransaction {
 
 struct DeleteTransaction {
   std::vector<Crypto::Hash> hashes;
-  enum class Reason {
-    InBlock,
-    Outdated,
-    NotActual
-  } reason;
+  enum class Reason { InBlock, Outdated, NotActual } reason;
 };
-}
+}  // namespace Messages
 
 class BlockchainMessage {
-public:
-  enum class Type {
-    NewBlock,
-    NewAlternativeBlock,
-    ChainSwitch,
-    AddTransaction,
-    DeleteTransaction
-  };
+ public:
+  enum class Type { NewBlock, NewAlternativeBlock, ChainSwitch, AddTransaction, DeleteTransaction };
 
   using NewBlock = Messages::NewBlock;
   using NewAlternativeBlock = Messages::NewAlternativeBlock;
@@ -94,7 +84,7 @@ public:
   const AddTransaction& getAddTransaction() const;
   const DeleteTransaction& getDeleteTransaction() const;
 
-private:
+ private:
   const Type type;
   union {
     NewBlock newBlock;
@@ -111,4 +101,4 @@ BlockchainMessage makeNewAlternativeBlockMessage(uint32_t index, const Crypto::H
 BlockchainMessage makeNewBlockMessage(uint32_t index, const Crypto::Hash& hash);
 BlockchainMessage makeAddTransactionMessage(std::vector<Crypto::Hash>&& hash);
 BlockchainMessage makeDelTransactionMessage(std::vector<Crypto::Hash>&& hash, Messages::DeleteTransaction::Reason r);
-}
+}  // namespace CryptoNote

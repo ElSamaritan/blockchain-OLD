@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -32,7 +32,7 @@ void writePod(IOutputStream& s, const T& value) {
   write(s, &value, sizeof(T));
 }
 
-template<class T>
+template <class T>
 size_t packVarint(IOutputStream& s, uint8_t type_or, size_t pv) {
   T v = static_cast<T>(pv << 2);
   v |= type_or;
@@ -65,13 +65,11 @@ size_t writeArraySize(IOutputStream& s, size_t val) {
   }
 }
 
-}
+}  // namespace
 
 namespace CryptoNote {
 
-KVBinaryOutputStreamSerializer::KVBinaryOutputStreamSerializer() {
-  beginObject(std::string());
-}
+KVBinaryOutputStreamSerializer::KVBinaryOutputStreamSerializer() { beginObject(std::string()); }
 
 void KVBinaryOutputStreamSerializer::dump(IOutputStream& target) {
   assert(m_objectsStack.size() == 1);
@@ -87,13 +85,11 @@ void KVBinaryOutputStreamSerializer::dump(IOutputStream& target) {
   write(target, stream().data(), stream().size());
 }
 
-ISerializer::SerializerType KVBinaryOutputStreamSerializer::type() const {
-  return ISerializer::OUTPUT;
-}
+ISerializer::SerializerType KVBinaryOutputStreamSerializer::type() const { return ISerializer::OUTPUT; }
 
 bool KVBinaryOutputStreamSerializer::beginObject(Common::StringView name) {
   checkArrayPreamble(BIN_KV_SERIALIZE_TYPE_OBJECT);
- 
+
   m_stack.push_back(Level(name));
   m_objectsStack.push_back(MemoryStream());
 
@@ -208,12 +204,12 @@ bool KVBinaryOutputStreamSerializer::binary(std::string& value, Common::StringVi
   return binary(const_cast<char*>(value.data()), value.size(), name);
 }
 
-void KVBinaryOutputStreamSerializer::writeElementPrefix(uint8_t type, Common::StringView name) {  
+void KVBinaryOutputStreamSerializer::writeElementPrefix(uint8_t type, Common::StringView name) {
   assert(m_stack.size());
 
   checkArrayPreamble(type);
   Level& level = m_stack.back();
-  
+
   if (level.state != State::Array) {
     if (!name.isEmpty()) {
       auto& s = stream();
@@ -241,10 +237,9 @@ void KVBinaryOutputStreamSerializer::checkArrayPreamble(uint8_t type) {
   }
 }
 
-
 MemoryStream& KVBinaryOutputStreamSerializer::stream() {
   assert(m_objectsStack.size());
   return m_objectsStack.back();
 }
 
-}
+}  // namespace CryptoNote

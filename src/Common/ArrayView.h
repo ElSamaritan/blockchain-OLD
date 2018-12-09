@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -32,8 +32,9 @@ namespace Common {
 //   'data' == 'nullptr' && 'size' > 0 - Undefined
 //   'data' != 'nullptr' && 'size' > 0 - NOTEMPTY NOTNIL
 // For signed integer 'Size', 'ArrayView' with 'size' < 0 is undefined.
-template<class Object = uint8_t, class Size = size_t> class ArrayView {
-public:
+template <class Object = uint8_t, class Size = size_t>
+class ArrayView {
+ public:
   typedef Object ObjectType;
   typedef Size SizeType;
 
@@ -45,7 +46,8 @@ public:
   // Leaves object uninitialized. Any usage before initializing it is undefined.
   ArrayView()
 #ifndef NDEBUG
-    : data(nullptr), size(INVALID) // In debug mode, fill in object with invalid state (undefined).
+      : data(nullptr),
+        size(INVALID)  // In debug mode, fill in object with invalid state (undefined).
 #endif
   {
   }
@@ -57,25 +59,26 @@ public:
   }
 
   // Constructor from C array.
-  // The behavior is undefined unless 'arrayData' != 'nullptr' || 'arraySize' == 0. Input state can be malformed using poiner conversions.
-  template<Size arraySize> ArrayView(const Object(&arrayData)[arraySize]) : data(arrayData), size(arraySize) {
+  // The behavior is undefined unless 'arrayData' != 'nullptr' || 'arraySize' == 0. Input state can be malformed using
+  // poiner conversions.
+  template <Size arraySize>
+  ArrayView(const Object (&arrayData)[arraySize]) : data(arrayData), size(arraySize) {
     assert(data != nullptr || size == 0);
   }
 
   // Copy constructor.
   // Performs default action - bitwise copying of source object.
-  // The behavior is undefined unless 'other' 'ArrayView' is in defined state, that is 'data' != 'nullptr' || 'size' == 0
-  ArrayView(const ArrayView& other) : data(other.data), size(other.size) {
-    assert(data != nullptr || size == 0);
-  }
+  // The behavior is undefined unless 'other' 'ArrayView' is in defined state, that is 'data' != 'nullptr' || 'size' ==
+  // 0
+  ArrayView(const ArrayView& other) : data(other.data), size(other.size) { assert(data != nullptr || size == 0); }
 
   // Destructor.
   // No special action is performed.
-  ~ArrayView() {
-  }
+  ~ArrayView() {}
 
   // Copy assignment operator.
-  // The behavior is undefined unless 'other' 'ArrayView' is in defined state, that is 'data' != 'nullptr' || 'size' == 0
+  // The behavior is undefined unless 'other' 'ArrayView' is in defined state, that is 'data' != 'nullptr' || 'size' ==
+  // 0
   ArrayView& operator=(const ArrayView& other) {
     assert(other.data != nullptr || other.size == 0);
     data = other.data;
@@ -395,7 +398,8 @@ public:
   }
 
   // Returns subarray starting at 'startIndex' and contaning 'endIndex' - 'startIndex' elements.
-  // The behavior is undefined unless 'ArrayView' was initialized and 'startIndex' <= 'endIndex' and 'endIndex' <= 'size'.
+  // The behavior is undefined unless 'ArrayView' was initialized and 'startIndex' <= 'endIndex' and 'endIndex' <=
+  // 'size'.
   ArrayView range(Size startIndex, Size endIndex) const {
     assert(data != nullptr || size == 0);
     assert(startIndex <= endIndex && endIndex <= size);
@@ -403,20 +407,24 @@ public:
   }
 
   // Returns subarray starting at 'startIndex' and contaning 'sliceSize' elements.
-  // The behavior is undefined unless 'ArrayView' was initialized and 'startIndex' <= 'size' and 'startIndex' + 'sliceSize' <= 'size'.
+  // The behavior is undefined unless 'ArrayView' was initialized and 'startIndex' <= 'size' and 'startIndex' +
+  // 'sliceSize' <= 'size'.
   ArrayView slice(Size startIndex, Size sliceSize) const {
     assert(data != nullptr || size == 0);
     assert(startIndex <= size && startIndex + sliceSize <= size);
     return ArrayView(data + startIndex, sliceSize);
   }
 
-protected:
+ protected:
   const Object* data;
   Size size;
 };
 
-template<class Object, class Size> const Size ArrayView<Object, Size>::INVALID = std::numeric_limits<Size>::max();
-template<class Object, class Size> const ArrayView<Object, Size> ArrayView<Object, Size>::EMPTY(reinterpret_cast<Object*>(1), 0);
-template<class Object, class Size> const ArrayView<Object, Size> ArrayView<Object, Size>::NIL(nullptr, 0);
+template <class Object, class Size>
+const Size ArrayView<Object, Size>::INVALID = std::numeric_limits<Size>::max();
+template <class Object, class Size>
+const ArrayView<Object, Size> ArrayView<Object, Size>::EMPTY(reinterpret_cast<Object*>(1), 0);
+template <class Object, class Size>
+const ArrayView<Object, Size> ArrayView<Object, Size>::NIL(nullptr, 0);
 
-}
+}  // namespace Common

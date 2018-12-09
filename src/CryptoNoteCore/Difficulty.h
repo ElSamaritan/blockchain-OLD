@@ -1,6 +1,6 @@
-// Copyright (c) 2018, The TurtleCoin Developers
+﻿// Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Calex Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 #include <stdint.h>
@@ -15,7 +15,6 @@ uint64_t nextDifficultyV4(std::vector<uint64_t> timestamps, std::vector<uint64_t
 uint64_t nextDifficultyV3(std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties);
 
 template <typename T>
-T clamp(const T& n, const T& lower, const T& upper)
-{
-    return std::max(lower, std::min(n, upper));
+T clamp(const T& n, const T& lower, const T& upper) {
+  return std::max(lower, std::min(n, upper));
 }

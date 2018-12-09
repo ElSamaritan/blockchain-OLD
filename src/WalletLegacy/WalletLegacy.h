@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -45,12 +45,8 @@ namespace CryptoNote {
 
 class SyncStarter;
 
-class WalletLegacy : 
-  public IWalletLegacy, 
-  IBlockchainSynchronizerObserver,  
-  ITransfersObserver {
-
-public:
+class WalletLegacy : public IWalletLegacy, IBlockchainSynchronizerObserver, ITransfersObserver {
+ public:
   WalletLegacy(const CryptoNote::Currency& currency, INode& node);
   virtual ~WalletLegacy();
 
@@ -81,15 +77,18 @@ public:
   virtual bool getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) override;
   virtual bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) override;
 
-  virtual TransactionId sendTransaction(const WalletLegacyTransfer& transfer, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) override;
-  virtual TransactionId sendTransaction(const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) override;
+  virtual TransactionId sendTransaction(const WalletLegacyTransfer& transfer, uint64_t fee,
+                                        const std::string& extra = "", uint64_t mixIn = 0,
+                                        uint64_t unlockTimestamp = 0) override;
+  virtual TransactionId sendTransaction(const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee,
+                                        const std::string& extra = "", uint64_t mixIn = 0,
+                                        uint64_t unlockTimestamp = 0) override;
   virtual std::error_code cancelTransaction(size_t transactionId) override;
 
   void syncAll(bool syncWalletFromZero, uint64_t height) override;
   virtual void getAccountKeys(AccountKeys& keys) override;
 
-private:
-
+ private:
   // IBlockchainSynchronizerObserver
   virtual void synchronizationProgressUpdated(uint32_t current, uint32_t total) override;
   virtual void synchronizationCompleted(std::error_code result) override;
@@ -111,13 +110,7 @@ private:
 
   std::vector<TransactionId> deleteOutdatedUnconfirmedTransactions();
 
-  enum WalletState
-  {
-    NOT_INITIALIZED = 0,
-    INITIALIZED,
-    LOADING,
-    SAVING
-  };
+  enum WalletState { NOT_INITIALIZED = 0, INITIALIZED, LOADING, SAVING };
 
   WalletState m_state;
   std::mutex m_cacheMutex;
@@ -146,4 +139,4 @@ private:
   uint64_t m_syncStartHeight = 0;
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

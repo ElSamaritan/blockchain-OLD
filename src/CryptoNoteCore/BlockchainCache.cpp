@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 #include "BlockchainCache.h"
@@ -10,6 +10,8 @@
 #include <tuple>
 
 #include <boost/functional/hash.hpp>
+
+#include <Xi/Global.h>
 
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
@@ -42,7 +44,8 @@ void splitGlobalIndexes(T& sourceContainer, T& destinationContainer, uint32_t sp
         static_cast<uint32_t>(std::distance(newCacheOutputsIteratorStart, it->second.outputs.end()));
     indexesForAmount.outputs.reserve(newCacheOutputsCount);
 
-    indexesForAmount.startIndex = it->second.startIndex + static_cast<uint32_t>(it->second.outputs.size()) - newCacheOutputsCount;
+    indexesForAmount.startIndex =
+        it->second.startIndex + static_cast<uint32_t>(it->second.outputs.size()) - newCacheOutputsCount;
 
     std::move(newCacheOutputsIteratorStart, it->second.outputs.end(), std::back_inserter(indexesForAmount.outputs));
     it->second.outputs.erase(newCacheOutputsIteratorStart, it->second.outputs.end());
@@ -59,7 +62,7 @@ void splitGlobalIndexes(T& sourceContainer, T& destinationContainer, uint32_t sp
     }
   }
 }
-}
+}  // namespace
 
 void SpentKeyImage::serialize(ISerializer& s) {
   s(blockIndex, "block_index");
@@ -100,7 +103,11 @@ bool serialize(PackedOutIndex& value, Common::StringView name, CryptoNote::ISeri
 
 BlockchainCache::BlockchainCache(const std::string& filename, const Currency& currency, Logging::ILogger& logger_,
                                  IBlockchainCache* parent, uint32_t splitBlockIndex)
-    : filename(filename), currency(currency), logger(logger_, "BlockchainCache"), parent(parent), storage(new BlockchainStorage(100)) {
+    : filename(filename),
+      currency(currency),
+      logger(logger_, "BlockchainCache"),
+      parent(parent),
+      storage(new BlockchainStorage(100)) {
   if (parent == nullptr) {
     startIndex = 0;
 
@@ -116,9 +123,10 @@ BlockchainCache::BlockchainCache(const std::string& filename, const Currency& cu
     uint64_t coinbaseTransactionSize = getObjectBinarySize(genesisBlock.getBlock().baseTransaction);
     assert(coinbaseTransactionSize < std::numeric_limits<uint64_t>::max());
 
-    std::vector<CachedTransaction> transactions;
+    std::vector<CachedTransaction> cachedTransactions;
     TransactionValidatorState validatorState;
-    doPushBlock(genesisBlock, transactions, validatorState, coinbaseTransactionSize, minerReward, 1, {toBinaryArray(genesisBlock.getBlock())});
+    doPushBlock(genesisBlock, cachedTransactions, validatorState, coinbaseTransactionSize, minerReward, 1,
+                {toBinaryArray(genesisBlock.getBlock())});
   } else {
     startIndex = splitBlockIndex;
   }
@@ -130,15 +138,17 @@ void BlockchainCache::pushBlock(const CachedBlock& cachedBlock,
                                 const std::vector<CachedTransaction>& cachedTransactions,
                                 const TransactionValidatorState& validatorState, size_t blockSize,
                                 uint64_t generatedCoins, uint64_t blockDifficulty, RawBlock&& rawBlock) {
-  //we have to call this function from constructor so it has to be non-virtual
-  doPushBlock(cachedBlock, cachedTransactions, validatorState, blockSize, generatedCoins, blockDifficulty, std::move(rawBlock));
+  // we have to call this function from constructor so it has to be non-virtual
+  doPushBlock(cachedBlock, cachedTransactions, validatorState, blockSize, generatedCoins, blockDifficulty,
+              std::move(rawBlock));
 }
 
 void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
-                                const std::vector<CachedTransaction>& cachedTransactions,
-                                const TransactionValidatorState& validatorState, size_t blockSize,
-                                uint64_t generatedCoins, uint64_t blockDifficulty, RawBlock&& rawBlock) {
-  logger(Logging::DEBUGGING) << "Pushing block " << cachedBlock.getBlockHash() << " at index " << cachedBlock.getBlockIndex();
+                                  const std::vector<CachedTransaction>& cachedTransactions,
+                                  const TransactionValidatorState& validatorState, size_t blockSize,
+                                  uint64_t generatedCoins, uint64_t blockDifficulty, RawBlock&& rawBlock) {
+  logger(Logging::DEBUGGING) << "Pushing block " << cachedBlock.getBlockHash() << " at index "
+                             << cachedBlock.getBlockIndex();
 
   assert(blockSize > 0);
   assert(blockDifficulty > 0);
@@ -188,7 +198,7 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
 
   assert(cachedTransactions.size() <= std::numeric_limits<uint16_t>::max());
 
-  auto transactionBlockIndex = 0;
+  uint16_t transactionBlockIndex = 0;
   auto baseTransaction = cachedBlock.getBlock().baseTransaction;
   pushTransaction(CachedTransaction(std::move(baseTransaction)), blockIndex, transactionBlockIndex++);
 
@@ -239,7 +249,8 @@ PushedBlockInfo BlockchainCache::getPushedBlockInfo(uint32_t blockIndex) const {
 // TODO: first move containers to new cache, then copy elements back. This can be much more effective, cause we usualy
 // split blockchain near its top.
 std::unique_ptr<IBlockchainCache> BlockchainCache::split(uint32_t splitBlockIndex) {
-  logger(Logging::DEBUGGING) << "Splitting at block index: " << splitBlockIndex << ", top block index: " << getTopBlockIndex();
+  logger(Logging::DEBUGGING) << "Splitting at block index: " << splitBlockIndex
+                             << ", top block index: " << getTopBlockIndex();
 
   assert(splitBlockIndex > startIndex);
   assert(splitBlockIndex <= getTopBlockIndex());
@@ -258,14 +269,14 @@ std::unique_ptr<IBlockchainCache> BlockchainCache::split(uint32_t splitBlockInde
 
   fixChildrenParent(newCache.get());
   newCache->children = children;
-  children = { newCache.get() };
+  children = {newCache.get()};
 
   logger(Logging::DEBUGGING) << "Split successfully completed";
   return std::move(newCache);
 }
 
 void BlockchainCache::splitSpentKeyImages(BlockchainCache& newCache, uint32_t splitBlockIndex) {
-  //Key images with blockIndex == splitBlockIndex remain in upper segment
+  // Key images with blockIndex == splitBlockIndex remain in upper segment
   auto& imagesIndex = spentKeyImages.get<BlockIndexTag>();
   auto lowerBound = imagesIndex.lower_bound(splitBlockIndex);
 
@@ -315,7 +326,7 @@ void BlockchainCache::splitKeyOutputsGlobalIndexes(BlockchainCache& newCache, ui
                                uint32_t splitBlockIndex) -> std::vector<PackedOutIndex>::iterator {
     return std::lower_bound(begin, end, splitBlockIndex, [](PackedOutIndex outputIndex, uint32_t splitIndex) {
       // all outputs in it->second.outputs are sorted according to blockIndex + transactionIndex
-      return outputIndex.blockIndex < splitIndex;
+      return outputIndex.data.blockIndex < splitIndex;
     });
   };
 
@@ -324,10 +335,10 @@ void BlockchainCache::splitKeyOutputsGlobalIndexes(BlockchainCache& newCache, ui
 }
 
 void BlockchainCache::addSpentKeyImage(const Crypto::KeyImage& keyImage, uint32_t blockIndex) {
-  assert(!checkIfSpent(keyImage, blockIndex - 1)); //Changed from "assert(!checkIfSpent(keyImage, blockIndex));"
-                                                   //to prevent fail when pushing block from DatabaseBlockchainCache.
-                                                   //In case of pushing external block double spend within block
-                                                   //should be checked by Core.
+  assert(!checkIfSpent(keyImage, blockIndex - 1));  // Changed from "assert(!checkIfSpent(keyImage, blockIndex));"
+                                                    // to prevent fail when pushing block from DatabaseBlockchainCache.
+                                                    // In case of pushing external block double spend within block
+                                                    // should be checked by Core.
   spentKeyImages.get<BlockIndexTag>().emplace(SpentKeyImage{blockIndex, keyImage});
 }
 
@@ -345,7 +356,8 @@ std::vector<Crypto::Hash> BlockchainCache::getTransactionHashes() const {
 
 void BlockchainCache::pushTransaction(const CachedTransaction& cachedTransaction, uint32_t blockIndex,
                                       uint16_t transactionInBlockIndex) {
-  logger(Logging::DEBUGGING) << "Adding transaction " << cachedTransaction.getTransactionHash() << " at block " << blockIndex << ", index in block " << transactionInBlockIndex;
+  logger(Logging::DEBUGGING) << "Adding transaction " << cachedTransaction.getTransactionHash() << " at block "
+                             << blockIndex << ", index in block " << transactionInBlockIndex;
 
   const auto& tx = cachedTransaction.getTransaction();
 
@@ -361,14 +373,14 @@ void BlockchainCache::pushTransaction(const CachedTransaction& cachedTransaction
   transactionCacheInfo.outputs.reserve(tx.outputs.size());
 
   logger(Logging::DEBUGGING) << "Adding " << tx.outputs.size() << " transaction outputs";
-  auto outputCount = 0;
+  uint16_t outputCount = 0;
   for (auto& output : tx.outputs) {
     transactionCacheInfo.outputs.push_back(output.target);
 
     PackedOutIndex poi;
-    poi.blockIndex = blockIndex;
-    poi.transactionIndex = transactionInBlockIndex;
-    poi.outputIndex = outputCount++;
+    poi.data.blockIndex = blockIndex;
+    poi.data.transactionIndex = transactionInBlockIndex;
+    poi.data.outputIndex = outputCount++;
 
     if (output.target.type() == typeid(KeyOutput)) {
       transactionCacheInfo.globalIndexes.push_back(insertKeyOutputToGlobalIndex(output.amount, poi, blockIndex));
@@ -397,7 +409,8 @@ uint32_t BlockchainCache::insertKeyOutputToGlobalIndex(uint64_t amount, PackedOu
   indexEntry.outputs.push_back(output);
   if (pair.second && parent != nullptr) {
     indexEntry.startIndex = static_cast<uint32_t>(parent->getKeyOutputsCountForAmount(amount, blockIndex));
-    logger(Logging::DEBUGGING) << "Key output count for amount " << amount << " requested from parent. Returned count: " << indexEntry.startIndex;
+    logger(Logging::DEBUGGING) << "Key output count for amount " << amount
+                               << " requested from parent. Returned count: " << indexEntry.startIndex;
   }
 
   return indexEntry.startIndex + static_cast<uint32_t>(indexEntry.outputs.size()) - 1;
@@ -425,16 +438,14 @@ bool BlockchainCache::checkIfSpent(const Crypto::KeyImage& keyImage) const {
   return parent != nullptr && parent->checkIfSpent(keyImage);
 }
 
-uint32_t BlockchainCache::getBlockCount() const {
-  return static_cast<uint32_t>(blockInfos.size());
-}
+uint32_t BlockchainCache::getBlockCount() const { return static_cast<uint32_t>(blockInfos.size()); }
 
 bool BlockchainCache::hasBlock(const Crypto::Hash& blockHash) const {
   return blockInfos.get<BlockHashTag>().count(blockHash) != 0;
 }
 
 uint32_t BlockchainCache::getBlockIndex(const Crypto::Hash& blockHash) const {
-//  assert(blockInfos.get<BlockHashTag>().count(blockHash) > 0);
+  //  assert(blockInfos.get<BlockHashTag>().count(blockHash) > 0);
   const auto hashIt = blockInfos.get<BlockHashTag>().find(blockHash);
   if (hashIt == blockInfos.get<BlockHashTag>().end()) {
     throw std::runtime_error("no such block");
@@ -475,17 +486,11 @@ std::vector<Crypto::Hash> BlockchainCache::getBlockHashes(uint32_t startBlockInd
   return hashes;
 }
 
-IBlockchainCache* BlockchainCache::getParent() const {
-  return parent;
-}
+IBlockchainCache* BlockchainCache::getParent() const { return parent; }
 
-void BlockchainCache::setParent(IBlockchainCache* p) {
-  parent = p;
-}
+void BlockchainCache::setParent(IBlockchainCache* p) { parent = p; }
 
-uint32_t BlockchainCache::getStartBlockIndex() const {
-  return startIndex;
-}
+uint32_t BlockchainCache::getStartBlockIndex() const { return startIndex; }
 
 size_t BlockchainCache::getKeyOutputsCountForAmount(uint64_t amount, uint32_t blockIndex) const {
   auto it = keyOutputsGlobalIndexes.find(amount);
@@ -497,9 +502,9 @@ size_t BlockchainCache::getKeyOutputsCountForAmount(uint64_t amount, uint32_t bl
     return parent->getKeyOutputsCountForAmount(amount, blockIndex);
   }
 
-  auto lowerBound = std::lower_bound(it->second.outputs.begin(), it->second.outputs.end(), blockIndex, [] (const PackedOutIndex& output, uint32_t blockIndex) {
-    return output.blockIndex < blockIndex;
-  });
+  auto lowerBound = std::lower_bound(
+      it->second.outputs.begin(), it->second.outputs.end(), blockIndex,
+      [](const PackedOutIndex& output, uint32_t blockIndex) { return output.data.blockIndex < blockIndex; });
 
   return it->second.startIndex + static_cast<size_t>(std::distance(it->second.outputs.begin(), lowerBound));
 }
@@ -579,8 +584,8 @@ BinaryArray BlockchainCache::getRawTransaction(uint32_t index, uint32_t transact
   }
 }
 
-std::vector<BinaryArray>
-BlockchainCache::getRawTransactions(const std::vector<Crypto::Hash>& requestedTransactions) const {
+std::vector<BinaryArray> BlockchainCache::getRawTransactions(
+    const std::vector<Crypto::Hash>& requestedTransactions) const {
   std::vector<Crypto::Hash> misses;
   auto ret = getRawTransactions(requestedTransactions, misses);
   assert(misses.empty());
@@ -610,9 +615,7 @@ void BlockchainCache::getRawTransactions(const std::vector<Crypto::Hash>& reques
   }
 }
 
-size_t BlockchainCache::getChildCount() const {
-  return children.size();
-}
+size_t BlockchainCache::getChildCount() const { return children.size(); }
 
 void BlockchainCache::addChild(IBlockchainCache* child) {
   assert(std::find(children.begin(), children.end(), child) == children.end());
@@ -650,10 +653,13 @@ void BlockchainCache::serialize(ISerializer& s) {
     OutputsGlobalIndexesContainer restoredKeyOutputsGlobalIndexes;
     PaymentIdContainer restoredPaymentIds;
 
-    readSequence<CachedTransactionInfo>(std::inserter(restoredTransactions, restoredTransactions.end()), "transactions", s);
-    readSequence<SpentKeyImage>(std::inserter(restoredSpentKeyImages, restoredSpentKeyImages.end()), "spent_key_images", s);
+    readSequence<CachedTransactionInfo>(std::inserter(restoredTransactions, restoredTransactions.end()), "transactions",
+                                        s);
+    readSequence<SpentKeyImage>(std::inserter(restoredSpentKeyImages, restoredSpentKeyImages.end()), "spent_key_images",
+                                s);
     readSequence<CachedBlockInfo>(std::back_inserter(restoredBlockHashIndex), "block_hash_indexes", s);
-    readSequence<PaymentIdTransactionHashPair>(std::inserter(restoredPaymentIds, restoredPaymentIds.end()), "payment_id_indexes", s);
+    readSequence<PaymentIdTransactionHashPair>(std::inserter(restoredPaymentIds, restoredPaymentIds.end()),
+                                               "payment_id_indexes", s);
 
     s(restoredKeyOutputsGlobalIndexes, "key_outputs_global_indexes");
 
@@ -709,9 +715,11 @@ std::vector<uint32_t> BlockchainCache::getRandomOutsByAmount(Amount amount, size
   }
 
   auto& outs = it->second.outputs;
-  auto end = std::find_if(outs.rbegin(), outs.rend(), [&](PackedOutIndex index) {
-               return index.blockIndex <= blockIndex - currency.minedMoneyUnlockWindow();
-             }).base();
+  auto end = std::find_if(outs.rbegin(), outs.rend(),
+                          [&](PackedOutIndex index) {
+                            return index.data.blockIndex <= blockIndex - currency.minedMoneyUnlockWindow();
+                          })
+                 .base();
   uint32_t dist = static_cast<uint32_t>(std::distance(outs.begin(), end));
   dist = std::min(static_cast<uint32_t>(count), dist);
   ShuffleGenerator<uint32_t, Crypto::random_engine<uint32_t>> generator(dist);
@@ -719,7 +727,7 @@ std::vector<uint32_t> BlockchainCache::getRandomOutsByAmount(Amount amount, size
     auto offset = generator();
     auto& outIndex = it->second.outputs[offset];
     auto transactionIterator = transactions.get<TransactionInBlockTag>().find(
-        boost::make_tuple<uint32_t, uint32_t>(outIndex.blockIndex, outIndex.transactionIndex));
+        boost::make_tuple<uint32_t, uint32_t>(outIndex.data.blockIndex, outIndex.data.transactionIndex));
     if (isTransactionSpendTimeUnlocked(transactionIterator->unlockTime, blockIndex)) {
       offs.push_back(it->second.startIndex + offset);
     }
@@ -738,40 +746,46 @@ ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount, u
                                                               Common::ArrayView<uint32_t> globalIndexes,
                                                               std::vector<Crypto::PublicKey>& publicKeys) const {
   assert(!globalIndexes.isEmpty());
-  assert(std::is_sorted(globalIndexes.begin(), globalIndexes.end()));                            // sorted
-  assert(std::adjacent_find(globalIndexes.begin(), globalIndexes.end()) == globalIndexes.end()); // unique
+  assert(std::is_sorted(globalIndexes.begin(), globalIndexes.end()));                             // sorted
+  assert(std::adjacent_find(globalIndexes.begin(), globalIndexes.end()) == globalIndexes.end());  // unique
 
-  return extractKeyOutputs(amount, blockIndex, globalIndexes, [&] (const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex) {
-    if (!isTransactionSpendTimeUnlocked(info.unlockTime, blockIndex)) {
-      return ExtractOutputKeysResult::OUTPUT_LOCKED;
-    }
+  return extractKeyOutputs(amount, blockIndex, globalIndexes,
+                           [&](const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex) {
+                             XI_UNUSED(globalIndex);
+                             if (!isTransactionSpendTimeUnlocked(info.unlockTime, blockIndex)) {
+                               return ExtractOutputKeysResult::OUTPUT_LOCKED;
+                             }
 
-    assert(info.outputs[index.outputIndex].type() == typeid(KeyOutput));
-    publicKeys.push_back(boost::get<KeyOutput>(info.outputs[index.outputIndex]).key);
-    return ExtractOutputKeysResult::SUCCESS;
-  });
+                             assert(info.outputs[index.data.outputIndex].type() == typeid(KeyOutput));
+                             publicKeys.push_back(boost::get<KeyOutput>(info.outputs[index.data.outputIndex]).key);
+                             return ExtractOutputKeysResult::SUCCESS;
+                           });
 }
 
-ExtractOutputKeysResult
-BlockchainCache::extractKeyOtputReferences(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
-                                           std::vector<std::pair<Crypto::Hash, size_t>>& outputReferences) const {
+ExtractOutputKeysResult BlockchainCache::extractKeyOtputReferences(
+    uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
+    std::vector<std::pair<Crypto::Hash, size_t>>& outputReferences) const {
   assert(!globalIndexes.isEmpty());
-  assert(std::is_sorted(globalIndexes.begin(), globalIndexes.end()));                            // sorted
-  assert(std::adjacent_find(globalIndexes.begin(), globalIndexes.end()) == globalIndexes.end()); // unique
+  assert(std::is_sorted(globalIndexes.begin(), globalIndexes.end()));                             // sorted
+  assert(std::adjacent_find(globalIndexes.begin(), globalIndexes.end()) == globalIndexes.end());  // unique
 
-  return extractKeyOutputs(amount, getTopBlockIndex(), globalIndexes, [&] (const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex) {
-    outputReferences.push_back(std::make_pair(info.transactionHash, index.outputIndex));
-    return ExtractOutputKeysResult::SUCCESS;
-  });
+  return extractKeyOutputs(amount, getTopBlockIndex(), globalIndexes,
+                           [&](const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex) {
+                             XI_UNUSED(globalIndex);
+                             outputReferences.push_back(std::make_pair(info.transactionHash, index.data.outputIndex));
+                             return ExtractOutputKeysResult::SUCCESS;
+                           });
 }
 
 // TODO: start from index
 ExtractOutputKeysResult BlockchainCache::extractKeyOutputs(
     uint64_t amount, uint32_t blockIndex, Common::ArrayView<uint32_t> globalIndexes,
-    std::function<ExtractOutputKeysResult(const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex)> pred) const {
+    std::function<ExtractOutputKeysResult(const CachedTransactionInfo& info, PackedOutIndex index,
+                                          uint32_t globalIndex)>
+        pred) const {
   assert(!globalIndexes.isEmpty());
-  assert(std::is_sorted(globalIndexes.begin(), globalIndexes.end()));                            // sorted
-  assert(std::adjacent_find(globalIndexes.begin(), globalIndexes.end()) == globalIndexes.end()); // unique
+  assert(std::is_sorted(globalIndexes.begin(), globalIndexes.end()));                             // sorted
+  assert(std::adjacent_find(globalIndexes.begin(), globalIndexes.end()) == globalIndexes.end());  // unique
 
   auto globalIndexesIterator = keyOutputsGlobalIndexes.find(amount);
   if (globalIndexesIterator == keyOutputsGlobalIndexes.end() || blockIndex < startIndex) {
@@ -785,7 +799,8 @@ ExtractOutputKeysResult BlockchainCache::extractKeyOutputs(
   auto offset = std::distance(globalIndexes.begin(), parentIndexesIterator);
   if (parentIndexesIterator != globalIndexes.begin()) {
     assert(parent != nullptr);
-    auto result = parent->extractKeyOutputs(amount, blockIndex, globalIndexes.head(parentIndexesIterator - globalIndexes.begin()), pred);
+    auto result = parent->extractKeyOutputs(amount, blockIndex,
+                                            globalIndexes.head(parentIndexesIterator - globalIndexes.begin()), pred);
     if (result != ExtractOutputKeysResult::SUCCESS) {
       return result;
     }
@@ -796,30 +811,33 @@ ExtractOutputKeysResult BlockchainCache::extractKeyOutputs(
   assert(!outputs.empty());
   for (auto globalIndex : myGlobalIndexes) {
     if (globalIndex - startGlobalIndex >= outputs.size()) {
-      logger(Logging::DEBUGGING) << "Couldn't extract key output for amount " << amount << " with global index " << globalIndex
-                                 << " because global index is greater than the last available: " << (startGlobalIndex + outputs.size());
+      logger(Logging::DEBUGGING) << "Couldn't extract key output for amount " << amount << " with global index "
+                                 << globalIndex << " because global index is greater than the last available: "
+                                 << (startGlobalIndex + outputs.size());
       return ExtractOutputKeysResult::INVALID_GLOBAL_INDEX;
     }
-    
+
     auto outputIndex = outputs[globalIndex - startGlobalIndex];
-    
-    assert(outputIndex.blockIndex >= startIndex);
-    assert(outputIndex.blockIndex <= blockIndex);
+
+    assert(outputIndex.data.blockIndex >= startIndex);
+    assert(outputIndex.data.blockIndex <= blockIndex);
 
     auto txIt = transactions.get<TransactionInBlockTag>().find(
-        boost::make_tuple<uint32_t, uint32_t>(outputIndex.blockIndex, outputIndex.transactionIndex));
+        boost::make_tuple<uint32_t, uint32_t>(outputIndex.data.blockIndex, outputIndex.data.transactionIndex));
     if (txIt == transactions.get<TransactionInBlockTag>().end()) {
-      logger(Logging::DEBUGGING) << "Couldn't extract key output for amount " << amount << " with global index " << globalIndex
-                                 << " because containing transaction doesn't exist in index "
-                                 << "(block index: " << outputIndex.blockIndex << ", transaction index: " << outputIndex.transactionIndex << ")";
+      logger(Logging::DEBUGGING) << "Couldn't extract key output for amount " << amount << " with global index "
+                                 << globalIndex << " because containing transaction doesn't exist in index "
+                                 << "(block index: " << outputIndex.data.blockIndex
+                                 << ", transaction index: " << outputIndex.data.transactionIndex << ")";
       return ExtractOutputKeysResult::INVALID_GLOBAL_INDEX;
     }
 
     auto ret = pred(*txIt, outputIndex, globalIndex);
     if (ret != ExtractOutputKeysResult::SUCCESS) {
-      logger(Logging::DEBUGGING) << "Couldn't extract key output for amount " << amount << " with global index " << globalIndex
-                                 << " because callback returned fail status (block index: " << outputIndex.blockIndex
-                                 << ", transaction index: " << outputIndex.transactionIndex << ")";
+      logger(Logging::DEBUGGING) << "Couldn't extract key output for amount " << amount << " with global index "
+                                 << globalIndex << " because callback returned fail status (block index: "
+                                 << outputIndex.data.blockIndex
+                                 << ", transaction index: " << outputIndex.data.transactionIndex << ")";
       return ret;
     }
   }
@@ -846,7 +864,8 @@ std::vector<Crypto::Hash> BlockchainCache::getTransactionHashesByPaymentId(const
   return transactionHashes;
 }
 
-std::vector<Crypto::Hash> BlockchainCache::getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount) const {
+std::vector<Crypto::Hash> BlockchainCache::getBlockHashesByTimestamps(uint64_t timestampBegin,
+                                                                      size_t secondsCount) const {
   std::vector<Crypto::Hash> blockHashes;
   if (secondsCount == 0) {
     return blockHashes;
@@ -874,11 +893,13 @@ ExtractOutputKeysResult BlockchainCache::extractKeyOtputIndexes(uint64_t amount,
                                                                 Common::ArrayView<uint32_t> globalIndexes,
                                                                 std::vector<PackedOutIndex>& outIndexes) const {
   assert(!globalIndexes.isEmpty());
-  return extractKeyOutputs(amount, getTopBlockIndex(), globalIndexes,
-                           [&](const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex) {
-                             outIndexes.push_back(index);
-                             return ExtractOutputKeysResult::SUCCESS;
-                           });
+  return extractKeyOutputs(
+      amount, getTopBlockIndex(), globalIndexes,
+      [&outIndexes](const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex) {
+        XI_UNUSED(info, globalIndex);
+        outIndexes.push_back(index);
+        return ExtractOutputKeysResult::SUCCESS;
+      });
 }
 
 uint32_t BlockchainCache::getTopBlockIndex() const {
@@ -934,17 +955,17 @@ std::vector<uint64_t> BlockchainCache::getLastBlocksSizes(size_t count, uint32_t
   return getLastUnits(count, blockIndex, useGenesis, [](const CachedBlockInfo& cb) { return cb.blockSize; });
 }
 
-uint64_t BlockchainCache::getDifficultyForNextBlock() const {
-  return getDifficultyForNextBlock(getTopBlockIndex());
-}
+uint64_t BlockchainCache::getDifficultyForNextBlock() const { return getDifficultyForNextBlock(getTopBlockIndex()); }
 
 uint64_t BlockchainCache::getDifficultyForNextBlock(uint32_t blockIndex) const {
   assert(blockIndex <= getTopBlockIndex());
-  uint8_t nextBlockMajorVersion = getBlockMajorVersionForHeight(blockIndex+1);
-  auto timestamps = getLastTimestamps(currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion, blockIndex), blockIndex, skipGenesisBlock);
-  auto commulativeDifficulties =
-      getLastCumulativeDifficulties(currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion, blockIndex), blockIndex, skipGenesisBlock);
-  return currency.getNextDifficulty(nextBlockMajorVersion, blockIndex, std::move(timestamps), std::move(commulativeDifficulties));
+  uint8_t nextBlockMajorVersion = getBlockMajorVersionForHeight(blockIndex + 1);
+  auto timestamps = getLastTimestamps(currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion, blockIndex),
+                                      blockIndex, skipGenesisBlock);
+  auto commulativeDifficulties = getLastCumulativeDifficulties(
+      currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion, blockIndex), blockIndex, skipGenesisBlock);
+  return currency.getNextDifficulty(nextBlockMajorVersion, blockIndex, std::move(timestamps),
+                                    std::move(commulativeDifficulties));
 }
 
 uint64_t BlockchainCache::getCurrentCumulativeDifficulty() const {
@@ -958,9 +979,7 @@ uint64_t BlockchainCache::getCurrentCumulativeDifficulty(uint32_t blockIndex) co
   return blockInfos.get<BlockIndexTag>().at(blockIndex - startIndex).cumulativeDifficulty;
 }
 
-uint64_t BlockchainCache::getAlreadyGeneratedCoins() const {
-  return getAlreadyGeneratedCoins(getTopBlockIndex());
-}
+uint64_t BlockchainCache::getAlreadyGeneratedCoins() const { return getAlreadyGeneratedCoins(getTopBlockIndex()); }
 
 uint64_t BlockchainCache::getAlreadyGeneratedCoins(uint32_t blockIndex) const {
   if (blockIndex < startIndex) {
@@ -981,7 +1000,7 @@ uint64_t BlockchainCache::getAlreadyGeneratedTransactions(uint32_t blockIndex) c
 }
 
 std::vector<uint64_t> BlockchainCache::getLastCumulativeDifficulties(size_t count, uint32_t blockIndex,
-                                                                       UseGenesis useGenesis) const {
+                                                                     UseGenesis useGenesis) const {
   return getLastUnits(count, blockIndex, useGenesis,
                       [](const CachedBlockInfo& info) { return info.cumulativeDifficulty; });
 }
@@ -1024,9 +1043,9 @@ uint8_t BlockchainCache::getBlockMajorVersionForHeight(uint32_t height) const {
 }
 
 void BlockchainCache::fixChildrenParent(IBlockchainCache* p) {
-  for (auto child: children) {
+  for (auto child : children) {
     child->setParent(p);
   }
 }
 
-}
+}  // namespace CryptoNote

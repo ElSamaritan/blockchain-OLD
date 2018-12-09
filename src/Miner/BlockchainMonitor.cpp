@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -27,16 +27,16 @@
 #include "Rpc/JsonRpc.h"
 #include "Rpc/HttpClient.h"
 
-BlockchainMonitor::BlockchainMonitor(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, size_t pollingInterval, Logging::ILogger& logger):
-  m_dispatcher(dispatcher),
-  m_daemonHost(daemonHost),
-  m_daemonPort(daemonPort),
-  m_pollingInterval(pollingInterval),
-  m_stopped(false),
-  m_httpEvent(dispatcher),
-  m_sleepingContext(dispatcher),
-  m_logger(logger, "BlockchainMonitor") {
-
+BlockchainMonitor::BlockchainMonitor(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort,
+                                     size_t pollingInterval, Logging::ILogger& logger)
+    : m_dispatcher(dispatcher),
+      m_daemonHost(daemonHost),
+      m_daemonPort(daemonPort),
+      m_pollingInterval(pollingInterval),
+      m_stopped(false),
+      m_httpEvent(dispatcher),
+      m_sleepingContext(dispatcher),
+      m_logger(logger, "BlockchainMonitor") {
   m_httpEvent.set();
 }
 
@@ -46,8 +46,8 @@ void BlockchainMonitor::waitBlockchainUpdate() {
 
   Crypto::Hash lastBlockHash = requestLastBlockHash();
 
-  while(!m_stopped) {
-    m_sleepingContext.spawn([this] () {
+  while (!m_stopped) {
+    m_sleepingContext.spawn([this]() {
       System::Timer timer(m_dispatcher);
       timer.sleep(std::chrono::seconds(m_pollingInterval));
     });

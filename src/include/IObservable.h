@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -21,9 +21,9 @@ namespace CryptoNote {
 
 template <typename T>
 class IObservable {
-public:
+ public:
   virtual void addObserver(T* observer) = 0;
   virtual void removeObserver(T* observer) = 0;
 };
 
-}
+}  // namespace CryptoNote

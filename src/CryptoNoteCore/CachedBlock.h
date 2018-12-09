@@ -1,7 +1,7 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 #pragma once
@@ -12,7 +12,7 @@
 namespace CryptoNote {
 
 class CachedBlock {
-public:
+ public:
   explicit CachedBlock(const BlockTemplate& block);
   const BlockTemplate& getBlock() const;
   const Crypto::Hash& getTransactionTreeHash() const;
@@ -24,7 +24,7 @@ public:
   const BinaryArray& getParentBlockHashingBinaryArray(bool headerOnly) const;
   uint32_t getBlockIndex() const;
 
-private:
+ private:
   const BlockTemplate& block;
   mutable boost::optional<BinaryArray> blockHashingBinaryArray;
   mutable boost::optional<BinaryArray> parentBlockBinaryArray;
@@ -38,4 +38,4 @@ private:
   mutable boost::optional<Crypto::Hash> auxiliaryBlockHeaderHash;
 };
 
-}
+}  // namespace CryptoNote

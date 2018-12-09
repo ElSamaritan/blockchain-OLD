@@ -28,13 +28,7 @@ const size_t WALLET_INVALID_TRANSACTION_ID = std::numeric_limits<size_t>::max();
 const size_t WALLET_INVALID_TRANSFER_ID = std::numeric_limits<size_t>::max();
 const uint32_t WALLET_UNCONFIRMED_TRANSACTION_HEIGHT = std::numeric_limits<uint32_t>::max();
 
-enum class WalletTransactionState : uint8_t {
-  SUCCEEDED = 0,
-  FAILED,
-  CANCELLED,
-  CREATED,
-  DELETED
-};
+enum class WalletTransactionState : uint8_t { SUCCEEDED = 0, FAILED, CANCELLED, CREATED, DELETED };
 
 enum WalletEventType {
   TRANSACTION_CREATED,
@@ -44,11 +38,7 @@ enum WalletEventType {
   SYNC_COMPLETED,
 };
 
-enum class WalletSaveLevel : uint8_t {
-  SAVE_KEYS_ONLY,
-  SAVE_KEYS_AND_TRANSACTIONS,
-  SAVE_ALL
-};
+enum class WalletSaveLevel : uint8_t { SAVE_KEYS_ONLY, SAVE_KEYS_AND_TRANSACTIONS, SAVE_ALL };
 
 struct WalletTransactionCreatedData {
   size_t transactionIndex;
@@ -85,11 +75,7 @@ struct WalletTransaction {
   bool isBase;
 };
 
-enum class WalletTransferType : uint8_t {
-  USUAL = 0,
-  DONATION,
-  CHANGE
-};
+enum class WalletTransferType : uint8_t { USUAL = 0, DONATION, CHANGE };
 
 struct WalletOrder {
   std::string address;
@@ -129,11 +115,13 @@ struct TransactionsInBlockInfo {
 };
 
 class IWallet {
-public:
+ public:
   virtual ~IWallet() {}
 
   virtual void initialize(const std::string& path, const std::string& password) = 0;
-  virtual void initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight, const bool newAddress) = 0;
+  virtual void initializeWithViewKey(const std::string& path, const std::string& password,
+                                     const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight,
+                                     const bool newAddress) = 0;
   virtual void load(const std::string& path, const std::string& password, std::string& extra) = 0;
   virtual void load(const std::string& path, const std::string& password) = 0;
   virtual void shutdown() = 0;
@@ -141,7 +129,8 @@ public:
   virtual void changePassword(const std::string& oldPassword, const std::string& newPassword) = 0;
   virtual void save(WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") = 0;
   virtual void reset(const uint32_t scanHeight) = 0;
-  virtual void exportWallet(const std::string& path, bool encrypt = true, WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") = 0;
+  virtual void exportWallet(const std::string& path, bool encrypt = true,
+                            WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") = 0;
 
   virtual size_t getAddressCount() const = 0;
   virtual std::string getAddress(size_t index) const = 0;
@@ -150,10 +139,13 @@ public:
   virtual KeyPair getViewKey() const = 0;
 
   virtual std::string createAddress() = 0;
-  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey, const uint32_t scanHeight, const bool newAddress) = 0;
-  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey, const uint32_t scanHeight, const bool newAddress) = 0;
+  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey, const uint32_t scanHeight,
+                                    const bool newAddress) = 0;
+  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey, const uint32_t scanHeight,
+                                    const bool newAddress) = 0;
 
-  virtual std::vector<std::string> createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys, const uint32_t scanHeight, const bool newAddress) = 0;
+  virtual std::vector<std::string> createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys,
+                                                     const uint32_t scanHeight, const bool newAddress) = 0;
 
   virtual void deleteAddress(const std::string& address) = 0;
 
@@ -171,7 +163,7 @@ public:
   virtual std::vector<TransactionsInBlockInfo> getTransactions(const Crypto::Hash& blockHash, size_t count) const = 0;
   virtual std::vector<TransactionsInBlockInfo> getTransactions(uint32_t blockIndex, size_t count) const = 0;
   virtual std::vector<Crypto::Hash> getBlockHashes(uint32_t blockIndex, size_t count) const = 0;
-  virtual uint32_t getBlockCount() const  = 0;
+  virtual uint32_t getBlockCount() const = 0;
   virtual std::vector<WalletTransactionWithTransfers> getUnconfirmedTransactions() const = 0;
   virtual std::vector<size_t> getDelayedTransactionIds() const = 0;
 
@@ -184,8 +176,8 @@ public:
   virtual void start() = 0;
   virtual void stop() = 0;
 
-  //blocks until an event occurred
+  // blocks until an event occurred
   virtual WalletEvent getEvent() = 0;
 };
 
-}
+}  // namespace CryptoNote

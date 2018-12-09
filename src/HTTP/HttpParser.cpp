@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -18,6 +18,8 @@
 #include "HttpParser.h"
 
 #include <algorithm>
+#include <limits>
+#include <locale>
 
 #include "HttpParserErrorCodes.h"
 
@@ -33,20 +35,21 @@ void throwIfNotGood(std::istream& stream) {
   }
 }
 
-}
+}  // namespace
 
 namespace CryptoNote {
 
 HttpResponse::HTTP_STATUS HttpParser::parseResponseStatusFromString(const std::string& status) {
-  if (status == "200 OK" || status == "200 Ok") return CryptoNote::HttpResponse::STATUS_200;
-  else if (status == "404 Not Found") return CryptoNote::HttpResponse::STATUS_404;
-  else if (status == "500 Internal Server Error") return CryptoNote::HttpResponse::STATUS_500;
-  else throw std::system_error(make_error_code(CryptoNote::error::HttpParserErrorCodes::UNEXPECTED_SYMBOL),
-      "Unknown HTTP status code is given");
-
-  return CryptoNote::HttpResponse::STATUS_200; //unaccessible
+  if (status == "200 OK" || status == "200 Ok")
+    return CryptoNote::HttpResponse::STATUS_200;
+  else if (status == "404 Not Found")
+    return CryptoNote::HttpResponse::STATUS_404;
+  else if (status == "500 Internal Server Error")
+    return CryptoNote::HttpResponse::STATUS_500;
+  else
+    throw std::system_error(make_error_code(CryptoNote::error::HttpParserErrorCodes::UNEXPECTED_SYMBOL),
+                            "Unknown HTTP status code is given");
 }
-
 
 void HttpParser::receiveRequest(std::istream& stream, HttpRequest& request) {
   readWord(stream, request.method);
@@ -64,16 +67,15 @@ void HttpParser::receiveRequest(std::istream& stream, HttpRequest& request) {
   }
 }
 
-
 void HttpParser::receiveResponse(std::istream& stream, HttpResponse& response) {
   std::string httpVersion;
   readWord(stream, httpVersion);
-  
+
   std::string status;
   char c;
-  
+
   stream.get(c);
-  while (stream.good() && c != '\r') { //Till the end
+  while (stream.good() && c != '\r') {  // Till the end
     status += c;
     stream.get(c);
   }
@@ -88,7 +90,7 @@ void HttpParser::receiveResponse(std::istream& stream, HttpResponse& response) {
   }
 
   response.setStatus(parseResponseStatusFromString(status));
-  
+
   std::string name;
   std::string value;
 
@@ -105,7 +107,7 @@ void HttpParser::receiveResponse(std::istream& stream, HttpResponse& response) {
   if (it != headers.end()) {
     length = std::stoul(it->second);
   }
-  
+
   std::string body;
   if (length) {
     readBody(stream, body, length);
@@ -113,7 +115,6 @@ void HttpParser::receiveResponse(std::istream& stream, HttpResponse& response) {
 
   response.setBody(body);
 }
-
 
 void HttpParser::readWord(std::istream& stream, std::string& word) {
   char c;
@@ -139,12 +140,12 @@ void HttpParser::readHeaders(std::istream& stream, HttpRequest::Headers& headers
   std::string value;
 
   while (readHeader(stream, name, value)) {
-    headers[name] = value; //use insert
+    headers[name] = value;  // use insert
     name.clear();
     value.clear();
   }
 
-  headers[name] = value; //use insert
+  headers[name] = value;  // use insert
 }
 
 bool HttpParser::readHeader(std::istream& stream, std::string& name, std::string& value) {
@@ -185,16 +186,20 @@ bool HttpParser::readHeader(std::istream& stream, std::string& name, std::string
     throw std::system_error(make_error_code(CryptoNote::error::HttpParserErrorCodes::UNEXPECTED_SYMBOL));
   }
 
-  std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+  const std::locale loc{};
+  std::transform(name.begin(), name.end(), name.begin(), [&loc](char c) { return std::tolower(c, loc); });
 
-  c = stream.peek();
+  int nextCharacter = stream.peek();
+  if (nextCharacter < std::numeric_limits<char>::min() || nextCharacter > std::numeric_limits<char>::max())
+    throw std::system_error(make_error_code(CryptoNote::error::HttpParserErrorCodes::UNEXPECTED_SYMBOL));
+  c = static_cast<char>(nextCharacter);
   if (c == '\r') {
     stream.get(c).get(c);
     if (c != '\n') {
       throw std::system_error(make_error_code(CryptoNote::error::HttpParserErrorCodes::UNEXPECTED_SYMBOL));
     }
 
-    return false; //no more headers
+    return false;  // no more headers
   }
 
   return true;
@@ -214,11 +219,11 @@ void HttpParser::readBody(std::istream& stream, std::string& body, const size_t 
   size_t read = 0;
 
   while (stream.good() && read < bodyLen) {
-    body += stream.get();
+    body += static_cast<char>(stream.get());
     ++read;
   }
 
   throwIfNotGood(stream);
 }
 
-}
+}  // namespace CryptoNote

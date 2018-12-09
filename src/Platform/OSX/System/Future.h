@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -25,24 +25,21 @@ namespace System {
 
 namespace Detail {
 
-namespace { 
+namespace {
 
-enum class State : unsigned {
-  STARTED,
-  COMPLETED,
-  CONSUMED
-};
+enum class State : unsigned { STARTED, COMPLETED, CONSUMED };
 
 }
 
 // Simplest possible future implementation. The reason why this class even exist is because currenty std future has a
 // memory corrupting bug on OSX. Spawn a new thread, execute procedure in it, get result, and wait thread to shut down.
 // Actualy, this is what libstdc++'s std::future is doing.
-template<class T> class Future {
-public:
+template <class T>
+class Future {
+ public:
   // Create a new thread, and run `operation` in it.
-  explicit Future(std::function<T()>&& operation) : procedure(std::move(operation)), state(State::STARTED), worker{[this] { asyncOp(); }} {
-  }
+  explicit Future(std::function<T()>&& operation)
+      : procedure(std::move(operation)), state(State::STARTED), worker{[this] { asyncOp(); }} {}
 
   // Wait for async op to complete, then if thread wasn't detached, join it.
   ~Future() {
@@ -77,7 +74,7 @@ public:
     return state != State::CONSUMED;
   }
 
-private:
+ private:
   // This function is executed in a separate thread.
   void asyncOp() {
     try {
@@ -101,11 +98,12 @@ private:
   std::thread worker;
 };
 
-template<> class Future<void> {
-public:
+template <>
+class Future<void> {
+ public:
   // Create a new thread, and run `operation` in it.
-  explicit Future(std::function<void()>&& operation) : procedure(std::move(operation)), state(State::STARTED), worker{[this] { asyncOp(); }} {
-  }
+  explicit Future(std::function<void()>&& operation)
+      : procedure(std::move(operation)), state(State::STARTED), worker{[this] { asyncOp(); }} {}
 
   // Wait for async op to complete, then if thread wasn't detached, join it.
   ~Future() {
@@ -138,7 +136,7 @@ public:
     return state != State::CONSUMED;
   }
 
-private:
+ private:
   // This function is executed in a separate thread.
   void asyncOp() {
     try {
@@ -161,10 +159,11 @@ private:
   std::thread worker;
 };
 
-template<class T> std::function<T()> async(std::function<T()>&& operation) {
+template <class T>
+std::function<T()> async(std::function<T()>&& operation) {
   return operation;
 }
 
-}
+}  // namespace Detail
 
-}
+}  // namespace System

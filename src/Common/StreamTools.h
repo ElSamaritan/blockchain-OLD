@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -56,30 +56,31 @@ void write(IOutputStream& out, const std::vector<uint8_t>& data);
 void write(IOutputStream& out, const std::string& data);
 void writeVarint(IOutputStream& out, uint64_t value);
 
-template<typename T> T read(IInputStream& in) {
+template <typename T>
+T read(IInputStream& in) {
   T value;
   read(in, value);
   return value;
 }
 
-template<typename T> T read(IInputStream& in, size_t size) {
+template <typename T>
+T read(IInputStream& in, size_t size) {
   T value;
   read(in, value, size);
   return value;
 }
 
-template<typename T> T readVarint(IInputStream& in) {
+template <typename T>
+T readVarint(IInputStream& in) {
   T value;
   readVarint(in, value);
   return value;
 }
 
-template<typename T>
+template <typename T>
 class ContainerFormatter {
-public:
-  explicit ContainerFormatter(const T& container) :
-    m_container(container) {
-  }
+ public:
+  explicit ContainerFormatter(const T& container) : m_container(container) {}
 
   friend std::ostream& operator<<(std::ostream& os, const ContainerFormatter<T>& formatter) {
     os << '{';
@@ -96,13 +97,13 @@ public:
     return os;
   }
 
-private:
+ private:
   const T& m_container;
 };
 
-template<typename T>
+template <typename T>
 ContainerFormatter<T> makeContainerFormatter(const T& container) {
   return ContainerFormatter<T>(container);
 }
 
-};
+};  // namespace Common

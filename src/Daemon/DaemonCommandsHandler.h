@@ -1,6 +1,6 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The TurtleCoin Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 #pragma once
@@ -16,24 +16,21 @@
 namespace CryptoNote {
 class Core;
 class NodeServer;
-}
+}  // namespace CryptoNote
 
-class DaemonCommandsHandler
-{
-public:
-  DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log, CryptoNote::RpcServer* prpc_server);
+class DaemonCommandsHandler {
+ public:
+  DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log,
+                        CryptoNote::RpcServer* prpc_server);
 
   bool start_handling() {
     m_consoleHandler.start();
     return true;
   }
 
-  void stop_handling() {
-    m_consoleHandler.stop();
-  }
+  void stop_handling() { m_consoleHandler.stop(); }
 
-private:
-
+ private:
   Common::ConsoleHandler m_consoleHandler;
   CryptoNote::Core& m_core;
   CryptoNote::NodeServer& m_srv;
@@ -53,7 +50,6 @@ private:
   bool print_bc_outs(const std::vector<std::string>& args);
   bool print_cn(const std::vector<std::string>& args);
   bool print_bc(const std::vector<std::string>& args);
-  bool print_bci(const std::vector<std::string>& args);
   bool set_log(const std::vector<std::string>& args);
   bool print_block(const std::vector<std::string>& args);
   bool print_tx(const std::vector<std::string>& args);

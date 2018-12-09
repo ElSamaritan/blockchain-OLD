@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,37 +22,33 @@ using namespace CryptoNote;
 
 namespace {
 
-const uint64_t LEVIN_SIGNATURE = 0x0101010101012101LL;  //Bender's nightmare
+const uint64_t LEVIN_SIGNATURE = 0x0101010101012101LL;  // Bender's nightmare
 const uint32_t LEVIN_PACKET_REQUEST = 0x00000001;
 const uint32_t LEVIN_PACKET_RESPONSE = 0x00000002;
-const uint32_t LEVIN_DEFAULT_MAX_PACKET_SIZE = 100000000;      //100MB by default
+const uint32_t LEVIN_DEFAULT_MAX_PACKET_SIZE = 100000000;  // 100MB by default
 const uint32_t LEVIN_PROTOCOL_VER_1 = 1;
 
 #pragma pack(push)
 #pragma pack(1)
-struct bucket_head2
-{
+struct bucket_head2 {
   uint64_t m_signature;
   uint64_t m_cb;
-  bool     m_have_to_return_data;
+  bool m_have_to_return_data;
   uint32_t m_command;
-  int32_t  m_return_code;
+  int32_t m_return_code;
   uint32_t m_flags;
   uint32_t m_protocol_version;
 };
 #pragma pack(pop)
 
-}
+}  // namespace
 
-bool LevinProtocol::Command::needReply() const {
-  return !(isNotify || isResponse);
-}
+bool LevinProtocol::Command::needReply() const { return !(isNotify || isResponse); }
 
-LevinProtocol::LevinProtocol(System::TcpConnection& connection) 
-  : m_conn(connection) {}
+LevinProtocol::LevinProtocol(System::TcpConnection& connection) : m_conn(connection) {}
 
 void LevinProtocol::sendMessage(uint32_t command, const BinaryArray& out, bool needResponse) {
-  bucket_head2 head = { 0 };
+  bucket_head2 head = {0};
   head.m_signature = LEVIN_SIGNATURE;
   head.m_cb = out.size();
   head.m_have_to_return_data = needResponse;
@@ -72,7 +68,7 @@ void LevinProtocol::sendMessage(uint32_t command, const BinaryArray& out, bool n
 }
 
 bool LevinProtocol::readCommand(Command& cmd) {
-  bucket_head2 head = { 0 };
+  bucket_head2 head = {0};
 
   if (!readStrict(reinterpret_cast<uint8_t*>(&head), sizeof(head))) {
     return false;
@@ -104,7 +100,7 @@ bool LevinProtocol::readCommand(Command& cmd) {
 }
 
 void LevinProtocol::sendReply(uint32_t command, const BinaryArray& out, int32_t returnCode) {
-  bucket_head2 head = { 0 };
+  bucket_head2 head = {0};
   head.m_signature = LEVIN_SIGNATURE;
   head.m_cb = out.size();
   head.m_have_to_return_data = false;

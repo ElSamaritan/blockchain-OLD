@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -42,4 +42,4 @@ void serializeGlobalOutputIndex(ISerializer& s, uint32_t& globalOutputIndex, Com
   serializeBlockHeight(s, globalOutputIndex, name);
 }
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

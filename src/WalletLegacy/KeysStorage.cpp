@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -38,4 +38,4 @@ void KeysStorage::serialize(ISerializer& serializer, const std::string& name) {
   serializer.endObject();
 }
 
-}
+}  // namespace CryptoNote

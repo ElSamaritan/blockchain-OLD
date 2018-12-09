@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,18 +23,21 @@
 
 namespace System {
 
-template<typename ResultType = void>
+template <typename ResultType = void>
 class Context {
-public:
-  Context(Dispatcher& dispatcher, std::function<ResultType()>&& target) : 
-    dispatcher(dispatcher), target(std::move(target)), ready(dispatcher), bindingContext(dispatcher.getReusableContext()) {
+ public:
+  Context(Dispatcher& dispatcher, std::function<ResultType()>&& target)
+      : dispatcher(dispatcher),
+        target(std::move(target)),
+        ready(dispatcher),
+        bindingContext(dispatcher.getReusableContext()) {
     bindingContext.interrupted = false;
     bindingContext.groupNext = nullptr;
     bindingContext.groupPrev = nullptr;
     bindingContext.group = nullptr;
     bindingContext.procedure = [this] {
       try {
-        new(resultStorage) ResultType(this->target());
+        new (resultStorage) ResultType(this->target());
       } catch (...) {
         exceptionPointer = std::current_exception();
       }
@@ -45,7 +48,7 @@ public:
     dispatcher.pushContext(&bindingContext);
   }
 
-  Context(const Context&) = delete;  
+  Context(const Context&) = delete;
   Context& operator=(const Context&) = delete;
 
   ~Context() {
@@ -63,9 +66,7 @@ public:
     return *reinterpret_cast<ResultType*>(resultStorage);
   }
 
-  void interrupt() {
-    dispatcher.interrupt(&bindingContext);
-  }
+  void interrupt() { dispatcher.interrupt(&bindingContext); }
 
   void wait() {
     for (;;) {
@@ -78,7 +79,7 @@ public:
     }
   }
 
-private:
+ private:
   uint8_t resultStorage[sizeof(ResultType)];
   Dispatcher& dispatcher;
   std::function<ResultType()> target;
@@ -87,11 +88,14 @@ private:
   std::exception_ptr exceptionPointer;
 };
 
-template<>
+template <>
 class Context<void> {
-public:
-  Context(Dispatcher& dispatcher, std::function<void()>&& target) :
-    dispatcher(dispatcher), target(std::move(target)), ready(dispatcher), bindingContext(dispatcher.getReusableContext()) {
+ public:
+  Context(Dispatcher& dispatcher, std::function<void()>&& target)
+      : dispatcher(dispatcher),
+        target(std::move(target)),
+        ready(dispatcher),
+        bindingContext(dispatcher.getReusableContext()) {
     bindingContext.interrupted = false;
     bindingContext.groupNext = nullptr;
     bindingContext.groupPrev = nullptr;
@@ -125,9 +129,7 @@ public:
     }
   }
 
-  void interrupt() {
-    dispatcher.interrupt(&bindingContext);
-  }
+  void interrupt() { dispatcher.interrupt(&bindingContext); }
 
   void wait() {
     for (;;) {
@@ -140,7 +142,7 @@ public:
     }
   }
 
-private:
+ private:
   Dispatcher& dispatcher;
   std::function<void()> target;
   Event ready;
@@ -148,4 +150,4 @@ private:
   std::exception_ptr exceptionPointer;
 };
 
-}
+}  // namespace System

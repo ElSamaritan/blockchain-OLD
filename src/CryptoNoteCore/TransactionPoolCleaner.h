@@ -1,6 +1,6 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The TurtleCoin Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 #pragma once
@@ -21,13 +21,11 @@
 
 namespace CryptoNote {
 
-class TransactionPoolCleanWrapper: public ITransactionPoolCleanWrapper {
-public:
-  TransactionPoolCleanWrapper(
-    std::unique_ptr<ITransactionPool>&& transactionPool,
-    std::unique_ptr<ITimeProvider>&& timeProvider,
-    Logging::ILogger& logger,
-    uint64_t timeout);
+class TransactionPoolCleanWrapper : public ITransactionPoolCleanWrapper {
+ public:
+  TransactionPoolCleanWrapper(std::unique_ptr<ITransactionPool>&& transactionPool,
+                              std::unique_ptr<ITimeProvider>&& timeProvider, Logging::ILogger& logger,
+                              uint64_t timeout);
 
   TransactionPoolCleanWrapper(const TransactionPoolCleanWrapper&) = delete;
   TransactionPoolCleanWrapper(TransactionPoolCleanWrapper&& other) = delete;
@@ -53,7 +51,7 @@ public:
 
   virtual std::vector<Crypto::Hash> clean(const uint32_t height) override;
 
-private:
+ private:
   std::unique_ptr<ITransactionPool> transactionPool;
   std::unique_ptr<ITimeProvider> timeProvider;
   Logging::LoggerRef logger;
@@ -64,4 +62,4 @@ private:
   void cleanRecentlyDeletedTransactions(uint64_t currentTime);
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

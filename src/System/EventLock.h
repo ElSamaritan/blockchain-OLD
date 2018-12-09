@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,13 +22,13 @@ namespace System {
 class Event;
 
 class EventLock {
-public:
+ public:
   explicit EventLock(Event& event);
   ~EventLock();
   EventLock& operator=(const EventLock&) = delete;
 
-private:
+ private:
   Event& event;
 };
 
-}
+}  // namespace System

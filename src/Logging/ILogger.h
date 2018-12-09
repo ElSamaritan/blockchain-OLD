@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -25,14 +25,7 @@
 
 namespace Logging {
 
-enum Level {
-  FATAL = 0,
-  ERROR = 1,
-  WARNING = 2,
-  INFO = 3,
-  DEBUGGING = 4,
-  TRACE = 5
-};
+enum Level { FATAL = 0, ERROR = 1, WARNING = 2, INFO = 3, DEBUGGING = 4, TRACE = 5 };
 
 extern const std::string BLUE;
 extern const std::string GREEN;
@@ -51,16 +44,18 @@ extern const std::string BRIGHT_MAGENTA;
 extern const std::string DEFAULT;
 
 class ILogger {
-public:
+ public:
   const static char COLOR_DELIMETER;
-
   const static std::array<std::string, 6> LEVEL_NAMES;
 
-  virtual void operator()(const std::string& category, Level level, boost::posix_time::ptime time, const std::string& body) = 0;
+  virtual ~ILogger() = default;
+
+  virtual void operator()(const std::string& category, Level level, boost::posix_time::ptime time,
+                          const std::string& body) = 0;
 };
 
 #ifndef ENDL
 #define ENDL std::endl
 #endif
 
-}
+}  // namespace Logging

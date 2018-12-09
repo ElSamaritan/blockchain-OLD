@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -50,18 +50,18 @@ struct NativeContextGroup {
 };
 
 struct OperationContext {
-  NativeContext *context;
+  NativeContext* context;
   bool interrupted;
   uint32_t events;
 };
 
 struct ContextPair {
-  OperationContext *readContext;
-  OperationContext *writeContext;
+  OperationContext* readContext;
+  OperationContext* writeContext;
 };
 
 class Dispatcher {
-public:
+ public:
   Dispatcher();
   Dispatcher(const Dispatcher&) = delete;
   ~Dispatcher();
@@ -84,18 +84,18 @@ public:
   void pushTimer(int timer);
 
 #ifdef __x86_64__
-    # if __WORDSIZE == 64
-    static const int SIZEOF_PTHREAD_MUTEX_T = 40;
-    # else
-    static const int SIZEOF_PTHREAD_MUTEX_T = 32;
-    # endif
-#elif __aarch64__
-static const int SIZEOF_PTHREAD_MUTEX_T = 48;
+#if __WORDSIZE == 64
+  static const int SIZEOF_PTHREAD_MUTEX_T = 40;
 #else
-static const int SIZEOF_PTHREAD_MUTEX_T = 24;
+  static const int SIZEOF_PTHREAD_MUTEX_T = 32;
+#endif
+#elif __aarch64__
+  static const int SIZEOF_PTHREAD_MUTEX_T = 48;
+#else
+  static const int SIZEOF_PTHREAD_MUTEX_T = 24;
 #endif
 
-private:
+ private:
   void spawn(std::function<void()>&& procedure);
   int epoll;
   alignas(void*) uint8_t mutex[SIZEOF_PTHREAD_MUTEX_T];
@@ -116,4 +116,4 @@ private:
   static void contextProcedureStatic(void* context);
 };
 
-}
+}  // namespace System

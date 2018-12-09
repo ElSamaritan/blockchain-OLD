@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,13 +23,13 @@
 namespace Common {
 
 class StringInputStream : public IInputStream {
-public:
+ public:
   StringInputStream(const std::string& in);
   size_t readSome(void* data, size_t size) override;
 
-private:
+ private:
   const std::string& in;
   size_t offset;
 };
 
-}
+}  // namespace Common

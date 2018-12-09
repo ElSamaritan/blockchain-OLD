@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -21,15 +21,13 @@
 
 namespace CryptoNote {
 
-  struct ITimeProvider {
-    virtual time_t now() = 0;
-    virtual ~ITimeProvider() {}
-  };
+struct ITimeProvider {
+  virtual time_t now() = 0;
+  virtual ~ITimeProvider() {}
+};
 
-  struct RealTimeProvider : public ITimeProvider {
-    virtual time_t now() override {
-      return time(nullptr);
-    }
-  };
+struct RealTimeProvider : public ITimeProvider {
+  virtual time_t now() override { return time(nullptr); }
+};
 
-}
+}  // namespace CryptoNote

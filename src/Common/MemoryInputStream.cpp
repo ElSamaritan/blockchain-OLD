@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -18,20 +18,16 @@
 #include "MemoryInputStream.h"
 #include <algorithm>
 #include <cassert>
-#include <cstring> // memcpy
+#include <cstring>  // memcpy
 
 namespace Common {
 
-MemoryInputStream::MemoryInputStream(const void* buffer, size_t bufferSize) : 
-buffer(static_cast<const char*>(buffer)), bufferSize(bufferSize), position(0) {}
+MemoryInputStream::MemoryInputStream(const void* buffer, size_t bufferSize)
+    : buffer(static_cast<const char*>(buffer)), bufferSize(bufferSize), position(0) {}
 
-size_t MemoryInputStream::getPosition() const {
-  return position;
-}
+size_t MemoryInputStream::getPosition() const { return position; }
 
-bool MemoryInputStream::endOfStream() const {
-  return position == bufferSize;
-}
+bool MemoryInputStream::endOfStream() const { return position == bufferSize; }
 
 size_t MemoryInputStream::readSome(void* data, size_t size) {
   assert(position <= bufferSize);
@@ -41,8 +37,8 @@ size_t MemoryInputStream::readSome(void* data, size_t size) {
     memcpy(data, buffer + position, readSize);
     position += readSize;
   }
-  
+
   return readSize;
 }
 
-}
+}  // namespace Common

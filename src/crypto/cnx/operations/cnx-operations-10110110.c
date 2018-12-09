@@ -1,7 +1,7 @@
-#include "crypto/cnx/operations/cnx-operations.h"
+﻿#include "crypto/cnx/operations/cnx-operations.h"
 
 void CN_ADAPTIVE_OPERATIONS_10110110(uint8_t* inPlaceOperand, const int8_t* appliedOperand, uint8_t op) {
-  switch(op) {
+  switch (op) {
     case 126:
       break;
 
@@ -2564,6 +2564,6 @@ void CN_ADAPTIVE_OPERATIONS_10110110(uint8_t* inPlaceOperand, const int8_t* appl
       break;
 
     default:
-        break;
+      break;
   }
 }

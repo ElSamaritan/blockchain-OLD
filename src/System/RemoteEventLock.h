@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,13 +23,13 @@ class Dispatcher;
 class Event;
 
 class RemoteEventLock {
-public:
+ public:
   RemoteEventLock(Dispatcher& dispatcher, Event& event);
   ~RemoteEventLock();
 
-private:
+ private:
   Dispatcher& dispatcher;
   Event& event;
 };
 
-}
+}  // namespace System

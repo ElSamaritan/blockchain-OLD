@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,7 +23,7 @@
 namespace System {
 
 class Ipv4Address {
-public:
+ public:
   explicit Ipv4Address(uint32_t value);
   explicit Ipv4Address(const std::string& dottedDecimal);
   bool operator!=(const Ipv4Address& other) const;
@@ -33,8 +33,8 @@ public:
   bool isPrivate() const;
   std::string toDottedDecimal() const;
 
-private:
+ private:
   uint32_t value;
 };
 
-}
+}  // namespace System

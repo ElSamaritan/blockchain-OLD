@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -27,20 +27,20 @@
 namespace CryptoNote {
 class AccountBase;
 class ISerializer;
-}
+}  // namespace CryptoNote
 
 namespace CryptoNote {
 
 class WalletUserTransactionsCache;
 
 class WalletLegacySerializer {
-public:
+ public:
   WalletLegacySerializer(CryptoNote::AccountBase& account, WalletUserTransactionsCache& transactionsCache);
 
   void serialize(std::ostream& stream, const std::string& password, bool saveDetailed, const std::string& cache);
   void deserialize(std::istream& stream, const std::string& password, std::string& cache);
 
-private:
+ private:
   void saveKeys(CryptoNote::ISerializer& serializer);
   void loadKeys(CryptoNote::ISerializer& serializer);
 
@@ -52,4 +52,4 @@ private:
   const uint32_t walletSerializationVersion;
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,7 +22,7 @@
 namespace System {
 
 class ContextGroup {
-public:
+ public:
   explicit ContextGroup(Dispatcher& dispatcher);
   ContextGroup(const ContextGroup&) = delete;
   ContextGroup(ContextGroup&& other);
@@ -33,9 +33,9 @@ public:
   void spawn(std::function<void()>&& procedure);
   void wait();
 
-private:
+ private:
   Dispatcher* dispatcher;
   NativeContextGroup contextGroup;
 };
 
-}
+}  // namespace System

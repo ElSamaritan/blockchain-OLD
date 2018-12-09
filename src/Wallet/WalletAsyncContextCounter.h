@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,21 +23,20 @@
 
 namespace CryptoNote {
 
-class WalletAsyncContextCounter
-{
-public:
+class WalletAsyncContextCounter {
+ public:
   WalletAsyncContextCounter() : m_asyncContexts(0) {}
 
   void addAsyncContext();
   void delAsyncContext();
 
-  //returns true if contexts are finished before timeout
+  // returns true if contexts are finished before timeout
   void waitAsyncContextsFinish();
 
-private:
+ private:
   uint32_t m_asyncContexts;
   std::condition_variable m_cv;
   std::mutex m_mutex;
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

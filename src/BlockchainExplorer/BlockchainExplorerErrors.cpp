@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,6 +22,5 @@ namespace error {
 
 BlockchainExplorerErrorCategory BlockchainExplorerErrorCategory::INSTANCE;
 
-} //namespace error
-} //namespace CryptoNote
-
+}  // namespace error
+}  // namespace CryptoNote

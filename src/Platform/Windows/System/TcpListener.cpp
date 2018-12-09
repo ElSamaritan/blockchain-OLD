@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -20,8 +20,11 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <winsock2.h>
-#include <mswsock.h>
+#include <WinSock2.h>
+#include <MSWSock.h>
+
+#include <Xi/Global.h>
+
 #include <System/InterruptedException.h>
 #include <System/Ipv4Address.h>
 #include "Dispatcher.h"
@@ -39,10 +42,9 @@ struct TcpListenerContext : public OVERLAPPED {
 
 LPFN_ACCEPTEX acceptEx = nullptr;
 
-}
+}  // namespace
 
-TcpListener::TcpListener() : dispatcher(nullptr) {
-}
+TcpListener::TcpListener() : dispatcher(nullptr) {}
 
 TcpListener::TcpListener(Dispatcher& dispatcher, const Ipv4Address& address, uint16_t port) : dispatcher(&dispatcher) {
   std::string message;
@@ -61,11 +63,13 @@ TcpListener::TcpListener(Dispatcher& dispatcher, const Ipv4Address& address, uin
     } else {
       GUID guidAcceptEx = WSAID_ACCEPTEX;
       DWORD read = sizeof acceptEx;
-      if (acceptEx == nullptr && WSAIoctl(listener, SIO_GET_EXTENSION_FUNCTION_POINTER, &guidAcceptEx, sizeof guidAcceptEx, &acceptEx, sizeof acceptEx, &read, NULL, NULL) != 0) {
+      if (acceptEx == nullptr && WSAIoctl(listener, SIO_GET_EXTENSION_FUNCTION_POINTER, &guidAcceptEx,
+                                          sizeof guidAcceptEx, &acceptEx, sizeof acceptEx, &read, NULL, NULL) != 0) {
         message = "WSAIoctl failed, " + errorMessage(WSAGetLastError());
       } else {
         assert(read == sizeof acceptEx);
-        if (CreateIoCompletionPort(reinterpret_cast<HANDLE>(listener), dispatcher.getCompletionPort(), 0, 0) != dispatcher.getCompletionPort()) {
+        if (CreateIoCompletionPort(reinterpret_cast<HANDLE>(listener), dispatcher.getCompletionPort(), 0, 0) !=
+            dispatcher.getCompletionPort()) {
           message = "CreateIoCompletionPort failed, " + lastErrorMessage();
         } else {
           context = nullptr;
@@ -76,6 +80,7 @@ TcpListener::TcpListener(Dispatcher& dispatcher, const Ipv4Address& address, uin
 
     int result = closesocket(listener);
     assert(result == 0);
+    (void)result;
   }
 
   throw std::runtime_error("TcpListener::TcpListener, " + message);
@@ -95,6 +100,7 @@ TcpListener::~TcpListener() {
     assert(context == nullptr);
     int result = closesocket(listener);
     assert(result == 0);
+    (void)result;
   }
 }
 
@@ -133,7 +139,8 @@ TcpConnection TcpListener::accept() {
     DWORD received;
     TcpListenerContext context2;
     context2.hEvent = NULL;
-    if (acceptEx(listener, connection, addresses, 0, sizeof(sockaddr_in) + 16, sizeof(sockaddr_in) + 16, &received, &context2) == TRUE) {
+    if (acceptEx(listener, connection, addresses, 0, sizeof(sockaddr_in) + 16, sizeof(sockaddr_in) + 16, &received,
+                 &context2) == TRUE) {
       message = "AcceptEx returned immediately, which is not supported.";
     } else {
       int lastError = WSAGetLastError();
@@ -185,18 +192,19 @@ TcpConnection TcpListener::accept() {
           if (context2.interrupted) {
             if (closesocket(connection) != 0) {
               throw std::runtime_error("TcpConnector::connect, closesocket failed, " + errorMessage(WSAGetLastError()));
-            }
-            else {
+            } else {
               throw InterruptedException();
             }
           }
 
           assert(transferred == 0);
           assert(flags == 0);
-          if (setsockopt(connection, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT, reinterpret_cast<char*>(&listener), sizeof listener) != 0) {
+          if (setsockopt(connection, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT, reinterpret_cast<char*>(&listener),
+                         sizeof listener) != 0) {
             message = "setsockopt failed, " + errorMessage(WSAGetLastError());
           } else {
-            if (CreateIoCompletionPort(reinterpret_cast<HANDLE>(connection), dispatcher->getCompletionPort(), 0, 0) != dispatcher->getCompletionPort()) {
+            if (CreateIoCompletionPort(reinterpret_cast<HANDLE>(connection), dispatcher->getCompletionPort(), 0, 0) !=
+                dispatcher->getCompletionPort()) {
               message = "CreateIoCompletionPort failed, " + lastErrorMessage();
             } else {
               return TcpConnection(*dispatcher, connection);
@@ -208,9 +216,10 @@ TcpConnection TcpListener::accept() {
 
     int result = closesocket(connection);
     assert(result == 0);
+    (void)result;
   }
 
   throw std::runtime_error("TcpListener::accept, " + message);
 }
 
-}
+}  // namespace System

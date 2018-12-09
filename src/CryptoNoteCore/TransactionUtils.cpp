@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -32,8 +32,7 @@ bool checkInputsKeyimagesDiff(const CryptoNote::TransactionPrefix& tx) {
   std::unordered_set<Crypto::KeyImage> ki;
   for (const auto& in : tx.inputs) {
     if (in.type() == typeid(KeyInput)) {
-      if (!ki.insert(boost::get<KeyInput>(in).keyImage).second)
-        return false;
+      if (!ki.insert(boost::get<KeyInput>(in).keyImage).second) return false;
     }
   }
 
@@ -78,7 +77,8 @@ const TransactionInput& getInputChecked(const CryptoNote::TransactionPrefix& tra
   return transaction.inputs[index];
 }
 
-const TransactionInput& getInputChecked(const CryptoNote::TransactionPrefix& transaction, size_t index, TransactionTypes::InputType type) {
+const TransactionInput& getInputChecked(const CryptoNote::TransactionPrefix& transaction, size_t index,
+                                        TransactionTypes::InputType type) {
   const auto& input = getInputChecked(transaction, index);
   if (getTransactionInputType(input) != type) {
     throw std::runtime_error("Unexpected transaction input type");
@@ -105,7 +105,8 @@ const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& t
   return transaction.outputs[index];
 }
 
-const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& transaction, size_t index, TransactionTypes::OutputType type) {
+const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& transaction, size_t index,
+                                          TransactionTypes::OutputType type) {
   const auto& output = getOutputChecked(transaction, index);
   if (getTransactionOutputType(output.target) != type) {
     throw std::runtime_error("Unexpected transaction output target type");
@@ -114,7 +115,8 @@ const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& t
   return output;
 }
 
-bool isOutToKey(const Crypto::PublicKey& spendPublicKey, const Crypto::PublicKey& outKey, const Crypto::KeyDerivation& derivation, size_t keyIndex) {
+bool isOutToKey(const Crypto::PublicKey& spendPublicKey, const Crypto::PublicKey& outKey,
+                const Crypto::KeyDerivation& derivation, size_t keyIndex) {
   Crypto::PublicKey pk;
   derive_public_key(derivation, keyIndex, spendPublicKey, pk);
   return pk == outKey;
@@ -153,4 +155,4 @@ bool findOutputsToAccount(const CryptoNote::TransactionPrefix& transaction, cons
   return true;
 }
 
-}
+}  // namespace CryptoNote

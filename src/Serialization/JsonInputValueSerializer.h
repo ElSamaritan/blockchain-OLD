@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,9 +22,9 @@
 
 namespace CryptoNote {
 
-//deserialization
+// deserialization
 class JsonInputValueSerializer : public ISerializer {
-public:
+ public:
   JsonInputValueSerializer(const Common::JsonValue& value);
   JsonInputValueSerializer(Common::JsonValue&& value);
   virtual ~JsonInputValueSerializer();
@@ -50,12 +50,12 @@ public:
   virtual bool binary(void* value, size_t size, Common::StringView name) override;
   virtual bool binary(std::string& value, Common::StringView name) override;
 
-  template<typename T>
+  template <typename T>
   bool operator()(T& value, Common::StringView name) {
     return ISerializer::operator()(value, name);
   }
 
-private:
+ private:
   Common::JsonValue value;
   std::vector<const Common::JsonValue*> chain;
   std::vector<size_t> idxs;
@@ -75,4 +75,4 @@ private:
   }
 };
 
-}
+}  // namespace CryptoNote

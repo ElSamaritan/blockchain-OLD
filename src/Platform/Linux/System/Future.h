@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,12 +23,14 @@ namespace System {
 
 namespace Detail {
 
-template<class T> using Future = std::future<T>;
+template <class T>
+using Future = std::future<T>;
 
-template<class T> Future<T> async(std::function<T()>&& operation) {
+template <class T>
+Future<T> async(std::function<T()>&& operation) {
   return std::async(std::launch::async, std::move(operation));
 }
 
-}
+}  // namespace Detail
 
-}
+}  // namespace System

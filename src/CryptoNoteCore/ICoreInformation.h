@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -21,7 +21,7 @@
 namespace CryptoNote {
 
 class ICoreInformation {
-public:
+ public:
   virtual ~ICoreInformation() {}
 
   virtual size_t getPoolTransactionCount() const = 0;
@@ -32,4 +32,4 @@ public:
   virtual std::vector<Transaction> getPoolTransactions() const = 0;
 };
 
-}
+}  // namespace CryptoNote

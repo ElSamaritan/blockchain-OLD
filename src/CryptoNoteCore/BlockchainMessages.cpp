@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -19,24 +19,19 @@
 
 namespace CryptoNote {
 
-BlockchainMessage::BlockchainMessage(const NewBlock& message) : type(Type::NewBlock), newBlock(std::move(message)) {
-}
+BlockchainMessage::BlockchainMessage(const NewBlock& message) : type(Type::NewBlock), newBlock(std::move(message)) {}
 
 BlockchainMessage::BlockchainMessage(const NewAlternativeBlock& message)
-    : type(Type::NewAlternativeBlock), newAlternativeBlock(message) {
-}
+    : type(Type::NewAlternativeBlock), newAlternativeBlock(message) {}
 
 BlockchainMessage::BlockchainMessage(const ChainSwitch& message)
-    : type(Type::ChainSwitch), chainSwitch(new ChainSwitch(message)) {
-}
+    : type(Type::ChainSwitch), chainSwitch(new ChainSwitch(message)) {}
 
 BlockchainMessage::BlockchainMessage(const AddTransaction& message)
-    : type(Type::AddTransaction), addTransaction(new AddTransaction(message)) {
-}
+    : type(Type::AddTransaction), addTransaction(new AddTransaction(message)) {}
 
 BlockchainMessage::BlockchainMessage(const DeleteTransaction& message)
-    : type(Type::DeleteTransaction), deleteTransaction(new DeleteTransaction(message)) {
-}
+    : type(Type::DeleteTransaction), deleteTransaction(new DeleteTransaction(message)) {}
 
 BlockchainMessage::BlockchainMessage(const BlockchainMessage& other) : type(other.type) {
   switch (type) {
@@ -78,21 +73,19 @@ BlockchainMessage::~BlockchainMessage() {
   }
 }
 
-BlockchainMessage::Type BlockchainMessage::getType() const {
-  return type;
-}
+BlockchainMessage::Type BlockchainMessage::getType() const { return type; }
 
-auto BlockchainMessage::getNewBlock() const -> const NewBlock & {
+auto BlockchainMessage::getNewBlock() const -> const NewBlock& {
   assert(getType() == Type::NewBlock);
   return newBlock;
 }
 
-auto BlockchainMessage::getNewAlternativeBlock() const -> const NewAlternativeBlock & {
+auto BlockchainMessage::getNewAlternativeBlock() const -> const NewAlternativeBlock& {
   assert(getType() == Type::NewAlternativeBlock);
   return newAlternativeBlock;
 }
 
-auto BlockchainMessage::getChainSwitch() const -> const ChainSwitch & {
+auto BlockchainMessage::getChainSwitch() const -> const ChainSwitch& {
   assert(getType() == Type::ChainSwitch);
   return *chainSwitch;
 }
@@ -141,4 +134,4 @@ void BlockchainMessage::match(std::function<void(const NewBlock&)> newBlockVisit
       break;
   }
 }
-}
+}  // namespace CryptoNote

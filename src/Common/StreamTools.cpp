@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -34,9 +34,7 @@ void read(IInputStream& in, void* data, size_t size) {
   }
 }
 
-void read(IInputStream& in, int8_t& value) {
-  read(in, &value, sizeof(value));
-}
+void read(IInputStream& in, int8_t& value) { read(in, &value, sizeof(value)); }
 
 void read(IInputStream& in, int16_t& value) {
   // TODO: Convert from little endian on big endian platforms
@@ -53,9 +51,7 @@ void read(IInputStream& in, int64_t& value) {
   read(in, &value, sizeof(value));
 }
 
-void read(IInputStream& in, uint8_t& value) {
-  read(in, &value, sizeof(value));
-}
+void read(IInputStream& in, uint8_t& value) { read(in, &value, sizeof(value)); }
 
 void read(IInputStream& in, uint16_t& value) {
   // TODO: Convert from little endian on big endian platforms
@@ -183,9 +179,7 @@ void write(IOutputStream& out, const void* data, size_t size) {
   }
 }
 
-void write(IOutputStream& out, int8_t value) {
-  write(out, &value, sizeof(value));
-}
+void write(IOutputStream& out, int8_t value) { write(out, &value, sizeof(value)); }
 
 void write(IOutputStream& out, int16_t value) {
   // TODO: Convert to little endian on big endian platforms
@@ -202,9 +196,7 @@ void write(IOutputStream& out, int64_t value) {
   write(out, &value, sizeof(value));
 }
 
-void write(IOutputStream& out, uint8_t value) {
-  write(out, &value, sizeof(value));
-}
+void write(IOutputStream& out, uint8_t value) { write(out, &value, sizeof(value)); }
 
 void write(IOutputStream& out, uint16_t value) {
   // TODO: Convert to little endian on big endian platforms
@@ -221,13 +213,9 @@ void write(IOutputStream& out, uint64_t value) {
   write(out, &value, sizeof(value));
 }
 
-void write(IOutputStream& out, const std::vector<uint8_t>& data) {
-  write(out, data.data(), data.size());
-}
+void write(IOutputStream& out, const std::vector<uint8_t>& data) { write(out, data.data(), data.size()); }
 
-void write(IOutputStream& out, const std::string& data) {
-  write(out, data.data(), data.size());
-}
+void write(IOutputStream& out, const std::string& data) { write(out, data.data(), data.size()); }
 
 void writeVarint(IOutputStream& out, uint32_t value) {
   while (value >= 0x80) {
@@ -247,4 +235,4 @@ void writeVarint(IOutputStream& out, uint64_t value) {
   write(out, static_cast<uint8_t>(value));
 }
 
-}
+}  // namespace Common

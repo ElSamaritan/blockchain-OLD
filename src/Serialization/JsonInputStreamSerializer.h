@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -25,11 +25,11 @@
 
 namespace CryptoNote {
 
-//deserialization
+// deserialization
 class JsonInputStreamSerializer : public JsonInputValueSerializer {
-public:
+ public:
   JsonInputStreamSerializer(std::istream& stream);
   virtual ~JsonInputStreamSerializer();
 };
 
-}
+}  // namespace CryptoNote

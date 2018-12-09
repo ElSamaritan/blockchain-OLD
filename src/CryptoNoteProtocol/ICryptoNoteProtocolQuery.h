@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -24,7 +24,7 @@ namespace CryptoNote {
 class ICryptoNoteProtocolObserver;
 
 class ICryptoNoteProtocolQuery {
-public:
+ public:
   virtual bool addObserver(ICryptoNoteProtocolObserver* observer) = 0;
   virtual bool removeObserver(ICryptoNoteProtocolObserver* observer) = 0;
 
@@ -34,4 +34,4 @@ public:
   virtual bool isSynchronized() const = 0;
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

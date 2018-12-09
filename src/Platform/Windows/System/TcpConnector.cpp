@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,6 +22,9 @@
 #endif
 #include <winsock2.h>
 #include <mswsock.h>
+
+#include <Xi/Global.h>
+
 #include <System/InterruptedException.h>
 #include <System/Ipv4Address.h>
 #include "Dispatcher.h"
@@ -40,13 +43,11 @@ struct TcpConnectorContext : public OVERLAPPED {
 
 LPFN_CONNECTEX connectEx = nullptr;
 
-}
+}  // namespace
 
-TcpConnector::TcpConnector() : dispatcher(nullptr) {
-}
+TcpConnector::TcpConnector() : dispatcher(nullptr) {}
 
-TcpConnector::TcpConnector(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {
-}
+TcpConnector::TcpConnector(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {}
 
 TcpConnector::TcpConnector(TcpConnector&& other) : dispatcher(other.dispatcher) {
   if (dispatcher != nullptr) {
@@ -56,9 +57,7 @@ TcpConnector::TcpConnector(TcpConnector&& other) : dispatcher(other.dispatcher) 
   }
 }
 
-TcpConnector::~TcpConnector() {
-  assert(dispatcher == nullptr || context == nullptr);
-}
+TcpConnector::~TcpConnector() { assert(dispatcher == nullptr || context == nullptr); }
 
 TcpConnector& TcpConnector::operator=(TcpConnector&& other) {
   assert(dispatcher == nullptr || context == nullptr);
@@ -93,11 +92,14 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
     } else {
       GUID guidConnectEx = WSAID_CONNECTEX;
       DWORD read = sizeof connectEx;
-      if (connectEx == nullptr && WSAIoctl(connection, SIO_GET_EXTENSION_FUNCTION_POINTER, &guidConnectEx, sizeof guidConnectEx, &connectEx, sizeof connectEx, &read, NULL, NULL) != 0) {
+      if (connectEx == nullptr &&
+          WSAIoctl(connection, SIO_GET_EXTENSION_FUNCTION_POINTER, &guidConnectEx, sizeof guidConnectEx, &connectEx,
+                   sizeof connectEx, &read, NULL, NULL) != 0) {
         message = "WSAIoctl failed, " + errorMessage(WSAGetLastError());
       } else {
         assert(read == sizeof connectEx);
-        if (CreateIoCompletionPort(reinterpret_cast<HANDLE>(connection), dispatcher->getCompletionPort(), 0, 0) != dispatcher->getCompletionPort()) {
+        if (CreateIoCompletionPort(reinterpret_cast<HANDLE>(connection), dispatcher->getCompletionPort(), 0, 0) !=
+            dispatcher->getCompletionPort()) {
           message = "CreateIoCompletionPort failed, " + lastErrorMessage();
         } else {
           sockaddr_in addressData;
@@ -106,7 +108,8 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
           addressData.sin_addr.S_un.S_addr = htonl(address.getValue());
           TcpConnectorContext context2;
           context2.hEvent = NULL;
-          if (connectEx(connection, reinterpret_cast<sockaddr*>(&addressData), sizeof addressData, NULL, 0, NULL, &context2) == TRUE) {
+          if (connectEx(connection, reinterpret_cast<sockaddr*>(&addressData), sizeof addressData, NULL, 0, NULL,
+                        &context2) == TRUE) {
             message = "ConnectEx returned immediately, which is not supported.";
           } else {
             int lastError = WSAGetLastError();
@@ -151,7 +154,8 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
                 } else {
                   assert(context2.interrupted);
                   if (closesocket(connection) != 0) {
-                    throw std::runtime_error("TcpConnector::connect, closesocket failed, " + errorMessage(WSAGetLastError()));
+                    throw std::runtime_error("TcpConnector::connect, closesocket failed, " +
+                                             errorMessage(WSAGetLastError()));
                   } else {
                     throw InterruptedException();
                   }
@@ -159,7 +163,8 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
               } else {
                 if (context2.interrupted) {
                   if (closesocket(connection) != 0) {
-                    throw std::runtime_error("TcpConnector::connect, closesocket failed, " + errorMessage(WSAGetLastError()));
+                    throw std::runtime_error("TcpConnector::connect, closesocket failed, " +
+                                             errorMessage(WSAGetLastError()));
                   } else {
                     throw InterruptedException();
                   }
@@ -168,7 +173,8 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
                 assert(transferred == 0);
                 assert(flags == 0);
                 DWORD value = 1;
-                if (setsockopt(connection, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, reinterpret_cast<char*>(&value), sizeof(value)) != 0) {
+                if (setsockopt(connection, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, reinterpret_cast<char*>(&value),
+                               sizeof(value)) != 0) {
                   message = "setsockopt failed, " + errorMessage(WSAGetLastError());
                 } else {
                   return TcpConnection(*dispatcher, connection);
@@ -182,9 +188,10 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
 
     int result = closesocket(connection);
     assert(result == 0);
+    (void)result;
   }
 
   throw std::runtime_error("TcpConnector::connect, " + message);
 }
 
-}
+}  // namespace System

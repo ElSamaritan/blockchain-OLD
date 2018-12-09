@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -19,12 +19,11 @@
 
 namespace Logging {
 
-FileLogger::FileLogger(Level level) : StreamLogger(level) {
-}
+FileLogger::FileLogger(Level level) : StreamLogger(level) {}
 
 void FileLogger::init(const std::string& fileName) {
   fileStream.open(fileName, std::ios::app);
   StreamLogger::attachToStream(fileStream);
 }
 
-}
+}  // namespace Logging

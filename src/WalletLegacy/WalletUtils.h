@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,13 +26,11 @@
 
 namespace CryptoNote {
 
-inline void throwIf(bool expr, CryptoNote::error::WalletErrorCodes ec)
-{
-  if (expr)
-    throw std::system_error(make_error_code(ec));
+inline void throwIf(bool expr, CryptoNote::error::WalletErrorCodes ec) {
+  if (expr) throw std::system_error(make_error_code(ec));
 }
 
-inline std::ostream& operator <<(std::ostream& ostr, const Crypto::Hash& hash) {
+inline std::ostream& operator<<(std::ostream& ostr, const Crypto::Hash& hash) {
   std::ios_base::fmtflags flags = ostr.setf(std::ios_base::hex, std::ios_base::basefield);
   char fill = ostr.fill('0');
 
@@ -45,4 +43,4 @@ inline std::ostream& operator <<(std::ostream& ostr, const Crypto::Hash& hash) {
   return ostr;
 }
 
-} //namespace CryptoNote
+}  // namespace CryptoNote

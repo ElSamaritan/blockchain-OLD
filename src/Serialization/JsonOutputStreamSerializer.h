@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -24,7 +24,7 @@
 namespace CryptoNote {
 
 class JsonOutputStreamSerializer : public ISerializer {
-public:
+ public:
   JsonOutputStreamSerializer();
   virtual ~JsonOutputStreamSerializer();
 
@@ -49,20 +49,18 @@ public:
   virtual bool binary(void* value, size_t size, Common::StringView name) override;
   virtual bool binary(std::string& value, Common::StringView name) override;
 
-  template<typename T>
+  template <typename T>
   bool operator()(T& value, Common::StringView name) {
     return ISerializer::operator()(value, name);
   }
 
-  const Common::JsonValue& getValue() const {
-    return root;
-  }
+  const Common::JsonValue& getValue() const { return root; }
 
   friend std::ostream& operator<<(std::ostream& out, const JsonOutputStreamSerializer& enumerator);
 
-private:
+ private:
   Common::JsonValue root;
   std::vector<Common::JsonValue*> chain;
 };
 
-}
+}  // namespace CryptoNote

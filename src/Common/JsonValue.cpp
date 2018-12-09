@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -21,31 +21,30 @@
 
 namespace Common {
 
-JsonValue::JsonValue() : type(NIL) {
-}
+JsonValue::JsonValue() : type(NIL) {}
 
 JsonValue::JsonValue(const JsonValue& other) {
   switch (other.type) {
-  case ARRAY:
-    new(valueArray)Array(*reinterpret_cast<const Array*>(other.valueArray));
-    break;
-  case BOOL:
-    valueBool = other.valueBool;
-    break;
-  case INTEGER:
-    valueInteger = other.valueInteger;
-    break;
-  case NIL:
-    break;
-  case OBJECT:
-    new(valueObject)Object(*reinterpret_cast<const Object*>(other.valueObject));
-    break;
-  case REAL:
-    valueReal = other.valueReal;
-    break;
-  case STRING:
-    new(valueString)String(*reinterpret_cast<const String*>(other.valueString));
-    break;
+    case ARRAY:
+      new (valueArray) Array(*reinterpret_cast<const Array*>(other.valueArray));
+      break;
+    case BOOL:
+      valueBool = other.valueBool;
+      break;
+    case INTEGER:
+      valueInteger = other.valueInteger;
+      break;
+    case NIL:
+      break;
+    case OBJECT:
+      new (valueObject) Object(*reinterpret_cast<const Object*>(other.valueObject));
+      break;
+    case REAL:
+      valueReal = other.valueReal;
+      break;
+    case STRING:
+      new (valueString) String(*reinterpret_cast<const String*>(other.valueString));
+      break;
   }
 
   type = other.type;
@@ -53,29 +52,29 @@ JsonValue::JsonValue(const JsonValue& other) {
 
 JsonValue::JsonValue(JsonValue&& other) {
   switch (other.type) {
-  case ARRAY:
-    new(valueArray)Array(std::move(*reinterpret_cast<Array*>(other.valueArray)));
-    reinterpret_cast<Array*>(other.valueArray)->~Array();
-    break;
-  case BOOL:
-    valueBool = other.valueBool;
-    break;
-  case INTEGER:
-    valueInteger = other.valueInteger;
-    break;
-  case NIL:
-    break;
-  case OBJECT:
-    new(valueObject)Object(std::move(*reinterpret_cast<Object*>(other.valueObject)));
-    reinterpret_cast<Object*>(other.valueObject)->~Object();
-    break;
-  case REAL:
-    valueReal = other.valueReal;
-    break;
-  case STRING:
-    new(valueString)String(std::move(*reinterpret_cast<String*>(other.valueString)));
-    reinterpret_cast<String*>(other.valueString)->~String();
-    break;
+    case ARRAY:
+      new (valueArray) Array(std::move(*reinterpret_cast<Array*>(other.valueArray)));
+      reinterpret_cast<Array*>(other.valueArray)->~Array();
+      break;
+    case BOOL:
+      valueBool = other.valueBool;
+      break;
+    case INTEGER:
+      valueInteger = other.valueInteger;
+      break;
+    case NIL:
+      break;
+    case OBJECT:
+      new (valueObject) Object(std::move(*reinterpret_cast<Object*>(other.valueObject)));
+      reinterpret_cast<Object*>(other.valueObject)->~Object();
+      break;
+    case REAL:
+      valueReal = other.valueReal;
+      break;
+    case STRING:
+      new (valueString) String(std::move(*reinterpret_cast<String*>(other.valueString)));
+      reinterpret_cast<String*>(other.valueString)->~String();
+      break;
   }
 
   type = other.type;
@@ -84,122 +83,116 @@ JsonValue::JsonValue(JsonValue&& other) {
 
 JsonValue::JsonValue(Type valueType) {
   switch (valueType) {
-  case ARRAY:
-    new(valueArray)Array;
-    break;
-  case NIL:
-    break;
-  case OBJECT:
-    new(valueObject)Object;
-    break;
-  case STRING:
-    new(valueString)String;
-    break;
-  default:
-    throw std::runtime_error("Invalid JsonValue type for constructor");
+    case ARRAY:
+      new (valueArray) Array;
+      break;
+    case NIL:
+      break;
+    case OBJECT:
+      new (valueObject) Object;
+      break;
+    case STRING:
+      new (valueString) String;
+      break;
+    default:
+      throw std::runtime_error("Invalid JsonValue type for constructor");
   }
 
   type = valueType;
 }
 
 JsonValue::JsonValue(const Array& value) {
-  new(valueArray)Array(value);
+  new (valueArray) Array(value);
   type = ARRAY;
 }
 
 JsonValue::JsonValue(Array&& value) {
-  new(valueArray)Array(std::move(value));
+  new (valueArray) Array(std::move(value));
   type = ARRAY;
 }
 
-JsonValue::JsonValue(Bool value) : type(BOOL), valueBool(value) {
-}
+JsonValue::JsonValue(Bool value) : type(BOOL), valueBool(value) {}
 
-JsonValue::JsonValue(Integer value) : type(INTEGER), valueInteger(value) {
-}
+JsonValue::JsonValue(Integer value) : type(INTEGER), valueInteger(value) {}
 
-JsonValue::JsonValue(Nil) : type(NIL) {
-}
+JsonValue::JsonValue(Nil) : type(NIL) {}
 
 JsonValue::JsonValue(const Object& value) {
-  new(valueObject)Object(value);
+  new (valueObject) Object(value);
   type = OBJECT;
 }
 
 JsonValue::JsonValue(Object&& value) {
-  new(valueObject)Object(std::move(value));
+  new (valueObject) Object(std::move(value));
   type = OBJECT;
 }
 
-JsonValue::JsonValue(Real value) : type(REAL), valueReal(value) {
-}
+JsonValue::JsonValue(Real value) : type(REAL), valueReal(value) {}
 
 JsonValue::JsonValue(const String& value) {
-  new(valueString)String(value);
+  new (valueString) String(value);
   type = STRING;
 }
 
 JsonValue::JsonValue(String&& value) {
-  new(valueString)String(std::move(value));
+  new (valueString) String(std::move(value));
   type = STRING;
 }
 
-JsonValue::~JsonValue() {
-  destructValue();
-}
+JsonValue::~JsonValue() { destructValue(); }
 
 JsonValue& JsonValue::operator=(const JsonValue& other) {
   if (type != other.type) {
     destructValue();
     switch (other.type) {
-    case ARRAY:
-      type = NIL;
-      new(valueArray)Array(*reinterpret_cast<const Array*>(other.valueArray));
-      break;
-    case BOOL:
-      valueBool = other.valueBool;
-      break;
-    case INTEGER:
-      valueInteger = other.valueInteger;
-      break;
-    case NIL:
-      break;
-    case OBJECT:
-      type = NIL;
-      new(valueObject)Object(*reinterpret_cast<const Object*>(other.valueObject));
-      break;
-    case REAL:
-      valueReal = other.valueReal;
-      break;
-    case STRING:
-      type = NIL;
-      new(valueString)String(*reinterpret_cast<const String*>(other.valueString));
-      break;
+      case ARRAY:
+        type = NIL;
+        new (valueArray) Array(*reinterpret_cast<const Array*>(other.valueArray));
+        break;
+      case BOOL:
+        valueBool = other.valueBool;
+        break;
+      case INTEGER:
+        valueInteger = other.valueInteger;
+        break;
+      case NIL:
+        break;
+      case OBJECT:
+        type = NIL;
+        new (valueObject) Object(*reinterpret_cast<const Object*>(other.valueObject));
+        break;
+      case REAL:
+        valueReal = other.valueReal;
+        break;
+      case STRING:
+        type = NIL;
+        new (valueString) String(*reinterpret_cast<const String*>(other.valueString));
+        break;
     }
 
     type = other.type;
   } else {
     switch (type) {
-    case ARRAY:
-      *reinterpret_cast<Array*>(valueArray) = *reinterpret_cast<const Array*>(other.valueArray);
-      break;
-    case BOOL:
-      valueBool = other.valueBool;
-      break;
-    case INTEGER:
-      valueInteger = other.valueInteger;
-      break;
-    case NIL:
-      break;
-    case OBJECT:
-      *reinterpret_cast<Object*>(valueObject) = *reinterpret_cast<const Object*>(other.valueObject);
-      break;
-    case REAL:
-      valueReal = other.valueReal;
-      break;
-    case STRING:
-      *reinterpret_cast<String*>(valueString) = *reinterpret_cast<const String*>(other.valueString);
-      break;
+      case ARRAY:
+        *reinterpret_cast<Array*>(valueArray) = *reinterpret_cast<const Array*>(other.valueArray);
+        break;
+      case BOOL:
+        valueBool = other.valueBool;
+        break;
+      case INTEGER:
+        valueInteger = other.valueInteger;
+        break;
+      case NIL:
+        break;
+      case OBJECT:
+        *reinterpret_cast<Object*>(valueObject) = *reinterpret_cast<const Object*>(other.valueObject);
+        break;
+      case REAL:
+        valueReal = other.valueReal;
+        break;
+      case STRING:
+        *reinterpret_cast<String*>(valueString) = *reinterpret_cast<const String*>(other.valueString);
+        break;
     }
   }
 
@@ -210,60 +203,60 @@ JsonValue& JsonValue::operator=(JsonValue&& other) {
   if (type != other.type) {
     destructValue();
     switch (other.type) {
-    case ARRAY:
-      type = NIL;
-      new(valueArray)Array(std::move(*reinterpret_cast<const Array*>(other.valueArray)));
-      reinterpret_cast<Array*>(other.valueArray)->~Array();
-      break;
-    case BOOL:
-      valueBool = other.valueBool;
-      break;
-    case INTEGER:
-      valueInteger = other.valueInteger;
-      break;
-    case NIL:
-      break;
-    case OBJECT:
-      type = NIL;
-      new(valueObject)Object(std::move(*reinterpret_cast<const Object*>(other.valueObject)));
-      reinterpret_cast<Object*>(other.valueObject)->~Object();
-      break;
-    case REAL:
-      valueReal = other.valueReal;
-      break;
-    case STRING:
-      type = NIL;
-      new(valueString)String(std::move(*reinterpret_cast<const String*>(other.valueString)));
-      reinterpret_cast<String*>(other.valueString)->~String();
-      break;
+      case ARRAY:
+        type = NIL;
+        new (valueArray) Array(std::move(*reinterpret_cast<const Array*>(other.valueArray)));
+        reinterpret_cast<Array*>(other.valueArray)->~Array();
+        break;
+      case BOOL:
+        valueBool = other.valueBool;
+        break;
+      case INTEGER:
+        valueInteger = other.valueInteger;
+        break;
+      case NIL:
+        break;
+      case OBJECT:
+        type = NIL;
+        new (valueObject) Object(std::move(*reinterpret_cast<const Object*>(other.valueObject)));
+        reinterpret_cast<Object*>(other.valueObject)->~Object();
+        break;
+      case REAL:
+        valueReal = other.valueReal;
+        break;
+      case STRING:
+        type = NIL;
+        new (valueString) String(std::move(*reinterpret_cast<const String*>(other.valueString)));
+        reinterpret_cast<String*>(other.valueString)->~String();
+        break;
     }
 
     type = other.type;
   } else {
     switch (type) {
-    case ARRAY:
-      *reinterpret_cast<Array*>(valueArray) = std::move(*reinterpret_cast<const Array*>(other.valueArray));
-      reinterpret_cast<Array*>(other.valueArray)->~Array();
-      break;
-    case BOOL:
-      valueBool = other.valueBool;
-      break;
-    case INTEGER:
-      valueInteger = other.valueInteger;
-      break;
-    case NIL:
-      break;
-    case OBJECT:
-      *reinterpret_cast<Object*>(valueObject) = std::move(*reinterpret_cast<const Object*>(other.valueObject));
-      reinterpret_cast<Object*>(other.valueObject)->~Object();
-      break;
-    case REAL:
-      valueReal = other.valueReal;
-      break;
-    case STRING:
-      *reinterpret_cast<String*>(valueString) = std::move(*reinterpret_cast<const String*>(other.valueString));
-      reinterpret_cast<String*>(other.valueString)->~String();
-      break;
+      case ARRAY:
+        *reinterpret_cast<Array*>(valueArray) = std::move(*reinterpret_cast<const Array*>(other.valueArray));
+        reinterpret_cast<Array*>(other.valueArray)->~Array();
+        break;
+      case BOOL:
+        valueBool = other.valueBool;
+        break;
+      case INTEGER:
+        valueInteger = other.valueInteger;
+        break;
+      case NIL:
+        break;
+      case OBJECT:
+        *reinterpret_cast<Object*>(valueObject) = std::move(*reinterpret_cast<const Object*>(other.valueObject));
+        reinterpret_cast<Object*>(other.valueObject)->~Object();
+        break;
+      case REAL:
+        valueReal = other.valueReal;
+        break;
+      case STRING:
+        *reinterpret_cast<String*>(valueString) = std::move(*reinterpret_cast<const String*>(other.valueString));
+        reinterpret_cast<String*>(other.valueString)->~String();
+        break;
     }
   }
 
@@ -275,7 +268,7 @@ JsonValue& JsonValue::operator=(const Array& value) {
   if (type != ARRAY) {
     destructValue();
     type = NIL;
-    new(valueArray)Array(value);
+    new (valueArray) Array(value);
     type = ARRAY;
   } else {
     *reinterpret_cast<Array*>(valueArray) = value;
@@ -288,7 +281,7 @@ JsonValue& JsonValue::operator=(Array&& value) {
   if (type != ARRAY) {
     destructValue();
     type = NIL;
-    new(valueArray)Array(std::move(value));
+    new (valueArray) Array(std::move(value));
     type = ARRAY;
   } else {
     *reinterpret_cast<Array*>(valueArray) = std::move(value);
@@ -297,7 +290,7 @@ JsonValue& JsonValue::operator=(Array&& value) {
   return *this;
 }
 
-//JsonValue& JsonValue::operator=(Bool value) {
+// JsonValue& JsonValue::operator=(Bool value) {
 //  if (type != BOOL) {
 //    destructValue();
 //    type = BOOL;
@@ -330,7 +323,7 @@ JsonValue& JsonValue::operator=(const Object& value) {
   if (type != OBJECT) {
     destructValue();
     type = NIL;
-    new(valueObject)Object(value);
+    new (valueObject) Object(value);
     type = OBJECT;
   } else {
     *reinterpret_cast<Object*>(valueObject) = value;
@@ -343,7 +336,7 @@ JsonValue& JsonValue::operator=(Object&& value) {
   if (type != OBJECT) {
     destructValue();
     type = NIL;
-    new(valueObject)Object(std::move(value));
+    new (valueObject) Object(std::move(value));
     type = OBJECT;
   } else {
     *reinterpret_cast<Object*>(valueObject) = std::move(value);
@@ -366,7 +359,7 @@ JsonValue& JsonValue::operator=(const String& value) {
   if (type != STRING) {
     destructValue();
     type = NIL;
-    new(valueString)String(value);
+    new (valueString) String(value);
     type = STRING;
   } else {
     *reinterpret_cast<String*>(valueString) = value;
@@ -379,7 +372,7 @@ JsonValue& JsonValue::operator=(String&& value) {
   if (type != STRING) {
     destructValue();
     type = NIL;
-    new(valueString)String(std::move(value));
+    new (valueString) String(std::move(value));
     type = STRING;
   } else {
     *reinterpret_cast<String*>(valueString) = std::move(value);
@@ -388,37 +381,21 @@ JsonValue& JsonValue::operator=(String&& value) {
   return *this;
 }
 
-bool JsonValue::isArray() const {
-  return type == ARRAY;
-}
+bool JsonValue::isArray() const { return type == ARRAY; }
 
-bool JsonValue::isBool() const {
-  return type == BOOL;
-}
+bool JsonValue::isBool() const { return type == BOOL; }
 
-bool JsonValue::isInteger() const {
-  return type == INTEGER;
-}
+bool JsonValue::isInteger() const { return type == INTEGER; }
 
-bool JsonValue::isNil() const {
-  return type == NIL;
-}
+bool JsonValue::isNil() const { return type == NIL; }
 
-bool JsonValue::isObject() const {
-  return type == OBJECT;
-}
+bool JsonValue::isObject() const { return type == OBJECT; }
 
-bool JsonValue::isReal() const {
-  return type == REAL;
-}
+bool JsonValue::isReal() const { return type == REAL; }
 
-bool JsonValue::isString() const {
-  return type == STRING;
-}
+bool JsonValue::isString() const { return type == STRING; }
 
-JsonValue::Type JsonValue::getType() const {
-  return type;
-}
+JsonValue::Type JsonValue::getType() const { return type; }
 
 JsonValue::Array& JsonValue::getArray() {
   if (type != ARRAY) {
@@ -494,12 +471,12 @@ const JsonValue::String& JsonValue::getString() const {
 
 size_t JsonValue::size() const {
   switch (type) {
-  case ARRAY:
-    return reinterpret_cast<const Array*>(valueArray)->size();
-  case OBJECT:
-    return reinterpret_cast<const Object*>(valueObject)->size();
-  default:
-    throw std::runtime_error("JsonValue type is not ARRAY or OBJECT");
+    case ARRAY:
+      return reinterpret_cast<const Array*>(valueArray)->size();
+    case OBJECT:
+      return reinterpret_cast<const Object*>(valueObject)->size();
+    default:
+      throw std::runtime_error("JsonValue type is not ARRAY or OBJECT");
   }
 }
 
@@ -537,17 +514,11 @@ JsonValue& JsonValue::pushBack(JsonValue&& value) {
   return reinterpret_cast<Array*>(valueArray)->back();
 }
 
-JsonValue& JsonValue::operator()(const Key& key) {
-  return getObject().at(key);
-}
+JsonValue& JsonValue::operator()(const Key& key) { return getObject().at(key); }
 
-const JsonValue& JsonValue::operator()(const Key& key) const {
-  return getObject().at(key);
-}
+const JsonValue& JsonValue::operator()(const Key& key) const { return getObject().at(key); }
 
-bool JsonValue::contains(const Key& key) const {
-  return getObject().count(key) > 0;
-}
+bool JsonValue::contains(const Key& key) const { return getObject().count(key) > 0; }
 
 JsonValue& JsonValue::insert(const Key& key, const JsonValue& value) {
   return getObject().emplace(key, value).first->second;
@@ -567,9 +538,7 @@ JsonValue& JsonValue::set(const Key& key, JsonValue&& value) {
   return *this;
 }
 
-size_t JsonValue::erase(const Key& key) {
-  return getObject().erase(key);
-}
+size_t JsonValue::erase(const Key& key) { return getObject().erase(key); }
 
 JsonValue JsonValue::fromString(const std::string& source) {
   JsonValue jsonValue;
@@ -590,62 +559,61 @@ std::string JsonValue::toString() const {
 
 std::ostream& operator<<(std::ostream& out, const JsonValue& jsonValue) {
   switch (jsonValue.type) {
-  case JsonValue::ARRAY: {
-    const JsonValue::Array& array = *reinterpret_cast<const JsonValue::Array*>(jsonValue.valueArray);
-    out << '[';
-    if (array.size() > 0) {
-      out << array[0];
-      for (size_t i = 1; i < array.size(); ++i) {
-        out << ',' << array[i];
+    case JsonValue::ARRAY: {
+      const JsonValue::Array& array = *reinterpret_cast<const JsonValue::Array*>(jsonValue.valueArray);
+      out << '[';
+      if (array.size() > 0) {
+        out << array[0];
+        for (size_t i = 1; i < array.size(); ++i) {
+          out << ',' << array[i];
+        }
       }
-    }
 
-    out << ']';
-    break;
-  }
-  case JsonValue::BOOL:
-    out << (jsonValue.valueBool ? "true" : "false");
-    break;
-  case JsonValue::INTEGER:
-    out << jsonValue.valueInteger;
-    break;
-  case JsonValue::NIL:
-    out << "null";
-    break;
-  case JsonValue::OBJECT: {
-    const JsonValue::Object& object = *reinterpret_cast<const JsonValue::Object*>(jsonValue.valueObject);
-    out << '{';
-    auto iter = object.begin();
-    if (iter != object.end()) {
-      out << '"' << iter->first << "\":" << iter->second;
-      ++iter;
-      for (; iter != object.end(); ++iter) {
-        out << ",\"" << iter->first << "\":" << iter->second;
+      out << ']';
+      break;
+    }
+    case JsonValue::BOOL:
+      out << (jsonValue.valueBool ? "true" : "false");
+      break;
+    case JsonValue::INTEGER:
+      out << jsonValue.valueInteger;
+      break;
+    case JsonValue::NIL:
+      out << "null";
+      break;
+    case JsonValue::OBJECT: {
+      const JsonValue::Object& object = *reinterpret_cast<const JsonValue::Object*>(jsonValue.valueObject);
+      out << '{';
+      auto iter = object.begin();
+      if (iter != object.end()) {
+        out << '"' << iter->first << "\":" << iter->second;
+        ++iter;
+        for (; iter != object.end(); ++iter) {
+          out << ",\"" << iter->first << "\":" << iter->second;
+        }
       }
-    }
 
-    out << '}';
-    break;
-  }
-  case JsonValue::REAL: {
-    std::ostringstream stream;
-    stream << std::fixed << std::setprecision(11) << jsonValue.valueReal;
-    std::string value = stream.str();
-    while (value.size() > 1 && value[value.size() - 2] != '.' && value[value.size() - 1] == '0') {
-      value.resize(value.size() - 1);
+      out << '}';
+      break;
     }
+    case JsonValue::REAL: {
+      std::ostringstream stream;
+      stream << std::fixed << std::setprecision(11) << jsonValue.valueReal;
+      std::string value = stream.str();
+      while (value.size() > 1 && value[value.size() - 2] != '.' && value[value.size() - 1] == '0') {
+        value.resize(value.size() - 1);
+      }
 
-    out << value;
-    break;
-  }
-  case JsonValue::STRING:
-    out << '"' << *reinterpret_cast<const JsonValue::String*>(jsonValue.valueString) << '"';
-    break;
+      out << value;
+      break;
+    }
+    case JsonValue::STRING:
+      out << '"' << *reinterpret_cast<const JsonValue::String*>(jsonValue.valueString) << '"';
+      break;
   }
 
   return out;
 }
-
 
 namespace {
 
@@ -691,8 +659,7 @@ std::string readStringToken(std::istream& in) {
   return value;
 }
 
-}
-
+}  // namespace
 
 std::istream& operator>>(std::istream& in, JsonValue& jsonValue) {
   char c = readNonWsChar(in);
@@ -720,17 +687,17 @@ std::istream& operator>>(std::istream& in, JsonValue& jsonValue) {
 
 void JsonValue::destructValue() {
   switch (type) {
-  case ARRAY:
-    reinterpret_cast<Array*>(valueArray)->~Array();
-    break;
-  case OBJECT:
-    reinterpret_cast<Object*>(valueObject)->~Object();
-    break;
-  case STRING:
-    reinterpret_cast<String*>(valueString)->~String();
-    break;
-  default:
-    break;
+    case ARRAY:
+      reinterpret_cast<Array*>(valueArray)->~Array();
+      break;
+    case OBJECT:
+      reinterpret_cast<Object*>(valueObject)->~Object();
+      break;
+    case STRING:
+      reinterpret_cast<String*>(valueString)->~String();
+      break;
+    default:
+      break;
   }
 }
 
@@ -738,7 +705,7 @@ void JsonValue::readArray(std::istream& in) {
   JsonValue::Array value;
   char c = readNonWsChar(in);
 
-  if(c != ']') {
+  if (c != ']') {
     in.putback(c);
     for (;;) {
       value.resize(value.size() + 1);
@@ -758,7 +725,7 @@ void JsonValue::readArray(std::istream& in) {
   if (type != JsonValue::ARRAY) {
     destructValue();
     type = JsonValue::NIL;
-    new(valueArray)JsonValue::Array;
+    new (valueArray) JsonValue::Array;
     type = JsonValue::ARRAY;
   }
 
@@ -817,7 +784,7 @@ void JsonValue::readNumber(std::istream& in, char c) {
     if (i >= '0' && i <= '9') {
       in.read(&c, 1);
       text += c;
-    } else  if (i == '.') {
+    } else if (i == '.') {
       in.read(&c, 1);
       text += '.';
       ++dots;
@@ -918,7 +885,7 @@ void JsonValue::readObject(std::istream& in) {
   if (type != JsonValue::OBJECT) {
     destructValue();
     type = JsonValue::NIL;
-    new(valueObject)JsonValue::Object;
+    new (valueObject) JsonValue::Object;
     type = JsonValue::OBJECT;
   }
 
@@ -931,11 +898,11 @@ void JsonValue::readString(std::istream& in) {
   if (type != JsonValue::STRING) {
     destructValue();
     type = JsonValue::NIL;
-    new(valueString)String;
+    new (valueString) String;
     type = JsonValue::STRING;
   }
 
   reinterpret_cast<String*>(valueString)->swap(value);
 }
 
-}
+}  // namespace Common

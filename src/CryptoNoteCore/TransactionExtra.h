@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,15 +22,15 @@
 
 #include <CryptoNote.h>
 
-#define TX_EXTRA_PADDING_MAX_COUNT          255
-#define TX_EXTRA_NONCE_MAX_COUNT            255
+#define TX_EXTRA_PADDING_MAX_COUNT 255
+#define TX_EXTRA_NONCE_MAX_COUNT 255
 
-#define TX_EXTRA_TAG_PADDING                0x00
-#define TX_EXTRA_TAG_PUBKEY                 0x01
-#define TX_EXTRA_NONCE                      0x02
-#define TX_EXTRA_MERGE_MINING_TAG           0x03
+#define TX_EXTRA_TAG_PADDING 0x00
+#define TX_EXTRA_TAG_PUBKEY 0x01
+#define TX_EXTRA_NONCE 0x02
+#define TX_EXTRA_MERGE_MINING_TAG 0x03
 
-#define TX_EXTRA_NONCE_PAYMENT_ID           0x00
+#define TX_EXTRA_NONCE_PAYMENT_ID 0x00
 
 namespace CryptoNote {
 
@@ -55,17 +55,16 @@ struct TransactionExtraMergeMiningTag {
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag> TransactionExtraField;
+typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce,
+                       TransactionExtraMergeMiningTag>
+    TransactionExtraField;
 
-
-
-template<typename T>
+template <typename T>
 bool findTransactionExtraFieldByType(const std::vector<TransactionExtraField>& tx_extra_fields, T& field) {
   auto it = std::find_if(tx_extra_fields.begin(), tx_extra_fields.end(),
-    [](const TransactionExtraField& f) { return typeid(T) == f.type(); });
+                         [](const TransactionExtraField& f) { return typeid(T) == f.type(); });
 
-  if (tx_extra_fields.end() == it)
-    return false;
+  if (tx_extra_fields.end() == it) return false;
 
   field = boost::get<T>(*it);
   return true;
@@ -83,8 +82,8 @@ bool appendMergeMiningTagToExtra(std::vector<uint8_t>& tx_extra, const Transacti
 bool getMergeMiningTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraMergeMiningTag& mm_tag);
 
 bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<uint8_t>& extra);
-//returns false if payment id is not found or parse error
+// returns false if payment id is not found or parse error
 bool getPaymentIdFromTxExtra(const std::vector<uint8_t>& extra, Crypto::Hash& paymentId);
 bool parsePaymentId(const std::string& paymentIdString, Crypto::Hash& paymentId);
 
-}
+}  // namespace CryptoNote

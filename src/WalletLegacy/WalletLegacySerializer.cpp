@@ -1,7 +1,7 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 #include "WalletLegacySerializer.h"
@@ -24,14 +24,12 @@ using namespace Common;
 
 namespace CryptoNote {
 
-WalletLegacySerializer::WalletLegacySerializer(CryptoNote::AccountBase& account, WalletUserTransactionsCache& transactionsCache) :
-  account(account),
-  transactionsCache(transactionsCache),
-  walletSerializationVersion(1)
-{
-}
+WalletLegacySerializer::WalletLegacySerializer(CryptoNote::AccountBase& account,
+                                               WalletUserTransactionsCache& transactionsCache)
+    : account(account), transactionsCache(transactionsCache), walletSerializationVersion(1) {}
 
-void WalletLegacySerializer::serialize(std::ostream& stream, const std::string& password, bool saveDetailed, const std::string& cache) {
+void WalletLegacySerializer::serialize(std::ostream& stream, const std::string& password, bool saveDetailed,
+                                       const std::string& cache) {
   std::stringstream plainArchive;
   StdOutputStream plainStream(plainArchive);
   CryptoNote::BinaryOutputStreamSerializer serializer(plainStream);
@@ -75,7 +73,8 @@ void WalletLegacySerializer::saveKeys(CryptoNote::ISerializer& serializer) {
   keys.serialize(serializer, "keys");
 }
 
-Crypto::chacha8_iv WalletLegacySerializer::encrypt(const std::string& plain, const std::string& password, std::string& cipher) {
+Crypto::chacha8_iv WalletLegacySerializer::encrypt(const std::string& plain, const std::string& password,
+                                                   std::string& cipher) {
   Crypto::chacha8_key key;
   Crypto::generate_chacha8_key(password, key);
 
@@ -86,7 +85,6 @@ Crypto::chacha8_iv WalletLegacySerializer::encrypt(const std::string& plain, con
 
   return iv;
 }
-
 
 void WalletLegacySerializer::deserialize(std::istream& stream, const std::string& password, std::string& cache) {
   StdInputStream stdStream(stream);
@@ -108,7 +106,7 @@ void WalletLegacySerializer::deserialize(std::istream& stream, const std::string
   std::string plain;
   decrypt(cipher, plain, iv, password);
 
-  MemoryInputStream decryptedStream(plain.data(), plain.size()); 
+  MemoryInputStream decryptedStream(plain.data(), plain.size());
   CryptoNote::BinaryInputStreamSerializer serializer(decryptedStream);
 
   loadKeys(serializer);
@@ -133,7 +131,8 @@ void WalletLegacySerializer::deserialize(std::istream& stream, const std::string
   serializer.binary(cache, "cache");
 }
 
-void WalletLegacySerializer::decrypt(const std::string& cipher, std::string& plain, Crypto::chacha8_iv iv, const std::string& password) {
+void WalletLegacySerializer::decrypt(const std::string& cipher, std::string& plain, Crypto::chacha8_iv iv,
+                                     const std::string& password) {
   Crypto::chacha8_key key;
   Crypto::generate_chacha8_key(password, key);
 
@@ -161,4 +160,4 @@ void WalletLegacySerializer::loadKeys(CryptoNote::ISerializer& serializer) {
   account.set_createtime(keys.creationTimestamp);
 }
 
-}
+}  // namespace CryptoNote

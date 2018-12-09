@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -35,7 +35,7 @@
 namespace CryptoNote {
 
 class TransactionPool : public ITransactionPool {
-public:
+ public:
   TransactionPool(Logging::ILogger& logger);
 
   virtual bool pushTransaction(CachedTransaction&& transaction, TransactionValidatorState&& transactionState) override;
@@ -51,7 +51,8 @@ public:
 
   virtual uint64_t getTransactionReceiveTime(const Crypto::Hash& hash) const override;
   virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
-private:
+
+ private:
   TransactionValidatorState poolState;
 
   struct PendingTransactionInfo {
@@ -71,46 +72,37 @@ private:
   struct TransactionCostTag {};
   struct PaymentIdTag {};
 
-  typedef boost::multi_index::ordered_non_unique<
-    boost::multi_index::tag<TransactionCostTag>,
-    boost::multi_index::identity<PendingTransactionInfo>,
-    TransactionPriorityComparator
-  > TransactionCostIndex;
+  typedef boost::multi_index::ordered_non_unique<boost::multi_index::tag<TransactionCostTag>,
+                                                 boost::multi_index::identity<PendingTransactionInfo>,
+                                                 TransactionPriorityComparator>
+      TransactionCostIndex;
 
   typedef boost::multi_index::hashed_unique<
-    boost::multi_index::tag<TransactionHashTag>,
-    boost::multi_index::const_mem_fun<
-      PendingTransactionInfo,
-      const Crypto::Hash&,
-      &PendingTransactionInfo::getTransactionHash
-    >
-  > TransactionHashIndex;
+      boost::multi_index::tag<TransactionHashTag>,
+      boost::multi_index::const_mem_fun<PendingTransactionInfo, const Crypto::Hash&,
+                                        &PendingTransactionInfo::getTransactionHash> >
+      TransactionHashIndex;
 
   struct PaymentIdHasher {
-    size_t operator() (const boost::optional<Crypto::Hash>& paymentId) const;
+    size_t operator()(const boost::optional<Crypto::Hash>& paymentId) const;
   };
 
   typedef boost::multi_index::hashed_non_unique<
-    boost::multi_index::tag<PaymentIdTag>,
-    BOOST_MULTI_INDEX_MEMBER(PendingTransactionInfo, boost::optional<Crypto::Hash>, paymentId),
-    PaymentIdHasher
-  > PaymentIdIndex;
+      boost::multi_index::tag<PaymentIdTag>,
+      BOOST_MULTI_INDEX_MEMBER(PendingTransactionInfo, boost::optional<Crypto::Hash>, paymentId), PaymentIdHasher>
+      PaymentIdIndex;
 
   typedef boost::multi_index_container<
-    PendingTransactionInfo,
-    boost::multi_index::indexed_by<
-      TransactionHashIndex,
-      TransactionCostIndex,
-      PaymentIdIndex
-    >
-  > TransactionsContainer;
+      PendingTransactionInfo,
+      boost::multi_index::indexed_by<TransactionHashIndex, TransactionCostIndex, PaymentIdIndex> >
+      TransactionsContainer;
 
   TransactionsContainer transactions;
   TransactionsContainer::index<TransactionHashTag>::type& transactionHashIndex;
   TransactionsContainer::index<TransactionCostTag>::type& transactionCostIndex;
   TransactionsContainer::index<PaymentIdTag>::type& paymentIdIndex;
-  
+
   Logging::LoggerRef logger;
 };
 
-}
+}  // namespace CryptoNote

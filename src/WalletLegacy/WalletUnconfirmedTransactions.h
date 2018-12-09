@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -32,26 +32,23 @@ namespace CryptoNote {
 class ISerializer;
 
 typedef std::pair<Crypto::PublicKey, size_t> TransactionOutputId;
-}
+}  // namespace CryptoNote
 
 namespace std {
 
-template<> 
+template <>
 struct hash<CryptoNote::TransactionOutputId> {
-  size_t operator()(const CryptoNote::TransactionOutputId &_v) const {    
+  size_t operator()(const CryptoNote::TransactionOutputId& _v) const {
     return hash<Crypto::PublicKey>()(_v.first) ^ _v.second;
-  } 
-}; 
+  }
+};
 
-}
+}  // namespace std
 
 namespace CryptoNote {
 
-
 struct UnconfirmedTransferDetails {
-
-  UnconfirmedTransferDetails() :
-    amount(0), sentTime(0), transactionId(WALLET_LEGACY_INVALID_TRANSACTION_ID) {}
+  UnconfirmedTransferDetails() : amount(0), sentTime(0), transactionId(WALLET_LEGACY_INVALID_TRANSACTION_ID) {}
 
   CryptoNote::Transaction tx;
   uint64_t amount;
@@ -61,18 +58,16 @@ struct UnconfirmedTransferDetails {
   std::vector<TransactionOutputId> usedOutputs;
 };
 
-class WalletUnconfirmedTransactions
-{
-public:
-
+class WalletUnconfirmedTransactions {
+ public:
   explicit WalletUnconfirmedTransactions(uint64_t uncofirmedTransactionsLiveTime);
 
   bool serialize(CryptoNote::ISerializer& s);
 
   bool findTransactionId(const Crypto::Hash& hash, TransactionId& id);
   void erase(const Crypto::Hash& hash);
-  void add(const CryptoNote::Transaction& tx, TransactionId transactionId, 
-    uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs);
+  void add(const CryptoNote::Transaction& tx, TransactionId transactionId, uint64_t amount,
+           const std::list<TransactionOutputInformation>& usedOutputs);
   void updateTransactionId(const Crypto::Hash& hash, TransactionId id);
 
   uint64_t countUnconfirmedOutsAmount() const;
@@ -82,12 +77,12 @@ public:
 
   std::vector<TransactionId> deleteOutdatedTransactions();
 
-private:
-
+ private:
   void collectUsedOutputs();
   void deleteUsedOutputs(const std::vector<TransactionOutputId>& usedOutputs);
 
-  typedef std::unordered_map<Crypto::Hash, UnconfirmedTransferDetails, boost::hash<Crypto::Hash>> UnconfirmedTxsContainer;
+  typedef std::unordered_map<Crypto::Hash, UnconfirmedTransferDetails, boost::hash<Crypto::Hash>>
+      UnconfirmedTxsContainer;
   typedef std::unordered_set<TransactionOutputId> UsedOutputsContainer;
 
   UnconfirmedTxsContainer m_unconfirmedTxs;
@@ -95,4 +90,4 @@ private:
   uint64_t m_uncofirmedTransactionsLiveTime;
 };
 
-} // namespace CryptoNote
+}  // namespace CryptoNote

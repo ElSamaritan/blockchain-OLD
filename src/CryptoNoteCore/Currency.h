@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 #pragma once
@@ -21,39 +21,29 @@ namespace CryptoNote {
 class AccountBase;
 
 class Currency {
-public:
+ public:
   uint32_t maxBlockHeight() const { return m_maxBlockHeight; }
   size_t maxBlockBlobSize() const { return m_maxBlockBlobSize; }
   size_t maxTxSize() const { return m_maxTxSize; }
   uint64_t publicAddressBase58Prefix() const { return m_publicAddressBase58Prefix; }
   uint32_t minedMoneyUnlockWindow() const { return m_minedMoneyUnlockWindow; }
 
-  size_t timestampCheckWindow(uint32_t blockHeight) const
-  {
-      if (blockHeight >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V3)
-      {
-          return CryptoNote::parameters::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V3;
-      }
-      else
-      {
-          return m_timestampCheckWindow;
-      }
+  size_t timestampCheckWindow(uint32_t blockHeight) const {
+    if (blockHeight >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V3) {
+      return CryptoNote::parameters::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V3;
+    } else {
+      return m_timestampCheckWindow;
+    }
   }
 
-  uint64_t blockFutureTimeLimit(uint32_t blockHeight) const
-  {
-      if (blockHeight >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V2)
-      {
-          return CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4;
-      }
-      else if (blockHeight >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX)
-      {
-          return CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3;
-      }
-      else
-      {
-          return m_blockFutureTimeLimit;
-      }
+  uint64_t blockFutureTimeLimit(uint32_t blockHeight) const {
+    if (blockHeight >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V2) {
+      return CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4;
+    } else if (blockHeight >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX) {
+      return CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3;
+    } else {
+      return m_blockFutureTimeLimit;
+    }
   }
 
   uint64_t moneySupply() const { return m_moneySupply; }
@@ -73,20 +63,18 @@ public:
 
   uint64_t minimumFee() const { return m_mininumFee; }
   uint64_t defaultDustThreshold(uint32_t height) const {
-      if (height >= CryptoNote::parameters::DUST_THRESHOLD_V2_HEIGHT)
-      {
-          return CryptoNote::parameters::DEFAULT_DUST_THRESHOLD_V2;
-      }
+    if (height >= CryptoNote::parameters::DUST_THRESHOLD_V2_HEIGHT) {
+      return CryptoNote::parameters::DEFAULT_DUST_THRESHOLD_V2;
+    }
 
-      return m_defaultDustThreshold;
+    return m_defaultDustThreshold;
   }
   uint64_t defaultFusionDustThreshold(uint32_t height) const {
-      if (height >= CryptoNote::parameters::FUSION_DUST_THRESHOLD_HEIGHT_V2)
-      {
-          return CryptoNote::parameters::DEFAULT_DUST_THRESHOLD_V2;
-      }
+    if (height >= CryptoNote::parameters::FUSION_DUST_THRESHOLD_HEIGHT_V2) {
+      return CryptoNote::parameters::DEFAULT_DUST_THRESHOLD_V2;
+    }
 
-      return m_defaultDustThreshold;
+    return m_defaultDustThreshold;
   }
 
   uint64_t difficultyTarget() const { return m_difficultyTarget; }
@@ -132,18 +120,21 @@ public:
   const BlockTemplate& genesisBlock() const { return cachedGenesisBlock->getBlock(); }
   const Crypto::Hash& genesisBlockHash() const { return cachedGenesisBlock->getBlockHash(); }
 
-  bool getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee,
-    uint64_t& reward, int64_t& emissionChange) const;
+  bool getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize,
+                      uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward, int64_t& emissionChange) const;
   size_t maxBlockCumulativeSize(uint64_t height) const;
 
-  bool constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size_t medianSize, uint64_t alreadyGeneratedCoins, size_t currentBlockSize,
-    uint64_t fee, const AccountPublicAddress& minerAddress, Transaction& tx, const BinaryArray& extraNonce = BinaryArray(), size_t maxOuts = 1) const;
+  bool constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size_t medianSize, uint64_t alreadyGeneratedCoins,
+                        size_t currentBlockSize, uint64_t fee, const AccountPublicAddress& minerAddress,
+                        Transaction& tx, const BinaryArray& extraNonce = BinaryArray(), size_t maxOuts = 1) const;
 
   bool isFusionTransaction(const Transaction& transaction, uint32_t height) const;
   bool isFusionTransaction(const Transaction& transaction, size_t size, uint32_t height) const;
-  bool isFusionTransaction(const std::vector<uint64_t>& inputsAmounts, const std::vector<uint64_t>& outputsAmounts, size_t size, uint32_t height) const;
+  bool isFusionTransaction(const std::vector<uint64_t>& inputsAmounts, const std::vector<uint64_t>& outputsAmounts,
+                           size_t size, uint32_t height) const;
   bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint32_t height) const;
-  bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t& amountPowerOfTen, uint32_t height) const;
+  bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t& amountPowerOfTen,
+                                                  uint32_t height) const;
 
   std::string accountAddressAsString(const AccountBase& account) const;
   std::string accountAddressAsString(const AccountPublicAddress& accountPublicAddress) const;
@@ -153,9 +144,10 @@ public:
   std::string formatAmount(int64_t amount) const;
   bool parseAmount(const std::string& str, uint64_t& amount) const;
 
-  uint64_t getNextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties) const;
-  uint64_t nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties) const;
-
+  uint64_t getNextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
+                             std::vector<uint64_t> cumulativeDifficulties) const;
+  uint64_t nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
+                          std::vector<uint64_t> cumulativeDifficulties) const;
 
   bool checkProofOfWorkV1(const CachedBlock& block, uint64_t currentDifficulty) const;
   bool checkProofOfWorkV2(const CachedBlock& block, uint64_t currentDifficulty) const;
@@ -165,15 +157,14 @@ public:
 
   size_t getApproximateMaximumInputCount(size_t transactionSize, size_t outputCount, size_t mixinCount) const;
 
-private:
-  Currency(Logging::ILogger& log) : logger(log, "currency") {
-  }
+ private:
+  Currency(Logging::ILogger& log) : logger(log, "currency") {}
 
   bool init();
 
   bool generateGenesisBlock();
 
-private:
+ private:
   uint32_t m_maxBlockHeight;
   size_t m_maxBlockBlobSize;
   size_t m_maxTxSize;
@@ -245,7 +236,7 @@ private:
 };
 
 class CurrencyBuilder : boost::noncopyable {
-public:
+ public:
   CurrencyBuilder(Logging::ILogger& log);
 
   Currency currency() {
@@ -258,67 +249,187 @@ public:
 
   Transaction generateGenesisTransaction();
   Transaction generateGenesisTransaction(const std::vector<AccountPublicAddress>& targets);
-  CurrencyBuilder& maxBlockNumber(uint32_t val) { m_currency.m_maxBlockHeight = val; return *this; }
-  CurrencyBuilder& maxBlockBlobSize(size_t val) { m_currency.m_maxBlockBlobSize = val; return *this; }
-  CurrencyBuilder& maxTxSize(size_t val) { m_currency.m_maxTxSize = val; return *this; }
-  CurrencyBuilder& publicAddressBase58Prefix(uint64_t val) { m_currency.m_publicAddressBase58Prefix = val; return *this; }
-  CurrencyBuilder& minedMoneyUnlockWindow(uint32_t val) { m_currency.m_minedMoneyUnlockWindow = val; return *this; }
+  CurrencyBuilder& maxBlockNumber(uint32_t val) {
+    m_currency.m_maxBlockHeight = val;
+    return *this;
+  }
+  CurrencyBuilder& maxBlockBlobSize(size_t val) {
+    m_currency.m_maxBlockBlobSize = val;
+    return *this;
+  }
+  CurrencyBuilder& maxTxSize(size_t val) {
+    m_currency.m_maxTxSize = val;
+    return *this;
+  }
+  CurrencyBuilder& publicAddressBase58Prefix(uint64_t val) {
+    m_currency.m_publicAddressBase58Prefix = val;
+    return *this;
+  }
+  CurrencyBuilder& minedMoneyUnlockWindow(uint32_t val) {
+    m_currency.m_minedMoneyUnlockWindow = val;
+    return *this;
+  }
 
-  CurrencyBuilder& timestampCheckWindow(size_t val) { m_currency.m_timestampCheckWindow = val; return *this; }
-  CurrencyBuilder& blockFutureTimeLimit(uint64_t val) { m_currency.m_blockFutureTimeLimit = val; return *this; }
+  CurrencyBuilder& timestampCheckWindow(size_t val) {
+    m_currency.m_timestampCheckWindow = val;
+    return *this;
+  }
+  CurrencyBuilder& blockFutureTimeLimit(uint64_t val) {
+    m_currency.m_blockFutureTimeLimit = val;
+    return *this;
+  }
 
-  CurrencyBuilder& moneySupply(uint64_t val) { m_currency.m_moneySupply = val; return *this; }
+  CurrencyBuilder& moneySupply(uint64_t val) {
+    m_currency.m_moneySupply = val;
+    return *this;
+  }
   CurrencyBuilder& emissionSpeedFactor(unsigned int val);
-  CurrencyBuilder& genesisBlockReward(uint64_t val) { m_currency.m_genesisBlockReward = val; return *this; }
+  CurrencyBuilder& genesisBlockReward(uint64_t val) {
+    m_currency.m_genesisBlockReward = val;
+    return *this;
+  }
 
-  CurrencyBuilder& rewardBlocksWindow(size_t val) { m_currency.m_rewardBlocksWindow = val; return *this; }
-  CurrencyBuilder& zawyDifficultyBlockIndex(uint32_t val) { m_currency.m_zawyDifficultyBlockIndex = val; return *this; }
-  CurrencyBuilder& zawyDifficultyV2(size_t val) { m_currency.m_zawyDifficultyV2 = val; return *this; }
-  CurrencyBuilder& zawyDifficultyBlockVersion(uint8_t val) { m_currency.m_zawyDifficultyBlockVersion = val; return *this; }
-  CurrencyBuilder& blockGrantedFullRewardZone(size_t val) { m_currency.m_blockGrantedFullRewardZone = val; return *this; }
-  CurrencyBuilder& minerTxBlobReservedSize(size_t val) { m_currency.m_minerTxBlobReservedSize = val; return *this; }
+  CurrencyBuilder& rewardBlocksWindow(size_t val) {
+    m_currency.m_rewardBlocksWindow = val;
+    return *this;
+  }
+  CurrencyBuilder& zawyDifficultyBlockIndex(uint32_t val) {
+    m_currency.m_zawyDifficultyBlockIndex = val;
+    return *this;
+  }
+  CurrencyBuilder& zawyDifficultyV2(size_t val) {
+    m_currency.m_zawyDifficultyV2 = val;
+    return *this;
+  }
+  CurrencyBuilder& zawyDifficultyBlockVersion(uint8_t val) {
+    m_currency.m_zawyDifficultyBlockVersion = val;
+    return *this;
+  }
+  CurrencyBuilder& blockGrantedFullRewardZone(size_t val) {
+    m_currency.m_blockGrantedFullRewardZone = val;
+    return *this;
+  }
+  CurrencyBuilder& minerTxBlobReservedSize(size_t val) {
+    m_currency.m_minerTxBlobReservedSize = val;
+    return *this;
+  }
 
   CurrencyBuilder& numberOfDecimalPlaces(size_t val);
 
-  CurrencyBuilder& mininumFee(uint64_t val) { m_currency.m_mininumFee = val; return *this; }
-  CurrencyBuilder& defaultDustThreshold(uint64_t val) { m_currency.m_defaultDustThreshold = val; return *this; }
+  CurrencyBuilder& mininumFee(uint64_t val) {
+    m_currency.m_mininumFee = val;
+    return *this;
+  }
+  CurrencyBuilder& defaultDustThreshold(uint64_t val) {
+    m_currency.m_defaultDustThreshold = val;
+    return *this;
+  }
 
-  CurrencyBuilder& difficultyTarget(uint64_t val) { m_currency.m_difficultyTarget = val; return *this; }
+  CurrencyBuilder& difficultyTarget(uint64_t val) {
+    m_currency.m_difficultyTarget = val;
+    return *this;
+  }
   CurrencyBuilder& difficultyWindow(size_t val);
-  CurrencyBuilder& difficultyLag(size_t val) { m_currency.m_difficultyLag = val; return *this; }
-  CurrencyBuilder& difficultyCut(size_t val) { m_currency.m_difficultyCut = val; return *this; }
+  CurrencyBuilder& difficultyLag(size_t val) {
+    m_currency.m_difficultyLag = val;
+    return *this;
+  }
+  CurrencyBuilder& difficultyCut(size_t val) {
+    m_currency.m_difficultyCut = val;
+    return *this;
+  }
 
-  CurrencyBuilder& maxBlockSizeInitial(size_t val) { m_currency.m_maxBlockSizeInitial = val; return *this; }
-  CurrencyBuilder& maxBlockSizeGrowthSpeedNumerator(uint64_t val) { m_currency.m_maxBlockSizeGrowthSpeedNumerator = val; return *this; }
-  CurrencyBuilder& maxBlockSizeGrowthSpeedDenominator(uint64_t val) { m_currency.m_maxBlockSizeGrowthSpeedDenominator = val; return *this; }
+  CurrencyBuilder& maxBlockSizeInitial(size_t val) {
+    m_currency.m_maxBlockSizeInitial = val;
+    return *this;
+  }
+  CurrencyBuilder& maxBlockSizeGrowthSpeedNumerator(uint64_t val) {
+    m_currency.m_maxBlockSizeGrowthSpeedNumerator = val;
+    return *this;
+  }
+  CurrencyBuilder& maxBlockSizeGrowthSpeedDenominator(uint64_t val) {
+    m_currency.m_maxBlockSizeGrowthSpeedDenominator = val;
+    return *this;
+  }
 
-  CurrencyBuilder& lockedTxAllowedDeltaSeconds(uint64_t val) { m_currency.m_lockedTxAllowedDeltaSeconds = val; return *this; }
-  CurrencyBuilder& lockedTxAllowedDeltaBlocks(size_t val) { m_currency.m_lockedTxAllowedDeltaBlocks = val; return *this; }
+  CurrencyBuilder& lockedTxAllowedDeltaSeconds(uint64_t val) {
+    m_currency.m_lockedTxAllowedDeltaSeconds = val;
+    return *this;
+  }
+  CurrencyBuilder& lockedTxAllowedDeltaBlocks(size_t val) {
+    m_currency.m_lockedTxAllowedDeltaBlocks = val;
+    return *this;
+  }
 
-  CurrencyBuilder& mempoolTxLiveTime(uint64_t val) { m_currency.m_mempoolTxLiveTime = val; return *this; }
-  CurrencyBuilder& mempoolTxFromAltBlockLiveTime(uint64_t val) { m_currency.m_mempoolTxFromAltBlockLiveTime = val; return *this; }
-  CurrencyBuilder& numberOfPeriodsToForgetTxDeletedFromPool(uint64_t val) { m_currency.m_numberOfPeriodsToForgetTxDeletedFromPool = val; return *this; }
+  CurrencyBuilder& mempoolTxLiveTime(uint64_t val) {
+    m_currency.m_mempoolTxLiveTime = val;
+    return *this;
+  }
+  CurrencyBuilder& mempoolTxFromAltBlockLiveTime(uint64_t val) {
+    m_currency.m_mempoolTxFromAltBlockLiveTime = val;
+    return *this;
+  }
+  CurrencyBuilder& numberOfPeriodsToForgetTxDeletedFromPool(uint64_t val) {
+    m_currency.m_numberOfPeriodsToForgetTxDeletedFromPool = val;
+    return *this;
+  }
 
-  CurrencyBuilder& fusionTxMaxSize(size_t val) { m_currency.m_fusionTxMaxSize = val; return *this; }
-  CurrencyBuilder& fusionTxMinInputCount(size_t val) { m_currency.m_fusionTxMinInputCount = val; return *this; }
-  CurrencyBuilder& fusionTxMinInOutCountRatio(size_t val) { m_currency.m_fusionTxMinInOutCountRatio = val; return *this; }
+  CurrencyBuilder& fusionTxMaxSize(size_t val) {
+    m_currency.m_fusionTxMaxSize = val;
+    return *this;
+  }
+  CurrencyBuilder& fusionTxMinInputCount(size_t val) {
+    m_currency.m_fusionTxMinInputCount = val;
+    return *this;
+  }
+  CurrencyBuilder& fusionTxMinInOutCountRatio(size_t val) {
+    m_currency.m_fusionTxMinInOutCountRatio = val;
+    return *this;
+  }
 
-  CurrencyBuilder& upgradeHeightV2(uint32_t val) { m_currency.m_upgradeHeightV2 = val; return *this; }
-  CurrencyBuilder& upgradeHeightV3(uint32_t val) { m_currency.m_upgradeHeightV3 = val; return *this; }
-  CurrencyBuilder& upgradeHeightV4(uint32_t val) { m_currency.m_upgradeHeightV4 = val; return *this; }
+  CurrencyBuilder& upgradeHeightV2(uint32_t val) {
+    m_currency.m_upgradeHeightV2 = val;
+    return *this;
+  }
+  CurrencyBuilder& upgradeHeightV3(uint32_t val) {
+    m_currency.m_upgradeHeightV3 = val;
+    return *this;
+  }
+  CurrencyBuilder& upgradeHeightV4(uint32_t val) {
+    m_currency.m_upgradeHeightV4 = val;
+    return *this;
+  }
   CurrencyBuilder& upgradeVotingThreshold(unsigned int val);
-  CurrencyBuilder& upgradeVotingWindow(uint32_t val) { m_currency.m_upgradeVotingWindow = val; return *this; }
+  CurrencyBuilder& upgradeVotingWindow(uint32_t val) {
+    m_currency.m_upgradeVotingWindow = val;
+    return *this;
+  }
   CurrencyBuilder& upgradeWindow(uint32_t val);
 
-  CurrencyBuilder& blocksFileName(const std::string& val) { m_currency.m_blocksFileName = val; return *this; }
-  CurrencyBuilder& blockIndexesFileName(const std::string& val) { m_currency.m_blockIndexesFileName = val; return *this; }
-  CurrencyBuilder& txPoolFileName(const std::string& val) { m_currency.m_txPoolFileName = val; return *this; }
-  
-  CurrencyBuilder& isBlockexplorer(const bool val) { m_currency.m_isBlockexplorer = val; return *this; }
-  CurrencyBuilder& testnet(bool val) { m_currency.m_testnet = val; return *this; }
+  CurrencyBuilder& blocksFileName(const std::string& val) {
+    m_currency.m_blocksFileName = val;
+    return *this;
+  }
+  CurrencyBuilder& blockIndexesFileName(const std::string& val) {
+    m_currency.m_blockIndexesFileName = val;
+    return *this;
+  }
+  CurrencyBuilder& txPoolFileName(const std::string& val) {
+    m_currency.m_txPoolFileName = val;
+    return *this;
+  }
 
-private:
+  CurrencyBuilder& isBlockexplorer(const bool val) {
+    m_currency.m_isBlockexplorer = val;
+    return *this;
+  }
+  CurrencyBuilder& testnet(bool val) {
+    m_currency.m_testnet = val;
+    return *this;
+  }
+
+ private:
   Currency m_currency;
 };
 
-}
+}  // namespace CryptoNote

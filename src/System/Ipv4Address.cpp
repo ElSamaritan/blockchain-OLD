@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -52,10 +52,9 @@ uint8_t readUint8(const std::string& source, size_t& offset) {
   return value;
 }
 
-}
+}  // namespace
 
-Ipv4Address::Ipv4Address(uint32_t value) : value(value) {
-}
+Ipv4Address::Ipv4Address(uint32_t value) : value(value) {}
 
 Ipv4Address::Ipv4Address(const std::string& dottedDecimal) {
   size_t offset = 0;
@@ -83,17 +82,11 @@ Ipv4Address::Ipv4Address(const std::string& dottedDecimal) {
   }
 }
 
-bool Ipv4Address::operator!=(const Ipv4Address& other) const {
-  return value != other.value;
-}
+bool Ipv4Address::operator!=(const Ipv4Address& other) const { return value != other.value; }
 
-bool Ipv4Address::operator==(const Ipv4Address& other) const {
-  return value == other.value;
-}
+bool Ipv4Address::operator==(const Ipv4Address& other) const { return value == other.value; }
 
-uint32_t Ipv4Address::getValue() const {
-  return value;
-}
+uint32_t Ipv4Address::getValue() const { return value; }
 
 std::string Ipv4Address::toDottedDecimal() const {
   std::string result;
@@ -114,12 +107,12 @@ bool Ipv4Address::isLoopback() const {
 
 bool Ipv4Address::isPrivate() const {
   return
-    // 10.0.0.0/8
-    (int)(value & 0xff000000) == (int)(10 << 24) ||
-    // 172.16.0.0/12
-    (int)(value & 0xfff00000) == (int)((172 << 24) | (16 << 16)) ||
-    // 192.168.0.0/16
-    (int)(value & 0xffff0000) == (int)((192 << 24) | (168 << 16));
+      // 10.0.0.0/8
+      (int)(value & 0xff000000) == (int)(10 << 24) ||
+      // 172.16.0.0/12
+      (int)(value & 0xfff00000) == (int)((172 << 24) | (16 << 16)) ||
+      // 192.168.0.0/16
+      (int)(value & 0xffff0000) == (int)((192 << 24) | (168 << 16));
 }
 
-}
+}  // namespace System

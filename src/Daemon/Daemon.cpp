@@ -2,7 +2,7 @@
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Karai Developers
 // Copyright (c) 2018, The Calex Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 #include "DaemonConfiguration.h"
@@ -45,42 +45,46 @@ using Common::JsonValue;
 using namespace CryptoNote;
 using namespace Logging;
 
-void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const bool blockExplorerMode, LoggerManager& logManager)
-{
+void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const bool blockExplorerMode,
+                          LoggerManager& logManager) {
   std::vector<CryptoNote::AccountPublicAddress> rewardTargets;
   CryptoNote::CurrencyBuilder currencyBuilder(logManager);
   currencyBuilder.isBlockexplorer(blockExplorerMode);
 
   CryptoNote::Currency currency = currencyBuilder.currency();
 
-  for (const auto& rewardAddress : rewardAddresses)
-  {
+  for (const auto& rewardAddress : rewardAddresses) {
     CryptoNote::AccountPublicAddress address;
-    if (!currency.parseAccountAddressString(rewardAddress, address))
-    {
+    if (!currency.parseAccountAddressString(rewardAddress, address)) {
       std::cout << "Failed to parse genesis reward address: " << rewardAddress << std::endl;
       return;
     }
     rewardTargets.emplace_back(std::move(address));
   }
-   CryptoNote::Transaction transaction;
-  if (rewardTargets.empty())
-  {
+  CryptoNote::Transaction transaction;
+  if (rewardTargets.empty()) {
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4127)
+#endif
     if (CryptoNote::parameters::GENESIS_BLOCK_REWARD > 0)
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
     {
       std::cout << "Error: Genesis Block Reward Addresses are not defined" << std::endl;
       return;
     }
     transaction = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction();
-  }
-  else
-  {
+  } else {
     transaction = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction();
   }
   std::string transactionHex = Common::toHex(CryptoNote::toBinaryArray(transaction));
-  std::cout << CommonCLI::header() << std::endl << std::endl
-    << "Replace the current GENESIS_COINBASE_TX_HEX line in src/config/CryptoNoteConfig.h with this one:" << std::endl
-    << "const char GENESIS_COINBASE_TX_HEX[] = \"" << transactionHex << "\";" << std::endl;
+  std::cout << CommonCLI::header() << std::endl
+            << std::endl
+            << "Replace the current GENESIS_COINBASE_TX_HEX line in src/config/CryptoNoteConfig.h with this one:"
+            << std::endl
+            << "const char GENESIS_COINBASE_TX_HEX[] = \"" << transactionHex << "\";" << std::endl;
 
   return;
 }
@@ -110,24 +114,23 @@ void pause_for_input(int argc) {
   /* if they passed arguments they're probably in a terminal so the errors will
      stay visible */
   if (argc == 1) {
-    #if defined(WIN32)
+#if defined(WIN32)
     if (_isatty(_fileno(stdout)) && _isatty(_fileno(stdin))) {
-    #else
-    if(isatty(fileno(stdout)) && isatty(fileno(stdin))) {
-    #endif
+#else
+    if (isatty(fileno(stdout)) && isatty(fileno(stdin))) {
+#endif
       std::cout << "Press any key to close the program: ";
       getchar();
     }
   }
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   CommonCLI::verifyDevExecution(argc, argv);
-	DaemonConfiguration config = initConfiguration(argv[0]);
+  DaemonConfiguration config = initConfiguration(argv[0]);
 
 #ifdef WIN32
-  _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
   LoggerManager logManager;
@@ -135,51 +138,43 @@ int main(int argc, char* argv[])
 
   // Initial loading of CLI parameters
   handleSettings(argc, argv, config);
-  if (config.printGenesisTx) // Do we weant to generate the Genesis Tx?
+  if (config.printGenesisTx)  // Do we weant to generate the Genesis Tx?
   {
     print_genesis_tx_hex(config.genesisAwardAddresses, false, logManager);
     exit(0);
   }
 
   // If the user passed in the --config-file option, we need to handle that first
-  if (!config.configFile.empty())
-  {
-    try
-    {
+  if (!config.configFile.empty()) {
+    try {
       handleSettings(config.configFile, config);
-    }
-    catch (std::exception& e)
-    {
-      std::cout << std::endl << "There was an error parsing the specified configuration file. Please check the file and try again"
-        << std::endl << e.what() << std::endl;
+    } catch (std::exception& e) {
+      std::cout << std::endl
+                << "There was an error parsing the specified configuration file. Please check the file and try again"
+                << std::endl
+                << e.what() << std::endl;
       exit(1);
     }
   }
- // Load in the CLI specified parameters again to overwrite anything from the config file
+  // Load in the CLI specified parameters again to overwrite anything from the config file
   handleSettings(argc, argv, config);
 
-    if (config.dumpConfig)
-  {
+  if (config.dumpConfig) {
     std::cout << CommonCLI::header() << asString(config) << std::endl;
     exit(0);
-  }
-  else if (!config.outputFile.empty())
-  {
+  } else if (!config.outputFile.empty()) {
     try {
       asFile(config, config.outputFile);
       std::cout << CommonCLI::header() << "Configuration saved to: " << config.outputFile << std::endl;
       exit(0);
-    }
-    catch (std::exception& e)
-    {
-      std::cout << CommonCLI::header() << "Could not save configuration to: " << config.outputFile
-        << std::endl << e.what() << std::endl;
+    } catch (std::exception& e) {
+      std::cout << CommonCLI::header() << "Could not save configuration to: " << config.outputFile << std::endl
+                << e.what() << std::endl;
       exit(1);
     }
   }
 
-  try
-  {
+  try {
     auto modulePath = Common::NativePathToGeneric(argv[0]);
     auto cfgLogFile = Common::NativePathToGeneric(config.logFile);
 
@@ -187,24 +182,25 @@ int main(int argc, char* argv[])
       cfgLogFile = Common::ReplaceExtenstion(modulePath, ".log");
     } else {
       if (!Common::HasParentPath(cfgLogFile)) {
-      cfgLogFile = Common::CombinePath(Common::GetPathDirectory(modulePath), cfgLogFile);
+        cfgLogFile = Common::CombinePath(Common::GetPathDirectory(modulePath), cfgLogFile);
       }
     }
 
-		Level cfgLogLevel = static_cast<Level>(static_cast<int>(Logging::ERROR) + config.logLevel);
+    Level cfgLogLevel = static_cast<Level>(static_cast<int>(Logging::ERROR) + config.logLevel);
 
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-                logger(INFO, BRIGHT_BLUE) << CommonCLI::header() << std::endl;
-		logger(INFO) << "Program Working Directory: " << argv[0];
-		
-    //create objects and link them
+    logger(INFO, BRIGHT_BLUE) << CommonCLI::header() << std::endl;
+    logger(INFO) << "Program Working Directory: " << argv[0];
+
+    // create objects and link them
     CryptoNote::CurrencyBuilder currencyBuilder(logManager);
     currencyBuilder.isBlockexplorer(config.enableBlockExplorer);
     try {
       currencyBuilder.currency();
     } catch (std::exception&) {
-      std::cout << "GENESIS_COINBASE_TX_HEX constant has an incorrect value. Please launch: " << CryptoNote::CRYPTONOTE_NAME << "d --print-genesis-tx" << std::endl;
+      std::cout << "GENESIS_COINBASE_TX_HEX constant has an incorrect value. Please launch: "
+                << CryptoNote::CRYPTONOTE_NAME << "d --print-genesis-tx" << std::endl;
       return 1;
     }
     CryptoNote::Currency currency = currencyBuilder.currency();
@@ -214,16 +210,12 @@ int main(int argc, char* argv[])
     CryptoNote::Checkpoints checkpoints(logManager);
     if (use_checkpoints) {
       logger(INFO) << "Loading Checkpoints for faster initial sync...";
-      if (config.checkPoints == "default")
-      {
-        for (const auto& cp : CryptoNote::CHECKPOINTS)
-        {
+      if (config.checkPoints == "default") {
+        for (const auto& cp : CryptoNote::CHECKPOINTS) {
           checkpoints.addCheckpoint(cp.index, cp.blockId);
         }
         logger(INFO) << "Loaded " << CryptoNote::CHECKPOINTS.size() << " default checkpoints";
-      }
-      else
-      {
+      } else {
         bool results = checkpoints.loadCheckpointsFromFile(config.checkPoints);
         if (!results) {
           throw std::runtime_error("Failed to load checkpoints");
@@ -232,35 +224,29 @@ int main(int argc, char* argv[])
     }
 
     NetNodeConfig netNodeConfig;
-    netNodeConfig.init(config.p2pInterface, config.p2pPort, config.p2pExternalPort, config.localIp,
-      config.hideMyPort, config.dataDirectory, config.peers,
-      config.exclusiveNodes, config.priorityNodes,
-      config.seedNodes);
+    netNodeConfig.init(config.p2pInterface, config.p2pPort, config.p2pExternalPort, config.localIp, config.hideMyPort,
+                       config.dataDirectory, config.peers, config.exclusiveNodes, config.priorityNodes,
+                       config.seedNodes);
 
     DataBaseConfig dbConfig;
-    dbConfig.init(config.dataDirectory, config.dbThreads, config.dbMaxOpenFiles, config.dbWriteBufferSize, config.dbReadCacheSize);
+    dbConfig.init(config.dataDirectory, config.dbThreads, config.dbMaxOpenFiles, config.dbWriteBufferSize,
+                  config.dbReadCacheSize);
 
-    if (dbConfig.isConfigFolderDefaulted())
-    {
-      if (!Tools::create_directories_if_necessary(dbConfig.getDataDir()))
-      {
-				throw std::runtime_error("Can't create directory: " + dbConfig.getDataDir());
+    if (dbConfig.isConfigFolderDefaulted()) {
+      if (!Tools::create_directories_if_necessary(dbConfig.getDataDir())) {
+        throw std::runtime_error("Can't create directory: " + dbConfig.getDataDir());
       }
-    }
-    else
-    {
-      if (!Tools::directoryExists(dbConfig.getDataDir()))
-      {
+    } else {
+      if (!Tools::directoryExists(dbConfig.getDataDir())) {
         throw std::runtime_error("Directory does not exist: " + dbConfig.getDataDir());
       }
     }
 
     RocksDBWrapper database(logManager);
     database.init(dbConfig);
-    Tools::ScopeExit dbShutdownOnExit([&database] () { database.shutdown(); });
+    Tools::ScopeExit dbShutdownOnExit([&database]() { database.shutdown(); });
 
-    if (!DatabaseBlockchainCache::checkDBSchemeVersion(database, logManager))
-    {
+    if (!DatabaseBlockchainCache::checkDBSchemeVersion(database, logManager)) {
       dbShutdownOnExit.cancel();
       database.shutdown();
 
@@ -273,12 +259,9 @@ int main(int argc, char* argv[])
     System::Dispatcher dispatcher;
     logger(INFO) << "Initializing core...";
     CryptoNote::Core ccore(
-      currency,
-      logManager,
-      std::move(checkpoints),
-      dispatcher,
-      std::unique_ptr<IBlockchainCacheFactory>(new DatabaseBlockchainCacheFactory(database, logger.getLogger())),
-      createSwappedMainChainStorage(config.dataDirectory, currency));
+        currency, logManager, std::move(checkpoints), dispatcher,
+        std::unique_ptr<IBlockchainCacheFactory>(new DatabaseBlockchainCacheFactory(database, logger.getLogger())),
+        createSwappedMainChainStorage(config.dataDirectory, currency));
 
     ccore.load();
     logger(INFO) << "Core initialized OK";
@@ -290,16 +273,14 @@ int main(int argc, char* argv[])
     cprotocol.set_p2p_endpoint(&p2psrv);
     DaemonCommandsHandler dch(ccore, p2psrv, logManager, &rpcServer);
     logger(INFO) << "Initializing p2p server...";
-		if (!p2psrv.init(netNodeConfig))
-    {
+    if (!p2psrv.init(netNodeConfig)) {
       logger(ERROR, BRIGHT_RED) << "Failed to initialize p2p server.";
       return 1;
     }
 
     logger(INFO) << "P2p server initialized OK";
 
-    if (!config.noConsole)
-    {
+    if (!config.noConsole) {
       dch.start_handling();
     }
 
@@ -322,20 +303,18 @@ int main(int argc, char* argv[])
 
     dch.stop_handling();
 
-    //stop components
+    // stop components
     logger(INFO) << "Stopping core rpc server...";
     rpcServer.stop();
 
-    //deinitialize components
+    // deinitialize components
     logger(INFO) << "Deinitializing p2p...";
     p2psrv.deinit();
 
     cprotocol.set_p2p_endpoint(nullptr);
     ccore.save();
 
-  }
-  catch (const std::exception& e)
-  {
+  } catch (const std::exception& e) {
     logger(ERROR, BRIGHT_RED) << "Exception: " << e.what();
     return 1;
   }

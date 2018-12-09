@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -23,10 +23,11 @@
 
 namespace System {
 
-template<typename T> class OperationTimeout {
-public:
-  OperationTimeout(Dispatcher& dispatcher, T& object, std::chrono::nanoseconds timeout) :
-    object(object), timerContext(dispatcher), timeoutTimer(dispatcher) {
+template <typename T>
+class OperationTimeout {
+ public:
+  OperationTimeout(Dispatcher& dispatcher, T& object, std::chrono::nanoseconds timeout)
+      : object(object), timerContext(dispatcher), timeoutTimer(dispatcher) {
     timerContext.spawn([this, timeout]() {
       try {
         timeoutTimer.sleep(timeout);
@@ -41,10 +42,10 @@ public:
     timerContext.wait();
   }
 
-private:
+ private:
   T& object;
   ContextGroup timerContext;
   Timer timeoutTimer;
 };
 
-}
+}  // namespace System

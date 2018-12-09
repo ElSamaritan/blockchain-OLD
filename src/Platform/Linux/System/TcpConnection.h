@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -27,7 +27,7 @@ namespace System {
 class Ipv4Address;
 
 class TcpConnection {
-public:
+ public:
   TcpConnection();
   TcpConnection(const TcpConnection&) = delete;
   TcpConnection(TcpConnection&& other);
@@ -38,10 +38,10 @@ public:
   std::size_t write(const uint8_t* data, std::size_t size);
   std::pair<Ipv4Address, uint16_t> getPeerAddressAndPort() const;
 
-private:
+ private:
   friend class TcpConnector;
   friend class TcpListener;
-  
+
   Dispatcher* dispatcher;
   int connection;
   ContextPair contextPair;
@@ -49,4 +49,4 @@ private:
   TcpConnection(Dispatcher& dispatcher, int socket);
 };
 
-}
+}  // namespace System

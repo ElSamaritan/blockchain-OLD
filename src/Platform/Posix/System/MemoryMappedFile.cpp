@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -30,11 +30,7 @@
 
 namespace System {
 
-MemoryMappedFile::MemoryMappedFile() :
-  m_file(-1),
-  m_size(0),
-  m_data(nullptr) {
-}
+MemoryMappedFile::MemoryMappedFile() : m_file(-1), m_size(0), m_data(nullptr) {}
 
 MemoryMappedFile::~MemoryMappedFile() {
   std::error_code ignore;
@@ -65,9 +61,7 @@ uint8_t* MemoryMappedFile::data() {
   return m_data;
 }
 
-bool MemoryMappedFile::isOpened() const {
-  return m_data != nullptr;
-}
+bool MemoryMappedFile::isOpened() const { return m_data != nullptr; }
 
 void MemoryMappedFile::create(const std::string& path, uint64_t size, bool overwrite, std::error_code& ec) {
   if (isOpened()) {
@@ -93,7 +87,8 @@ void MemoryMappedFile::create(const std::string& path, uint64_t size, bool overw
     return;
   }
 
-  m_data = reinterpret_cast<uint8_t*>(::mmap(nullptr, static_cast<size_t>(size), PROT_READ | PROT_WRITE, MAP_SHARED, m_file, 0));
+  m_data = reinterpret_cast<uint8_t*>(
+      ::mmap(nullptr, static_cast<size_t>(size), PROT_READ | PROT_WRITE, MAP_SHARED, m_file, 0));
   if (m_data == MAP_FAILED) {
     return;
   }
@@ -140,7 +135,8 @@ void MemoryMappedFile::open(const std::string& path, std::error_code& ec) {
 
   m_size = static_cast<uint64_t>(fileStat.st_size);
 
-  m_data = reinterpret_cast<uint8_t*>(::mmap(nullptr, static_cast<size_t>(m_size), PROT_READ | PROT_WRITE, MAP_SHARED, m_file, 0));
+  m_data = reinterpret_cast<uint8_t*>(
+      ::mmap(nullptr, static_cast<size_t>(m_size), PROT_READ | PROT_WRITE, MAP_SHARED, m_file, 0));
   if (m_data == MAP_FAILED) {
     return;
   }
@@ -256,4 +252,4 @@ void MemoryMappedFile::swap(MemoryMappedFile& other) {
   std::swap(m_size, other.m_size);
 }
 
-}
+}  // namespace System

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -31,8 +31,7 @@
 
 namespace System {
 
-TcpConnection::TcpConnection() : dispatcher(nullptr) {
-}
+TcpConnection::TcpConnection() : dispatcher(nullptr) {}
 
 TcpConnection::TcpConnection(TcpConnection&& other) : dispatcher(other.dispatcher) {
   if (other.dispatcher != nullptr) {
@@ -50,7 +49,8 @@ TcpConnection::~TcpConnection() {
     assert(readContext == nullptr);
     assert(writeContext == nullptr);
     int result = close(connection);
-    if (result) {}
+    if (result) {
+    }
     assert(result != -1);
   }
 }
@@ -85,9 +85,9 @@ size_t TcpConnection::read(uint8_t* data, size_t size) {
   }
 
   std::string message;
-  ssize_t transferred = ::recv(connection, (void *)data, size, 0);
+  ssize_t transferred = ::recv(connection, (void*)data, size, 0);
   if (transferred == -1) {
-    if (errno != EAGAIN  && errno != EWOULDBLOCK) {
+    if (errno != EAGAIN && errno != EWOULDBLOCK) {
       message = "recv failed, " + lastErrorMessage();
     } else {
       OperationContext context;
@@ -106,16 +106,16 @@ size_t TcpConnection::read(uint8_t* data, size_t size) {
           if (!context->interrupted) {
             struct kevent event;
             EV_SET(&event, connection, EVFILT_READ, EV_DELETE | EV_DISABLE, 0, 0, NULL);
-            
+
             if (kevent(dispatcher->getKqueue(), &event, 1, NULL, 0, NULL) == -1) {
               throw std::runtime_error("TcpListener::interruptionProcedure, kevent failed, " + lastErrorMessage());
             }
-            
+
             context->interrupted = true;
             dispatcher->pushContext(context->context);
           }
         };
-        
+
         dispatcher->dispatch();
         dispatcher->getCurrentContext()->interruptProcedure = nullptr;
         assert(dispatcher != nullptr);
@@ -127,7 +127,7 @@ size_t TcpConnection::read(uint8_t* data, size_t size) {
           throw InterruptedException();
         }
 
-        ssize_t transferred = ::recv(connection, (void *)data, size, 0);
+        ssize_t transferred = ::recv(connection, (void*)data, size, 0);
         if (transferred == -1) {
           message = "recv failed, " + lastErrorMessage();
         } else {
@@ -160,9 +160,9 @@ size_t TcpConnection::write(const uint8_t* data, size_t size) {
     return 0;
   }
 
-  ssize_t transferred = ::send(connection, (void *)data, size, 0);
+  ssize_t transferred = ::send(connection, (void*)data, size, 0);
   if (transferred == -1) {
-    if (errno != EAGAIN  && errno != EWOULDBLOCK) {
+    if (errno != EAGAIN && errno != EWOULDBLOCK) {
       message = "send failed, " + lastErrorMessage();
     } else {
       OperationContext context;
@@ -181,16 +181,16 @@ size_t TcpConnection::write(const uint8_t* data, size_t size) {
           if (!context->interrupted) {
             struct kevent event;
             EV_SET(&event, connection, EVFILT_WRITE, EV_DELETE | EV_DISABLE, 0, 0, NULL);
-            
+
             if (kevent(dispatcher->getKqueue(), &event, 1, NULL, 0, NULL) == -1) {
               throw std::runtime_error("TcpListener::stop, kevent failed, " + lastErrorMessage());
             }
-            
+
             context->interrupted = true;
-            dispatcher->pushContext(context->context);            
+            dispatcher->pushContext(context->context);
           }
         };
-        
+
         dispatcher->dispatch();
         dispatcher->getCurrentContext()->interruptProcedure = nullptr;
         assert(dispatcher != nullptr);
@@ -202,7 +202,7 @@ size_t TcpConnection::write(const uint8_t* data, size_t size) {
           throw InterruptedException();
         }
 
-        ssize_t transferred = ::send(connection, (void *)data, size, 0);
+        ssize_t transferred = ::send(connection, (void*)data, size, 0);
         if (transferred == -1) {
           message = "send failed, " + lastErrorMessage();
         } else {
@@ -230,11 +230,12 @@ std::pair<Ipv4Address, uint16_t> TcpConnection::getPeerAddressAndPort() const {
   return std::make_pair(Ipv4Address(htonl(addr.sin_addr.s_addr)), htons(addr.sin_port));
 }
 
-TcpConnection::TcpConnection(Dispatcher& dispatcher, int socket) : dispatcher(&dispatcher), connection(socket), readContext(nullptr), writeContext(nullptr) {
+TcpConnection::TcpConnection(Dispatcher& dispatcher, int socket)
+    : dispatcher(&dispatcher), connection(socket), readContext(nullptr), writeContext(nullptr) {
   int val = 1;
   if (setsockopt(connection, SOL_SOCKET, SO_NOSIGPIPE, (void*)&val, sizeof val) == -1) {
     throw std::runtime_error("TcpConnection::TcpConnection, setsockopt failed, " + lastErrorMessage());
   }
 }
 
-}
+}  // namespace System

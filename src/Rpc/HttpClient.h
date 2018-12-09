@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -28,21 +28,20 @@
 
 namespace CryptoNote {
 
-class ConnectException : public std::runtime_error  {
-public:
+class ConnectException : public std::runtime_error {
+ public:
   ConnectException(const std::string& whatArg);
 };
 
 class HttpClient {
-public:
-
+ public:
   HttpClient(System::Dispatcher& dispatcher, const std::string& address, uint16_t port);
   ~HttpClient();
   void request(const HttpRequest& req, HttpResponse& res);
-  
+
   bool isConnected() const;
 
-private:
+ private:
   void connect();
   void disconnect();
 
@@ -88,4 +87,4 @@ void invokeBinaryCommand(HttpClient& client, const std::string& url, const Reque
   }
 }
 
-}
+}  // namespace CryptoNote

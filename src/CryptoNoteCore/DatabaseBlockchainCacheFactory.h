@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -24,17 +24,18 @@ namespace CryptoNote {
 
 class IDataBase;
 
-class DatabaseBlockchainCacheFactory: public IBlockchainCacheFactory {
-public:
+class DatabaseBlockchainCacheFactory : public IBlockchainCacheFactory {
+ public:
   explicit DatabaseBlockchainCacheFactory(IDataBase& database, Logging::ILogger& logger);
   virtual ~DatabaseBlockchainCacheFactory();
 
   virtual std::unique_ptr<IBlockchainCache> createRootBlockchainCache(const Currency& currency) override;
-  virtual std::unique_ptr<IBlockchainCache> createBlockchainCache(const Currency& currency, IBlockchainCache* parent, uint32_t startIndex = 0) override;
+  virtual std::unique_ptr<IBlockchainCache> createBlockchainCache(const Currency& currency, IBlockchainCache* parent,
+                                                                  uint32_t startIndex = 0) override;
 
-private:
+ private:
   IDataBase& database;
   Logging::ILogger& logger;
 };
 
-} //namespace CryptoNote
+}  // namespace CryptoNote
