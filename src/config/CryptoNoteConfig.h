@@ -16,13 +16,13 @@
 namespace CryptoNote {
 namespace parameters {
 
-const uint64_t DIFFICULTY_TARGET = 10;  // seconds // WARNING: Testnet
+const uint64_t DIFFICULTY_TARGET = 60;
 
 const uint32_t CRYPTONOTE_MAX_BLOCK_NUMBER = 500000000;
 const size_t CRYPTONOTE_MAX_BLOCK_BLOB_SIZE = 500000000;
 const size_t CRYPTONOTE_MAX_TX_SIZE = 1000000000;
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 22583;
-const uint32_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW = 360;  // WARNING(mainnet)
+const uint32_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW = 1440;
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT = 60 * 60 * 2;
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3 = 3 * DIFFICULTY_TARGET;
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4 = CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3;
@@ -31,7 +31,7 @@ const uint32_t BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW = 60;
 const uint32_t BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V3 = 11;
 
 // MONEY_SUPPLY - total number coins to be generated
-const uint64_t MONEY_SUPPLY = UINT64_C(1000000000000000);
+const uint64_t MONEY_SUPPLY = UINT64_C(55000000 * 1000000);
 const uint32_t ZAWY_DIFFICULTY_BLOCK_INDEX = 0;
 const size_t ZAWY_DIFFICULTY_V2 = 0;
 const uint8_t ZAWY_DIFFICULTY_DIFFICULTY_BLOCK_VERSION = 3;
@@ -44,11 +44,11 @@ const uint32_t LWMA_3_DIFFICULTY_BLOCK_INDEX = 8;
 const uint32_t DIFFICULTY_WINDOW_V3 = 64;
 const uint32_t DIFFICULTY_BLOCKS_COUNT_V3 = DIFFICULTY_WINDOW_V3 + 1;
 
-const unsigned EMISSION_SPEED_FACTOR = 29;
+const unsigned EMISSION_SPEED_FACTOR = 50;
 static_assert(EMISSION_SPEED_FACTOR <= 8 * sizeof(uint64_t), "Bad EMISSION_SPEED_FACTOR");
 
 /* Premine amount */
-const uint64_t GENESIS_BLOCK_REWARD = UINT64_C(0);
+const uint64_t GENESIS_BLOCK_REWARD = UINT64_C(1200000 * 1000000);
 
 /* How to generate a premine:
 
@@ -72,23 +72,23 @@ XIv2Fyavy8CXG8BPEbNeCHFZ1fuDCYCZ3vW5H5LXN4K2M2MHUpTENip9bbavpHvvPwb4NDkBWrNgURAd
 
 */
 const char GENESIS_COINBASE_TX_HEX[] =
-    "01e80201ff0001f5d771029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210164b78248cce756bf40cc48fb"
-    "9a79c04d5361ce3ef79e439e361b49179e79185a";
+    "01a00b01ff000180c0cbacf622029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210116b7eaec13f43967ca"
+    "dd52d6ed6bb0d0901cb7db66e7b221595d448593a303a2";
 
 /* This is the unix timestamp of the first "mined" block (technically block 2, not the genesis block)
-   You can get this value by doing "print_block 2" in xi-daemon. It is used to know what timestamp
+   You can get this value by doing "print_block 2" in xi-daemon. It is used to know what timestamp.\xi-
    to import from when the block height cannot be found in the node or the node is offline. */
-const uint64_t GENESIS_BLOCK_TIMESTAMP = 1541385662;  // WARNING(mainnet) Needs to be adjusted
+const uint64_t GENESIS_BLOCK_TIMESTAMP = 1544396293;  // WARNING(mainnet) Needs to be adjusted
 
-const size_t CRYPTONOTE_REWARD_BLOCKS_WINDOW = static_cast<size_t>(186.2643);
+const size_t CRYPTONOTE_REWARD_BLOCKS_WINDOW = 50;
 const size_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE =
     100000;  // size of block (bytes) after which reward for block calculated using block size
 const size_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2 = 20000;
 const size_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1 = 10000;
 const size_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 const size_t CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE = 600;
-const size_t CRYPTONOTE_DISPLAY_DECIMAL_POINT = 4;
-const uint64_t MINIMUM_FEE = UINT64_C(10);
+const size_t CRYPTONOTE_DISPLAY_DECIMAL_POINT = 6;
+const uint64_t MINIMUM_FEE = UINT64_C(1000);
 
 const uint64_t MINIMUM_MIXIN_V1 = 0;
 const uint64_t MAXIMUM_MIXIN_V1 = 10;
@@ -240,8 +240,8 @@ const uint64_t DATABASE_READ_BUFFER_MB_DEFAULT_SIZE = 10;
 const uint32_t DATABASE_DEFAULT_MAX_OPEN_FILES = 100;
 const uint16_t DATABASE_DEFAULT_BACKGROUND_THREADS_COUNT = 2;
 
-const char LICENSE_URL[] = "TODO";
-const char LATEST_VERSION_URL[] = "TODO";
+const char LICENSE_URL[] = "https://gitlab.com/galaxia-project/blockchain/xi/blob/develop/LICENSE";
+const char LATEST_VERSION_URL[] = "http://release.xi.galaxiaproject.org";
 const static boost::uuids::uuid CRYPTONOTE_NETWORK = {
     {0x74, 0x68, 0x69, 0x73, 0x69, 0x73, 0x61, 0x74, 0x65, 0x73, 0x74, 0x66, 0x6f, 0x72, 0x63, 0x6e}};
 

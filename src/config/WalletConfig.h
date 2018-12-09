@@ -36,7 +36,7 @@ const std::string walletdName = "xi-pgservice";
 const std::string coinName = std::string(CryptoNote::CRYPTONOTE_NAME);
 
 /* Where can your users contact you for support? E.g. discord */
-const std::string contactLink = "TODO";
+const std::string contactLink = "https://discord.gg/WQJVmBz";
 
 /* The number of decimals your coin has */
 const int numDecimalPlaces = CryptoNote::parameters ::CRYPTONOTE_DISPLAY_DECIMAL_POINT;
