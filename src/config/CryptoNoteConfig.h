@@ -21,6 +21,7 @@
 #include "config/Coin.h"
 #include "config/Network.h"
 #include "config/P2P.h"
+#include "config/Mixin.h"
 
 namespace CryptoNote {
 namespace Config {
@@ -96,31 +97,10 @@ const size_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT = CRYPTONOTE_BLOC
 const size_t CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE = 600;
 const uint64_t MINIMUM_FEE = UINT64_C(1000);
 
-const uint64_t MINIMUM_MIXIN_V1 = 0;
-const uint64_t MAXIMUM_MIXIN_V1 = 10;
-
-const uint64_t MINIMUM_MIXIN_V2 = 3;
-const uint64_t MAXIMUM_MIXIN_V2 = 3;
-
-const uint64_t MINIMUM_MIXIN_V3 = 3;
-const uint64_t MAXIMUM_MIXIN_V3 = 3;
-
-/* The heights to activate the mixin limits at */
-const uint32_t MIXIN_LIMITS_V1_HEIGHT = 1000;
-const uint32_t MIXIN_LIMITS_V2_HEIGHT = 2000;
-const uint32_t MIXIN_LIMITS_V3_HEIGHT = 3000;
-
-/* The mixin to use by default with xi-wallet and xi-pgservice */
-/* DEFAULT_MIXIN_V0 is the mixin used before MIXIN_LIMITS_V1_HEIGHT is started */
-const uint16_t DEFAULT_MIXIN_V0 = 0;
-const uint16_t DEFAULT_MIXIN_V1 = MAXIMUM_MIXIN_V1;
-const uint16_t DEFAULT_MIXIN_V2 = MAXIMUM_MIXIN_V2;
-const uint16_t DEFAULT_MIXIN_V3 = MAXIMUM_MIXIN_V3;
-
 const uint64_t DEFAULT_DUST_THRESHOLD = UINT64_C(10);
 const uint64_t DEFAULT_DUST_THRESHOLD_V2 = DEFAULT_DUST_THRESHOLD;
 
-const uint32_t DUST_THRESHOLD_V2_HEIGHT = MIXIN_LIMITS_V2_HEIGHT;
+const uint32_t DUST_THRESHOLD_V2_HEIGHT = 3000;
 const uint32_t FUSION_DUST_THRESHOLD_HEIGHT_V2 = 2;
 
 const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY = 24 * 60 * 60 / DIFFICULTY_TARGET;

@@ -353,7 +353,7 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool send
       std::cout << WarningMsg("Due to dust inputs, we are unable to ") << WarningMsg("send ")
                 << InformationMsg(formatAmount(unsendable)) << WarningMsg("of your balance.") << std::endl;
 
-      if (!WalletConfig::mixinZeroDisabled || height < WalletConfig::mixinZeroDisabledHeight) {
+      if (CryptoNote::Config::Mixin::isZeroMixinAllowed(height)) {
         std::cout << "Alternatively, you can set the mixin count to "
                   << "zero to send it all." << std::endl;
 
@@ -375,7 +375,7 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool send
 }
 
 BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr<WalletInfo> walletInfo,
-                                  uint64_t height, uint32_t nodeFee) {
+                                  uint32_t height, uint32_t nodeFee) {
   const uint64_t balance = walletInfo->wallet.getActualBalance();
 
   const uint64_t balanceNoDust = walletInfo->wallet.getBalanceMinusDust({walletInfo->walletAddress});
@@ -400,7 +400,7 @@ BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr
               << " without issues (includes a network fee of " << InformationMsg(formatAmount(fee)) << " and "
               << " a node fee of " << InformationMsg(formatAmount(nodeFee)) << ")" << std::endl;
 
-    if (!WalletConfig::mixinZeroDisabled || height < WalletConfig::mixinZeroDisabledHeight) {
+    if (CryptoNote::Config::Mixin::isZeroMixinAllowed(height)) {
       std::cout << "Alternatively, you can sent the mixin "
                 << "count to 0." << std::endl;
 
@@ -519,7 +519,7 @@ bool handleTransferError(const std::system_error &e, bool retried, uint32_t heig
       /* If a mixin of zero is allowed, or we are below the
          fork height when it's banned, ask them to resend with
          zero */
-      if (!WalletConfig::mixinZeroDisabled || height < WalletConfig::mixinZeroDisabledHeight) {
+      if (CryptoNote::Config::Mixin::isZeroMixinAllowed(height)) {
         std::cout << "Alternatively, you can set the mixin "
                   << "count to 0." << std::endl;
 

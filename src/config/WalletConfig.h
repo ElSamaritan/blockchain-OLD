@@ -61,12 +61,4 @@ const uint64_t minimumFee = CryptoNote::Config::MINIMUM_FEE;
 
 /* The minimum amount allowed to be sent - usually 1 (in ATOMIC units!) */
 const uint64_t minimumSend = CryptoNote::Config::MINIMUM_FEE;
-
-/* Is a mixin of zero disabled on your network? */
-const bool mixinZeroDisabled = true;
-
-/* If a mixin of zero is disabled, at what height was it disabled? E.g.
-   fork height, or 0, if never allowed. This is ignored if a mixin of
-   zero is allowed */
-const uint64_t mixinZeroDisabledHeight = CryptoNote::Config::MIXIN_LIMITS_V2_HEIGHT;
 }  // namespace WalletConfig
