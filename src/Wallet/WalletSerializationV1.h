@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "IWalletLegacy.h"
+#include "WalletLegacy/IWalletLegacy.h"
 
 #include "Common/IInputStream.h"
 #include "crypto/chacha8.h"

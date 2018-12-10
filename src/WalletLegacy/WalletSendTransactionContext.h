@@ -22,7 +22,7 @@
 
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "IWalletLegacy.h"
-#include "ITransfersContainer.h"
+#include "Transfers/ITransfersContainer.h"
 
 namespace CryptoNote {
 

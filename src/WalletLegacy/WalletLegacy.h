@@ -24,7 +24,7 @@
 #include <mutex>
 
 #include "IWalletLegacy.h"
-#include "INode.h"
+#include "CryptoNoteCore/INode.h"
 #include "Wallet/WalletErrors.h"
 #include "Wallet/WalletAsyncContextCounter.h"
 #include "Common/ObserverManager.h"

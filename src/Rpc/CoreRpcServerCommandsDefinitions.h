@@ -13,7 +13,7 @@
 #include "CryptoNoteCore/Difficulty.h"
 #include "crypto/hash.h"
 
-#include "BlockchainExplorerData.h"
+#include "BlockchainExplorer/BlockchainExplorerData.h"
 
 #include "Serialization/SerializationOverloads.h"
 #include "Serialization/BlockchainExplorerDataSerialization.h"
@@ -53,7 +53,7 @@ struct COMMAND_RPC_GET_HEIGHT {
 struct COMMAND_RPC_GET_BLOCKS_FAST {
   struct request {
     std::vector<Crypto::Hash> block_ids;  //*first 10 blocks id goes sequential, next goes in pow(2,n) offset, like 2,
-                                          //4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
+                                          // 4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
 
     void serialize(ISerializer &s) { KV_MEMBER(block_ids); }
   };
@@ -641,7 +641,7 @@ struct F_COMMAND_RPC_GET_POOL {
 struct COMMAND_RPC_QUERY_BLOCKS {
   struct request {
     std::vector<Crypto::Hash> block_ids;  //*first 10 blocks id goes sequential, next goes in pow(2,n) offset, like 2,
-                                          //4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
+                                          // 4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
     uint64_t timestamp;
 
     void serialize(ISerializer &s) {

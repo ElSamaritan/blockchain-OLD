@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "CryptoTypes.h"
+#include <crypto/CryptoTypes.h>
 
 #include <System/ContextGroup.h>
 #include <System/Dispatcher.h>

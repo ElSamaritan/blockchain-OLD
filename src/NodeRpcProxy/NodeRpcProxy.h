@@ -16,7 +16,7 @@
 
 #include "Common/ObserverManager.h"
 #include "Logging/LoggerRef.h"
-#include "INode.h"
+#include "CryptoNoteCore/INode.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 
 namespace System {

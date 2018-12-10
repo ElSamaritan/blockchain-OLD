@@ -22,8 +22,8 @@
 #include <unordered_set>
 
 #include "IBlockchainExplorer.h"
-#include "IDataBase.h"
-#include "INode.h"
+#include "CryptoNoteCore/IDataBase.h"
+#include "CryptoNoteCore/INode.h"
 
 #include "BlockchainExplorerErrors.h"
 #include "Common/ObserverManager.h"

@@ -22,9 +22,9 @@
 
 #include <Xi/Global.h>
 
-#include "ITransaction.h"
-#include "ITransfersContainer.h"
-#include "IStreamSerializable.h"
+#include "CryptoNoteCore/ITransaction.h"
+#include "Transfers/ITransfersContainer.h"
+#include "Common/IStreamSerializable.h"
 
 namespace CryptoNote {
 

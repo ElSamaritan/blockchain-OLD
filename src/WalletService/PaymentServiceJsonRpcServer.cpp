@@ -11,7 +11,7 @@
 
 #include <Xi/Global.h>
 
-#include <CryptoTypes.h>
+#include <crypto/CryptoTypes.h>
 #include "crypto/hash.h"
 #include "PaymentServiceJsonRpcMessages.h"
 #include "WalletService.h"

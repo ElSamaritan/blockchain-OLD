@@ -28,7 +28,7 @@
 #include <System/Timer.h>
 
 #include "IP2pNodeInternal.h"
-#include "IStreamSerializable.h"
+#include "Common/IStreamSerializable.h"
 #include "NetNodeConfig.h"
 #include "P2pInterfaces.h"
 #include "P2pNodeConfig.h"

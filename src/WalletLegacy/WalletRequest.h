@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "INode.h"
+#include "CryptoNoteCore/INode.h"
 // #include "WalletSynchronizationContext.h"
 #include "WalletLegacy/WalletSendTransactionContext.h"
 #include "WalletLegacy/WalletLegacyEvent.h"

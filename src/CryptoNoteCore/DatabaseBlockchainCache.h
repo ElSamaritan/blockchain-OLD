@@ -21,7 +21,7 @@
 #include "Currency.h"
 #include "IBlockchainCache.h"
 #include "CryptoNoteCore/UpgradeManager.h"
-#include <IDataBase.h>
+#include <CryptoNoteCore/IDataBase.h>
 #include <CryptoNoteCore/BlockchainReadBatch.h>
 #include <CryptoNoteCore/BlockchainWriteBatch.h>
 #include <CryptoNoteCore/DatabaseCacheData.h>

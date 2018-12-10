@@ -19,7 +19,7 @@
 
 #include "crypto/hash.h"
 #include "IWalletLegacy.h"
-#include "ITransfersContainer.h"
+#include "Transfers/ITransfersContainer.h"
 
 #include "WalletLegacy/WalletLegacyEvent.h"
 #include "WalletLegacy/WalletUnconfirmedTransactions.h"

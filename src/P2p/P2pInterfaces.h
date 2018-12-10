@@ -20,7 +20,7 @@
 #include <cstdint>
 #include <memory>
 
-#include <CryptoNote.h>
+#include <CryptoNoteCore/CryptoNote.h>
 
 namespace CryptoNote {
 

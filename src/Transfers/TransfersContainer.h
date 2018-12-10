@@ -35,8 +35,8 @@
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"
 
-#include "ITransaction.h"
-#include "ITransfersContainer.h"
+#include "CryptoNoteCore/ITransaction.h"
+#include "Transfers/ITransfersContainer.h"
 
 namespace CryptoNote {
 

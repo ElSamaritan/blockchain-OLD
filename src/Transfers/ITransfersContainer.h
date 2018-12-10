@@ -21,9 +21,9 @@
 #include <limits>
 #include <vector>
 #include "crypto/hash.h"
-#include "ITransaction.h"
-#include "IObservable.h"
-#include "IStreamSerializable.h"
+#include "CryptoNoteCore/ITransaction.h"
+#include "Common/IObservable.h"
+#include "Common/IStreamSerializable.h"
 
 namespace CryptoNote {
 

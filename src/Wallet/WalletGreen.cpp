@@ -23,7 +23,7 @@
 
 #include <Xi/Global.h>
 
-#include "ITransaction.h"
+#include "CryptoNoteCore/ITransaction.h"
 
 #include "Common/ScopeExit.h"
 #include "Common/ShuffleGenerator.h"

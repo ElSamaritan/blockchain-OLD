@@ -20,13 +20,13 @@
 #include "CryptoNoteCore/Account.h"
 #include "CryptoNoteCore/Currency.h"
 
-#include "INode.h"
+#include "CryptoNoteCore/INode.h"
 #include "WalletLegacy/WalletSendTransactionContext.h"
 #include "WalletLegacy/WalletUserTransactionsCache.h"
 #include "WalletLegacy/WalletUnconfirmedTransactions.h"
 #include "WalletLegacy/WalletRequest.h"
 
-#include "ITransfersContainer.h"
+#include "Transfers/ITransfersContainer.h"
 
 namespace CryptoNote {
 

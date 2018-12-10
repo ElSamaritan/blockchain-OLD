@@ -7,7 +7,7 @@
 
 #include <Xi/Global.h>
 
-#include "CryptoNote.h"
+#include "CryptoNoteCore/CryptoNote.h"
 #include "P2pProtocolTypes.h"
 
 namespace CryptoNote {

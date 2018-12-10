@@ -13,7 +13,7 @@
 #include <System/Event.h>
 #include <System/RemoteContext.h>
 
-#include "CryptoNote.h"
+#include "CryptoNoteCore/CryptoNote.h"
 
 #include "Logging/LoggerRef.h"
 

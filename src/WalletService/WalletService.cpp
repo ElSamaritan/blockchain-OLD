@@ -22,7 +22,7 @@
 #include "Common/Util.h"
 
 #include "crypto/crypto.h"
-#include "CryptoNote.h"
+#include "CryptoNoteCore/CryptoNote.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"

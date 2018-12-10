@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "IWalletLegacy.h"
-#include "ITransfersContainer.h"
+#include "WalletLegacy/IWalletLegacy.h"
+#include "Transfers/ITransfersContainer.h"
 
 #include <unordered_map>
 #include <unordered_set>

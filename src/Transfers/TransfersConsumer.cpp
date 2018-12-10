@@ -16,8 +16,8 @@
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/TransactionApi.h"
 
-#include "IWallet.h"
-#include "INode.h"
+#include "Wallet/IWallet.h"
+#include "CryptoNoteCore/INode.h"
 #include <future>
 
 using namespace Crypto;

@@ -10,8 +10,8 @@
 #include <System/ContextGroup.h>
 #include <System/Dispatcher.h>
 #include <System/Event.h>
-#include "IWallet.h"
-#include "INode.h"
+#include "Wallet/IWallet.h"
+#include "CryptoNoteCore/INode.h"
 #include "CryptoNoteCore/Currency.h"
 #include "PaymentServiceJsonRpcMessages.h"
 #undef ERROR  // TODO: workaround for windows build. fix it

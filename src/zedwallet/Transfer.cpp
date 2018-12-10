@@ -15,7 +15,7 @@
 #include <CryptoNoteCore/CryptoNoteTools.h>
 #include <CryptoNoteCore/TransactionExtra.h>
 
-#include "IWallet.h"
+#include "Wallet/IWallet.h"
 
 /* NodeErrors.h and WalletErrors.h have some conflicting enums, e.g. they
    both export NOT_INITIALIZED, we can get round this by using a namespace */

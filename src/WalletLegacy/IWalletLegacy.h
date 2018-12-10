@@ -25,7 +25,7 @@
 
 #include <Xi/Global.h>
 
-#include "CryptoNote.h"
+#include "CryptoNoteCore/CryptoNote.h"
 
 namespace CryptoNote {
 
