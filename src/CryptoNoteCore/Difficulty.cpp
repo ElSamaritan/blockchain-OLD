@@ -13,8 +13,8 @@
 // Copyright (c) 2017-2018 Zawy, MIT License
 // https://github.com/zawy12/difficulty-algorithms/issues/3
 uint64_t nextDifficultyV6(std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties) {
-  uint64_t T = CryptoNote::parameters::DIFFICULTY_TARGET;
-  uint64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW_V3;
+  uint64_t T = CryptoNote::Config::DIFFICULTY_TARGET;
+  uint64_t N = CryptoNote::Config::DIFFICULTY_WINDOW_V3;
   uint64_t L(0), ST, sum_3_ST(0), next_D, prev_D, nextTime, lastTime;
 
   /* If we are starting up, returning a difficulty guess. If you are a
@@ -58,8 +58,8 @@ uint64_t nextDifficultyV6(std::vector<uint64_t> timestamps, std::vector<uint64_t
 // Copyright (c) 2017-2018 Zawy, MIT License
 // https://github.com/zawy12/difficulty-algorithms/issues/3
 uint64_t nextDifficultyV5(std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties) {
-  int64_t T = CryptoNote::parameters::DIFFICULTY_TARGET;
-  int64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW_V3;
+  int64_t T = CryptoNote::Config::DIFFICULTY_TARGET;
+  int64_t N = CryptoNote::Config::DIFFICULTY_WINDOW_V3;
   int64_t L(0), ST, sum_3_ST(0), next_D, prev_D;
 
   /* If we are starting up, returning a difficulty guess. If you are a
@@ -99,8 +99,8 @@ uint64_t nextDifficultyV5(std::vector<uint64_t> timestamps, std::vector<uint64_t
 // Copyright (c) 2017-2018 Zawy, MIT License
 // https://github.com/zawy12/difficulty-algorithms/issues/3
 uint64_t nextDifficultyV4(std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties) {
-  int64_t T = CryptoNote::parameters::DIFFICULTY_TARGET;
-  int64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW_V3;
+  int64_t T = CryptoNote::Config::DIFFICULTY_TARGET;
+  int64_t N = CryptoNote::Config::DIFFICULTY_WINDOW_V3;
   int64_t L(0), ST, sum_3_ST(0), next_D, prev_D;
 
   if (timestamps.size() <= static_cast<uint64_t>(N)) {
@@ -135,9 +135,9 @@ uint64_t nextDifficultyV4(std::vector<uint64_t> timestamps, std::vector<uint64_t
 // Copyright (c) 2017-2018 Zawy, MIT License
 // https://github.com/zawy12/difficulty-algorithms/issues/3
 uint64_t nextDifficultyV3(std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties) {
-  int64_t T = CryptoNote::parameters::DIFFICULTY_TARGET;
-  int64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW_V3;
-  int64_t FTL = CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3;
+  int64_t T = CryptoNote::Config::DIFFICULTY_TARGET;
+  int64_t N = CryptoNote::Config::DIFFICULTY_WINDOW_V3;
+  int64_t FTL = CryptoNote::Config::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3;
   int64_t L(0), ST, sum_3_ST(0), next_D, prev_D;
 
   if (timestamps.size() <= static_cast<uint64_t>(N)) {

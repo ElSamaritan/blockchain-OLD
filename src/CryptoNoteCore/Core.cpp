@@ -655,8 +655,8 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   // that may be using older mixin rules on the network. This helps to clear out the transaction
   // pool during a network soft fork that requires a mixin lower or upper bound change
   uint32_t mixinChangeWindow = blockIndex;
-  if (mixinChangeWindow > CryptoNote::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW) {
-    mixinChangeWindow = mixinChangeWindow - CryptoNote::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
+  if (mixinChangeWindow > CryptoNote::Config::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW) {
+    mixinChangeWindow = mixinChangeWindow - CryptoNote::Config::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
   }
 
   bool success;
@@ -1175,10 +1175,10 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   /* How many blocks we look in the past to calculate the median timestamp */
   uint32_t blockchain_timestamp_check_window;
 
-  if (height >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX) {
-    blockchain_timestamp_check_window = CryptoNote::parameters::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V3;
+  if (height >= CryptoNote::Config::LWMA_2_DIFFICULTY_BLOCK_INDEX) {
+    blockchain_timestamp_check_window = CryptoNote::Config::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V3;
   } else {
-    blockchain_timestamp_check_window = CryptoNote::parameters::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW;
+    blockchain_timestamp_check_window = CryptoNote::Config::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW;
   }
 
   /* Skip the first N blocks, we don't have enough blocks to calculate a
@@ -1413,7 +1413,7 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
         if (!Crypto::check_ring_signature(cachedTransaction.getTransactionPrefixHash(), in.keyImage,
                                           outputKeyPointers.data(), outputKeyPointers.size(),
                                           transaction.signatures[inputIndex].data(),
-                                          blockIndex > parameters::KEY_IMAGE_CHECKING_BLOCK_INDEX)) {
+                                          blockIndex > Config::KEY_IMAGE_CHECKING_BLOCK_INDEX)) {
           return error::TransactionValidationError::INPUT_INVALID_SIGNATURES;
         }
       }
@@ -1487,7 +1487,7 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
       // outputIndexes are packed here, first is absolute, others are offsets to previous,
       // so first can be zero, others can't
       // Fix discovered by Monero Lab and suggested by "fluffypony" (bitcointalk.org)
-      if (!(scalarmultKey(in.keyImage, L) == I) && blockIndex > parameters::KEY_IMAGE_CHECKING_BLOCK_INDEX) {
+      if (!(scalarmultKey(in.keyImage, L) == I) && blockIndex > Config::KEY_IMAGE_CHECKING_BLOCK_INDEX) {
         return error::TransactionValidationError::INPUT_INVALID_DOMAIN_KEYIMAGES;
       }
 

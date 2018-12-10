@@ -69,11 +69,11 @@ DaemonConfiguration initConfiguration() {
   config.logFile = "xi-daemon.log";
   config.logLevel = Logging::WARNING;
   config.dbMaxOpenFiles = CryptoNote::DATABASE_DEFAULT_MAX_OPEN_FILES;
-  config.dbReadCacheSize = CryptoNote::DATABASE_READ_BUFFER_MB_DEFAULT_SIZE;
+  config.dbReadCacheSize = CryptoNote::DATABASE_READ_BUFFER_DEFAULT_SIZE;
   config.dbThreads = CryptoNote::DATABASE_DEFAULT_BACKGROUND_THREADS_COUNT;
-  config.dbWriteBufferSize = CryptoNote::DATABASE_WRITE_BUFFER_MB_DEFAULT_SIZE;
+  config.dbWriteBufferSize = CryptoNote::DATABASE_WRITE_BUFFER_DEFAULT_SIZE;
   config.p2pInterface = "0.0.0.0";
-  config.p2pPort = CryptoNote::P2P_DEFAULT_PORT;
+  config.p2pPort = CryptoNote::Config::P2P::defaultPort();
   config.p2pExternalPort = 0;
   config.rpcInterface = "127.0.0.1";
   config.rpcPort = CryptoNote::RPC_DEFAULT_PORT;

@@ -29,18 +29,18 @@ class Currency {
   uint32_t minedMoneyUnlockWindow() const { return m_minedMoneyUnlockWindow; }
 
   size_t timestampCheckWindow(uint32_t blockHeight) const {
-    if (blockHeight >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V3) {
-      return CryptoNote::parameters::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V3;
+    if (blockHeight >= CryptoNote::Config::LWMA_2_DIFFICULTY_BLOCK_INDEX_V3) {
+      return CryptoNote::Config::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V3;
     } else {
       return m_timestampCheckWindow;
     }
   }
 
   uint64_t blockFutureTimeLimit(uint32_t blockHeight) const {
-    if (blockHeight >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V2) {
-      return CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4;
-    } else if (blockHeight >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX) {
-      return CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3;
+    if (blockHeight >= CryptoNote::Config::LWMA_2_DIFFICULTY_BLOCK_INDEX_V2) {
+      return CryptoNote::Config::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4;
+    } else if (blockHeight >= CryptoNote::Config::LWMA_2_DIFFICULTY_BLOCK_INDEX) {
+      return CryptoNote::Config::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3;
     } else {
       return m_blockFutureTimeLimit;
     }
@@ -63,15 +63,15 @@ class Currency {
 
   uint64_t minimumFee() const { return m_mininumFee; }
   uint64_t defaultDustThreshold(uint32_t height) const {
-    if (height >= CryptoNote::parameters::DUST_THRESHOLD_V2_HEIGHT) {
-      return CryptoNote::parameters::DEFAULT_DUST_THRESHOLD_V2;
+    if (height >= CryptoNote::Config::DUST_THRESHOLD_V2_HEIGHT) {
+      return CryptoNote::Config::DEFAULT_DUST_THRESHOLD_V2;
     }
 
     return m_defaultDustThreshold;
   }
   uint64_t defaultFusionDustThreshold(uint32_t height) const {
-    if (height >= CryptoNote::parameters::FUSION_DUST_THRESHOLD_HEIGHT_V2) {
-      return CryptoNote::parameters::DEFAULT_DUST_THRESHOLD_V2;
+    if (height >= CryptoNote::Config::FUSION_DUST_THRESHOLD_HEIGHT_V2) {
+      return CryptoNote::Config::DEFAULT_DUST_THRESHOLD_V2;
     }
 
     return m_defaultDustThreshold;

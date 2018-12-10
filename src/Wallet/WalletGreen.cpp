@@ -1217,14 +1217,14 @@ uint64_t WalletGreen::scanHeightToTimestamp(const uint32_t scanHeight) {
   }
 
   /* Get the amount of seconds since the blockchain launched */
-  uint64_t secondsSinceLaunch = scanHeight * CryptoNote::parameters::DIFFICULTY_TARGET;
+  uint64_t secondsSinceLaunch = scanHeight * CryptoNote::Config::DIFFICULTY_TARGET;
 
   /* Add a bit of a buffer in case of difficulty weirdness, blocks coming
      out too fast */
   secondsSinceLaunch = (secondsSinceLaunch * 95) / 100;
 
   /* Get the genesis block timestamp and add the time since launch */
-  timestamp = CryptoNote::parameters::GENESIS_BLOCK_TIMESTAMP + secondsSinceLaunch;
+  timestamp = CryptoNote::Config::GENESIS_BLOCK_TIMESTAMP + secondsSinceLaunch;
 
   /* Timestamp in the future */
   if (timestamp >= static_cast<uint64_t>(std::time(nullptr))) {
@@ -1239,9 +1239,9 @@ uint64_t WalletGreen::getCurrentTimestampAdjusted() {
   std::time_t time = std::time(nullptr);
 
   /* Take the amount of time a block can potentially be in the past/future */
-  std::initializer_list<uint64_t> limits = {CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT,
-                                            CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3,
-                                            CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4};
+  std::initializer_list<uint64_t> limits = {CryptoNote::Config::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT,
+                                            CryptoNote::Config::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3,
+                                            CryptoNote::Config::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4};
 
   /* Get the largest adjustment possible */
   uint64_t adjust = std::max(limits);
@@ -3751,15 +3751,15 @@ void WalletGreen::deleteFromUncommitedTransactions(const std::vector<size_t>& de
 size_t WalletGreen::getMaxTxSize() {
   uint32_t currentHeight = m_node.getLastKnownBlockHeight();
 
-  size_t growth = (currentHeight * CryptoNote ::parameters ::MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR) /
+  size_t growth = (currentHeight * CryptoNote ::Config ::MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR) /
 
-                  CryptoNote ::parameters ::MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR;
+                  CryptoNote ::Config ::MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR;
 
-  size_t x = CryptoNote::parameters::MAX_BLOCK_SIZE_INITIAL + growth;
+  size_t x = CryptoNote::Config::MAX_BLOCK_SIZE_INITIAL + growth;
 
   size_t y = 125000;
 
-  return std::min(x, y) - CryptoNote::parameters ::CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
+  return std::min(x, y) - CryptoNote::Config ::CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
 }
 
 }  // namespace CryptoNote

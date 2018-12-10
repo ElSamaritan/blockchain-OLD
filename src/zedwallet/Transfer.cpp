@@ -728,7 +728,7 @@ Maybe<std::pair<std::string, std::string>> extractIntegratedAddress(std::string 
   }
 
   /* The prefix needs to be the same as the base58 prefix */
-  if (prefix != CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX) {
+  if (prefix != CryptoNote::Config::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX) {
     return Nothing<std::pair<std::string, std::string>>();
   }
 

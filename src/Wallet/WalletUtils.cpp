@@ -24,15 +24,15 @@
 namespace CryptoNote {
 
 uint16_t getDefaultMixinByHeight(const uint64_t height) {
-  if (height >= CryptoNote::parameters::MIXIN_LIMITS_V3_HEIGHT) {
-    return CryptoNote::parameters::DEFAULT_MIXIN_V3;
+  if (height >= CryptoNote::Config::MIXIN_LIMITS_V3_HEIGHT) {
+    return CryptoNote::Config::DEFAULT_MIXIN_V3;
   }
-  if (height >= CryptoNote::parameters::MIXIN_LIMITS_V2_HEIGHT) {
-    return CryptoNote::parameters::DEFAULT_MIXIN_V2;
-  } else if (height >= CryptoNote::parameters::MIXIN_LIMITS_V1_HEIGHT) {
-    return CryptoNote::parameters::DEFAULT_MIXIN_V1;
+  if (height >= CryptoNote::Config::MIXIN_LIMITS_V2_HEIGHT) {
+    return CryptoNote::Config::DEFAULT_MIXIN_V2;
+  } else if (height >= CryptoNote::Config::MIXIN_LIMITS_V1_HEIGHT) {
+    return CryptoNote::Config::DEFAULT_MIXIN_V1;
   } else {
-    return CryptoNote::parameters::DEFAULT_MIXIN_V0;
+    return CryptoNote::Config::DEFAULT_MIXIN_V0;
   }
 }
 

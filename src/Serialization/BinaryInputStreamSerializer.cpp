@@ -110,7 +110,7 @@ bool BinaryInputStreamSerializer::operator()(std::string& value, Common::StringV
   readVarint(stream, size);
 
   /* Can't take up more than a block size */
-  if (size > CryptoNote::parameters::MAX_EXTRA_SIZE && std::string(name.getData()) == "mm_tag") {
+  if (size > CryptoNote::Config::MAX_EXTRA_SIZE && std::string(name.getData()) == "mm_tag") {
     std::vector<char> temp;
     temp.resize(1);
 

@@ -11,10 +11,19 @@
 #include <cstdint>
 #include <limits>
 #include <initializer_list>
+#include <chrono>
+
+#include <Xi/Utils/ConstExprMath.h>
+#include <Xi/Utils/Conversion.h>
+
 #include <boost/uuid/uuid.hpp>
 
+#include "config/Coin.h"
+#include "config/Network.h"
+#include "config/P2P.h"
+
 namespace CryptoNote {
-namespace parameters {
+namespace Config {
 
 const uint64_t DIFFICULTY_TARGET = 60;
 
@@ -30,8 +39,6 @@ const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4 = CRYPTONOTE_BLOCK_FUTURE_T
 const uint32_t BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW = 60;
 const uint32_t BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V3 = 11;
 
-// MONEY_SUPPLY - total number coins to be generated
-const uint64_t MONEY_SUPPLY = UINT64_C(55000000 * 1000000);
 const uint32_t ZAWY_DIFFICULTY_BLOCK_INDEX = 0;
 const size_t ZAWY_DIFFICULTY_V2 = 0;
 const uint8_t ZAWY_DIFFICULTY_DIFFICULTY_BLOCK_VERSION = 3;
@@ -87,7 +94,6 @@ const size_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2 = 20000;
 const size_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1 = 10000;
 const size_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 const size_t CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE = 600;
-const size_t CRYPTONOTE_DISPLAY_DECIMAL_POINT = 6;
 const uint64_t MINIMUM_FEE = UINT64_C(1000);
 
 const uint64_t MINIMUM_MIXIN_V1 = 0;
@@ -190,7 +196,7 @@ const char CRYPTONOTE_BLOCKINDEXES_FILENAME[] = "blockindexes.bin";
 const char CRYPTONOTE_POOLDATA_FILENAME[] = "poolstate.bin";
 const char P2P_NET_DATA_FILENAME[] = "p2pstate.bin";
 const char MINER_CONFIG_FILE_NAME[] = "miner_conf.json";
-}  // namespace parameters
+}  // namespace Config
 
 const char CRYPTONOTE_NAME[] = "XI";
 
@@ -208,42 +214,16 @@ const size_t BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT = 10000;  // by default, blo
 const size_t BLOCKS_SYNCHRONIZING_DEFAULT_COUNT = 100;        // by default, blocks count in blocks downloading
 const size_t COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT = 1000;
 
-const uint16_t P2P_DEFAULT_PORT = 22868;
 const uint16_t RPC_DEFAULT_PORT = 22869;
 const uint16_t SERVICE_DEFAULT_PORT = 38070;
 
-const size_t P2P_LOCAL_WHITE_PEERLIST_LIMIT = 1000;
-const size_t P2P_LOCAL_GRAY_PEERLIST_LIMIT = 5000;
-
-// P2P Network Configuration Section - This defines our current P2P network version
-// and the minimum version for communication between nodes
-const uint8_t P2P_CURRENT_VERSION = 1;
-const uint8_t P2P_MINIMUM_VERSION = 1;
-// This defines the number of versions ahead we must see peers before we start displaying
-// warning messages that we need to upgrade our software.
-const uint8_t P2P_UPGRADE_WINDOW = 2;
-
-const size_t P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE = 32 * 1024 * 1024;  // 32 MB
-const uint32_t P2P_DEFAULT_CONNECTIONS_COUNT = 8;
-const size_t P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT = 70;
-const uint32_t P2P_DEFAULT_HANDSHAKE_INTERVAL = 60;     // seconds
-const uint32_t P2P_DEFAULT_PACKET_MAX_SIZE = 50000000;  // 50000000 bytes maximum packet size
-const uint32_t P2P_DEFAULT_PEERS_IN_HANDSHAKE = 250;
-const uint32_t P2P_DEFAULT_CONNECTION_TIMEOUT = 5000;       // 5 seconds
-const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT = 2000;  // 2 seconds
-const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT = 60 * 2 * 1000;  // 2 minutes
-const size_t P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT = 5000;   // 5 seconds
-const char P2P_STAT_TRUSTED_PUB_KEY[] = "";
-
-const uint64_t DATABASE_WRITE_BUFFER_MB_DEFAULT_SIZE = 256;
-const uint64_t DATABASE_READ_BUFFER_MB_DEFAULT_SIZE = 10;
+const uint64_t DATABASE_WRITE_BUFFER_DEFAULT_SIZE = 256_MB;
+const uint64_t DATABASE_READ_BUFFER_DEFAULT_SIZE = 10_MB;
 const uint32_t DATABASE_DEFAULT_MAX_OPEN_FILES = 100;
 const uint16_t DATABASE_DEFAULT_BACKGROUND_THREADS_COUNT = 2;
 
 const char LICENSE_URL[] = "https://gitlab.com/galaxia-project/blockchain/xi/blob/develop/LICENSE";
 const char LATEST_VERSION_URL[] = "http://release.xi.galaxiaproject.org";
-const static boost::uuids::uuid CRYPTONOTE_NETWORK = {
-    {0x74, 0x68, 0x69, 0x73, 0x69, 0x73, 0x61, 0x74, 0x65, 0x73, 0x74, 0x66, 0x6f, 0x72, 0x63, 0x6e}};
 
 const char* const SEED_NODES[] = {"207.180.240.151:22868", "207.180.240.152:22868"};
 }  // namespace CryptoNote

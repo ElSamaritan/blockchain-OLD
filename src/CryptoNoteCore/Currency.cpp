@@ -229,7 +229,7 @@ bool Currency::init() {
 bool Currency::generateGenesisBlock() {
   genesisBlockTemplate = boost::value_initialized<BlockTemplate>();
 
-  std::string genesisCoinbaseTxHex = CryptoNote::parameters::GENESIS_COINBASE_TX_HEX;
+  std::string genesisCoinbaseTxHex = CryptoNote::Config::GENESIS_COINBASE_TX_HEX;
   BinaryArray minerTxBlob;
 
   bool r =
@@ -256,9 +256,9 @@ size_t Currency::difficultyWindowByBlockVersion(uint8_t blockMajorVersion) const
   if (blockMajorVersion >= BLOCK_MAJOR_VERSION_3) {
     return m_difficultyWindow;
   } else if (blockMajorVersion == BLOCK_MAJOR_VERSION_2) {
-    return CryptoNote::parameters::DIFFICULTY_WINDOW_V2;
+    return CryptoNote::Config::DIFFICULTY_WINDOW_V2;
   } else {
-    return CryptoNote::parameters::DIFFICULTY_WINDOW_V1;
+    return CryptoNote::Config::DIFFICULTY_WINDOW_V1;
   }
 }
 
@@ -266,9 +266,9 @@ size_t Currency::difficultyLagByBlockVersion(uint8_t blockMajorVersion) const {
   if (blockMajorVersion >= BLOCK_MAJOR_VERSION_3) {
     return m_difficultyLag;
   } else if (blockMajorVersion == BLOCK_MAJOR_VERSION_2) {
-    return CryptoNote::parameters::DIFFICULTY_LAG_V2;
+    return CryptoNote::Config::DIFFICULTY_LAG_V2;
   } else {
-    return CryptoNote::parameters::DIFFICULTY_LAG_V1;
+    return CryptoNote::Config::DIFFICULTY_LAG_V1;
   }
 }
 
@@ -276,15 +276,15 @@ size_t Currency::difficultyCutByBlockVersion(uint8_t blockMajorVersion) const {
   if (blockMajorVersion >= BLOCK_MAJOR_VERSION_3) {
     return m_difficultyCut;
   } else if (blockMajorVersion == BLOCK_MAJOR_VERSION_2) {
-    return CryptoNote::parameters::DIFFICULTY_CUT_V2;
+    return CryptoNote::Config::DIFFICULTY_CUT_V2;
   } else {
-    return CryptoNote::parameters::DIFFICULTY_CUT_V1;
+    return CryptoNote::Config::DIFFICULTY_CUT_V1;
   }
 }
 
 size_t Currency::difficultyBlocksCountByBlockVersion(uint8_t blockMajorVersion, uint32_t height) const {
-  if (height >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX) {
-    return CryptoNote::parameters::DIFFICULTY_BLOCKS_COUNT_V3;
+  if (height >= CryptoNote::Config::LWMA_2_DIFFICULTY_BLOCK_INDEX) {
+    return CryptoNote::Config::DIFFICULTY_BLOCKS_COUNT_V3;
   }
 
   return difficultyWindowByBlockVersion(blockMajorVersion) + difficultyLagByBlockVersion(blockMajorVersion);
@@ -294,9 +294,9 @@ size_t Currency::blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVers
   if (blockMajorVersion >= BLOCK_MAJOR_VERSION_3) {
     return m_blockGrantedFullRewardZone;
   } else if (blockMajorVersion == BLOCK_MAJOR_VERSION_2) {
-    return CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2;
+    return CryptoNote::Config::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2;
   } else {
-    return CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1;
+    return CryptoNote::Config::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1;
   }
 }
 
@@ -584,14 +584,14 @@ bool Currency::parseAmount(const std::string& str, uint64_t& amount) const {
 uint64_t Currency::getNextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
                                      std::vector<uint64_t> cumulativeDifficulties) const {
   /* nextDifficultyV3 and above are defined in src/CryptoNoteCore/Difficulty.cpp */
-  if (blockIndex >= CryptoNote::parameters::LWMA_3_DIFFICULTY_BLOCK_INDEX) {
+  if (blockIndex >= CryptoNote::Config::LWMA_3_DIFFICULTY_BLOCK_INDEX) {
     return nextDifficultyV6(timestamps, cumulativeDifficulties);
   }
-  if (blockIndex >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V3) {
+  if (blockIndex >= CryptoNote::Config::LWMA_2_DIFFICULTY_BLOCK_INDEX_V3) {
     return nextDifficultyV5(timestamps, cumulativeDifficulties);
-  } else if (blockIndex >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V2) {
+  } else if (blockIndex >= CryptoNote::Config::LWMA_2_DIFFICULTY_BLOCK_INDEX_V2) {
     return nextDifficultyV4(timestamps, cumulativeDifficulties);
-  } else if (blockIndex >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX) {
+  } else if (blockIndex >= CryptoNote::Config::LWMA_2_DIFFICULTY_BLOCK_INDEX) {
     return nextDifficultyV3(timestamps, cumulativeDifficulties);
   } else {
     return nextDifficulty(version, blockIndex, timestamps, cumulativeDifficulties);
@@ -856,61 +856,61 @@ Currency::Currency(Currency&& currency)
       logger(currency.logger) {}
 
 CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
-  maxBlockNumber(parameters::CRYPTONOTE_MAX_BLOCK_NUMBER);
-  maxBlockBlobSize(parameters::CRYPTONOTE_MAX_BLOCK_BLOB_SIZE);
-  maxTxSize(parameters::CRYPTONOTE_MAX_TX_SIZE);
-  publicAddressBase58Prefix(parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
-  minedMoneyUnlockWindow(parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW);
+  maxBlockNumber(Config::CRYPTONOTE_MAX_BLOCK_NUMBER);
+  maxBlockBlobSize(Config::CRYPTONOTE_MAX_BLOCK_BLOB_SIZE);
+  maxTxSize(Config::CRYPTONOTE_MAX_TX_SIZE);
+  publicAddressBase58Prefix(Config::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
+  minedMoneyUnlockWindow(Config::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW);
 
-  timestampCheckWindow(parameters::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW);
-  blockFutureTimeLimit(parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT);
+  timestampCheckWindow(Config::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW);
+  blockFutureTimeLimit(Config::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT);
 
-  moneySupply(parameters::MONEY_SUPPLY);
-  emissionSpeedFactor(parameters::EMISSION_SPEED_FACTOR);
-  genesisBlockReward(parameters::GENESIS_BLOCK_REWARD);
+  moneySupply(Config::Coin::totalSupply());
+  emissionSpeedFactor(Config::EMISSION_SPEED_FACTOR);
+  genesisBlockReward(Config::GENESIS_BLOCK_REWARD);
 
-  rewardBlocksWindow(parameters::CRYPTONOTE_REWARD_BLOCKS_WINDOW);
-  zawyDifficultyBlockIndex(parameters::ZAWY_DIFFICULTY_BLOCK_INDEX);
-  zawyDifficultyV2(parameters::ZAWY_DIFFICULTY_V2);
-  zawyDifficultyBlockVersion(parameters::ZAWY_DIFFICULTY_DIFFICULTY_BLOCK_VERSION);
-  blockGrantedFullRewardZone(parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE);
-  minerTxBlobReservedSize(parameters::CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE);
+  rewardBlocksWindow(Config::CRYPTONOTE_REWARD_BLOCKS_WINDOW);
+  zawyDifficultyBlockIndex(Config::ZAWY_DIFFICULTY_BLOCK_INDEX);
+  zawyDifficultyV2(Config::ZAWY_DIFFICULTY_V2);
+  zawyDifficultyBlockVersion(Config::ZAWY_DIFFICULTY_DIFFICULTY_BLOCK_VERSION);
+  blockGrantedFullRewardZone(Config::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE);
+  minerTxBlobReservedSize(Config::CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE);
 
-  numberOfDecimalPlaces(parameters::CRYPTONOTE_DISPLAY_DECIMAL_POINT);
+  numberOfDecimalPlaces(Config::Coin::numberOfDecimalPoints());
 
-  mininumFee(parameters::MINIMUM_FEE);
-  defaultDustThreshold(parameters::DEFAULT_DUST_THRESHOLD);
+  mininumFee(Config::MINIMUM_FEE);
+  defaultDustThreshold(Config::DEFAULT_DUST_THRESHOLD);
 
-  difficultyTarget(parameters::DIFFICULTY_TARGET);
-  difficultyWindow(parameters::DIFFICULTY_WINDOW);
-  difficultyLag(parameters::DIFFICULTY_LAG);
-  difficultyCut(parameters::DIFFICULTY_CUT);
+  difficultyTarget(Config::DIFFICULTY_TARGET);
+  difficultyWindow(Config::DIFFICULTY_WINDOW);
+  difficultyLag(Config::DIFFICULTY_LAG);
+  difficultyCut(Config::DIFFICULTY_CUT);
 
-  maxBlockSizeInitial(parameters::MAX_BLOCK_SIZE_INITIAL);
-  maxBlockSizeGrowthSpeedNumerator(parameters::MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR);
-  maxBlockSizeGrowthSpeedDenominator(parameters::MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR);
+  maxBlockSizeInitial(Config::MAX_BLOCK_SIZE_INITIAL);
+  maxBlockSizeGrowthSpeedNumerator(Config::MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR);
+  maxBlockSizeGrowthSpeedDenominator(Config::MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR);
 
-  lockedTxAllowedDeltaSeconds(parameters::CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS);
-  lockedTxAllowedDeltaBlocks(parameters::CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS);
+  lockedTxAllowedDeltaSeconds(Config::CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS);
+  lockedTxAllowedDeltaBlocks(Config::CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS);
 
-  mempoolTxLiveTime(parameters::CRYPTONOTE_MEMPOOL_TX_LIVETIME);
-  mempoolTxFromAltBlockLiveTime(parameters::CRYPTONOTE_MEMPOOL_TX_FROM_ALT_BLOCK_LIVETIME);
-  numberOfPeriodsToForgetTxDeletedFromPool(parameters::CRYPTONOTE_NUMBER_OF_PERIODS_TO_FORGET_TX_DELETED_FROM_POOL);
+  mempoolTxLiveTime(Config::CRYPTONOTE_MEMPOOL_TX_LIVETIME);
+  mempoolTxFromAltBlockLiveTime(Config::CRYPTONOTE_MEMPOOL_TX_FROM_ALT_BLOCK_LIVETIME);
+  numberOfPeriodsToForgetTxDeletedFromPool(Config::CRYPTONOTE_NUMBER_OF_PERIODS_TO_FORGET_TX_DELETED_FROM_POOL);
 
-  fusionTxMaxSize(parameters::FUSION_TX_MAX_SIZE);
-  fusionTxMinInputCount(parameters::FUSION_TX_MIN_INPUT_COUNT);
-  fusionTxMinInOutCountRatio(parameters::FUSION_TX_MIN_IN_OUT_COUNT_RATIO);
+  fusionTxMaxSize(Config::FUSION_TX_MAX_SIZE);
+  fusionTxMinInputCount(Config::FUSION_TX_MIN_INPUT_COUNT);
+  fusionTxMinInOutCountRatio(Config::FUSION_TX_MIN_IN_OUT_COUNT_RATIO);
 
-  upgradeHeightV2(parameters::UPGRADE_HEIGHT_V2);
-  upgradeHeightV3(parameters::UPGRADE_HEIGHT_V3);
-  upgradeHeightV4(parameters::UPGRADE_HEIGHT_V4);
-  upgradeVotingThreshold(parameters::UPGRADE_VOTING_THRESHOLD);
-  upgradeVotingWindow(parameters::UPGRADE_VOTING_WINDOW);
-  upgradeWindow(parameters::UPGRADE_WINDOW);
+  upgradeHeightV2(Config::UPGRADE_HEIGHT_V2);
+  upgradeHeightV3(Config::UPGRADE_HEIGHT_V3);
+  upgradeHeightV4(Config::UPGRADE_HEIGHT_V4);
+  upgradeVotingThreshold(Config::UPGRADE_VOTING_THRESHOLD);
+  upgradeVotingWindow(Config::UPGRADE_VOTING_WINDOW);
+  upgradeWindow(Config::UPGRADE_WINDOW);
 
-  blocksFileName(parameters::CRYPTONOTE_BLOCKS_FILENAME);
-  blockIndexesFileName(parameters::CRYPTONOTE_BLOCKINDEXES_FILENAME);
-  txPoolFileName(parameters::CRYPTONOTE_POOLDATA_FILENAME);
+  blocksFileName(Config::CRYPTONOTE_BLOCKS_FILENAME);
+  blockIndexesFileName(Config::CRYPTONOTE_BLOCKINDEXES_FILENAME);
+  txPoolFileName(Config::CRYPTONOTE_POOLDATA_FILENAME);
 
   isBlockexplorer(false);
   testnet(false);

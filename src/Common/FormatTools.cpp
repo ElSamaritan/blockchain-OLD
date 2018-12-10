@@ -67,7 +67,7 @@ ForkStatus get_fork_status(uint64_t height, std::vector<uint64_t> upgrade_height
     }
   }
 
-  uint64_t days = (next_fork - height) / CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
+  uint64_t days = (next_fork - height) / CryptoNote::Config::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 
   /* Next fork in < 30 days away */
   if (days < 30) {
@@ -97,7 +97,7 @@ std::string get_fork_time(uint64_t height, std::vector<uint64_t> upgrade_heights
     }
   }
 
-  uint64_t days = (next_fork - height) / CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
+  uint64_t days = (next_fork - height) / CryptoNote::Config::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 
   if (height == next_fork) {
     return " (forking now),";
