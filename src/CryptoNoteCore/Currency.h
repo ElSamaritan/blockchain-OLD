@@ -29,21 +29,11 @@ class Currency {
   uint32_t minedMoneyUnlockWindow() const { return m_minedMoneyUnlockWindow; }
 
   size_t timestampCheckWindow(uint32_t blockHeight) const {
-    if (blockHeight >= CryptoNote::Config::LWMA_2_DIFFICULTY_BLOCK_INDEX_V3) {
-      return CryptoNote::Config::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V3;
-    } else {
-      return m_timestampCheckWindow;
-    }
+    return CryptoNote::Config::Difficulty::windowSize(blockHeight);
   }
 
   uint64_t blockFutureTimeLimit(uint32_t blockHeight) const {
-    if (blockHeight >= CryptoNote::Config::LWMA_2_DIFFICULTY_BLOCK_INDEX_V2) {
-      return CryptoNote::Config::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4;
-    } else if (blockHeight >= CryptoNote::Config::LWMA_2_DIFFICULTY_BLOCK_INDEX) {
-      return CryptoNote::Config::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3;
-    } else {
-      return m_blockFutureTimeLimit;
-    }
+    return static_cast<uint64_t>(std::chrono::seconds{CryptoNote::Config::Difficulty::timeLimit(blockHeight)}.count());
   }
 
   uint64_t moneySupply() const { return m_moneySupply; }
@@ -51,9 +41,6 @@ class Currency {
   uint64_t genesisBlockReward() const { return m_genesisBlockReward; }
 
   size_t rewardBlocksWindow() const { return m_rewardBlocksWindow; }
-  uint32_t zawyDifficultyBlockIndex() const { return m_zawyDifficultyBlockIndex; }
-  size_t zawyDifficultyV2() const { return m_zawyDifficultyV2; }
-  uint8_t zawyDifficultyBlockVersion() const { return m_zawyDifficultyBlockVersion; }
   size_t blockGrantedFullRewardZone() const { return m_blockGrantedFullRewardZone; }
   size_t blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const;
   size_t minerTxBlobReservedSize() const { return m_minerTxBlobReservedSize; }
@@ -78,14 +65,7 @@ class Currency {
   }
 
   uint64_t difficultyTarget() const { return m_difficultyTarget; }
-  size_t difficultyWindow() const { return m_difficultyWindow; }
-  size_t difficultyWindowByBlockVersion(uint8_t blockMajorVersion) const;
-  size_t difficultyLag() const { return m_difficultyLag; }
-  size_t difficultyLagByBlockVersion(uint8_t blockMajorVersion) const;
-  size_t difficultyCut() const { return m_difficultyCut; }
-  size_t difficultyCutByBlockVersion(uint8_t blockMajorVersion) const;
-  size_t difficultyBlocksCount() const { return m_difficultyWindow + m_difficultyLag; }
-  size_t difficultyBlocksCountByBlockVersion(uint8_t blockMajorVersion, uint32_t height) const;
+  size_t difficultyBlocksCountByHeight(uint32_t height) const;
 
   size_t maxBlockSizeInitial() const { return m_maxBlockSizeInitial; }
   uint64_t maxBlockSizeGrowthSpeedNumerator() const { return m_maxBlockSizeGrowthSpeedNumerator; }
@@ -144,8 +124,6 @@ class Currency {
   std::string formatAmount(int64_t amount) const;
   bool parseAmount(const std::string& str, uint64_t& amount) const;
 
-  uint64_t getNextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
-                             std::vector<uint64_t> cumulativeDifficulties) const;
   uint64_t nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
                           std::vector<uint64_t> cumulativeDifficulties) const;
 
@@ -179,9 +157,6 @@ class Currency {
   uint64_t m_genesisBlockReward;
 
   size_t m_rewardBlocksWindow;
-  uint32_t m_zawyDifficultyBlockIndex;
-  size_t m_zawyDifficultyV2;
-  uint8_t m_zawyDifficultyBlockVersion;
   size_t m_blockGrantedFullRewardZone;
   size_t m_minerTxBlobReservedSize;
 
@@ -192,9 +167,6 @@ class Currency {
   uint64_t m_defaultDustThreshold;
 
   uint64_t m_difficultyTarget;
-  size_t m_difficultyWindow;
-  size_t m_difficultyLag;
-  size_t m_difficultyCut;
 
   size_t m_maxBlockSizeInitial;
   uint64_t m_maxBlockSizeGrowthSpeedNumerator;
@@ -293,18 +265,6 @@ class CurrencyBuilder : boost::noncopyable {
     m_currency.m_rewardBlocksWindow = val;
     return *this;
   }
-  CurrencyBuilder& zawyDifficultyBlockIndex(uint32_t val) {
-    m_currency.m_zawyDifficultyBlockIndex = val;
-    return *this;
-  }
-  CurrencyBuilder& zawyDifficultyV2(size_t val) {
-    m_currency.m_zawyDifficultyV2 = val;
-    return *this;
-  }
-  CurrencyBuilder& zawyDifficultyBlockVersion(uint8_t val) {
-    m_currency.m_zawyDifficultyBlockVersion = val;
-    return *this;
-  }
   CurrencyBuilder& blockGrantedFullRewardZone(size_t val) {
     m_currency.m_blockGrantedFullRewardZone = val;
     return *this;
@@ -327,15 +287,6 @@ class CurrencyBuilder : boost::noncopyable {
 
   CurrencyBuilder& difficultyTarget(uint64_t val) {
     m_currency.m_difficultyTarget = val;
-    return *this;
-  }
-  CurrencyBuilder& difficultyWindow(size_t val);
-  CurrencyBuilder& difficultyLag(size_t val) {
-    m_currency.m_difficultyLag = val;
-    return *this;
-  }
-  CurrencyBuilder& difficultyCut(size_t val) {
-    m_currency.m_difficultyCut = val;
     return *this;
   }
 

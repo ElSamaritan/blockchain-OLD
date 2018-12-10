@@ -19,44 +19,26 @@
 #include <boost/uuid/uuid.hpp>
 
 #include "config/Coin.h"
+#include "config/Time.h"
 #include "config/Network.h"
 #include "config/P2P.h"
 #include "config/Mixin.h"
+#include "config/Difficulty.h"
 
 namespace CryptoNote {
 namespace Config {
-
-const uint64_t DIFFICULTY_TARGET = 60;
 
 const uint32_t CRYPTONOTE_MAX_BLOCK_NUMBER = 500000000;
 const size_t CRYPTONOTE_MAX_BLOCK_BLOB_SIZE = 500000000;
 const size_t CRYPTONOTE_MAX_TX_SIZE = 1000000000;
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 22583;
-const uint32_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW = 1440;
-const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT = 60 * 60 * 2;
-const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3 = 3 * DIFFICULTY_TARGET;
-const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4 = CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3;
-
-const uint32_t BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW = 60;
-const uint32_t BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V3 = 11;
 
 const uint32_t ZAWY_DIFFICULTY_BLOCK_INDEX = 0;
 const size_t ZAWY_DIFFICULTY_V2 = 0;
 const uint8_t ZAWY_DIFFICULTY_DIFFICULTY_BLOCK_VERSION = 3;
 
-const uint32_t LWMA_2_DIFFICULTY_BLOCK_INDEX = 5;
-const uint32_t LWMA_2_DIFFICULTY_BLOCK_INDEX_V2 = 6;
-const uint32_t LWMA_2_DIFFICULTY_BLOCK_INDEX_V3 = 7;
-const uint32_t LWMA_3_DIFFICULTY_BLOCK_INDEX = 8;
-
-const uint32_t DIFFICULTY_WINDOW_V3 = 64;
-const uint32_t DIFFICULTY_BLOCKS_COUNT_V3 = DIFFICULTY_WINDOW_V3 + 1;
-
 const unsigned EMISSION_SPEED_FACTOR = 50;
 static_assert(EMISSION_SPEED_FACTOR <= 8 * sizeof(uint64_t), "Bad EMISSION_SPEED_FACTOR");
-
-/* Premine amount */
-const uint64_t GENESIS_BLOCK_REWARD = UINT64_C(1200000 * 1000000);
 
 /* How to generate a premine:
 
@@ -103,26 +85,15 @@ const uint64_t DEFAULT_DUST_THRESHOLD_V2 = DEFAULT_DUST_THRESHOLD;
 const uint32_t DUST_THRESHOLD_V2_HEIGHT = 3000;
 const uint32_t FUSION_DUST_THRESHOLD_HEIGHT_V2 = 2;
 
-const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY = 24 * 60 * 60 / DIFFICULTY_TARGET;
-const size_t DIFFICULTY_WINDOW = 17;
-const size_t DIFFICULTY_WINDOW_V1 = 2880;
-const size_t DIFFICULTY_WINDOW_V2 = 2880;
-const size_t DIFFICULTY_CUT = 0;  // timestamps to cut after sorting
-const size_t DIFFICULTY_CUT_V1 = 60;
-const size_t DIFFICULTY_CUT_V2 = 60;
-const size_t DIFFICULTY_LAG = 0;  // !!!
-const size_t DIFFICULTY_LAG_V1 = 15;
-const size_t DIFFICULTY_LAG_V2 = 15;
-static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
-
 const size_t MAX_BLOCK_SIZE_INITIAL = 100000;
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR = 100 * 1024;
-const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR = 365 * 24 * 60 * 60 / DIFFICULTY_TARGET;
+const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR =
+    365 * 24 * 60 * 60 / std::chrono::seconds{Time::blockTime()}.count();
 const uint64_t MAX_EXTRA_SIZE = 140000;
 
 const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS = 1;
 const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS =
-    DIFFICULTY_TARGET * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS;
+    std::chrono::seconds{Time::blockTime()}.count() * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS;
 
 const uint64_t CRYPTONOTE_MEMPOOL_TX_LIVETIME = 60 * 60 * 24;                     // seconds, one day
 const uint64_t CRYPTONOTE_MEMPOOL_TX_FROM_ALT_BLOCK_LIVETIME = 60 * 60 * 24 * 7;  // seconds, one week
@@ -139,9 +110,9 @@ const uint32_t UPGRADE_HEIGHT_V2 = 1;
 const uint32_t UPGRADE_HEIGHT_V3 = 2;
 const uint32_t UPGRADE_HEIGHT_V4 = 3;  // Upgrade height for CN-X
 const uint32_t UPGRADE_HEIGHT_CURRENT = UPGRADE_HEIGHT_V4;
-const unsigned UPGRADE_VOTING_THRESHOLD = 90;                              // percent
-const uint32_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks
-const uint32_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;         // blocks
+const unsigned UPGRADE_VOTING_THRESHOLD = 90;                         // percent
+const uint32_t UPGRADE_VOTING_WINDOW = Time::expectedBlocksPerDay();  // blocks
+const uint32_t UPGRADE_WINDOW = Time::expectedBlocksPerDay();         // blocks
 static_assert(0 < UPGRADE_VOTING_THRESHOLD && UPGRADE_VOTING_THRESHOLD <= 100, "Bad UPGRADE_VOTING_THRESHOLD");
 static_assert(UPGRADE_VOTING_WINDOW > 1, "Bad UPGRADE_VOTING_WINDOW");
 

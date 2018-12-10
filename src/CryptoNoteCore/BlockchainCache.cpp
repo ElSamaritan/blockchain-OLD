@@ -960,12 +960,11 @@ uint64_t BlockchainCache::getDifficultyForNextBlock() const { return getDifficul
 uint64_t BlockchainCache::getDifficultyForNextBlock(uint32_t blockIndex) const {
   assert(blockIndex <= getTopBlockIndex());
   uint8_t nextBlockMajorVersion = getBlockMajorVersionForHeight(blockIndex + 1);
-  auto timestamps = getLastTimestamps(currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion, blockIndex),
-                                      blockIndex, skipGenesisBlock);
-  auto commulativeDifficulties = getLastCumulativeDifficulties(
-      currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion, blockIndex), blockIndex, skipGenesisBlock);
-  return currency.getNextDifficulty(nextBlockMajorVersion, blockIndex, std::move(timestamps),
-                                    std::move(commulativeDifficulties));
+  auto timestamps = getLastTimestamps(currency.difficultyBlocksCountByHeight(blockIndex), blockIndex, skipGenesisBlock);
+  auto commulativeDifficulties =
+      getLastCumulativeDifficulties(currency.difficultyBlocksCountByHeight(blockIndex), blockIndex, skipGenesisBlock);
+  return currency.nextDifficulty(nextBlockMajorVersion, blockIndex, std::move(timestamps),
+                                 std::move(commulativeDifficulties));
 }
 
 uint64_t BlockchainCache::getCurrentCumulativeDifficulty() const {

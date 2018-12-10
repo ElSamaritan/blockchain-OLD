@@ -570,13 +570,13 @@ uint64_t Core::getDifficultyForNextBlock() const {
 
   uint8_t nextBlockMajorVersion = getBlockMajorVersionForHeight(topBlockIndex);
 
-  size_t blocksCount = std::min(static_cast<size_t>(topBlockIndex),
-                                currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion, topBlockIndex));
+  size_t blocksCount =
+      std::min(static_cast<size_t>(topBlockIndex), currency.difficultyBlocksCountByHeight(topBlockIndex));
 
   auto timestamps = mainChain->getLastTimestamps(blocksCount);
   auto difficulties = mainChain->getLastCumulativeDifficulties(blocksCount);
 
-  return currency.getNextDifficulty(nextBlockMajorVersion, topBlockIndex, timestamps, difficulties);
+  return currency.nextDifficulty(nextBlockMajorVersion, topBlockIndex, timestamps, difficulties);
 }
 
 std::vector<Crypto::Hash> Core::findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds,
@@ -655,8 +655,8 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   // that may be using older mixin rules on the network. This helps to clear out the transaction
   // pool during a network soft fork that requires a mixin lower or upper bound change
   uint32_t mixinChangeWindow = blockIndex;
-  if (mixinChangeWindow > CryptoNote::Config::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW) {
-    mixinChangeWindow = mixinChangeWindow - CryptoNote::Config::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
+  if (mixinChangeWindow > CryptoNote::Config::Time::minerRewardUnlockBlocksCount()) {
+    mixinChangeWindow = mixinChangeWindow - CryptoNote::Config::Time::minerRewardUnlockBlocksCount();
   }
 
   bool success;
@@ -1173,13 +1173,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
      https://github.com/loki-project/loki/pull/26 */
 
   /* How many blocks we look in the past to calculate the median timestamp */
-  uint32_t blockchain_timestamp_check_window;
-
-  if (height >= CryptoNote::Config::LWMA_2_DIFFICULTY_BLOCK_INDEX) {
-    blockchain_timestamp_check_window = CryptoNote::Config::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V3;
-  } else {
-    blockchain_timestamp_check_window = CryptoNote::Config::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW;
-  }
+  uint32_t blockchain_timestamp_check_window = 11;
 
   /* Skip the first N blocks, we don't have enough blocks to calculate a
      proper median yet */

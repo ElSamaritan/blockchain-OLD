@@ -16,6 +16,7 @@
 #include <random>
 #include <set>
 #include <tuple>
+#include <chrono>
 #include <utility>
 
 #include <System/EventLock.h>
@@ -1217,7 +1218,7 @@ uint64_t WalletGreen::scanHeightToTimestamp(const uint32_t scanHeight) {
   }
 
   /* Get the amount of seconds since the blockchain launched */
-  uint64_t secondsSinceLaunch = scanHeight * CryptoNote::Config::DIFFICULTY_TARGET;
+  uint64_t secondsSinceLaunch = scanHeight * CryptoNote::Config::Time::blockTimeSeconds();
 
   /* Add a bit of a buffer in case of difficulty weirdness, blocks coming
      out too fast */
@@ -1238,13 +1239,9 @@ uint64_t WalletGreen::getCurrentTimestampAdjusted() {
   /* Get the current time as a unix timestamp */
   std::time_t time = std::time(nullptr);
 
-  /* Take the amount of time a block can potentially be in the past/future */
-  std::initializer_list<uint64_t> limits = {CryptoNote::Config::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT,
-                                            CryptoNote::Config::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3,
-                                            CryptoNote::Config::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4};
-
-  /* Get the largest adjustment possible */
-  uint64_t adjust = std::max(limits);
+  /* Take the amount of time a block can potentially be in the past/future
+   * Get the largest adjustment possible */
+  uint64_t adjust = std::chrono::seconds{CryptoNote::Config::Difficulty::maximumTimeLimit()}.count();
 
   /* Take the earliest timestamp that will include all possible blocks */
   return time - adjust;

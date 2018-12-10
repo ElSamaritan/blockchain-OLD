@@ -2,19 +2,29 @@
 // Copyright (c) 2018, The Calex Developers
 //
 // Please see the included LICENSE file for more information.
+#pragma once
 
-#include <stdint.h>
+#include <cstdint>
+#include <cmath>
 #include <vector>
 
-uint64_t nextDifficultyV6(std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties);
+namespace CryptoNote {
+namespace Difficulty {
 
-uint64_t nextDifficultyV5(std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties);
+struct LWMA_3 {
+  uint64_t operator()(const std::vector<uint64_t> &timestamps, const std::vector<uint64_t> &cumulativeDifficulties,
+                      uint32_t windowSize, uint16_t blockTime) const;
+};
 
-uint64_t nextDifficultyV4(std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties);
+struct LWMA_2 {
+  uint64_t operator()(const std::vector<uint64_t> &timestamps, const std::vector<uint64_t> &cumulativeDifficulties,
+                      uint32_t windowSize, uint16_t blockTime) const;
+};
 
-uint64_t nextDifficultyV3(std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties);
+}  // namespace Difficulty
+}  // namespace CryptoNote
 
 template <typename T>
-T clamp(const T& n, const T& lower, const T& upper) {
+T clamp(const T &n, const T &lower, const T &upper) {
   return std::max(lower, std::min(n, upper));
 }

@@ -63,15 +63,7 @@ void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const 
   }
   CryptoNote::Transaction transaction;
   if (rewardTargets.empty()) {
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4127)
-#endif
-    if (CryptoNote::Config::GENESIS_BLOCK_REWARD > 0)
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
-    {
+    if (CryptoNote::Config::Coin::amountOfPremine() > 0) {
       std::cout << "Error: Genesis Block Reward Addresses are not defined" << std::endl;
       return;
     }

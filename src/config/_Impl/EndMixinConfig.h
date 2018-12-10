@@ -80,5 +80,3 @@ inline uint16_t defaultValue(uint32_t height) {
 }
 
 #undef CURRENT_MIXIN_CHECKPOINT_INDEX
-
-#undef CURRENT_MIXIN_CHECKPOINT_INDEX

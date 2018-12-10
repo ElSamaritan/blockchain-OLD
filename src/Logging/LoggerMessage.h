@@ -25,7 +25,7 @@ namespace Logging {
 class LoggerMessage : public std::ostream, std::streambuf {
  public:
   LoggerMessage(ILogger& logger, const std::string& category, Level level, const std::string& color);
-  ~LoggerMessage();
+  ~LoggerMessage() override;
   LoggerMessage(const LoggerMessage&) = delete;
   LoggerMessage& operator=(const LoggerMessage&) = delete;
   LoggerMessage(LoggerMessage&& other);
