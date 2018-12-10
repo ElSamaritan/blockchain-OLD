@@ -36,7 +36,7 @@ struct WalletConfiguration {
   std::string secretViewKey;
   std::string secretSpendKey;
   std::string mnemonicSeed;
-  uint64_t scanHeight;
+  uint32_t scanHeight;
 };
 
 void generateNewWallet(const CryptoNote::Currency& currency, const WalletConfiguration& conf, Logging::ILogger& logger,
@@ -56,15 +56,15 @@ class WalletService {
 
   std::error_code saveWalletNoThrow();
   std::error_code exportWallet(const std::string& fileName);
-  std::error_code resetWallet(const uint64_t scanHeight);
-  std::error_code replaceWithNewWallet(const std::string& viewSecretKey, const uint64_t scanHeight,
+  std::error_code resetWallet(const uint32_t scanHeight);
+  std::error_code replaceWithNewWallet(const std::string& viewSecretKey, const uint32_t scanHeight,
                                        const bool newAddress);
-  std::error_code createAddress(const std::string& spendSecretKeyText, const uint64_t scanHeight, const bool newAddress,
+  std::error_code createAddress(const std::string& spendSecretKeyText, uint32_t scanHeight, const bool newAddress,
                                 std::string& address);
-  std::error_code createAddressList(const std::vector<std::string>& spendSecretKeysText, const uint64_t scanHeight,
+  std::error_code createAddressList(const std::vector<std::string>& spendSecretKeysText, uint32_t scanHeight,
                                     const bool newAddress, std::vector<std::string>& addresses);
   std::error_code createAddress(std::string& address);
-  std::error_code createTrackingAddress(const std::string& spendPublicKeyText, uint64_t scanHeight, bool newAddress,
+  std::error_code createTrackingAddress(const std::string& spendPublicKeyText, uint32_t scanHeight, bool newAddress,
                                         std::string& address);
   std::error_code deleteAddress(const std::string& address);
   std::error_code getSpendkeys(const std::string& address, std::string& publicSpendKeyText,
@@ -97,7 +97,7 @@ class WalletService {
                                                   std::vector<std::string>& transactionHashes);
   std::error_code getStatus(uint32_t& blockCount, uint32_t& knownBlockCount, uint64_t& localDaemonBlockCount,
                             std::string& lastBlockHash, uint32_t& peerCount);
-  std::error_code sendFusionTransaction(uint64_t threshold, uint32_t anonymity,
+  std::error_code sendFusionTransaction(uint64_t threshold, uint16_t anonymity,
                                         const std::vector<std::string>& addresses,
                                         const std::string& destinationAddress, std::string& transactionHash);
   std::error_code estimateFusion(uint64_t threshold, const std::vector<std::string>& addresses,
@@ -105,17 +105,17 @@ class WalletService {
   std::error_code createIntegratedAddress(const std::string& address, const std::string& paymentId,
                                           std::string& integratedAddress);
   std::error_code getFeeInfo(std::string& address, uint32_t& amount);
-  uint64_t getDefaultMixin() const;
+  uint16_t getDefaultMixin() const;
 
  private:
   void refresh();
-  void reset(const uint64_t scanHeight);
+  void reset(const uint32_t scanHeight);
 
   void loadWallet();
   void loadTransactionIdIndex();
   void getNodeFee();
 
-  void replaceWithNewWallet(const Crypto::SecretKey& viewSecretKey, const uint64_t scanHeight, const bool newAddress);
+  void replaceWithNewWallet(const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight, const bool newAddress);
 
   std::vector<CryptoNote::TransactionsInBlockInfo> getTransactions(const Crypto::Hash& blockHash,
                                                                    size_t blockCount) const;

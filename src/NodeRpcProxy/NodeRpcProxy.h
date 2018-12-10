@@ -38,7 +38,7 @@ class INodeRpcProxyObserver {
 class NodeRpcProxy : public CryptoNote::INode {
  public:
   NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort, Logging::ILogger& logger);
-  virtual ~NodeRpcProxy();
+  virtual ~NodeRpcProxy() override;
 
   virtual bool addObserver(CryptoNote::INodeObserver* observer) override;
   virtual bool removeObserver(CryptoNote::INodeObserver* observer) override;

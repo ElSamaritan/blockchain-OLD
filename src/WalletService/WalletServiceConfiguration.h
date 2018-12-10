@@ -55,7 +55,7 @@ struct WalletServiceConfiguration {
   bool printAddresses;
   bool syncFromZero;
 
-  uint64_t scanHeight;
+  uint32_t scanHeight;
 };
 
 inline WalletServiceConfiguration initConfiguration() {
@@ -109,7 +109,7 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
     ("view-key", "Generate a wallet container with this secret view <key>", cxxopts::value<std::string>(), "<key>")
     ("spend-key", "Generate a wallet container with this secret spend <key>", cxxopts::value<std::string>(), "<key>")
     ("mnemonic-seed", "Generate a wallet container with this Mnemonic <seed>", cxxopts::value<std::string>(), "<seed>")
-    ("scan-height", "Start scanning for transactions from this Blockchain height", cxxopts::value<uint64_t>()->default_value("0"), "#")
+    ("scan-height", "Start scanning for transactions from this Blockchain height", cxxopts::value<uint32_t>()->default_value("0"), "#")
     ("SYNC_FROM_ZERO", "Force the wallet to sync from 0", cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
 
   options.add_options("Network")
@@ -239,7 +239,7 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
     }
 
     if (cli.count("scan-height") > 0) {
-      config.scanHeight = cli["scan-height"].as<uint64_t>();
+      config.scanHeight = cli["scan-height"].as<uint32_t>();
     }
 
     if (config.help)  // Do we want to display the help message?

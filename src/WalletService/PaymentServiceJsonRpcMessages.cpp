@@ -3,8 +3,10 @@
 // Copyright (c) 2018, The TurtleCoin Developers
 //
 // Please see the included LICENSE file for more information.
-
 #include "PaymentServiceJsonRpcMessages.h"
+
+#include <Xi/Global.h>
+
 #include "Serialization/SerializationOverloads.h"
 #include "WalletService.h"
 
@@ -20,7 +22,7 @@ void Export::Request::serialize(CryptoNote::ISerializer& serializer) {
   }
 }
 
-void Export::Response::serialize(CryptoNote::ISerializer& serializer) {}
+void Export::Response::serialize(CryptoNote::ISerializer& serializer) { XI_UNUSED(serializer); }
 
 void Reset::Request::serialize(CryptoNote::ISerializer& serializer) {
   bool hasKey = serializer(viewSecretKey, "viewSecretKey");
@@ -40,9 +42,9 @@ void Reset::Request::serialize(CryptoNote::ISerializer& serializer) {
   };
 }
 
-void Reset::Response::serialize(CryptoNote::ISerializer& serializer) {}
+void Reset::Response::serialize(CryptoNote::ISerializer& serializer) { XI_UNUSED(serializer); }
 
-void GetViewKey::Request::serialize(CryptoNote::ISerializer& serializer) {}
+void GetViewKey::Request::serialize(CryptoNote::ISerializer& serializer) { XI_UNUSED(serializer); }
 
 void GetViewKey::Response::serialize(CryptoNote::ISerializer& serializer) {
   serializer(viewSecretKey, "viewSecretKey");
@@ -58,7 +60,7 @@ void GetMnemonicSeed::Response::serialize(CryptoNote::ISerializer& serializer) {
   serializer(mnemonicSeed, "mnemonicSeed");
 }
 
-void GetStatus::Request::serialize(CryptoNote::ISerializer& serializer) {}
+void GetStatus::Request::serialize(CryptoNote::ISerializer& serializer) { XI_UNUSED(serializer); }
 
 void GetStatus::Response::serialize(CryptoNote::ISerializer& serializer) {
   serializer(blockCount, "blockCount");
@@ -68,7 +70,7 @@ void GetStatus::Response::serialize(CryptoNote::ISerializer& serializer) {
   serializer(peerCount, "peerCount");
 }
 
-void GetAddresses::Request::serialize(CryptoNote::ISerializer& serializer) {}
+void GetAddresses::Request::serialize(CryptoNote::ISerializer& serializer) { XI_UNUSED(serializer); }
 
 void GetAddresses::Response::serialize(CryptoNote::ISerializer& serializer) { serializer(addresses, "addresses"); }
 
@@ -117,7 +119,7 @@ void DeleteAddress::Request::serialize(CryptoNote::ISerializer& serializer) {
   }
 }
 
-void DeleteAddress::Response::serialize(CryptoNote::ISerializer& serializer) {}
+void DeleteAddress::Response::serialize(CryptoNote::ISerializer& serializer) { XI_UNUSED(serializer); }
 
 void GetSpendKeys::Request::serialize(CryptoNote::ISerializer& serializer) {
   if (!serializer(address, "address")) {
@@ -301,7 +303,7 @@ void CreateDelayedTransaction::Response::serialize(CryptoNote::ISerializer& seri
   serializer(transactionHash, "transactionHash");
 }
 
-void GetDelayedTransactionHashes::Request::serialize(CryptoNote::ISerializer& serializer) {}
+void GetDelayedTransactionHashes::Request::serialize(CryptoNote::ISerializer& serializer) { XI_UNUSED(serializer); }
 
 void GetDelayedTransactionHashes::Response::serialize(CryptoNote::ISerializer& serializer) {
   serializer(transactionHashes, "transactionHashes");
@@ -313,7 +315,7 @@ void DeleteDelayedTransaction::Request::serialize(CryptoNote::ISerializer& seria
   }
 }
 
-void DeleteDelayedTransaction::Response::serialize(CryptoNote::ISerializer& serializer) {}
+void DeleteDelayedTransaction::Response::serialize(CryptoNote::ISerializer& serializer) { XI_UNUSED(serializer); }
 
 void SendDelayedTransaction::Request::serialize(CryptoNote::ISerializer& serializer) {
   if (!serializer(transactionHash, "transactionHash")) {
@@ -321,7 +323,7 @@ void SendDelayedTransaction::Request::serialize(CryptoNote::ISerializer& seriali
   }
 }
 
-void SendDelayedTransaction::Response::serialize(CryptoNote::ISerializer& serializer) {}
+void SendDelayedTransaction::Response::serialize(CryptoNote::ISerializer& serializer) { XI_UNUSED(serializer); }
 
 void SendFusionTransaction::Request::serialize(CryptoNote::ISerializer& serializer, const WalletService& service) {
   if (!serializer(threshold, "threshold")) {
@@ -367,7 +369,7 @@ void CreateIntegratedAddress::Response::serialize(CryptoNote::ISerializer& seria
   serializer(integratedAddress, "integratedAddress");
 }
 
-void NodeFeeInfo::Request::serialize(CryptoNote::ISerializer& serializer) {}
+void NodeFeeInfo::Request::serialize(CryptoNote::ISerializer& serializer) { XI_UNUSED(serializer); }
 
 void NodeFeeInfo::Response::serialize(CryptoNote::ISerializer& serializer) {
   serializer(address, "address");
