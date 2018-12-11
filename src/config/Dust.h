@@ -4,17 +4,15 @@
 
 // clang-format off
 //                (_Index, _Version,   _Dust)
-MakeDustCheckpoint(    0,       1,    100)
-MakeDustCheckpoint(    1,       4,   1000)
-MakeDustCheckpoint(    2,       5,  10000)
-// clang-format on
+MakeDustCheckpoint(     0,        1,     100)
+MakeDustCheckpoint(     1,        5,    1000)
+MakeDustCheckpoint(     2,        6,   10000)
 
 #define CURRENT_DUST_CHECKPOINT_INDEX 2
 
-// clang-format off
 //                      (_Index, _Version,   _Dust)
-MakeFusionDustCheckpoint(    0,       1,      0)
-MakeFusionDustCheckpoint(    1,       5,    200)
+MakeFusionDustCheckpoint(     0,        1,      10)
+MakeFusionDustCheckpoint(     1,        6,     200)
 // clang-format on
 
 #define CURRENT_FUSION_DUST_CHECKPOINT_INDEX 1

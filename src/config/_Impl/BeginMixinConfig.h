@@ -2,6 +2,8 @@
 
 #include <cinttypes>
 
+#include "config/BlockVersion.h"
+
 namespace CryptoNote {
 namespace Config {
 namespace Mixin {
@@ -22,6 +24,8 @@ struct MixinCheckpoint;
     static inline constexpr uint16_t minimum() { return _Min; }          \
     static inline constexpr uint16_t maximum() { return _Max; }          \
     static inline constexpr uint16_t defaultValue() { return _Default; } \
+    static_assert(::CryptoNote::Config::BlockVersion::exists(_Version),  \
+                  "Non existing major block version referenced.");       \
   };                                                                     \
   }                                                                      \
   }                                                                      \

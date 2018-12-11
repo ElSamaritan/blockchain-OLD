@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "config/Limits.h"
 #include "config/BlockVersion.h"
+#include "config/Limits.h"
 #include "config/Coin.h"
 #include "config/Time.h"
 #include "config/Network.h"

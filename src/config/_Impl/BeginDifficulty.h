@@ -5,6 +5,7 @@
 #include <chrono>
 
 #include "CryptoNoteCore/Difficulty.h"
+#include "config/BlockVersion.h"
 
 namespace CryptoNote {
 namespace Config {
@@ -27,6 +28,8 @@ struct DifficultyCheckpoint;
     static inline constexpr uint64_t initialValue() { return _Initial; }                      \
     static inline constexpr std::chrono::seconds timeLimit() { return _TimeLimit; }           \
     using algorithm = _Algorithm;                                                             \
+    static_assert(::CryptoNote::Config::BlockVersion::exists(_Version),                       \
+                  "Non existing major block version referenced.");                            \
   };                                                                                          \
   }                                                                                           \
   }                                                                                           \

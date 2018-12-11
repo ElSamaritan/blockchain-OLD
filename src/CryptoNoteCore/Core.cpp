@@ -1540,6 +1540,9 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   if (upgradeManager->getBlockMajorVersion(cachedBlock.getBlockIndex()) != block.majorVersion) {
     return error::BlockValidationError::WRONG_VERSION;
   }
+  if (!Config::BlockVersion::validateMinorVersion(block.minorVersion)) {
+    return error::BlockValidationError::WRONG_VERSION;
+  }
 
   if (block.majorVersion >= Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
     if (block.majorVersion == Config::BlockVersion::BlockVersionCheckpoint<1>::version() &&

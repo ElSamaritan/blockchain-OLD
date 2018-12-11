@@ -16,10 +16,10 @@
 
 // clang-format off
 //                 (_Index, _Version, _Min, _Max, _Default)
-MakeMixinCheckpoint(    0,       0,    0,   4,       0)
-MakeMixinCheckpoint(    1,       5,    4,  10,       4)
-MakeMixinCheckpoint(    2,       6,    4,  20,       8)
-MakeMixinCheckpoint(    3,       7,   10,  30,      20)
+MakeMixinCheckpoint(     0,        1,    0,    4,        0)
+MakeMixinCheckpoint(     1,        5,    4,   10,        4)
+MakeMixinCheckpoint(     2,        6,    4,   20,        8)
+MakeMixinCheckpoint(     3,        7,   10,   30,       20)
 // clang-format on
 
 #define CURRENT_MIXIN_CHECKPOINT_INDEX 3
