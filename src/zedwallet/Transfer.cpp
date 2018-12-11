@@ -353,7 +353,7 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool send
       std::cout << WarningMsg("Due to dust inputs, we are unable to ") << WarningMsg("send ")
                 << InformationMsg(formatAmount(unsendable)) << WarningMsg("of your balance.") << std::endl;
 
-      if (CryptoNote::Config::Mixin::isZeroMixinAllowed(height)) {
+      if (CryptoNote::Config::Mixin::isZeroMixinAllowed(CryptoNote::Config::BlockVersion::version(height))) {
         std::cout << "Alternatively, you can set the mixin count to "
                   << "zero to send it all." << std::endl;
 
@@ -400,7 +400,7 @@ BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr
               << " without issues (includes a network fee of " << InformationMsg(formatAmount(fee)) << " and "
               << " a node fee of " << InformationMsg(formatAmount(nodeFee)) << ")" << std::endl;
 
-    if (CryptoNote::Config::Mixin::isZeroMixinAllowed(height)) {
+    if (CryptoNote::Config::Mixin::isZeroMixinAllowed(CryptoNote::Config::BlockVersion::version(height))) {
       std::cout << "Alternatively, you can sent the mixin "
                 << "count to 0." << std::endl;
 
@@ -519,7 +519,7 @@ bool handleTransferError(const std::system_error &e, bool retried, uint32_t heig
       /* If a mixin of zero is allowed, or we are below the
          fork height when it's banned, ask them to resend with
          zero */
-      if (CryptoNote::Config::Mixin::isZeroMixinAllowed(height)) {
+      if (CryptoNote::Config::Mixin::isZeroMixinAllowed(CryptoNote::Config::BlockVersion::version(height))) {
         std::cout << "Alternatively, you can set the mixin "
                   << "count to 0." << std::endl;
 
@@ -728,7 +728,7 @@ Maybe<std::pair<std::string, std::string>> extractIntegratedAddress(std::string 
   }
 
   /* The prefix needs to be the same as the base58 prefix */
-  if (prefix != CryptoNote::Config::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX) {
+  if (prefix != CryptoNote::Config::Coin::addressBas58Prefix()) {
     return Nothing<std::pair<std::string, std::string>>();
   }
 

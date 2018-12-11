@@ -158,11 +158,13 @@ int64_t getEmissionChange(const Currency& currency, IBlockchainCache& segment, u
                           const CachedBlock& cachedBlock, uint64_t cumulativeSize, uint64_t cumulativeFee) {
   uint64_t reward = 0;
   int64_t emissionChange = 0;
+  const uint8_t majorVersion = cachedBlock.getBlock().majorVersion;
   auto alreadyGeneratedCoins = segment.getAlreadyGeneratedCoins(previousBlockIndex);
-  auto lastBlocksSizes = segment.getLastBlocksSizes(currency.rewardBlocksWindow(), previousBlockIndex, addGenesisBlock);
+  auto lastBlocksSizes = segment.getLastBlocksSizes(currency.rewardBlocksWindowByBlockVersion(majorVersion),
+                                                    previousBlockIndex, addGenesisBlock);
   auto blocksSizeMedian = Common::medianValue(lastBlocksSizes);
-  if (!currency.getBlockReward(cachedBlock.getBlock().majorVersion, blocksSizeMedian, cumulativeSize,
-                               alreadyGeneratedCoins, cumulativeFee, reward, emissionChange)) {
+  if (!currency.getBlockReward(majorVersion, blocksSizeMedian, cumulativeSize, alreadyGeneratedCoins, cumulativeFee,
+                               reward, emissionChange)) {
     throw std::system_error(make_error_code(error::BlockValidationError::CUMULATIVE_BLOCK_SIZE_TOO_BIG));
   }
 
@@ -206,10 +208,8 @@ Core::Core(const Currency& currency, Logging::ILogger& logger, Checkpoints&& che
       blockchainCacheFactory(std::move(blockchainCacheFactory)),
       mainChainStorage(std::move(mainchainStorage)),
       initialized(false) {
-  upgradeManager->addMajorBlockVersion(BLOCK_MAJOR_VERSION_2, currency.upgradeHeight(BLOCK_MAJOR_VERSION_2));
-  upgradeManager->addMajorBlockVersion(BLOCK_MAJOR_VERSION_3, currency.upgradeHeight(BLOCK_MAJOR_VERSION_3));
-  upgradeManager->addMajorBlockVersion(BLOCK_MAJOR_VERSION_4, currency.upgradeHeight(BLOCK_MAJOR_VERSION_4));
-
+  for (auto version : Config::BlockVersion::versions())
+    upgradeManager->addMajorBlockVersion(version, currency.upgradeHeight(version));
   transactionPool = std::unique_ptr<ITransactionPoolCleanWrapper>(new TransactionPoolCleanWrapper(
       std::unique_ptr<ITransactionPool>(new TransactionPool(logger)),
       std::unique_ptr<ITimeProvider>(new RealTimeProvider()), logger, currency.mempoolTxLiveTime()));
@@ -398,13 +398,14 @@ bool Core::queryBlocks(const std::vector<Crypto::Hash>& blockHashes, uint64_t ti
       fullOffset = startIndex;
     }
 
-    size_t hashesPushed = pushBlockHashes(startIndex, fullOffset, BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT, entries);
+    size_t hashesPushed =
+        pushBlockHashes(startIndex, fullOffset, Config::Network::blockIdentifiersSynchronizationBatchSize(), entries);
 
     if (startIndex + hashesPushed != fullOffset) {
       return true;
     }
 
-    fillQueryBlockFullInfo(fullOffset, currentIndex, BLOCKS_SYNCHRONIZING_DEFAULT_COUNT, entries);
+    fillQueryBlockFullInfo(fullOffset, currentIndex, Config::Network::blocksSynchronizationBatchSize(), entries);
 
     return true;
   } catch (std::exception&) {
@@ -445,13 +446,14 @@ bool Core::queryBlocksLite(const std::vector<Crypto::Hash>& knownBlockHashes, ui
       fullOffset = startIndex;
     }
 
-    size_t hashesPushed = pushBlockHashes(startIndex, fullOffset, BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT, entries);
+    size_t hashesPushed =
+        pushBlockHashes(startIndex, fullOffset, Config::Network::blockIdentifiersSynchronizationBatchSize(), entries);
 
     if (startIndex + static_cast<uint32_t>(hashesPushed) != fullOffset) {
       return true;
     }
 
-    fillQueryBlockShortInfo(fullOffset, currentIndex, BLOCKS_SYNCHRONIZING_DEFAULT_COUNT, entries);
+    fillQueryBlockShortInfo(fullOffset, currentIndex, Config::Network::blocksSynchronizationBatchSize(), entries);
 
     return true;
   } catch (std::exception& e) {
@@ -494,13 +496,14 @@ bool Core::queryBlocksDetailed(const std::vector<Crypto::Hash>& knownBlockHashes
       fullOffset = startIndex;
     }
 
-    size_t hashesPushed = pushBlockHashes(startIndex, fullOffset, BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT, entries);
+    size_t hashesPushed =
+        pushBlockHashes(startIndex, fullOffset, Config::Network::blockIdentifiersSynchronizationBatchSize(), entries);
 
     if (startIndex + static_cast<uint32_t>(hashesPushed) != fullOffset) {
       return true;
     }
 
-    fillQueryBlockDetails(fullOffset, currentIndex, BLOCKS_SYNCHRONIZING_DEFAULT_COUNT, entries);
+    fillQueryBlockDetails(fullOffset, currentIndex, Config::Network::blocksSynchronizationBatchSize(), entries);
 
     return true;
   } catch (std::exception& e) {
@@ -571,7 +574,7 @@ uint64_t Core::getDifficultyForNextBlock() const {
   uint8_t nextBlockMajorVersion = getBlockMajorVersionForHeight(topBlockIndex);
 
   size_t blocksCount =
-      std::min(static_cast<size_t>(topBlockIndex), currency.difficultyBlocksCountByHeight(topBlockIndex));
+      std::min(static_cast<size_t>(topBlockIndex), currency.difficultyBlocksCountByVersion(nextBlockMajorVersion));
 
   auto timestamps = mainChain->getLastTimestamps(blocksCount);
   auto difficulties = mainChain->getLastCumulativeDifficulties(blocksCount);
@@ -689,7 +692,9 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   uint64_t reward = 0;
   int64_t emissionChange = 0;
   auto alreadyGeneratedCoins = cache->getAlreadyGeneratedCoins(previousBlockIndex);
-  auto lastBlocksSizes = cache->getLastBlocksSizes(currency.rewardBlocksWindow(), previousBlockIndex, addGenesisBlock);
+  auto lastBlocksSizes =
+      cache->getLastBlocksSizes(currency.rewardBlocksWindowByBlockVersion(cachedBlock.getBlock().majorVersion),
+                                previousBlockIndex, addGenesisBlock);
   auto blocksSizeMedian = Common::medianValue(lastBlocksSizes);
 
   if (!currency.getBlockReward(cachedBlock.getBlock().majorVersion, blocksSizeMedian, cumulativeBlockSize,
@@ -1127,20 +1132,19 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
 
   b = boost::value_initialized<BlockTemplate>();
   b.majorVersion = getBlockMajorVersionForHeight(height);
+  if (b.majorVersion == Config::BlockVersion::BlockVersionCheckpoint<0>::version()) {
+    b.minorVersion = currency.upgradeHeight(Config::BlockVersion::BlockVersionCheckpoint<1>::version()) ==
+                             IUpgradeDetector::UNDEF_HEIGHT
+                         ? Config::BlockVersion::minorVersionNoVotingIndicator()
+                         : Config::BlockVersion::minorVersionVotingIndicator();
+  } else if (b.majorVersion >= Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
+    // If we know we will introduce a new major version in the future we should vote for it.
+    const bool isMajorChangeUpcoming = currency.upgradeHeight(b.majorVersion + 1) != IUpgradeDetector::UNDEF_HEIGHT;
+    b.minorVersion = isMajorChangeUpcoming ? Config::BlockVersion::minorVersionVotingIndicator()
+                                           : Config::BlockVersion::minorVersionNoVotingIndicator();
 
-  if (b.majorVersion == BLOCK_MAJOR_VERSION_1) {
-    b.minorVersion = currency.upgradeHeight(BLOCK_MAJOR_VERSION_2) == IUpgradeDetector::UNDEF_HEIGHT
-                         ? BLOCK_MINOR_VERSION_1
-                         : BLOCK_MINOR_VERSION_0;
-  } else if (b.majorVersion >= BLOCK_MAJOR_VERSION_2) {
-    if (currency.upgradeHeight(BLOCK_MAJOR_VERSION_3) == IUpgradeDetector::UNDEF_HEIGHT) {
-      b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_2 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
-    } else {
-      b.minorVersion = BLOCK_MINOR_VERSION_0;
-    }
-
-    b.parentBlock.majorVersion = BLOCK_MAJOR_VERSION_1;
-    b.parentBlock.majorVersion = BLOCK_MINOR_VERSION_0;
+    b.parentBlock.majorVersion = Config::BlockVersion::BlockVersionCheckpoint<0>::version();
+    b.parentBlock.majorVersion = Config::BlockVersion::minorVersionNoVotingIndicator();
     b.parentBlock.transactionCount = 1;
 
     TransactionExtraMergeMiningTag mmTag = boost::value_initialized<decltype(mmTag)>();
@@ -1282,8 +1286,6 @@ CoreStatistics Core::getCoreStatistics() const {
   result.alternativeBlockCount = getAlternativeBlockCount();
   auto hash = getTopBlockHash();
   result.topBlockHashString = Common::toHex(&hash, sizeof(Crypto::Hash));
-  std::fill(reinterpret_cast<uint8_t*>(&result), reinterpret_cast<uint8_t*>(&result) + sizeof(result),
-            static_cast<uint8_t>(0u));
   return result;
 }
 
@@ -1363,6 +1365,9 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
                                           IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex) {
   // TransactionValidatorState currentState;
   const auto& transaction = cachedTransaction.getTransaction();
+  if (transaction.version > currency.maxTxVersion() || transaction.version < currency.minTxVersion()) {
+    return error::TransactionValidationError::INVALID_VERSION;
+  }
   auto error = validateSemantic(transaction, fee, blockIndex);
   if (error != error::TransactionValidationError::VALIDATION_SUCCESS) {
     return error;
@@ -1407,7 +1412,7 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
         if (!Crypto::check_ring_signature(cachedTransaction.getTransactionPrefixHash(), in.keyImage,
                                           outputKeyPointers.data(), outputKeyPointers.size(),
                                           transaction.signatures[inputIndex].data(),
-                                          blockIndex > Config::KEY_IMAGE_CHECKING_BLOCK_INDEX)) {
+                                          blockIndex >= Config::Transaction::keyCheckingActivitationBlockIndex())) {
           return error::TransactionValidationError::INPUT_INVALID_SIGNATURES;
         }
       }
@@ -1481,7 +1486,8 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
       // outputIndexes are packed here, first is absolute, others are offsets to previous,
       // so first can be zero, others can't
       // Fix discovered by Monero Lab and suggested by "fluffypony" (bitcointalk.org)
-      if (!(scalarmultKey(in.keyImage, L) == I) && blockIndex > Config::KEY_IMAGE_CHECKING_BLOCK_INDEX) {
+      if (!(scalarmultKey(in.keyImage, L) == I) &&
+          blockIndex >= Config::Transaction::keyCheckingActivitationBlockIndex()) {
         return error::TransactionValidationError::INPUT_INVALID_DOMAIN_KEYIMAGES;
       }
 
@@ -1535,12 +1541,14 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     return error::BlockValidationError::WRONG_VERSION;
   }
 
-  if (block.majorVersion >= BLOCK_MAJOR_VERSION_2) {
-    if (block.majorVersion == BLOCK_MAJOR_VERSION_2 && block.parentBlock.majorVersion > BLOCK_MAJOR_VERSION_1) {
+  if (block.majorVersion >= Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
+    if (block.majorVersion == Config::BlockVersion::BlockVersionCheckpoint<1>::version() &&
+        block.parentBlock.majorVersion > Config::BlockVersion::BlockVersionCheckpoint<0>::version()) {
       logger(Logging::ERROR, Logging::BRIGHT_RED)
           << "Parent block of block " << cachedBlock.getBlockHash()
           << " has wrong major version: " << static_cast<int>(block.parentBlock.majorVersion) << ", at index "
-          << cachedBlock.getBlockIndex() << " expected version is " << static_cast<int>(BLOCK_MAJOR_VERSION_1);
+          << cachedBlock.getBlockIndex() << " expected version is "
+          << static_cast<int>(Config::BlockVersion::BlockVersionCheckpoint<0>::version());
       return error::BlockValidationError::PARENT_BLOCK_WRONG_VERSION;
     }
 
@@ -1549,13 +1557,13 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     }
   }
 
-  if (block.timestamp > getAdjustedTime() + currency.blockFutureTimeLimit(previousBlockIndex + 1)) {
+  if (block.timestamp > getAdjustedTime() + currency.blockFutureTimeLimit(previousBlockIndex + 1, block.majorVersion)) {
     return error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_FUTURE;
   }
 
-  auto timestamps = cache->getLastTimestamps(currency.timestampCheckWindow(previousBlockIndex + 1), previousBlockIndex,
-                                             addGenesisBlock);
-  if (timestamps.size() >= currency.timestampCheckWindow(previousBlockIndex + 1)) {
+  auto timestamps = cache->getLastTimestamps(currency.timestampCheckWindow(previousBlockIndex + 1, block.majorVersion),
+                                             previousBlockIndex, addGenesisBlock);
+  if (timestamps.size() >= currency.timestampCheckWindow(previousBlockIndex + 1, block.majorVersion)) {
     auto median_ts = Common::medianValue(timestamps);
     if (block.timestamp < median_ts) {
       return error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_PAST;
@@ -1990,7 +1998,7 @@ size_t Core::calculateCumulativeBlocksizeLimit(uint32_t height) const {
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
   // FIXME: skip gensis here?
-  auto sizes = chainsLeaves[0]->getLastBlocksSizes(currency.rewardBlocksWindow());
+  auto sizes = chainsLeaves[0]->getLastBlocksSizes(currency.rewardBlocksWindowByBlockVersion(nextBlockMajorVersion));
   uint64_t median = Common::medianValue(sizes);
   if (median <= nextBlockGrantedFullRewardZone) {
     median = nextBlockGrantedFullRewardZone;
@@ -2201,8 +2209,8 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
   uint64_t prevBlockGeneratedCoins = 0;
   blockDetails.sizeMedian = 0;
   if (blockDetails.index > 0) {
-    auto lastBlocksSizes =
-        segment->getLastBlocksSizes(currency.rewardBlocksWindow(), blockDetails.index - 1, addGenesisBlock);
+    auto lastBlocksSizes = segment->getLastBlocksSizes(
+        currency.rewardBlocksWindowByBlockVersion(blockDetails.majorVersion), blockDetails.index - 1, addGenesisBlock);
     blockDetails.sizeMedian = Common::medianValue(lastBlocksSizes);
     prevBlockGeneratedCoins = segment->getAlreadyGeneratedCoins(blockDetails.index - 1);
   }
@@ -2506,7 +2514,8 @@ void Core::updateBlockMedianSize() {
   size_t nextBlockGrantedFullRewardZone = currency.blockGrantedFullRewardZoneByBlockVersion(
       upgradeManager->getBlockMajorVersion(mainChain->getTopBlockIndex() + 1));
 
-  auto lastBlockSizes = mainChain->getLastBlocksSizes(currency.rewardBlocksWindow());
+  auto lastBlockSizes = mainChain->getLastBlocksSizes(currency.rewardBlocksWindowByBlockVersion(
+      upgradeManager->getBlockMajorVersion(mainChain->getTopBlockIndex() + 1)));
 
   blockMedianSize =
       std::max(Common::medianValue(lastBlockSizes), static_cast<uint64_t>(nextBlockGrantedFullRewardZone));

@@ -959,10 +959,10 @@ uint64_t BlockchainCache::getDifficultyForNextBlock() const { return getDifficul
 
 uint64_t BlockchainCache::getDifficultyForNextBlock(uint32_t blockIndex) const {
   assert(blockIndex <= getTopBlockIndex());
-  uint8_t nextBlockMajorVersion = getBlockMajorVersionForHeight(blockIndex + 1);
-  auto timestamps = getLastTimestamps(currency.difficultyBlocksCountByHeight(blockIndex), blockIndex, skipGenesisBlock);
-  auto commulativeDifficulties =
-      getLastCumulativeDifficulties(currency.difficultyBlocksCountByHeight(blockIndex), blockIndex, skipGenesisBlock);
+  const uint8_t nextBlockMajorVersion = getBlockMajorVersionForHeight(blockIndex + 1);
+  const uint64_t blockWindow = currency.difficultyBlocksCountByVersion(nextBlockMajorVersion);
+  auto timestamps = getLastTimestamps(blockWindow, blockIndex, skipGenesisBlock);
+  auto commulativeDifficulties = getLastCumulativeDifficulties(blockWindow, blockIndex, skipGenesisBlock);
   return currency.nextDifficulty(nextBlockMajorVersion, blockIndex, std::move(timestamps),
                                  std::move(commulativeDifficulties));
 }
@@ -1035,9 +1035,8 @@ uint32_t BlockchainCache::getBlockIndexContainingTx(const Crypto::Hash& transact
 
 uint8_t BlockchainCache::getBlockMajorVersionForHeight(uint32_t height) const {
   UpgradeManager upgradeManager;
-  upgradeManager.addMajorBlockVersion(BLOCK_MAJOR_VERSION_2, currency.upgradeHeight(BLOCK_MAJOR_VERSION_2));
-  upgradeManager.addMajorBlockVersion(BLOCK_MAJOR_VERSION_3, currency.upgradeHeight(BLOCK_MAJOR_VERSION_3));
-  upgradeManager.addMajorBlockVersion(BLOCK_MAJOR_VERSION_4, currency.upgradeHeight(BLOCK_MAJOR_VERSION_4));
+  for (auto version : Config::BlockVersion::versions())
+    upgradeManager.addMajorBlockVersion(version, currency.upgradeHeight(version));
   return upgradeManager.getBlockMajorVersion(height);
 }
 

@@ -23,7 +23,8 @@ class Mixins {
     /* We also need to ensure that the mixin enforced is for the limit that
        was correct when the block was formed - i.e. if 0 mixin was allowed at
        block 100, but is no longer allowed - we should still validate block 100 */
-    return std::make_tuple(Config::Mixin::minimum(height), Config::Mixin::maximum(height));
+    const uint8_t blockMajorVersion = Config::BlockVersion::version(height);
+    return std::make_tuple(Config::Mixin::minimum(blockMajorVersion), Config::Mixin::maximum(blockMajorVersion));
   }
 
   /* This method is used by WalletService to determine if the mixin amount is correct
@@ -31,7 +32,6 @@ class Mixins {
   static std::tuple<bool, std::string, std::error_code> validate(const uint32_t mixin, const uint32_t height) {
     uint64_t minMixin;
     uint64_t maxMixin;
-
     std::tie(minMixin, maxMixin) = getMixinAllowableRange(height);
 
     std::stringstream str;

@@ -24,7 +24,9 @@
 
 namespace CryptoNote {
 
-uint16_t getDefaultMixinByHeight(const uint32_t height) { return Config::Mixin::defaultValue(height); }
+uint16_t getDefaultMixinByHeight(const uint32_t height) {
+  return Config::Mixin::defaultValue(Config::BlockVersion::version(height));
+}
 
 void throwIfKeysMismatch(const Crypto::SecretKey& secretKey, const Crypto::PublicKey& expectedPublicKey,
                          const std::string& message) {

@@ -148,7 +148,7 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
   tx.outputs.clear();
   tx.signatures.clear();
 
-  tx.version = CURRENT_TRANSACTION_VERSION;
+  tx.version = CryptoNote::Config::Transaction::version();
   tx.unlockTime = unlock_time;
 
   tx.extra = extra;

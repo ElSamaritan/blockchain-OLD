@@ -289,7 +289,7 @@ std::tuple<std::string, std::string> decodeIntegratedAddress(const std::string& 
   }
 
   /* The prefix needs to be the same as the base58 prefix */
-  if (prefix != CryptoNote::Config::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX) {
+  if (prefix != CryptoNote::Config::Coin::addressBas58Prefix()) {
     throw std::system_error(make_error_code(CryptoNote::error::BAD_ADDRESS));
   }
 
@@ -1387,8 +1387,7 @@ std::error_code WalletService::createIntegratedAddress(const std::string& addres
   std::string keys = Common::asString(ba);
 
   /* Encode prefix + paymentID + keys as an address */
-  integratedAddress =
-      Tools::Base58::encode_addr(CryptoNote::Config::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, paymentId + keys);
+  integratedAddress = Tools::Base58::encode_addr(CryptoNote::Config::Coin::addressBas58Prefix(), paymentId + keys);
 
   return std::error_code();
 }

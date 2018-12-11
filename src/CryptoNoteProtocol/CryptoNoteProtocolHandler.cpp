@@ -224,9 +224,9 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
       context.m_state = CryptoNoteConnectionContext::state_normal;
     }
   } else {
-    uint64_t currentHeight = get_current_blockchain_height();
+    uint32_t currentHeight = get_current_blockchain_height();
 
-    uint64_t remoteHeight = hshd.current_height;
+    uint32_t remoteHeight = hshd.current_height;
 
     /* Find the difference between the remote and the local height */
     int64_t diff = static_cast<int64_t>(remoteHeight) - static_cast<int64_t>(currentHeight);
@@ -236,7 +236,7 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
 
     std::stringstream ss;
 
-    ss << "Your " << CRYPTONOTE_NAME << " node is syncing with the network ";
+    ss << "Your " << Config::Coin::name() << " node is syncing with the network ";
 
     /* We're behind the remote node */
     if (diff >= 0) {
@@ -568,8 +568,8 @@ int CryptoNoteProtocolHandler::handle_request_chain(int command, NOTIFY_REQUEST_
   }
 
   NOTIFY_RESPONSE_CHAIN_ENTRY::request r;
-  r.m_block_ids = m_core.findBlockchainSupplement(arg.block_ids, BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT, r.total_height,
-                                                  r.start_height);
+  r.m_block_ids = m_core.findBlockchainSupplement(
+      arg.block_ids, Config::Network::blockIdentifiersSynchronizationBatchSize(), r.total_height, r.start_height);
 
   m_logger(Logging::TRACE) << context << "-->>NOTIFY_RESPONSE_CHAIN_ENTRY: m_start_height=" << r.start_height
                            << ", m_total_height=" << r.total_height << ", m_block_ids.size()=" << r.m_block_ids.size();
@@ -585,7 +585,7 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
     size_t count = 0;
     auto it = context.m_needed_objects.begin();
 
-    while (it != context.m_needed_objects.end() && count < BLOCKS_SYNCHRONIZING_DEFAULT_COUNT) {
+    while (it != context.m_needed_objects.end() && count < Config::Network::blocksSynchronizationBatchSize()) {
       if (!(check_having_blocks && m_core.hasBlock(*it))) {
         req.blocks.push_back(*it);
         ++count;
@@ -629,7 +629,7 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized() {
   bool val_expected = false;
   if (m_synchronized.compare_exchange_strong(val_expected, true)) {
     m_logger(Logging::INFO) << ENDL;
-    m_logger(INFO, BRIGHT_MAGENTA) << "===[ " + std::string(CryptoNote::CRYPTONOTE_NAME) +
+    m_logger(INFO, BRIGHT_MAGENTA) << "===[ " + std::string(CryptoNote::Config::Coin::name()) +
                                           " Tip! ]============================="
                                    << ENDL;
     m_logger(INFO, WHITE) << " Always exit " + WalletConfig::daemonName + " and " + WalletConfig::walletName +

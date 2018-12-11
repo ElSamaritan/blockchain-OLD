@@ -61,7 +61,7 @@ bool parseDaemonAddressFromString(std::string& host, uint16_t& port, const std::
   }
 
   host = parts.at(0);
-  port = CryptoNote::RPC_DEFAULT_PORT;
+  port = CryptoNote::Config::Network::rpcPort();
   return true;
 }
 
@@ -82,7 +82,7 @@ void MiningConfig::parse(int argc, char** argv) {
     ("daemon-address", "The daemon [host:port] combination to use for node operations. This option overrides --daemon-host and --daemon-rpc-port",
       cxxopts::value<std::string>(daemonAddress), "<host:port>")
     ("daemon-host", "The daemon host to use for node operations", cxxopts::value<std::string>(daemonHost)->default_value("127.0.0.1"), "<host>")
-    ("daemon-rpc-port", "The daemon RPC port to use for node operations", cxxopts::value<uint16_t>(daemonPort)->default_value(std::to_string(CryptoNote::RPC_DEFAULT_PORT)), "#")
+    ("daemon-rpc-port", "The daemon RPC port to use for node operations", cxxopts::value<uint16_t>(daemonPort)->default_value(std::to_string(CryptoNote::Config::Network::rpcPort())), "#")
     ("scan-time", "Blockchain polling interval (seconds). How often miner will check the Blockchain for updates", cxxopts::value<size_t>(scanPeriod)->default_value("30"), "#");
 
   options.add_options("Mining")

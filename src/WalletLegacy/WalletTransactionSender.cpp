@@ -88,8 +88,7 @@ WalletTransactionSender::WalletTransactionSender(const Currency& currency,
       m_isStoping(false),
       m_keys(keys),
       m_transferDetails(transfersContainer),
-      m_upperTransactionSizeLimit(Config::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT * 125 / 100 -
-                                  m_currency.minerTxBlobReservedSize()) {}
+      m_upperTransactionSizeLimit(0) {}
 
 void WalletTransactionSender::stop() { m_isStoping = true; }
 
@@ -108,12 +107,14 @@ void WalletTransactionSender::validateTransfersAddresses(const std::vector<Walle
 
 std::shared_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(
     TransactionId& transactionId, std::deque<std::shared_ptr<WalletLegacyEvent>>& events,
-    const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, const std::string& extra, uint64_t mixIn,
-    uint64_t unlockTimestamp) {
+    const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, uint8_t majorBlockVersion,
+    const std::string& extra, uint64_t mixIn, uint64_t unlockTimestamp) {
   using namespace CryptoNote;
 
   throwIf(transfers.empty(), error::ZERO_DESTINATION);
   validateTransfersAddresses(transfers);
+  m_upperTransactionSizeLimit =
+      CryptoNote::Config::Reward::fullRewardZone(majorBlockVersion) - m_currency.minerTxBlobReservedSize();
   uint64_t neededMoney = countNeededMoney(fee, transfers);
 
   std::shared_ptr<SendTransactionContext> context = std::make_shared<SendTransactionContext>();

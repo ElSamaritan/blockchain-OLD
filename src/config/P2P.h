@@ -29,6 +29,8 @@ static inline constexpr uint32_t maximumPackageSize() { return static_cast<uint3
 static inline constexpr std::chrono::seconds handshakeInterval() { return std::chrono::seconds{60}; }
 static inline constexpr std::chrono::seconds handshakeTimeout() { return std::chrono::seconds{5}; }
 
+static inline std::string stateBackupFilename() { return "xi-p2p.bin"; }
+
 /*!
  * \brief handshakePeersCount is the amount of known peers exchanged during a handshake.
  */

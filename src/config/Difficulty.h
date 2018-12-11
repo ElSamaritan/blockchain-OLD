@@ -11,7 +11,7 @@
  * Configuring LWMA
  *
  * _Index     : The order in which the different configurations apply.
- * _Height    : When shall this algorithm be applied.
+ * _Version   : The block version when this algorithm should be applied
  * _Window    : The amount of previous blocks that shall be considered for calculating the new difficulty.
  * _Initial   : The initial difficulty chosen if not enough block have been mined to obtain all data required.
  * _TimeLimit : The maximum amount of time a new block can differ from it predecessor in order to be accepted.
@@ -20,8 +20,8 @@
  */
 
 // clang-format off
-//                      (_Index, _Height, _Window, _Initial, _TimeLimit,                           _Algorithm)
-MakeDifficultyCheckpoint(    0,      0,      64,   1000,       2_h,    ::CryptoNote::Difficulty::LWMA_2)
+//                      (_Index, _Version, _Window, _Initial, _TimeLimit,                           _Algorithm)
+MakeDifficultyCheckpoint(    0,       0,      64,   1000,       2_h,    ::CryptoNote::Difficulty::LWMA_2)
 // clang-format on
 
 #define CURRENT_DIFFICULTY_CHECKPOINT_INDEX 0

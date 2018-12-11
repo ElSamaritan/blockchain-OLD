@@ -16,35 +16,22 @@
 
 using namespace CryptoNote;
 
-namespace {
-const uint64_t MEGABYTE = 1024 * 1024;
-}
-
 DataBaseConfig::DataBaseConfig()
     : dataDir(Tools::getDefaultDataDirectory()),
-      backgroundThreadsCount(DATABASE_DEFAULT_BACKGROUND_THREADS_COUNT),
-      maxOpenFiles(DATABASE_DEFAULT_MAX_OPEN_FILES),
-      writeBufferSize(DATABASE_WRITE_BUFFER_DEFAULT_SIZE),
-      readCacheSize(DATABASE_READ_BUFFER_DEFAULT_SIZE),
+      backgroundThreadsCount(CryptoNote::Config::Database::backgroundThreads()),
+      maxOpenFiles(CryptoNote::Config::Database::maximumOpenFiles()),
+      writeBufferSize(CryptoNote::Config::Database::writeBufferSize()),
+      readCacheSize(CryptoNote::Config::Database::readBufferSize()),
       testnet(false) {}
 
-bool DataBaseConfig::init(const std::string dataDirectory, const int backgroundThreads, const int openFiles,
-                          const int writeBuffer, const int readCache) {
+bool DataBaseConfig::init(const std::string dataDirectory, const uint16_t backgroundThreads, const uint16_t openFiles,
+                          const uint64_t writeBuffer, const uint64_t readCache) {
   dataDir = dataDirectory;
 
-  if (backgroundThreads < std::numeric_limits<uint16_t>::min() ||
-      backgroundThreads > std::numeric_limits<uint16_t>::max())
-    return false;
-  backgroundThreadsCount = static_cast<uint16_t>(backgroundThreads);
-
-  if (openFiles < 0) return false;
-  maxOpenFiles = static_cast<uint32_t>(openFiles);
-
-  if (writeBuffer < 0) return false;
-  writeBufferSize = static_cast<uint64_t>(writeBuffer) * MEGABYTE;
-
-  if (readCache < 0) return false;
-  readCacheSize = static_cast<uint64_t>(readCache) * MEGABYTE;
+  backgroundThreadsCount = backgroundThreads;
+  maxOpenFiles = openFiles;
+  writeBufferSize = writeBuffer;
+  readCacheSize = readCache;
 
   if (dataDir == Tools::getDefaultDataDirectory()) {
     configFolderDefaulted = true;

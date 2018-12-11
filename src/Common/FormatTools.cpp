@@ -24,7 +24,7 @@ std::string get_mining_speed(uint32_t hr) {
 }
 
 //--------------------------------------------------------------------------------
-std::string get_sync_percentage(uint64_t height, uint64_t target_height) {
+std::string get_sync_percentage(uint32_t height, uint32_t target_height) {
   /* Don't divide by zero */
   if (height == 0 || target_height == 0) {
     return "0.00";
@@ -46,13 +46,13 @@ std::string get_sync_percentage(uint64_t height, uint64_t target_height) {
 
 enum ForkStatus { UpToDate, ForkLater, ForkSoonReady, ForkSoonNotReady, OutOfDate };
 
-ForkStatus get_fork_status(uint64_t height, std::vector<uint64_t> upgrade_heights, uint64_t supported_height) {
+ForkStatus get_fork_status(uint32_t height, std::vector<uint32_t> upgrade_heights, uint32_t supported_height) {
   /* Allow fork heights to be empty */
   if (upgrade_heights.empty()) {
     return UpToDate;
   }
 
-  uint64_t next_fork = 0;
+  uint32_t next_fork = 0;
 
   for (auto upgrade : upgrade_heights) {
     /* We have hit an upgrade already that the user cannot support */
@@ -86,8 +86,8 @@ ForkStatus get_fork_status(uint64_t height, std::vector<uint64_t> upgrade_height
   return ForkLater;
 }
 
-std::string get_fork_time(uint64_t height, std::vector<uint64_t> upgrade_heights) {
-  uint64_t next_fork = 0;
+std::string get_fork_time(uint32_t height, std::vector<uint32_t> upgrade_heights) {
+  uint32_t next_fork = 0;
 
   for (auto upgrade : upgrade_heights) {
     /* Get the next fork height */
@@ -97,7 +97,7 @@ std::string get_fork_time(uint64_t height, std::vector<uint64_t> upgrade_heights
     }
   }
 
-  uint64_t heightOffset = next_fork - height;
+  uint32_t heightOffset = next_fork - height;
   uint64_t days = heightOffset / CryptoNote::Config::Time::expectedBlocksPerDay();
   if (height == next_fork) {
     return " (forking now),";
@@ -108,10 +108,9 @@ std::string get_fork_time(uint64_t height, std::vector<uint64_t> upgrade_heights
   } else {
     return (boost::format(" (next fork in %.1f days),") % days).str();
   }
-  return "";
 }
 
-std::string get_update_status(ForkStatus forkStatus, uint64_t height, std::vector<uint64_t> upgrade_heights) {
+std::string get_update_status(ForkStatus forkStatus, uint32_t height, std::vector<uint32_t> upgrade_heights) {
   switch (forkStatus) {
     case UpToDate:
     case ForkLater: {
@@ -131,11 +130,11 @@ std::string get_update_status(ForkStatus forkStatus, uint64_t height, std::vecto
 }
 
 //--------------------------------------------------------------------------------
-std::string get_upgrade_info(uint64_t supported_height, std::vector<uint64_t> upgrade_heights) {
+std::string get_upgrade_info(uint32_t supported_height, std::vector<uint32_t> upgrade_heights) {
   for (auto upgrade : upgrade_heights) {
     if (upgrade > supported_height) {
       return "The network forked at height " + std::to_string(upgrade) +
-             ", please update your software: " + CryptoNote::LATEST_VERSION_URL;
+             ", please update your software: " + CryptoNote::Config::Coin::downloadUrl();
     }
   }
 

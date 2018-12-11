@@ -64,8 +64,8 @@ inline WalletServiceConfiguration initConfiguration() {
   config.daemonAddress = "127.0.0.1";
   config.bindAddress = "127.0.0.1";
   config.logFile = "service.log";
-  config.daemonPort = CryptoNote::RPC_DEFAULT_PORT;
-  config.bindPort = CryptoNote::SERVICE_DEFAULT_PORT;
+  config.daemonPort = CryptoNote::Config::Network::rpcPort();
+  config.bindPort = CryptoNote::Config::Network::pgPort();
   config.logLevel = Logging::INFO;
   config.legacySecurity = false;
   config.help = false;

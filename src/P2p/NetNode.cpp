@@ -72,7 +72,8 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
       std::ostringstream portString;
       portString << port;
       if (UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(),
-                              portString.str().c_str(), lanAddress, CryptoNote::CRYPTONOTE_NAME, "TCP", 0, "0") != 0) {
+                              portString.str().c_str(), lanAddress, CryptoNote::Config::Coin::name().c_str(), "TCP", 0,
+                              "0") != 0) {
         logger(ERROR) << "UPNP_AddPortMapping failed.";
       } else {
         logger(INFO) << "Added IGD port mapping.";
@@ -440,7 +441,8 @@ bool NodeServer::append_net_address(std::vector<NetworkAddress>& nodes, const st
 
 bool NodeServer::init(const NetNodeConfig& config) {
   if (!config.getTestnet()) {
-    for (auto seed : CryptoNote::SEED_NODES) {
+    const auto seedNodes = CryptoNote::Config::Network::seedNodes();
+    for (const auto& seed : seedNodes) {
       append_net_address(m_seed_nodes, seed);
     }
   } else {
@@ -594,7 +596,7 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
   } else if ((rsp.node_data.version - CryptoNote::Config::P2P::currentVersion()) >=
              CryptoNote::Config::P2P::upgradeNotificationWindow()) {
     logger(Logging::WARNING) << context << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please visit: "
-                             << CryptoNote::LATEST_VERSION_URL << " for the latest version.";
+                             << CryptoNote::Config::Coin::downloadUrl() << " for the latest version.";
   }
 
   if (!handle_remote_peerlist(rsp.local_peerlist, rsp.node_data.local_time, context)) {
@@ -1156,9 +1158,8 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
   } else if (arg.node_data.version > CryptoNote::Config::P2P::currentVersion()) {
-    logger(Logging::WARNING) << context
-                             << "Our software may be out of date. Please visit: " << CryptoNote::LATEST_VERSION_URL
-                             << " for the latest version.";
+    logger(Logging::WARNING) << context << "Our software may be out of date. Please visit: "
+                             << CryptoNote::Config::Coin::downloadUrl() << " for the latest version.";
   }
 
   if (!context.m_is_income) {

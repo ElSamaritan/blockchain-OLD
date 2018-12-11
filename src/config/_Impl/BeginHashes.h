@@ -8,24 +8,21 @@
 
 namespace CryptoNote {
 namespace Config {
-namespace Difficulty {
+namespace Hashes {
 template <uint8_t _Index>
-struct DifficultyCheckpoint;
+struct HashCheckpoint;
 }
 }  // namespace Config
 }  // namespace CryptoNote
 
-#define MakeDifficultyCheckpoint(_Index, _Version, _Window, _Initial, _TimeLimit, _Algorithm) \
+#define MakeHashCheckpoint(_Index, _Version, _Algorithm) \
   namespace CryptoNote {                                                                      \
   namespace Config {                                                                          \
-  namespace Difficulty {                                                                      \
+  namespace Hashes {                                                                          \
   template <>                                                                                 \
-  struct DifficultyCheckpoint<_Index> {                                                       \
-    static inline constexpr uint8_t index() { return _Index; }                                \
-    static inline constexpr uint8_t version() { return _Version; }                            \
-    static inline constexpr uint32_t windowSize() { return _Window; }                         \
-    static inline constexpr uint64_t initialValue() { return _Initial; }                      \
-    static inline constexpr std::chrono::seconds timeLimit() { return _TimeLimit; }           \
+  struct HashCheckpoint<_Index> {                                                             \
+    static inline constexpr uint8_t index() { return _Index; }                                  \
+    static inline constexpr uint8_t version() { return _Version; }                              \
     using algorithm = _Algorithm;                                                             \
   };                                                                                          \
   }                                                                                           \

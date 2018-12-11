@@ -248,7 +248,7 @@ struct COMMAND_RPC_GET_INFO {
 
   struct response {
     std::string status;
-    uint64_t height;
+    uint32_t height;
     uint64_t difficulty;
     uint64_t tx_count;
     uint64_t tx_pool_size;
@@ -259,8 +259,8 @@ struct COMMAND_RPC_GET_INFO {
     uint64_t grey_peerlist_size;
     uint32_t last_known_block_index;
     uint32_t network_height;
-    std::vector<uint64_t> upgrade_heights;
-    uint64_t supported_height;
+    std::vector<uint32_t> upgrade_heights;
+    uint32_t supported_height;
     uint32_t hashrate;
     uint8_t major_version;
     uint8_t minor_version;

@@ -25,23 +25,19 @@ class Currency {
   uint32_t maxBlockHeight() const { return m_maxBlockHeight; }
   size_t maxBlockBlobSize() const { return m_maxBlockBlobSize; }
   size_t maxTxSize() const { return m_maxTxSize; }
+  uint8_t maxTxVersion() const;
+  uint8_t minTxVersion() const;
   uint64_t publicAddressBase58Prefix() const { return m_publicAddressBase58Prefix; }
   uint32_t minedMoneyUnlockWindow() const { return m_minedMoneyUnlockWindow; }
 
-  size_t timestampCheckWindow(uint32_t blockHeight) const {
-    return CryptoNote::Config::Difficulty::windowSize(blockHeight);
-  }
-
-  uint64_t blockFutureTimeLimit(uint32_t blockHeight) const {
-    return static_cast<uint64_t>(std::chrono::seconds{CryptoNote::Config::Difficulty::timeLimit(blockHeight)}.count());
-  }
+  size_t timestampCheckWindow(uint32_t blockHeight, uint8_t majorVersion) const;
+  uint64_t blockFutureTimeLimit(uint32_t blockHeight, uint8_t majorVersion) const;
 
   uint64_t moneySupply() const { return m_moneySupply; }
   unsigned int emissionSpeedFactor() const { return m_emissionSpeedFactor; }
   uint64_t genesisBlockReward() const { return m_genesisBlockReward; }
 
-  size_t rewardBlocksWindow() const { return m_rewardBlocksWindow; }
-  size_t blockGrantedFullRewardZone() const { return m_blockGrantedFullRewardZone; }
+  size_t rewardBlocksWindowByBlockVersion(uint8_t blockMajorVersion) const;
   size_t blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const;
   size_t minerTxBlobReservedSize() const { return m_minerTxBlobReservedSize; }
 
@@ -49,23 +45,11 @@ class Currency {
   uint64_t coin() const { return m_coin; }
 
   uint64_t minimumFee() const { return m_mininumFee; }
-  uint64_t defaultDustThreshold(uint32_t height) const {
-    if (height >= CryptoNote::Config::DUST_THRESHOLD_V2_HEIGHT) {
-      return CryptoNote::Config::DEFAULT_DUST_THRESHOLD_V2;
-    }
-
-    return m_defaultDustThreshold;
-  }
-  uint64_t defaultFusionDustThreshold(uint32_t height) const {
-    if (height >= CryptoNote::Config::FUSION_DUST_THRESHOLD_HEIGHT_V2) {
-      return CryptoNote::Config::DEFAULT_DUST_THRESHOLD_V2;
-    }
-
-    return m_defaultDustThreshold;
-  }
+  uint64_t defaultDustThreshold(uint32_t height) const;
+  uint64_t defaultFusionDustThreshold(uint32_t height) const;
 
   uint64_t difficultyTarget() const { return m_difficultyTarget; }
-  size_t difficultyBlocksCountByHeight(uint32_t height) const;
+  size_t difficultyBlocksCountByVersion(uint8_t version) const;
 
   size_t maxBlockSizeInitial() const { return m_maxBlockSizeInitial; }
   uint64_t maxBlockSizeGrowthSpeedNumerator() const { return m_maxBlockSizeGrowthSpeedNumerator; }
@@ -136,10 +120,9 @@ class Currency {
   size_t getApproximateMaximumInputCount(size_t transactionSize, size_t outputCount, size_t mixinCount) const;
 
  private:
-  Currency(Logging::ILogger& log) : logger(log, "currency") {}
+  Currency(Logging::ILogger& log);
 
   bool init();
-
   bool generateGenesisBlock();
 
  private:
@@ -156,15 +139,12 @@ class Currency {
   unsigned int m_emissionSpeedFactor;
   uint64_t m_genesisBlockReward;
 
-  size_t m_rewardBlocksWindow;
-  size_t m_blockGrantedFullRewardZone;
   size_t m_minerTxBlobReservedSize;
 
   size_t m_numberOfDecimalPlaces;
   uint64_t m_coin;
 
   uint64_t m_mininumFee;
-  uint64_t m_defaultDustThreshold;
 
   uint64_t m_difficultyTarget;
 
@@ -260,15 +240,6 @@ class CurrencyBuilder : boost::noncopyable {
     m_currency.m_genesisBlockReward = val;
     return *this;
   }
-
-  CurrencyBuilder& rewardBlocksWindow(size_t val) {
-    m_currency.m_rewardBlocksWindow = val;
-    return *this;
-  }
-  CurrencyBuilder& blockGrantedFullRewardZone(size_t val) {
-    m_currency.m_blockGrantedFullRewardZone = val;
-    return *this;
-  }
   CurrencyBuilder& minerTxBlobReservedSize(size_t val) {
     m_currency.m_minerTxBlobReservedSize = val;
     return *this;
@@ -278,10 +249,6 @@ class CurrencyBuilder : boost::noncopyable {
 
   CurrencyBuilder& mininumFee(uint64_t val) {
     m_currency.m_mininumFee = val;
-    return *this;
-  }
-  CurrencyBuilder& defaultDustThreshold(uint64_t val) {
-    m_currency.m_defaultDustThreshold = val;
     return *this;
   }
 

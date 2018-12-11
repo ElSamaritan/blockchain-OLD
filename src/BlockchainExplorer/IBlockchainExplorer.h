@@ -70,7 +70,7 @@ class IBlockchainExplorer {
                             std::vector<TransactionDetails>& newTransactions,
                             std::vector<Crypto::Hash>& removedTransactions) = 0;
 
-  virtual uint64_t getRewardBlocksWindow() = 0;
+  virtual uint64_t getRewardBlocksWindow(uint8_t majorVersion) = 0;
   virtual uint64_t getFullRewardMaxBlockSize(uint8_t majorVersion) = 0;
 
   virtual bool isSynchronized() = 0;

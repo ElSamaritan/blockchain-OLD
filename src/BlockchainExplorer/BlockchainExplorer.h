@@ -69,7 +69,7 @@ class BlockchainExplorer : public IBlockchainExplorer, public INodeObserver {
                             std::vector<TransactionDetails>& newTransactions,
                             std::vector<Crypto::Hash>& removedTransactions) override;
 
-  virtual uint64_t getRewardBlocksWindow() override;
+  virtual uint64_t getRewardBlocksWindow(uint8_t majorVersion) override;
   virtual uint64_t getFullRewardMaxBlockSize(uint8_t majorVersion) override;
 
   virtual bool isSynchronized() override;

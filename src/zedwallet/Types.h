@@ -52,7 +52,7 @@ struct Config {
   std::string host = "127.0.0.1";
 
   /* The daemon port */
-  uint16_t port = CryptoNote::RPC_DEFAULT_PORT;
+  uint16_t port = CryptoNote::Config::Network::rpcPort();
 
   /* The wallet file path */
   std::string walletFile = "";

@@ -154,7 +154,7 @@ TransactionImpl::TransactionImpl() {
   TransactionExtraPublicKey pk = {txKeys.publicKey};
   extra.set(pk);
 
-  transaction.version = CURRENT_TRANSACTION_VERSION;
+  transaction.version = CryptoNote::Config::Transaction::version();
   transaction.unlockTime = 0;
   transaction.extra = extra.serialize();
 

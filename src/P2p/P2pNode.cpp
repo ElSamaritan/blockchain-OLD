@@ -401,7 +401,7 @@ bool P2pNode::fetchPeerList(ContextPtr connection) {
     } else if ((response.node_data.version - CryptoNote::Config::P2P::currentVersion()) >=
                CryptoNote::Config::P2P::upgradeNotificationWindow()) {
       logger(WARNING) << *connection << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please visit: "
-                      << CryptoNote::LATEST_VERSION_URL << " for the latest version.";
+                      << CryptoNote::Config::Coin::downloadUrl() << " for the latest version.";
     }
 
     return handleRemotePeerList(response.local_peerlist, response.node_data.local_time);

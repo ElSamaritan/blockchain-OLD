@@ -419,25 +419,18 @@ bool BlockchainExplorer::getPoolState(const std::vector<Hash>& knownPoolTransact
   return getTransactions(newTransactionsHashes, newTransactions);
 }
 
-uint64_t BlockchainExplorer::getRewardBlocksWindow() {
+uint64_t BlockchainExplorer::getRewardBlocksWindow(uint8_t majorVersion) {
   if (state.load() != INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
-  return Config::CRYPTONOTE_REWARD_BLOCKS_WINDOW;
+  return Config::Reward::window(majorVersion);
 }
 
 uint64_t BlockchainExplorer::getFullRewardMaxBlockSize(uint8_t majorVersion) {
   if (state.load() != INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
-
-  if (majorVersion >= BLOCK_MAJOR_VERSION_3) {
-    return Config::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
-  } else if (majorVersion == BLOCK_MAJOR_VERSION_2) {
-    return Config::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2;
-  } else {
-    return Config::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1;
-  }
+  return Config::Reward::fullRewardZone(majorVersion);
 }
 
 bool BlockchainExplorer::isSynchronized() {

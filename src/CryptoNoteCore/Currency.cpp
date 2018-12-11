@@ -34,178 +34,30 @@ using namespace Common;
 
 namespace CryptoNote {
 
-const std::vector<uint64_t> Currency::PRETTY_AMOUNTS = {1,
-                                                        2,
-                                                        3,
-                                                        4,
-                                                        5,
-                                                        6,
-                                                        7,
-                                                        8,
-                                                        9,
-                                                        10,
-                                                        20,
-                                                        30,
-                                                        40,
-                                                        50,
-                                                        60,
-                                                        70,
-                                                        80,
-                                                        90,
-                                                        100,
-                                                        200,
-                                                        300,
-                                                        400,
-                                                        500,
-                                                        600,
-                                                        700,
-                                                        800,
-                                                        900,
-                                                        1000,
-                                                        2000,
-                                                        3000,
-                                                        4000,
-                                                        5000,
-                                                        6000,
-                                                        7000,
-                                                        8000,
-                                                        9000,
-                                                        10000,
-                                                        20000,
-                                                        30000,
-                                                        40000,
-                                                        50000,
-                                                        60000,
-                                                        70000,
-                                                        80000,
-                                                        90000,
-                                                        100000,
-                                                        200000,
-                                                        300000,
-                                                        400000,
-                                                        500000,
-                                                        600000,
-                                                        700000,
-                                                        800000,
-                                                        900000,
-                                                        1000000,
-                                                        2000000,
-                                                        3000000,
-                                                        4000000,
-                                                        5000000,
-                                                        6000000,
-                                                        7000000,
-                                                        8000000,
-                                                        9000000,
-                                                        10000000,
-                                                        20000000,
-                                                        30000000,
-                                                        40000000,
-                                                        50000000,
-                                                        60000000,
-                                                        70000000,
-                                                        80000000,
-                                                        90000000,
-                                                        100000000,
-                                                        200000000,
-                                                        300000000,
-                                                        400000000,
-                                                        500000000,
-                                                        600000000,
-                                                        700000000,
-                                                        800000000,
-                                                        900000000,
-                                                        1000000000,
-                                                        2000000000,
-                                                        3000000000,
-                                                        4000000000,
-                                                        5000000000,
-                                                        6000000000,
-                                                        7000000000,
-                                                        8000000000,
-                                                        9000000000,
-                                                        10000000000,
-                                                        20000000000,
-                                                        30000000000,
-                                                        40000000000,
-                                                        50000000000,
-                                                        60000000000,
-                                                        70000000000,
-                                                        80000000000,
-                                                        90000000000,
-                                                        100000000000,
-                                                        200000000000,
-                                                        300000000000,
-                                                        400000000000,
-                                                        500000000000,
-                                                        600000000000,
-                                                        700000000000,
-                                                        800000000000,
-                                                        900000000000,
-                                                        1000000000000,
-                                                        2000000000000,
-                                                        3000000000000,
-                                                        4000000000000,
-                                                        5000000000000,
-                                                        6000000000000,
-                                                        7000000000000,
-                                                        8000000000000,
-                                                        9000000000000,
-                                                        10000000000000,
-                                                        20000000000000,
-                                                        30000000000000,
-                                                        40000000000000,
-                                                        50000000000000,
-                                                        60000000000000,
-                                                        70000000000000,
-                                                        80000000000000,
-                                                        90000000000000,
-                                                        100000000000000,
-                                                        200000000000000,
-                                                        300000000000000,
-                                                        400000000000000,
-                                                        500000000000000,
-                                                        600000000000000,
-                                                        700000000000000,
-                                                        800000000000000,
-                                                        900000000000000,
-                                                        1000000000000000,
-                                                        2000000000000000,
-                                                        3000000000000000,
-                                                        4000000000000000,
-                                                        5000000000000000,
-                                                        6000000000000000,
-                                                        7000000000000000,
-                                                        8000000000000000,
-                                                        9000000000000000,
-                                                        10000000000000000,
-                                                        20000000000000000,
-                                                        30000000000000000,
-                                                        40000000000000000,
-                                                        50000000000000000,
-                                                        60000000000000000,
-                                                        70000000000000000,
-                                                        80000000000000000,
-                                                        90000000000000000,
-                                                        100000000000000000,
-                                                        200000000000000000,
-                                                        300000000000000000,
-                                                        400000000000000000,
-                                                        500000000000000000,
-                                                        600000000000000000,
-                                                        700000000000000000,
-                                                        800000000000000000,
-                                                        900000000000000000,
-                                                        1000000000000000000,
-                                                        2000000000000000000,
-                                                        3000000000000000000,
-                                                        4000000000000000000,
-                                                        5000000000000000000,
-                                                        6000000000000000000,
-                                                        7000000000000000000,
-                                                        8000000000000000000,
-                                                        9000000000000000000,
-                                                        10000000000000000000ull};
+// clang-format off
+const std::vector<uint64_t> Currency::PRETTY_AMOUNTS = {
+  1, 2, 3, 4, 5, 6, 7, 8, 9,
+  10, 20, 30, 40, 50, 60, 70, 80, 90,
+  100, 200, 300, 400, 500, 600, 700, 800, 900,
+  1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000,
+  10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000,
+  100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000,
+  1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 7000000, 8000000, 9000000,
+  10000000, 20000000, 30000000, 40000000, 50000000, 60000000, 70000000, 80000000, 90000000,
+  100000000, 200000000, 300000000, 400000000, 500000000, 600000000, 700000000, 800000000, 900000000,
+  1000000000, 2000000000, 3000000000, 4000000000, 5000000000, 6000000000, 7000000000, 8000000000, 9000000000,
+  10000000000, 20000000000, 30000000000, 40000000000, 50000000000, 60000000000, 70000000000, 80000000000, 90000000000,
+  100000000000, 200000000000, 300000000000, 400000000000, 500000000000, 600000000000, 700000000000, 800000000000, 900000000000,
+  1000000000000, 2000000000000, 3000000000000, 4000000000000, 5000000000000, 6000000000000, 7000000000000, 8000000000000, 9000000000000,
+  10000000000000, 20000000000000, 30000000000000, 40000000000000, 50000000000000, 60000000000000, 70000000000000, 80000000000000, 90000000000000,
+  100000000000000, 200000000000000, 300000000000000, 400000000000000, 500000000000000, 600000000000000, 700000000000000, 800000000000000, 900000000000000,
+  1000000000000000, 2000000000000000, 3000000000000000, 4000000000000000, 5000000000000000, 6000000000000000, 7000000000000000, 8000000000000000, 9000000000000000,
+  10000000000000000, 20000000000000000, 30000000000000000, 40000000000000000, 50000000000000000, 60000000000000000, 70000000000000000, 80000000000000000, 90000000000000000,
+  100000000000000000, 200000000000000000, 300000000000000000, 400000000000000000, 500000000000000000, 600000000000000000, 700000000000000000, 800000000000000000, 900000000000000000,
+  1000000000000000000, 2000000000000000000, 3000000000000000000, 4000000000000000000, 5000000000000000000, 6000000000000000000, 7000000000000000000, 8000000000000000000, 9000000000000000000,
+  10000000000000000000ull
+};
+// clang-format on
 
 bool Currency::init() {
   if (!generateGenesisBlock()) {
@@ -220,21 +72,13 @@ bool Currency::init() {
     return false;
   }
 
-  if (isTestnet()) {
-    m_upgradeHeightV2 = 0;
-    m_upgradeHeightV3 = static_cast<uint32_t>(-1);
-    m_blocksFileName = "testnet_" + m_blocksFileName;
-    m_blockIndexesFileName = "testnet_" + m_blockIndexesFileName;
-    m_txPoolFileName = "testnet_" + m_txPoolFileName;
-  }
-
   return true;
 }
 
 bool Currency::generateGenesisBlock() {
   genesisBlockTemplate = boost::value_initialized<BlockTemplate>();
 
-  std::string genesisCoinbaseTxHex = CryptoNote::Config::GENESIS_COINBASE_TX_HEX;
+  std::string genesisCoinbaseTxHex = CryptoNote::Config::Coin::genesisTransactionHash();
   BinaryArray minerTxBlob;
 
   bool r =
@@ -245,8 +89,8 @@ bool Currency::generateGenesisBlock() {
     return false;
   }
 
-  genesisBlockTemplate.majorVersion = BLOCK_MAJOR_VERSION_1;
-  genesisBlockTemplate.minorVersion = BLOCK_MINOR_VERSION_0;
+  genesisBlockTemplate.majorVersion = Config::BlockVersion::BlockVersionCheckpoint<0>::version();
+  genesisBlockTemplate.minorVersion = Config::BlockVersion::minorVersionNoVotingIndicator();
   genesisBlockTemplate.timestamp = 0;
   genesisBlockTemplate.nonce = 70;
   if (m_testnet) {
@@ -257,30 +101,42 @@ bool Currency::generateGenesisBlock() {
   return true;
 }
 
-size_t Currency::difficultyBlocksCountByHeight(uint32_t height) const {
-  return CryptoNote::Config::Difficulty::windowSize(height);
+size_t Currency::difficultyBlocksCountByVersion(uint8_t version) const {
+  return CryptoNote::Config::Difficulty::windowSize(version);
 }
 
-size_t Currency::blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const {
-  if (blockMajorVersion >= BLOCK_MAJOR_VERSION_3) {
-    return m_blockGrantedFullRewardZone;
-  } else if (blockMajorVersion == BLOCK_MAJOR_VERSION_2) {
-    return CryptoNote::Config::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2;
-  } else {
-    return CryptoNote::Config::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1;
-  }
+uint8_t Currency::maxTxVersion() const { return CryptoNote::Config::Transaction::maximumVersion(); }
+
+uint8_t Currency::minTxVersion() const { return CryptoNote::Config::Transaction::minimumVersion(); }
+
+size_t Currency::timestampCheckWindow(uint32_t blockHeight, uint8_t majorVersion) const {
+  XI_UNUSED(blockHeight);
+  return CryptoNote::Config::Difficulty::windowSize(majorVersion);
+}
+
+uint64_t Currency::blockFutureTimeLimit(uint32_t blockHeight, uint8_t majorVersion) const {
+  XI_UNUSED(blockHeight);
+  return static_cast<uint64_t>(std::chrono::seconds{CryptoNote::Config::Difficulty::timeLimit(majorVersion)}.count());
+}
+
+size_t Currency::rewardBlocksWindowByBlockVersion(uint8_t blockMajorVersion) const {
+  return CryptoNote::Config::Reward::window(blockMajorVersion);
+}
+
+uint64_t Currency::blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const {
+  return CryptoNote::Config::Reward::fullRewardZone(blockMajorVersion);
+}
+
+uint64_t Currency::defaultDustThreshold(uint32_t height) const {
+  return CryptoNote::Config::Dust::dust(CryptoNote::Config::BlockVersion::version(height));
+}
+
+uint64_t Currency::defaultFusionDustThreshold(uint32_t height) const {
+  return CryptoNote::Config::Dust::fusionDust(CryptoNote::Config::BlockVersion::version(height));
 }
 
 uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
-  if (majorVersion == BLOCK_MAJOR_VERSION_2) {
-    return m_upgradeHeightV2;
-  } else if (majorVersion == BLOCK_MAJOR_VERSION_3) {
-    return m_upgradeHeightV3;
-  } else if (majorVersion == BLOCK_MAJOR_VERSION_4) {
-    return m_upgradeHeightV4;
-  } else {
-    return static_cast<uint32_t>(-1);
-  }
+  return CryptoNote::Config::BlockVersion::upgradeHeight(majorVersion);
 }
 
 bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize,
@@ -304,8 +160,9 @@ bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size
   }
 
   uint64_t penalizedBaseReward = getPenalizedAmount(baseReward, medianSize, currentBlockSize);
-  uint64_t penalizedFee =
-      blockMajorVersion >= BLOCK_MAJOR_VERSION_2 ? getPenalizedAmount(fee, medianSize, currentBlockSize) : fee;
+  uint64_t penalizedFee = blockMajorVersion >= Config::BlockVersion::BlockVersionCheckpoint<1>::version()
+                              ? getPenalizedAmount(fee, medianSize, currentBlockSize)
+                              : fee;
 
   emissionChange = penalizedBaseReward - (fee - penalizedFee);
   reward = penalizedBaseReward + penalizedFee;
@@ -398,7 +255,7 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
     return false;
   }
 
-  tx.version = CURRENT_TRANSACTION_VERSION;
+  tx.version = Config::Transaction::version();
   // lock
   tx.unlockTime = height + m_minedMoneyUnlockWindow;
   tx.inputs.push_back(in);
@@ -554,12 +411,12 @@ bool Currency::parseAmount(const std::string& str, uint64_t& amount) const {
 
 uint64_t Currency::nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
                                   std::vector<uint64_t> cumulativeDifficulties) const {
-  XI_UNUSED(version);
-  return CryptoNote::Config::Difficulty::nextDifficulty(blockIndex, timestamps, cumulativeDifficulties);
+  XI_UNUSED(blockIndex);
+  return CryptoNote::Config::Difficulty::nextDifficulty(version, timestamps, cumulativeDifficulties);
 }
 
 bool Currency::checkProofOfWorkV1(const CachedBlock& block, uint64_t currentDifficulty) const {
-  if (BLOCK_MAJOR_VERSION_1 != block.getBlock().majorVersion) {
+  if (Config::BlockVersion::BlockVersionCheckpoint<0>::version() != block.getBlock().majorVersion) {
     return false;
   }
 
@@ -568,7 +425,7 @@ bool Currency::checkProofOfWorkV1(const CachedBlock& block, uint64_t currentDiff
 
 bool Currency::checkProofOfWorkV2(const CachedBlock& cachedBlock, uint64_t currentDifficulty) const {
   const auto& block = cachedBlock.getBlock();
-  if (block.majorVersion < BLOCK_MAJOR_VERSION_2) {
+  if (block.majorVersion < Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
     return false;
   }
 
@@ -603,16 +460,12 @@ bool Currency::checkProofOfWorkV2(const CachedBlock& cachedBlock, uint64_t curre
 
 bool Currency::checkProofOfWork(const CachedBlock& block, uint64_t currentDiffic) const {
   switch (block.getBlock().majorVersion) {
-    case BLOCK_MAJOR_VERSION_1:
+    case Config::BlockVersion::BlockVersionCheckpoint<0>::version():
       return checkProofOfWorkV1(block, currentDiffic);
 
     default:
       return checkProofOfWorkV2(block, currentDiffic);
   }
-
-  logger(ERROR, BRIGHT_RED) << "Unknown block major version: " << block.getBlock().majorVersion << "."
-                            << block.getBlock().minorVersion;
-  return false;
 }
 
 size_t Currency::getApproximateMaximumInputCount(size_t transactionSize, size_t outputCount, size_t mixinCount) const {
@@ -639,6 +492,8 @@ size_t Currency::getApproximateMaximumInputCount(size_t transactionSize, size_t 
   return (transactionSize - headerSize - outputsSize) / inputSize;
 }
 
+Currency::Currency(ILogger& log) : logger(log, "currency") {}
+
 Currency::Currency(Currency&& currency)
     : m_maxBlockHeight(currency.m_maxBlockHeight),
       m_maxBlockBlobSize(currency.m_maxBlockBlobSize),
@@ -649,14 +504,11 @@ Currency::Currency(Currency&& currency)
       m_blockFutureTimeLimit(currency.m_blockFutureTimeLimit),
       m_moneySupply(currency.m_moneySupply),
       m_emissionSpeedFactor(currency.m_emissionSpeedFactor),
-      m_rewardBlocksWindow(currency.m_rewardBlocksWindow),
-      m_blockGrantedFullRewardZone(currency.m_blockGrantedFullRewardZone),
       m_isBlockexplorer(currency.m_isBlockexplorer),
       m_minerTxBlobReservedSize(currency.m_minerTxBlobReservedSize),
       m_numberOfDecimalPlaces(currency.m_numberOfDecimalPlaces),
       m_coin(currency.m_coin),
       m_mininumFee(currency.m_mininumFee),
-      m_defaultDustThreshold(currency.m_defaultDustThreshold),
       m_difficultyTarget(currency.m_difficultyTarget),
       m_maxBlockSizeInitial(currency.m_maxBlockSizeInitial),
       m_maxBlockSizeGrowthSpeedNumerator(currency.m_maxBlockSizeGrowthSpeedNumerator),
@@ -684,52 +536,47 @@ Currency::Currency(Currency&& currency)
       logger(currency.logger) {}
 
 CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
-  maxBlockNumber(Config::CRYPTONOTE_MAX_BLOCK_NUMBER);
-  maxBlockBlobSize(Config::CRYPTONOTE_MAX_BLOCK_BLOB_SIZE);
-  maxTxSize(Config::CRYPTONOTE_MAX_TX_SIZE);
-  publicAddressBase58Prefix(Config::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
+  maxBlockNumber(Config::Limits::maximumHeight());
+  maxBlockBlobSize(Config::Limits::maximumBlockBlobSize());
+  maxTxSize(Config::Limits::maximumTransactionSize());
+  publicAddressBase58Prefix(Config::Coin::addressBas58Prefix());
   minedMoneyUnlockWindow(Config::Time::minerRewardUnlockBlocksCount());
 
   moneySupply(Config::Coin::totalSupply());
-  emissionSpeedFactor(Config::EMISSION_SPEED_FACTOR);
+  emissionSpeedFactor(Config::Coin::emissionSpeed());
   genesisBlockReward(Config::Coin::amountOfPremine());
 
-  rewardBlocksWindow(Config::CRYPTONOTE_REWARD_BLOCKS_WINDOW);
-  blockGrantedFullRewardZone(Config::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE);
-  minerTxBlobReservedSize(Config::CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE);
+  minerTxBlobReservedSize(Config::Limits::blockBlobCoinbaseReservedSize());
 
   numberOfDecimalPlaces(Config::Coin::numberOfDecimalPoints());
 
-  mininumFee(Config::MINIMUM_FEE);
-  defaultDustThreshold(Config::DEFAULT_DUST_THRESHOLD);
+  mininumFee(Config::Coin::minimumFee());
 
   difficultyTarget(Config::Time::blockTimeSeconds());
 
-  maxBlockSizeInitial(Config::MAX_BLOCK_SIZE_INITIAL);
-  maxBlockSizeGrowthSpeedNumerator(Config::MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR);
-  maxBlockSizeGrowthSpeedDenominator(Config::MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR);
+  maxBlockSizeInitial(Config::Limits::initialBlockBlobSizeLimit());
+  maxBlockSizeGrowthSpeedNumerator(Config::Limits::blockBlobSizeGrowthNumerator());
+  maxBlockSizeGrowthSpeedDenominator(Config::Limits::blockBlobSizeGrowthDenominator());
 
-  lockedTxAllowedDeltaSeconds(Config::CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS);
-  lockedTxAllowedDeltaBlocks(Config::CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS);
+  lockedTxAllowedDeltaSeconds(static_cast<uint64_t>(Config::Limits::maximumTimeWindowForLockedTransation().count()));
+  lockedTxAllowedDeltaBlocks(Config::Limits::maximumBlockWindowForLockedTransation());
 
-  mempoolTxLiveTime(Config::CRYPTONOTE_MEMPOOL_TX_LIVETIME);
-  mempoolTxFromAltBlockLiveTime(Config::CRYPTONOTE_MEMPOOL_TX_FROM_ALT_BLOCK_LIVETIME);
-  numberOfPeriodsToForgetTxDeletedFromPool(Config::CRYPTONOTE_NUMBER_OF_PERIODS_TO_FORGET_TX_DELETED_FROM_POOL);
+  mempoolTxLiveTime(static_cast<uint64_t>(Config::Limits::maximumTransactionLivetimeSpan().count()));
+  mempoolTxFromAltBlockLiveTime(
+      static_cast<uint64_t>(Config::Limits::maximumTransactionLivetimeSpanFromAltBlocks().count()));
+  numberOfPeriodsToForgetTxDeletedFromPool(Config::Limits::minimumTransactionLivetimeSpansUntilDeletion());
 
-  fusionTxMaxSize(Config::FUSION_TX_MAX_SIZE);
-  fusionTxMinInputCount(Config::FUSION_TX_MIN_INPUT_COUNT);
-  fusionTxMinInOutCountRatio(Config::FUSION_TX_MIN_IN_OUT_COUNT_RATIO);
+  fusionTxMaxSize(Config::Limits::maximumFusionTransactionSize());
+  fusionTxMinInputCount(Config::Limits::minimumFusionTransactionInputCount());
+  fusionTxMinInOutCountRatio(Config::Limits::minimumFusionTransactionInputOutputRatio());
 
-  upgradeHeightV2(Config::UPGRADE_HEIGHT_V2);
-  upgradeHeightV3(Config::UPGRADE_HEIGHT_V3);
-  upgradeHeightV4(Config::UPGRADE_HEIGHT_V4);
-  upgradeVotingThreshold(Config::UPGRADE_VOTING_THRESHOLD);
-  upgradeVotingWindow(Config::UPGRADE_VOTING_WINDOW);
-  upgradeWindow(Config::UPGRADE_WINDOW);
+  upgradeVotingThreshold(Config::Limits::upgradeVotingThreshold());
+  upgradeVotingWindow(Config::Limits::upgradeVotingWindow());
+  upgradeWindow(Config::Limits::upgradeWindow());
 
-  blocksFileName(Config::CRYPTONOTE_BLOCKS_FILENAME);
-  blockIndexesFileName(Config::CRYPTONOTE_BLOCKINDEXES_FILENAME);
-  txPoolFileName(Config::CRYPTONOTE_POOLDATA_FILENAME);
+  blocksFileName(CryptoNote::Config::Database::blocksFilename());
+  blockIndexesFileName(CryptoNote::Config::Database::blockIndicesFilename());
+  txPoolFileName(CryptoNote::Config::Database::pooldataFilename());
 
   isBlockexplorer(false);
   testnet(false);
@@ -748,7 +595,7 @@ Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<Accoun
   tx.inputs.clear();
   tx.outputs.clear();
   tx.extra.clear();
-  tx.version = CURRENT_TRANSACTION_VERSION;
+  tx.version = CryptoNote::Config::Transaction::version();
   tx.unlockTime = m_currency.m_minedMoneyUnlockWindow;
   KeyPair txkey = generateKeyPair();
   addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
@@ -762,8 +609,6 @@ Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<Accoun
     Crypto::KeyDerivation derivation = boost::value_initialized<Crypto::KeyDerivation>();
     Crypto::PublicKey outEphemeralPubKey = boost::value_initialized<Crypto::PublicKey>();
     bool r = Crypto::generate_key_derivation(targets[i].viewPublicKey, txkey.secretKey, derivation);
-    if (r) {
-    }
     assert(r == true);
     //      CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to generate_key_derivation(" <<
     //      targets[i].viewPublicKey << ", " << txkey.sec << ")");

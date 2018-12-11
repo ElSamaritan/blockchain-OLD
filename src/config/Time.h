@@ -25,6 +25,9 @@ constexpr uint32_t expectedBlocksPerDay(){
 }
 
 constexpr uint16_t blockTimeSeconds() { return static_cast<uint16_t>(std::chrono::seconds{blockTime()}.count()); }
+constexpr std::chrono::seconds expectedBlockhainUptimeForHeight(uint32_t height) {
+  return height * blockTime();
+}
 
 static_assert (std::chrono::seconds{blockTime()}.count() < std::numeric_limits<uint16_t>::max(),
                "Only a maximum of 2^16-1 seconds is allowed as block time.");

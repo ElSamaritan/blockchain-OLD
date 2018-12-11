@@ -17,6 +17,8 @@
 
 #include "UpgradeManager.h"
 
+#include <stdexcept>
+
 #include <config/CryptoNoteConfig.h>
 
 namespace CryptoNote {
@@ -37,7 +39,7 @@ uint8_t UpgradeManager::getBlockMajorVersion(uint32_t blockIndex) const {
     }
   }
 
-  return BLOCK_MAJOR_VERSION_1;
+  throw std::runtime_error{"Could not find any major block version for given height."};
 }
 
 }  // namespace CryptoNote

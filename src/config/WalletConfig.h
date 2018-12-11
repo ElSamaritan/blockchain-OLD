@@ -35,7 +35,7 @@ const std::string walletName = "xi-wallet";
 const std::string walletdName = "xi-pgservice";
 
 /* The full name of your crypto */
-const std::string coinName = std::string(CryptoNote::CRYPTONOTE_NAME);
+const std::string coinName = CryptoNote::Config::Coin::name();
 
 /* Where can your users contact you for support? E.g. discord */
 const std::string contactLink = "https://discord.gg/WQJVmBz";
@@ -54,11 +54,11 @@ const long unsigned int standardAddressLength = 98;
 const long unsigned int integratedAddressLength = standardAddressLength + ((64 * 11) / 8);
 
 /* The default fee value to use with transactions (in ATOMIC units!) */
-const uint64_t defaultFee = CryptoNote::Config::MINIMUM_FEE;
+const uint64_t defaultFee = CryptoNote::Config::Coin::minimumFee();
 
 /* The minimum fee value to allow with transactions (in ATOMIC units!) */
-const uint64_t minimumFee = CryptoNote::Config::MINIMUM_FEE;
+const uint64_t minimumFee = CryptoNote::Config::Coin::minimumFee();
 
 /* The minimum amount allowed to be sent - usually 1 (in ATOMIC units!) */
-const uint64_t minimumSend = CryptoNote::Config::MINIMUM_FEE;
+const uint64_t minimumSend = CryptoNote::Config::Coin::minimumFee();
 }  // namespace WalletConfig

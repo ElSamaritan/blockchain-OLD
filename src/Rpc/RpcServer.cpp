@@ -238,7 +238,7 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req,
   uint32_t totalBlockCount;
   uint32_t startBlockIndex;
   std::vector<Crypto::Hash> supplement = m_core.findBlockchainSupplement(
-      req.block_ids, COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT, totalBlockCount, startBlockIndex);
+      req.block_ids, Config::Limits::maximumRPCBlocksQueryCount(), totalBlockCount, startBlockIndex);
 
   res.current_height = totalBlockCount;
   res.start_height = startBlockIndex;
@@ -505,14 +505,8 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.grey_peerlist_size = m_p2p.getPeerlistManager().get_gray_peers_count();
   res.last_known_block_index = std::max(static_cast<uint32_t>(1), m_protocol.getObservedHeight()) - 1;
   res.network_height = std::max(static_cast<uint32_t>(1), m_protocol.getBlockchainHeight());
-  res.upgrade_heights =
-      CryptoNote::Config::FORK_HEIGHTS_SIZE == 0
-          ? std::vector<uint64_t>()
-          : std::vector<uint64_t>(CryptoNote::Config::FORK_HEIGHTS,
-                                  CryptoNote::Config::FORK_HEIGHTS + CryptoNote::Config::FORK_HEIGHTS_SIZE);
-  res.supported_height = CryptoNote::Config::FORK_HEIGHTS_SIZE == 0
-                             ? 0
-                             : CryptoNote::Config::FORK_HEIGHTS[CryptoNote::Config::CURRENT_FORK_INDEX];
+  res.upgrade_heights = CryptoNote::Config::BlockVersion::forks();
+  res.supported_height = res.upgrade_heights.empty() ? 0 : *res.upgrade_heights.rbegin();
   res.hashrate = (uint32_t)round(res.difficulty / CryptoNote::Config::Time::blockTimeSeconds());
   res.synced = ((uint64_t)res.height == (uint64_t)res.network_height);
   res.testnet = m_core.getCurrency().isTestnet();
