@@ -5,6 +5,12 @@
 
 #pragma once
 
+#include <limits>
+#include <vector>
+#include <tuple>
+#include <string>
+#include <sstream>
+
 #include "CachedTransaction.h"
 #include "TransactionApi.h"
 #include "Wallet/WalletErrors.h"

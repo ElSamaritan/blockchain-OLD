@@ -20,6 +20,8 @@
 #include <array>
 #include <memory>
 #include <cstdint>
+#include <vector>
+#include <list>
 
 #include <boost/optional.hpp>
 

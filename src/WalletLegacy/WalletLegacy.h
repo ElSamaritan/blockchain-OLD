@@ -22,6 +22,8 @@
 #include <unordered_map>
 #include <memory>
 #include <mutex>
+#include <deque>
+#include <string>
 
 #include "IWalletLegacy.h"
 #include "CryptoNoteCore/INode.h"

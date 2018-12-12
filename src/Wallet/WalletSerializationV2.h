@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <string>
+#include <cinttypes>
+
 #include "Common/IInputStream.h"
 #include "Common/IOutputStream.h"
 #include "Serialization/ISerializer.h"

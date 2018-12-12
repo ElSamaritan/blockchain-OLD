@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "WalletLegacy/IWalletLegacy.h"
 
 #include "Common/IInputStream.h"

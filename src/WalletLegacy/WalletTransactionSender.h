@@ -17,10 +17,16 @@
 
 #pragma once
 
+#include <deque>
+#include <vector>
+#include <string>
+#include <list>
+
 #include "CryptoNoteCore/Account.h"
 #include "CryptoNoteCore/Currency.h"
 
 #include "CryptoNoteCore/INode.h"
+#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "WalletLegacy/WalletSendTransactionContext.h"
 #include "WalletLegacy/WalletUserTransactionsCache.h"
 #include "WalletLegacy/WalletUnconfirmedTransactions.h"

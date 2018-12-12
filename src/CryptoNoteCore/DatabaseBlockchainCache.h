@@ -17,6 +17,11 @@
 
 #pragma once
 
+#include <utility>
+#include <deque>
+#include <map>
+#include <vector>
+
 #include "Common/StringView.h"
 #include "Currency.h"
 #include "IBlockchainCache.h"

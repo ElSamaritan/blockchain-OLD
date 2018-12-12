@@ -17,6 +17,11 @@
 
 #pragma once
 
+#include <set>
+#include <utility>
+#include <string>
+#include <vector>
+
 #include "IWriteBatch.h"
 
 #include "BlockchainCache.h"

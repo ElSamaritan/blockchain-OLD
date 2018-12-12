@@ -17,16 +17,19 @@
 
 #pragma once
 
-#include "WalletLegacy/IWalletLegacy.h"
-#include "Transfers/ITransfersContainer.h"
-
 #include <unordered_map>
 #include <unordered_set>
-#include <time.h>
+#include <ctime>
+#include <utility>
+#include <list>
+#include <vector>
+
 #include <boost/functional/hash.hpp>
 
-#include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "crypto/crypto.h"
+#include "CryptoNoteCore/CryptoNoteBasic.h"
+#include "WalletLegacy/IWalletLegacy.h"
+#include "Transfers/ITransfersContainer.h"
 
 namespace CryptoNote {
 class ISerializer;

@@ -9,6 +9,7 @@
 #include <exception>
 #include <limits>
 #include <vector>
+#include <string>
 
 #include "Serialization/ISerializer.h"
 

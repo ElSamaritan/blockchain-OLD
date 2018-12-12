@@ -5,7 +5,9 @@
 
 #pragma once
 
-const std::string windowsAsciiArt = R"(
+#include <string>
+
+const std::string asciiArt = R"(
 + ----------------------------------------------------------------------------------------------------- +
 |                                                                         *                             |
 |    ________       .__                .__         __________                   __               __     |
@@ -24,32 +26,3 @@ const std::string windowsAsciiArt = R"(
 |   *                                                                                                   |
 + ----------------------------------------------------------------------------------------------------- +
 )";
-
-const std::string nonWindowsAsciiArt = R"(
-+ ----------------------------------------------------------------------------------------------------- +
-|                                                                         *                             |
-|    ________       .__                .__         __________                   __               __     |
-|   /  _____/_____  |  | _____  ___  __|__|____    \______   \_______  ____    |__| ____   _____/  |_   |
-|  /   \  ___\__  \ |  | \__  \ \  \/  /  \__  \    |     ___/\_  __ \/  _ \   |  |/ __ \_/ ___\   __\  |
-|  \    \_\  \/ __ \|  |__/ __ \_>    <|  |/ __ \_  |    |     |  | \(  <_> )  |  \  ___/\  \___|  |    |
-|   \______  (____  /____(____  /__/\_ \__(____  /  |____|     |__|   \____/\__|  |\___  >\___  >__|    |
-|          \/     \/          \/      \/       \/                          \______|    \/     \/        |
-|                                                                                                       |
-|      *                       ____  ___.___                                                            |
-|                              \   \/  /|   |                                                           |
-|                       ______  \     / |   |                                           *               |
-|                      /_____/  /     \ |   |                                                           |
-|                              /___/\  \|___|         *                                                 |
-|               *                    \_/                                                                |
-|   *                                                                                                   |
-+ ----------------------------------------------------------------------------------------------------- +
-)";
-
-/* Windows has some characters it won't display in a terminal. If your ascii
-   art works fine on Windows and Linux terminals, just replace 'asciiArt' with
-   the art itself, and remove these two #ifdefs and above ascii arts */
-#ifdef _WIN32
-const std::string asciiArt = windowsAsciiArt;
-#else
-const std::string asciiArt = nonWindowsAsciiArt;
-#endif

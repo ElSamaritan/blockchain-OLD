@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <string>
+#include <cinttypes>
+
 #include "Common/StringTools.h"
 #include "crypto/crypto.h"
 #include "crypto/hash.h"

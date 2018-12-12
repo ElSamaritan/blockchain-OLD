@@ -17,6 +17,10 @@
 
 #pragma once
 
+#include <string>
+#include <list>
+#include <vector>
+
 #include "crypto/hash.h"
 #include "IWalletLegacy.h"
 #include "Transfers/ITransfersContainer.h"

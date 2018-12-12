@@ -6,6 +6,10 @@
 #include <zedwallet/Transfer.h>
 ///////////////////////////////
 
+#include <vector>
+#include <utility>
+#include <string>
+
 #include <Common/Base58.h>
 #include <Common/StringTools.h>
 

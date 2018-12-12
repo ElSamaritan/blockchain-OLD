@@ -7,6 +7,8 @@
 /////////////////////////////////////////////
 
 #include <atomic>
+#include <string>
+#include <vector>
 
 #include <Common/FormatTools.h>
 #include <Common/StringTools.h>

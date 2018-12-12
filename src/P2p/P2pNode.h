@@ -19,6 +19,8 @@
 
 #include <functional>
 #include <list>
+#include <deque>
+#include <vector>
 
 #include <Logging/LoggerRef.h>
 #include <System/ContextGroup.h>

@@ -20,6 +20,7 @@
 #include "IUpgradeManager.h"
 
 #include <memory>
+#include <vector>
 
 #include "IUpgradeDetector.h"
 

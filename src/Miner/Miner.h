@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include <thread>
+#include <vector>
 
 #include <System/Dispatcher.h>
 #include <System/Event.h>

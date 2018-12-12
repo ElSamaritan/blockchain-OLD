@@ -5,6 +5,8 @@
 #pragma once
 
 #include <memory>
+#include <utility>
+#include <string>
 
 #include <zedwallet/Types.h>
 #include <config/WalletConfig.h>

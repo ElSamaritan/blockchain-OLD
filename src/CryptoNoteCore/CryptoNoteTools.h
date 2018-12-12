@@ -18,6 +18,8 @@
 #pragma once
 
 #include <limits>
+#include <vector>
+
 #include "Common/MemoryInputStream.h"
 #include "Common/StringTools.h"
 #include "Common/VectorOutputStream.h"

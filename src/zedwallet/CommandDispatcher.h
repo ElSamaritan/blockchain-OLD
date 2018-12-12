@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include <zedwallet/Types.h>
 
 bool handleCommand(const std::string command, std::shared_ptr<WalletInfo> walletInfo, CryptoNote::INode &node);

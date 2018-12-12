@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <unordered_map>
+#include <vector>
 
 #include "crypto/crypto.h"
 

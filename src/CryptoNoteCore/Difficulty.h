@@ -5,8 +5,8 @@
 #pragma once
 
 #include <cstdint>
-#include <cmath>
 #include <vector>
+#include <algorithm>
 
 namespace CryptoNote {
 namespace Difficulty {

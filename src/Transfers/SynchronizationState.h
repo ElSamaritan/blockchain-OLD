@@ -17,11 +17,13 @@
 
 #pragma once
 
+#include <vector>
+#include <map>
+#include <string>
+
 #include "CommonTypes.h"
 #include "Common/IStreamSerializable.h"
 #include "Serialization/ISerializer.h"
-#include <vector>
-#include <map>
 
 namespace CryptoNote {
 
@@ -37,6 +39,7 @@ class SynchronizationState : public IStreamSerializable {
   typedef std::vector<Crypto::Hash> ShortHistory;
 
   explicit SynchronizationState(const Crypto::Hash& genesisBlockHash) { m_blockchain.push_back(genesisBlockHash); }
+  ~SynchronizationState() override = default;
 
   ShortHistory getShortHistory(uint32_t localHeight) const;
   CheckResult checkInterval(const BlockchainInterval& interval) const;

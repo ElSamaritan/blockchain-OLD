@@ -2,6 +2,9 @@
 //
 // Please see the included LICENSE file for more information.
 
+#include <string>
+#include <cinttypes>
+
 #include <zedwallet/Types.h>
 
 void addToAddressBook();

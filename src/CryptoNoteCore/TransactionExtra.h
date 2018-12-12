@@ -18,6 +18,8 @@
 #pragma once
 
 #include <vector>
+#include <string>
+
 #include <boost/variant.hpp>
 
 #include <CryptoNoteCore/CryptoNote.h>

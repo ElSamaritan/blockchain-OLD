@@ -19,6 +19,7 @@
 
 #include <string>
 #include <cinttypes>
+#include <vector>
 
 #include "IWallet.h"
 #include "CryptoNoteCore/Currency.h"

@@ -16,9 +16,13 @@
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
+
 #include <map>
 #include <unordered_map>
 #include <vector>
+#include <utility>
+#include <set>
+#include <string>
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/composite_key.hpp>

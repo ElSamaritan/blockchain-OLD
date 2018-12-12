@@ -17,16 +17,16 @@
 
 #pragma once
 
-#include "CryptoNoteCore/INode.h"
-// #include "WalletSynchronizationContext.h"
-#include "WalletLegacy/WalletSendTransactionContext.h"
-#include "WalletLegacy/WalletLegacyEvent.h"
-
-#include <boost/optional.hpp>
-
 #include <deque>
 #include <functional>
 #include <memory>
+#include <vector>
+
+#include <boost/optional.hpp>
+
+#include "CryptoNoteCore/INode.h"
+#include "WalletLegacy/WalletSendTransactionContext.h"
+#include "WalletLegacy/WalletLegacyEvent.h"
 
 namespace CryptoNote {
 
@@ -36,7 +36,7 @@ class WalletRequest {
                              boost::optional<std::shared_ptr<WalletRequest>>& nextRequest, std::error_code ec)>
       Callback;
 
-  virtual ~WalletRequest(){};
+  virtual ~WalletRequest() {}
 
   virtual void perform(INode& node, std::function<void(WalletRequest::Callback, std::error_code)> cb) = 0;
 };
@@ -45,14 +45,14 @@ class WalletGetRandomOutsByAmountsRequest : public WalletRequest {
  public:
   WalletGetRandomOutsByAmountsRequest(const std::vector<uint64_t>& amounts, uint64_t outsCount,
                                       std::shared_ptr<SendTransactionContext> context, Callback cb)
-      : m_amounts(amounts), m_outsCount(outsCount), m_context(context), m_cb(cb){};
+      : m_amounts(amounts), m_outsCount(outsCount), m_context(context), m_cb(cb) {}
 
-  virtual ~WalletGetRandomOutsByAmountsRequest(){};
+  virtual ~WalletGetRandomOutsByAmountsRequest() override {}
 
   virtual void perform(INode& node, std::function<void(WalletRequest::Callback, std::error_code)> cb) override {
     node.getRandomOutsByAmounts(std::move(m_amounts), static_cast<uint16_t>(m_outsCount), std::ref(m_context->outs),
                                 std::bind(cb, m_cb, std::placeholders::_1));
-  };
+  }
 
  private:
   std::vector<uint64_t> m_amounts;
@@ -63,8 +63,8 @@ class WalletGetRandomOutsByAmountsRequest : public WalletRequest {
 
 class WalletRelayTransactionRequest : public WalletRequest {
  public:
-  WalletRelayTransactionRequest(const CryptoNote::Transaction& tx, Callback cb) : m_tx(tx), m_cb(cb){};
-  virtual ~WalletRelayTransactionRequest(){};
+  WalletRelayTransactionRequest(const CryptoNote::Transaction& tx, Callback cb) : m_tx(tx), m_cb(cb) {}
+  virtual ~WalletRelayTransactionRequest() override {}
 
   virtual void perform(INode& node, std::function<void(WalletRequest::Callback, std::error_code)> cb) override {
     node.relayTransaction(m_tx, std::bind(cb, m_cb, std::placeholders::_1));

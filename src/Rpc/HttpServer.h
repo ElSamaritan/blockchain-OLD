@@ -18,6 +18,8 @@
 #pragma once
 
 #include <unordered_set>
+#include <string>
+#include <cinttypes>
 
 #include <HTTP/HttpRequest.h>
 #include <HTTP/HttpResponse.h>

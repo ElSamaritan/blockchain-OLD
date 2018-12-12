@@ -20,6 +20,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
+
 #include "Dispatcher.h"
 
 namespace System {

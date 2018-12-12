@@ -17,6 +17,10 @@
 
 #pragma once
 
+#include <utility>
+#include <string>
+#include <vector>
+
 #include <boost/utility/value_init.hpp>
 
 #include "CryptoNoteBasic.h"

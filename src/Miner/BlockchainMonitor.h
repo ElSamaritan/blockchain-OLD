@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <string>
+#include <cinttypes>
+
 #include <crypto/CryptoTypes.h>
 
 #include <System/ContextGroup.h>

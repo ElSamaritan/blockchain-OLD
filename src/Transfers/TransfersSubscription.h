@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <vector>
+#include <string>
+
 #include "ITransfersSynchronizer.h"
 #include "TransfersContainer.h"
 #include "IObservableImpl.h"

@@ -7,6 +7,9 @@
 
 #include <functional>
 #include <unordered_map>
+#include <string>
+#include <vector>
+#include <list>
 
 #include <boost/functional/hash.hpp>
 

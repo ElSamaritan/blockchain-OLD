@@ -4,6 +4,10 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+#include <cinttypes>
+
 #include <config/CryptoNoteConfig.h>
 
 #include <Serialization/ISerializer.h>

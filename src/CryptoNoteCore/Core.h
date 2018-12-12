@@ -5,9 +5,12 @@
 // Please see the included LICENSE file for more information.
 
 #pragma once
+
 #include <ctime>
 #include <vector>
 #include <unordered_map>
+#include <string>
+
 #include "BlockchainCache.h"
 #include "BlockchainMessages.h"
 #include "CachedBlock.h"

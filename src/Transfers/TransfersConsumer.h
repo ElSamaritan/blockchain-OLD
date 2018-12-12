@@ -18,6 +18,7 @@
 #include "IObservableImpl.h"
 
 #include <unordered_set>
+#include <vector>
 
 namespace CryptoNote {
 

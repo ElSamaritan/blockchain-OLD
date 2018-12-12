@@ -4,8 +4,10 @@
 
 #pragma once
 
-#include <zedwallet/Types.h>
+#include <string>
+#include <cinttypes>
 
+#include <zedwallet/Types.h>
 #include <Wallet/WalletGreen.h>
 
 bool handleCommand(const std::string command, std::shared_ptr<WalletInfo> walletInfo, CryptoNote::INode &node);

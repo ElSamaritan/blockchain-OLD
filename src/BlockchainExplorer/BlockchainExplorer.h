@@ -20,6 +20,8 @@
 #include <mutex>
 #include <atomic>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 #include "IBlockchainExplorer.h"
 #include "CryptoNoteCore/IDataBase.h"

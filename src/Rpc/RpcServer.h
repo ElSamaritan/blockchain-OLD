@@ -11,6 +11,8 @@
 
 #include <functional>
 #include <unordered_map>
+#include <vector>
+#include <string>
 
 #include <Logging/LoggerRef.h>
 #include "Common/Math.h"

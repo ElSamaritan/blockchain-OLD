@@ -18,11 +18,13 @@
 #pragma once
 
 #include <list>
+#include <string>
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/member.hpp>
+#include <boost/multi_index/tag.hpp>
 
 #include "P2pProtocolTypes.h"
 #include <config/CryptoNoteConfig.h>

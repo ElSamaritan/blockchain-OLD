@@ -6,6 +6,10 @@
 
 #pragma once
 
+#include <vector>
+#include <string>
+#include <cinttypes>
+
 #include <Xi/Global.h>
 
 #include "CryptoNoteProtocol/CryptoNoteProtocolDefinitions.h"

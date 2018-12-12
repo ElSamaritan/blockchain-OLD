@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <string>
 #include <system_error>
 
 #include <System/Dispatcher.h>

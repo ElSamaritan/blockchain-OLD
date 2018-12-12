@@ -6,6 +6,8 @@
 #include <zedwallet/ParseArguments.h>
 /////////////////////////////////////
 
+#include <vector>
+#include <string>
 #include <limits>
 
 #include <Xi/Utils/ExternalIncludePush.h>

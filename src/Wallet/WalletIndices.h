@@ -19,6 +19,8 @@
 
 #include <map>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "CryptoNoteCore/ITransaction.h"
 #include "Transfers/ITransfersContainer.h"

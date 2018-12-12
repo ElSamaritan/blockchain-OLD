@@ -6,6 +6,8 @@
 #include <zedwallet/CommandDispatcher.h>
 ////////////////////////////////////////
 
+#include <string>
+
 #include <zedwallet/AddressBook.h>
 #include <zedwallet/ColouredMsg.h>
 #include <zedwallet/CommandImplementations.h>

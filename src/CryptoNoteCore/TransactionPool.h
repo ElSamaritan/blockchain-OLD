@@ -16,6 +16,9 @@
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
+
+#include <vector>
+#include <cinttypes>
 #include <unordered_map>
 
 #include "crypto/crypto.h"

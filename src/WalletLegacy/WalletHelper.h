@@ -20,6 +20,7 @@
 #include <future>
 #include <map>
 #include <mutex>
+#include <string>
 
 #include "crypto/hash.h"
 #include "IWalletLegacy.h"

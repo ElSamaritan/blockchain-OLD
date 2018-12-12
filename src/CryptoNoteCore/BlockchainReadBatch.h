@@ -17,6 +17,10 @@
 
 #pragma once
 
+#include <utility>
+#include <string>
+#include <vector>
+
 #include <boost/functional/hash.hpp>
 
 #include "IReadBatch.h"

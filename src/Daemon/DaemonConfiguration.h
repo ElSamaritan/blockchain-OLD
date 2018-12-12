@@ -6,6 +6,8 @@
 
 #include <fstream>
 #include <sstream>
+#include <vector>
+#include <string>
 #include <cinttypes>
 
 #include <Xi/Utils/ExternalIncludePush.h>

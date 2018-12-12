@@ -24,6 +24,7 @@
 #include "Common/VectorOutputStream.h"
 
 #include <fstream>
+#include <string>
 
 namespace CryptoNote {
 

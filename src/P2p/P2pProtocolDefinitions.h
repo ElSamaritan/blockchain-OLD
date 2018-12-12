@@ -5,6 +5,10 @@
 
 #pragma once
 
+#include <string>
+#include <cinttypes>
+#include <list>
+
 #include <Xi/Global.h>
 #include <config/CryptoNoteConfig.h>
 

@@ -27,6 +27,10 @@
 #include <mutex>
 #include <atomic>
 #include <future>
+#include <vector>
+#include <map>
+#include <list>
+#include <utility>
 
 #include "Logging/LoggerRef.h"
 

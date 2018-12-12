@@ -8,6 +8,15 @@
 
 #include <ctime>
 #include <cstdlib>
+#include <deque>
+#include <string>
+#include <tuple>
+#include <set>
+#include <algorithm>
+#include <map>
+#include <utility>
+#include <vector>
+#include <limits>
 
 #include <boost/iterator/iterator_facade.hpp>
 

@@ -17,6 +17,10 @@
 
 #pragma once
 
+#include <memory>
+#include <cinttypes>
+#include <vector>
+
 #include <CryptoNoteCore/BlockchainStorage.h>
 
 namespace CryptoNote {

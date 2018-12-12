@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <system_error>
+#include <vector>
 
 #include <Xi/Global.h>
 

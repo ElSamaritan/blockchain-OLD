@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <cinttypes>
+#include <string>
+
 #include "Serialization/ISerializer.h"
 
 namespace CryptoNote {
