@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "ITransaction.h"
+#include "CryptoNoteCore/ITransaction.h"
 #include "TransactionApiExtra.h"
 #include "TransactionUtils.h"
 
@@ -154,7 +154,7 @@ TransactionImpl::TransactionImpl() {
   TransactionExtraPublicKey pk = {txKeys.publicKey};
   extra.set(pk);
 
-  transaction.version = CURRENT_TRANSACTION_VERSION;
+  transaction.version = CryptoNote::Config::Transaction::version();
   transaction.unlockTime = 0;
   transaction.extra = extra.serialize();
 

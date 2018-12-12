@@ -450,7 +450,9 @@ TransactionId WalletLegacy::sendTransaction(const std::vector<WalletLegacyTransf
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
-    request = m_sender->makeSendRequest(txId, events, transfers, fee, extra, mixIn, unlockTimestamp);
+    request = m_sender->makeSendRequest(txId, events, transfers, fee,
+                                        CryptoNote::Config::BlockVersion::version(m_node.getLastKnownBlockHeight()),
+                                        extra, mixIn, unlockTimestamp);
   }
 
   notifyClients(events);

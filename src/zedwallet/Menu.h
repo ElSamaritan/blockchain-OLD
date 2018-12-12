@@ -4,6 +4,10 @@
 
 #pragma once
 
+#include <tuple>
+#include <string>
+#include <vector>
+
 #include <zedwallet/Types.h>
 
 template <typename T>

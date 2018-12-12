@@ -18,6 +18,9 @@
 #pragma once
 
 #include <iostream>
+#include <string>
+#include <vector>
+
 #include "../Common/JsonValue.h"
 #include "ISerializer.h"
 
@@ -26,7 +29,7 @@ namespace CryptoNote {
 class JsonOutputStreamSerializer : public ISerializer {
  public:
   JsonOutputStreamSerializer();
-  virtual ~JsonOutputStreamSerializer();
+  virtual ~JsonOutputStreamSerializer() override;
 
   SerializerType type() const override;
 

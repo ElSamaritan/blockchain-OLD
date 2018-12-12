@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <string>
+#include <cinttypes>
+
 #include <CryptoNoteCore/BlockchainStorage.h>
 #include "CryptoNoteCore/SwappedVector.h"
 

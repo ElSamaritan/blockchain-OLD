@@ -8,6 +8,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <string>
 
 #include "Common/JsonValue.h"
 #include "JsonRpcServer/JsonRpcServer.h"

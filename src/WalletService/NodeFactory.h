@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "INode.h"
+#include "CryptoNoteCore/INode.h"
 
 #include <string>
 

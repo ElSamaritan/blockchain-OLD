@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <string>
+#include <cinttypes>
 
 #include <Xi/Utils/ExternalIncludePush.h>
 #include <cxxopts.hpp>
@@ -30,8 +31,8 @@ struct WalletServiceConfiguration {
   std::string corsHeader;
   std::string logFile;
 
-  int daemonPort;
-  int bindPort;
+  uint16_t daemonPort;
+  uint16_t bindPort;
   int logLevel;
 
   bool legacySecurity;
@@ -54,7 +55,7 @@ struct WalletServiceConfiguration {
   bool printAddresses;
   bool syncFromZero;
 
-  uint64_t scanHeight;
+  uint32_t scanHeight;
 };
 
 inline WalletServiceConfiguration initConfiguration() {
@@ -63,8 +64,8 @@ inline WalletServiceConfiguration initConfiguration() {
   config.daemonAddress = "127.0.0.1";
   config.bindAddress = "127.0.0.1";
   config.logFile = "service.log";
-  config.daemonPort = CryptoNote::RPC_DEFAULT_PORT;
-  config.bindPort = CryptoNote::SERVICE_DEFAULT_PORT;
+  config.daemonPort = CryptoNote::Config::Network::rpcPort();
+  config.bindPort = CryptoNote::Config::Network::pgPort();
   config.logLevel = Logging::INFO;
   config.legacySecurity = false;
   config.help = false;
@@ -83,60 +84,52 @@ inline WalletServiceConfiguration initConfiguration() {
 inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& config) {
   cxxopts::Options options(argv[0], CommonCLI::header());
 
-  options.add_options("Core")("h,help", "Display this help message", cxxopts::value<bool>()->implicit_value("true"))(
-      "v,version", "Output software version information",
-      cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
+  // clang-format off
+  options.add_options("Core")
+    ("h,help", "Display this help message", cxxopts::value<bool>()->implicit_value("true"))
+    ("v,version", "Output software version information", cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
 
-  options.add_options("Daemon")("daemon-address", "The daemon host to use for node operations",
-                                cxxopts::value<std::string>()->default_value(config.daemonAddress), "<ip>")(
-      "daemon-port", "The daemon RPC port to use for node operations",
-      cxxopts::value<int>()->default_value(std::to_string(config.daemonPort)), "<port>");
+  options.add_options("Daemon")
+    ("daemon-address", "The daemon host to use for node operations",cxxopts::value<std::string>()->default_value(config.daemonAddress), "<ip>")
+    ("daemon-port", "The daemon RPC port to use for node operations", cxxopts::value<uint16_t>()->default_value(std::to_string(config.daemonPort)), "<port>");
 
-  options.add_options("Service")("c,config", "Specify the configuration <file> to use instead of CLI arguments",
-                                 cxxopts::value<std::string>(),
-                                 "<file>")("dump-config", "Prints the current configuration to the screen",
-                                           cxxopts::value<bool>()->default_value("false")->implicit_value("true"))(
-      "log-file", "Specify log <file> location", cxxopts::value<std::string>()->default_value(config.logFile),
-      "<file>")("log-level", "Specify log level", cxxopts::value<int>()->default_value(std::to_string(config.logLevel)),
-                "#")("server-root", "The service will use this <path> as the working directory",
-                     cxxopts::value<std::string>(), "<path>")(
-      "save-config", "Save the configuration to the specified <file>", cxxopts::value<std::string>(), "<file>");
+  options.add_options("Service")
+    ("c,config", "Specify the configuration <file> to use instead of CLI arguments", cxxopts::value<std::string>(), "<file>")
+    ("dump-config", "Prints the current configuration to the screen", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+    ("log-file", "Specify log <file> location", cxxopts::value<std::string>()->default_value(config.logFile), "<file>")
+    ("log-level", "Specify log level", cxxopts::value<int>()->default_value(std::to_string(config.logLevel)), "#")
+    ("server-root", "The service will use this <path> as the working directory", cxxopts::value<std::string>(), "<path>")
+    ("save-config", "Save the configuration to the specified <file>", cxxopts::value<std::string>(), "<file>");
 
-  options.add_options("Wallet")("address", "Print the wallet addresses and then exit",
-                                cxxopts::value<bool>()->default_value("false")->implicit_value("true"))(
-      "w,container-file", "Wallet container <file>", cxxopts::value<std::string>(), "<file>")(
-      "p,container-password", "Wallet container <password>", cxxopts::value<std::string>(), "<password>")(
-      "g,generate-container", "Generate a new wallet container",
-      cxxopts::value<bool>()->default_value("false")->implicit_value("true"))(
-      "view-key", "Generate a wallet container with this secret view <key>", cxxopts::value<std::string>(), "<key>")(
-      "spend-key", "Generate a wallet container with this secret spend <key>", cxxopts::value<std::string>(), "<key>")(
-      "mnemonic-seed", "Generate a wallet container with this Mnemonic <seed>", cxxopts::value<std::string>(),
-      "<seed>")("scan-height", "Start scanning for transactions from this Blockchain height",
-                cxxopts::value<uint64_t>()->default_value("0"),
-                "#")("SYNC_FROM_ZERO", "Force the wallet to sync from 0",
-                     cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
+  options.add_options("Wallet")
+    ("address", "Print the wallet addresses and then exit", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+    ("w,container-file", "Wallet container <file>", cxxopts::value<std::string>(), "<file>")
+    ("p,container-password", "Wallet container <password>", cxxopts::value<std::string>(), "<password>")
+    ("g,generate-container", "Generate a new wallet container", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+    ("view-key", "Generate a wallet container with this secret view <key>", cxxopts::value<std::string>(), "<key>")
+    ("spend-key", "Generate a wallet container with this secret spend <key>", cxxopts::value<std::string>(), "<key>")
+    ("mnemonic-seed", "Generate a wallet container with this Mnemonic <seed>", cxxopts::value<std::string>(), "<seed>")
+    ("scan-height", "Start scanning for transactions from this Blockchain height", cxxopts::value<uint32_t>()->default_value("0"), "#")
+    ("SYNC_FROM_ZERO", "Force the wallet to sync from 0", cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
 
-  options.add_options("Network")("bind-address", "Interface IP address for the RPC service",
-                                 cxxopts::value<std::string>()->default_value(config.bindAddress), "<ip>")(
-      "bind-port", "TCP port for the RPC service",
-      cxxopts::value<int>()->default_value(std::to_string(config.bindPort)), "<port>");
+  options.add_options("Network")
+    ("bind-address", "Interface IP address for the RPC service", cxxopts::value<std::string>()->default_value(config.bindAddress), "<ip>")
+    ("bind-port", "TCP port for the RPC service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.bindPort)), "<port>");
 
-  options.add_options("RPC")("enable-cors",
-                             "Adds header 'Access-Control-Allow-Origin' to the RPC responses. Uses the value specified "
-                             "as the domain. Use * for all.",
-                             cxxopts::value<std::string>(), "<domain>")(
-      "rpc-legacy-security", "Enable legacy mode (no password for RPC). WARNING: INSECURE. USE ONLY AS A LAST RESORT.",
-      cxxopts::value<bool>()->default_value("false")->implicit_value("true"))(
-      "rpc-password", "Specify the <password> to access the RPC server.", cxxopts::value<std::string>(), "<password>");
+  options.add_options("RPC")
+    ("enable-cors", "Adds header 'Access-Control-Allow-Origin' to the RPC responses. Uses the value specified as the domain. Use * for all.",
+      cxxopts::value<std::string>(), "<domain>")
+    ("rpc-legacy-security", "Enable legacy mode (no password for RPC). WARNING: INSECURE. USE ONLY AS A LAST RESORT.",
+      cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+    ("rpc-password", "Specify the <password> to access the RPC server.", cxxopts::value<std::string>(), "<password>");
 
 #ifdef WIN32
-  options.add_options("Windows Only")("daemonize", "Run the service as a daemon",
-                                      cxxopts::value<bool>()->default_value("false")->implicit_value("true"))(
-      "register-service", "Registers this program as a Windows service",
-      cxxopts::value<bool>()->default_value("false")->implicit_value("true"))(
-      "unregister-service", "Unregisters this program from being a Windows service",
-      cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
+  options.add_options("Windows Only")
+    ("daemonize", "Run the service as a daemon", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+    ("register-service", "Registers this program as a Windows service",cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+    ("unregister-service", "Unregisters this program from being a Windows service", cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
 #endif
+  // clang-format on
 
   try {
     auto cli = options.parse(argc, argv);
@@ -166,7 +159,7 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
     }
 
     if (cli.count("daemon-port") > 0) {
-      config.daemonPort = cli["daemon-port"].as<int>();
+      config.daemonPort = cli["daemon-port"].as<uint16_t>();
     }
 
     if (cli.count("log-file") > 0) {
@@ -190,7 +183,7 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
     }
 
     if (cli.count("bind-port") > 0) {
-      config.bindPort = cli["bind-port"].as<int>();
+      config.bindPort = cli["bind-port"].as<uint16_t>();
     }
 
     if (cli.count("enable-cors") > 0) {
@@ -246,7 +239,7 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
     }
 
     if (cli.count("scan-height") > 0) {
-      config.scanHeight = cli["scan-height"].as<uint64_t>();
+      config.scanHeight = cli["scan-height"].as<uint32_t>();
     }
 
     if (config.help)  // Do we want to display the help message?
@@ -282,7 +275,7 @@ inline void handleSettings(const std::string configFile, WalletServiceConfigurat
   }
 
   if (j.find("daemon-port") != j.end()) {
-    config.daemonPort = j["daemon-port"].get<int>();
+    config.daemonPort = j["daemon-port"].get<uint16_t>();
   }
 
   if (j.find("log-file") != j.end()) {
@@ -306,7 +299,7 @@ inline void handleSettings(const std::string configFile, WalletServiceConfigurat
   }
 
   if (j.find("bind-port") != j.end()) {
-    config.bindPort = j["bind-port"].get<int>();
+    config.bindPort = j["bind-port"].get<uint16_t>();
   }
 
   if (j.find("enable-cors") != j.end()) {

@@ -20,6 +20,8 @@
 #include <cassert>
 #include <cstdint>
 #include <string>
+#include <algorithm>
+#include <utility>
 
 #include <boost/filesystem.hpp>
 

@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "CachedTransaction.h"
-#include "CryptoNote.h"
+#include "CryptoNoteCore/CryptoNote.h"
 #include "CryptoNoteTools.h"
 
 namespace CryptoNote {

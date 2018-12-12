@@ -16,6 +16,7 @@
 #include <random>
 #include <set>
 #include <tuple>
+#include <chrono>
 #include <utility>
 
 #include <System/EventLock.h>
@@ -23,7 +24,7 @@
 
 #include <Xi/Global.h>
 
-#include "ITransaction.h"
+#include "CryptoNoteCore/ITransaction.h"
 
 #include "Common/ScopeExit.h"
 #include "Common/ShuffleGenerator.h"
@@ -1217,14 +1218,14 @@ uint64_t WalletGreen::scanHeightToTimestamp(const uint32_t scanHeight) {
   }
 
   /* Get the amount of seconds since the blockchain launched */
-  uint64_t secondsSinceLaunch = scanHeight * CryptoNote::parameters::DIFFICULTY_TARGET;
+  uint64_t secondsSinceLaunch = scanHeight * CryptoNote::Config::Time::blockTimeSeconds();
 
   /* Add a bit of a buffer in case of difficulty weirdness, blocks coming
      out too fast */
   secondsSinceLaunch = (secondsSinceLaunch * 95) / 100;
 
   /* Get the genesis block timestamp and add the time since launch */
-  timestamp = CryptoNote::parameters::GENESIS_BLOCK_TIMESTAMP + secondsSinceLaunch;
+  timestamp = CryptoNote::Config::Coin::genesisTimestamp() + secondsSinceLaunch;
 
   /* Timestamp in the future */
   if (timestamp >= static_cast<uint64_t>(std::time(nullptr))) {
@@ -1238,13 +1239,9 @@ uint64_t WalletGreen::getCurrentTimestampAdjusted() {
   /* Get the current time as a unix timestamp */
   std::time_t time = std::time(nullptr);
 
-  /* Take the amount of time a block can potentially be in the past/future */
-  std::initializer_list<uint64_t> limits = {CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT,
-                                            CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3,
-                                            CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4};
-
-  /* Get the largest adjustment possible */
-  uint64_t adjust = std::max(limits);
+  /* Take the amount of time a block can potentially be in the past/future
+   * Get the largest adjustment possible */
+  uint64_t adjust = std::chrono::seconds{CryptoNote::Config::Difficulty::maximumTimeLimit()}.count();
 
   /* Take the earliest timestamp that will include all possible blocks */
   return time - adjust;
@@ -3751,15 +3748,11 @@ void WalletGreen::deleteFromUncommitedTransactions(const std::vector<size_t>& de
 size_t WalletGreen::getMaxTxSize() {
   uint32_t currentHeight = m_node.getLastKnownBlockHeight();
 
-  size_t growth = (currentHeight * CryptoNote ::parameters ::MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR) /
-
-                  CryptoNote ::parameters ::MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR;
-
-  size_t x = CryptoNote::parameters::MAX_BLOCK_SIZE_INITIAL + growth;
-
-  size_t y = 125000;
-
-  return std::min(x, y) - CryptoNote::parameters ::CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
+  size_t growth = (currentHeight * CryptoNote ::Config ::Limits::blockBlobSizeGrowthNumerator()) /
+                  CryptoNote::Config::Limits::blockBlobSizeGrowthDenominator();
+  size_t x = CryptoNote::Config::Limits::initialBlockBlobSizeLimit() + growth;
+  size_t y = CryptoNote::Config::Limits::maximumBlockBlobSize();
+  return std::min(x, y) - CryptoNote::Config ::Limits::blockBlobCoinbaseReservedSize();
 }
 
 }  // namespace CryptoNote

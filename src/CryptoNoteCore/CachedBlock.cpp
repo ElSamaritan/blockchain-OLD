@@ -33,7 +33,7 @@ const Crypto::Hash& CachedBlock::getTransactionTreeHash() const {
 const Crypto::Hash& CachedBlock::getBlockHash() const {
   if (!blockHash.is_initialized()) {
     BinaryArray blockBinaryArray = getBlockHashingBinaryArray();
-    if (BLOCK_MAJOR_VERSION_2 <= block.majorVersion) {
+    if (Config::BlockVersion::BlockVersionCheckpoint<1>::version() <= block.majorVersion) {
       const auto& parentBlock = getParentBlockHashingBinaryArray(false);
       blockBinaryArray.insert(blockBinaryArray.end(), parentBlock.begin(), parentBlock.end());
     }
@@ -46,21 +46,8 @@ const Crypto::Hash& CachedBlock::getBlockHash() const {
 
 const Crypto::Hash& CachedBlock::getBlockLongHash() const {
   if (!blockLongHash.is_initialized()) {
-    if (block.majorVersion == BLOCK_MAJOR_VERSION_1) {
-      const auto& rawHashingBlock = getBlockHashingBinaryArray();
-      blockLongHash = Hash();
-      cn_slow_hash_v0(rawHashingBlock.data(), rawHashingBlock.size(), blockLongHash.get());
-    } else if ((block.majorVersion == BLOCK_MAJOR_VERSION_2) || (block.majorVersion == BLOCK_MAJOR_VERSION_3)) {
-      const auto& rawHashingBlock = getParentBlockHashingBinaryArray(true);
-      blockLongHash = Hash();
-      cn_slow_hash_v0(rawHashingBlock.data(), rawHashingBlock.size(), blockLongHash.get());
-    } else if (block.majorVersion == BLOCK_MAJOR_VERSION_4) {
-      const auto& rawHashingBlock = getParentBlockHashingBinaryArray(true);
-      blockLongHash = Hash();
-      CNX::Hash_v0{}(rawHashingBlock.data(), rawHashingBlock.size(), blockLongHash.get(), getBlockIndex());
-    } else {
-      throw std::runtime_error("Unknown block major version.");
-    }
+    blockLongHash = Hash{};
+    CryptoNote::Config::Hashes::compute(*this, blockLongHash.get(), block.majorVersion);
   }
 
   return blockLongHash.get();

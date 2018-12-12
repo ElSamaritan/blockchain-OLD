@@ -183,7 +183,7 @@ std::string createIntegratedAddress(const std::string &address, const std::strin
   std::string keys = Common::asString(ba);
 
   /* Encode prefix + paymentID + keys as an address */
-  return Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, paymentID + keys);
+  return Tools::Base58::encode_addr(CryptoNote::Config::Coin::addressBas58Prefix(), paymentID + keys);
 }
 
 uint32_t getScanHeight() {

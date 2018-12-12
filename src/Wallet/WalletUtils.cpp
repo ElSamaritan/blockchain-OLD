@@ -17,23 +17,15 @@
 
 #include "WalletUtils.h"
 
-#include "CryptoNote.h"
+#include "CryptoNoteCore/CryptoNote.h"
+#include <config/Mixin.h>
 #include "crypto/crypto.h"
 #include "Wallet/WalletErrors.h"
 
 namespace CryptoNote {
 
-uint16_t getDefaultMixinByHeight(const uint64_t height) {
-  if (height >= CryptoNote::parameters::MIXIN_LIMITS_V3_HEIGHT) {
-    return CryptoNote::parameters::DEFAULT_MIXIN_V3;
-  }
-  if (height >= CryptoNote::parameters::MIXIN_LIMITS_V2_HEIGHT) {
-    return CryptoNote::parameters::DEFAULT_MIXIN_V2;
-  } else if (height >= CryptoNote::parameters::MIXIN_LIMITS_V1_HEIGHT) {
-    return CryptoNote::parameters::DEFAULT_MIXIN_V1;
-  } else {
-    return CryptoNote::parameters::DEFAULT_MIXIN_V0;
-  }
+uint16_t getDefaultMixinByHeight(const uint32_t height) {
+  return Config::Mixin::defaultValue(Config::BlockVersion::version(height));
 }
 
 void throwIfKeysMismatch(const Crypto::SecretKey& secretKey, const Crypto::PublicKey& expectedPublicKey,

@@ -20,6 +20,7 @@
 #include <list>
 #include <ostream>
 #include <unordered_set>
+#include <string>
 
 #include <boost/uuid/uuid.hpp>
 #include "Common/StringTools.h"

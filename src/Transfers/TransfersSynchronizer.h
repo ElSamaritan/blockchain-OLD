@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <memory>
 #include <cstring>
+#include <vector>
 
 #include "Logging/LoggerRef.h"
 

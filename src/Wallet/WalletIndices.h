@@ -19,9 +19,12 @@
 
 #include <map>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
-#include "ITransfersContainer.h"
-#include "IWallet.h"
+#include "CryptoNoteCore/ITransaction.h"
+#include "Transfers/ITransfersContainer.h"
+#include "Wallet/IWallet.h"
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>

@@ -18,8 +18,10 @@
 #pragma once
 
 #include <vector>
+#include <limits>
+#include <utility>
 
-#include <CryptoNote.h>
+#include <CryptoNoteCore/CryptoNote.h>
 
 #include "CryptoNoteCore/CachedBlock.h"
 #include "CryptoNoteCore/CachedTransaction.h"

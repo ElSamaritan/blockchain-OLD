@@ -47,6 +47,7 @@ enum class TransactionValidationError {
   OUTPUTS_AMOUNT_OVERFLOW,
   WRONG_AMOUNT,
   WRONG_TRANSACTION_UNLOCK_TIME,
+  INVALID_VERSION,
   INVALID_MIXIN
 };
 
@@ -111,6 +112,8 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Transaction has wrong unlock time";
       case TransactionValidationError::INVALID_MIXIN:
         return "Mixin too large or too small";
+      case TransactionValidationError::INVALID_VERSION:
+        return "Transaction has an unknown version";
       default:
         return "Unknown error";
     }

@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include <mutex>
+#include <vector>
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/hashed_index.hpp>
@@ -35,8 +36,8 @@
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"
 
-#include "ITransaction.h"
-#include "ITransfersContainer.h"
+#include "CryptoNoteCore/ITransaction.h"
+#include "Transfers/ITransfersContainer.h"
 
 namespace CryptoNote {
 

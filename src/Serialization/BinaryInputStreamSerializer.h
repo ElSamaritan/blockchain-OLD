@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <string>
+
 #include <Common/IInputStream.h>
 #include "ISerializer.h"
 #include "SerializationOverloads.h"

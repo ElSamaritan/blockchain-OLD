@@ -5,19 +5,28 @@
 
 #include "NodeFactory.h"
 
-#include "NodeRpcProxy/NodeRpcProxy.h"
 #include <memory>
 #include <future>
+
+#include <Xi/Global.h>
+
+#include "NodeRpcProxy/NodeRpcProxy.h"
 
 namespace PaymentService {
 
 class NodeRpcStub : public CryptoNote::INode {
  public:
-  virtual ~NodeRpcStub() {}
-  virtual bool addObserver(CryptoNote::INodeObserver* observer) override { return true; }
-  virtual bool removeObserver(CryptoNote::INodeObserver* observer) override { return true; }
+  virtual ~NodeRpcStub() override {}
+  virtual bool addObserver(CryptoNote::INodeObserver* observer) override {
+    XI_UNUSED(observer);
+    return true;
+  }
+  virtual bool removeObserver(CryptoNote::INodeObserver* observer) override {
+    XI_UNUSED(observer);
+    return true;
+  }
 
-  virtual void init(const Callback& callback) override {}
+  virtual void init(const Callback& callback) override { XI_UNUSED(callback); }
   virtual bool shutdown() override { return true; }
 
   virtual size_t getPeerCount() const override { return 0; }
@@ -34,12 +43,14 @@ class NodeRpcStub : public CryptoNote::INode {
 
   virtual void getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount,
                                           std::vector<Crypto::Hash>& blockHashes, const Callback& callback) override {
+    XI_UNUSED(timestampBegin, secondsCount, blockHashes);
     callback(std::error_code());
   }
 
   virtual void getTransactionHashesByPaymentId(const Crypto::Hash& paymentId,
                                                std::vector<Crypto::Hash>& transactionHashes,
                                                const Callback& callback) override {
+    XI_UNUSED(paymentId, transactionHashes);
     callback(std::error_code());
   }
 
@@ -48,51 +59,68 @@ class NodeRpcStub : public CryptoNote::INode {
   }
 
   virtual void relayTransaction(const CryptoNote::Transaction& transaction, const Callback& callback) override {
+    XI_UNUSED(transaction);
     callback(std::error_code());
   }
   virtual void getRandomOutsByAmounts(
       std::vector<uint64_t>&& amounts, uint16_t outsCount,
       std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result,
-      const Callback& callback) override {}
+      const Callback& callback) override {
+    XI_UNUSED(amounts, outsCount, result, callback);
+  }
   virtual void getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
                             uint32_t& startHeight, const Callback& callback) override {
+    XI_UNUSED(knownBlockIds);
+    XI_UNUSED(newBlocks);
     startHeight = 0;
     callback(std::error_code());
   }
   virtual void getTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,
                                                std::vector<uint32_t>& outsGlobalIndices,
-                                               const Callback& callback) override {}
+                                               const Callback& callback) override {
+    XI_UNUSED(transactionHash, outsGlobalIndices, callback);
+  }
 
   virtual void queryBlocks(std::vector<Crypto::Hash>&& knownBlockIds, uint64_t timestamp,
                            std::vector<CryptoNote::BlockShortEntry>& newBlocks, uint32_t& startHeight,
                            const Callback& callback) override {
+    XI_UNUSED(knownBlockIds, timestamp, newBlocks);
     startHeight = 0;
     callback(std::error_code());
-  };
+  }
 
   virtual void getPoolSymmetricDifference(std::vector<Crypto::Hash>&& knownPoolTxIds, Crypto::Hash knownBlockId,
                                           bool& isBcActual,
                                           std::vector<std::unique_ptr<CryptoNote::ITransactionReader>>& newTxs,
                                           std::vector<Crypto::Hash>& deletedTxIds, const Callback& callback) override {
+    XI_UNUSED(knownPoolTxIds, knownBlockId, newTxs, deletedTxIds);
     isBcActual = true;
     callback(std::error_code());
   }
 
   virtual void getBlocks(const std::vector<uint32_t>& blockHeights,
                          std::vector<std::vector<CryptoNote::BlockDetails>>& blocks,
-                         const Callback& callback) override {}
+                         const Callback& callback) override {
+    XI_UNUSED(blockHeights, blocks, callback);
+  }
 
   virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<CryptoNote::BlockDetails>& blocks,
-                         const Callback& callback) override {}
+                         const Callback& callback) override {
+    XI_UNUSED(blockHashes, blocks, callback);
+  }
 
   virtual void getBlock(const uint32_t blockHeight, CryptoNote::BlockDetails& block,
-                        const Callback& callback) override {}
+                        const Callback& callback) override {
+    XI_UNUSED(blockHeight, block, callback);
+  }
 
   virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes,
                                std::vector<CryptoNote::TransactionDetails>& transactions,
-                               const Callback& callback) override {}
+                               const Callback& callback) override {
+    XI_UNUSED(transactionHashes, transactions, callback);
+  }
 
-  virtual void isSynchronized(bool& syncStatus, const Callback& callback) override {}
+  virtual void isSynchronized(bool& syncStatus, const Callback& callback) override { XI_UNUSED(syncStatus, callback); }
   virtual std::string feeAddress() override { return std::string(); }
   virtual uint32_t feeAmount() override { return 0; }
 };

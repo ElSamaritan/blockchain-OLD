@@ -18,8 +18,10 @@
 #pragma once
 
 #include "StringView.h"
+
 #include <limits>
-#include <string.h>
+#include <string>
+#include <cstring>
 
 namespace Common {
 

@@ -17,9 +17,11 @@
 
 #pragma once
 
+#include <string>
+#include <functional>
+
 #include <boost/optional.hpp>
 #include <boost/foreach.hpp>
-#include <functional>
 
 #include "CoreRpcServerCommandsDefinitions.h"
 #include <Common/JsonValue.h>

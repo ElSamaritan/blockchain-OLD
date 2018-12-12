@@ -22,9 +22,11 @@
 #include <unordered_map>
 #include <memory>
 #include <mutex>
+#include <deque>
+#include <string>
 
 #include "IWalletLegacy.h"
-#include "INode.h"
+#include "CryptoNoteCore/INode.h"
 #include "Wallet/WalletErrors.h"
 #include "Wallet/WalletAsyncContextCounter.h"
 #include "Common/ObserverManager.h"

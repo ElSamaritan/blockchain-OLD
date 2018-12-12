@@ -238,7 +238,7 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req,
   uint32_t totalBlockCount;
   uint32_t startBlockIndex;
   std::vector<Crypto::Hash> supplement = m_core.findBlockchainSupplement(
-      req.block_ids, COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT, totalBlockCount, startBlockIndex);
+      req.block_ids, Config::Limits::maximumRPCBlocksQueryCount(), totalBlockCount, startBlockIndex);
 
   res.current_height = totalBlockCount;
   res.start_height = startBlockIndex;
@@ -505,15 +505,9 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.grey_peerlist_size = m_p2p.getPeerlistManager().get_gray_peers_count();
   res.last_known_block_index = std::max(static_cast<uint32_t>(1), m_protocol.getObservedHeight()) - 1;
   res.network_height = std::max(static_cast<uint32_t>(1), m_protocol.getBlockchainHeight());
-  res.upgrade_heights =
-      CryptoNote::parameters::FORK_HEIGHTS_SIZE == 0
-          ? std::vector<uint64_t>()
-          : std::vector<uint64_t>(CryptoNote::parameters::FORK_HEIGHTS,
-                                  CryptoNote::parameters::FORK_HEIGHTS + CryptoNote::parameters::FORK_HEIGHTS_SIZE);
-  res.supported_height = CryptoNote::parameters::FORK_HEIGHTS_SIZE == 0
-                             ? 0
-                             : CryptoNote::parameters::FORK_HEIGHTS[CryptoNote::parameters::CURRENT_FORK_INDEX];
-  res.hashrate = (uint32_t)round(res.difficulty / CryptoNote::parameters::DIFFICULTY_TARGET);
+  res.upgrade_heights = CryptoNote::Config::BlockVersion::forks();
+  res.supported_height = res.upgrade_heights.empty() ? 0 : *res.upgrade_heights.rbegin();
+  res.hashrate = (uint32_t)round(res.difficulty / CryptoNote::Config::Time::blockTimeSeconds());
   res.synced = ((uint64_t)res.height == (uint64_t)res.network_height);
   res.testnet = m_core.getCurrency().isTestnet();
   res.major_version = m_core.getBlockDetails(m_core.getTopBlockIndex()).majorVersion;
@@ -821,6 +815,7 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
     block_short.timestamp = blk.timestamp;
     block_short.height = blockHeight;
     block_short.hash = Common::podToHex(blockHash);
+    block_short.difficulty = blkDetails.difficulty;
     block_short.tx_count = blk.transactionHashes.size() + 1;
     res.block = block_short;
   }

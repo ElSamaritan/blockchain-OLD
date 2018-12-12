@@ -5,6 +5,8 @@
 #pragma once
 
 #include <memory>
+#include <utility>
+#include <string>
 
 #include <zedwallet/Types.h>
 #include <config/WalletConfig.h>
@@ -55,4 +57,4 @@ Maybe<uint64_t> getTransferAmount();
 Maybe<std::pair<std::string, std::string>> extractIntegratedAddress(std::string integratedAddress);
 
 BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr<WalletInfo> walletInfo,
-                                  uint64_t height, uint32_t nodeFee);
+                                  uint32_t height, uint32_t nodeFee);

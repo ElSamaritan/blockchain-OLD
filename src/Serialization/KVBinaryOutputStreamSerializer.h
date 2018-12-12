@@ -18,7 +18,10 @@
 #pragma once
 
 #include <vector>
+#include <string>
+
 #include <Common/IOutputStream.h>
+
 #include "ISerializer.h"
 #include "MemoryStream.h"
 
@@ -27,7 +30,7 @@ namespace CryptoNote {
 class KVBinaryOutputStreamSerializer : public ISerializer {
  public:
   KVBinaryOutputStreamSerializer();
-  virtual ~KVBinaryOutputStreamSerializer() {}
+  virtual ~KVBinaryOutputStreamSerializer() override = default;
 
   void dump(Common::IOutputStream& target);
 

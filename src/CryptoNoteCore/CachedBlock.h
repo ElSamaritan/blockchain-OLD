@@ -7,7 +7,7 @@
 #pragma once
 
 #include <boost/optional.hpp>
-#include <CryptoNote.h>
+#include <CryptoNoteCore/CryptoNote.h>
 
 namespace CryptoNote {
 

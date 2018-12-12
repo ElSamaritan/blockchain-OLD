@@ -63,15 +63,7 @@ void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const 
   }
   CryptoNote::Transaction transaction;
   if (rewardTargets.empty()) {
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4127)
-#endif
-    if (CryptoNote::parameters::GENESIS_BLOCK_REWARD > 0)
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
-    {
+    if (CryptoNote::Config::Coin::amountOfPremine() > 0) {
       std::cout << "Error: Genesis Block Reward Addresses are not defined" << std::endl;
       return;
     }
@@ -82,9 +74,8 @@ void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const 
   std::string transactionHex = Common::toHex(CryptoNote::toBinaryArray(transaction));
   std::cout << CommonCLI::header() << std::endl
             << std::endl
-            << "Replace the current GENESIS_COINBASE_TX_HEX line in src/config/CryptoNoteConfig.h with this one:"
-            << std::endl
-            << "const char GENESIS_COINBASE_TX_HEX[] = \"" << transactionHex << "\";" << std::endl;
+            << "Replace the current genesisTransactionHash line in src/config/Coin.h with this one:" << std::endl
+            << "\"" << transactionHex << "\";" << std::endl;
 
   return;
 }
@@ -199,8 +190,8 @@ int main(int argc, char* argv[]) {
     try {
       currencyBuilder.currency();
     } catch (std::exception&) {
-      std::cout << "GENESIS_COINBASE_TX_HEX constant has an incorrect value. Please launch: "
-                << CryptoNote::CRYPTONOTE_NAME << "d --print-genesis-tx" << std::endl;
+      std::cout << "genesisTransactionHash() constant has an incorrect value. Please launch: "
+                << "xi-daemon --print-genesis-tx" << std::endl;
       return 1;
     }
     CryptoNote::Currency currency = currencyBuilder.currency();

@@ -19,6 +19,8 @@
 
 #include <list>
 #include <vector>
+#include <string>
+
 #include <Common/MemoryInputStream.h>
 #include <Common/StringOutputStream.h>
 #include "JsonInputStreamSerializer.h"

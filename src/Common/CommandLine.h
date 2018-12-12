@@ -19,6 +19,8 @@
 
 #include <iostream>
 #include <type_traits>
+#include <vector>
+#include <string>
 
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>

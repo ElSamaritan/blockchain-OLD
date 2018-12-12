@@ -16,6 +16,10 @@
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
+
+#include <vector>
+#include <cinttypes>
+
 #include "CachedTransaction.h"
 
 namespace CryptoNote {
@@ -24,6 +28,8 @@ struct TransactionValidatorState;
 
 class ITransactionPool {
  public:
+  virtual ~ITransactionPool() = default;
+
   virtual bool pushTransaction(CachedTransaction&& tx, TransactionValidatorState&& transactionState) = 0;
   virtual const CachedTransaction& getTransaction(const Crypto::Hash& hash) const = 0;
   virtual bool removeTransaction(const Crypto::Hash& hash) = 0;

@@ -11,12 +11,13 @@
 #include <string>
 #include <thread>
 #include <unordered_set>
+#include <vector>
 
 #include <Xi/Global.h>
 
 #include "Common/ObserverManager.h"
 #include "Logging/LoggerRef.h"
-#include "INode.h"
+#include "CryptoNoteCore/INode.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 
 namespace System {
@@ -38,7 +39,7 @@ class INodeRpcProxyObserver {
 class NodeRpcProxy : public CryptoNote::INode {
  public:
   NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort, Logging::ILogger& logger);
-  virtual ~NodeRpcProxy();
+  virtual ~NodeRpcProxy() override;
 
   virtual bool addObserver(CryptoNote::INodeObserver* observer) override;
   virtual bool removeObserver(CryptoNote::INodeObserver* observer) override;

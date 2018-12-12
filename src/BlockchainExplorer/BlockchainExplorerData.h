@@ -21,8 +21,8 @@
 #include <string>
 #include <vector>
 
-#include "CryptoTypes.h"
-#include "CryptoNote.h"
+#include <crypto/CryptoTypes.h>
+#include "CryptoNoteCore/CryptoNote.h"
 
 #include <boost/variant.hpp>
 

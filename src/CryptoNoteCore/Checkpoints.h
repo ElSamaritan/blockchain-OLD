@@ -16,9 +16,15 @@
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
+
 #include <map>
-#include "CryptoNoteBasicImpl.h"
+#include <string>
+#include <vector>
+#include <cinttypes>
+
 #include <Logging/LoggerRef.h>
+
+#include "CryptoNoteBasicImpl.h"
 
 namespace CryptoNote {
 class Checkpoints {

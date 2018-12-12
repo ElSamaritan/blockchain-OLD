@@ -74,7 +74,7 @@ bool NetNodeConfig::init(const std::string interface, const int port, const int 
   allowLocalIp = localIp;
   hideMyPort = hidePort;
   configFolder = dataDir;
-  p2pStateFilename = CryptoNote::parameters::P2P_NET_DATA_FILENAME;
+  p2pStateFilename = CryptoNote::Config::P2P::stateBackupFilename();
 
   if (!addPeers.empty()) {
     if (!parsePeersAndAddToPeerListContainer(addPeers, peers)) {

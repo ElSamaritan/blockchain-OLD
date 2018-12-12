@@ -31,7 +31,13 @@
 using namespace PaymentService;
 
 void changeDirectory(const std::string& path) {
-  if (chdir(path.c_str())) {
+  if (
+#if defined(WIN32)
+      _chdir(path.c_str())
+#else
+      chdir(path.c_str())
+#endif
+  ) {
     throw std::runtime_error("Couldn't change directory to \'" + path + "\': " + strerror(errno));
   }
 }

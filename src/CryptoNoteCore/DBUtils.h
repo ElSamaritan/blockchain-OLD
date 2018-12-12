@@ -19,6 +19,8 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
+#include <utility>
 
 #include "Common/StdOutputStream.h"
 #include "Serialization/KVBinaryOutputStreamSerializer.h"

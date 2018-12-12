@@ -30,13 +30,13 @@ const size_t P2P_DEFAULT_PEERLIST_GET_TRY_COUNT = 10;
 }  // namespace
 
 P2pNodeConfig::P2pNodeConfig()
-    : timedSyncInterval(std::chrono::seconds(P2P_DEFAULT_HANDSHAKE_INTERVAL)),
-      handshakeTimeout(std::chrono::milliseconds(P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT)),
+    : timedSyncInterval(std::chrono::seconds(Config::P2P::handshakeInterval())),
+      handshakeTimeout(std::chrono::milliseconds(Config::P2P::handshakeTimeout())),
       connectInterval(P2P_DEFAULT_CONNECT_INTERVAL),
-      connectTimeout(std::chrono::milliseconds(P2P_DEFAULT_CONNECTION_TIMEOUT)),
-      networkId(CryptoNote::CRYPTONOTE_NETWORK),
-      expectedOutgoingConnectionsCount(P2P_DEFAULT_CONNECTIONS_COUNT),
-      whiteListConnectionsPercent(P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT),
+      connectTimeout(std::chrono::milliseconds(Config::P2P::connectionTimeout())),
+      networkId(CryptoNote::Config::Network::identifier()),
+      expectedOutgoingConnectionsCount(Config::P2P::connectionsCount()),
+      whiteListConnectionsPercent(Config::P2P::whiteListPreferenceThreshold()),
       peerListConnectRange(P2P_DEFAULT_CONNECT_RANGE),
       peerListGetTryCount(P2P_DEFAULT_PEERLIST_GET_TRY_COUNT) {}
 

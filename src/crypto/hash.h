@@ -10,7 +10,7 @@
 
 #include <stddef.h>
 
-#include <CryptoTypes.h>
+#include <crypto/CryptoTypes.h>
 #include "generic-ops.h"
 
 // Standard Cryptonight Definitions

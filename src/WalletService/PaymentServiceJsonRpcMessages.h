@@ -9,6 +9,7 @@
 #include <exception>
 #include <limits>
 #include <vector>
+#include <string>
 
 #include "Serialization/ISerializer.h"
 
@@ -19,7 +20,7 @@ class WalletService;
 
 class RequestSerializationError : public std::exception {
  public:
-  virtual const char* what() const throw() override { return "Request error"; }
+  virtual const char* what() const noexcept override { return "Request error"; }
 };
 
 struct Save {
@@ -48,7 +49,7 @@ struct Reset {
   struct Request {
     std::string viewSecretKey;
 
-    uint64_t scanHeight = 0;
+    uint32_t scanHeight = 0;
 
     bool newAddress = false;
 
@@ -119,7 +120,7 @@ struct CreateAddress {
     std::string spendSecretKey;
     std::string spendPublicKey;
 
-    uint64_t scanHeight = 0;
+    uint32_t scanHeight = 0;
 
     bool newAddress = false;
 
@@ -137,7 +138,7 @@ struct CreateAddressList {
   struct Request {
     std::vector<std::string> spendSecretKeys;
 
-    uint64_t scanHeight = 0;
+    uint16_t scanHeight = 0;
 
     bool newAddress = false;
 
@@ -323,7 +324,7 @@ struct SendTransaction {
     std::vector<WalletRpcOrder> transfers;
     std::string changeAddress;
     uint64_t fee = 0;
-    uint64_t anonymity;
+    uint16_t anonymity;
     std::string extra;
     std::string paymentId;
     uint64_t unlockTime = 0;
@@ -344,7 +345,7 @@ struct CreateDelayedTransaction {
     std::vector<WalletRpcOrder> transfers;
     std::string changeAddress;
     uint64_t fee = 0;
-    uint64_t anonymity;
+    uint16_t anonymity;
     std::string extra;
     std::string paymentId;
     uint64_t unlockTime = 0;
@@ -398,7 +399,7 @@ struct SendDelayedTransaction {
 struct SendFusionTransaction {
   struct Request {
     uint64_t threshold;
-    uint64_t anonymity;
+    uint16_t anonymity;
     std::vector<std::string> addresses;
     std::string destinationAddress;
 

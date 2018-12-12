@@ -20,10 +20,12 @@
 #include <mutex>
 #include <atomic>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 #include "IBlockchainExplorer.h"
-#include "IDataBase.h"
-#include "INode.h"
+#include "CryptoNoteCore/IDataBase.h"
+#include "CryptoNoteCore/INode.h"
 
 #include "BlockchainExplorerErrors.h"
 #include "Common/ObserverManager.h"
@@ -69,7 +71,7 @@ class BlockchainExplorer : public IBlockchainExplorer, public INodeObserver {
                             std::vector<TransactionDetails>& newTransactions,
                             std::vector<Crypto::Hash>& removedTransactions) override;
 
-  virtual uint64_t getRewardBlocksWindow() override;
+  virtual uint64_t getRewardBlocksWindow(uint8_t majorVersion) override;
   virtual uint64_t getFullRewardMaxBlockSize(uint8_t majorVersion) override;
 
   virtual bool isSynchronized() override;

@@ -8,7 +8,7 @@
 #include <set>
 #include <unordered_set>
 #include "CachedTransaction.h"
-#include <CryptoNote.h>
+#include <CryptoNoteCore/CryptoNote.h>
 #include <crypto/crypto.h>
 
 namespace CryptoNote {

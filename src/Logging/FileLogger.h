@@ -18,6 +18,8 @@
 #pragma once
 
 #include <fstream>
+#include <string>
+
 #include "StreamLogger.h"
 
 namespace Logging {

@@ -6,11 +6,11 @@
 
 #pragma once
 #include <vector>
-#include <CryptoNote.h>
+#include <CryptoNoteCore/CryptoNote.h>
 
 #include "AddBlockErrors.h"
 #include "AddBlockErrorCondition.h"
-#include "BlockchainExplorerData.h"
+#include "BlockchainExplorer/BlockchainExplorerData.h"
 #include "BlockchainMessages.h"
 #include "CachedBlock.h"
 #include "CachedTransaction.h"

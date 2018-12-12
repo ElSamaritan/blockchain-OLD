@@ -17,16 +17,20 @@
 
 #pragma once
 
-#include "INode.h"
+#include "CryptoNoteCore/INode.h"
 #include "SynchronizationState.h"
 #include "IBlockchainSynchronizer.h"
 #include "IObservableImpl.h"
-#include "IStreamSerializable.h"
+#include "Common/IStreamSerializable.h"
 
 #include <condition_variable>
 #include <mutex>
 #include <atomic>
 #include <future>
+#include <vector>
+#include <map>
+#include <list>
+#include <utility>
 
 #include "Logging/LoggerRef.h"
 

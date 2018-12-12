@@ -6,6 +6,8 @@
 
 #include <fstream>
 #include <sstream>
+#include <vector>
+#include <string>
 #include <cinttypes>
 
 #include <Xi/Utils/ExternalIncludePush.h>
@@ -41,10 +43,10 @@ struct DaemonConfiguration {
   uint16_t rpcPort;
   uint16_t p2pPort;
   uint16_t p2pExternalPort;
-  int dbThreads;
-  int dbMaxOpenFiles;
-  int dbWriteBufferSize;
-  int dbReadCacheSize;
+  uint16_t dbThreads;
+  uint16_t dbMaxOpenFiles;
+  uint64_t dbWriteBufferSize;
+  uint64_t dbReadCacheSize;
 
   bool noConsole;
   bool enableBlockExplorer;
@@ -68,15 +70,15 @@ DaemonConfiguration initConfiguration() {
   config.checkPoints = "default";
   config.logFile = "xi-daemon.log";
   config.logLevel = Logging::WARNING;
-  config.dbMaxOpenFiles = CryptoNote::DATABASE_DEFAULT_MAX_OPEN_FILES;
-  config.dbReadCacheSize = CryptoNote::DATABASE_READ_BUFFER_MB_DEFAULT_SIZE;
-  config.dbThreads = CryptoNote::DATABASE_DEFAULT_BACKGROUND_THREADS_COUNT;
-  config.dbWriteBufferSize = CryptoNote::DATABASE_WRITE_BUFFER_MB_DEFAULT_SIZE;
+  config.dbMaxOpenFiles = CryptoNote::Config::Database::maximumOpenFiles();
+  config.dbReadCacheSize = CryptoNote::Config::Database::readBufferSize();
+  config.dbThreads = CryptoNote::Config::Database::backgroundThreads();
+  config.dbWriteBufferSize = CryptoNote::Config::Database::writeBufferSize();
   config.p2pInterface = "0.0.0.0";
-  config.p2pPort = CryptoNote::P2P_DEFAULT_PORT;
+  config.p2pPort = CryptoNote::Config::P2P::defaultPort();
   config.p2pExternalPort = 0;
   config.rpcInterface = "127.0.0.1";
-  config.rpcPort = CryptoNote::RPC_DEFAULT_PORT;
+  config.rpcPort = CryptoNote::Config::Network::rpcPort();
   config.noConsole = false;
   config.enableBlockExplorer = false;
   config.localIp = false;
@@ -145,10 +147,10 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     ("seed-node", "Connect to a node to retrieve the peer list and then disconnect", cxxopts::value<std::vector<std::string>>(), "<ip:port>");
 
   options.add_options("Database")
-    ("db-max-open-files", "Number of files that can be used by the database at one time", cxxopts::value<int>()->default_value(std::to_string(config.dbMaxOpenFiles)), "#")
-    ("db-read-buffer-size", "Size of the database read cache in megabytes (MB)", cxxopts::value<int>()->default_value(std::to_string(config.dbReadCacheSize)), "#")
-    ("db-threads", "Number of background threads used for compaction and flush operations", cxxopts::value<int>()->default_value(std::to_string(config.dbThreads)), "#")
-    ("db-write-buffer-size", "Size of the database write buffer in megabytes (MB)", cxxopts::value<int>()->default_value(std::to_string(config.dbWriteBufferSize)), "#");
+    ("db-max-open-files", "Number of files that can be used by the database at one time", cxxopts::value<uint16_t>()->default_value(std::to_string(config.dbMaxOpenFiles)), "#")
+    ("db-read-buffer-size", "Size of the database read cache in megabytes (MB)", cxxopts::value<uint64_t>()->default_value(std::to_string(config.dbReadCacheSize)), "#")
+    ("db-threads", "Number of background threads used for compaction and flush operations", cxxopts::value<uint16_t>()->default_value(std::to_string(config.dbThreads)), "#")
+    ("db-write-buffer-size", "Size of the database write buffer in megabytes (MB)", cxxopts::value<uint64_t>()->default_value(std::to_string(config.dbWriteBufferSize)), "#");
   // clang-format on
 
   try {
@@ -207,19 +209,19 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     }
 
     if (cli.count("db-max-open-files") > 0) {
-      config.dbMaxOpenFiles = cli["db-max-open-files"].as<int>();
+      config.dbMaxOpenFiles = cli["db-max-open-files"].as<uint16_t>();
     }
 
     if (cli.count("db-read-buffer-size") > 0) {
-      config.dbReadCacheSize = cli["db-read-buffer-size"].as<int>();
+      config.dbReadCacheSize = cli["db-read-buffer-size"].as<uint64_t>();
     }
 
     if (cli.count("db-threads") > 0) {
-      config.dbThreads = cli["db-threads"].as<int>();
+      config.dbThreads = cli["db-threads"].as<uint16_t>();
     }
 
     if (cli.count("db-write-buffer-size") > 0) {
-      config.dbWriteBufferSize = cli["db-write-buffer-size"].as<int>();
+      config.dbWriteBufferSize = cli["db-write-buffer-size"].as<uint64_t>();
     }
 
     if (cli.count("local-ip") > 0) {
@@ -335,19 +337,19 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
   }
 
   if (j.find("db-max-open-files") != j.end()) {
-    config.dbMaxOpenFiles = j["db-max-open-files"].get<int>();
+    config.dbMaxOpenFiles = j["db-max-open-files"].get<uint16_t>();
   }
 
   if (j.find("db-read-buffer-size") != j.end()) {
-    config.dbReadCacheSize = j["db-read-buffer-size"].get<int>();
+    config.dbReadCacheSize = j["db-read-buffer-size"].get<uint64_t>();
   }
 
   if (j.find("db-threads") != j.end()) {
-    config.dbThreads = j["db-threads"].get<int>();
+    config.dbThreads = j["db-threads"].get<uint16_t>();
   }
 
   if (j.find("db-write-buffer-size") != j.end()) {
-    config.dbWriteBufferSize = j["db-write-buffer-size"].get<int>();
+    config.dbWriteBufferSize = j["db-write-buffer-size"].get<uint64_t>();
   }
 
   if (j.find("allow-local-ip") != j.end()) {

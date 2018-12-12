@@ -7,6 +7,7 @@
 #pragma once
 
 #include <queue>
+#include <string>
 
 #include <System/ContextGroup.h>
 #include <System/Event.h>

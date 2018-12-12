@@ -9,7 +9,9 @@
 
 #include <functional>
 
-#include <CryptoTypes.h>
+#include <Xi/Global.h>
+
+#include <crypto/CryptoTypes.h>
 #include "crypto/hash.h"
 #include "PaymentServiceJsonRpcMessages.h"
 #include "WalletService.h"
@@ -188,6 +190,7 @@ std::error_code PaymentServiceJsonRpcServer::handleExport(const Export::Request&
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleReset(const Reset::Request& request, Reset::Response& response) {
+  XI_UNUSED(response);
   if (request.viewSecretKey.empty()) {
     return service.resetWallet(request.scanHeight);
   } else {
@@ -214,6 +217,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateAddressList(const Creat
 
 std::error_code PaymentServiceJsonRpcServer::handleDeleteAddress(const DeleteAddress::Request& request,
                                                                  DeleteAddress::Response& response) {
+  XI_UNUSED(response);
   return service.deleteAddress(request.address);
 }
 
@@ -280,21 +284,25 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateDelayedTransaction(
 
 std::error_code PaymentServiceJsonRpcServer::handleGetDelayedTransactionHashes(
     const GetDelayedTransactionHashes::Request& request, GetDelayedTransactionHashes::Response& response) {
+  XI_UNUSED(request);
   return service.getDelayedTransactionHashes(response.transactionHashes);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleDeleteDelayedTransaction(
     const DeleteDelayedTransaction::Request& request, DeleteDelayedTransaction::Response& response) {
+  XI_UNUSED(response);
   return service.deleteDelayedTransaction(request.transactionHash);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleSendDelayedTransaction(SendDelayedTransaction::Request& request,
                                                                           SendDelayedTransaction::Response& response) {
+  XI_UNUSED(response);
   return service.sendDelayedTransaction(request.transactionHash);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetViewKey(const GetViewKey::Request& request,
                                                               GetViewKey::Response& response) {
+  XI_UNUSED(request);
   return service.getViewKey(response.viewSecretKey);
 }
 
@@ -305,12 +313,14 @@ std::error_code PaymentServiceJsonRpcServer::handleGetMnemonicSeed(const GetMnem
 
 std::error_code PaymentServiceJsonRpcServer::handleGetStatus(const GetStatus::Request& request,
                                                              GetStatus::Response& response) {
+  XI_UNUSED(request);
   return service.getStatus(response.blockCount, response.knownBlockCount, response.localDaemonBlockCount,
                            response.lastBlockHash, response.peerCount);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetAddresses(const GetAddresses::Request& request,
                                                                 GetAddresses::Response& response) {
+  XI_UNUSED(request);
   return service.getAddresses(response.addresses);
 }
 
@@ -333,6 +343,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateIntegratedAddress(
 
 std::error_code PaymentServiceJsonRpcServer::handleNodeFeeInfo(const NodeFeeInfo::Request& request,
                                                                NodeFeeInfo::Response& response) {
+  XI_UNUSED(request);
   return service.getFeeInfo(response.address, response.amount);
 }
 

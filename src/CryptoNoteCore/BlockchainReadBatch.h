@@ -17,10 +17,14 @@
 
 #pragma once
 
+#include <utility>
+#include <string>
+#include <vector>
+
 #include <boost/functional/hash.hpp>
 
 #include "IReadBatch.h"
-#include "CryptoNote.h"
+#include "CryptoNoteCore/CryptoNote.h"
 #include "BlockchainCache.h"
 #include "DatabaseCacheData.h"
 

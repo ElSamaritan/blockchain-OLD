@@ -7,8 +7,9 @@
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <cstring>
 
-#include <string.h>
+#include <Xi/Global.h>
 
 #include "CommonCLI.h"
 #include "PaymentGateService.h"
@@ -18,7 +19,7 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <windows.h>
+#include <Windows.h>
 #include <winsvc.h>
 #else
 #include <unistd.h>
@@ -62,6 +63,7 @@ void __stdcall serviceHandler(DWORD fdwControl) {
 }
 
 void __stdcall serviceMain(DWORD dwArgc, char** lpszArgv) {
+  XI_UNUSED(dwArgc, lpszArgv);
   Logging::LoggerRef logRef(ppg->getLogger(), "WindowsService");
 
   serviceStatusHandle = RegisterServiceCtrlHandler("PaymentGate", serviceHandler);

@@ -18,8 +18,8 @@
 #pragma once
 
 #include <vector>
-#include <CryptoNote.h>
-#include <CryptoTypes.h>
+#include <CryptoNoteCore/CryptoNote.h>
+#include <crypto/CryptoTypes.h>
 //#include <Serialization/ISerializer.h>
 
 namespace CryptoNote {

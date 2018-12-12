@@ -6,6 +6,11 @@
 #include <zedwallet/Menu.h>
 ///////////////////////////
 
+#include <algorithm>
+#include <tuple>
+#include <string>
+#include <vector>
+
 #include <Common/SignalHandler.h>
 
 #include <zedwallet/ColouredMsg.h>

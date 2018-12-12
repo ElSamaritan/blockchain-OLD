@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <cinttypes>
 
 #include <boost/foreach.hpp>
 #include <boost/uuid/random_generator.hpp>
@@ -71,7 +72,8 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
       std::ostringstream portString;
       portString << port;
       if (UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(),
-                              portString.str().c_str(), lanAddress, CryptoNote::CRYPTONOTE_NAME, "TCP", 0, "0") != 0) {
+                              portString.str().c_str(), lanAddress, CryptoNote::Config::Coin::name().c_str(), "TCP", 0,
+                              "0") != 0) {
         logger(ERROR) << "UPNP_AddPortMapping failed.";
       } else {
         logger(INFO) << "Added IGD port mapping.";
@@ -101,8 +103,8 @@ namespace {
 
 const command_line::arg_descriptor<std::string> arg_p2p_bind_ip = {"p2p-bind-ip", "Interface for p2p network protocol",
                                                                    "0.0.0.0"};
-const command_line::arg_descriptor<std::string> arg_p2p_bind_port = {"p2p-bind-port", "Port for p2p network protocol",
-                                                                     std::to_string(CryptoNote::P2P_DEFAULT_PORT)};
+const command_line::arg_descriptor<std::string> arg_p2p_bind_port = {
+    "p2p-bind-port", "Port for p2p network protocol", std::to_string(CryptoNote::Config::P2P::defaultPort())};
 const command_line::arg_descriptor<uint32_t> arg_p2p_external_port = {
     "p2p-external-port", "External port for p2p network protocol (if port forwarding used with NAT)", 0};
 const command_line::arg_descriptor<bool> arg_p2p_allow_local_ip = {
@@ -141,7 +143,7 @@ std::string print_peerlist_to_string(const std::list<PeerlistEntry>& pl) {
 bool P2pConnectionContext::pushMessage(P2pMessage&& msg) {
   writeQueueSize += msg.size();
 
-  if (writeQueueSize > P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE) {
+  if (writeQueueSize > Config::P2P::maximumWriteBufferSize()) {
     logger(DEBUGGING) << *this << "Write queue overflows. Interrupt connection";
     interrupt();
     return false;
@@ -206,7 +208,7 @@ NodeServer::NodeServer(System::Dispatcher& dispatcher, CryptoNote::CryptoNotePro
       m_payload_handler(payload_handler),
       m_allow_local_ip(false),
       m_hide_my_port(false),
-      m_network_id(CryptoNote::CRYPTONOTE_NETWORK),
+      m_network_id(CryptoNote::Config::Network::identifier()),
       logger(log, "node_server"),
       m_stopEvent(m_dispatcher),
       m_idleTimer(m_dispatcher),
@@ -308,13 +310,16 @@ bool NodeServer::init_config() {
     }
 
     // at this moment we have hardcoded config
-    m_config.m_net_config.handshake_interval = CryptoNote::P2P_DEFAULT_HANDSHAKE_INTERVAL;
-    m_config.m_net_config.connections_count = CryptoNote::P2P_DEFAULT_CONNECTIONS_COUNT;
-    m_config.m_net_config.packet_max_size = CryptoNote::P2P_DEFAULT_PACKET_MAX_SIZE;  // 20 MB limit
-    m_config.m_net_config.config_id = 0;                                              // initial config
-    m_config.m_net_config.connection_timeout = CryptoNote::P2P_DEFAULT_CONNECTION_TIMEOUT;
-    m_config.m_net_config.ping_connection_timeout = CryptoNote::P2P_DEFAULT_PING_CONNECTION_TIMEOUT;
-    m_config.m_net_config.send_peerlist_sz = CryptoNote::P2P_DEFAULT_PEERS_IN_HANDSHAKE;
+    m_config.m_net_config.handshake_interval =
+        static_cast<uint32_t>(std::chrono::milliseconds{CryptoNote::Config::P2P::handshakeInterval()}.count());
+    m_config.m_net_config.connections_count = CryptoNote::Config::P2P::connectionsCount();
+    m_config.m_net_config.packet_max_size = CryptoNote::Config::P2P::maximumPackageSize();
+    m_config.m_net_config.config_id = 0;  // initial config
+    m_config.m_net_config.connection_timeout =
+        static_cast<uint32_t>(std::chrono::milliseconds{CryptoNote::Config::P2P::connectionTimeout()}.count());
+    m_config.m_net_config.ping_connection_timeout =
+        static_cast<uint32_t>(std::chrono::milliseconds{CryptoNote::Config::P2P::pingTimeout()}.count());
+    m_config.m_net_config.send_peerlist_sz = CryptoNote::Config::P2P::handshakePeersCount();
 
     m_first_connection_maker_call = true;
   } catch (const std::exception& e) {
@@ -436,7 +441,8 @@ bool NodeServer::append_net_address(std::vector<NetworkAddress>& nodes, const st
 
 bool NodeServer::init(const NetNodeConfig& config) {
   if (!config.getTestnet()) {
-    for (auto seed : CryptoNote::SEED_NODES) {
+    const auto seedNodes = CryptoNote::Config::Network::seedNodes();
+    for (const auto& seed : seedNodes) {
       append_net_address(m_seed_nodes, seed);
     }
   } else {
@@ -583,13 +589,14 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
     return false;
   }
 
-  if (rsp.node_data.version < CryptoNote::P2P_MINIMUM_VERSION) {
+  if (rsp.node_data.version < CryptoNote::Config::P2P::minimumVersion()) {
     logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! ("
                                << std::to_string(rsp.node_data.version) << "), closing connection.";
     return false;
-  } else if ((rsp.node_data.version - CryptoNote::P2P_CURRENT_VERSION) >= CryptoNote::P2P_UPGRADE_WINDOW) {
+  } else if ((rsp.node_data.version - CryptoNote::Config::P2P::currentVersion()) >=
+             CryptoNote::Config::P2P::upgradeNotificationWindow()) {
     logger(Logging::WARNING) << context << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please visit: "
-                             << CryptoNote::LATEST_VERSION_URL << " for the latest version.";
+                             << CryptoNote::Config::Coin::downloadUrl() << " for the latest version.";
   }
 
   if (!handle_remote_peerlist(rsp.local_peerlist, rsp.node_data.local_time, context)) {
@@ -860,7 +867,7 @@ bool NodeServer::connections_maker() {
   if (!connect_to_peerlist(m_priority_peers)) return false;
 
   size_t expected_white_connections =
-      (m_config.m_net_config.connections_count * CryptoNote::P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT) / 100;
+      (m_config.m_net_config.connections_count * CryptoNote::Config::P2P::whiteListPreferenceThreshold()) / 100;
 
   size_t conn_count = get_outgoing_connections_count();
   if (conn_count < m_config.m_net_config.connections_count) {
@@ -946,7 +953,7 @@ bool NodeServer::handle_remote_peerlist(const std::list<PeerlistEntry>& peerlist
 //-----------------------------------------------------------------------------------
 
 bool NodeServer::get_local_node_data(basic_node_data& node_data) {
-  node_data.version = CryptoNote::P2P_CURRENT_VERSION;
+  node_data.version = CryptoNote::Config::P2P::currentVersion();
   time_t local_time;
   time(&local_time);
   node_data.local_time = local_time;
@@ -984,7 +991,7 @@ bool NodeServer::check_trust(const proof_of_trust& tr) {
   }
 
   Crypto::PublicKey pk;
-  Common::podFromHex(CryptoNote::P2P_STAT_TRUSTED_PUB_KEY, pk);
+  Common::podFromHex(CryptoNote::Config::P2P::trustedPublicKey(), pk);
   Crypto::Hash h = get_proof_of_trust_hash(tr);
   if (!Crypto::check_signature(h, pk, tr.sign)) {
     logger(ERROR) << "check_trust failed: sign check failed";
@@ -1145,15 +1152,14 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
     return 1;
   }
 
-  if (arg.node_data.version < CryptoNote::P2P_MINIMUM_VERSION) {
+  if (arg.node_data.version < CryptoNote::Config::P2P::minimumVersion()) {
     logger(Logging::DEBUGGING) << context << "UNSUPPORTED NETWORK AGENT VERSION CONNECTED! version="
                                << std::to_string(arg.node_data.version);
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
-  } else if (arg.node_data.version > CryptoNote::P2P_CURRENT_VERSION) {
-    logger(Logging::WARNING) << context
-                             << "Our software may be out of date. Please visit: " << CryptoNote::LATEST_VERSION_URL
-                             << " for the latest version.";
+  } else if (arg.node_data.version > CryptoNote::Config::P2P::currentVersion()) {
+    logger(Logging::WARNING) << context << "Our software may be out of date. Please visit: "
+                             << CryptoNote::Config::Coin::downloadUrl() << " for the latest version.";
   }
 
   if (!context.m_is_income) {
@@ -1344,7 +1350,8 @@ void NodeServer::timeoutLoop() {
 
       for (auto& kv : m_connections) {
         auto& ctx = kv.second;
-        if (ctx.writeDuration(now) > P2P_DEFAULT_INVOKE_TIMEOUT) {
+        if (ctx.writeDuration(now) >
+            static_cast<uint64_t>(std::chrono::milliseconds{Config::P2P::invokeTimeout()}.count())) {
           logger(DEBUGGING) << ctx << "write operation timed out, stopping connection";
           safeInterrupt(ctx);
         }
@@ -1362,7 +1369,7 @@ void NodeServer::timeoutLoop() {
 void NodeServer::timedSyncLoop() {
   try {
     for (;;) {
-      m_timedSyncTimer.sleep(std::chrono::seconds(P2P_DEFAULT_HANDSHAKE_INTERVAL));
+      m_timedSyncTimer.sleep(std::chrono::seconds(Config::P2P::handshakeInterval()));
       timedSync();
     }
   } catch (System::InterruptedException&) {

@@ -6,6 +6,8 @@
 #include <zedwallet/Open.h>
 ///////////////////////////
 
+#include <string>
+
 #include <CryptoNoteCore/Account.h>
 #include <CryptoNoteCore/CryptoNoteBasicImpl.h>
 

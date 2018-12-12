@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include <string>
+#include <cinttypes>
+
 #include <config/CryptoNoteConfig.h>
 
 /* Make sure everything in here is const - or it won't compile! */
@@ -33,13 +36,13 @@ const std::string walletName = "xi-wallet";
 const std::string walletdName = "xi-pgservice";
 
 /* The full name of your crypto */
-const std::string coinName = std::string(CryptoNote::CRYPTONOTE_NAME);
+const std::string coinName = CryptoNote::Config::Coin::name();
 
 /* Where can your users contact you for support? E.g. discord */
 const std::string contactLink = "https://discord.gg/WQJVmBz";
 
 /* The number of decimals your coin has */
-const int numDecimalPlaces = CryptoNote::parameters ::CRYPTONOTE_DISPLAY_DECIMAL_POINT;
+const int numDecimalPlaces = CryptoNote::Config ::Coin::numberOfDecimalPoints();
 
 /* The length of a standard address for your coin */
 const long unsigned int standardAddressLength = 98;
@@ -52,19 +55,11 @@ const long unsigned int standardAddressLength = 98;
 const long unsigned int integratedAddressLength = standardAddressLength + ((64 * 11) / 8);
 
 /* The default fee value to use with transactions (in ATOMIC units!) */
-const uint64_t defaultFee = CryptoNote::parameters::MINIMUM_FEE;
+const uint64_t defaultFee = CryptoNote::Config::Coin::minimumFee();
 
 /* The minimum fee value to allow with transactions (in ATOMIC units!) */
-const uint64_t minimumFee = CryptoNote::parameters::MINIMUM_FEE;
+const uint64_t minimumFee = CryptoNote::Config::Coin::minimumFee();
 
 /* The minimum amount allowed to be sent - usually 1 (in ATOMIC units!) */
-const uint64_t minimumSend = CryptoNote::parameters::MINIMUM_FEE;
-
-/* Is a mixin of zero disabled on your network? */
-const bool mixinZeroDisabled = true;
-
-/* If a mixin of zero is disabled, at what height was it disabled? E.g.
-   fork height, or 0, if never allowed. This is ignored if a mixin of
-   zero is allowed */
-const uint64_t mixinZeroDisabledHeight = CryptoNote::parameters::MIXIN_LIMITS_V2_HEIGHT;
+const uint64_t minimumSend = CryptoNote::Config::Coin::minimumFee();
 }  // namespace WalletConfig

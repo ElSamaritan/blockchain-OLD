@@ -18,6 +18,7 @@
 #pragma once
 
 #include <atomic>
+#include <vector>
 
 #include <Common/ObserverManager.h>
 

@@ -8,12 +8,13 @@
 
 #include <atomic>
 #include <thread>
+#include <vector>
 
 #include <System/Dispatcher.h>
 #include <System/Event.h>
 #include <System/RemoteContext.h>
 
-#include "CryptoNote.h"
+#include "CryptoNoteCore/CryptoNote.h"
 
 #include "Logging/LoggerRef.h"
 

@@ -6,6 +6,8 @@
 #include <zedwallet/ParseArguments.h>
 /////////////////////////////////////
 
+#include <vector>
+#include <string>
 #include <limits>
 
 #include <Xi/Utils/ExternalIncludePush.h>
@@ -46,7 +48,7 @@ bool parseDaemonAddressFromString(std::string& host, uint16_t& port, const std::
   }
 
   host = parts.at(0);
-  port = CryptoNote::RPC_DEFAULT_PORT;
+  port = CryptoNote::Config::Network::rpcPort();
   return true;
 }
 
@@ -61,21 +63,21 @@ Config parseArguments(int argc, char** argv) {
   bool help, version;
   std::string remoteDaemon;
 
-  options.add_options("Core")("h,help", "Display this help message",
-                              cxxopts::value<bool>(help)->implicit_value("true"))(
-      "v,version", "Output software version information",
-      cxxopts::value<bool>(version)->default_value("false")->implicit_value("true"))(
-      "debug", "Enable " + WalletConfig::walletdName + " debugging to " + WalletConfig::walletName + ".log",
+  // clang-format off
+  options.add_options("Core")
+    ("h,help", "Display this help message", cxxopts::value<bool>(help)->implicit_value("true"))
+    ("v,version", "Output software version information", cxxopts::value<bool>(version)->default_value("false")->implicit_value("true"))
+    ("debug", "Enable " + WalletConfig::walletdName + " debugging to "+ WalletConfig::walletName + ".log",
       cxxopts::value<bool>(config.debug)->default_value("false")->implicit_value("true"));
 
-  options.add_options("Daemon")("r,remote-daemon", "The daemon <host:port> combination to use for node operations.",
-                                cxxopts::value<std::string>(remoteDaemon)->default_value(defaultRemoteDaemon.str()),
-                                "<host:port>");
+  options.add_options("Daemon")
+    ("r,remote-daemon", "The daemon <host:port> combination to use for node operations.",
+      cxxopts::value<std::string>(remoteDaemon)->default_value(defaultRemoteDaemon.str()), "<host:port>");
 
-  options.add_options("Wallet")("w,wallet-file", "Open the wallet <file>",
-                                cxxopts::value<std::string>(config.walletFile),
-                                "<file>")("p,password", "Use the password <pass> to open the wallet",
-                                          cxxopts::value<std::string>(config.walletPass), "<pass>");
+  options.add_options("Wallet")
+    ("w,wallet-file", "Open the wallet <file>", cxxopts::value<std::string>(config.walletFile), "<file>")
+    ("p,password", "Use the password <pass> to open the wallet", cxxopts::value<std::string>(config.walletPass), "<pass>");
+  // clang-format on
 
   try {
     options.parse(argc, argv);

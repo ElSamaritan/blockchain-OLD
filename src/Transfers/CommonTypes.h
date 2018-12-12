@@ -20,11 +20,13 @@
 #include <array>
 #include <memory>
 #include <cstdint>
+#include <vector>
+#include <list>
 
 #include <boost/optional.hpp>
 
-#include "INode.h"
-#include "ITransaction.h"
+#include "CryptoNoteCore/INode.h"
+#include "CryptoNoteCore/ITransaction.h"
 
 namespace CryptoNote {
 

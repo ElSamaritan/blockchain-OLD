@@ -22,6 +22,8 @@
 #include <istream>
 #include <ostream>
 
+#include <Xi/Global.h>
+
 #include "BlockchainExplorerData.h"
 
 namespace CryptoNote {
@@ -31,16 +33,20 @@ class IBlockchainObserver {
   virtual ~IBlockchainObserver() {}
 
   virtual void blockchainUpdated(const std::vector<BlockDetails>& newBlocks,
-                                 const std::vector<BlockDetails>& alternativeBlocks) {}
+                                 const std::vector<BlockDetails>& alternativeBlocks) {
+    XI_UNUSED(newBlocks, alternativeBlocks);
+  }
   virtual void poolUpdated(const std::vector<TransactionDetails>& newTransactions,
-                           const std::vector<std::pair<Crypto::Hash, TransactionRemoveReason>>& removedTransactions) {}
+                           const std::vector<std::pair<Crypto::Hash, TransactionRemoveReason>>& removedTransactions) {
+    XI_UNUSED(newTransactions, removedTransactions);
+  }
 
-  virtual void blockchainSynchronized(const BlockDetails& topBlock) {}
+  virtual void blockchainSynchronized(const BlockDetails& topBlock) { XI_UNUSED(topBlock); }
 };
 
 class IBlockchainExplorer {
  public:
-  virtual ~IBlockchainExplorer(){};
+  virtual ~IBlockchainExplorer() = default;
 
   virtual bool addObserver(IBlockchainObserver* observer) = 0;
   virtual bool removeObserver(IBlockchainObserver* observer) = 0;
@@ -64,7 +70,7 @@ class IBlockchainExplorer {
                             std::vector<TransactionDetails>& newTransactions,
                             std::vector<Crypto::Hash>& removedTransactions) = 0;
 
-  virtual uint64_t getRewardBlocksWindow() = 0;
+  virtual uint64_t getRewardBlocksWindow(uint8_t majorVersion) = 0;
   virtual uint64_t getFullRewardMaxBlockSize(uint8_t majorVersion) = 0;
 
   virtual bool isSynchronized() = 0;

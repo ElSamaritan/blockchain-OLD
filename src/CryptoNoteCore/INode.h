@@ -9,14 +9,15 @@
 #include <functional>
 #include <system_error>
 #include <vector>
+#include <string>
 
 #include "crypto/crypto.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolDefinitions.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 
-#include "BlockchainExplorerData.h"
-#include "ITransaction.h"
+#include "BlockchainExplorer/BlockchainExplorerData.h"
+#include "CryptoNoteCore/ITransaction.h"
 
 namespace CryptoNote {
 

@@ -17,9 +17,13 @@
 
 #pragma once
 
+#include <string>
+#include <cinttypes>
+
 #include "IBlockchainCacheFactory.h"
 
 #include "BlockchainCache.h"
+#include "Currency.h"
 
 namespace CryptoNote {
 

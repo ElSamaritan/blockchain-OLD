@@ -23,6 +23,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <utility>
 
 #include "BlockingQueue.h"
 #include "ConsoleTools.h"

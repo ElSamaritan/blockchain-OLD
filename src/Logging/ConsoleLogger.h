@@ -18,6 +18,8 @@
 #pragma once
 
 #include <mutex>
+#include <string>
+
 #include "CommonLogger.h"
 
 namespace Logging {

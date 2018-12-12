@@ -19,7 +19,7 @@
 
 #include <vector>
 #include <boost/variant.hpp>
-#include "CryptoTypes.h"
+#include <crypto/CryptoTypes.h>
 
 namespace CryptoNote {
 

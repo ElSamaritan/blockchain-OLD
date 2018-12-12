@@ -6,6 +6,10 @@
 
 #pragma once
 
+#include <vector>
+#include <string>
+#include <cinttypes>
+
 #include <Xi/Global.h>
 
 #include "CryptoNoteProtocol/CryptoNoteProtocolDefinitions.h"
@@ -13,7 +17,7 @@
 #include "CryptoNoteCore/Difficulty.h"
 #include "crypto/hash.h"
 
-#include "BlockchainExplorerData.h"
+#include "BlockchainExplorer/BlockchainExplorerData.h"
 
 #include "Serialization/SerializationOverloads.h"
 #include "Serialization/BlockchainExplorerDataSerialization.h"
@@ -53,7 +57,7 @@ struct COMMAND_RPC_GET_HEIGHT {
 struct COMMAND_RPC_GET_BLOCKS_FAST {
   struct request {
     std::vector<Crypto::Hash> block_ids;  //*first 10 blocks id goes sequential, next goes in pow(2,n) offset, like 2,
-                                          //4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
+                                          // 4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
 
     void serialize(ISerializer &s) { KV_MEMBER(block_ids); }
   };
@@ -248,7 +252,7 @@ struct COMMAND_RPC_GET_INFO {
 
   struct response {
     std::string status;
-    uint64_t height;
+    uint32_t height;
     uint64_t difficulty;
     uint64_t tx_count;
     uint64_t tx_pool_size;
@@ -259,8 +263,8 @@ struct COMMAND_RPC_GET_INFO {
     uint64_t grey_peerlist_size;
     uint32_t last_known_block_index;
     uint32_t network_height;
-    std::vector<uint64_t> upgrade_heights;
-    uint64_t supported_height;
+    std::vector<uint32_t> upgrade_heights;
+    uint32_t supported_height;
     uint32_t hashrate;
     uint8_t major_version;
     uint8_t minor_version;
@@ -641,7 +645,7 @@ struct F_COMMAND_RPC_GET_POOL {
 struct COMMAND_RPC_QUERY_BLOCKS {
   struct request {
     std::vector<Crypto::Hash> block_ids;  //*first 10 blocks id goes sequential, next goes in pow(2,n) offset, like 2,
-                                          //4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
+                                          // 4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
     uint64_t timestamp;
 
     void serialize(ISerializer &s) {

@@ -8,10 +8,11 @@
 #include "WalletService.h"
 
 #include <future>
-#include <assert.h>
+#include <cassert>
 #include <sstream>
 #include <unordered_set>
 #include <tuple>
+#include <locale>
 
 #include <boost/filesystem/operations.hpp>
 
@@ -21,7 +22,7 @@
 #include "Common/Util.h"
 
 #include "crypto/crypto.h"
-#include "CryptoNote.h"
+#include "CryptoNoteCore/CryptoNote.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
@@ -288,7 +289,7 @@ std::tuple<std::string, std::string> decodeIntegratedAddress(const std::string& 
   }
 
   /* The prefix needs to be the same as the base58 prefix */
-  if (prefix != CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX) {
+  if (prefix != CryptoNote::Config::Coin::addressBas58Prefix()) {
     throw std::system_error(make_error_code(CryptoNote::error::BAD_ADDRESS));
   }
 
@@ -476,11 +477,11 @@ void WalletService::getNodeFee() {
 
   if (!m_node_address.empty() && m_node_fee != 0) {
     // Partially borrowed from <zedwallet/Tools.h>
-    uint32_t div = static_cast<uint32_t>(pow(10, CryptoNote::parameters::CRYPTONOTE_DISPLAY_DECIMAL_POINT));
+    uint32_t div = static_cast<uint32_t>(pow(10, CryptoNote::Config::Coin::numberOfDecimalPoints()));
     uint32_t coins = m_node_fee / div;
     uint32_t cents = m_node_fee % div;
     std::stringstream stream;
-    stream << std::setfill('0') << std::setw(CryptoNote::parameters::CRYPTONOTE_DISPLAY_DECIMAL_POINT) << cents;
+    stream << std::setfill('0') << std::setw(CryptoNote::Config::Coin::numberOfDecimalPoints()) << cents;
     std::string amount = std::to_string(coins) + "." + stream.str();
 
     logger(Logging::INFO, Logging::RED) << "You have connected to a node that charges "
@@ -562,7 +563,7 @@ std::error_code WalletService::exportWallet(const std::string& fileName) {
   return std::error_code();
 }
 
-std::error_code WalletService::resetWallet(const uint64_t scanHeight) {
+std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
   try {
     System::EventLock lk(readyEvent);
 
@@ -586,7 +587,7 @@ std::error_code WalletService::resetWallet(const uint64_t scanHeight) {
   return std::error_code();
 }
 
-std::error_code WalletService::replaceWithNewWallet(const std::string& viewSecretKeyText, const uint64_t scanHeight,
+std::error_code WalletService::replaceWithNewWallet(const std::string& viewSecretKeyText, const uint32_t scanHeight,
                                                     const bool newAddress) {
   try {
     System::EventLock lk(readyEvent);
@@ -617,7 +618,7 @@ std::error_code WalletService::replaceWithNewWallet(const std::string& viewSecre
   return std::error_code();
 }
 
-std::error_code WalletService::createAddress(const std::string& spendSecretKeyText, uint64_t scanHeight,
+std::error_code WalletService::createAddress(const std::string& spendSecretKeyText, uint32_t scanHeight,
                                              bool newAddress, std::string& address) {
   try {
     System::EventLock lk(readyEvent);
@@ -642,7 +643,7 @@ std::error_code WalletService::createAddress(const std::string& spendSecretKeyTe
 }
 
 std::error_code WalletService::createAddressList(const std::vector<std::string>& spendSecretKeysText,
-                                                 uint64_t scanHeight, bool newAddress,
+                                                 uint32_t scanHeight, bool newAddress,
                                                  std::vector<std::string>& addresses) {
   try {
     System::EventLock lk(readyEvent);
@@ -697,8 +698,9 @@ std::error_code WalletService::createAddress(std::string& address) {
   return std::error_code();
 }
 
-std::error_code WalletService::createTrackingAddress(const std::string& spendPublicKeyText, uint64_t scanHeight,
+std::error_code WalletService::createTrackingAddress(const std::string& spendPublicKeyText, uint32_t scanHeight,
                                                      bool newAddress, std::string& address) {
+  XI_UNUSED(newAddress);
   try {
     System::EventLock lk(readyEvent);
 
@@ -1000,7 +1002,9 @@ std::error_code WalletService::sendTransaction(SendTransaction::Request& request
 
     /* Integrated address payment ID's are uppercase - lets convert the input
        payment ID to upper so we can compare with more ease */
-    std::transform(request.paymentId.begin(), request.paymentId.end(), request.paymentId.begin(), ::toupper);
+    const std::locale loc{};
+    std::transform(request.paymentId.begin(), request.paymentId.end(), request.paymentId.begin(),
+                   [&loc](char c) { return std::toupper(c, loc); });
 
     std::vector<std::string> paymentIDs;
 
@@ -1097,7 +1101,9 @@ std::error_code WalletService::createDelayedTransaction(CreateDelayedTransaction
 
     /* Integrated address payment ID's are uppercase - lets convert the input
        payment ID to upper so we can compare with more ease */
-    std::transform(request.paymentId.begin(), request.paymentId.end(), request.paymentId.begin(), ::toupper);
+    const std::locale loc{};
+    std::transform(request.paymentId.begin(), request.paymentId.end(), request.paymentId.begin(),
+                   [&loc](char c) { return std::toupper(c, loc); });
 
     std::vector<std::string> paymentIDs;
 
@@ -1307,7 +1313,7 @@ std::error_code WalletService::getStatus(uint32_t& blockCount, uint32_t& knownBl
   return std::error_code();
 }
 
-std::error_code WalletService::sendFusionTransaction(uint64_t threshold, uint32_t anonymity,
+std::error_code WalletService::sendFusionTransaction(uint64_t threshold, uint16_t anonymity,
                                                      const std::vector<std::string>& addresses,
                                                      const std::string& destinationAddress,
                                                      std::string& transactionHash) {
@@ -1381,8 +1387,7 @@ std::error_code WalletService::createIntegratedAddress(const std::string& addres
   std::string keys = Common::asString(ba);
 
   /* Encode prefix + paymentID + keys as an address */
-  integratedAddress =
-      Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, paymentId + keys);
+  integratedAddress = Tools::Base58::encode_addr(CryptoNote::Config::Coin::addressBas58Prefix(), paymentId + keys);
 
   return std::error_code();
 }
@@ -1394,7 +1399,7 @@ std::error_code WalletService::getFeeInfo(std::string& address, uint32_t& amount
   return std::error_code();
 }
 
-uint64_t WalletService::getDefaultMixin() const {
+uint16_t WalletService::getDefaultMixin() const {
   return CryptoNote::getDefaultMixinByHeight(node.getLastKnownBlockHeight());
 }
 
@@ -1415,9 +1420,9 @@ void WalletService::refresh() {
   }
 }
 
-void WalletService::reset(const uint64_t scanHeight) { wallet.reset(scanHeight); }
+void WalletService::reset(const uint32_t scanHeight) { wallet.reset(scanHeight); }
 
-void WalletService::replaceWithNewWallet(const Crypto::SecretKey& viewSecretKey, const uint64_t scanHeight,
+void WalletService::replaceWithNewWallet(const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight,
                                          const bool newAddress) {
   wallet.stop();
   wallet.shutdown();

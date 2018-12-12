@@ -20,7 +20,7 @@
 #include <limits>
 #include <string>
 #include <vector>
-#include "CryptoNote.h"
+#include "CryptoNoteCore/CryptoNote.h"
 
 namespace CryptoNote {
 

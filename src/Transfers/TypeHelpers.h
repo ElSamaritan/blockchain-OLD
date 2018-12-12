@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "ITransaction.h"
+#include "CryptoNoteCore/ITransaction.h"
 #include <functional>
 #include <cstring>
 
