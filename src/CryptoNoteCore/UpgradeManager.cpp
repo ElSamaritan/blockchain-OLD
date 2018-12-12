@@ -39,7 +39,7 @@ uint8_t UpgradeManager::getBlockMajorVersion(uint32_t blockIndex) const {
     }
   }
 
-  throw std::runtime_error{"Could not find any major block version for given height."};
+  return Config::BlockVersion::BlockVersionCheckpoint<0>::version();
 }
 
 }  // namespace CryptoNote

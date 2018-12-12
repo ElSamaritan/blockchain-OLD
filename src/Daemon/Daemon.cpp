@@ -69,7 +69,7 @@ void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const 
     }
     transaction = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction();
   } else {
-    transaction = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction();
+    transaction = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction(rewardTargets);
   }
   std::string transactionHex = Common::toHex(CryptoNote::toBinaryArray(transaction));
   std::cout << CommonCLI::header() << std::endl

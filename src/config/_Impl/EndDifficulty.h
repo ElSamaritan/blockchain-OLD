@@ -82,6 +82,9 @@ template <>
 inline uint64_t DifficultyCheckpointResolver::nextDifficulty<0>(uint8_t /* version */,
                                                                 const std::vector<uint64_t> &timestamps,
                                                                 const std::vector<uint64_t> &cumulativeDifficulties) {
+  if (timestamps.size() < DifficultyCheckpoint<0>::windowSize() ||
+      cumulativeDifficulties.size() < DifficultyCheckpoint<0>::windowSize())
+    return DifficultyCheckpoint<0>::initialValue();
   return DifficultyCheckpoint<0>::algorithm{}(timestamps, cumulativeDifficulties, DifficultyCheckpoint<0>::windowSize(),
                                               CryptoNote::Config::Time::blockTimeSeconds());
 }
@@ -91,7 +94,7 @@ inline uint64_t DifficultyCheckpointResolver::nextDifficulty(uint8_t version, co
   if (version >= DifficultyCheckpoint<_Index>::version()) {
     if (timestamps.size() < DifficultyCheckpoint<_Index>::windowSize() ||
         cumulativeDifficulties.size() < DifficultyCheckpoint<_Index>::windowSize())
-      return DifficultyCheckpoint<_Index>::defaultValue();
+      return DifficultyCheckpoint<_Index>::initialValue();
     else {
       typename DifficultyCheckpoint<_Index>::algorithm algo{};
       return algo(timestamps, cumulativeDifficulties, DifficultyCheckpoint<_Index>::windowSize(),

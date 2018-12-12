@@ -86,7 +86,6 @@ void syncWallet(CryptoNote::INode &node, std::shared_ptr<WalletInfo> walletInfo)
   }
 
   int counter = 1;
-
   while (walletHeight < localHeight) {
     /* This MUST be called on the main thread! */
     walletInfo->wallet.updateInternalCache();
