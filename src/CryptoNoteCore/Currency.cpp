@@ -614,6 +614,7 @@ Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<Accoun
     //      targets[i].viewPublicKey << ", " << txkey.sec << ")");
     r = Crypto::derive_public_key(derivation, i, targets[i].spendPublicKey, outEphemeralPubKey);
     assert(r == true);
+    XI_UNUSED(r);
     //     CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to derive_public_key(" << derivation << ", " << i
     //     << ", " << targets[i].spendPublicKey << ")");
     KeyOutput tk;
