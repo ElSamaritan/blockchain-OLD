@@ -29,7 +29,7 @@ namespace CryptoNote {
 // Blocking HttpParser
 class HttpParser {
  public:
-  HttpParser(){};
+  HttpParser() = default;
 
   void receiveRequest(std::istream& stream, HttpRequest& request);
   void receiveResponse(std::istream& stream, HttpResponse& response);

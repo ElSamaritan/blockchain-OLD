@@ -30,9 +30,9 @@ class HttpParserErrorCategory : public std::error_category {
  public:
   static HttpParserErrorCategory INSTANCE;
 
-  virtual const char* name() const throw() override { return "HttpParserErrorCategory"; }
+  virtual const char* name() const noexcept override { return "HttpParserErrorCategory"; }
 
-  virtual std::error_condition default_error_condition(int ev) const throw() override {
+  virtual std::error_condition default_error_condition(int ev) const noexcept override {
     return std::error_condition(ev, *this);
   }
 

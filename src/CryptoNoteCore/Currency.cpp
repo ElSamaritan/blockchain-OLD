@@ -91,7 +91,7 @@ bool Currency::generateGenesisBlock() {
 
   genesisBlockTemplate.majorVersion = Config::BlockVersion::BlockVersionCheckpoint<0>::version();
   genesisBlockTemplate.minorVersion = Config::BlockVersion::minorVersionNoVotingIndicator();
-  genesisBlockTemplate.timestamp = 0;
+  genesisBlockTemplate.timestamp = 1544732468;
   genesisBlockTemplate.nonce = 70;
   if (m_testnet) {
     ++genesisBlockTemplate.nonce;
