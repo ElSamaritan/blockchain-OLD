@@ -102,7 +102,7 @@ bool Currency::generateGenesisBlock() {
 }
 
 size_t Currency::difficultyBlocksCountByVersion(uint8_t version) const {
-  return CryptoNote::Config::Difficulty::windowSize(version);
+  return CryptoNote::Config::Difficulty::windowSize(version) + 1;
 }
 
 uint8_t Currency::maxTxVersion() const { return CryptoNote::Config::Transaction::maximumVersion(); }

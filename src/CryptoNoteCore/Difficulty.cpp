@@ -4,6 +4,7 @@
 // Please see the included LICENSE file for more information.
 
 #include <algorithm>
+#include <stdexcept>
 
 #include "Difficulty.h"
 
@@ -17,11 +18,10 @@ uint64_t CryptoNote::Difficulty::LWMA_3::operator()(const std::vector<uint64_t>&
   uint64_t N = windowSize;
   uint64_t L(0), ST, sum_3_ST(0), next_D, prev_D, nextTime, lastTime;
 
-  /* If we are starting up, returning a difficulty guess. If you are a
-     new coin, you might want to set this to a decent estimate of your
-     hashrate */
-  if (timestamps.size() < static_cast<uint64_t>(N + 1)) {
-    return 5000;
+  // If we dont have enough data this method is missused and we shall throw an exception.
+  if (timestamps.size() < static_cast<uint64_t>(N + 1) ||
+      cumulativeDifficulties.size() < static_cast<uint64_t>(N + 1)) {
+    throw std::runtime_error{"LWMA called with insufficient timestamps or difficulties."};
   }
 
   lastTime = timestamps[0];
@@ -64,11 +64,10 @@ uint64_t CryptoNote::Difficulty::LWMA_2::operator()(const std::vector<uint64_t>&
   int64_t N = windowSize;
   int64_t L(0), ST, sum_3_ST(0), next_D, prev_D;
 
-  /* If we are starting up, returning a difficulty guess. If you are a
-     new coin, you might want to set this to a decent estimate of your
-     hashrate */
-  if (timestamps.size() < static_cast<uint64_t>(N + 1)) {
-    return 5000;
+  // If we dont have enough data this method is missused and we shall throw an exception.
+  if (timestamps.size() < static_cast<uint64_t>(N + 1) ||
+      cumulativeDifficulties.size() < static_cast<uint64_t>(N + 1)) {
+    throw std::runtime_error{"LWMA called with insufficient timestamps or difficulties."};
   }
 
   for (int64_t i = 1; i <= N; i++) {

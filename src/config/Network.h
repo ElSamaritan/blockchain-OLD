@@ -22,11 +22,7 @@ static inline constexpr uint16_t rpcPort() { return 22869; }
 static inline constexpr uint16_t pgPort() { return 38070; }
 
 static inline std::vector<std::string> seedNodes() {
-#if defined(_DEBUG)
-  static const char* _SeedNodes[] = {"127.0.0.1:22868"};
-#else
   static const char* _SeedNodes[] = {"207.180.240.151:22868", "207.180.240.152:22868"};
-#endif
   return std::vector<std::string>(_SeedNodes, std::end(_SeedNodes));
 }
 
