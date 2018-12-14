@@ -26,7 +26,7 @@ ExternalProject_Get_Property(lz4-lz4 INSTALL_DIR)
 add_library(lz4 STATIC IMPORTED GLOBAL)
 add_dependencies(lz4 lz4-lz4)
 
-set_property(TARGET lz4 PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
+set_property(TARGET lz4 PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
 set_property(TARGET lz4 APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${INSTALL_DIR}/include")
 set(LZ4_ROOT_DIR "${INSTALL_DIR}" CACHE PATH "External project lz4 installation directory." FORCE)
 mark_as_advanced(LZ4_ROOT_DIR)

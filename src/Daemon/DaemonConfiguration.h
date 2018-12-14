@@ -16,6 +16,7 @@
 #include <Xi/Utils/ExternalIncludePop.h>
 
 #include <config/CryptoNoteConfig.h>
+#include <CryptoNoteCore/DataBaseConfig.h>
 #include <Logging/ILogger.h>
 #include "Common/PathTools.h"
 #include "Common/Util.h"
@@ -47,6 +48,7 @@ struct DaemonConfiguration {
   uint16_t dbMaxOpenFiles;
   uint64_t dbWriteBufferSize;
   uint64_t dbReadCacheSize;
+  CryptoNote::DataBaseConfig::Compression dbCompression = CryptoNote::DataBaseConfig::Compression::LZ4;
 
   bool noConsole;
   bool enableBlockExplorer;
@@ -148,6 +150,7 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
 
   options.add_options("Database")
     ("db-max-open-files", "Number of files that can be used by the database at one time", cxxopts::value<uint16_t>()->default_value(std::to_string(config.dbMaxOpenFiles)), "#")
+    ("db-compression", "Compression to be used for storing the database.", cxxopts::value<std::string>()->default_value("lz4"), "[none|lz4|lz4hc]")
     ("db-read-buffer-size", "Size of the database read cache in megabytes (MB)", cxxopts::value<uint64_t>()->default_value(std::to_string(config.dbReadCacheSize)), "#")
     ("db-threads", "Number of background threads used for compaction and flush operations", cxxopts::value<uint16_t>()->default_value(std::to_string(config.dbThreads)), "#")
     ("db-write-buffer-size", "Size of the database write buffer in megabytes (MB)", cxxopts::value<uint64_t>()->default_value(std::to_string(config.dbWriteBufferSize)), "#");
@@ -222,6 +225,14 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
 
     if (cli.count("db-write-buffer-size") > 0) {
       config.dbWriteBufferSize = cli["db-write-buffer-size"].as<uint64_t>();
+    }
+
+    if (cli.count("db-compression") > 0) {
+      CryptoNote::DataBaseConfig::Compression compression;
+      if (!CryptoNote::DataBaseConfig::parseCompression(cli["db-compression"].as<std::string>(), compression)) {
+        throw cxxopts::OptionException("db-compression must be one of none, lz4 or lz4hc");
+      }
+      config.dbCompression = compression;
     }
 
     if (cli.count("local-ip") > 0) {
@@ -352,6 +363,13 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
     config.dbWriteBufferSize = j["db-write-buffer-size"].get<uint64_t>();
   }
 
+  if (j.find("db-compression") != j.end()) {
+    auto compression = j["db-compression"].get<std::string>();
+    if (!CryptoNote::DataBaseConfig::parseCompression(compression, config.dbCompression)) {
+      throw std::runtime_error{"Invalid db compression in json configuration."};
+    }
+  }
+
   if (j.find("allow-local-ip") != j.end()) {
     config.localIp = j["allow-local-ip"].get<bool>();
   }
@@ -414,6 +432,8 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
 };
 
 json asJSON(const DaemonConfiguration& config) {
+  std::string compressionString;
+  Common::toString(config.dbCompression, compressionString);
   json j = json{
       {"data-dir", config.dataDirectory},
       {"load-checkpoints", config.checkPoints},
@@ -424,6 +444,7 @@ json asJSON(const DaemonConfiguration& config) {
       {"db-read-buffer-size", config.dbReadCacheSize},
       {"db-threads", config.dbThreads},
       {"db-write-buffer-size", config.dbWriteBufferSize},
+      {"db-compression", compressionString},
       {"allow-local-ip", config.localIp},
       {"hide-my-port", config.hideMyPort},
       {"p2p-bind-ip", config.p2pInterface},

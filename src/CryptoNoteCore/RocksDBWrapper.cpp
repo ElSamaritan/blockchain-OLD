@@ -46,8 +46,8 @@ void RocksDBWrapper::init(const DataBaseConfig& config) {
   logger(INFO) << "Opening DB in " << dataDir;
 
   rocksdb::DB* dbPtr;
-
   rocksdb::Options dbOptions = getDBOptions(config);
+  dbOptions.compression = rocksdb::CompressionType::kLZ4Compression;
   rocksdb::Status status = rocksdb::DB::Open(dbOptions, dataDir, &dbPtr);
   if (status.ok()) {
     logger(INFO) << "DB opened in " << dataDir;

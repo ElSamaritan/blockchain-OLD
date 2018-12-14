@@ -121,6 +121,7 @@ target_link_libraries(
         Serialization
         System
         rocksdb
+        lz4
         ${Boost_LIBRARIES}
 )
 target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static)

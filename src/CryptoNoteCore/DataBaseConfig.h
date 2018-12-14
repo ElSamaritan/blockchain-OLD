@@ -10,9 +10,17 @@
 #include <vector>
 #include <string>
 
+#include <Common/StringTools.h>
+
 namespace CryptoNote {
 
 class DataBaseConfig {
+ public:
+  enum struct Compression { None, LZ4, LZ4HC };
+
+ public:
+  static bool parseCompression(const std::string& compressionMode, Compression& out);
+
  public:
   DataBaseConfig();
   bool init(const std::string dataDirectory, const uint16_t backgroundThreads, const uint16_t maxOpenFiles,
@@ -25,6 +33,7 @@ class DataBaseConfig {
   uint64_t getWriteBufferSize() const;  // Bytes
   uint64_t getReadCacheSize() const;    // Bytes
   bool getTestnet() const;
+  Compression getCompression() const;
 
   void setConfigFolderDefaulted(bool defaulted);
   void setDataDir(const std::string& dataDir);
@@ -33,6 +42,7 @@ class DataBaseConfig {
   void setWriteBufferSize(uint64_t writeBufferSize);  // Bytes
   void setReadCacheSize(uint64_t readCacheSize);      // Bytes
   void setTestnet(bool testnet);
+  void setCompression(Compression compression);
 
  private:
   bool configFolderDefaulted;
@@ -42,5 +52,12 @@ class DataBaseConfig {
   uint64_t writeBufferSize;
   uint64_t readCacheSize;
   bool testnet;
+  Compression compression;
 };
 }  // namespace CryptoNote
+
+namespace Common {
+template <>
+void toString<CryptoNote::DataBaseConfig::Compression>(const CryptoNote::DataBaseConfig::Compression& compression,
+                                                       std::string& out);
+}
