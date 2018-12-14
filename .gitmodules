@@ -22,3 +22,6 @@
 [submodule "external/ruslo-leathers"]
 	path = external/ruslo-leathers
 	url = ../external/ruslo-leathers.git
+[submodule "external/lz4-lz4"]
+	path = external/lz4-lz4
+	url = ../External/lz4-lz4

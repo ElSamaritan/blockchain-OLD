@@ -16,13 +16,26 @@
 
 using namespace CryptoNote;
 
+bool DataBaseConfig::parseCompression(const std::string &compressionMode, DataBaseConfig::Compression &out) {
+  if (compressionMode == "none")
+    out = Compression::None;
+  else if (compressionMode == "lz4")
+    out = Compression::LZ4;
+  else if (compressionMode == "lz4hc")
+    out = Compression::LZ4HC;
+  else
+    return false;
+  return true;
+}
+
 DataBaseConfig::DataBaseConfig()
     : dataDir(Tools::getDefaultDataDirectory()),
       backgroundThreadsCount(CryptoNote::Config::Database::backgroundThreads()),
       maxOpenFiles(CryptoNote::Config::Database::maximumOpenFiles()),
       writeBufferSize(CryptoNote::Config::Database::writeBufferSize()),
       readCacheSize(CryptoNote::Config::Database::readBufferSize()),
-      testnet(false) {}
+      testnet(false),
+      compression(Compression::LZ4) {}
 
 bool DataBaseConfig::init(const std::string dataDirectory, const uint16_t backgroundThreads, const uint16_t openFiles,
                           const uint64_t writeBuffer, const uint64_t readCache) {
@@ -53,9 +66,11 @@ uint64_t DataBaseConfig::getReadCacheSize() const { return readCacheSize; }
 
 bool DataBaseConfig::getTestnet() const { return testnet; }
 
+DataBaseConfig::Compression DataBaseConfig::getCompression() const { return compression; }
+
 void DataBaseConfig::setConfigFolderDefaulted(bool defaulted) { configFolderDefaulted = defaulted; }
 
-void DataBaseConfig::setDataDir(const std::string& _dataDir) { this->dataDir = _dataDir; }
+void DataBaseConfig::setDataDir(const std::string &_dataDir) { this->dataDir = _dataDir; }
 
 void DataBaseConfig::setBackgroundThreadsCount(uint16_t _backgroundThreadsCount) {
   this->backgroundThreadsCount = _backgroundThreadsCount;
@@ -69,3 +84,26 @@ void DataBaseConfig::setReadCacheSize(uint64_t _readCacheSize) { this->readCache
 
 // WARNING(mainnet)
 void DataBaseConfig::setTestnet(bool _testnet) { this->testnet = _testnet; }
+
+void DataBaseConfig::setCompression(DataBaseConfig::Compression _compression) { compression = _compression; }
+
+namespace Common {
+template <>
+void Common::toString(const CryptoNote::DataBaseConfig::Compression &compression, std::string &out) {
+  using CryptoNote::DataBaseConfig;
+
+  switch (compression) {
+    case DataBaseConfig::Compression::None:
+      out = "none";
+      break;
+    case DataBaseConfig::Compression::LZ4:
+      out = "lz4";
+      break;
+    case DataBaseConfig::Compression::LZ4HC:
+      out = "lz4hc";
+      break;
+    default:
+      throw std::runtime_error{"Unknown string representation for DataBaseConfig::Compression."};
+  }
+}
+}  // namespace Common
