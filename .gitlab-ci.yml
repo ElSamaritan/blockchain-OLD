@@ -3,7 +3,6 @@ stages:
   - test
   - analysis
   - deploy
-  - notifications
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -198,27 +197,3 @@ pages:
       - public
   only:
     - develop
-
-# ================================================================================================================== #
-#                                                                                                                    #
-#                                                     NOTIFICATIONS                                                  #
-#                                                                                                                    #
-# ================================================================================================================== #
-
-Discord Failure Notification:
-  stage: notifications
-  tags:
-    - docker
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/notify:latest
-  script: "/bin/bash ./scripts/ci/SendDiscordNotification.sh failure $DISCORD_WEBHOOK"
-  dependencies: []
-  when: on_failure
-
-Discord Success Notification:
-  stage: notifications
-  tags:
-    - docker
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/notify:latest
-  script: "/bin/bash ./scripts/ci/SendDiscordNotification.sh success $DISCORD_WEBHOOK"
-  dependencies: []
-  when: on_success
