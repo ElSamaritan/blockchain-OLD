@@ -47,6 +47,19 @@ void RocksDBWrapper::init(const DataBaseConfig& config) {
 
   rocksdb::DB* dbPtr;
   rocksdb::Options dbOptions = getDBOptions(config);
+  switch (config.getCompression()) {
+    case DataBaseConfig::Compression::LZ4:
+      dbOptions.compression = rocksdb::CompressionType::kLZ4Compression;
+      break;
+    case DataBaseConfig::Compression::LZ4HC:
+      dbOptions.compression = rocksdb::CompressionType::kLZ4HCCompression;
+      break;
+    case DataBaseConfig::Compression::None:
+      dbOptions.compression = rocksdb::CompressionType::kNoCompression;
+      break;
+    default:
+      throw std::runtime_error{"Unknown compression set in DataBaseConfig."};
+  }
   dbOptions.compression = rocksdb::CompressionType::kLZ4Compression;
   rocksdb::Status status = rocksdb::DB::Open(dbOptions, dataDir, &dbPtr);
   if (status.ok()) {

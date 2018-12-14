@@ -222,6 +222,7 @@ int main(int argc, char* argv[]) {
     DataBaseConfig dbConfig;
     dbConfig.init(config.dataDirectory, config.dbThreads, config.dbMaxOpenFiles, config.dbWriteBufferSize,
                   config.dbReadCacheSize);
+    dbConfig.setCompression(config.dbCompression);
 
     if (dbConfig.isConfigFolderDefaulted()) {
       if (!Tools::create_directories_if_necessary(dbConfig.getDataDir())) {
