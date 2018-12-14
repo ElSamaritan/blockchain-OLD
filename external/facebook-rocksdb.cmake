@@ -38,10 +38,14 @@ ExternalProject_Add(
     -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/rocksdb
     -DCMAKE_BUILD_TYPE=${ROCKSDB_BUILD_TYPE}
     -DUSE_RTTI=ON
+    -DLZ4_ROOT_DIR=${LZ4_ROOT_DIR}
+    -DWITH_LZ4=ON
     ${ROCKSB_EXTRA_CMAKE_ARGS}
 
   INSTALL_COMMAND cmake -DCOMPONENT=devel -P cmake_install.cmake
 )
+add_dependencies(facebook-rocksdb lz4-lz4)
+
 install()
 ExternalProject_Get_Property(facebook-rocksdb INSTALL_DIR)
 
