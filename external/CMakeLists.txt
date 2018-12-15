@@ -23,5 +23,6 @@ set(
     ${PROJECT_SOURCE_DIR}/external/jarro2783-cxxopts/include
     ${PROJECT_SOURCE_DIR}/external/ruslo-leathers/Source
     ${PROJECT_SOURCE_DIR}/external/miniupnp                   # minpunp fails to setup includes correctly
+    ${Boost_INCLUDE_DIRS}
   PARENT_SCOPE
 )

@@ -5,10 +5,11 @@ set(
 
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/Core/include
     ${XI_EXTERNAL_INCLUDE_DIRS}
     ${XI_VERSION_INCLUDE_DIR}
 )
+
+xi_make_library(Core Xi-Core)
 
 file(GLOB_RECURSE BlockchainExplorer BlockchainExplorer/*)
 file(GLOB_RECURSE Common Common/*)
@@ -104,7 +105,9 @@ foreach(xiLib ${XI_LIBRARIES})
 endforeach()
 
 if(MSVC)
-  target_link_libraries(System ws2_32)
+  target_link_libraries(System ws2_32 Xi.Core)
+else()
+  target_link_libraries(System Xi.Core)
 endif ()
 
 # Add the dependencies we need
@@ -124,10 +127,22 @@ target_link_libraries(
         lz4
         ${Boost_LIBRARIES}
 )
-target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static)
-target_link_libraries(Rpc PUBLIC CryptoNoteCore)
-target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Http Serialization CryptoNoteCore System Logging Common Crypto ${Boost_LIBRARIES})
+target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static Xi.Core)
+target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core)
+target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Http Serialization CryptoNoteCore System Logging Common Crypto Xi.Core ${Boost_LIBRARIES})
 target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI)
+target_link_libraries(BlockchainExplorer PUBLIC Xi.Core)
+target_link_libraries(Common PUBLIC Xi.Core)
+target_link_libraries(CommonCLI PUBLIC Xi.Core)
+target_link_libraries(Crypto PUBLIC Xi.Core)
+target_link_libraries(Http PUBLIC Xi.Core)
+target_link_libraries(Logging PUBLIC Xi.Core)
+target_link_libraries(Mnemonics PUBLIC Xi.Core)
+target_link_libraries(NodeRpcProxy PUBLIC Xi.Core)
+target_link_libraries(P2P PUBLIC Xi.Core)
+target_link_libraries(Serialization PUBLIC Xi.Core)
+target_link_libraries(Transfers PUBLIC Xi.Core)
+target_link_libraries(JsonRpcServer PUBLIC Xi.Core)
 
 add_dependencies(WalletService Version)
 add_dependencies(Rpc Version)
