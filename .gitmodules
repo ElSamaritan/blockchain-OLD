@@ -25,3 +25,6 @@
 [submodule "external/lz4-lz4"]
 	path = external/lz4-lz4
 	url = ../External/lz4-lz4
+[submodule "external/pol51-openssl-cmake"]
+	path = external/pol51-openssl-cmake
+	url = ../external/pol51-openssl-cmake
