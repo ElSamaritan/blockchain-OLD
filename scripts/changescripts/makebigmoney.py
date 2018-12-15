@@ -2,7 +2,7 @@
 
 '''
 Original script written and copyright; The TurtleCoin Developers 2018
-Adapted for AmityCoin and copyright; The CalecXore Developers 2018
+Adapted for AmityCoin and copyright; The CalexCore Developers 2018
 Adapted for xi and copyright; The Galaxia Project Developers 2018
 -Thanks
 
