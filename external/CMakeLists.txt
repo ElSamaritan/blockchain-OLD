@@ -1,6 +1,8 @@
 ﻿include(ExternalProject)
 
 include(pol51-openssl-cmake.cmake)
+include(madler-zlib.cmake)
+include(yhirose-cpp-httplib.cmake)
 include(lz4-lz4.cmake)
 include(facebook-rocksdb.cmake)
 include(miniupnp-miniupnpc.cmake)

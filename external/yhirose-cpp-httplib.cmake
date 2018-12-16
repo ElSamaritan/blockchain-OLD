@@ -1,0 +1,5 @@
+﻿add_library(cpp-netlib INTERFACE IMPORTED GLOBAL)
+target_include_directories(cpp-netlib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/yhirose-cpp-httplib)
+target_compile_definitions(cpp-netlib INTERFACE CPPHTTPLIB_OPENSSL_SUPPORT CPPHTTPLIB_ZLIB_SUPPORT)
+target_sources(cpp-netlib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/yhirose-cpp-httplib/httplib.h)
+target_link_libraries(cpp-netlib INTERFACE ssl crypto zlibstatic)

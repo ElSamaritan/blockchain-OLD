@@ -28,3 +28,9 @@
 [submodule "external/pol51-openssl-cmake"]
 	path = external/pol51-openssl-cmake
 	url = ../external/pol51-openssl-cmake
+[submodule "external/yhirose-cpp-httplib"]
+	path = external/yhirose-cpp-httplib
+	url = ../external/yhirose-cpp-httplib
+[submodule "external/madler-zlib"]
+	path = external/madler-zlib
+	url = ../external/madler-zlib
