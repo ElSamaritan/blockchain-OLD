@@ -11,9 +11,9 @@ find_package(Threads)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_STATIC_RUNTIME ON)
 find_package(
-    Boost 1.65.1 REQUIRED
+    Boost 1.68.0
 
-    COMPONENTS
+    REQUIRED COMPONENTS
         system
         filesystem
         thread
@@ -23,10 +23,11 @@ find_package(
         serialization
         program_options
 )
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
-if(APPLE)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES}")
-elseif(NOT MSVC)
+if(NOT MSVC)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")
 endif()
 cmake_policy(POP)
+
+add_library(boost INTERFACE IMPORTED GLOBAL)
+target_include_directories(boost INTERFACE ${Boost_INCLUDE_DIRS})
+target_link_libraries(boost INTERFACE ${Boost_LIBRARIES})

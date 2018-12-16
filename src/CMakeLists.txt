@@ -5,11 +5,11 @@ set(
 
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/include
-    ${XI_EXTERNAL_INCLUDE_DIRS}
     ${XI_VERSION_INCLUDE_DIR}
 )
 
 xi_make_library(Core Xi-Core)
+target_link_libraries(Xi.Core PUBLIC boost leathers cxxopts) # cxxopts is only linked to enable it for all libraries
 
 file(GLOB_RECURSE BlockchainExplorer BlockchainExplorer/*)
 file(GLOB_RECURSE Common Common/*)
@@ -125,24 +125,24 @@ target_link_libraries(
         System
         rocksdb
         lz4
-        ${Boost_LIBRARIES}
+        boost
 )
-target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static Xi.Core)
-target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core)
-target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Http Serialization CryptoNoteCore System Logging Common Crypto Xi.Core ${Boost_LIBRARIES})
-target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI)
-target_link_libraries(BlockchainExplorer PUBLIC Xi.Core)
-target_link_libraries(Common PUBLIC Xi.Core)
-target_link_libraries(CommonCLI PUBLIC Xi.Core)
-target_link_libraries(Crypto PUBLIC Xi.Core)
-target_link_libraries(Http PUBLIC Xi.Core)
-target_link_libraries(Logging PUBLIC Xi.Core)
-target_link_libraries(Mnemonics PUBLIC Xi.Core)
-target_link_libraries(NodeRpcProxy PUBLIC Xi.Core)
-target_link_libraries(P2P PUBLIC Xi.Core)
-target_link_libraries(Serialization PUBLIC Xi.Core)
-target_link_libraries(Transfers PUBLIC Xi.Core)
-target_link_libraries(JsonRpcServer PUBLIC Xi.Core)
+target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static Xi.Core boost json cpp-linenoise)
+target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core boost json cpp-linenoise)
+target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Http Serialization CryptoNoteCore System Logging Common Crypto Xi.Core boost json cpp-linenoise)
+target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI boost json cpp-linenoise cxxopts)
+target_link_libraries(BlockchainExplorer PUBLIC Xi.Core boost json cpp-linenoise)
+target_link_libraries(Common PUBLIC Xi.Core boost json cpp-linenoise)
+target_link_libraries(CommonCLI PUBLIC Xi.Core boost json cpp-linenoise)
+target_link_libraries(Crypto PUBLIC Xi.Core boost json cpp-linenoise)
+target_link_libraries(Http PUBLIC Xi.Core boost json cpp-linenoise)
+target_link_libraries(Logging PUBLIC Xi.Core boost json cpp-linenoise)
+target_link_libraries(Mnemonics PUBLIC Xi.Core boost json cpp-linenoise)
+target_link_libraries(NodeRpcProxy PUBLIC Xi.Core boost json cpp-linenoise)
+target_link_libraries(P2P PUBLIC Xi.Core boost json cpp-linenoise)
+target_link_libraries(Serialization PUBLIC Xi.Core boost json cpp-linenoise)
+target_link_libraries(Transfers PUBLIC Xi.Core boost json cpp-linenoise)
+target_link_libraries(JsonRpcServer PUBLIC Xi.Core boost json cpp-linenoise)
 
 add_dependencies(WalletService Version)
 add_dependencies(Rpc Version)
@@ -173,10 +173,10 @@ if(XI_BUILD_EXECUTABLES)
     set(XI_EXTRA_OS_LIBRARIES Rpcrt4)
   endif()
 
-  target_link_libraries(CLIDaemon P2P Rpc Serialization System Http Logging CryptoNoteCore Crypto Common CommonCLI rocksdb ${Boost_LIBRARIES} ${XI_EXTRA_OS_LIBRARIES})
-  target_link_libraries(CLIWallet CommonCLI Mnemonics Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common CommonCLI ${Boost_LIBRARIES})
-  target_link_libraries(CLIMiner CommonCLI CryptoNoteCore Rpc Serialization System Http Logging Common CommonCLI Crypto ${Boost_LIBRARIES})
-  target_link_libraries(PGService WalletService JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto Rpc Http System Logging Common rocksdb ${Boost_LIBRARIES} ${XI_EXTRA_OS_LIBRARIES})
+  target_link_libraries(CLIDaemon P2P Rpc Serialization System Http Logging CryptoNoteCore Crypto Common CommonCLI rocksdb boost cxxopts ${XI_EXTRA_OS_LIBRARIES})
+  target_link_libraries(CLIWallet CommonCLI Mnemonics Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common CommonCLI boost cxxopts)
+  target_link_libraries(CLIMiner CommonCLI CryptoNoteCore Rpc Serialization System Http Logging Common CommonCLI Crypto boost cxxopts)
+  target_link_libraries(PGService WalletService JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto Rpc Http System Logging Common rocksdb boost cxxopts ${XI_EXTRA_OS_LIBRARIES})
 
   # Add dependencies means we have to build the latter before we build the former
   # In this case it's because we need to have the current version name rather

@@ -55,7 +55,6 @@ macro(xi_make_library name source_dir)
 
     PUBLIC
       ${lib_include_dir}
-      ${XI_EXTERNAL_INCLUDE_DIRS}
 
     PRIVATE
       ${lib_source_dir}

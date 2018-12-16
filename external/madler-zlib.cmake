@@ -1,7 +1,9 @@
 ﻿## ZLIB -- Compression Support
-find_package(OpenSSL QUIET)
+set(_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 if(MSVC)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /w")
+else()
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
 endif()
 set(BUILD_SHARED_LIBS OFF)
 set(SKIP_INSTALL_ALL ON)

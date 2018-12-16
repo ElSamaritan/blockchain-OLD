@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.9.2)
+﻿cmake_minimum_required(VERSION 3.12.4)
 
 include(cmake/ApplyDefaultBuildType.cmake)
 
@@ -23,7 +23,6 @@ option(XI_BUILD_TESTSUITE "Builds the xi test suite, see ./tests" OFF)
 
 include(cmake/CompilerCheck.cmake)
 include(cmake/CompilerConfiguration.cmake)
-include(cmake/Dependencies.cmake)
 include(cmake/Platform.cmake)
 include(cmake/Version.cmake)
 include(cmake/XiMakeLibrary.cmake)
