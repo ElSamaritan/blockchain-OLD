@@ -1,5 +1,5 @@
 ﻿#pragma once
 
-#include <string>
+#include "Xi/Global.h"
 
 namespace Xi {}
