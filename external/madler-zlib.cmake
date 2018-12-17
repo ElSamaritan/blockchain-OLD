@@ -8,4 +8,11 @@ endif()
 set(BUILD_SHARED_LIBS OFF)
 set(SKIP_INSTALL_ALL ON)
 add_subdirectory(madler-zlib)
+target_include_directories(
+  zlibstatic
+
+  INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/madler-zlib
+    ${CMAKE_CURRENT_BINARY_DIR}/madler-zlib
+)
 set(CMAKE_C_FLAGS ${_CMAKE_C_FLAGS})

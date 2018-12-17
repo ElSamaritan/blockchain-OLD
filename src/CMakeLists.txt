@@ -1,4 +1,4 @@
-﻿add_definitions(-DSTATICLIB)
+add_definitions(-DSTATICLIB)
 
 set(
     XI_INCLUDE_DIRS
@@ -10,6 +10,27 @@ set(
 
 xi_make_library(Core Xi-Core)
 target_link_libraries(Xi.Core PUBLIC boost leathers cxxopts) # cxxopts is only linked to enable it for all libraries
+
+xi_make_library(Compression Xi-Compression)
+target_link_libraries(
+  Xi.Compression
+
+  PUBLIC
+    Xi.Core
+
+  PRIVATE
+    zlibstatic
+    boost
+)
+
+xi_make_library(Http Xi-Http)
+target_link_libraries(
+  Xi.Http
+
+  PUBLIC
+    Xi.Core
+    boost
+)
 
 file(GLOB_RECURSE BlockchainExplorer BlockchainExplorer/*)
 file(GLOB_RECURSE Common Common/*)
