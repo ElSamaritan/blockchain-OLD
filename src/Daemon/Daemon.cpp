@@ -8,6 +8,8 @@
 #include "DaemonConfiguration.h"
 #include "DaemonCommandsHandler.h"
 
+#include <Logging/LoggerMessage.h>
+
 #include "Common/ScopeExit.h"
 #include "Common/SignalHandler.h"
 #include "Common/StdOutputStream.h"

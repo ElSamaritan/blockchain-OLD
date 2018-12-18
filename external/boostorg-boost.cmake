@@ -10,6 +10,11 @@ find_package(Threads)
 ## Go get us some static BOOST libraries
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_STATIC_RUNTIME ON)
+
+if(MSVC)
+  set(Boost_COMPONENTS_EXTRA zlib)
+endif()
+
 find_package(
     Boost 1.68.0
 
@@ -22,6 +27,8 @@ find_package(
         regex
         serialization
         program_options
+        iostreams
+        ${Boost_COMPONENTS_EXTRA}
 )
 if(NOT MSVC)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")

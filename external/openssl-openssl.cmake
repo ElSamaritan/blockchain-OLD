@@ -1,5 +1,13 @@
-﻿find_package(OpenSSL QUIET)
-if(NOT OpenSSL_FOUND)
-  message(WARNING "OpenSSL could not be found. We will migrate to it later and it will be required, you may wanna"
-    " install it in advance.")
+﻿cmake_policy(PUSH)
+
+if(CMAKE_VERSION VERSION_GREATER "3.12")
+  cmake_policy(SET CMP0074 OLD)
 endif()
+
+find_package(OpenSSL REQUIRED)
+
+cmake_policy(POP)
+
+add_library(openssl INTERFACE IMPORTED GLOBAL)
+target_include_directories(openssl INTERFACE ${OPENSSL_INCLUDE_DIR})
+target_link_libraries(openssl INTERFACE ${OPENSSL_LIBRARIES})

@@ -1,4 +1,4 @@
-add_definitions(-DSTATICLIB)
+﻿add_definitions(-DSTATICLIB)
 
 set(
     XI_INCLUDE_DIRS
@@ -10,19 +10,6 @@ set(
 
 xi_make_library(Core Xi-Core)
 target_link_libraries(Xi.Core PUBLIC boost leathers cxxopts) # cxxopts is only linked to enable it for all libraries
-
-xi_make_library(Compression Xi-Compression)
-target_link_libraries(
-  Xi.Compression
-
-  PUBLIC
-    Xi.Core
-
-  PRIVATE
-    zlibstatic
-    boost
-)
-
 xi_make_library(Http Xi-Http)
 target_link_libraries(
   Xi.Http
@@ -30,6 +17,10 @@ target_link_libraries(
   PUBLIC
     Xi.Core
     boost
+
+  PRIVATE
+    zlibstatic
+    openssl
 )
 
 file(GLOB_RECURSE BlockchainExplorer BlockchainExplorer/*)
@@ -68,7 +59,7 @@ endif()
 # https://cmake.org/cmake/help/v3.0/command/source_group.html
 # Probably not what you need to be looking at if something isn't building
 foreach(source_file ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} ${XI_CLI_DAEMON_SOURCES} ${service}
-                   ${JsonRpcServer} ${Http} ${Logging} ${XI_CLI_MINER_SOURCES} ${Mnemonics} ${NodeRpcProxy} ${P2p}
+                   ${JsonRpcServer} ${Logging} ${XI_CLI_MINER_SOURCES} ${Mnemonics} ${NodeRpcProxy} ${P2p}
                    ${Rpc} ${Serialization} ${System} ${Transfers} ${Wallet} ${WalletLegacy} ${XI_CLI_WALLET_SOURCES}
                    ${BlockchainExplorer})
   if(XI_CXX_FLAGS)
@@ -148,22 +139,21 @@ target_link_libraries(
         lz4
         boost
 )
-target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static Xi.Core boost json cpp-linenoise)
-target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core boost json cpp-linenoise)
-target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Http Serialization CryptoNoteCore System Logging Common Crypto Xi.Core boost json cpp-linenoise)
-target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI boost json cpp-linenoise cxxopts)
-target_link_libraries(BlockchainExplorer PUBLIC Xi.Core boost json cpp-linenoise)
-target_link_libraries(Common PUBLIC Xi.Core boost json cpp-linenoise)
-target_link_libraries(CommonCLI PUBLIC Xi.Core boost json cpp-linenoise)
-target_link_libraries(Crypto PUBLIC Xi.Core boost json cpp-linenoise)
-target_link_libraries(Http PUBLIC Xi.Core boost json cpp-linenoise)
-target_link_libraries(Logging PUBLIC Xi.Core boost json cpp-linenoise)
-target_link_libraries(Mnemonics PUBLIC Xi.Core boost json cpp-linenoise)
-target_link_libraries(NodeRpcProxy PUBLIC Xi.Core boost json cpp-linenoise)
-target_link_libraries(P2P PUBLIC Xi.Core boost json cpp-linenoise)
-target_link_libraries(Serialization PUBLIC Xi.Core boost json cpp-linenoise)
-target_link_libraries(Transfers PUBLIC Xi.Core boost json cpp-linenoise)
-target_link_libraries(JsonRpcServer PUBLIC Xi.Core boost json cpp-linenoise)
+target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static Xi.Core boost json linenoise)
+target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core boost json linenoise Http)
+target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Http Serialization CryptoNoteCore System Logging Common Crypto Xi.Core boost json linenoise)
+target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI boost json linenoise cxxopts)
+target_link_libraries(BlockchainExplorer PUBLIC Xi.Core boost json linenoise)
+target_link_libraries(Common PUBLIC Xi.Core boost json linenoise)
+target_link_libraries(CommonCLI PUBLIC Xi.Core boost json linenoise)
+target_link_libraries(Crypto PUBLIC Xi.Core boost json linenoise)
+target_link_libraries(Logging PUBLIC Xi.Core boost json linenoise)
+target_link_libraries(Mnemonics PUBLIC Xi.Core boost json linenoise)
+target_link_libraries(NodeRpcProxy PUBLIC Xi.Core boost json linenoise)
+target_link_libraries(P2P PUBLIC Xi.Core boost json linenoise)
+target_link_libraries(Serialization PUBLIC Xi.Core boost json linenoise)
+target_link_libraries(Transfers PUBLIC Xi.Core boost json linenoise)
+target_link_libraries(JsonRpcServer PUBLIC Xi.Core boost json linenoise)
 
 add_dependencies(WalletService Version)
 add_dependencies(Rpc Version)
