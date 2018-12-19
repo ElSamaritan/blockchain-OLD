@@ -37,6 +37,10 @@ Ubuntu Bionic - Build:
   <<: *linux_build_definition
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
 
+Ubuntu Xenial - Build:
+  <<: *linux_build_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:xenial
+
 openSuse Leap - Build:
   <<: *linux_build_definition
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
@@ -77,6 +81,11 @@ Ubuntu Bionic - Test:
   <<: *linux_test_definition
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
   dependencies: ["Ubuntu Bionic - Build"]
+
+Ubuntu Xenial - Test:
+  <<: *linux_test_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:xenial
+  dependencies: ["Ubuntu Xenial - Build"]
 
 openSuse Leap - Test:
   <<: *linux_test_definition
@@ -151,6 +160,11 @@ Ubuntu Bionic:
   <<: *linux_deploy_definition
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
   dependencies: ["Ubuntu Bionic - Build"]
+
+Ubuntu Xenial:
+  <<: *linux_deploy_definition
+  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:xenial
+  dependencies: ["Ubuntu Xenial - Build"]
 
 openSuse Leap:
   <<: *linux_deploy_definition
