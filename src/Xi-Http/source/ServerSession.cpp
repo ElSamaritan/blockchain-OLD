@@ -85,7 +85,7 @@ void Xi::Http::ServerSession::doReadRequest() {
 void Xi::Http::ServerSession::doOnRequestRead() {
   const auto request = m_conversion(m_request);
   Response response = m_handler->operator()(request);
-  m_response = m_conversion(response);
+  m_response = m_conversion(response);  // TODO better make it async as well and use a strand?
   writeResponse();
 }
 

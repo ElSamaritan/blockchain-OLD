@@ -110,13 +110,38 @@ class HeaderContainer final {
 
   boost::optional<std::string> location() const;
 
+  /*!
+   * \brief begin returns the begin iterator of all raw headers stored
+   */
   const_iterator begin() const;
+
+  /*!
+   * \brief end returns the end iterator of all raw headers stored
+   */
   const_iterator end() const;
 
+  /*!
+   * \brief get queries a given header
+   * \param header the header to query
+   * \return null if the header is not set, otherwise the raw content stored
+   */
   boost::optional<std::string> get(Header header) const;
 
+  /*!
+   * \brief set sets the value of a header to a raw string
+   * \param header the header field to set
+   * \param raw the content of the header field
+   *
+   * \attention if you provide raw values that have wrapper functions provided by the header container you may get
+   * exceptions if you query them using the wrapper getter. Thus be careful you set them correctly.
+   */
   void set(Header header, const std::string& raw);
 
+  /*!
+   * \brief contains checks if a header has been set
+   * \param header the header field to check
+   * \return true if the header field has a set value, otherwise false
+   */
   bool contains(Header header) const;
 
  private:

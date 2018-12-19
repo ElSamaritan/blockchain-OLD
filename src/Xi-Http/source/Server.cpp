@@ -20,9 +20,8 @@ struct Xi::Http::Server::_Listener : Listener {
   _Listener(const std::string& address, uint16_t port, std::shared_ptr<RequestHandler> _handler)
       : Listener(boost::asio::ip::tcp::endpoint{boost::asio::ip::make_address(address), port}), handler{_handler} {}
 
-  void run() override {
+  void run(uint16_t numThreads) {
     Listener::run();
-    const std::size_t numThreads = 1;
     runner.reserve(numThreads);
     for (std::size_t i = 0; i < numThreads; ++i) {
       runner.emplace_back(std::thread{[&] {
@@ -39,9 +38,12 @@ struct Xi::Http::Server::_Listener : Listener {
   }
 
   ~_Listener() override {
-    keepRunning = false;
-    for (auto& thread : runner) thread.join();
-    io.stop();
+    try {
+      keepRunning = false;
+      for (auto& thread : runner) thread.join();
+      io.stop();
+    } catch (...) {
+    }
   }
 
   void doOnAccept(boost::asio::ip::tcp::socket socket) override {
@@ -57,7 +59,7 @@ void Xi::Http::Server::start(const std::string& address, uint16_t port) {
   if (m_listener.get() != nullptr) throw std::runtime_error{"server is already running, stop it first"};
   if (m_handler.get() == nullptr) throw std::runtime_error{"you must provide a handler in order to start the server"};
   m_listener = std::make_shared<_Listener>(address, port, handler());
-  m_listener->run();
+  m_listener->run(1);
 }
 
 void Xi::Http::Server::stop() { m_listener.reset(); }

@@ -6,6 +6,9 @@ namespace Xi {
 namespace Http {
 class ClientSession;
 
+/*!
+ * \brief The IClientSessionBuilder class abstract the way new client sessions are builded.
+ */
 class IClientSessionBuilder {
  public:
   IClientSessionBuilder() = default;

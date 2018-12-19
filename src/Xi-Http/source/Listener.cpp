@@ -42,10 +42,14 @@ void Xi::Http::Listener::doAccept() {
 }
 
 void Xi::Http::Listener::onAccept(boost::beast::error_code ec) {
-  if (ec) {
-    onError(ec, "accept");
-  } else {
-    doOnAccept(std::move(m_socket));
+  try {
+    if (ec) {
+      onError(ec, "accept");
+    } else {
+      doOnAccept(std::move(m_socket));
+    }
+  } catch (...) {
+    onError(std::current_exception());
   }
 
   // Accept another connection
@@ -53,3 +57,5 @@ void Xi::Http::Listener::onAccept(boost::beast::error_code ec) {
 }
 
 void Xi::Http::Listener::onError(boost::beast::error_code ec, const std::string &what) { XI_UNUSED(ec, what); }
+
+void Xi::Http::Listener::onError(std::exception_ptr ex) { XI_UNUSED(ex); }

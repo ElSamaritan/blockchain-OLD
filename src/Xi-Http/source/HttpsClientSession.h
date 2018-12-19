@@ -20,6 +20,9 @@
 
 namespace Xi {
 namespace Http {
+/*!
+ * \brief The HttpsClientSession class implements a client session requiring ssl encryption.
+ */
 class HttpsClientSession : public ClientSession {
  public:
   HttpsClientSession(boost::asio::io_context& io, boost::asio::ssl::context& ctx,
@@ -37,6 +40,9 @@ class HttpsClientSession : public ClientSession {
   void doOnShutdown() override;
 
  private:
+  /*!
+   * \brief onHandshake called after initial handshake with the server
+   */
   void onHandshake(boost::beast::error_code ec);
 
  private:

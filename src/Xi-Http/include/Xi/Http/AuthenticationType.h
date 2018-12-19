@@ -6,6 +6,9 @@
 
 namespace Xi {
 namespace Http {
+/*!
+ * \brief The AuthenticationType enum represents a type of authentication required/provided
+ */
 enum struct AuthenticationType { Basic, Unsupported };
 }  // namespace Http
 std::string to_string(Http::AuthenticationType status);

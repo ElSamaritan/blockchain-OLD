@@ -18,6 +18,9 @@
 
 namespace Xi {
 namespace Http {
+/*!
+ * \brief The HttpClientSession class implements a client session without ssl encryption.
+ */
 class HttpClientSession : public ClientSession {
  public:
   HttpClientSession(boost::asio::io_context& io, std::shared_ptr<IClientSessionBuilder> builder);

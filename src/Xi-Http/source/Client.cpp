@@ -60,7 +60,7 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
 };
 
 Xi::Http::Client::Client(const std::string &host, uint16_t port, bool ssl)
-    : m_host{host}, m_port{port}, m_worker{new _Worker}, m_ssl{ssl} {}
+    : m_host{host}, m_port{port}, m_ssl{ssl}, m_worker{new _Worker} {}
 
 Xi::Http::Client::~Client() {}
 
@@ -71,8 +71,6 @@ uint16_t Xi::Http::Client::port() const { return m_port; }
 bool Xi::Http::Client::ssl() const { return m_ssl; }
 
 void Xi::Http::Client::setSSL(bool _ssl) { m_ssl = _ssl; }
-
-uint16_t Xi::Http::Client::maximumSessions() const { return 32; }
 
 std::future<Xi::Http::Response> Xi::Http::Client::send(Xi::Http::Request &&request) {
   if (request.host().empty()) request.setHost(host());

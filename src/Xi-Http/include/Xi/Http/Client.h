@@ -29,10 +29,18 @@ class Client {
   const std::string host() const;
   uint16_t port() const;
 
+  /*!
+   * \brief ssl indicates if ssl connections are required
+   */
   bool ssl() const;
-  void setSSL(bool m_ssl);
 
-  uint16_t maximumSessions() const;
+  /*!
+   * \brief setSSL sets if ssl connections are required
+   *
+   * If ssl is required every request going to this client will make an ssl request and will not accept any retargeting
+   * to non ssl secured hosts.
+   */
+  void setSSL(bool m_ssl);
 
   /*!
    * \brief send sends the request to the server asynchroniously

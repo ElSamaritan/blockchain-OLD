@@ -2,6 +2,11 @@
 
 namespace Xi {
 namespace Http {
+/*!
+ * \brief The Version enum is the http protocol version to be used
+ *
+ * Http2.* is currently not supported.
+ */
 enum struct Version {
   Http_0_9 =
       9,  ///< HTTP/0.9 – The one-line protocol \link

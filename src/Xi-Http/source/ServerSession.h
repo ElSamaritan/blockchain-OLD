@@ -19,6 +19,12 @@
 
 namespace Xi {
 namespace Http {
+/*!
+ * \brief The ServerSession class servers an accepted http connection
+ *
+ * This class will be created from the listener once a connection was established and will manage the http transfer and
+ * high level api calls in order to handle the request.
+ */
 class ServerSession : public std::enable_shared_from_this<ServerSession> {
   XI_DELETE_COPY(ServerSession);
 
@@ -30,21 +36,66 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
   using strand_t = boost::asio::strand<boost::asio::io_context::executor_type>;
 
  public:
+  /*!
+   * \brief ServerSession creates a session handling a client request
+   * \param socket the socket created for communicating with the client
+   * \param handler the high level api handler that will server the request
+   */
   ServerSession(socket_t socket, std::shared_ptr<RequestHandler> handler);
   XI_DEFAULT_MOVE(ServerSession);
   ~ServerSession();
 
+  /*!
+   * \brief run starts handling the session
+   */
   void run();
 
+  /*!
+   * \brief readRequest called on startup an will read the requests data/headers...
+   */
   void readRequest();
+
+  /*!
+   * \brief onRequestRead called when the request is ready and fully read
+   * \param ec An error that may occured while reading
+   * \param bytesTransfered the amount of bytes read
+   */
   void onRequestRead(boost::beast::error_code ec, std::size_t bytesTransfered);
+
+  /*!
+   * \brief writeResponse called once the high level api handler returned a response that will be send back
+   */
   void writeResponse();
+
+  /*!
+   * \brief onResponseWritten called once the response was written to the client
+   * \param ec An error that may occured while writing
+   * \param bytesTransfered the amount of bytes writte
+   */
   void onResponseWritten(boost::beast::error_code ec, std::size_t bytesTransfered);
+
+  /*!
+   * \brief close closes the connection
+   */
   void close();
 
  protected:
+  /*!
+   * \brief checkErrorCode check for an potential error and throw if an error occured
+   */
   void checkErrorCode(boost::beast::error_code ec);
+
+  /*!
+   * \brief fail marks this session as failed
+   */
   void fail(std::exception_ptr ex);
+
+  /*!
+   * The follwing methods implement the NoneVirtualInterface patter. Never call them directly they are wrapped
+   * by their corresponding public methods that will prevent any exception.
+   *
+   * Thus you are free to throw any exception you like within these methods.
+   */
 
   void doReadRequest();
   void doOnRequestRead();

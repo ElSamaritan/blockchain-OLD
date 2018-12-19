@@ -8,6 +8,9 @@
 
 namespace Xi {
 namespace Http {
+/*!
+ * \brief The BasicCredentials class wraps a basic username and password authentication
+ */
 class BasicCredentials final {
  public:
   static bool validateUsername(const std::string& username);

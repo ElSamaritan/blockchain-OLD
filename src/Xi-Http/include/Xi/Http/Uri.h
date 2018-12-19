@@ -15,6 +15,7 @@
 
 namespace Xi {
 namespace Http {
+// TODO Replace me
 class Uri {
   /* URIs are broadly divided into two categories: hierarchical and
    * non-hierarchical. Both hierarchical URIs and non-hierarchical URIs have a

@@ -11,19 +11,49 @@
 
 namespace Xi {
 namespace Http {
+/*!
+ * \brief The Response class is a wrapper for a http response that was recieved or will be send back to a client
+ */
 class Response final {
  public:
   XI_DEFAULT_MOVE(Response);
   XI_DEFAULT_COPY(Response);
 
-  Response(StatusCode code = StatusCode::Ok, const std::string& body = "");
+  /*!
+   * \brief Response creates a new response
+   * \param code the status code of the response
+   * \param body the response string body, with according content type you do not need to compress it
+   * \param type the content type of the body
+   */
+  explicit Response(StatusCode code = StatusCode::Ok, const std::string& body = "",
+                    ContentType type = ContentType::Text);
   ~Response() = default;
 
+  /*!
+   * \brief status the status code of this response
+   */
   StatusCode status() const;
+
+  /*!
+   * \brief setStatus sets the status code
+   */
   void setStatus(StatusCode code);
 
+  /*!
+   * \brief body the response text body
+   *
+   * To query its content type use \see headers
+   */
   const std::string& body() const;
+
+  /*!
+   * \brief setBody sets the body to a copy of the provided text
+   */
   void setBody(const std::string& body);
+
+  /*!
+   * \brief setBody moves the provided text into the body wihtout copying it
+   */
   void setBody(std::string&& body);
 
   /*!
@@ -31,13 +61,17 @@ class Response final {
    */
   bool isRedirection() const;
 
+  /*!
+   * \brief headers mutable headers wrapper
+   */
   HeaderContainer& headers();
+
+  /*!
+   * \brief headers immutable deaders wrapper
+   */
   const HeaderContainer& headers() const;
 
  private:
-  friend class Client;
-  friend class Session;
-
   HeaderContainer m_headers;
   std::string m_body;
   StatusCode m_statusCode;

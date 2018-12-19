@@ -71,15 +71,50 @@ class Request final {
    * the request must abort a connection once its get redirected to such endpoint if this flag is set.
    */
   bool isSSLRequired() const;
+
+  /*!
+   * \brief setSSLRequired sets if ssl is required
+   *
+   * You may use this field to enforce particular ssl connections even if the client resolving this request does not
+   * require it.
+   */
   void setSSLRequired(bool isRequired);
 
+  /*!
+   * \brief headers A wrapper of all headers set for this request.
+   */
   HeaderContainer& headers();
+
+  /*!
+   * \brief headers A wrapper of all headers set for this request.
+   */
   const HeaderContainer& headers() const;
 
+  /*!
+   * \brief host the host to query
+   *
+   * You may provide a different host than the client has setup. If you dont do so the client will provide the host
+   * for you.
+   */
   const std::string& host() const;
+
+  /*!
+   * \brief setHost sets the host to connect to, empty if the default client host should be used.
+   */
   void setHost(const std::string& host);
 
+  /*!
+   * \brief port the port to connect to
+   *
+   * You may provide a different port than the client has setup. If you dont do so the client will provide the port
+   * for you.
+   */
   uint16_t port() const;
+
+  /*!
+   * \brief setPort sets the port to connect to on the host
+   * \param port the port to connect to, 0 if no port provided
+   */
   void setPort(uint16_t port);
 
  private:

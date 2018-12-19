@@ -2,8 +2,10 @@
 
 #include <cinttypes>
 
-Xi::Http::Response::Response(StatusCode code, const std::string &body)
-    : m_headers{}, m_body{body}, m_statusCode{code} {}
+Xi::Http::Response::Response(StatusCode code, const std::string &body, ContentType type)
+    : m_headers{}, m_body{body}, m_statusCode{code} {
+  headers().setContentType(type);
+}
 
 Xi::Http::StatusCode Xi::Http::Response::status() const { return m_statusCode; }
 
