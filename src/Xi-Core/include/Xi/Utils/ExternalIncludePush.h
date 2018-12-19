@@ -1,4 +1,10 @@
-﻿#include <leathers/push>
+﻿/*!
+ * Include this header before you include external headers yielding warnings.
+ *
+ * Note: You must include the corresponding Pop header once you included all external headers.
+ */
+
+#include <leathers/push>
 #if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wpragmas"
 #endif

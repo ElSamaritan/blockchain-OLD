@@ -7,7 +7,7 @@
 
 #include <Xi/Http/Client.h>
 
-#define XI_TESTSUITE T_Xi_Http_Server
+#define XI_TESTSUITE DISABLED_T_Xi_Http_Server
 
 using namespace ::Xi::Http;
 
@@ -47,53 +47,49 @@ class XI_TESTSUITE : public ::testing::Test {
   const uint16_t Port = 48008;
   Server server{};
   Client client{"127.0.0.1", Port, false};
-  std::shared_ptr<MockRequestHandler> mock;
+  std::shared_ptr<MockRequestHandler> mock = std::make_shared<MockRequestHandler>();
 
   void SetUp() override {
-    mock = std::make_shared<MockRequestHandler>();
     server.setHandler(mock);
     server.start("0.0.0.0", Port);
   }
 
-  void TearDown() override {
-    server.stop();
-    mock.reset();
-  }
+  void TearDown() override { server.stop(); }
 };
 
-// TEST_F(XI_TESTSUITE, HTTPRequest) {
-//  using namespace ::testing;
+TEST_F(XI_TESTSUITE, HTTPRequest) {
+  using namespace ::testing;
 
-//  const uint32_t NumRequests = 100;
+  const uint32_t NumRequests = 100;
 
-//  ON_CALL(*mock, doHandleRequest).With(HasBody()).WillByDefault(ReturnBody());
-//  EXPECT_CALL(*mock, doHandleRequest(_)).Times(NumRequests);
+  ON_CALL(*mock, doHandleRequest).With(HasBody()).WillByDefault(ReturnBody());
+  EXPECT_CALL(*mock, doHandleRequest(_)).Times(NumRequests);
 
-//  std::vector<std::future<Response>> responses;
-//  for (uint32_t i = 0; i < NumRequests; ++i)
-//    responses.emplace_back(client.get("", ContentType::Plain, std::to_string(i)));
+  std::vector<std::future<Response>> responses;
+  for (uint32_t i = 0; i < NumRequests; ++i)
+    responses.emplace_back(client.get("", ContentType::Plain, std::to_string(i)));
 
-//  for (uint32_t i = 0; i < NumRequests; ++i) {
-//    Response response;
-//    ASSERT_NO_THROW(response = responses[i].get());
-//    EXPECT_STREQ(response.body().c_str(), (std::string{"Hi "} + std::to_string(i)).c_str());
-//    EXPECT_EQ(response.status(), StatusCode::Ok);
-//  }
-//}
+  for (uint32_t i = 0; i < NumRequests; ++i) {
+    Response response;
+    ASSERT_NO_THROW(response = responses[i].get());
+    EXPECT_STREQ(response.body().c_str(), (std::string{"Hi "} + std::to_string(i)).c_str());
+    EXPECT_EQ(response.status(), StatusCode::Ok);
+  }
+}
 
-// TEST_F(XI_TESTSUITE, HTTPHandlerThrows) {
-//  using namespace ::testing;
+TEST_F(XI_TESTSUITE, HTTPHandlerThrows) {
+  using namespace ::testing;
 
-//  ON_CALL(*mock, doHandleRequest).With(HasContentType(ContentType::Text)).WillByDefault(ThrowAction());
-//  EXPECT_CALL(*mock, doHandleRequest(_)).Times(1);
+  ON_CALL(*mock, doHandleRequest).With(HasContentType(ContentType::Text)).WillByDefault(ThrowAction());
+  EXPECT_CALL(*mock, doHandleRequest(_)).Times(1);
 
-//  {
-//    auto response = client.postSync("", ContentType::Text, "{}");
-//    EXPECT_EQ(response.status(), StatusCode::InternalServerError);
-//  }
+  {
+    auto response = client.postSync("", ContentType::Text, "{}");
+    EXPECT_EQ(response.status(), StatusCode::InternalServerError);
+  }
 
-//  {
-//    auto response = client.postSync("", ContentType::Text, "");
-//    EXPECT_EQ(response.status(), StatusCode::InternalServerError);
-//  }
-//}
+  {
+    auto response = client.postSync("", ContentType::Text, "");
+    EXPECT_EQ(response.status(), StatusCode::InternalServerError);
+  }
+}
