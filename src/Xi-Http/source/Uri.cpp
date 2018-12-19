@@ -196,6 +196,13 @@ std::string Xi::Http::Uri::toString() const {
   return full_uri;
 }
 
+std::string Xi::Http::Uri::relativePart() const {
+  auto relativePart = std::string{"/"} + path();
+  if (!query().empty()) relativePart += std::string{"?"} + query();
+  if (!fragment().empty()) relativePart += std::string{"#"} + fragment();
+  return relativePart;
+}
+
 void Xi::Http::Uri::setUp(const std::string &uri_text, Xi::Http::Uri::SchemeCategory category) {
   XI_UNUSED(category);
   size_t const uri_length = uri_text.length();
@@ -268,14 +275,17 @@ std::string::const_iterator Xi::Http::Uri::parseContent(const std::string &uri_t
 
       authority_cursor = parseHost(uri_text, m_content, authority_cursor);
 
-      if (*authority_cursor == ':') {
+      if (authority_cursor != m_content.end() && *authority_cursor == ':') {
         authority_cursor = parsePort(uri_text, m_content, (authority_cursor + 1));
       }
 
-      if (*authority_cursor == '/') {
+      if ((authority_cursor != m_content.end() && *authority_cursor == '/') || !m_host.empty()) {
         // Then the path is rooted, and we should note this.
         m_path_is_rooted = true;
-        path_start = authority_cursor + 1;
+        if (authority_cursor != m_content.end())
+          path_start = authority_cursor + 1;
+        else
+          authority_cursor = m_content.end();
       }
     } else if (!m_content.compare(0, 1, "/")) {
       m_path_is_rooted = true;

@@ -1,6 +1,7 @@
 ﻿#include "HttpClientSession.h"
 
-Xi::Http::HttpClientSession::HttpClientSession(boost::asio::io_context& io, IClientSessionBuilder& builder)
+Xi::Http::HttpClientSession::HttpClientSession(boost::asio::io_context& io,
+                                               std::shared_ptr<IClientSessionBuilder> builder)
     : ClientSession(io, builder), m_socket{io} {}
 
 void Xi::Http::HttpClientSession::doPrepareRun() {}

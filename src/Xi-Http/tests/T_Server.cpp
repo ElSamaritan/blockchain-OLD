@@ -1,0 +1,93 @@
+﻿#include <gmock/gmock.h>
+#include <Xi/Http/Server.h>
+
+#include <vector>
+
+#include <boost/predef.h>
+
+#include <Xi/Http/Client.h>
+
+#define XI_TESTSUITE T_Xi_Http_Server
+
+using namespace ::Xi::Http;
+
+class MockRequestHandler : public Xi::Http::RequestHandler {
+ public:
+  ~MockRequestHandler() = default;
+
+  MOCK_METHOD1(doHandleRequest, Response(const Request&));
+};
+
+#if BOOST_COMP_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4100)
+#endif
+ACTION(ThrowAction) { throw std::runtime_error{""}; }
+ACTION(ReturnBody) {
+  const Request& request = arg0;
+  return Response{StatusCode::Ok, std::string{"Hi "} + request.body()};
+}
+
+MATCHER(HasBody, negation ? "has no body" : "has a body") {
+  const auto& request = std::get<0>(arg);
+  return !request.body().empty();
+}
+#if BOOST_COMP_MSVC
+#pragma warning(pop)
+#endif
+
+class XI_TESTSUITE : public ::testing::Test {
+ public:
+  const uint16_t Port = 48008;
+  Server server{};
+  Client client{"127.0.0.1", Port, false};
+  std::shared_ptr<MockRequestHandler> mock;
+
+  void SetUp() override {
+    mock = std::make_shared<MockRequestHandler>();
+    server.setHandler(mock);
+    server.start("0.0.0.0", Port);
+  }
+
+  void TearDown() override {
+    server.stop();
+    mock.reset();
+  }
+};
+
+TEST_F(XI_TESTSUITE, HTTPRequest) {
+  using namespace ::testing;
+
+  const uint32_t NumRequests = 20;
+
+  ON_CALL(*mock, doHandleRequest).With(HasBody()).WillByDefault(ReturnBody());
+  EXPECT_CALL(*mock, doHandleRequest(_)).Times(NumRequests);
+
+  std::vector<std::future<Response>> responses;
+  for (uint32_t i = 0; i < NumRequests; ++i)
+    responses.emplace_back(client.get("/anything", ContentType::Json, std::to_string(i)));
+
+  for (uint32_t i = 0; i < NumRequests; ++i) {
+    auto response = responses[i].get();
+
+    EXPECT_STREQ(response.body().c_str(), (std::string{"Hi "} + std::to_string(i)).c_str());
+    EXPECT_EQ(response.status(), StatusCode::Ok);
+  }
+}
+
+TEST_F(XI_TESTSUITE, HTTPHandlerThrows) {
+  using namespace ::testing;
+
+  ON_CALL(*mock, doHandleRequest).WillByDefault(ThrowAction());
+  EXPECT_CALL(*mock, doHandleRequest(_)).Times(1);
+
+  {
+    auto response = client.postSync("", ContentType::Json, "{}");
+    EXPECT_EQ(response.status(), StatusCode::InternalServerError);
+  }
+
+  {
+    auto response = client.postSync("", ContentType::Text, "");
+    EXPECT_EQ(response.status(), StatusCode::InternalServerError);
+  }
+}

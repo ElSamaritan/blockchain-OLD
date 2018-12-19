@@ -16,19 +16,19 @@ class Request final {
 
  public:
   Request();
-  Request(const std::string& url, Method method = Method::Get);
+  Request(const std::string& target, Method method = Method::Get);
   XI_DEFAULT_MOVE(Request);
   ~Request() = default;
 
   /*!
    * \brief url is the url to query.
    */
-  const std::string& url() const;
+  const std::string& target() const;
 
   /*!
    * \brief setUrl sets the url to query.
    */
-  void setUrl(const std::string& url);
+  void setTarget(const std::string& target);
 
   /*!
    * \brief method is the specified method that will be used once emitting the request. Default: Get
@@ -64,12 +64,23 @@ class Request final {
    */
   void setBody(std::string&& body);
 
+  /*!
+   * \brief isSSLRequired returns true if ssl is required by the client
+   *
+   * A request may get redirected during it evaluation and the redirected endpoint may not offer ssl encryption, thus
+   * the request must abort a connection once its get redirected to such endpoint if this flag is set.
+   */
   bool isSSLRequired() const;
   void setSSLRequired(bool isRequired);
 
   HeaderContainer& headers();
-
   const HeaderContainer& headers() const;
+
+  const std::string& host() const;
+  void setHost(const std::string& host);
+
+  uint16_t port() const;
+  void setPort(uint16_t port);
 
  private:
   friend class Server;
@@ -78,7 +89,9 @@ class Request final {
   std::string m_body;
   Version m_version;
   Method m_method;
-  std::string m_url;
+  std::string m_target;
+  std::string m_host;
+  uint16_t m_port;
   bool m_sslRequired;
 };
 }  // namespace Http

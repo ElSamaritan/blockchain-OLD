@@ -76,6 +76,7 @@ class Uri {
   std::string const &fragment() const;
 
   std::string toString() const;
+  std::string relativePart() const;
 
  private:
   void setUp(std::string const &uri_text, SchemeCategory category);

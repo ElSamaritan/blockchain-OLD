@@ -3,13 +3,16 @@
 #include <sstream>
 #include <memory>
 
+#include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
 
 #include "Xi/Http/Request.h"
 #include "Xi/Http/Response.h"
 
 #include "IClientSessionBuilder.h"
+#include "BeastConversion.h"
 
 namespace Xi {
 namespace Http {
@@ -22,12 +25,12 @@ class ClientSession : public std::enable_shared_from_this<ClientSession> {
   using response_t = boost::beast::http::response<boost::beast::http::string_body>;
   using buffer_t = boost::beast::flat_buffer;
 
-  ClientSession(boost::asio::io_context& io, IClientSessionBuilder& builder);
+  ClientSession(boost::asio::io_context& io, std::shared_ptr<IClientSessionBuilder> builder);
   XI_DELETE_COPY(ClientSession);
   XI_DEFAULT_MOVE(ClientSession);
   virtual ~ClientSession() = default;
 
-  future_t run(char const* host, char const* port, Request&& request);
+  future_t run(Request&& request);
 
   void onHostResolved(boost::beast::error_code ec, resolver_t::results_type results);
   void onConnected(boost::beast::error_code ec);
@@ -43,7 +46,6 @@ class ClientSession : public std::enable_shared_from_this<ClientSession> {
   virtual void doOnResponseRecieved() = 0;
   virtual void doOnShutdown() = 0;
 
-  const char* host();
   void checkErrorCode(const boost::beast::error_code& ec);
   void fail(const std::exception_ptr& ex);
 
@@ -53,30 +55,21 @@ class ClientSession : public std::enable_shared_from_this<ClientSession> {
   buffer_t m_buffer;
 
  private:
-  void decodeResponse();
   void run();
-  void redirect();
-  void finalize();
+  void redirect(boost::optional<std::string> location);
   void swallowErrorCode(const boost::beast::error_code& ec);
-
-  void copyHeader(HeaderContainer::Header header);
-  void copyHeaders();
-  void copyHeaders(const Request& request);
 
  private:
   boost::asio::io_context& m_io;
   boost::asio::ip::tcp::resolver m_resolver;
+  BeastConversion m_conversion;
+  uint16_t m_redirectionCounter;
 
-  IClientSessionBuilder& m_builder;
-  std::stringstream m_bodyDecodingBuffer;
   promise_t m_promise;
-  Request m_originalRequest;
-  Response m_responseToEmit;
-  std::string m_host;
   std::string m_port;
-  bool m_isRedirected;
+  bool m_sslRequired;
 
-  std::shared_ptr<ClientSession> m_selfHoldingPointer;
+  std::shared_ptr<IClientSessionBuilder> m_builder;
 };
 }  // namespace Http
 }  // namespace Xi

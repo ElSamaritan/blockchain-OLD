@@ -22,7 +22,8 @@ namespace Xi {
 namespace Http {
 class HttpsClientSession : public ClientSession {
  public:
-  HttpsClientSession(boost::asio::io_context& io, boost::asio::ssl::context& ctx, IClientSessionBuilder& builder);
+  HttpsClientSession(boost::asio::io_context& io, boost::asio::ssl::context& ctx,
+                     std::shared_ptr<IClientSessionBuilder> builder);
   XI_DELETE_COPY(HttpsClientSession);
   XI_DEFAULT_MOVE(HttpsClientSession);
   ~HttpsClientSession() override = default;

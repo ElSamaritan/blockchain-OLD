@@ -21,7 +21,7 @@ class Client {
    * \param host The hostname this clients connects to, can be an DNS entry.
    * \param port The port to connect to if necessary, if 0 then the default port is used (HTTP: 80, HTTPS: 443)
    */
-  explicit Client(const std::string& host, uint16_t port = 0);
+  explicit Client(const std::string& host, uint16_t port, bool ssl = true);
   XI_DELETE_COPY(Client);
   XI_DEFAULT_MOVE(Client);
   virtual ~Client();
@@ -29,8 +29,8 @@ class Client {
   const std::string host() const;
   uint16_t port() const;
 
-  uint16_t httpPort() const;
-  uint16_t httpsPort() const;
+  bool ssl() const;
+  void setSSL(bool m_ssl);
 
   uint16_t maximumSessions() const;
 
@@ -61,9 +61,10 @@ class Client {
  private:
   const std::string m_host;
   const uint16_t m_port;
+  bool m_ssl;
 
   struct _Worker;
-  std::unique_ptr<_Worker> m_worker;
+  std::shared_ptr<_Worker> m_worker;
 };
 }  // namespace Http
 }  // namespace Xi

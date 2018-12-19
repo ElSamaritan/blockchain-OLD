@@ -2,7 +2,8 @@
 
 #include <cinttypes>
 
-Xi::Http::Response::Response() : m_headers{}, m_body{}, m_statusCode{StatusCode::Ok}, m_redirections{0} {}
+Xi::Http::Response::Response(StatusCode code, const std::string &body)
+    : m_headers{}, m_body{body}, m_statusCode{code} {}
 
 Xi::Http::StatusCode Xi::Http::Response::status() const { return m_statusCode; }
 
@@ -22,7 +23,3 @@ bool Xi::Http::Response::isRedirection() const { return (static_cast<uint32_t>(s
 Xi::Http::HeaderContainer &Xi::Http::Response::headers() { return m_headers; }
 
 const Xi::Http::HeaderContainer &Xi::Http::Response::headers() const { return m_headers; }
-
-uint16_t Xi::Http::Response::redirections() const { return m_redirections; }
-
-void Xi::Http::Response::setRedirections(uint16_t num) { m_redirections = num; }

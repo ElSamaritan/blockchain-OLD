@@ -5,16 +5,22 @@
 #include <thread>
 #include <atomic>
 #include <functional>
+#include <memory>
+#include <utility>
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl/stream.hpp>
+
+#include <Xi/Utils/String.h>
+
+#include "Xi/Http/Uri.h"
 
 #include "IClientSessionBuilder.h"
 #include "ClientSession.h"
 #include "HttpClientSession.h"
 #include "HttpsClientSession.h"
 
-struct Xi::Http::Client::_Worker : IClientSessionBuilder {
+struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_from_this<IClientSessionBuilder> {
   std::thread thread;
   std::atomic_bool keepRunning{true};
   std::unique_ptr<boost::asio::io_context> io;
@@ -45,15 +51,16 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder {
 
   std::shared_ptr<ClientSession> makeHttpSession() override {
     if (!io) throw std::runtime_error{"worker is not initialized"};
-    return std::make_shared<HttpClientSession>(*io, *this);
+    return std::make_shared<HttpClientSession>(*io, shared_from_this());
   }
   std::shared_ptr<ClientSession> makeHttpsSession() override {
     if (!io) throw std::runtime_error{"worker is not initialized"};
-    return std::make_shared<HttpsClientSession>(*io, ctx, *this);
+    return std::make_shared<HttpsClientSession>(*io, ctx, shared_from_this());
   }
 };
 
-Xi::Http::Client::Client(const std::string &host, uint16_t port) : m_host{host}, m_port{port}, m_worker{new _Worker} {}
+Xi::Http::Client::Client(const std::string &host, uint16_t port, bool ssl)
+    : m_host{host}, m_port{port}, m_worker{new _Worker}, m_ssl{ssl} {}
 
 Xi::Http::Client::~Client() {}
 
@@ -61,25 +68,20 @@ const std::string Xi::Http::Client::host() const { return m_host; }
 
 uint16_t Xi::Http::Client::port() const { return m_port; }
 
-uint16_t Xi::Http::Client::httpPort() const {
-  if (port() == 0)
-    return 80;
-  else
-    return port();
-}
+bool Xi::Http::Client::ssl() const { return m_ssl; }
 
-uint16_t Xi::Http::Client::httpsPort() const {
-  if (port() == 0)
-    return 443;
-  else
-    return port();
-}
+void Xi::Http::Client::setSSL(bool _ssl) { m_ssl = _ssl; }
 
 uint16_t Xi::Http::Client::maximumSessions() const { return 32; }
 
 std::future<Xi::Http::Response> Xi::Http::Client::send(Xi::Http::Request &&request) {
-  std::string portStr = to_string(static_cast<uint64_t>(m_port));
-  return m_worker->makeHttpsSession()->run(m_host.c_str(), portStr.c_str(), std::move(request));
+  if (request.host().empty()) request.setHost(host());
+  if (request.port() == 0) request.setPort(port());
+  if (ssl()) {
+    request.setSSLRequired(true);
+    return m_worker->makeHttpsSession()->run(std::move(request));
+  } else
+    return m_worker->makeHttpSession()->run(std::move(request));
 }
 
 std::future<Xi::Http::Response> Xi::Http::Client::send(const std::string &url, Xi::Http::Method method,

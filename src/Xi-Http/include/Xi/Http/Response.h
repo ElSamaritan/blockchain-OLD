@@ -12,12 +12,11 @@
 namespace Xi {
 namespace Http {
 class Response final {
-  XI_DELETE_COPY(Response);
-
  public:
   XI_DEFAULT_MOVE(Response);
+  XI_DEFAULT_COPY(Response);
 
-  Response();
+  Response(StatusCode code = StatusCode::Ok, const std::string& body = "");
   ~Response() = default;
 
   StatusCode status() const;
@@ -35,9 +34,6 @@ class Response final {
   HeaderContainer& headers();
   const HeaderContainer& headers() const;
 
-  uint16_t redirections() const;
-  void setRedirections(uint16_t num);
-
  private:
   friend class Client;
   friend class Session;
@@ -45,7 +41,6 @@ class Response final {
   HeaderContainer m_headers;
   std::string m_body;
   StatusCode m_statusCode;
-  uint16_t m_redirections;
 };
 }  // namespace Http
 }  // namespace Xi

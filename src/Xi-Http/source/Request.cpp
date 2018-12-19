@@ -1,15 +1,24 @@
 ﻿#include "Xi/Http/Request.h"
 
-Xi::Http::Request::Request() : m_headers{}, m_body{}, m_version{Version::Http1_1}, m_method{Method::Get}, m_url{"/"} {}
+#include "Xi/Http/Uri.h"
+
+Xi::Http::Request::Request()
+    : m_headers{},
+      m_body{},
+      m_version{Version::Http1_1},
+      m_method{Method::Get},
+      m_target{"/"},
+      m_port{0},
+      m_sslRequired{false} {}
 
 Xi::Http::Request::Request(const std::string &url, Xi::Http::Method method) : Request() {
-  setUrl(url);
+  setTarget(url);
   setMethod(method);
 }
 
-const std::string &Xi::Http::Request::url() const { return m_url; }
+const std::string &Xi::Http::Request::target() const { return m_target; }
 
-void Xi::Http::Request::setUrl(const std::string &url) { m_url = url.empty() ? "/" : url; }
+void Xi::Http::Request::setTarget(const std::string &url) { url.empty() ? m_target = "/" : m_target = url; }
 
 Xi::Http::Method Xi::Http::Request::method() const { return m_method; }
 
@@ -35,3 +44,11 @@ void Xi::Http::Request::setSSLRequired(bool isRequired) { m_sslRequired = isRequ
 Xi::Http::HeaderContainer &Xi::Http::Request::headers() { return m_headers; }
 
 const Xi::Http::HeaderContainer &Xi::Http::Request::headers() const { return m_headers; }
+
+const std::string &Xi::Http::Request::host() const { return m_host; }
+
+void Xi::Http::Request::setHost(const std::string &_host) { m_host = _host; }
+
+uint16_t Xi::Http::Request::port() const { return m_port; }
+
+void Xi::Http::Request::setPort(uint16_t port) { m_port = port; }
