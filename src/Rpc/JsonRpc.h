@@ -23,6 +23,8 @@
 #include <boost/optional.hpp>
 #include <boost/foreach.hpp>
 
+#include <Xi/Http/Client.h>
+
 #include "CoreRpcServerCommandsDefinitions.h"
 #include <Common/JsonValue.h>
 #include "Serialization/ISerializer.h"
@@ -30,7 +32,7 @@
 
 namespace CryptoNote {
 
-class HttpClient;
+using HttpClient = Xi::Http::Client;
 
 namespace JsonRpc {
 

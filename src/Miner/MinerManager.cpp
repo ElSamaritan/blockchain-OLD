@@ -224,7 +224,7 @@ bool MinerManager::submitBlock(const BlockTemplate& minedBlock, const std::strin
   CachedBlock cachedBlock(minedBlock);
 
   try {
-    HttpClient client(m_dispatcher, daemonHost, daemonPort);
+    HttpClient client(daemonHost, daemonPort);
 
     COMMAND_RPC_SUBMITBLOCK::request request;
     request.emplace_back(Common::toHex(toBinaryArray(minedBlock)));
@@ -247,8 +247,9 @@ bool MinerManager::submitBlock(const BlockTemplate& minedBlock, const std::strin
 BlockMiningParameters MinerManager::requestMiningParameters(System::Dispatcher& dispatcher,
                                                             const std::string& daemonHost, uint16_t daemonPort,
                                                             const std::string& miningAddress) {
+  XI_UNUSED(dispatcher);
   try {
-    HttpClient client(dispatcher, daemonHost, daemonPort);
+    HttpClient client(daemonHost, daemonPort);
 
     COMMAND_RPC_GETBLOCKTEMPLATE::request request;
     request.reserve_size = 0;

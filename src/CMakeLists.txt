@@ -8,21 +8,6 @@ set(
     ${XI_VERSION_INCLUDE_DIR}
 )
 
-xi_make_library(Core Xi-Core)
-target_link_libraries(Xi.Core PUBLIC boost leathers cxxopts) # cxxopts is only linked to enable it for all libraries
-xi_make_library(Http Xi-Http)
-target_link_libraries(
-  Xi.Http
-
-  PUBLIC
-    Xi.Core
-    boost
-
-  PRIVATE
-    zlibstatic
-    openssl
-)
-
 file(GLOB_RECURSE BlockchainExplorer BlockchainExplorer/*)
 file(GLOB_RECURSE Common Common/*)
 file(GLOB_RECURSE Crypto crypto/*)
@@ -85,6 +70,22 @@ add_library(Wallet STATIC ${Wallet} ${WalletLegacy})
 add_library(JsonRpcServer STATIC ${JsonRpcServer})
 add_library(WalletService STATIC ${service})
 
+xi_make_library(Core Xi-Core)
+target_link_libraries(Xi.Core PUBLIC boost leathers cxxopts zlibstatic) # cxxopts is only linked to enable it for all libraries
+xi_make_library(Http Xi-Http)
+target_link_libraries(
+  Xi.Http
+
+  PUBLIC
+    Xi.Core
+    boost
+    System
+
+  PRIVATE
+    zlibstatic
+    openssl
+)
+
 file(GLOB_RECURSE CommonCLI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI/*")
 add_library(CommonCLI STATIC ${CommonCLI_SOURCES})
 target_include_directories(CommonCLI PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI")
@@ -139,21 +140,21 @@ target_link_libraries(
         lz4
         boost
 )
-target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static Xi.Core boost json linenoise)
-target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core boost json linenoise Http)
-target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Http Serialization CryptoNoteCore System Logging Common Crypto Xi.Core boost json linenoise)
-target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI boost json linenoise cxxopts)
-target_link_libraries(BlockchainExplorer PUBLIC Xi.Core boost json linenoise)
-target_link_libraries(Common PUBLIC Xi.Core boost json linenoise)
-target_link_libraries(CommonCLI PUBLIC Xi.Core boost json linenoise)
-target_link_libraries(Crypto PUBLIC Xi.Core boost json linenoise)
-target_link_libraries(Logging PUBLIC Xi.Core boost json linenoise)
-target_link_libraries(Mnemonics PUBLIC Xi.Core boost json linenoise)
-target_link_libraries(NodeRpcProxy PUBLIC Xi.Core boost json linenoise)
-target_link_libraries(P2P PUBLIC Xi.Core boost json linenoise)
-target_link_libraries(Serialization PUBLIC Xi.Core boost json linenoise)
-target_link_libraries(Transfers PUBLIC Xi.Core boost json linenoise)
-target_link_libraries(JsonRpcServer PUBLIC Xi.Core boost json linenoise)
+target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core boost json linenoise Http Xi.Http)
+target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Http Serialization CryptoNoteCore System Logging Common Crypto Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI boost json linenoise cxxopts Xi.Http)
+target_link_libraries(BlockchainExplorer PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Common PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(CommonCLI PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Crypto PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Logging PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Mnemonics PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(NodeRpcProxy PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(P2P PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Serialization PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Transfers PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(JsonRpcServer PUBLIC Xi.Core boost json linenoise Xi.Http)
 
 add_dependencies(WalletService Version)
 add_dependencies(Rpc Version)

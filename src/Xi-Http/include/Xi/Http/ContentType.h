@@ -17,7 +17,7 @@ namespace Http {
  *
  * Documentation is taken from https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
  */
-enum struct ContentType { Html, Plain, Xml, Json, Text };
+enum struct ContentType { Html, Plain, Xml, Json, Text, Binary };
 }  // namespace Http
 std::string to_string(Http::ContentType status);
 

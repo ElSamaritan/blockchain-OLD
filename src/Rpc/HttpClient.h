@@ -20,6 +20,10 @@
 #include <memory>
 #include <string>
 
+#include <Xi/Http/Client.h>
+#include <Xi/Http/Request.h>
+#include <Xi/Http/Response.h>
+
 #include <HTTP/HttpRequest.h>
 #include <HTTP/HttpResponse.h>
 #include <System/TcpConnection.h>
@@ -34,56 +38,32 @@ class ConnectException : public std::runtime_error {
   ConnectException(const std::string& whatArg);
 };
 
-class HttpClient {
- public:
-  HttpClient(System::Dispatcher& dispatcher, const std::string& address, uint16_t port);
-  ~HttpClient();
-  void request(const HttpRequest& req, HttpResponse& res);
-
-  bool isConnected() const;
-
- private:
-  void connect();
-  void disconnect();
-
-  const std::string m_address;
-  const uint16_t m_port;
-
-  bool m_connected = false;
-  System::Dispatcher& m_dispatcher;
-  System::TcpConnection m_connection;
-  std::unique_ptr<System::TcpStreambuf> m_streamBuf;
-};
+using HttpClient = Xi::Http::Client;
 
 template <typename Request, typename Response>
 void invokeJsonCommand(HttpClient& client, const std::string& url, const Request& req, Response& res) {
-  HttpRequest hreq;
-  HttpResponse hres;
+  using namespace ::Xi::Http;
 
-  hreq.addHeader("Content-Type", "application/json");
-  hreq.setUrl(url);
-  hreq.setBody(storeToJson(req));
-  client.request(hreq, hres);
-
-  if (hres.getStatus() != HttpResponse::STATUS_200) {
-    throw std::runtime_error("HTTP status: " + std::to_string(hres.getStatus()));
+  const auto response = client.postSync(url, Xi::Http::ContentType::Json, storeToJson(req));
+  if (response.status() != StatusCode::Ok) {
+    throw std::runtime_error("HTTP status: " + Xi::to_string(response.status()));
   }
 
-  if (!loadFromJson(res, hres.getBody())) {
+  if (!loadFromJson(res, response.body())) {
     throw std::runtime_error("Failed to parse JSON response");
   }
 }
 
 template <typename Request, typename Response>
 void invokeBinaryCommand(HttpClient& client, const std::string& url, const Request& req, Response& res) {
-  HttpRequest hreq;
-  HttpResponse hres;
+  using namespace ::Xi::Http;
 
-  hreq.setUrl(url);
-  hreq.setBody(storeToBinaryKeyValue(req));
-  client.request(hreq, hres);
+  const auto response = client.postSync(url, Xi::Http::ContentType::Binary, storeToBinaryKeyValue(req));
+  if (response.getStatus() != StatusCode::Ok) {
+    throw std::runtime_error("HTTP status: " + std::to_string(response.getStatus()));
+  }
 
-  if (!loadFromBinaryKeyValue(res, hres.getBody())) {
+  if (!loadFromBinaryKeyValue(res, response.getBody())) {
     throw std::runtime_error("Failed to parse binary response");
   }
 }

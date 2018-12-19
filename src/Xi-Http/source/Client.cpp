@@ -20,49 +20,45 @@
 #include "HttpClientSession.h"
 #include "HttpsClientSession.h"
 
-struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_from_this<IClientSessionBuilder> {
+struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_from_this<_Worker> {
   std::thread thread;
   std::atomic_bool keepRunning{true};
-  std::unique_ptr<boost::asio::io_context> io;
+  boost::asio::io_context io;
   boost::asio::ssl::context ctx{boost::asio::ssl::context::sslv23_client};
 
-  _Worker() : thread{std::bind(&_Worker::operator(), this)} {
+  _Worker() {
     // ctx.set_verify_mode(boost::asio::ssl::verify_peer);
     ctx.set_verify_mode(boost::asio::ssl::verify_none);
   }
 
-  ~_Worker() override {
-    keepRunning = false;
-    thread.join();
-  }
+  void run() { thread = std::thread{std::bind(&_Worker::operator(), shared_from_this())}; }
+  void stop() { keepRunning = false; }
 
   void operator()() {
-    io = std::make_unique<boost::asio::io_context>();
     while (keepRunning) {
       try {
         boost::system::error_code ec;
-        io->run(ec);
+        io.run(ec);
       } catch (...) {
         // TODO Logging
       }
     }
-    io.reset();
   }
 
   std::shared_ptr<ClientSession> makeHttpSession() override {
-    if (!io) throw std::runtime_error{"worker is not initialized"};
-    return std::make_shared<HttpClientSession>(*io, shared_from_this());
+    return std::make_shared<HttpClientSession>(io, shared_from_this());
   }
   std::shared_ptr<ClientSession> makeHttpsSession() override {
-    if (!io) throw std::runtime_error{"worker is not initialized"};
-    return std::make_shared<HttpsClientSession>(*io, ctx, shared_from_this());
+    return std::make_shared<HttpsClientSession>(io, ctx, shared_from_this());
   }
 };
 
 Xi::Http::Client::Client(const std::string &host, uint16_t port, bool ssl)
-    : m_host{host}, m_port{port}, m_ssl{ssl}, m_worker{new _Worker} {}
+    : m_host{host}, m_port{port}, m_ssl{ssl}, m_worker{new _Worker} {
+  m_worker->run();
+}
 
-Xi::Http::Client::~Client() {}
+Xi::Http::Client::~Client() { m_worker->stop(); }
 
 const std::string Xi::Http::Client::host() const { return m_host; }
 

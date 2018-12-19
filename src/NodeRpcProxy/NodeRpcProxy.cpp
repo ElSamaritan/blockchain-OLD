@@ -64,6 +64,7 @@ NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort,
       m_networkHeight(0),
       m_nodeHeight(0) {
   resetInternalState();
+  m_httpClient = std::make_unique<Xi::Http::Client>(nodeHost, nodePort, false);
 }
 
 NodeRpcProxy::~NodeRpcProxy() {
@@ -121,8 +122,6 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
     m_dispatcher = &dispatcher;
     ContextGroup contextGroup(dispatcher);
     m_context_group = &contextGroup;
-    HttpClient httpClient(dispatcher, m_nodeHost, m_nodePort);
-    m_httpClient = &httpClient;
     Event httpEvent(dispatcher);
     m_httpEvent = &httpEvent;
     m_httpEvent->set();
@@ -180,7 +179,6 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
 
   m_dispatcher = nullptr;
   m_context_group = nullptr;
-  m_httpClient = nullptr;
   m_httpEvent = nullptr;
   m_connected = false;
   m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
@@ -273,10 +271,11 @@ void NodeRpcProxy::updateBlockchainStatus() {
     updatePeerCount(getInfoResp.incoming_connections_count + getInfoResp.outgoing_connections_count);
   }
 
-  if (m_connected != m_httpClient->isConnected()) {
-    m_connected = m_httpClient->isConnected();
-    m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
-  }
+  // TODO(njamnjam)
+  //  if (m_connected != m_httpClient->isConnected()) {
+  //    m_connected = m_httpClient->isConnected();
+  //    m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
+  //  }
 }
 
 void NodeRpcProxy::updatePeerCount(size_t peerCount) {
@@ -828,10 +827,6 @@ void NodeRpcProxy::scheduleRequest(std::function<std::error_code()>&& procedure,
                 callback(std::make_error_code(std::errc::operation_canceled));
               } else {
                 std::error_code ec = procedure();
-                if (m_connected != m_httpClient->isConnected()) {
-                  m_connected = m_httpClient->isConnected();
-                  m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
-                }
                 callback(m_stop ? std::make_error_code(std::errc::operation_canceled) : ec);
               }
             },
@@ -845,7 +840,6 @@ std::error_code NodeRpcProxy::binaryCommand(const std::string& url, const Reques
   std::error_code ec;
 
   try {
-    EventLock eventLock(*m_httpEvent);
     invokeBinaryCommand(*m_httpClient, url, req, res);
     ec = interpretResponseStatus(res.status);
   } catch (const ConnectException&) {
@@ -863,7 +857,6 @@ std::error_code NodeRpcProxy::jsonCommand(const std::string& url, const Request&
 
   try {
     m_logger(TRACE) << "Send " << url << " JSON request";
-    EventLock eventLock(*m_httpEvent);
     invokeJsonCommand(*m_httpClient, url, req, res);
     ec = interpretResponseStatus(res.status);
   } catch (const ConnectException&) {
@@ -883,30 +876,23 @@ std::error_code NodeRpcProxy::jsonCommand(const std::string& url, const Request&
 
 template <typename Request, typename Response>
 std::error_code NodeRpcProxy::jsonRpcCommand(const std::string& method, const Request& req, Response& res) {
+  using namespace ::Xi::Http;
   std::error_code ec = make_error_code(error::INTERNAL_NODE_ERROR);
 
   try {
     m_logger(TRACE) << "Send " << method << " JSON RPC request";
-    EventLock eventLock(*m_httpEvent);
 
     JsonRpc::JsonRpcRequest jsReq;
 
     jsReq.setMethod(method);
     jsReq.setParams(req);
 
-    HttpRequest httpReq;
-    HttpResponse httpRes;
-
-    httpReq.addHeader("Content-Type", "application/json");
-    httpReq.setUrl("/json_rpc");
-    httpReq.setBody(jsReq.getBody());
-
-    m_httpClient->request(httpReq, httpRes);
+    const auto httpRes = m_httpClient->postSync("/json_rpc", ContentType::Json, jsReq.getBody());
 
     JsonRpc::JsonRpcResponse jsRes;
 
-    if (httpRes.getStatus() == HttpResponse::STATUS_200) {
-      jsRes.parse(httpRes.getBody());
+    if (httpRes.status() == StatusCode::Ok) {
+      jsRes.parse(httpRes.body());
       if (jsRes.getResult(res)) {
         ec = interpretResponseStatus(res.status);
       }

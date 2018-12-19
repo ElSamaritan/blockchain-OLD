@@ -5,6 +5,8 @@
 #include <vector>
 #include <future>
 
+#include <System/Dispatcher.h>
+
 #include <Xi/Global.h>
 
 #include "Xi/Http/Request.h"

@@ -14,6 +14,7 @@
 #include <vector>
 
 #include <Xi/Global.h>
+#include <Xi/Http/Client.h>
 
 #include "Common/ObserverManager.h"
 #include "Logging/LoggerRef.h"
@@ -28,7 +29,7 @@ class Event;
 
 namespace CryptoNote {
 
-class HttpClient;
+using HttpClient = Xi::Http::Client;
 
 class INodeRpcProxyObserver {
  public:
@@ -162,7 +163,7 @@ class NodeRpcProxy : public CryptoNote::INode {
   const std::string m_nodeHost;
   const unsigned short m_nodePort;
   unsigned int m_rpcTimeout;
-  HttpClient* m_httpClient = nullptr;
+  std::unique_ptr<Xi::Http::Client> m_httpClient;
   System::Event* m_httpEvent = nullptr;
 
   uint64_t m_pullInterval;

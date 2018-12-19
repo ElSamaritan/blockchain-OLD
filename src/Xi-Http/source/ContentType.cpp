@@ -14,6 +14,8 @@ std::string Xi::to_string(Xi::Http::ContentType status) {
       return "application/json";
     case Http::ContentType::Text:
       return "application/text";
+    case Http::ContentType::Binary:
+      return "application/octet-stream";
     default:
       throw std::runtime_error{"unknow content type could not be parsed into a string representation"};
   }
@@ -32,6 +34,8 @@ Xi::Http::ContentType lexical_cast<Xi::Http::ContentType>(const std::string &val
     return Http::ContentType::Json;
   else if (value == to_string(Http::ContentType::Text))
     return Http::ContentType::Text;
+  else if (value == to_string(Http::ContentType::Binary))
+    return Http::ContentType::Binary;
   else
     throw std::runtime_error{"unable to find a corresponding content type for the provided string"};
 }
