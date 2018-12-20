@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Karai Developers
 // Copyright (c) 2018, The Calex Developers
@@ -226,14 +226,11 @@ int main(int argc, char* argv[]) {
                   config.dbReadCacheSize);
     dbConfig.setCompression(config.dbCompression);
 
-    if (dbConfig.isConfigFolderDefaulted()) {
-      if (!Tools::create_directories_if_necessary(dbConfig.getDataDir())) {
-        throw std::runtime_error("Can't create directory: " + dbConfig.getDataDir());
-      }
-    } else {
-      if (!Tools::directoryExists(dbConfig.getDataDir())) {
-        throw std::runtime_error("Directory does not exist: " + dbConfig.getDataDir());
-      }
+    if (!Tools::create_directories_if_necessary(dbConfig.getDataDir())) {
+      throw std::runtime_error("Can't create directory: " + dbConfig.getDataDir());
+    }
+    if (!Tools::directoryExists(dbConfig.getDataDir())) {
+      throw std::runtime_error("Directory does not exist: " + dbConfig.getDataDir());
     }
 
     RocksDBWrapper database(logManager);
