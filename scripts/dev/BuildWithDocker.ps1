@@ -15,10 +15,10 @@ New-Item -ItemType Directory -Force -Path $BuildDir | Out-Null
 
 Push-Location $RootDir
 
-docker run --platform linux --rm -it -v "${PWD}:/source" -v "${PWD}/.build/$($Name):/build" -w "/build" $Container bash /source/scripts/dev/Build.sh
+docker run --rm -it -v "${PWD}:/source" -v "${PWD}/.build/$($Name):/build" -w "/build" $Container bash /source/scripts/dev/Build.sh
 if($JumpIn)
 {
-    docker run --platform linux --rm -it -v "${PWD}:/source" -v "${PWD}/.build/$($Name):/build" -w "/build" $Container bash
+    docker run --rm -it -v "${PWD}:/source" -v "${PWD}/.build/$($Name):/build" -w "/build" $Container bash
 }
 
 Pop-Location
