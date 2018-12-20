@@ -76,14 +76,14 @@ xi_make_library(Http Xi-Http)
 target_link_libraries(
   Xi.Http
 
+  PRIVATE
+    zlibstatic
+    openssl
+
   PUBLIC
     Xi.Core
     boost
     System
-
-  PRIVATE
-    zlibstatic
-    openssl
 )
 
 file(GLOB_RECURSE CommonCLI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI/*")
