@@ -14,5 +14,6 @@
 #pragma warning(disable : 4456)
 #pragma warning(disable : 4458)
 #pragma warning(disable : 4067)
+#pragma warning(disable : 4706)
 #define NOGDI
 #endif
