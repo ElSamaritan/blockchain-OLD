@@ -17,6 +17,16 @@ std::string header();
 bool isDevVersion();
 
 /*!
+ * \brief insecureClientWarning returns a message to be printed for insecure client setups
+ */
+std::string insecureClientWarning();
+
+/*!
+ * \brief insecureClientWarning returns a message to be printed for insecure server setups
+ */
+std::string insecureServerWarning();
+
+/*!
  * \brief verifyDevelopmentExecution checks whether the current version is build from master or if
  * not whether the user provided the --dev-mode flag.
  *

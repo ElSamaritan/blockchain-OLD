@@ -75,3 +75,27 @@ void CommonCLI::verifyDevExecution(int& argc, char** argv) {
     exit(-1);
   }
 }
+
+std::string CommonCLI::insecureClientWarning() {
+  return R"(
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !                                                                                       !
+   ! Your client is not setup to be most secure. To increase you secuirity please read our !
+   ! tutorial on setting up ssl correctly.                                                 !
+   !     https://galaxia-project.gitlab.io/end-user-documentation/ssl                      !
+   !                                                                                       !
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+)";
+}
+
+std::string CommonCLI::insecureServerWarning() {
+  return R"(
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !                                                                                       !
+   ! Your sever is not setup to be most secure. To increase you secuirity please read our  !
+   ! tutorial on setting up ssl correctly.                                                 !
+   !     https://galaxia-project.gitlab.io/end-user-documentation/ssl                      !
+   !                                                                                       !
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+)";
+}

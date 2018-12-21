@@ -53,8 +53,9 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
   }
 };
 
-Xi::Http::Client::Client(const std::string &host, uint16_t port, bool ssl)
-    : m_host{host}, m_port{port}, m_ssl{ssl}, m_worker{new _Worker} {
+Xi::Http::Client::Client(const std::string &host, uint16_t port, SSLClientConfiguration config)
+    : m_host{host}, m_port{port}, m_sslConfig{config}, m_worker{new _Worker} {
+  m_sslConfig.initializeContext(m_worker->ctx);
   m_worker->run();
 }
 
@@ -64,14 +65,10 @@ const std::string Xi::Http::Client::host() const { return m_host; }
 
 uint16_t Xi::Http::Client::port() const { return m_port; }
 
-bool Xi::Http::Client::ssl() const { return m_ssl; }
-
-void Xi::Http::Client::setSSL(bool _ssl) { m_ssl = _ssl; }
-
 std::future<Xi::Http::Response> Xi::Http::Client::send(Xi::Http::Request &&request) {
   if (request.host().empty()) request.setHost(host());
   if (request.port() == 0) request.setPort(port());
-  if (ssl()) {
+  if (!m_sslConfig.Disabled) {
     request.setSSLRequired(true);
     return m_worker->makeHttpsSession()->run(std::move(request));
   } else

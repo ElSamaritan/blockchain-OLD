@@ -54,7 +54,7 @@ JsonRpcError::JsonRpcError(int c, const std::string& msg) : code(c), message(msg
 void invokeJsonRpcCommand(HttpClient& httpClient, JsonRpcRequest& jsReq, JsonRpcResponse& jsRes) {
   using namespace Xi::Http;
 
-  const auto httpRes = httpClient.postSync("json_rpc", ContentType::Json, jsReq.getBody());
+  const auto httpRes = httpClient.postSync("/json_rpc", ContentType::Json, jsReq.getBody());
 
   if (httpRes.status() != StatusCode::Ok) {
     throw std::runtime_error("JSON-RPC call failed, HTTP status = " + Xi::to_string(httpRes.status()));

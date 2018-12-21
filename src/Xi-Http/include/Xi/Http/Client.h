@@ -11,6 +11,7 @@
 
 #include "Xi/Http/Request.h"
 #include "Xi/Http/Response.h"
+#include "Xi/Http/SSLClientConfiguration.h"
 
 namespace Xi {
 namespace Http {
@@ -23,26 +24,13 @@ class Client {
    * \param host The hostname this clients connects to, can be an DNS entry.
    * \param port The port to connect to if necessary, if 0 then the default port is used (HTTP: 80, HTTPS: 443)
    */
-  explicit Client(const std::string& host, uint16_t port, bool ssl = true);
+  explicit Client(const std::string& host, uint16_t port, SSLClientConfiguration config);
   XI_DELETE_COPY(Client);
   XI_DEFAULT_MOVE(Client);
   virtual ~Client();
 
   const std::string host() const;
   uint16_t port() const;
-
-  /*!
-   * \brief ssl indicates if ssl connections are required
-   */
-  bool ssl() const;
-
-  /*!
-   * \brief setSSL sets if ssl connections are required
-   *
-   * If ssl is required every request going to this client will make an ssl request and will not accept any retargeting
-   * to non ssl secured hosts.
-   */
-  void setSSL(bool m_ssl);
 
   /*!
    * \brief send sends the request to the server asynchroniously
@@ -71,7 +59,7 @@ class Client {
  private:
   const std::string m_host;
   const uint16_t m_port;
-  bool m_ssl;
+  SSLClientConfiguration m_sslConfig;
 
   struct _Worker;
   std::shared_ptr<_Worker> m_worker;

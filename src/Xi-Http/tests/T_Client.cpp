@@ -3,13 +3,16 @@
 
 #include <vector>
 
-#define XI_TESTSUITE DISABLED_T_Xi_Http_Client
+#define DISABLED_XI_TESTSUITE DISABLED_T_Xi_Http_Client
 
 TEST(XI_TESTSUITE, HTTPGetRequestWithRedirection) {
   using namespace ::testing;
   using namespace ::Xi::Http;
 
-  Client client{"google.de", 80, false};
+  SSLClientConfiguration config;
+  config.Disabled = true;
+
+  Client client{"google.de", 80, config};
   const uint16_t NumRequests = 1;
   std::vector<std::future<Response>> responses;
   for (auto i = 0u; i < NumRequests; ++i) {
@@ -26,7 +29,10 @@ TEST(XI_TESTSUITE, HTTPSGetRequestWithRedirection) {
   using namespace ::testing;
   using namespace ::Xi::Http;
 
-  Client client{"github.com", 443, true};
+  SSLClientConfiguration config;
+  config.VerifyPeers = false;
+
+  Client client{"github.com", 443, config};
   const uint16_t NumRequests = 1;
   std::vector<std::future<Response>> responses;
   for (auto i = 0u; i < NumRequests; ++i) {

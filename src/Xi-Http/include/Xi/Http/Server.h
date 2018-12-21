@@ -47,7 +47,7 @@ class Server : std::enable_shared_from_this<Server> {
   std::shared_ptr<Concurrent::IDispatcher> dispatcher() const;
 
   SSLServerConfiguration sslConfiguration() const;
-  void setSSLConfiguration();
+  void setSSLConfiguration(SSLServerConfiguration config);
 
  private:
   std::shared_ptr<RequestHandler> m_handler;

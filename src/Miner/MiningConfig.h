@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <string>
 
+#include <Xi/Http/SSLClientConfiguration.h>
+
 namespace CryptoNote {
 
 struct MiningConfig {
@@ -27,6 +29,8 @@ struct MiningConfig {
   int64_t blockTimestampInterval;
   bool help;
   bool version;
+
+  ::Xi::Http::SSLClientConfiguration ssl;
 };
 
 }  // namespace CryptoNote

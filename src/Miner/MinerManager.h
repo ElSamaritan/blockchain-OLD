@@ -12,6 +12,8 @@
 #include <System/ContextGroup.h>
 #include <System/Event.h>
 
+#include <Xi/Http/Client.h>
+
 #include "BlockchainMonitor.h"
 #include "Logging/LoggerRef.h"
 #include "Miner.h"
@@ -33,6 +35,7 @@ class MinerManager {
 
  private:
   System::Dispatcher& m_dispatcher;
+  ::Xi::Http::Client m_httpClient;
   Logging::LoggerRef m_logger;
   System::ContextGroup m_contextGroup;
   CryptoNote::MiningConfig m_config;
@@ -60,9 +63,8 @@ class MinerManager {
   void startBlockchainMonitoring();
   void stopBlockchainMonitoring();
 
-  bool submitBlock(const CryptoNote::BlockTemplate& minedBlock, const std::string& daemonHost, uint16_t daemonPort);
+  bool submitBlock(const CryptoNote::BlockTemplate& minedBlock);
   CryptoNote::BlockMiningParameters requestMiningParameters(System::Dispatcher& dispatcher,
-                                                            const std::string& daemonHost, uint16_t daemonPort,
                                                             const std::string& miningAddress);
 
   void adjustBlockTemplate(CryptoNote::BlockTemplate& blockTemplate) const;

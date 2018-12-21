@@ -92,3 +92,7 @@ void Xi::Http::Server::setDispatcher(std::shared_ptr<Xi::Concurrent::IDispatcher
 }
 
 std::shared_ptr<Xi::Concurrent::IDispatcher> Xi::Http::Server::dispatcher() const { return m_dispatcher; }
+
+Xi::Http::SSLServerConfiguration Xi::Http::Server::sslConfiguration() const { return m_sslConfig; }
+
+void Xi::Http::Server::setSSLConfiguration(Xi::Http::SSLServerConfiguration config) { m_sslConfig = config; }

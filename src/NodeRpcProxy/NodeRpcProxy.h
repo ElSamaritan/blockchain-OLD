@@ -15,6 +15,7 @@
 
 #include <Xi/Global.h>
 #include <Xi/Http/Client.h>
+#include <Xi/Http/SSLClientConfiguration.h>
 
 #include "Common/ObserverManager.h"
 #include "Logging/LoggerRef.h"
@@ -39,7 +40,8 @@ class INodeRpcProxyObserver {
 
 class NodeRpcProxy : public CryptoNote::INode {
  public:
-  NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort, Logging::ILogger& logger);
+  NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort, ::Xi::Http::SSLClientConfiguration sslConfig,
+               Logging::ILogger& logger);
   virtual ~NodeRpcProxy() override;
 
   virtual bool addObserver(CryptoNote::INodeObserver* observer) override;

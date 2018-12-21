@@ -15,6 +15,8 @@
 #include <nlohmann/json.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
+#include <Xi/Http/SSLServerConfiguration.h>
+
 #include <config/CryptoNoteConfig.h>
 #include <CryptoNoteCore/DataBaseConfig.h>
 #include <Logging/ILogger.h>
@@ -49,6 +51,7 @@ struct DaemonConfiguration {
   uint64_t dbWriteBufferSize;
   uint64_t dbReadCacheSize;
   CryptoNote::DataBaseConfig::Compression dbCompression = CryptoNote::DataBaseConfig::Compression::LZ4;
+  ::Xi::Http::SSLServerConfiguration ssl;
 
   bool noConsole;
   bool enableBlockExplorer;
@@ -154,6 +157,8 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     ("db-read-buffer-size", "Size of the database read cache in megabytes (MB)", cxxopts::value<uint64_t>()->default_value(std::to_string(config.dbReadCacheSize)), "#")
     ("db-threads", "Number of background threads used for compaction and flush operations", cxxopts::value<uint16_t>()->default_value(std::to_string(config.dbThreads)), "#")
     ("db-write-buffer-size", "Size of the database write buffer in megabytes (MB)", cxxopts::value<uint64_t>()->default_value(std::to_string(config.dbWriteBufferSize)), "#");
+
+  config.ssl.emplaceCLIConfiguration(options);
   // clang-format on
 
   try {
@@ -429,38 +434,44 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
   if (j.find("fee-amount") != j.end()) {
     config.feeAmount = j["fee-amount"].get<int>();
   }
+
+  if (j.find("ssl") != j.end()) {
+    config.ssl.load(j["ssl"]);
+  }
 };
 
 json asJSON(const DaemonConfiguration& config) {
   std::string compressionString;
   Common::toString(config.dbCompression, compressionString);
-  json j = json{
-      {"data-dir", config.dataDirectory},
-      {"load-checkpoints", config.checkPoints},
-      {"log-file", config.logFile},
-      {"log-level", config.logLevel},
-      {"no-console", config.noConsole},
-      {"db-max-open-files", config.dbMaxOpenFiles},
-      {"db-read-buffer-size", config.dbReadCacheSize},
-      {"db-threads", config.dbThreads},
-      {"db-write-buffer-size", config.dbWriteBufferSize},
-      {"db-compression", compressionString},
-      {"allow-local-ip", config.localIp},
-      {"hide-my-port", config.hideMyPort},
-      {"p2p-bind-ip", config.p2pInterface},
-      {"p2p-bind-port", config.p2pPort},
-      {"p2p-external-port", config.p2pExternalPort},
-      {"rpc-bind-ip", config.rpcInterface},
-      {"rpc-bind-port", config.rpcPort},
-      {"add-exclusive-node", config.exclusiveNodes},
-      {"add-peer", config.peers},
-      {"add-priority-node", config.priorityNodes},
-      {"seed-node", config.seedNodes},
-      {"enable-blockexplorer", config.enableBlockExplorer},
-      {"enable-cors", config.enableCors},
-      {"fee-address", config.feeAddress},
-      {"fee-amount", config.feeAmount},
-  };
+  json ssl = json{};
+  config.ssl.store(ssl);
+
+  json j = json{{"data-dir", config.dataDirectory},
+                {"load-checkpoints", config.checkPoints},
+                {"log-file", config.logFile},
+                {"log-level", config.logLevel},
+                {"no-console", config.noConsole},
+                {"db-max-open-files", config.dbMaxOpenFiles},
+                {"db-read-buffer-size", config.dbReadCacheSize},
+                {"db-threads", config.dbThreads},
+                {"db-write-buffer-size", config.dbWriteBufferSize},
+                {"db-compression", compressionString},
+                {"allow-local-ip", config.localIp},
+                {"hide-my-port", config.hideMyPort},
+                {"p2p-bind-ip", config.p2pInterface},
+                {"p2p-bind-port", config.p2pPort},
+                {"p2p-external-port", config.p2pExternalPort},
+                {"rpc-bind-ip", config.rpcInterface},
+                {"rpc-bind-port", config.rpcPort},
+                {"add-exclusive-node", config.exclusiveNodes},
+                {"add-peer", config.peers},
+                {"add-priority-node", config.priorityNodes},
+                {"seed-node", config.seedNodes},
+                {"enable-blockexplorer", config.enableBlockExplorer},
+                {"enable-cors", config.enableCors},
+                {"fee-address", config.feeAddress},
+                {"fee-amount", config.feeAmount},
+                {"ssl", ssl}};
 
   return j;
 };

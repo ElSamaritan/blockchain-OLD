@@ -77,6 +77,8 @@ Config parseArguments(int argc, char** argv) {
   options.add_options("Wallet")
     ("w,wallet-file", "Open the wallet <file>", cxxopts::value<std::string>(config.walletFile), "<file>")
     ("p,password", "Use the password <pass> to open the wallet", cxxopts::value<std::string>(config.walletPass), "<pass>");
+
+  config.ssl.emplaceCLIConfiguration(options);
   // clang-format on
 
   try {

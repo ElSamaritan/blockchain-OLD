@@ -39,9 +39,6 @@ else()
   list(APPEND XI_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/Platform/OSX" "${CMAKE_CURRENT_SOURCE_DIR}/Platform/Posix")
 endif()
 
-# This appears to be an IDE thing, to group files together.
-# https://cmake.org/cmake/help/v3.0/command/source_group.html
-# Probably not what you need to be looking at if something isn't building
 foreach(source_file ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} ${XI_CLI_DAEMON_SOURCES} ${service}
                    ${JsonRpcServer} ${Logging} ${XI_CLI_MINER_SOURCES} ${Mnemonics} ${NodeRpcProxy} ${P2p}
                    ${Rpc} ${Serialization} ${System} ${Transfers} ${Wallet} ${WalletLegacy} ${XI_CLI_WALLET_SOURCES}
@@ -50,7 +47,7 @@ foreach(source_file ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} 
     set_source_files_properties(${source_file} PROPERTIES COMPILE_FLAGS "${XI_CXX_FLAGS}")
   endif() # XI_CXX_FLAGS
   source_group("" FILES ${source_file})
-endforeach()
+endforeach() # source_file
 
 add_library(BlockchainExplorer STATIC ${BlockchainExplorer})
 add_library(Common STATIC ${Common})
@@ -81,7 +78,8 @@ target_link_libraries(
   PUBLIC
     Xi.Core
     boost
-    System
+    cxxopts
+    json
 )
 
 file(GLOB_RECURSE CommonCLI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI/*")

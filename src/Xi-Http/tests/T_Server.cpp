@@ -46,7 +46,9 @@ class XI_TESTSUITE : public ::testing::Test {
  public:
   const uint16_t Port = 48008;
   Server server{};
-  Client client{"127.0.0.1", Port, false};
+
+  SSLClientConfiguration clientConfig;
+  Client client{"127.0.0.1", Port, clientConfig};
   std::shared_ptr<MockRequestHandler> mock = std::make_shared<MockRequestHandler>();
 
   void SetUp() override {

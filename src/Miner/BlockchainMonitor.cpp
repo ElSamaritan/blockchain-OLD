@@ -26,11 +26,10 @@
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Rpc/JsonRpc.h"
 
-BlockchainMonitor::BlockchainMonitor(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort,
-                                     size_t pollingInterval, Logging::ILogger& logger)
+BlockchainMonitor::BlockchainMonitor(System::Dispatcher& dispatcher, Xi::Http::Client& client, size_t pollingInterval,
+                                     Logging::ILogger& logger)
     : m_dispatcher(dispatcher),
-      m_daemonHost(daemonHost),
-      m_daemonPort(daemonPort),
+      m_httpClient(client),
       m_pollingInterval(pollingInterval),
       m_stopped(false),
       m_httpEvent(dispatcher),
@@ -77,13 +76,11 @@ Crypto::Hash BlockchainMonitor::requestLastBlockHash() {
   m_logger(Logging::DEBUGGING) << "Requesting last block hash";
 
   try {
-    CryptoNote::HttpClient client(m_daemonHost, m_daemonPort);
-
     CryptoNote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::request request;
     CryptoNote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::response response;
 
     System::EventLock lk(m_httpEvent);
-    CryptoNote::JsonRpc::invokeJsonRpcCommand(client, "getlastblockheader", request, response);
+    CryptoNote::JsonRpc::invokeJsonRpcCommand(m_httpClient, "getlastblockheader", request, response);
 
     if (response.status != CORE_RPC_STATUS_OK) {
       throw std::runtime_error("Core responded with wrong status: " + response.status);

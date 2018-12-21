@@ -17,16 +17,13 @@ class context;
 
 namespace Xi {
 namespace Http {
-struct SSLServerConfiguration {
+struct SSLClientConfiguration {
   bool Disabled;
+  bool VerifyPeers;
+  std::string TrustedFile;
 
-  std::string CertFile;
-  std::string KeyFile;
-  std::string Password;
-  std::string DhFile;
-
-  SSLServerConfiguration();
-  ~SSLServerConfiguration() = default;
+  SSLClientConfiguration();
+  ~SSLClientConfiguration() = default;
 
   void initializeContext(boost::asio::ssl::context& ctx);
 
