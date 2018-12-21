@@ -25,7 +25,6 @@
 
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Rpc/JsonRpc.h"
-#include "Rpc/HttpClient.h"
 
 BlockchainMonitor::BlockchainMonitor(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort,
                                      size_t pollingInterval, Logging::ILogger& logger)

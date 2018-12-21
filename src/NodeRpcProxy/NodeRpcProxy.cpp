@@ -11,8 +11,6 @@
 #include <system_error>
 #include <thread>
 
-#include <HTTP/HttpRequest.h>
-#include <HTTP/HttpResponse.h>
 #include <System/ContextGroup.h>
 #include <System/Dispatcher.h>
 #include <System/Event.h>
@@ -26,7 +24,6 @@
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
-#include "Rpc/HttpClient.h"
 #include "Rpc/JsonRpc.h"
 
 #ifndef AUTO_VAL_INIT
@@ -129,6 +126,7 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
     if (!ping()) {
       initialized_callback(make_error_code(error::CONNECT_ERROR));
     } else {
+      m_connected = true;
       {
         std::lock_guard<std::mutex> lock(m_mutex);
         assert(m_state == STATE_INITIALIZING);
@@ -851,6 +849,22 @@ std::error_code NodeRpcProxy::binaryCommand(const std::string& url, const Reques
   return ec;
 }
 
+namespace {
+template <typename Request, typename Response>
+void invokeJsonCommand(HttpClient& client, const std::string& url, const Request& req, Response& res) {
+  using namespace ::Xi::Http;
+
+  const auto response = client.postSync(url, Xi::Http::ContentType::Json, storeToJson(req));
+  if (response.status() != StatusCode::Ok) {
+    throw std::runtime_error("HTTP status: " + Xi::to_string(response.status()));
+  }
+
+  if (!loadFromJson(res, response.body())) {
+    throw std::runtime_error("Failed to parse JSON response");
+  }
+}
+}  // namespace
+
 template <typename Request, typename Response>
 std::error_code NodeRpcProxy::jsonCommand(const std::string& url, const Request& req, Response& res) {
   std::error_code ec;
@@ -859,8 +873,6 @@ std::error_code NodeRpcProxy::jsonCommand(const std::string& url, const Request&
     m_logger(TRACE) << "Send " << url << " JSON request";
     invokeJsonCommand(*m_httpClient, url, req, res);
     ec = interpretResponseStatus(res.status);
-  } catch (const ConnectException&) {
-    ec = make_error_code(error::CONNECT_ERROR);
   } catch (const std::exception&) {
     ec = make_error_code(error::NETWORK_ERROR);
   }
@@ -897,8 +909,6 @@ std::error_code NodeRpcProxy::jsonRpcCommand(const std::string& method, const Re
         ec = interpretResponseStatus(res.status);
       }
     }
-  } catch (const ConnectException&) {
-    ec = make_error_code(error::CONNECT_ERROR);
   } catch (const std::exception&) {
     ec = make_error_code(error::NETWORK_ERROR);
   }

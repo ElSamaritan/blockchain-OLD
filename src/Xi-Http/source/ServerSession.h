@@ -12,6 +12,7 @@
 #include <Xi/Utils/ExternalIncludePop.h>
 
 #include <Xi/Global.h>
+#include <Xi/Concurrent/IDispatcher.h>
 
 #include "Xi/Http/RequestHandler.h"
 
@@ -41,7 +42,7 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
    * \param socket the socket created for communicating with the client
    * \param handler the high level api handler that will server the request
    */
-  ServerSession(socket_t socket, std::shared_ptr<RequestHandler> handler);
+  ServerSession(socket_t socket, std::shared_ptr<RequestHandler> handler, Concurrent::IDispatcher& dispatcher);
   XI_DEFAULT_MOVE(ServerSession);
   ~ServerSession();
 
@@ -65,7 +66,7 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
   /*!
    * \brief writeResponse called once the high level api handler returned a response that will be send back
    */
-  void writeResponse();
+  void writeResponse(Response&& response);
 
   /*!
    * \brief onResponseWritten called once the response was written to the client
@@ -99,7 +100,7 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
 
   void doReadRequest();
   void doOnRequestRead();
-  void doWriteResponse();
+  void doWriteResponse(Response&& response);
   void doOnResponseWritten();
   void doClose();
 
@@ -108,7 +109,9 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
   strand_t m_strand;
   buffer_t m_buffer;
   std::shared_ptr<RequestHandler> m_handler;
+  Concurrent::IDispatcher& m_dispatcher;
   request_t m_request;
+  Request m_convertedRequest;
   response_t m_response;
   BeastConversion m_conversion;
 };

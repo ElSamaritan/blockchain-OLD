@@ -42,7 +42,9 @@ class HeaderContainer final {
                            ///< how to decode in order to obtain the media-type referenced by the Content-Type header.
     Location = 176,        ///< Indicates the URL to redirect a page to.
     Allow = 22,            ///< Lists the set of HTTP request methods support by a resource.
-    Server = 286           ///< Contains information about the software used by the origin server to handle the request.
+    Server = 286,          ///< Contains information about the software used by the origin server to handle the request.
+    AccessControlAllowOrigin = 16  ///< The Access-Control-Allow-Origin response header indicates whether the response
+                                   ///< can be shared with requesting code from the given origin.
   };
 
   using iterator = std::map<Header, std::string>::iterator;

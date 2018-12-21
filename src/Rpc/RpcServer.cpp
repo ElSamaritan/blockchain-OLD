@@ -12,6 +12,7 @@
 #include <cmath>
 
 #include <Xi/Global.h>
+#include <Xi/Concurrent/SystemDispatcher.h>
 
 // CryptoNote
 #include "Common/StringTools.h"
@@ -62,19 +63,16 @@ namespace {
 template <typename Command>
 RpcServer::HandlerFunction jsonMethod(bool (RpcServer::*handler)(typename Command::request const&,
                                                                  typename Command::response&)) {
-  return [handler](RpcServer* obj, const HttpRequest& request, HttpResponse& response) {
+  return [handler](RpcServer* obj, const Xi::Http::Request& request, Xi::Http::Response& response) {
     boost::value_initialized<typename Command::request> req;
     boost::value_initialized<typename Command::response> res;
 
-    if (!loadFromJson(static_cast<typename Command::request&>(req), request.getBody())) {
+    if (!loadFromJson(static_cast<typename Command::request&>(req), request.body())) {
       return false;
     }
-
-    bool result = (obj->*handler)(req, res);
-    for (const auto& cors_domain : obj->getCorsDomains()) {
-      response.addHeader("Access-Control-Allow-Origin", cors_domain);
-    }
-    response.addHeader("Content-Type", "application/json");
+    auto result = (obj->*handler)(req, res);
+    response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, obj->getCorsDomain());
+    response.headers().setContentType(Xi::Http::ContentType::Json);
     response.setBody(storeToJson(res.data()));
     return result;
   };
@@ -124,45 +122,35 @@ std::unordered_map<std::string, RpcServer::RpcHandler<RpcServer::HandlerFunction
 
 RpcServer::RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, Core& c, NodeServer& p2p,
                      ICryptoNoteProtocolHandler& protocol)
-    : HttpServer(dispatcher, log), logger(log, "RpcServer"), m_core(c), m_p2p(p2p), m_protocol(protocol) {}
+    : Xi::Http::Server(), logger(log, "RpcServer"), m_core(c), m_p2p(p2p), m_protocol(protocol) {
+  setDispatcher(std::make_shared<Xi::Concurrent::SystemDispatcher>(dispatcher));
+}
 
-void RpcServer::processRequest(const HttpRequest& request, HttpResponse& response) {
-  auto url = request.getUrl();
-  if (url.find(".bin") == std::string::npos) {
-    logger(TRACE) << "RPC request came: \n" << request << std::endl;
-  } else {
-    logger(TRACE) << "RPC request came: " << url << std::endl;
+Xi::Http::Response RpcServer::doHandleRequest(const Xi::Http::Request& request) {
+  auto it = s_handlers.find(request.target());
+  if (it == s_handlers.end())
+    return makeNotFound();
+  else if (!it->second.allowBusyCore && !isCoreReady())
+    return makeInternalServerError("core is busy");
+  else {
+    Xi::Http::Response response;
+    it->second.handler(this, request, response);
+    return response;
   }
-
-  auto it = s_handlers.find(url);
-  if (it == s_handlers.end()) {
-    response.setStatus(HttpResponse::STATUS_404);
-    return;
-  }
-
-  if (!it->second.allowBusyCore && !isCoreReady()) {
-    response.setStatus(HttpResponse::STATUS_500);
-    response.setBody("Core is busy");
-    return;
-  }
-
-  it->second.handler(this, request, response);
 }
 
 bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& response) {
   using namespace JsonRpc;
 
-  for (const auto& cors_domain : m_cors_domains) {
-    response.addHeader("Access-Control-Allow-Origin", cors_domain);
-  }
-  response.addHeader("Content-Type", "application/json");
+  response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, getCorsDomain());
+  response.headers().setContentType(Xi::Http::ContentType::Json);
 
   JsonRpcRequest jsonRequest;
   JsonRpcResponse jsonResponse;
 
   try {
-    logger(TRACE) << "JSON-RPC request: " << request.getBody();
-    jsonRequest.parseRequest(request.getBody());
+    logger(TRACE) << "JSON-RPC request: " << request.body();
+    jsonRequest.parseRequest(request.body());
     jsonResponse.setId(jsonRequest.getId());  // copy id
 
     static std::unordered_map<std::string, RpcServer::RpcHandler<JsonMemberMethod>> jsonRpcHandlers = {
@@ -211,12 +199,12 @@ bool RpcServer::setFeeAmount(const uint32_t fee_amount) {
   return true;
 }
 
-bool RpcServer::enableCors(const std::vector<std::string> domains) {
-  m_cors_domains = domains;
+bool RpcServer::enableCors(const std::string& domain) {
+  m_cors = domain;
   return true;
 }
 
-std::vector<std::string> RpcServer::getCorsDomains() { return m_cors_domains; }
+const std::string& RpcServer::getCorsDomain() { return m_cors; }
 
 bool RpcServer::isCoreReady() {
   return m_core.getCurrency().isTestnet() || m_p2p.get_payload_object().isSynchronized();
@@ -1140,7 +1128,8 @@ bool RpcServer::on_get_block_headers_range(const COMMAND_RPC_GET_BLOCK_HEADERS_R
     {
             error_resp.code = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
             error_resp.message = "Internal error: can't get block by height. Height = " +
-    boost::lexical_cast<std::string>(h) + ". Hash = " + epee::string_tools::pod_to_hex(block_hash) + '.'; return false;
+    boost::lexical_cast<std::string>(h) + ". Hash = " + epee::string_tools::pod_to_hex(block_hash) + '.'; return
+    false;
     }
     if (blk.miner_tx.vin.size() != 1 || blk.miner_tx.vin.front().type() != typeid(txin_gen))
     {

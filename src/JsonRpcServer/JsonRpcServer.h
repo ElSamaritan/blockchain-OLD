@@ -9,11 +9,15 @@
 #include <string>
 #include <system_error>
 
+#include <Xi/Http/Server.h>
+#include <Xi/Http/Request.h>
+#include <Xi/Http/Response.h>
+#include <Xi/Http/RequestHandler.h>
+
 #include <System/Dispatcher.h>
 #include <System/Event.h>
 #include "Logging/ILogger.h"
 #include "Logging/LoggerRef.h"
-#include "Rpc/HttpServer.h"
 
 #include "WalletService/ConfigurationManager.h"
 
@@ -32,7 +36,7 @@ class TcpConnection;
 
 namespace CryptoNote {
 
-class JsonRpcServer : HttpServer {
+class JsonRpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
  public:
   JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup,
                 PaymentService::ConfigurationManager& config);
@@ -54,7 +58,7 @@ class JsonRpcServer : HttpServer {
 
  private:
   // HttpServer
-  virtual void processRequest(const CryptoNote::HttpRequest& request, CryptoNote::HttpResponse& response) override;
+  virtual Xi::Http::Response doHandleRequest(const Xi::Http::Request& request) override;
 
   System::Dispatcher& system;
   System::Event& stopEvent;

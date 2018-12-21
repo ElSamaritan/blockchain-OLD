@@ -11,14 +11,13 @@
 #include <system_error>
 #include <memory>
 #include <sstream>
-#include "HTTP/HttpParserErrorCodes.h"
+
+#include <Xi/Concurrent/SystemDispatcher.h>
 
 #include <System/TcpConnection.h>
 #include <System/TcpListener.h>
 #include <System/TcpStream.h>
 #include <System/Ipv4Address.h>
-#include "HTTP/HttpParser.h"
-#include "HTTP/HttpResponse.h"
 #include "Rpc/JsonRpc.h"
 
 #include "Common/JsonValue.h"
@@ -29,35 +28,31 @@ namespace CryptoNote {
 
 JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup,
                              PaymentService::ConfigurationManager& config)
-    : HttpServer(sys, loggerGroup),
-      system(sys),
-      stopEvent(stopEvent),
-      logger(loggerGroup, "JsonRpcServer"),
-      config(config) {}
-
-void JsonRpcServer::start(const std::string& bindAddress, uint16_t bindPort) {
-  HttpServer::start(bindAddress, bindPort);
-  stopEvent.wait();
-  HttpServer::stop();
+    : Server(), system(sys), stopEvent(stopEvent), logger(loggerGroup, "JsonRpcServer"), config(config) {
+  setDispatcher(std::make_shared<Xi::Concurrent::SystemDispatcher>(sys));
 }
 
-void JsonRpcServer::processRequest(const CryptoNote::HttpRequest& req, CryptoNote::HttpResponse& resp) {
-  try {
-    logger(Logging::TRACE) << "HTTP request came: \n" << req;
+void JsonRpcServer::start(const std::string& bindAddress, uint16_t bindPort) {
+  Server::start(bindAddress, bindPort);
+  stopEvent.wait();
+  Server::stop();
+}
 
-    if (req.getUrl() == "/json_rpc") {
-      std::istringstream jsonInputStream(req.getBody());
+Xi::Http::Response JsonRpcServer::doHandleRequest(const Xi::Http::Request& request) {
+  try {
+    logger(Logging::TRACE) << "HTTP request came: \n" << request.body();
+
+    if (request.target() == "/json_rpc") {
+      std::istringstream jsonInputStream(request.body());
       Common::JsonValue jsonRpcRequest;
       Common::JsonValue jsonRpcResponse(Common::JsonValue::OBJECT);
 
       try {
         jsonInputStream >> jsonRpcRequest;
       } catch (std::runtime_error&) {
-        logger(Logging::DEBUGGING) << "Couldn't parse request: \"" << req.getBody() << "\"";
+        logger(Logging::DEBUGGING) << "Couldn't parse request: \"" << request.body() << "\"";
         makeJsonParsingErrorResponse(jsonRpcResponse);
-        resp.setStatus(CryptoNote::HttpResponse::STATUS_200);
-        resp.setBody(jsonRpcResponse.toString());
-        return;
+        return Xi::Http::Response{Xi::Http::StatusCode::Ok, jsonRpcResponse.toString(), Xi::Http::ContentType::Json};
       }
 
       processJsonRpcRequest(jsonRpcRequest, jsonRpcResponse);
@@ -65,21 +60,22 @@ void JsonRpcServer::processRequest(const CryptoNote::HttpRequest& req, CryptoNot
       std::ostringstream jsonOutputStream;
       jsonOutputStream << jsonRpcResponse;
 
+      Xi::Http::Response resp;
       if (config.serviceConfig.corsHeader != "") {
-        resp.addHeader("Access-Control-Allow-Origin", config.serviceConfig.corsHeader);
+        resp.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, config.serviceConfig.corsHeader);
       }
 
-      resp.setStatus(CryptoNote::HttpResponse::STATUS_200);
+      resp.setStatus(Xi::Http::StatusCode::Ok);
       resp.setBody(jsonOutputStream.str());
 
+      return resp;
     } else {
-      logger(Logging::WARNING) << "Requested url \"" << req.getUrl() << "\" is not found";
-      resp.setStatus(CryptoNote::HttpResponse::STATUS_404);
-      return;
+      logger(Logging::WARNING) << "Requested url \"" << request.target() << "\" is not found";
+      return makeNotFound();
     }
   } catch (std::exception& e) {
     logger(Logging::WARNING) << "Error while processing http request: " << e.what();
-    resp.setStatus(CryptoNote::HttpResponse::STATUS_500);
+    return makeInternalServerError();
   }
 }
 

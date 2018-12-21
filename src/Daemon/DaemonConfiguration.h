@@ -37,7 +37,7 @@ struct DaemonConfiguration {
   std::vector<std::string> priorityNodes;
   std::vector<std::string> exclusiveNodes;
   std::vector<std::string> seedNodes;
-  std::vector<std::string> enableCors;
+  std::string enableCors;
 
   int logLevel;
   int feeAmount;
@@ -284,7 +284,7 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     }
 
     if (cli.count("enable-cors") > 0) {
-      config.enableCors = cli["enable-cors"].as<std::vector<std::string>>();
+      config.enableCors = cli["enable-cors"].as<std::string>();
     }
 
     if (cli.count("fee-address") > 0) {
@@ -419,7 +419,7 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
   }
 
   if (j.find("enable-cors") != j.end()) {
-    config.enableCors = j["enable-cors"].get<std::vector<std::string>>();
+    config.enableCors = j["enable-cors"].get<std::string>();
   }
 
   if (j.find("fee-address") != j.end()) {

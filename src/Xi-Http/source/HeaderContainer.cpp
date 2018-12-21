@@ -53,6 +53,10 @@ static_assert(
 static_assert(
     static_cast<boost::beast::http::field>(Xi::Http::HeaderContainer::Server) == boost::beast::http::field::server,
     "The casted value must correspond to the enum used by the beast library because they are internally casted.");
+static_assert(
+    static_cast<boost::beast::http::field>(Xi::Http::HeaderContainer::AccessControlAllowOrigin) ==
+        boost::beast::http::field::access_control_allow_origin,
+    "The casted value must correspond to the enum used by the beast library because they are internally casted.");
 
 void Xi::Http::HeaderContainer::setRequiredAuthenticationScheme(Xi::Http::AuthenticationType authType) {
   set(WWWAuthenticate, to_string(authType));

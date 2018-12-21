@@ -7,12 +7,13 @@
 
 #pragma once
 
-#include "HttpServer.h"
-
 #include <functional>
 #include <unordered_map>
 #include <vector>
 #include <string>
+
+#include <Xi/Http/RequestHandler.h>
+#include <Xi/Http/Server.h>
 
 #include <Logging/LoggerRef.h>
 #include "Common/Math.h"
@@ -25,16 +26,20 @@ class Core;
 class NodeServer;
 struct ICryptoNoteProtocolHandler;
 
-class RpcServer : public HttpServer {
+class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
+  using HttpRequest = Xi::Http::Request;
+  using HttpResponse = Xi::Http::Response;
+
  public:
   RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, Core& c, NodeServer& p2p,
             ICryptoNoteProtocolHandler& protocol);
+  virtual ~RpcServer() override = default;
 
   typedef std::function<bool(RpcServer*, const HttpRequest& request, HttpResponse& response)> HandlerFunction;
-  bool enableCors(const std::vector<std::string> domains);
+  bool enableCors(const std::string& domain);
   bool setFeeAddress(const std::string fee_address);
   bool setFeeAmount(const uint32_t fee_amount);
-  std::vector<std::string> getCorsDomains();
+  const std::string& getCorsDomain();
 
   bool on_get_block_headers_range(const COMMAND_RPC_GET_BLOCK_HEADERS_RANGE::request& req,
                                   COMMAND_RPC_GET_BLOCK_HEADERS_RANGE::response& res,
@@ -51,7 +56,7 @@ class RpcServer : public HttpServer {
   typedef void (RpcServer::*HandlerPtr)(const HttpRequest& request, HttpResponse& response);
   static std::unordered_map<std::string, RpcHandler<HandlerFunction>> s_handlers;
 
-  virtual void processRequest(const HttpRequest& request, HttpResponse& response) override;
+  Xi::Http::Response doHandleRequest(const Xi::Http::Request& request) override;
   bool processJsonRpcRequest(const HttpRequest& request, HttpResponse& response);
   bool isCoreReady();
 
@@ -119,7 +124,7 @@ class RpcServer : public HttpServer {
   Core& m_core;
   NodeServer& m_p2p;
   ICryptoNoteProtocolHandler& m_protocol;
-  std::vector<std::string> m_cors_domains;
+  std::string m_cors;
   std::string m_fee_address;
   uint32_t m_fee_amount;
 };

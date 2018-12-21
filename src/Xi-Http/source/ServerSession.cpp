@@ -7,9 +7,10 @@
 #include <boost/asio/bind_executor.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
-Xi::Http::ServerSession::ServerSession(socket_t socket, std::shared_ptr<RequestHandler> handler)
-    : m_socket{std::move(socket)}, m_strand{m_socket.get_executor()}, m_handler{handler} {
-  if (!handler) throw std::invalid_argument{"a server session required a non null request handler"};
+Xi::Http::ServerSession::ServerSession(socket_t socket, std::shared_ptr<RequestHandler> handler,
+                                       Concurrent::IDispatcher& dispatcher)
+    : m_socket{std::move(socket)}, m_strand{m_socket.get_executor()}, m_handler{handler}, m_dispatcher{dispatcher} {
+  if (m_handler.get() == nullptr) throw std::invalid_argument{"a server session requires a non null request handler"};
 }
 
 Xi::Http::ServerSession::~ServerSession() {}
@@ -38,9 +39,9 @@ void Xi::Http::ServerSession::onRequestRead(boost::beast::error_code ec, std::si
     checkErrorCode(std::move(ec));
 }
 
-void Xi::Http::ServerSession::writeResponse() {
+void Xi::Http::ServerSession::writeResponse(Response&& response) {
   try {
-    doWriteResponse();
+    doWriteResponse(std::move(response));
   } catch (...) {
     fail(std::current_exception());
   }
@@ -83,13 +84,13 @@ void Xi::Http::ServerSession::doReadRequest() {
 }
 
 void Xi::Http::ServerSession::doOnRequestRead() {
-  const auto request = m_conversion(m_request);
-  Response response = m_handler->operator()(request);
-  m_response = m_conversion(response);  // TODO better make it async as well and use a strand?
-  writeResponse();
+  m_convertedRequest = m_conversion(m_request);
+  auto _this = shared_from_this();
+  m_dispatcher.post([_this]() { _this->writeResponse(_this->m_handler->operator()(_this->m_convertedRequest)); });
 }
 
-void Xi::Http::ServerSession::doWriteResponse() {
+void Xi::Http::ServerSession::doWriteResponse(Response&& response) {
+  m_response = m_conversion(response);
   boost::beast::http::async_write(
       m_socket, m_response,
       boost::asio::bind_executor(m_strand, std::bind(&ServerSession::onResponseWritten, shared_from_this(),

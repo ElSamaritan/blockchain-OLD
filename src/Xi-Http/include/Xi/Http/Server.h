@@ -2,6 +2,9 @@
 
 #include <memory>
 #include <string>
+#include <utility>
+
+#include <Xi/Concurrent/IDispatcher.h>
 
 #include "Xi/Http/RequestHandler.h"
 
@@ -10,7 +13,7 @@ namespace Http {
 /*!
  * \brief The Server class provies a http/https capable server implmentation
  */
-class Server {
+class Server : std::enable_shared_from_this<Server> {
  public:
   /*!
    * \brief setHandler sets the handle that should be called for resolving requests
@@ -39,8 +42,12 @@ class Server {
    */
   void stop();
 
+  void setDispatcher(std::shared_ptr<Concurrent::IDispatcher> dispatcher);
+  std::shared_ptr<Concurrent::IDispatcher> dispatcher() const;
+
  private:
   std::shared_ptr<RequestHandler> m_handler;
+  std::shared_ptr<Concurrent::IDispatcher> m_dispatcher;
 
   struct _Listener;
   std::shared_ptr<_Listener> m_listener;

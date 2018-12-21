@@ -1,6 +1,7 @@
 ﻿## ZLIB -- Compression Support
 set(_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 if(MSVC)
+  string(REGEX REPLACE "/W[1234X]" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /w")
 else()
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Karai Developers
 // Copyright (c) 2018, The Calex Developers
@@ -259,10 +259,10 @@ int main(int argc, char* argv[]) {
 
     CryptoNote::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
     CryptoNote::NodeServer p2psrv(dispatcher, cprotocol, logManager);
-    CryptoNote::RpcServer rpcServer(dispatcher, logManager, ccore, p2psrv, cprotocol);
+    auto rpcServer = std::make_shared<CryptoNote::RpcServer>(dispatcher, logManager, ccore, p2psrv, cprotocol);
 
     cprotocol.set_p2p_endpoint(&p2psrv);
-    DaemonCommandsHandler dch(ccore, p2psrv, logManager, &rpcServer);
+    DaemonCommandsHandler dch(ccore, p2psrv, logManager, rpcServer.get());
     logger(INFO) << "Initializing p2p server...";
     if (!p2psrv.init(netNodeConfig)) {
       logger(ERROR, BRIGHT_RED) << "Failed to initialize p2p server.";
@@ -277,10 +277,11 @@ int main(int argc, char* argv[]) {
 
     // Fire up the RPC Server
     logger(INFO) << "Starting core rpc server on address " << config.rpcInterface << ":" << config.rpcPort;
-    rpcServer.start(config.rpcInterface, config.rpcPort);
-    rpcServer.setFeeAddress(config.feeAddress);
-    rpcServer.setFeeAmount(config.feeAmount);
-    rpcServer.enableCors(config.enableCors);
+    rpcServer->setHandler(rpcServer);
+    rpcServer->start(config.rpcInterface, config.rpcPort);
+    rpcServer->setFeeAddress(config.feeAddress);
+    rpcServer->setFeeAmount(config.feeAmount);
+    rpcServer->enableCors(config.enableCors);
     logger(INFO) << "Core rpc server started ok";
 
     Tools::SignalHandler::install([&dch, &p2psrv] {
@@ -296,7 +297,8 @@ int main(int argc, char* argv[]) {
 
     // stop components
     logger(INFO) << "Stopping core rpc server...";
-    rpcServer.stop();
+    rpcServer->stop();
+    rpcServer->setHandler(nullptr);
 
     // deinitialize components
     logger(INFO) << "Deinitializing p2p...";

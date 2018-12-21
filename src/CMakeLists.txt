@@ -13,7 +13,6 @@ file(GLOB_RECURSE Common Common/*)
 file(GLOB_RECURSE Crypto crypto/*)
 file(GLOB_RECURSE CryptoNoteCore CryptoNoteCore/* CryptoNoteConfig.h)
 file(GLOB_RECURSE CryptoNoteProtocol CryptoNoteProtocol/*)
-file(GLOB_RECURSE Http HTTP/*)
 file(GLOB_RECURSE Logging Logging/*)
 file(GLOB_RECURSE Mnemonics Mnemonics/*)
 file(GLOB_RECURSE NodeRpcProxy NodeRpcProxy/*)
@@ -57,7 +56,6 @@ add_library(BlockchainExplorer STATIC ${BlockchainExplorer})
 add_library(Common STATIC ${Common})
 add_library(Crypto STATIC ${Crypto})
 add_library(CryptoNoteCore STATIC ${CryptoNoteCore})
-add_library(Http STATIC ${Http})
 add_library(Logging STATIC ${Logging})
 add_library(Mnemonics STATIC ${Mnemonics})
 add_library(NodeRpcProxy STATIC ${NodeRpcProxy})
@@ -71,7 +69,7 @@ add_library(JsonRpcServer STATIC ${JsonRpcServer})
 add_library(WalletService STATIC ${service})
 
 xi_make_library(Core Xi-Core)
-target_link_libraries(Xi.Core PUBLIC boost leathers cxxopts zlibstatic) # cxxopts is only linked to enable it for all libraries
+target_link_libraries(Xi.Core PUBLIC boost leathers cxxopts System) # cxxopts is only linked to enable it for all libraries
 xi_make_library(Http Xi-Http)
 target_link_libraries(
   Xi.Http
@@ -99,7 +97,6 @@ set(
     CommonCLI
     Crypto
     CryptoNoteCore
-    Http
     Logging
     Mnemonics
     NodeRpcProxy
@@ -133,7 +130,6 @@ target_link_libraries(
         Crypto
         P2P
         Rpc
-        Http
         Serialization
         System
         rocksdb
@@ -141,8 +137,8 @@ target_link_libraries(
         boost
 )
 target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static Xi.Core boost json linenoise Xi.Http)
-target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core boost json linenoise Http Xi.Http)
-target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Http Serialization CryptoNoteCore System Logging Common Crypto Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Serialization CryptoNoteCore System Logging Common Crypto Xi.Core boost json linenoise Xi.Http)
 target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI boost json linenoise cxxopts Xi.Http)
 target_link_libraries(BlockchainExplorer PUBLIC Xi.Core boost json linenoise Xi.Http)
 target_link_libraries(Common PUBLIC Xi.Core boost json linenoise Xi.Http)
@@ -185,10 +181,10 @@ if(XI_BUILD_EXECUTABLES)
     set(XI_EXTRA_OS_LIBRARIES Rpcrt4)
   endif()
 
-  target_link_libraries(CLIDaemon P2P Rpc Serialization System Http Logging CryptoNoteCore Crypto Common CommonCLI rocksdb boost cxxopts ${XI_EXTRA_OS_LIBRARIES})
-  target_link_libraries(CLIWallet CommonCLI Mnemonics Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common CommonCLI boost cxxopts)
-  target_link_libraries(CLIMiner CommonCLI CryptoNoteCore Rpc Serialization System Http Logging Common CommonCLI Crypto boost cxxopts)
-  target_link_libraries(PGService WalletService JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto Rpc Http System Logging Common rocksdb boost cxxopts ${XI_EXTRA_OS_LIBRARIES})
+  target_link_libraries(CLIDaemon P2P Rpc Serialization System Xi.Http Logging CryptoNoteCore Crypto Common CommonCLI rocksdb boost cxxopts ${XI_EXTRA_OS_LIBRARIES})
+  target_link_libraries(CLIWallet CommonCLI Mnemonics Wallet NodeRpcProxy Transfers Rpc Xi.Http CryptoNoteCore System Logging Common CommonCLI boost cxxopts)
+  target_link_libraries(CLIMiner CommonCLI CryptoNoteCore Rpc Serialization System Xi.Http Logging Common CommonCLI Crypto boost cxxopts)
+  target_link_libraries(PGService WalletService JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto Rpc Xi.Http System Logging Common rocksdb boost cxxopts ${XI_EXTRA_OS_LIBRARIES})
 
   # Add dependencies means we have to build the latter before we build the former
   # In this case it's because we need to have the current version name rather

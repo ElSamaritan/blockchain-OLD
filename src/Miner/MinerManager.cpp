@@ -19,7 +19,6 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/TransactionExtra.h"
-#include "Rpc/HttpClient.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Rpc/JsonRpc.h"
 #include <Logging/LoggerManager.h>
@@ -85,13 +84,13 @@ void MinerManager::start() {
 
     try {
       params = requestMiningParameters(m_dispatcher, m_config.daemonHost, m_config.daemonPort, m_config.miningAddress);
-    } catch (ConnectException& e) {
-      m_logger(Logging::WARNING) << "Couldn't connect to daemon: " << e.what();
+    } catch (JsonRpc::JsonRpcError& ex) {
+      m_logger(Logging::WARNING) << "Daemon returned non-success state: " << ex.what();
       System::Timer timer(m_dispatcher);
       timer.sleep(std::chrono::seconds(m_config.scanPeriod));
       continue;
-    } catch (JsonRpc::JsonRpcError& ex) {
-      m_logger(Logging::WARNING) << "Daemon returned non-success state: " << ex.what();
+    } catch (std::exception& e) {
+      m_logger(Logging::WARNING) << "Couldn't connect to daemon: " << e.what();
       System::Timer timer(m_dispatcher);
       timer.sleep(std::chrono::seconds(m_config.scanPeriod));
       continue;
@@ -117,7 +116,7 @@ void MinerManager::printHashRate() {
   while (isRunning) {
     std::this_thread::sleep_for(std::chrono::seconds(60));
     uint64_t current_hash_count = m_miner.getHashCount();
-    double hashes = static_cast<double>((current_hash_count - last_hash_count) / 60);
+    double hashes = static_cast<double>(current_hash_count - last_hash_count) / 60.0;
     last_hash_count = current_hash_count;
     m_logger(Logging::INFO, BRIGHT_BLUE) << "Mining at " << hashes << " H/s";
   }
