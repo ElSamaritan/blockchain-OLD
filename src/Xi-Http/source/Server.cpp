@@ -7,13 +7,18 @@
 
 #include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
 #include "Listener.h"
 #include "ServerSession.h"
+#include "ServerSessionDetector.h"
+#include "HttpServerSession.h"
+#include "HttpsServerSession.h"
 
-struct Xi::Http::Server::_Listener : Listener {
+struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
   std::vector<std::thread> runner;
+  boost::asio::ssl::context ctx{boost::asio::ssl::context::sslv23};
   std::shared_ptr<RequestHandler> handler;
   Xi::Concurrent::IDispatcher& dispatcher;
   std::atomic_bool keepRunning{true};
@@ -51,7 +56,18 @@ struct Xi::Http::Server::_Listener : Listener {
   }
 
   void doOnAccept(boost::asio::ip::tcp::socket socket) override {
-    std::make_shared<ServerSession>(std::move(socket), handler, dispatcher)->run();
+    std::make_shared<ServerSessionDetector>(std::move(socket), ctx,
+                                            std::shared_ptr<IServerSessionBuilder>{shared_from_this(), this})
+        ->run();
+  }
+
+  std::shared_ptr<ServerSession> makeHttpServerSession(ServerSession::socket_t socket,
+                                                       ServerSession::buffer_t buffer) override {
+    return std::make_shared<HttpServerSession>(std::move(socket), std::move(buffer), handler, dispatcher);
+  }
+  std::shared_ptr<ServerSession> makeHttpsServerSession(ServerSession::socket_t socket,
+                                                        ServerSession::buffer_t buffer) override {
+    return std::make_shared<HttpsServerSession>(std::move(socket), std::move(buffer), ctx, handler, dispatcher);
   }
 };
 
@@ -63,6 +79,9 @@ void Xi::Http::Server::start(const std::string& address, uint16_t port) {
   if (m_listener.get() != nullptr) throw std::runtime_error{"server is already running, stop it first"};
   if (m_handler.get() == nullptr) throw std::runtime_error{"you must provide a handler in order to start the server"};
   m_listener = std::make_shared<_Listener>(address, port, handler(), *dispatcher());
+
+  m_sslConfig.initializeContext(m_listener->ctx);
+
   m_listener->run(1);
 }
 

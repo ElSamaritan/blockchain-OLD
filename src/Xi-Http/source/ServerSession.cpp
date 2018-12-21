@@ -7,9 +7,13 @@
 #include <boost/asio/bind_executor.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
-Xi::Http::ServerSession::ServerSession(socket_t socket, std::shared_ptr<RequestHandler> handler,
+Xi::Http::ServerSession::ServerSession(socket_t socket, buffer_t buffer, std::shared_ptr<RequestHandler> handler,
                                        Concurrent::IDispatcher& dispatcher)
-    : m_socket{std::move(socket)}, m_strand{m_socket.get_executor()}, m_handler{handler}, m_dispatcher{dispatcher} {
+    : m_socket{std::move(socket)},
+      m_strand{m_socket.get_executor()},
+      m_buffer{std::move(buffer)},
+      m_handler{handler},
+      m_dispatcher{dispatcher} {
   if (m_handler.get() == nullptr) throw std::invalid_argument{"a server session requires a non null request handler"};
 }
 
@@ -73,34 +77,4 @@ void Xi::Http::ServerSession::checkErrorCode(boost::beast::error_code ec) {
 
 void Xi::Http::ServerSession::fail(std::exception_ptr ex) {
   XI_UNUSED(ex);  // Logging
-}
-
-void Xi::Http::ServerSession::doReadRequest() {
-  m_request = {};
-  boost::beast::http::async_read(
-      m_socket, m_buffer, m_request,
-      boost::asio::bind_executor(m_strand, std::bind(&ServerSession::onRequestRead, shared_from_this(),
-                                                     std::placeholders::_1, std::placeholders::_2)));
-}
-
-void Xi::Http::ServerSession::doOnRequestRead() {
-  m_convertedRequest = m_conversion(m_request);
-  auto _this = shared_from_this();
-  m_dispatcher.post([_this]() { _this->writeResponse(_this->m_handler->operator()(_this->m_convertedRequest)); });
-}
-
-void Xi::Http::ServerSession::doWriteResponse(Response&& response) {
-  m_response = m_conversion(response);
-  boost::beast::http::async_write(
-      m_socket, m_response,
-      boost::asio::bind_executor(m_strand, std::bind(&ServerSession::onResponseWritten, shared_from_this(),
-                                                     std::placeholders::_1, std::placeholders::_2)));
-}
-
-void Xi::Http::ServerSession::doOnResponseWritten() { close(); }
-
-void Xi::Http::ServerSession::doClose() {
-  boost::beast::error_code ec;
-  m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_send, ec);
-  checkErrorCode(ec);
 }

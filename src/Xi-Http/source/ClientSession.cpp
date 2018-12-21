@@ -6,6 +6,8 @@
 
 #include <Xi/Utils/ExternalIncludePush.h>
 #include <zlib.h>
+#include <openssl/ssl.h>
+#include <boost/asio/ssl.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>

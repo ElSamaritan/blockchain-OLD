@@ -42,14 +42,15 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
    * \param socket the socket created for communicating with the client
    * \param handler the high level api handler that will server the request
    */
-  ServerSession(socket_t socket, std::shared_ptr<RequestHandler> handler, Concurrent::IDispatcher& dispatcher);
+  ServerSession(socket_t socket, buffer_t buffer, std::shared_ptr<RequestHandler> handler,
+                Concurrent::IDispatcher& dispatcher);
   XI_DEFAULT_MOVE(ServerSession);
-  ~ServerSession();
+  virtual ~ServerSession();
 
   /*!
    * \brief run starts handling the session
    */
-  void run();
+  virtual void run();
 
   /*!
    * \brief readRequest called on startup an will read the requests data/headers...
@@ -80,7 +81,6 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
    */
   void close();
 
- protected:
   /*!
    * \brief checkErrorCode check for an potential error and throw if an error occured
    */
@@ -98,13 +98,12 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
    * Thus you are free to throw any exception you like within these methods.
    */
 
-  void doReadRequest();
-  void doOnRequestRead();
-  void doWriteResponse(Response&& response);
-  void doOnResponseWritten();
-  void doClose();
+  virtual void doReadRequest() = 0;
+  virtual void doOnRequestRead() = 0;
+  virtual void doWriteResponse(Response&& response) = 0;
+  virtual void doOnResponseWritten() = 0;
+  virtual void doClose() = 0;
 
- private:
   socket_t m_socket;
   strand_t m_strand;
   buffer_t m_buffer;
