@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#define DISABLED_XI_TESTSUITE DISABLED_T_Xi_Http_Client
+#define XI_TESTSUITE DISABLED_T_Xi_Http_Client
 
 TEST(XI_TESTSUITE, HTTPGetRequestWithRedirection) {
   using namespace ::testing;
