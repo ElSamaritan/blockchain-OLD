@@ -21,6 +21,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 option(XI_BUILD_EXECUTABLES "Builds the executables for this project (daemon, wallet...)." ON)
 option(XI_BUILD_TESTSUITE "Builds the xi test suite, see ./tests" OFF)
 
+include(cmake/CompilerCheck.cmake)
 include(cmake/CompilerConfiguration.cmake)
 include(cmake/Dependencies.cmake)
 include(cmake/Platform.cmake)
