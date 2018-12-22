@@ -469,7 +469,7 @@ namespace beast {
     a fashion identical to a call to `std::bind`.
 */
 template <class Handler, class... Args>
-#if BOOST_BEAST_DOXYGEN
+#if defined(BOOST_BEAST_DOXYGEN) && BOOST_BEAST_DOXYGEN
 __implementation_defined__
 #else
 detail::bind_wrapper<typename std::decay<Handler>::type, Args...>
@@ -510,7 +510,7 @@ bind_handler(Handler&& handler, Args&&... args) {
     The arguments are forwarded into the returned object.
 */
 template <class Handler, class... Args>
-#if BOOST_BEAST_DOXYGEN
+#if defined(BOOST_BEAST_DOXYGEN) && BOOST_BEAST_DOXYGEN
 __implementation_defined__
 #else
 auto
