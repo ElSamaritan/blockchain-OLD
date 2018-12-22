@@ -14,6 +14,8 @@
 #include <vector>
 
 #include <Xi/Global.h>
+#include <Xi/Http/Client.h>
+#include <Xi/Http/SSLClientConfiguration.h>
 
 #include "Common/ObserverManager.h"
 #include "Logging/LoggerRef.h"
@@ -28,7 +30,7 @@ class Event;
 
 namespace CryptoNote {
 
-class HttpClient;
+using HttpClient = Xi::Http::Client;
 
 class INodeRpcProxyObserver {
  public:
@@ -38,7 +40,8 @@ class INodeRpcProxyObserver {
 
 class NodeRpcProxy : public CryptoNote::INode {
  public:
-  NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort, Logging::ILogger& logger);
+  NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort, ::Xi::Http::SSLClientConfiguration sslConfig,
+               Logging::ILogger& logger);
   virtual ~NodeRpcProxy() override;
 
   virtual bool addObserver(CryptoNote::INodeObserver* observer) override;
@@ -162,7 +165,7 @@ class NodeRpcProxy : public CryptoNote::INode {
   const std::string m_nodeHost;
   const unsigned short m_nodePort;
   unsigned int m_rpcTimeout;
-  HttpClient* m_httpClient = nullptr;
+  std::unique_ptr<Xi::Http::Client> m_httpClient;
   System::Event* m_httpEvent = nullptr;
 
   uint64_t m_pullInterval;

@@ -19,7 +19,6 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/TransactionExtra.h"
-#include "Rpc/HttpClient.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Rpc/JsonRpc.h"
 #include <Logging/LoggerManager.h>
@@ -62,11 +61,12 @@ void adjustMergeMiningTag(BlockTemplate& blockTemplate) {
 MinerManager::MinerManager(System::Dispatcher& dispatcher, const CryptoNote::MiningConfig& config,
                            Logging::ILogger& logger)
     : m_dispatcher(dispatcher),
+      m_httpClient(config.daemonHost, config.daemonPort, config.ssl),
       m_logger(logger, "MinerManager"),
       m_contextGroup(dispatcher),
       m_config(config),
       m_miner(dispatcher, logger),
-      m_blockchainMonitor(dispatcher, m_config.daemonHost, m_config.daemonPort, m_config.scanPeriod, logger),
+      m_blockchainMonitor(dispatcher, m_httpClient, m_config.scanPeriod, logger),
       m_blockCounter(0),
       m_eventOccurred(dispatcher),
       m_httpEvent(dispatcher),
@@ -84,14 +84,14 @@ void MinerManager::start() {
     m_logger(Logging::INFO) << "requesting mining parameters";
 
     try {
-      params = requestMiningParameters(m_dispatcher, m_config.daemonHost, m_config.daemonPort, m_config.miningAddress);
-    } catch (ConnectException& e) {
-      m_logger(Logging::WARNING) << "Couldn't connect to daemon: " << e.what();
+      params = requestMiningParameters(m_dispatcher, m_config.miningAddress);
+    } catch (JsonRpc::JsonRpcError& ex) {
+      m_logger(Logging::WARNING) << "Daemon returned non-success state: " << ex.what();
       System::Timer timer(m_dispatcher);
       timer.sleep(std::chrono::seconds(m_config.scanPeriod));
       continue;
-    } catch (JsonRpc::JsonRpcError& ex) {
-      m_logger(Logging::WARNING) << "Daemon returned non-success state: " << ex.what();
+    } catch (std::exception& e) {
+      m_logger(Logging::WARNING) << "Couldn't connect to daemon: " << e.what();
       System::Timer timer(m_dispatcher);
       timer.sleep(std::chrono::seconds(m_config.scanPeriod));
       continue;
@@ -117,7 +117,7 @@ void MinerManager::printHashRate() {
   while (isRunning) {
     std::this_thread::sleep_for(std::chrono::seconds(60));
     uint64_t current_hash_count = m_miner.getHashCount();
-    double hashes = static_cast<double>((current_hash_count - last_hash_count) / 60);
+    double hashes = static_cast<double>(current_hash_count - last_hash_count) / 60.0;
     last_hash_count = current_hash_count;
     m_logger(Logging::INFO, BRIGHT_BLUE) << "Mining at " << hashes << " H/s";
   }
@@ -135,7 +135,7 @@ void MinerManager::eventLoop() {
         m_logger(Logging::DEBUGGING) << "got BLOCK_MINED event";
         stopBlockchainMonitoring();
 
-        if (submitBlock(m_minedBlock, m_config.daemonHost, m_config.daemonPort)) {
+        if (submitBlock(m_minedBlock)) {
           m_lastBlockTimestamp = m_minedBlock.timestamp;
 
           if (m_config.blocksLimit != 0 && ++blocksMined == m_config.blocksLimit) {
@@ -144,8 +144,7 @@ void MinerManager::eventLoop() {
           }
         }
 
-        BlockMiningParameters params =
-            requestMiningParameters(m_dispatcher, m_config.daemonHost, m_config.daemonPort, m_config.miningAddress);
+        BlockMiningParameters params = requestMiningParameters(m_dispatcher, m_config.miningAddress);
         adjustBlockTemplate(params.blockTemplate);
 
         startBlockchainMonitoring();
@@ -157,8 +156,7 @@ void MinerManager::eventLoop() {
         m_logger(Logging::DEBUGGING) << "got BLOCKCHAIN_UPDATED event";
         stopMining();
         stopBlockchainMonitoring();
-        BlockMiningParameters params =
-            requestMiningParameters(m_dispatcher, m_config.daemonHost, m_config.daemonPort, m_config.miningAddress);
+        BlockMiningParameters params = requestMiningParameters(m_dispatcher, m_config.miningAddress);
         adjustBlockTemplate(params.blockTemplate);
 
         startBlockchainMonitoring();
@@ -220,19 +218,17 @@ void MinerManager::startBlockchainMonitoring() {
 
 void MinerManager::stopBlockchainMonitoring() { m_blockchainMonitor.stop(); }
 
-bool MinerManager::submitBlock(const BlockTemplate& minedBlock, const std::string& daemonHost, uint16_t daemonPort) {
+bool MinerManager::submitBlock(const BlockTemplate& minedBlock) {
   CachedBlock cachedBlock(minedBlock);
 
   try {
-    HttpClient client(m_dispatcher, daemonHost, daemonPort);
-
     COMMAND_RPC_SUBMITBLOCK::request request;
     request.emplace_back(Common::toHex(toBinaryArray(minedBlock)));
 
     COMMAND_RPC_SUBMITBLOCK::response response;
 
     System::EventLock lk(m_httpEvent);
-    JsonRpc::invokeJsonRpcCommand(client, "submitblock", request, response);
+    JsonRpc::invokeJsonRpcCommand(m_httpClient, "submitblock", request, response);
 
     m_logger(Logging::INFO) << "Block has been successfully submitted. Block hash: "
                             << Common::podToHex(cachedBlock.getBlockHash());
@@ -245,11 +241,9 @@ bool MinerManager::submitBlock(const BlockTemplate& minedBlock, const std::strin
 }
 
 BlockMiningParameters MinerManager::requestMiningParameters(System::Dispatcher& dispatcher,
-                                                            const std::string& daemonHost, uint16_t daemonPort,
                                                             const std::string& miningAddress) {
+  XI_UNUSED(dispatcher);
   try {
-    HttpClient client(dispatcher, daemonHost, daemonPort);
-
     COMMAND_RPC_GETBLOCKTEMPLATE::request request;
     request.reserve_size = 0;
     request.wallet_address = miningAddress;
@@ -257,7 +251,7 @@ BlockMiningParameters MinerManager::requestMiningParameters(System::Dispatcher& 
     COMMAND_RPC_GETBLOCKTEMPLATE::response response;
 
     System::EventLock lk(m_httpEvent);
-    JsonRpc::invokeJsonRpcCommand(client, "getblocktemplate", request, response);
+    JsonRpc::invokeJsonRpcCommand(m_httpClient, "getblocktemplate", request, response);
 
     if (response.status != CORE_RPC_STATUS_OK) {
       throw std::runtime_error("Core responded with wrong status: " + response.status);

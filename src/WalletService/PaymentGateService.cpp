@@ -105,6 +105,12 @@ void PaymentGateService::run() {
   Tools::SignalHandler::install(std::bind(&stopSignalHandler, this));
 
   Logging::LoggerRef log(logger, "run");
+  if (config.serviceConfig.sslClient.isInsecure()) {
+    log(Logging::WARNING) << "\n" << CommonCLI::insecureClientWarning() << std::endl;
+  }
+  if (config.serviceConfig.sslServer.isInsecure()) {
+    log(Logging::WARNING) << "\n" << CommonCLI::insecureServerWarning() << std::endl;
+  }
 
   runRpcProxy(log);
 
@@ -130,8 +136,9 @@ void PaymentGateService::runRpcProxy(Logging::LoggerRef& log) {
   log(Logging::INFO) << "Starting Payment Gate with remote node";
   CryptoNote::Currency currency = currencyBuilder.currency();
 
-  std::unique_ptr<CryptoNote::INode> node(PaymentService::NodeFactory::createNode(
-      config.serviceConfig.daemonAddress, config.serviceConfig.daemonPort, log.getLogger()));
+  std::unique_ptr<CryptoNote::INode> node(
+      PaymentService::NodeFactory::createNode(config.serviceConfig.daemonAddress, config.serviceConfig.daemonPort,
+                                              config.serviceConfig.sslClient, log.getLogger()));
 
   runWalletService(currency, *node);
 }
@@ -161,8 +168,11 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
       std::cout << "Address: " << address << std::endl;
     }
   } else {
-    PaymentService::PaymentServiceJsonRpcServer rpcServer(*dispatcher, *stopEvent, *service, logger, config);
-    rpcServer.start(config.serviceConfig.bindAddress, config.serviceConfig.bindPort);
+    auto rpcServer = std::make_shared<PaymentService::PaymentServiceJsonRpcServer>(*dispatcher, *stopEvent, *service,
+                                                                                   logger, config);
+    rpcServer->setHandler(rpcServer);
+    rpcServer->setSSLConfiguration(config.serviceConfig.sslServer);
+    rpcServer->start(config.serviceConfig.bindAddress, config.serviceConfig.bindPort);
 
     Logging::LoggerRef(logger, "PaymentGateService")(Logging::INFO, Logging::BRIGHT_WHITE)
         << "JSON-RPC server stopped, stopping wallet service...";

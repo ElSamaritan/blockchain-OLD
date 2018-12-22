@@ -1,0 +1,71 @@
+The following third party projects are included in this project. Modified
+sources are cleary stated and published in our gitlab group
+    https://gitlab.com/galaxia-project/blockchain/external
+.
+
+boost
+    Copyright 2018 boostorg
+    https://www.boost.org/
+    Boost Software License - Version 1.0 - August 17th, 2003
+
+rocksdb
+    https://github.com/facebook/rocksdb
+    Apache License Version 2.0, January 2004
+
+google benchmark
+    https://github.com/google/benchmark
+    Apache License Version 2.0, January 2004
+
+google test
+    Copyright 2008, Google Inc.
+    https://github.com/google/googletest
+    BSD 3-Clause "New" or "Revised" License
+
+cxxopts
+    Copyright (c) 2014 Jarryd Beck
+    https://github.com/jarro2783/cxxopts
+    MIT License
+
+lz4
+    Copyright (c) 2011-2016, Yann Collet
+    https://github.com/lz4/lz4
+    GPLv2, BSD 2-Clause license
+
+miniupnp
+    Copyright (c) 2005-2017, Thomas BERNARD
+    https://github.com/miniupnp/miniupnp
+    https://github.com/miniupnp/miniupnp/blob/master/LICENSE
+
+json
+    Copyright (c) 2013-2018 Niels Lohmann
+    https://github.com/nlohmann/json
+    MIT License 
+
+leathers
+    Copyright (c) 2014, Ruslan Baratov
+    https://github.com/ruslo/leathers
+    BSD 2-Clause "Simplified" License
+
+cpp-linenoise
+    Copyright (c) 2015 yhirose
+    https://github.com/yhirose/cpp-linenoise
+    BSD 2-Clause "Simplified" License
+
+zlib
+    (C) 1995-2017 Jean-loup Gailly and Mark Adler
+    https://github.com/madler/zlib
+
+openssl
+    Copyright 2015-2018 The OpenSSL Project Authors.
+    https://github.com/openssl/openssl
+    Apache License Version 2.0, January 2004
+
+The project was forked from an existing code base, all changes are stated by our git
+history https://gitlab.com/galaxia-project/blockchain/xi/commits/develop.
+
+AmityCoin
+    GNU General Public License v3.0
+    https://github.com/CalexCore/AmityCoin
+
+CrypteNote, Bytecoin, Turtlecoin, Monero Project
+    https://github.com/turtlecoin/turtlecoin/blob/development/LICENSE

@@ -10,6 +10,8 @@
 
 #include <config/CryptoNoteConfig.h>
 
+#include <Xi/Http/SSLClientConfiguration.h>
+
 #include <Serialization/ISerializer.h>
 
 #include <Wallet/WalletGreen.h>
@@ -63,6 +65,9 @@ struct Config {
 
   /* The wallet password */
   std::string walletPass = "";
+
+  /* Configuration of SSL usage using the HTTP(S) client. */
+  ::Xi::Http::SSLClientConfiguration ssl;
 };
 
 struct AddressBookEntry {

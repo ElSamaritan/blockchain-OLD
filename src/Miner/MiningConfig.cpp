@@ -93,6 +93,8 @@ void MiningConfig::parse(int argc, char** argv) {
     ("limit", "Mine this exact quantity of blocks and then stop. 0 means no limit", cxxopts::value<size_t>(blocksLimit)->default_value("0"), "#")
     ("log-level", "Specify log level. Must be 0 - 5", cxxopts::value<uint8_t>(logLevel)->default_value("3"), "#")
     ("threads", "The mining threads count. Must not exceed hardware capabilities.", cxxopts::value<size_t>(threadCount)->default_value(std::to_string(CONCURRENCY_LEVEL)), "#");
+
+  ssl.emplaceCLIConfiguration(options);
   // clang-format on
 
   try {

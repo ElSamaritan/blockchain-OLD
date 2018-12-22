@@ -26,20 +26,21 @@
 #include <System/Dispatcher.h>
 #include <System/Event.h>
 
+#include <Xi/Http/Client.h>
+
 #include "Logging/LoggerRef.h"
 
 class BlockchainMonitor {
  public:
-  BlockchainMonitor(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort,
-                    size_t pollingInterval, Logging::ILogger& logger);
+  BlockchainMonitor(System::Dispatcher& dispatcher, Xi::Http::Client& client, size_t pollingInterval,
+                    Logging::ILogger& logger);
 
   void waitBlockchainUpdate();
   void stop();
 
  private:
   System::Dispatcher& m_dispatcher;
-  std::string m_daemonHost;
-  uint16_t m_daemonPort;
+  Xi::Http::Client& m_httpClient;
   size_t m_pollingInterval;
   bool m_stopped;
   System::Event m_httpEvent;

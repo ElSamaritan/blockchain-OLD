@@ -1,4 +1,27 @@
-﻿#include "CommonCLI.h"
+﻿/* ============================================================================================== *
+ *                                                                                                *
+ *                                       Xi Blockchain                                            *
+ *                                                                                                *
+ * ---------------------------------------------------------------------------------------------- *
+ * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * ---------------------------------------------------------------------------------------------- *
+ *                                                                                                *
+ * Copyright 2018 Galaxia Project Developers                                                      *
+ *                                                                                                *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the *
+ * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.                                            *
+ *                                                                                                *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;      *
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.      *
+ * See the GNU General Public License for more details.                                           *
+ *                                                                                                *
+ * You should have received a copy of the GNU General Public License along with this program.     *
+ * If not, see <https://www.gnu.org/licenses/>.                                                   *
+ *                                                                                                *
+ * ============================================================================================== */
+
+#include "CommonCLI.h"
 
 #include <sstream>
 #include <iostream>
@@ -7,6 +30,7 @@
 #include "config/Ascii.h"
 #include "config/CryptoNoteConfig.h"
 
+namespace {
 // clang-format off
 const std::string DevelpmentVersionHeader = R"(
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ATTENTION   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -21,6 +45,7 @@ const std::string DevelpmentVersionHeader = R"(
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ATTENTION   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 )";
 // clang-format on
+}  // namespace
 
 std::string CommonCLI::header() {
   std::stringstream programHeader;
@@ -74,4 +99,28 @@ void CommonCLI::verifyDevExecution(int& argc, char** argv) {
               << std::endl;
     exit(-1);
   }
+}
+
+std::string CommonCLI::insecureClientWarning() {
+  return R"(
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !                                                                                       !
+   ! Your client is not setup to be most secure. To increase you secuirity please read our !
+   ! tutorial on setting up ssl correctly.                                                 !
+   !     https://galaxia-project.gitlab.io/end-user-documentation/ssl                      !
+   !                                                                                       !
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+)";
+}
+
+std::string CommonCLI::insecureServerWarning() {
+  return R"(
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !                                                                                       !
+   ! Your sever is not setup to be most secure. To increase you secuirity please read our  !
+   ! tutorial on setting up ssl correctly.                                                 !
+   !     https://galaxia-project.gitlab.io/end-user-documentation/ssl                      !
+   !                                                                                       !
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+)";
 }

@@ -300,7 +300,7 @@ int main(int argc, char** argv) {
       return 0;  // help message requested or so
     }
 
-    std::cout << CommonCLI::header();
+    std::cout << CommonCLI::header() << std::endl;
 
     const auto& config = pg.getConfig();
 

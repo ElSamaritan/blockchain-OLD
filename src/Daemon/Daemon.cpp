@@ -8,6 +8,8 @@
 #include "DaemonConfiguration.h"
 #include "DaemonCommandsHandler.h"
 
+#include <Logging/LoggerMessage.h>
+
 #include "Common/ScopeExit.h"
 #include "Common/SignalHandler.h"
 #include "Common/StdOutputStream.h"
@@ -182,6 +184,9 @@ int main(int argc, char* argv[]) {
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
     logger(INFO, BRIGHT_BLUE) << CommonCLI::header() << std::endl;
+    if (config.ssl.isInsecure()) {
+      logger(WARNING) << "\n" << CommonCLI::insecureServerWarning() << std::endl;
+    }
     logger(INFO) << "Program Working Directory: " << argv[0];
 
     // create objects and link them
@@ -224,14 +229,11 @@ int main(int argc, char* argv[]) {
                   config.dbReadCacheSize);
     dbConfig.setCompression(config.dbCompression);
 
-    if (dbConfig.isConfigFolderDefaulted()) {
-      if (!Tools::create_directories_if_necessary(dbConfig.getDataDir())) {
-        throw std::runtime_error("Can't create directory: " + dbConfig.getDataDir());
-      }
-    } else {
-      if (!Tools::directoryExists(dbConfig.getDataDir())) {
-        throw std::runtime_error("Directory does not exist: " + dbConfig.getDataDir());
-      }
+    if (!Tools::create_directories_if_necessary(dbConfig.getDataDir())) {
+      throw std::runtime_error("Can't create directory: " + dbConfig.getDataDir());
+    }
+    if (!Tools::directoryExists(dbConfig.getDataDir())) {
+      throw std::runtime_error("Directory does not exist: " + dbConfig.getDataDir());
     }
 
     RocksDBWrapper database(logManager);
@@ -260,10 +262,10 @@ int main(int argc, char* argv[]) {
 
     CryptoNote::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
     CryptoNote::NodeServer p2psrv(dispatcher, cprotocol, logManager);
-    CryptoNote::RpcServer rpcServer(dispatcher, logManager, ccore, p2psrv, cprotocol);
+    auto rpcServer = std::make_shared<CryptoNote::RpcServer>(dispatcher, logManager, ccore, p2psrv, cprotocol);
 
     cprotocol.set_p2p_endpoint(&p2psrv);
-    DaemonCommandsHandler dch(ccore, p2psrv, logManager, &rpcServer);
+    DaemonCommandsHandler dch(ccore, p2psrv, logManager, rpcServer.get());
     logger(INFO) << "Initializing p2p server...";
     if (!p2psrv.init(netNodeConfig)) {
       logger(ERROR, BRIGHT_RED) << "Failed to initialize p2p server.";
@@ -278,10 +280,12 @@ int main(int argc, char* argv[]) {
 
     // Fire up the RPC Server
     logger(INFO) << "Starting core rpc server on address " << config.rpcInterface << ":" << config.rpcPort;
-    rpcServer.start(config.rpcInterface, config.rpcPort);
-    rpcServer.setFeeAddress(config.feeAddress);
-    rpcServer.setFeeAmount(config.feeAmount);
-    rpcServer.enableCors(config.enableCors);
+    rpcServer->setHandler(rpcServer);
+    rpcServer->setSSLConfiguration(config.ssl);
+    rpcServer->start(config.rpcInterface, config.rpcPort);
+    rpcServer->setFeeAddress(config.feeAddress);
+    rpcServer->setFeeAmount(config.feeAmount);
+    rpcServer->enableCors(config.enableCors);
     logger(INFO) << "Core rpc server started ok";
 
     Tools::SignalHandler::install([&dch, &p2psrv] {
@@ -297,7 +301,8 @@ int main(int argc, char* argv[]) {
 
     // stop components
     logger(INFO) << "Stopping core rpc server...";
-    rpcServer.stop();
+    rpcServer->stop();
+    rpcServer->setHandler(nullptr);
 
     // deinitialize components
     logger(INFO) << "Deinitializing p2p...";

@@ -16,7 +16,6 @@
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "JsonRpc.h"
-#include "Rpc/HttpClient.h"
 
 namespace CryptoNote {
 
@@ -53,20 +52,15 @@ JsonRpcError::JsonRpcError(int c) : code(c) {
 JsonRpcError::JsonRpcError(int c, const std::string& msg) : code(c), message(msg) {}
 
 void invokeJsonRpcCommand(HttpClient& httpClient, JsonRpcRequest& jsReq, JsonRpcResponse& jsRes) {
-  HttpRequest httpReq;
-  HttpResponse httpRes;
+  using namespace Xi::Http;
 
-  httpReq.addHeader("Content-Type", "application/json");
-  httpReq.setUrl("/json_rpc");
-  httpReq.setBody(jsReq.getBody());
+  const auto httpRes = httpClient.postSync("/json_rpc", ContentType::Json, jsReq.getBody());
 
-  httpClient.request(httpReq, httpRes);
-
-  if (httpRes.getStatus() != HttpResponse::STATUS_200) {
-    throw std::runtime_error("JSON-RPC call failed, HTTP status = " + std::to_string(httpRes.getStatus()));
+  if (httpRes.status() != StatusCode::Ok) {
+    throw std::runtime_error("JSON-RPC call failed, HTTP status = " + Xi::to_string(httpRes.status()));
   }
 
-  jsRes.parse(httpRes.getBody());
+  jsRes.parse(httpRes.body());
 
   JsonRpcError err;
   if (jsRes.getError(err)) {

@@ -21,6 +21,10 @@ int main(int argc, char** argv) {
     CryptoNote::MiningConfig config;
     config.parse(argc, argv);
 
+    if (config.ssl.isInsecure()) {
+      std::cout << CommonCLI::insecureClientWarning() << std::endl;
+    }
+
     Logging::LoggerGroup loggerGroup;
     Logging::ConsoleLogger consoleLogger(static_cast<Logging::Level>(config.logLevel));
     loggerGroup.addLogger(consoleLogger);

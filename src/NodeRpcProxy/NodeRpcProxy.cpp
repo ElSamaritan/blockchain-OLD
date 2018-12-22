@@ -11,8 +11,6 @@
 #include <system_error>
 #include <thread>
 
-#include <HTTP/HttpRequest.h>
-#include <HTTP/HttpResponse.h>
 #include <System/ContextGroup.h>
 #include <System/Dispatcher.h>
 #include <System/Event.h>
@@ -26,7 +24,6 @@
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
-#include "Rpc/HttpClient.h"
 #include "Rpc/JsonRpc.h"
 
 #ifndef AUTO_VAL_INIT
@@ -53,7 +50,8 @@ std::error_code interpretResponseStatus(const std::string& status) {
 
 }  // namespace
 
-NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort, Logging::ILogger& logger)
+NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort,
+                           Xi::Http::SSLClientConfiguration sslConfig, Logging::ILogger& logger)
     : m_logger(logger, "NodeRpcProxy"),
       m_rpcTimeout(10000),
       m_pullInterval(5000),
@@ -64,6 +62,7 @@ NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort,
       m_networkHeight(0),
       m_nodeHeight(0) {
   resetInternalState();
+  m_httpClient = std::make_unique<Xi::Http::Client>(nodeHost, nodePort, sslConfig);
 }
 
 NodeRpcProxy::~NodeRpcProxy() {
@@ -121,8 +120,6 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
     m_dispatcher = &dispatcher;
     ContextGroup contextGroup(dispatcher);
     m_context_group = &contextGroup;
-    HttpClient httpClient(dispatcher, m_nodeHost, m_nodePort);
-    m_httpClient = &httpClient;
     Event httpEvent(dispatcher);
     m_httpEvent = &httpEvent;
     m_httpEvent->set();
@@ -130,6 +127,7 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
     if (!ping()) {
       initialized_callback(make_error_code(error::CONNECT_ERROR));
     } else {
+      m_connected = true;
       {
         std::lock_guard<std::mutex> lock(m_mutex);
         assert(m_state == STATE_INITIALIZING);
@@ -180,7 +178,6 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
 
   m_dispatcher = nullptr;
   m_context_group = nullptr;
-  m_httpClient = nullptr;
   m_httpEvent = nullptr;
   m_connected = false;
   m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
@@ -273,10 +270,11 @@ void NodeRpcProxy::updateBlockchainStatus() {
     updatePeerCount(getInfoResp.incoming_connections_count + getInfoResp.outgoing_connections_count);
   }
 
-  if (m_connected != m_httpClient->isConnected()) {
-    m_connected = m_httpClient->isConnected();
-    m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
-  }
+  // TODO(njamnjam)
+  //  if (m_connected != m_httpClient->isConnected()) {
+  //    m_connected = m_httpClient->isConnected();
+  //    m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
+  //  }
 }
 
 void NodeRpcProxy::updatePeerCount(size_t peerCount) {
@@ -828,10 +826,6 @@ void NodeRpcProxy::scheduleRequest(std::function<std::error_code()>&& procedure,
                 callback(std::make_error_code(std::errc::operation_canceled));
               } else {
                 std::error_code ec = procedure();
-                if (m_connected != m_httpClient->isConnected()) {
-                  m_connected = m_httpClient->isConnected();
-                  m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
-                }
                 callback(m_stop ? std::make_error_code(std::errc::operation_canceled) : ec);
               }
             },
@@ -845,11 +839,8 @@ std::error_code NodeRpcProxy::binaryCommand(const std::string& url, const Reques
   std::error_code ec;
 
   try {
-    EventLock eventLock(*m_httpEvent);
     invokeBinaryCommand(*m_httpClient, url, req, res);
     ec = interpretResponseStatus(res.status);
-  } catch (const ConnectException&) {
-    ec = make_error_code(error::CONNECT_ERROR);
   } catch (const std::exception&) {
     ec = make_error_code(error::NETWORK_ERROR);
   }
@@ -857,17 +848,30 @@ std::error_code NodeRpcProxy::binaryCommand(const std::string& url, const Reques
   return ec;
 }
 
+namespace {
+template <typename Request, typename Response>
+void invokeJsonCommand(HttpClient& client, const std::string& url, const Request& req, Response& res) {
+  using namespace ::Xi::Http;
+
+  const auto response = client.postSync(url, Xi::Http::ContentType::Json, storeToJson(req));
+  if (response.status() != StatusCode::Ok) {
+    throw std::runtime_error("HTTP status: " + Xi::to_string(response.status()));
+  }
+
+  if (!loadFromJson(res, response.body())) {
+    throw std::runtime_error("Failed to parse JSON response");
+  }
+}
+}  // namespace
+
 template <typename Request, typename Response>
 std::error_code NodeRpcProxy::jsonCommand(const std::string& url, const Request& req, Response& res) {
   std::error_code ec;
 
   try {
     m_logger(TRACE) << "Send " << url << " JSON request";
-    EventLock eventLock(*m_httpEvent);
     invokeJsonCommand(*m_httpClient, url, req, res);
     ec = interpretResponseStatus(res.status);
-  } catch (const ConnectException&) {
-    ec = make_error_code(error::CONNECT_ERROR);
   } catch (const std::exception&) {
     ec = make_error_code(error::NETWORK_ERROR);
   }
@@ -883,36 +887,27 @@ std::error_code NodeRpcProxy::jsonCommand(const std::string& url, const Request&
 
 template <typename Request, typename Response>
 std::error_code NodeRpcProxy::jsonRpcCommand(const std::string& method, const Request& req, Response& res) {
+  using namespace ::Xi::Http;
   std::error_code ec = make_error_code(error::INTERNAL_NODE_ERROR);
 
   try {
     m_logger(TRACE) << "Send " << method << " JSON RPC request";
-    EventLock eventLock(*m_httpEvent);
 
     JsonRpc::JsonRpcRequest jsReq;
 
     jsReq.setMethod(method);
     jsReq.setParams(req);
 
-    HttpRequest httpReq;
-    HttpResponse httpRes;
-
-    httpReq.addHeader("Content-Type", "application/json");
-    httpReq.setUrl("/json_rpc");
-    httpReq.setBody(jsReq.getBody());
-
-    m_httpClient->request(httpReq, httpRes);
+    const auto httpRes = m_httpClient->postSync("/json_rpc", ContentType::Json, jsReq.getBody());
 
     JsonRpc::JsonRpcResponse jsRes;
 
-    if (httpRes.getStatus() == HttpResponse::STATUS_200) {
-      jsRes.parse(httpRes.getBody());
+    if (httpRes.status() == StatusCode::Ok) {
+      jsRes.parse(httpRes.body());
       if (jsRes.getResult(res)) {
         ec = interpretResponseStatus(res.status);
       }
     }
-  } catch (const ConnectException&) {
-    ec = make_error_code(error::CONNECT_ERROR);
   } catch (const std::exception&) {
     ec = make_error_code(error::NETWORK_ERROR);
   }

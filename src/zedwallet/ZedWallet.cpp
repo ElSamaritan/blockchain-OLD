@@ -38,6 +38,10 @@ int main(int argc, char **argv) {
 
   std::cout << InformationMsg(CommonCLI::header()) << std::endl;
 
+  if (config.ssl.isInsecure()) {
+    std::cout << WarningMsg(CommonCLI::insecureClientWarning()) << std::endl;
+  }
+
   Logging::LoggerManager logManager;
 
   /* We'd like these lines to be in the below if(), but because some genius
@@ -62,7 +66,8 @@ int main(int argc, char **argv) {
   System::Dispatcher *dispatcher = &localDispatcher;
 
   /* Our connection to xi-daemon */
-  std::unique_ptr<CryptoNote::INode> node(new CryptoNote::NodeRpcProxy(config.host, config.port, logger.getLogger()));
+  std::unique_ptr<CryptoNote::INode> node(
+      new CryptoNote::NodeRpcProxy(config.host, config.port, config.ssl, logger.getLogger()));
 
   std::promise<std::error_code> errorPromise;
 

@@ -1,12 +1,33 @@
-﻿add_definitions(-DSTATICLIB)
+﻿# ============================================================================================== #
+#                                                                                                #
+#                                       Xi Blockchain                                            #
+#                                                                                                #
+# ---------------------------------------------------------------------------------------------- #
+# This file is part of the Galaxia Project - Xi Blockchain                                       #
+# ---------------------------------------------------------------------------------------------- #
+#                                                                                                #
+# Copyright 2018 Galaxia Project Developers                                                      #
+#                                                                                                #
+# This program is free software: you can redistribute it and/or modify it under the terms of the #
+# GNU General Public License as published by the Free Software Foundation, either version 3 of   #
+# the License, or (at your option) any later version.                                            #
+#                                                                                                #
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;      #
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.      #
+# See the GNU General Public License for more details.                                           #
+#                                                                                                #
+# You should have received a copy of the GNU General Public License along with this program.     #
+# If not, see <https://www.gnu.org/licenses/>.                                                   #
+#                                                                                                #
+# ============================================================================================== #
+
+add_definitions(-DSTATICLIB)
 
 set(
     XI_INCLUDE_DIRS
 
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/Core/include
-    ${XI_EXTERNAL_INCLUDE_DIRS}
     ${XI_VERSION_INCLUDE_DIR}
 )
 
@@ -15,7 +36,6 @@ file(GLOB_RECURSE Common Common/*)
 file(GLOB_RECURSE Crypto crypto/*)
 file(GLOB_RECURSE CryptoNoteCore CryptoNoteCore/* CryptoNoteConfig.h)
 file(GLOB_RECURSE CryptoNoteProtocol CryptoNoteProtocol/*)
-file(GLOB_RECURSE Http HTTP/*)
 file(GLOB_RECURSE Logging Logging/*)
 file(GLOB_RECURSE Mnemonics Mnemonics/*)
 file(GLOB_RECURSE NodeRpcProxy NodeRpcProxy/*)
@@ -42,24 +62,20 @@ else()
   list(APPEND XI_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/Platform/OSX" "${CMAKE_CURRENT_SOURCE_DIR}/Platform/Posix")
 endif()
 
-# This appears to be an IDE thing, to group files together.
-# https://cmake.org/cmake/help/v3.0/command/source_group.html
-# Probably not what you need to be looking at if something isn't building
 foreach(source_file ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} ${XI_CLI_DAEMON_SOURCES} ${service}
-                   ${JsonRpcServer} ${Http} ${Logging} ${XI_CLI_MINER_SOURCES} ${Mnemonics} ${NodeRpcProxy} ${P2p}
+                   ${JsonRpcServer} ${Logging} ${XI_CLI_MINER_SOURCES} ${Mnemonics} ${NodeRpcProxy} ${P2p}
                    ${Rpc} ${Serialization} ${System} ${Transfers} ${Wallet} ${WalletLegacy} ${XI_CLI_WALLET_SOURCES}
                    ${BlockchainExplorer})
   if(XI_CXX_FLAGS)
     set_source_files_properties(${source_file} PROPERTIES COMPILE_FLAGS "${XI_CXX_FLAGS}")
   endif() # XI_CXX_FLAGS
   source_group("" FILES ${source_file})
-endforeach()
+endforeach() # source_file
 
 add_library(BlockchainExplorer STATIC ${BlockchainExplorer})
 add_library(Common STATIC ${Common})
 add_library(Crypto STATIC ${Crypto})
 add_library(CryptoNoteCore STATIC ${CryptoNoteCore})
-add_library(Http STATIC ${Http})
 add_library(Logging STATIC ${Logging})
 add_library(Mnemonics STATIC ${Mnemonics})
 add_library(NodeRpcProxy STATIC ${NodeRpcProxy})
@@ -72,9 +88,26 @@ add_library(Wallet STATIC ${Wallet} ${WalletLegacy})
 add_library(JsonRpcServer STATIC ${JsonRpcServer})
 add_library(WalletService STATIC ${service})
 
+xi_make_library(Core Xi-Core)
+target_link_libraries(Xi.Core PUBLIC boost leathers cxxopts System) # cxxopts is only linked to enable it for all libraries
+xi_make_library(Http Xi-Http)
+target_link_libraries(
+  Xi.Http
+
+  PRIVATE
+    openssl
+
+  PUBLIC
+    Xi.Core
+    boost
+    cxxopts
+    json
+)
+
 file(GLOB_RECURSE CommonCLI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI/*")
 add_library(CommonCLI STATIC ${CommonCLI_SOURCES})
 target_include_directories(CommonCLI PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI")
+target_link_libraries(CommonCLI PUBLIC cxxopts)
 add_dependencies(CommonCLI Version)
 
 set(
@@ -85,7 +118,6 @@ set(
     CommonCLI
     Crypto
     CryptoNoteCore
-    Http
     Logging
     Mnemonics
     NodeRpcProxy
@@ -104,7 +136,9 @@ foreach(xiLib ${XI_LIBRARIES})
 endforeach()
 
 if(MSVC)
-  target_link_libraries(System ws2_32)
+  target_link_libraries(System ws2_32 Xi.Core)
+else()
+  target_link_libraries(System Xi.Core)
 endif ()
 
 # Add the dependencies we need
@@ -117,17 +151,27 @@ target_link_libraries(
         Crypto
         P2P
         Rpc
-        Http
         Serialization
         System
         rocksdb
         lz4
-        ${Boost_LIBRARIES}
+        boost
 )
-target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static)
-target_link_libraries(Rpc PUBLIC CryptoNoteCore)
-target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Http Serialization CryptoNoteCore System Logging Common Crypto ${Boost_LIBRARIES})
-target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI)
+target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Serialization CryptoNoteCore System Logging Common Crypto Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI boost json linenoise cxxopts Xi.Http)
+target_link_libraries(BlockchainExplorer PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Common PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(CommonCLI PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Crypto PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Logging PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Mnemonics PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(NodeRpcProxy PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(P2P PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Serialization PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(Transfers PUBLIC Xi.Core boost json linenoise Xi.Http)
+target_link_libraries(JsonRpcServer PUBLIC Xi.Core boost json linenoise Xi.Http)
 
 add_dependencies(WalletService Version)
 add_dependencies(Rpc Version)
@@ -158,10 +202,10 @@ if(XI_BUILD_EXECUTABLES)
     set(XI_EXTRA_OS_LIBRARIES Rpcrt4)
   endif()
 
-  target_link_libraries(CLIDaemon P2P Rpc Serialization System Http Logging CryptoNoteCore Crypto Common CommonCLI rocksdb ${Boost_LIBRARIES} ${XI_EXTRA_OS_LIBRARIES})
-  target_link_libraries(CLIWallet CommonCLI Mnemonics Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common CommonCLI ${Boost_LIBRARIES})
-  target_link_libraries(CLIMiner CommonCLI CryptoNoteCore Rpc Serialization System Http Logging Common CommonCLI Crypto ${Boost_LIBRARIES})
-  target_link_libraries(PGService WalletService JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto Rpc Http System Logging Common rocksdb ${Boost_LIBRARIES} ${XI_EXTRA_OS_LIBRARIES})
+  target_link_libraries(CLIDaemon P2P Rpc Serialization System Xi.Http Logging CryptoNoteCore Crypto Common CommonCLI rocksdb boost cxxopts ${XI_EXTRA_OS_LIBRARIES})
+  target_link_libraries(CLIWallet CommonCLI Mnemonics Wallet NodeRpcProxy Transfers Rpc Xi.Http CryptoNoteCore System Logging Common CommonCLI boost cxxopts)
+  target_link_libraries(CLIMiner CommonCLI CryptoNoteCore Rpc Serialization System Xi.Http Logging Common CommonCLI Crypto boost cxxopts)
+  target_link_libraries(PGService WalletService JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto Rpc Xi.Http System Logging Common rocksdb boost cxxopts ${XI_EXTRA_OS_LIBRARIES})
 
   # Add dependencies means we have to build the latter before we build the former
   # In this case it's because we need to have the current version name rather
@@ -181,5 +225,16 @@ if(XI_BUILD_EXECUTABLES)
   install(
     TARGETS CLIDaemon CLIWallet CLIMiner PGService
     RUNTIME DESTINATION bin
+  )
+
+  # Install license
+  install(
+    FILES
+      "${PROJECT_SOURCE_DIR}/LICENSE"
+      "${PROJECT_SOURCE_DIR}/THIRD_PARTY"
+      "${PROJECT_SOURCE_DIR}/THIRD_PARTY_LICENSE"
+
+    DESTINATION
+      licenses
   )
 endif() # XI_BUILD_EXECUTABLES
