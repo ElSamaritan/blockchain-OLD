@@ -249,8 +249,7 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool send
             << std::endl;
 
   const uint64_t balance = walletInfo->wallet.getActualBalance();
-
-  const uint64_t balanceNoDust = walletInfo->wallet.getBalanceMinusDust({walletInfo->walletAddress});
+  const uint64_t balanceNoDust = walletInfo->wallet.getBalanceMinusDust({});
 
   const auto maybeAddress = getAddress(
       "What address do you want to transfer"
