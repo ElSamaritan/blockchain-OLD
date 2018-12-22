@@ -107,6 +107,7 @@ target_link_libraries(
 file(GLOB_RECURSE CommonCLI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI/*")
 add_library(CommonCLI STATIC ${CommonCLI_SOURCES})
 target_include_directories(CommonCLI PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI")
+target_link_libraries(CommonCLI PUBLIC cxxopts)
 add_dependencies(CommonCLI Version)
 
 set(
@@ -224,5 +225,16 @@ if(XI_BUILD_EXECUTABLES)
   install(
     TARGETS CLIDaemon CLIWallet CLIMiner PGService
     RUNTIME DESTINATION bin
+  )
+
+  # Install license
+  install(
+    FILES
+      "${PROJECT_SOURCE_DIR}/LICENSE"
+      "${PROJECT_SOURCE_DIR}/THIRD_PARTY"
+      "${PROJECT_SOURCE_DIR}/THIRD_PARTY_LICENSE"
+
+    DESTINATION
+      licenses
   )
 endif() # XI_BUILD_EXECUTABLES

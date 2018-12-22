@@ -24,6 +24,7 @@
 ## This section helps us tag our builds with the git commit information
 set(versionScript "${CMAKE_CURRENT_LIST_DIR}/VersionScript.cmake")
 set(XI_VERSION_INPUT_FILE "${PROJECT_SOURCE_DIR}/VERSION")
+set(XI_THIRD_PARTY_INPUT_FILE "${PROJECT_SOURCE_DIR}/THIRD_PARTY")
 set(XI_VERSION_INCLUDE_DIR "${CMAKE_BINARY_DIR}/version")
 set(XI_VERSION_TEMPLATE "${CMAKE_CURRENT_SOURCE_DIR}/src/config/version.h.in")
 set(XI_VERSION_FILE "${XI_VERSION_INCLUDE_DIR}/version.h")
@@ -33,6 +34,7 @@ add_custom_target(
     COMMAND ${CMAKE_COMMAND}
         -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
         -DXI_VERSION_INPUT_FILE=${XI_VERSION_INPUT_FILE}
+        -DXI_THIRD_PARTY_INPUT_FILE=${XI_THIRD_PARTY_INPUT_FILE}
         -DXI_VERSION_TEMPLATE=${XI_VERSION_TEMPLATE}
         -DXI_VERSION_INCLUDE_DIR=${XI_VERSION_INCLUDE_DIR}
         -P ${versionScript}

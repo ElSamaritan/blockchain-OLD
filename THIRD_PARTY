@@ -1,3 +1,8 @@
+The following third party projects are included in this project. Modified
+sources are cleary stated and published in our gitlab group
+    https://gitlab.com/galaxia-project/blockchain/external
+.
+
 boost
     Copyright 2018 boostorg
     https://www.boost.org/
@@ -55,7 +60,7 @@ openssl
     https://github.com/openssl/openssl
     Apache License Version 2.0, January 2004
 
-The blockchain was forked from an existing code base, all changes are stated by our git
+The project was forked from an existing code base, all changes are stated by our git
 history https://gitlab.com/galaxia-project/blockchain/xi/commits/develop.
 
 AmityCoin

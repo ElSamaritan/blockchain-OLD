@@ -46,3 +46,13 @@
 #define PROJECT_VERSION_BUILD_NO "@XI_VERSION_TWEAK@"
 #define PROJECT_VERSION_LONG PROJECT_VERSION "." PROJECT_VERSION_BUILD_NO " (" BUILD_COMMIT_ID ")"
 #define PROJECT_DESCRIPTION PROJECT_NAME " " PROJECT_VERSION_LONG
+
+#include <string>
+
+namespace Xi {
+inline std::string thirdParty() {
+return R"(
+@XI_THIRD_PARTY@
+)";
+}
+} // namespace Xi

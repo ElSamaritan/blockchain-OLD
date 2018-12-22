@@ -30,6 +30,7 @@
 #include "config/Ascii.h"
 #include "config/CryptoNoteConfig.h"
 
+namespace {
 // clang-format off
 const std::string DevelpmentVersionHeader = R"(
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ATTENTION   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -44,6 +45,7 @@ const std::string DevelpmentVersionHeader = R"(
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ATTENTION   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 )";
 // clang-format on
+}  // namespace
 
 std::string CommonCLI::header() {
   std::stringstream programHeader;
