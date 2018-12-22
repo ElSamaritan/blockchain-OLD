@@ -72,7 +72,6 @@ target_link_libraries(
   Xi.Http
 
   PRIVATE
-    zlibstatic
     openssl
 
   PUBLIC

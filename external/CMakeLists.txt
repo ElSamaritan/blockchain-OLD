@@ -2,13 +2,13 @@
 
 # Not contained in build system
 ## Required
+include(madler-zlib.cmake)
 include(boostorg-boost.cmake)
 
 ## Optional
 include(openssl-openssl.cmake)
 
 # Contained in buildsystem using submodules
-include(madler-zlib.cmake)
 include(lz4-lz4.cmake)
 include(facebook-rocksdb.cmake)
 include(miniupnp-miniupnpc.cmake)

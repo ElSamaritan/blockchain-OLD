@@ -4,7 +4,6 @@
 #include <sstream>
 
 #include <Xi/Utils/ExternalIncludePush.h>
-#include <zlib.h>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -12,6 +11,10 @@
 #include <Xi/Utils/ExternalIncludePop.h>
 
 #include <Xi/Utils/String.h>
+
+#ifndef MAX_WBITS
+#define MAX_WBITS 15
+#endif
 
 namespace {
 std::vector<Xi::Http::HeaderContainer::Header> headersToCopy{

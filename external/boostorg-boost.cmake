@@ -31,7 +31,7 @@ find_package(
         ${Boost_COMPONENTS_EXTRA}
 )
 if(NOT MSVC)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")
+  set(Boost_LIBRARIES "${Boost_LIBRARIES};rt;zlib")
 endif()
 cmake_policy(POP)
 

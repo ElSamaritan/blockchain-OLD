@@ -5,7 +5,6 @@
 #include <cinttypes>
 
 #include <Xi/Utils/ExternalIncludePush.h>
-#include <zlib.h>
 #include <openssl/ssl.h>
 #include <boost/asio/ssl.hpp>
 #include <boost/iostreams/copy.hpp>
