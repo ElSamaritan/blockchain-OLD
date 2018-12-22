@@ -25,6 +25,3 @@
 [submodule "external/lz4-lz4"]
 	path = external/lz4-lz4
 	url = ../External/lz4-lz4
-[submodule "external/madler-zlib"]
-	path = external/madler-zlib
-	url = ../external/madler-zlib
