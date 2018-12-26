@@ -10,6 +10,8 @@
 #include <utility>
 #include <string>
 
+#include <Xi/Utils/String.h>
+
 #include <Common/Base58.h>
 #include <Common/StringTools.h>
 
@@ -105,6 +107,13 @@ bool confirmTransaction(CryptoNote::TransactionParameters t, std::shared_ptr<Wal
     std::cout << ", " << std::endl << "and a Payment ID of " << SuccessMsg(paymentID);
   } else {
     std::cout << ".";
+  }
+
+  std::cout << " The transaction will be unlocked ";
+  if (t.unlockTimestamp > 0) {
+    std::cout << "at block " << WarningMsg(std::to_string(t.unlockTimestamp)) << ".";
+  } else {
+    std::cout << SuccessMsg("immediately.");
   }
 
   std::cout << std::endl
@@ -345,6 +354,13 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool send
     default: { break; }
   }
 
+  const auto maybeUnlockTimestamp = getUnlockTimestamp();
+  if (!maybeUnlockTimestamp.isJust) {
+    std::cout << WarningMsg("Cancelling transaction.") << std::endl;
+    return;
+  }
+  uint64_t unlockTimestamp = maybeUnlockTimestamp.x;
+
   /* This doesn't account for dust. We should probably make a function to
      check for balance minus dust */
   if (sendAll) {
@@ -374,7 +390,7 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool send
   }
 
   doTransfer(address, amount, fee, extra, walletInfo, height, integratedAddress, mixin, nodeAddress, nodeFee,
-             originalAddress);
+             originalAddress, unlockTimestamp);
 }
 
 BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr<WalletInfo> walletInfo,
@@ -420,7 +436,7 @@ BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr
 
 void doTransfer(std::string address, uint64_t amount, uint64_t fee, std::string extra,
                 std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool integratedAddress, uint64_t mixin,
-                std::string nodeAddress, uint32_t nodeFee, std::string originalAddress) {
+                std::string nodeAddress, uint32_t nodeFee, std::string originalAddress, uint64_t unlockTimestamp) {
   const uint64_t balance = walletInfo->wallet.getActualBalance();
 
   if (balance < amount + fee + nodeFee) {
@@ -442,6 +458,7 @@ void doTransfer(std::string address, uint64_t amount, uint64_t fee, std::string 
   p.mixIn = static_cast<uint16_t>(mixin);
   p.extra = extra;
   p.changeDestination = walletInfo->walletAddress;
+  p.unlockTimestamp = unlockTimestamp;
 
   if (!confirmTransaction(p, walletInfo, integratedAddress, nodeFee, originalAddress)) {
     std::cout << WarningMsg("Cancelling transaction.") << std::endl;
@@ -697,6 +714,34 @@ Maybe<uint64_t> getTransferAmount() {
   }
 }
 
+Maybe<uint64_t> getUnlockTimestamp() {
+  while (true) {
+    std::string userInput;
+    std::cout
+        << std::endl
+        << InformationMsg(
+               "Do you want to setup an unlock time? Transaction and the related change will be locked until the "
+               "given height is reached.")
+        << std::endl
+        << InformationMsg(
+               "Insert a blockchain height in the future to lock the coins and the change to that blockchain height to "
+               "that height")
+        << std::endl
+        << InformationMsg("Hit enter for the default of no unlock time: ");
+
+    std::getline(std::cin, userInput);
+
+    if (userInput == "cancel") {
+      return Nothing<uint64_t>();
+    }
+
+    uint64_t unlockTimestamp;
+    if (parseUnlockTimestamp(userInput, unlockTimestamp)) {
+      return Just<uint64_t>(unlockTimestamp);
+    }
+  }
+}
+
 bool parseFee(std::string feeString) {
   uint64_t fee;
 
@@ -892,4 +937,25 @@ bool parseAmount(std::string amountString) {
   }
 
   return true;
+}
+
+bool parseUnlockTimestamp(const std::string &str, uint64_t &out) {
+  try {
+    auto trimmed = Xi::trim(str);
+    if (trimmed.empty()) {
+      out = 0;
+      return true;
+    } else {
+      auto input = std::stoll(str);
+      if (input < 0)
+        throw std::runtime_error{"negative block height"};
+      else
+        out = static_cast<uint64_t>(input);
+      return true;
+    }
+  } catch (...) {
+    std::cout << WarningMsg("Failed to parse unlock timestamp. Pease ensure you enter a valid postive number.")
+              << std::endl;
+    return false;
+  }
 }

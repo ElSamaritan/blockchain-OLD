@@ -40,6 +40,26 @@ TEST(XI_TESTSUITE, StartsWith) {
   EXPECT_FALSE(Xi::starts_with("Xi Blockchain", "Xi b"));
 }
 
+TEST(XI_TESTSUITE, Trim) {
+  using namespace ::testing;
+
+  EXPECT_STREQ(Xi::trim_left("").c_str(), "");
+  EXPECT_STREQ(Xi::trim_left(" ").c_str(), "");
+  EXPECT_STREQ(Xi::trim_left("x  ").c_str(), "x  ");
+  EXPECT_STREQ(Xi::trim_left("  x  ").c_str(), "x  ");
+
+  EXPECT_STREQ(Xi::trim_right("").c_str(), "");
+  EXPECT_STREQ(Xi::trim_right(" ").c_str(), "");
+  EXPECT_STREQ(Xi::trim_right("  x").c_str(), "  x");
+  EXPECT_STREQ(Xi::trim_right("  x  ").c_str(), "  x");
+
+  EXPECT_STREQ(Xi::trim("").c_str(), "");
+  EXPECT_STREQ(Xi::trim(" ").c_str(), "");
+  EXPECT_STREQ(Xi::trim("x ").c_str(), "x");
+  EXPECT_STREQ(Xi::trim(" x").c_str(), "x");
+  EXPECT_STREQ(Xi::trim("  x  ").c_str(), "x");
+}
+
 TEST(XI_TESTSUITE, ToString) {
   using namespace ::testing;
   using namespace ::Xi;

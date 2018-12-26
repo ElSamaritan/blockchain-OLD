@@ -164,6 +164,13 @@ void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, uint32_t height
     return;
   }
 
+  const auto maybeUnlockTimestamp = getUnlockTimestamp();
+  if (!maybeUnlockTimestamp.isJust) {
+    std::cout << WarningMsg("Cancelling transaction.") << std::endl;
+    return;
+  }
+  uint64_t unlockTimestamp = maybeUnlockTimestamp.x;
+
   /* Originally entered address, so we can preserve the correct integrated
      address for confirmation screen */
   auto originalAddress = addressBookEntry.address;
@@ -180,8 +187,8 @@ void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, uint32_t height
     extra = getExtraFromPaymentID(addrPaymentIDPair.x.second);
   }
 
-  doTransfer(address, amount, fee, extra, walletInfo, height, integrated, mixin, feeAddress, feeAmount,
-             originalAddress);
+  doTransfer(address, amount, fee, extra, walletInfo, height, integrated, mixin, feeAddress, feeAmount, originalAddress,
+             unlockTimestamp);
 }
 
 bool isAddressBookEmpty(AddressBook addressBook) {

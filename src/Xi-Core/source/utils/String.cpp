@@ -5,6 +5,7 @@
 #include <locale>
 #include <stdexcept>
 #include <algorithm>
+#include <cctype>
 
 bool Xi::starts_with(const std::string &str, const std::string &prefix) {
   if (prefix.empty())
@@ -14,6 +15,18 @@ bool Xi::starts_with(const std::string &str, const std::string &prefix) {
   else
     return std::mismatch(prefix.begin(), prefix.end(), str.begin()).first == prefix.end();
 }
+
+std::string Xi::trim_left(std::string str) {
+  str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](char ch) { return !std::isspace(ch); }));
+  return str;
+}
+
+std::string Xi::trim_right(std::string str) {
+  str.erase(std::find_if(str.rbegin(), str.rend(), [](char ch) { return !std::isspace(ch); }).base(), str.end());
+  return str;
+}
+
+std::string Xi::trim(std::string str) { return trim_right(trim_left(str)); }
 
 static_assert(std::numeric_limits<uint64_t>::max() == std::numeric_limits<unsigned long long>::max(), "");
 
