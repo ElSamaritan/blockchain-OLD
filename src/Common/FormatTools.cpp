@@ -7,7 +7,7 @@
 #include "FormatTools.h"
 #include <cstdio>
 #include <ctime>
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 #include "CryptoNoteCore/Core.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include <boost/format.hpp>
@@ -67,7 +67,7 @@ ForkStatus get_fork_status(uint32_t height, std::vector<uint32_t> upgrade_height
     }
   }
 
-  uint64_t days = (next_fork - height) / CryptoNote::Config::Time::expectedBlocksPerDay();
+  uint64_t days = (next_fork - height) / Xi::Config::Time::expectedBlocksPerDay();
 
   /* Next fork in < 30 days away */
   if (days < 30) {
@@ -98,12 +98,12 @@ std::string get_fork_time(uint32_t height, std::vector<uint32_t> upgrade_heights
   }
 
   uint32_t heightOffset = next_fork - height;
-  uint64_t days = heightOffset / CryptoNote::Config::Time::expectedBlocksPerDay();
+  uint64_t days = heightOffset / Xi::Config::Time::expectedBlocksPerDay();
   if (height == next_fork) {
     return " (forking now),";
   } else if (days < 1) {
     uint64_t hours = static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::hours>(heightOffset * CryptoNote::Config::Time::blockTime()).count());
+        std::chrono::duration_cast<std::chrono::hours>(heightOffset * Xi::Config::Time::blockTime()).count());
     return (boost::format(" (next fork in %.1f hours),") % hours).str();
   } else {
     return (boost::format(" (next fork in %.1f days),") % days).str();
@@ -134,7 +134,7 @@ std::string get_upgrade_info(uint32_t supported_height, std::vector<uint32_t> up
   for (auto upgrade : upgrade_heights) {
     if (upgrade > supported_height) {
       return "The network forked at height " + std::to_string(upgrade) +
-             ", please update your software: " + CryptoNote::Config::Coin::downloadUrl();
+             ", please update your software: " + Xi::Config::Coin::downloadUrl();
     }
   }
 
@@ -150,7 +150,7 @@ std::string get_status_string(CryptoNote::COMMAND_RPC_GET_INFO::response iresp) 
 
   ss << "Height: " << iresp.height << "/" << iresp.network_height << " ("
      << get_sync_percentage(iresp.height, iresp.network_height) << "%) "
-     << "on " << (iresp.testnet ? "testnet, " : "mainnet, ") << (iresp.synced ? "synced, " : "syncing, ") << "net hash "
+     << "on " << iresp.network << (iresp.synced ? "synced, " : "syncing, ") << "net hash "
      << get_mining_speed(iresp.hashrate) << ", "
      << "v" << +iresp.major_version << "," << get_update_status(forkStatus, iresp.network_height, iresp.upgrade_heights)
      << ", " << iresp.outgoing_connections_count << "(out)+" << iresp.incoming_connections_count << "(in) connections, "

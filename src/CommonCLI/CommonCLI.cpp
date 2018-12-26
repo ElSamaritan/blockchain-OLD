@@ -26,9 +26,11 @@
 #include <sstream>
 #include <iostream>
 
-#include "version.h"
-#include "config/Ascii.h"
-#include "config/CryptoNoteConfig.h"
+#include <Xi/Version.h>
+#include <Xi/Config/Ascii.h>
+#include <Xi/Config.h>
+
+#include <Common/Util.h>
 
 namespace {
 // clang-format off
@@ -51,16 +53,16 @@ std::string CommonCLI::header() {
   std::stringstream programHeader;
   programHeader << std::endl
                 << asciiArt << std::endl
-                << " " << CryptoNote::Config::Coin::name() << " v" << PROJECT_VERSION_LONG << std::endl
+                << " " << Xi::Config::Coin::name() << " v" << PROJECT_VERSION_LONG << std::endl
                 << " This software is distributed under the General Public License v3.0" << std::endl
                 << std::endl
                 << " " << PROJECT_COPYRIGHT << std::endl
                 << std::endl
                 << " Additional Copyright(s) may apply, please see the included LICENSE file for more information."
                 << std::endl;
-  if (!CryptoNote::Config::Coin::licenseUrl().empty()) {
+  if (!Xi::Config::Coin::licenseUrl().empty()) {
     programHeader << " If you did not receive a copy of the LICENSE, please visit:" << std::endl
-                  << " " << CryptoNote::Config::Coin::licenseUrl() << std::endl
+                  << " " << Xi::Config::Coin::licenseUrl() << std::endl
                   << std::endl;
   }
 
@@ -79,26 +81,6 @@ bool CommonCLI::isDevVersion() {
       false
 #endif
       ;
-}
-
-void CommonCLI::verifyDevExecution(int& argc, char** argv) {
-  const std::string devModeFlag{"--dev-mode"};
-  for (int i = 1; i < argc; ++i) {
-    if (std::string{argv[i]} == devModeFlag) {
-      for (int k = 0; i + k < argc - 1; ++k) {
-        argv[i + k] = argv[i + k + 1];
-      }
-      argc -= 1;
-      return;
-    }
-  }
-
-  if (isDevVersion()) {
-    std::cout << header()
-              << "\n You are using a development version and did not provide the --dev-mode flag. Exiting..."
-              << std::endl;
-    exit(-1);
-  }
 }
 
 std::string CommonCLI::insecureClientWarning() {
@@ -123,4 +105,51 @@ std::string CommonCLI::insecureServerWarning() {
    !                                                                                       !
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 )";
+}
+
+void CommonCLI::emplaceCLIOptions(cxxopts::Options& options) {
+  // clang-format off
+  options.add_options("Core")
+      ("help", "Display this help message")
+      ("version", "Output software version information")
+      ("os-version", "Output Operating System version information");
+
+  options.add_options("License")
+      ("license", "Print the project license and exits.")
+      ("third-party","Prints a summary of all third party libraries used by this project.")
+      ("third-party-licenses", "Prints every license included by third party libraries used by this project.");
+
+  if(isDevVersion()) {
+    options.add_options("Development")("dev-mode", "Indicates you are aware of running a development version. "
+                                                   "You must provide this flag in order to run the application.");
+  }
+  // clang-format on
+}
+
+bool CommonCLI::handleCLIOptions(cxxopts::Options& options, const cxxopts::ParseResult& result) {
+  if (result.count("help")) {
+    std::cout << options.help({}) << std::endl;
+    return true;
+  } else if (result.count("version")) {
+    std::cout << header() << std::endl;
+    return true;
+  } else if (result.count("license")) {
+    std::cout << Xi::Version::license() << std::endl;
+    return true;
+  } else if (result.count("third-party")) {
+    std::cout << Xi::Version::thirdParty() << std::endl;
+    return true;
+  } else if (result.count("third-party-licenses")) {
+    std::cout << Xi::Version::thirdPartyLicense() << std::endl;
+    return true;
+  } else if (result.count("os-version")) {
+    std::cout << CommonCLI::header() << "OS: " << Tools::get_os_version_string() << std::endl;
+    return true;
+  } else if (isDevVersion() && (result.count("dev-mode") == 0)) {
+    std::cout << header()
+              << "\n You are using a development version and did not provide the --dev-mode flag. Exiting..."
+              << std::endl;
+    return true;
+  } else
+    return false;
 }

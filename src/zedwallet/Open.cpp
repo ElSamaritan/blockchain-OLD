@@ -21,7 +21,7 @@
 #include <zedwallet/Transfer.h>
 #include <zedwallet/Types.h>
 #include <zedwallet/PasswordContainer.h>
-#include <config/WalletConfig.h>
+#include <Xi/Config/WalletConfig.h>
 
 std::shared_ptr<WalletInfo> createViewWallet(CryptoNote::WalletGreen &wallet) {
   std::cout << WarningMsg("View wallets are only for viewing incoming ")

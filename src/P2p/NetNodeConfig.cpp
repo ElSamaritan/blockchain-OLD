@@ -8,11 +8,13 @@
 
 #include <limits>
 
+#include <Xi/Config.h>
+#include <Xi/Utils/String.h>
+
 #include <Common/Util.h>
 #include "Common/CommandLine.h"
 #include "Common/StringTools.h"
 #include "crypto/crypto.h"
-#include <config/CryptoNoteConfig.h>
 
 namespace CryptoNote {
 namespace {
@@ -55,7 +57,7 @@ NetNodeConfig::NetNodeConfig() {
   allowLocalIp = false;
   hideMyPort = false;
   configFolder = Tools::getDefaultDataDirectory();
-  testnet = false;
+  m_network = Xi::Config::Network::defaultNetworkType();
 }
 
 bool NetNodeConfig::init(const std::string interface, const int port, const int external, const bool localIp,
@@ -74,7 +76,7 @@ bool NetNodeConfig::init(const std::string interface, const int port, const int 
   allowLocalIp = localIp;
   hideMyPort = hidePort;
   configFolder = dataDir;
-  p2pStateFilename = CryptoNote::Config::P2P::stateBackupFilename();
+  p2pStateFilename = Xi::Config::P2P::stateBackupFilename();
 
   if (!addPeers.empty()) {
     if (!parsePeersAndAddToPeerListContainer(addPeers, peers)) {
@@ -103,17 +105,13 @@ bool NetNodeConfig::init(const std::string interface, const int port, const int 
   return true;
 }
 
-void NetNodeConfig::setTestnet(bool isTestnet) { testnet = isTestnet; }
+void NetNodeConfig::setNetwork(Xi::Config::Network::Type network) { m_network = network; }
 
 std::string NetNodeConfig::getP2pStateFilename() const {
-  if (testnet) {
-    return "testnet_" + p2pStateFilename;
-  }
-
-  return p2pStateFilename;
+  return p2pStateFilename + "." + Xi::to_lower(Xi::to_string(getNetwork()));
 }
 
-bool NetNodeConfig::getTestnet() const { return testnet; }
+Xi::Config::Network::Type NetNodeConfig::getNetwork() const { return m_network; }
 
 std::string NetNodeConfig::getBindIp() const { return bindIp; }
 

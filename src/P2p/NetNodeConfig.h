@@ -10,6 +10,8 @@
 #include <vector>
 #include <string>
 
+#include <Xi/Config/NetworkType.h>
+
 #include "P2pProtocolTypes.h"
 
 namespace CryptoNote {
@@ -23,7 +25,7 @@ class NetNodeConfig {
             const std::vector<std::string> addSeedNodes);
 
   std::string getP2pStateFilename() const;
-  bool getTestnet() const;
+  Xi::Config::Network::Type getNetwork() const;
   std::string getBindIp() const;
   uint16_t getBindPort() const;
   uint16_t getExternalPort() const;
@@ -36,7 +38,7 @@ class NetNodeConfig {
   std::string getConfigFolder() const;
 
   void setP2pStateFilename(const std::string& filename);
-  void setTestnet(bool isTestnet);
+  void setNetwork(Xi::Config::Network::Type network);
   void setBindIp(const std::string& ip);
   void setBindPort(uint16_t port);
   void setExternalPort(uint16_t port);
@@ -60,7 +62,7 @@ class NetNodeConfig {
   bool hideMyPort;
   std::string configFolder;
   std::string p2pStateFilename;
-  bool testnet;
+  Xi::Config::Network::Type m_network;
 };
 
 }  // namespace CryptoNote

@@ -12,7 +12,7 @@
 #include "Common/CommandLine.h"
 #include "Common/StringTools.h"
 #include "crypto/crypto.h"
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 
 using namespace CryptoNote;
 
@@ -30,11 +30,11 @@ bool DataBaseConfig::parseCompression(const std::string &compressionMode, DataBa
 
 DataBaseConfig::DataBaseConfig()
     : dataDir(Tools::getDefaultDataDirectory()),
-      backgroundThreadsCount(CryptoNote::Config::Database::backgroundThreads()),
-      maxOpenFiles(CryptoNote::Config::Database::maximumOpenFiles()),
-      writeBufferSize(CryptoNote::Config::Database::writeBufferSize()),
-      readCacheSize(CryptoNote::Config::Database::readBufferSize()),
-      testnet(false),
+      backgroundThreadsCount(Xi::Config::Database::backgroundThreads()),
+      maxOpenFiles(Xi::Config::Database::maximumOpenFiles()),
+      writeBufferSize(Xi::Config::Database::writeBufferSize()),
+      readCacheSize(Xi::Config::Database::readBufferSize()),
+      m_network(Xi::Config::Network::defaultNetworkType()),
       compression(Compression::LZ4) {}
 
 bool DataBaseConfig::init(const std::string dataDirectory, const uint16_t backgroundThreads, const uint16_t openFiles,
@@ -64,7 +64,7 @@ uint64_t DataBaseConfig::getWriteBufferSize() const { return writeBufferSize; }
 
 uint64_t DataBaseConfig::getReadCacheSize() const { return readCacheSize; }
 
-bool DataBaseConfig::getTestnet() const { return testnet; }
+Xi::Config::Network::Type DataBaseConfig::getNetwork() const { return m_network; }
 
 DataBaseConfig::Compression DataBaseConfig::getCompression() const { return compression; }
 
@@ -83,7 +83,7 @@ void DataBaseConfig::setWriteBufferSize(uint64_t _writeBufferSize) { this->write
 void DataBaseConfig::setReadCacheSize(uint64_t _readCacheSize) { this->readCacheSize = _readCacheSize; }
 
 // WARNING(mainnet)
-void DataBaseConfig::setTestnet(bool _testnet) { this->testnet = _testnet; }
+void DataBaseConfig::setNetwork(Xi::Config::Network::Type network) { this->m_network = network; }
 
 void DataBaseConfig::setCompression(DataBaseConfig::Compression _compression) { compression = _compression; }
 

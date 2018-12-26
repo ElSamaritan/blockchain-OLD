@@ -1035,7 +1035,7 @@ uint32_t BlockchainCache::getBlockIndexContainingTx(const Crypto::Hash& transact
 
 uint8_t BlockchainCache::getBlockMajorVersionForHeight(uint32_t height) const {
   UpgradeManager upgradeManager;
-  for (auto version : Config::BlockVersion::versions())
+  for (auto version : Xi::Config::BlockVersion::versions())
     upgradeManager.addMajorBlockVersion(version, currency.upgradeHeight(version));
   return upgradeManager.getBlockMajorVersion(height);
 }

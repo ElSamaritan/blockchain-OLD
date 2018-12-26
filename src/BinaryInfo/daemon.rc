@@ -1,37 +1,45 @@
-#include <windows.h>
-#include "version.h"
+#include <Windows.h>
+#include <winresrc.h>
+#include <Xi/Version.h>
 
-IDI_ICON1    ICON    DISCARDABLE    "../../assets/icons/daemon.ico"
+/*!
+ * \attention This file must be ANSI encoded in order to be parsed correctly by MSVC resource compiler.
+ */
+
+// clang-format off
+#ifndef DEBUG
+#define VER_DEBUG                   0
+#else
+#define VER_DEBUG                   VS_FF_DEBUG
+#endif
+
+IDI_ICON1 ICON DISCARDABLE "daemon.ico"
 
 VS_VERSION_INFO VERSIONINFO
-  FILEVERSION APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV,APP_VER_BUILD
-  PRODUCTVERSION APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV,APP_VER_BUILD
-  FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
-  FILEFLAGS VS_FF_DEBUG
-#else
-  FILEFLAGS 0x0L
-#endif
-  FILEOS VOS__WINDOWS32
-  FILETYPE VFT_APP
-  FILESUBTYPE 0x0L
+FILEVERSION APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV,APP_VER_BUILD
+PRODUCTVERSION APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV,APP_VER_BUILD
+FILEFLAGSMASK 0x3fL
+FILEFLAGS VER_DEBUG
+FILEOS VOS__WINDOWS32
+FILETYPE VFT_APP
+FILESUBTYPE 0x0L
+BEGIN
+  BLOCK "StringFileInfo"
   BEGIN
-    BLOCK "StringFileInfo"
+    BLOCK "000004b0"
     BEGIN
-      BLOCK "000004b0"
-      BEGIN
-        VALUE "CompanyName",      PROJECT_SITE
-        VALUE "FileDescription",  PROJECT_NAME " Daemon " PROJECT_VERSION_LONG
-        VALUE "FileVersion",      PROJECT_VERSION_BUILD_NO
-        VALUE "LegalCopyright",   PROJECT_COPYRIGHT
-        VALUE "OriginalFilename", "xi-daemon.exe"
-        VALUE "ProductName",      PROJECT_NAME
-        VALUE "ProductVersion",   PROJECT_VERSION
-      END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-      VALUE "Translation", 0x0, 1200
+      VALUE "CompanyName",      PROJECT_SITE
+      VALUE "FileDescription",  PROJECT_NAME " Daemon " PROJECT_VERSION_LONG
+      VALUE "FileVersion",      PROJECT_VERSION_BUILD_NO
+      VALUE "LegalCopyright",   PROJECT_COPYRIGHT
+      VALUE "OriginalFilename", "xi-daemon.exe"
+      VALUE "ProductName",      PROJECT_NAME
+      VALUE "ProductVersion",   PROJECT_VERSION
     END
   END
-
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1252
+  END
+END
+    // clang-format on

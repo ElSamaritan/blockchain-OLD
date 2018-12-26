@@ -19,13 +19,14 @@
 #include <cxxopts.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
-#include <CommonCLI.h>
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Version.h>
+#include <Xi/Config.h>
+
 #include "Common/StringTools.h"
+#include <CommonCLI.h>
 #include <Common/Util.h>
 
 #include "Logging/ILogger.h"
-#include "version.h"
 
 namespace CryptoNote {
 
@@ -61,28 +62,26 @@ bool parseDaemonAddressFromString(std::string& host, uint16_t& port, const std::
   }
 
   host = parts.at(0);
-  port = CryptoNote::Config::Network::rpcPort();
+  port = Xi::Config::Network::rpcPort();
   return true;
 }
 
 }  // namespace
 
-MiningConfig::MiningConfig() : help(false), version(false) {}
+MiningConfig::MiningConfig() {}
 
 void MiningConfig::parse(int argc, char** argv) {
   cxxopts::Options options(argv[0], CommonCLI::header());
 
   // clang-format off
-  options.add_options("Core")
-    ("help", "Display this help message", cxxopts::value<bool>(help)->implicit_value("true"))
-    ("version", "Output software version information", cxxopts::value<bool>(version)->default_value("false")->implicit_value("true"));
+  CommonCLI::emplaceCLIOptions(options);
 
   std::string daemonAddress;
   options.add_options("Daemon")
     ("daemon-address", "The daemon [host:port] combination to use for node operations. This option overrides --daemon-host and --daemon-rpc-port",
       cxxopts::value<std::string>(daemonAddress), "<host:port>")
     ("daemon-host", "The daemon host to use for node operations", cxxopts::value<std::string>(daemonHost)->default_value("127.0.0.1"), "<host>")
-    ("daemon-rpc-port", "The daemon RPC port to use for node operations", cxxopts::value<uint16_t>(daemonPort)->default_value(std::to_string(CryptoNote::Config::Network::rpcPort())), "#")
+    ("daemon-rpc-port", "The daemon RPC port to use for node operations", cxxopts::value<uint16_t>(daemonPort)->default_value(std::to_string(Xi::Config::Network::rpcPort())), "#")
     ("scan-time", "Blockchain polling interval (seconds). How often miner will check the Blockchain for updates", cxxopts::value<size_t>(scanPeriod)->default_value("30"), "#");
 
   options.add_options("Mining")
@@ -98,21 +97,12 @@ void MiningConfig::parse(int argc, char** argv) {
   // clang-format on
 
   try {
-    auto result = options.parse(argc, argv);
+    const auto result = options.parse(argc, argv);
+    if (CommonCLI::handleCLIOptions(options, result)) exit(0);
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Error: Unable to parse command line argument options: " << e.what() << std::endl << std::endl;
     std::cout << options.help({}) << std::endl;
     exit(1);
-  }
-
-  if (help)  // Do we want to display the help message?
-  {
-    std::cout << options.help({}) << std::endl;
-    exit(0);
-  } else if (version)  // Do we want to display the software version?
-  {
-    std::cout << CommonCLI::header() << std::endl;
-    exit(0);
   }
 
   if (miningAddress.empty()) {

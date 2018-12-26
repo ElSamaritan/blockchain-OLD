@@ -271,7 +271,7 @@ struct COMMAND_RPC_GET_INFO {
     std::string version;
     uint64_t start_time;
     bool synced;
-    bool testnet;
+    std::string network;
 
     void serialize(ISerializer &s) {
       KV_MEMBER(status)
@@ -293,7 +293,7 @@ struct COMMAND_RPC_GET_INFO {
       KV_MEMBER(minor_version)
       KV_MEMBER(start_time)
       KV_MEMBER(synced)
-      KV_MEMBER(testnet)
+      KV_MEMBER(network)
       KV_MEMBER(version)
     }
   };

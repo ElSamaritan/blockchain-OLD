@@ -32,7 +32,7 @@
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
 
-#include <config/CryptoNoteCheckpoints.h>
+#include <Xi/Config/Checkpoints.h>
 
 #include <Logging/LoggerManager.h>
 
@@ -65,7 +65,7 @@ void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const 
   }
   CryptoNote::Transaction transaction;
   if (rewardTargets.empty()) {
-    if (CryptoNote::Config::Coin::amountOfPremine() > 0) {
+    if (Xi::Config::Coin::amountOfPremine() > 0) {
       std::cout << "Error: Genesis Block Reward Addresses are not defined" << std::endl;
       return;
     }
@@ -76,7 +76,7 @@ void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const 
   std::string transactionHex = Common::toHex(CryptoNote::toBinaryArray(transaction));
   std::cout << CommonCLI::header() << std::endl
             << std::endl
-            << "Replace the current genesisTransactionHash line in src/config/Coin.h with this one:" << std::endl
+            << "Replace the current genesisTransactionHash line in src/Xi/Config/Coin.h with this one:" << std::endl
             << "\"" << transactionHex << "\";" << std::endl;
 
   return;
@@ -119,7 +119,6 @@ void pause_for_input(int argc) {
 }
 
 int main(int argc, char* argv[]) {
-  CommonCLI::verifyDevExecution(argc, argv);
   DaemonConfiguration config = initConfiguration(argv[0]);
 
 #ifdef WIN32
@@ -191,7 +190,11 @@ int main(int argc, char* argv[]) {
 
     // create objects and link them
     CryptoNote::CurrencyBuilder currencyBuilder(logManager);
-    currencyBuilder.isBlockexplorer(config.enableBlockExplorer);
+    // clang-format off
+    currencyBuilder
+      .isBlockexplorer(config.enableBlockExplorer)
+      .network(config.network);
+    // clang-format on
     try {
       currencyBuilder.currency();
     } catch (std::exception&) {
@@ -207,10 +210,10 @@ int main(int argc, char* argv[]) {
     if (use_checkpoints) {
       logger(INFO) << "Loading Checkpoints for faster initial sync...";
       if (config.checkPoints == "default") {
-        for (const auto& cp : CryptoNote::CHECKPOINTS) {
+        for (const auto& cp : Xi::Config::CHECKPOINTS) {
           checkpoints.addCheckpoint(cp.index, cp.blockId);
         }
-        logger(INFO) << "Loaded " << CryptoNote::CHECKPOINTS.size() << " default checkpoints";
+        logger(INFO) << "Loaded " << Xi::Config::CHECKPOINTS.size() << " default checkpoints";
       } else {
         bool results = checkpoints.loadCheckpointsFromFile(config.checkPoints);
         if (!results) {
@@ -220,6 +223,7 @@ int main(int argc, char* argv[]) {
     }
 
     NetNodeConfig netNodeConfig;
+    netNodeConfig.setNetwork(config.network);
     netNodeConfig.init(config.p2pInterface, config.p2pPort, config.p2pExternalPort, config.localIp, config.hideMyPort,
                        config.dataDirectory, config.peers, config.exclusiveNodes, config.priorityNodes,
                        config.seedNodes);
@@ -227,6 +231,7 @@ int main(int argc, char* argv[]) {
     DataBaseConfig dbConfig;
     dbConfig.init(config.dataDirectory, config.dbThreads, config.dbMaxOpenFiles, config.dbWriteBufferSize,
                   config.dbReadCacheSize);
+    dbConfig.setNetwork(config.network);
     dbConfig.setCompression(config.dbCompression);
 
     if (!Tools::create_directories_if_necessary(dbConfig.getDataDir())) {
@@ -261,7 +266,7 @@ int main(int argc, char* argv[]) {
     logger(INFO) << "Core initialized OK";
 
     CryptoNote::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
-    CryptoNote::NodeServer p2psrv(dispatcher, cprotocol, logManager);
+    CryptoNote::NodeServer p2psrv(dispatcher, config.network, cprotocol, logManager);
     auto rpcServer = std::make_shared<CryptoNote::RpcServer>(dispatcher, logManager, ccore, p2psrv, cprotocol);
 
     cprotocol.set_p2p_endpoint(&p2psrv);

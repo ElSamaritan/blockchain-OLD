@@ -14,7 +14,7 @@
 #include "CachedTransaction.h"
 #include "TransactionApi.h"
 #include "Wallet/WalletErrors.h"
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 
 namespace CryptoNote {
 class Mixins {
@@ -29,8 +29,9 @@ class Mixins {
     /* We also need to ensure that the mixin enforced is for the limit that
        was correct when the block was formed - i.e. if 0 mixin was allowed at
        block 100, but is no longer allowed - we should still validate block 100 */
-    const uint8_t blockMajorVersion = Config::BlockVersion::version(height);
-    return std::make_tuple(Config::Mixin::minimum(blockMajorVersion), Config::Mixin::maximum(blockMajorVersion));
+    const uint8_t blockMajorVersion = Xi::Config::BlockVersion::version(height);
+    return std::make_tuple(Xi::Config::Mixin::minimum(blockMajorVersion),
+                           Xi::Config::Mixin::maximum(blockMajorVersion));
   }
 
   /* This method is used by WalletService to determine if the mixin amount is correct

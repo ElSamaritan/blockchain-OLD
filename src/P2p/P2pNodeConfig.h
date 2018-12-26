@@ -18,13 +18,16 @@
 #pragma once
 
 #include <chrono>
+
+#include <Xi/Config/NetworkType.h>
+
 #include "NetNodeConfig.h"
 
 namespace CryptoNote {
 
 class P2pNodeConfig : public NetNodeConfig {
  public:
-  P2pNodeConfig();
+  P2pNodeConfig(::Xi::Config::Network::Type network);
 
   // getters
   std::chrono::nanoseconds getTimedSyncInterval() const;

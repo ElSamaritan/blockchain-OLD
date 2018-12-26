@@ -17,6 +17,8 @@
 
 #include "RocksDBWrapper.h"
 
+#include <Xi/Utils/String.h>
+
 #include "rocksdb/cache.h"
 #include "rocksdb/table.h"
 #include "rocksdb/db.h"
@@ -28,8 +30,7 @@ using namespace CryptoNote;
 using namespace Logging;
 
 namespace {
-const std::string DB_NAME = "DB";
-const std::string TESTNET_DB_NAME = "testnet_DB";
+const std::string DB_PREFIX{"db_"};
 }  // namespace
 
 RocksDBWrapper::RocksDBWrapper(Logging::ILogger& logger) : logger(logger, "RocksDBWrapper"), state(NOT_INITIALIZED) {}
@@ -232,9 +233,5 @@ rocksdb::Options RocksDBWrapper::getDBOptions(const DataBaseConfig& config) {
 }
 
 std::string RocksDBWrapper::getDataDir(const DataBaseConfig& config) {
-  if (config.getTestnet()) {
-    return config.getDataDir() + '/' + TESTNET_DB_NAME;
-  } else {
-    return config.getDataDir() + '/' + DB_NAME;
-  }
+  return config.getDataDir() + "/" + DB_PREFIX + Xi::to_lower(Xi::to_string(config.getNetwork()));
 }

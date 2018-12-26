@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <cmath>
 
+#include <Xi/Version.h>
 #include <Xi/Global.h>
 #include <Xi/Concurrent/SystemDispatcher.h>
 
@@ -19,12 +20,11 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteCore/TransactionExtra.h"
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandlerCommon.h"
 #include "P2p/NetNode.h"
 #include "CoreRpcServerErrorCodes.h"
 #include "JsonRpc.h"
-#include "version.h"
 
 #undef ERROR
 
@@ -207,7 +207,7 @@ bool RpcServer::enableCors(const std::string& domain) {
 const std::string& RpcServer::getCorsDomain() { return m_cors; }
 
 bool RpcServer::isCoreReady() {
-  return m_core.getCurrency().isTestnet() || m_p2p.get_payload_object().isSynchronized();
+  return m_core.getCurrency().isTestNet() || m_p2p.get_payload_object().isSynchronized();
 }
 
 bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req,
@@ -226,7 +226,7 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req,
   uint32_t totalBlockCount;
   uint32_t startBlockIndex;
   std::vector<Crypto::Hash> supplement = m_core.findBlockchainSupplement(
-      req.block_ids, Config::Limits::maximumRPCBlocksQueryCount(), totalBlockCount, startBlockIndex);
+      req.block_ids, Xi::Config::Limits::maximumRPCBlocksQueryCount(), totalBlockCount, startBlockIndex);
 
   res.current_height = totalBlockCount;
   res.start_height = startBlockIndex;
@@ -493,11 +493,11 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.grey_peerlist_size = m_p2p.getPeerlistManager().get_gray_peers_count();
   res.last_known_block_index = std::max(static_cast<uint32_t>(1), m_protocol.getObservedHeight()) - 1;
   res.network_height = std::max(static_cast<uint32_t>(1), m_protocol.getBlockchainHeight());
-  res.upgrade_heights = CryptoNote::Config::BlockVersion::forks();
+  res.upgrade_heights = Xi::Config::BlockVersion::forks();
   res.supported_height = res.upgrade_heights.empty() ? 0 : *res.upgrade_heights.rbegin();
-  res.hashrate = (uint32_t)round(res.difficulty / CryptoNote::Config::Time::blockTimeSeconds());
+  res.hashrate = (uint32_t)round(res.difficulty / Xi::Config::Time::blockTimeSeconds());
   res.synced = ((uint64_t)res.height == (uint64_t)res.network_height);
-  res.testnet = m_core.getCurrency().isTestnet();
+  res.network = Xi::to_string(m_core.getCurrency().network());
   res.major_version = m_core.getBlockDetails(m_core.getTopBlockIndex()).majorVersion;
   res.minor_version = m_core.getBlockDetails(m_core.getTopBlockIndex()).minorVersion;
   res.version = PROJECT_VERSION;

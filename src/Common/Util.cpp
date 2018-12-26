@@ -20,7 +20,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 
 #ifdef WIN32
 #ifndef NOMINMAX
@@ -279,7 +279,7 @@ std::string getDefaultDataDirectory() {
   std::string config_folder;
 #ifdef WIN32
   // Windows
-  config_folder = get_special_folder_path(CSIDL_APPDATA, true) + "/" + CryptoNote::Config::Coin::name();
+  config_folder = get_special_folder_path(CSIDL_APPDATA, true) + "/" + Xi::Config::Coin::name();
 #else
   std::string pathRet;
   char* pszHome = getenv("HOME");
@@ -290,10 +290,10 @@ std::string getDefaultDataDirectory() {
 #ifdef MAC_OSX
   // Mac
   pathRet /= "Library/Application Support";
-  config_folder = (pathRet + "/" + CryptoNote::Config::Coin::name());
+  config_folder = (pathRet + "/" + Xi::Config::Coin::name());
 #else
   // Unix
-  config_folder = (pathRet + "/." + CryptoNote::Config::Coin::name());
+  config_folder = (pathRet + "/." + Xi::Config::Coin::name());
 #endif
 #endif
 

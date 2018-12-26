@@ -268,13 +268,15 @@ void NodeRpcProxy::updateBlockchainStatus() {
     m_nodeHeight.store(getInfoResp.height, std::memory_order_relaxed);
 
     updatePeerCount(getInfoResp.incoming_connections_count + getInfoResp.outgoing_connections_count);
-  }
 
-  // TODO(njamnjam)
-  //  if (m_connected != m_httpClient->isConnected()) {
-  //    m_connected = m_httpClient->isConnected();
-  //    m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
-  //  }
+    if (!m_connected) {
+      m_connected = true;
+      m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
+    }
+  } else if (m_connected) {
+    m_connected = false;
+    m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
+  }
 }
 
 void NodeRpcProxy::updatePeerCount(size_t peerCount) {

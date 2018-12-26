@@ -208,7 +208,7 @@ Core::Core(const Currency& currency, Logging::ILogger& logger, Checkpoints&& che
       blockchainCacheFactory(std::move(blockchainCacheFactory)),
       mainChainStorage(std::move(mainchainStorage)),
       initialized(false) {
-  for (auto version : Config::BlockVersion::versions())
+  for (auto version : Xi::Config::BlockVersion::versions())
     upgradeManager->addMajorBlockVersion(version, currency.upgradeHeight(version));
   transactionPool = std::unique_ptr<ITransactionPoolCleanWrapper>(new TransactionPoolCleanWrapper(
       std::unique_ptr<ITransactionPool>(new TransactionPool(logger)),
@@ -398,14 +398,14 @@ bool Core::queryBlocks(const std::vector<Crypto::Hash>& blockHashes, uint64_t ti
       fullOffset = startIndex;
     }
 
-    size_t hashesPushed =
-        pushBlockHashes(startIndex, fullOffset, Config::Network::blockIdentifiersSynchronizationBatchSize(), entries);
+    size_t hashesPushed = pushBlockHashes(startIndex, fullOffset,
+                                          Xi::Config::Network::blockIdentifiersSynchronizationBatchSize(), entries);
 
     if (startIndex + hashesPushed != fullOffset) {
       return true;
     }
 
-    fillQueryBlockFullInfo(fullOffset, currentIndex, Config::Network::blocksSynchronizationBatchSize(), entries);
+    fillQueryBlockFullInfo(fullOffset, currentIndex, Xi::Config::Network::blocksSynchronizationBatchSize(), entries);
 
     return true;
   } catch (std::exception&) {
@@ -446,14 +446,14 @@ bool Core::queryBlocksLite(const std::vector<Crypto::Hash>& knownBlockHashes, ui
       fullOffset = startIndex;
     }
 
-    size_t hashesPushed =
-        pushBlockHashes(startIndex, fullOffset, Config::Network::blockIdentifiersSynchronizationBatchSize(), entries);
+    size_t hashesPushed = pushBlockHashes(startIndex, fullOffset,
+                                          Xi::Config::Network::blockIdentifiersSynchronizationBatchSize(), entries);
 
     if (startIndex + static_cast<uint32_t>(hashesPushed) != fullOffset) {
       return true;
     }
 
-    fillQueryBlockShortInfo(fullOffset, currentIndex, Config::Network::blocksSynchronizationBatchSize(), entries);
+    fillQueryBlockShortInfo(fullOffset, currentIndex, Xi::Config::Network::blocksSynchronizationBatchSize(), entries);
 
     return true;
   } catch (std::exception& e) {
@@ -496,14 +496,14 @@ bool Core::queryBlocksDetailed(const std::vector<Crypto::Hash>& knownBlockHashes
       fullOffset = startIndex;
     }
 
-    size_t hashesPushed =
-        pushBlockHashes(startIndex, fullOffset, Config::Network::blockIdentifiersSynchronizationBatchSize(), entries);
+    size_t hashesPushed = pushBlockHashes(startIndex, fullOffset,
+                                          Xi::Config::Network::blockIdentifiersSynchronizationBatchSize(), entries);
 
     if (startIndex + static_cast<uint32_t>(hashesPushed) != fullOffset) {
       return true;
     }
 
-    fillQueryBlockDetails(fullOffset, currentIndex, Config::Network::blocksSynchronizationBatchSize(), entries);
+    fillQueryBlockDetails(fullOffset, currentIndex, Xi::Config::Network::blocksSynchronizationBatchSize(), entries);
 
     return true;
   } catch (std::exception& e) {
@@ -658,8 +658,8 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   // that may be using older mixin rules on the network. This helps to clear out the transaction
   // pool during a network soft fork that requires a mixin lower or upper bound change
   uint32_t mixinChangeWindow = blockIndex;
-  if (mixinChangeWindow > CryptoNote::Config::Time::minerRewardUnlockBlocksCount()) {
-    mixinChangeWindow = mixinChangeWindow - CryptoNote::Config::Time::minerRewardUnlockBlocksCount();
+  if (mixinChangeWindow > Xi::Config::Time::minerRewardUnlockBlocksCount()) {
+    mixinChangeWindow = mixinChangeWindow - Xi::Config::Time::minerRewardUnlockBlocksCount();
   }
 
   bool success;
@@ -1132,19 +1132,19 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
 
   b = boost::value_initialized<BlockTemplate>();
   b.majorVersion = getBlockMajorVersionForHeight(height);
-  if (b.majorVersion == Config::BlockVersion::BlockVersionCheckpoint<0>::version()) {
-    b.minorVersion = currency.upgradeHeight(Config::BlockVersion::BlockVersionCheckpoint<1>::version()) ==
+  if (b.majorVersion == Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version()) {
+    b.minorVersion = currency.upgradeHeight(Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) ==
                              IUpgradeDetector::UNDEF_HEIGHT
-                         ? Config::BlockVersion::minorVersionNoVotingIndicator()
-                         : Config::BlockVersion::minorVersionVotingIndicator();
-  } else if (b.majorVersion >= Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
+                         ? Xi::Config::BlockVersion::minorVersionNoVotingIndicator()
+                         : Xi::Config::BlockVersion::minorVersionVotingIndicator();
+  } else if (b.majorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
     // If we know we will introduce a new major version in the future we should vote for it.
     const bool isMajorChangeUpcoming = currency.upgradeHeight(b.majorVersion + 1) != IUpgradeDetector::UNDEF_HEIGHT;
-    b.minorVersion = isMajorChangeUpcoming ? Config::BlockVersion::minorVersionVotingIndicator()
-                                           : Config::BlockVersion::minorVersionNoVotingIndicator();
+    b.minorVersion = isMajorChangeUpcoming ? Xi::Config::BlockVersion::minorVersionVotingIndicator()
+                                           : Xi::Config::BlockVersion::minorVersionNoVotingIndicator();
 
-    b.parentBlock.majorVersion = Config::BlockVersion::BlockVersionCheckpoint<0>::version();
-    b.parentBlock.majorVersion = Config::BlockVersion::minorVersionNoVotingIndicator();
+    b.parentBlock.majorVersion = Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version();
+    b.parentBlock.majorVersion = Xi::Config::BlockVersion::minorVersionNoVotingIndicator();
     b.parentBlock.transactionCount = 1;
 
     TransactionExtraMergeMiningTag mmTag = boost::value_initialized<decltype(mmTag)>();
@@ -1412,7 +1412,7 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
         if (!Crypto::check_ring_signature(cachedTransaction.getTransactionPrefixHash(), in.keyImage,
                                           outputKeyPointers.data(), outputKeyPointers.size(),
                                           transaction.signatures[inputIndex].data(),
-                                          blockIndex >= Config::Transaction::keyCheckingActivitationBlockIndex())) {
+                                          blockIndex >= Xi::Config::Transaction::keyCheckingActivitationBlockIndex())) {
           return error::TransactionValidationError::INPUT_INVALID_SIGNATURES;
         }
       }
@@ -1487,7 +1487,7 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
       // so first can be zero, others can't
       // Fix discovered by Monero Lab and suggested by "fluffypony" (bitcointalk.org)
       if (!(scalarmultKey(in.keyImage, L) == I) &&
-          blockIndex >= Config::Transaction::keyCheckingActivitationBlockIndex()) {
+          blockIndex >= Xi::Config::Transaction::keyCheckingActivitationBlockIndex()) {
         return error::TransactionValidationError::INPUT_INVALID_DOMAIN_KEYIMAGES;
       }
 
@@ -1540,18 +1540,18 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   if (upgradeManager->getBlockMajorVersion(cachedBlock.getBlockIndex()) != block.majorVersion) {
     return error::BlockValidationError::WRONG_VERSION;
   }
-  if (!Config::BlockVersion::validateMinorVersion(block.minorVersion)) {
+  if (!Xi::Config::BlockVersion::validateMinorVersion(block.minorVersion)) {
     return error::BlockValidationError::WRONG_VERSION;
   }
 
-  if (block.majorVersion >= Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
-    if (block.majorVersion == Config::BlockVersion::BlockVersionCheckpoint<1>::version() &&
-        block.parentBlock.majorVersion > Config::BlockVersion::BlockVersionCheckpoint<0>::version()) {
+  if (block.majorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
+    if (block.majorVersion == Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version() &&
+        block.parentBlock.majorVersion > Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version()) {
       logger(Logging::ERROR, Logging::BRIGHT_RED)
           << "Parent block of block " << cachedBlock.getBlockHash()
           << " has wrong major version: " << static_cast<int>(block.parentBlock.majorVersion) << ", at index "
           << cachedBlock.getBlockIndex() << " expected version is "
-          << static_cast<int>(Config::BlockVersion::BlockVersionCheckpoint<0>::version());
+          << static_cast<int>(Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version());
       return error::BlockValidationError::PARENT_BLOCK_WRONG_VERSION;
     }
 

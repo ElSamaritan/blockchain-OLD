@@ -1218,14 +1218,14 @@ uint64_t WalletGreen::scanHeightToTimestamp(const uint32_t scanHeight) {
   }
 
   /* Get the amount of seconds since the blockchain launched */
-  uint64_t secondsSinceLaunch = scanHeight * CryptoNote::Config::Time::blockTimeSeconds();
+  uint64_t secondsSinceLaunch = scanHeight * Xi::Config::Time::blockTimeSeconds();
 
   /* Add a bit of a buffer in case of difficulty weirdness, blocks coming
      out too fast */
   secondsSinceLaunch = (secondsSinceLaunch * 95) / 100;
 
   /* Get the genesis block timestamp and add the time since launch */
-  timestamp = CryptoNote::Config::Coin::genesisTimestamp() + secondsSinceLaunch;
+  timestamp = Xi::Config::Coin::genesisTimestamp() + secondsSinceLaunch;
 
   /* Timestamp in the future */
   if (timestamp >= static_cast<uint64_t>(std::time(nullptr))) {
@@ -1241,7 +1241,7 @@ uint64_t WalletGreen::getCurrentTimestampAdjusted() {
 
   /* Take the amount of time a block can potentially be in the past/future
    * Get the largest adjustment possible */
-  uint64_t adjust = std::chrono::seconds{CryptoNote::Config::Difficulty::maximumTimeLimit()}.count();
+  uint64_t adjust = std::chrono::seconds{Xi::Config::Difficulty::maximumTimeLimit()}.count();
 
   /* Take the earliest timestamp that will include all possible blocks */
   return time - adjust;
@@ -3748,11 +3748,11 @@ void WalletGreen::deleteFromUncommitedTransactions(const std::vector<size_t>& de
 size_t WalletGreen::getMaxTxSize() {
   uint32_t currentHeight = m_node.getLastKnownBlockHeight();
 
-  size_t growth = (currentHeight * CryptoNote ::Config ::Limits::blockBlobSizeGrowthNumerator()) /
-                  CryptoNote::Config::Limits::blockBlobSizeGrowthDenominator();
-  size_t x = CryptoNote::Config::Limits::initialBlockBlobSizeLimit() + growth;
-  size_t y = CryptoNote::Config::Limits::maximumBlockBlobSize();
-  return std::min(x, y) - CryptoNote::Config ::Limits::blockBlobCoinbaseReservedSize();
+  size_t growth = (currentHeight * Xi::Config ::Limits::blockBlobSizeGrowthNumerator()) /
+                  Xi::Config::Limits::blockBlobSizeGrowthDenominator();
+  size_t x = Xi::Config::Limits::initialBlockBlobSizeLimit() + growth;
+  size_t y = Xi::Config::Limits::maximumBlockBlobSize();
+  return std::min(x, y) - Xi::Config ::Limits::blockBlobCoinbaseReservedSize();
 }
 
 }  // namespace CryptoNote

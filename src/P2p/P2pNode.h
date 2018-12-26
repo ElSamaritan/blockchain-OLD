@@ -44,7 +44,7 @@ class P2pConnectionProxy;
 
 class P2pNode : public IP2pNode, public IStreamSerializable, IP2pNodeInternal {
  public:
-  P2pNode(const P2pNodeConfig& cfg, System::Dispatcher& dispatcher, Logging::ILogger& log,
+  P2pNode(int, const P2pNodeConfig& cfg, System::Dispatcher& dispatcher, Logging::ILogger& log,
           const Crypto::Hash& genesisHash, PeerIdType peerId);
 
   ~P2pNode();

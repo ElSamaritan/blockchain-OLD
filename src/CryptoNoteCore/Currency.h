@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 #include <boost/utility.hpp>
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 #include "crypto/hash.h"
 #include "Logging/LoggerRef.h"
 #include "CachedBlock.h"
@@ -74,12 +74,14 @@ class Currency {
   uint32_t maxUpgradeDistance() const { return 7 * m_upgradeWindow; }
   uint32_t calculateUpgradeHeight(uint32_t voteCompleteHeight) const { return voteCompleteHeight + m_upgradeWindow; }
 
-  const std::string& blocksFileName() const { return m_blocksFileName; }
-  const std::string& blockIndexesFileName() const { return m_blockIndexesFileName; }
-  const std::string& txPoolFileName() const { return m_txPoolFileName; }
+  std::string blocksFileName() const;
+  std::string blockIndexesFileName() const;
+  std::string txPoolFileName() const;
 
   bool isBlockexplorer() const { return m_isBlockexplorer; }
-  bool isTestnet() const { return m_testnet; }
+  ::Xi::Config::Network::Type network() const { return m_network; }
+  bool isMainNet() const { return m_network == ::Xi::Config::Network::Type::MainNet; }
+  bool isTestNet() const { return !isMainNet() && m_network != ::Xi::Config::Network::MainNet; }
 
   const BlockTemplate& genesisBlock() const { return cachedGenesisBlock->getBlock(); }
   const Crypto::Hash& genesisBlockHash() const { return cachedGenesisBlock->getBlockHash(); }
@@ -176,7 +178,7 @@ class Currency {
 
   static const std::vector<uint64_t> PRETTY_AMOUNTS;
 
-  bool m_testnet;
+  Xi::Config::Network::Type m_network;
   bool m_isBlockexplorer;
 
   BlockTemplate genesisBlockTemplate;
@@ -341,8 +343,8 @@ class CurrencyBuilder : boost::noncopyable {
     m_currency.m_isBlockexplorer = val;
     return *this;
   }
-  CurrencyBuilder& testnet(bool val) {
-    m_currency.m_testnet = val;
+  CurrencyBuilder& network(Xi::Config::Network::Type network) {
+    m_currency.m_network = network;
     return *this;
   }
 

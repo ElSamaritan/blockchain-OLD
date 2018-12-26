@@ -21,9 +21,9 @@
 
 #include <Common/FormatTools.h>
 
-#include <config/Ascii.h>
-#include <config/CryptoNoteConfig.h>
-#include <config/WalletConfig.h>
+#include <Xi/Config/Ascii.h>
+#include <Xi/Config.h>
+#include <Xi/Config/WalletConfig.h>
 
 using namespace Logging;
 using namespace Common;
@@ -236,7 +236,7 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
 
     std::stringstream ss;
 
-    ss << "Your " << Config::Coin::name() << " node is syncing with the network ";
+    ss << "Your " << Xi::Config::Coin::name() << " node is syncing with the network ";
 
     /* We're behind the remote node */
     if (diff >= 0) {
@@ -569,7 +569,7 @@ int CryptoNoteProtocolHandler::handle_request_chain(int command, NOTIFY_REQUEST_
 
   NOTIFY_RESPONSE_CHAIN_ENTRY::request r;
   r.m_block_ids = m_core.findBlockchainSupplement(
-      arg.block_ids, Config::Network::blockIdentifiersSynchronizationBatchSize(), r.total_height, r.start_height);
+      arg.block_ids, Xi::Config::Network::blockIdentifiersSynchronizationBatchSize(), r.total_height, r.start_height);
 
   m_logger(Logging::TRACE) << context << "-->>NOTIFY_RESPONSE_CHAIN_ENTRY: m_start_height=" << r.start_height
                            << ", m_total_height=" << r.total_height << ", m_block_ids.size()=" << r.m_block_ids.size();
@@ -585,7 +585,7 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
     size_t count = 0;
     auto it = context.m_needed_objects.begin();
 
-    while (it != context.m_needed_objects.end() && count < Config::Network::blocksSynchronizationBatchSize()) {
+    while (it != context.m_needed_objects.end() && count < Xi::Config::Network::blocksSynchronizationBatchSize()) {
       if (!(check_having_blocks && m_core.hasBlock(*it))) {
         req.blocks.push_back(*it);
         ++count;
@@ -629,7 +629,7 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized() {
   bool val_expected = false;
   if (m_synchronized.compare_exchange_strong(val_expected, true)) {
     m_logger(Logging::INFO) << ENDL;
-    m_logger(INFO, BRIGHT_MAGENTA) << "===[ " + std::string(CryptoNote::Config::Coin::name()) +
+    m_logger(INFO, BRIGHT_MAGENTA) << "===[ " + std::string(Xi::Config::Coin::name()) +
                                           " Tip! ]============================="
                                    << ENDL;
     m_logger(INFO, WHITE) << " Always exit " + WalletConfig::daemonName + " and " + WalletConfig::walletName +

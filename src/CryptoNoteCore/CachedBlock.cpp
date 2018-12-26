@@ -6,7 +6,7 @@
 
 #include "CachedBlock.h"
 #include <Common/Varint.h>
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 #include "CryptoNoteTools.h"
 #include "crypto/cnx/cnx.h"
 
@@ -33,7 +33,7 @@ const Crypto::Hash& CachedBlock::getTransactionTreeHash() const {
 const Crypto::Hash& CachedBlock::getBlockHash() const {
   if (!blockHash.is_initialized()) {
     BinaryArray blockBinaryArray = getBlockHashingBinaryArray();
-    if (Config::BlockVersion::BlockVersionCheckpoint<1>::version() <= block.majorVersion) {
+    if (Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version() <= block.majorVersion) {
       const auto& parentBlock = getParentBlockHashingBinaryArray(false);
       blockBinaryArray.insert(blockBinaryArray.end(), parentBlock.begin(), parentBlock.end());
     }
@@ -47,7 +47,7 @@ const Crypto::Hash& CachedBlock::getBlockHash() const {
 const Crypto::Hash& CachedBlock::getBlockLongHash() const {
   if (!blockLongHash.is_initialized()) {
     blockLongHash = Hash{};
-    CryptoNote::Config::Hashes::compute(*this, blockLongHash.get(), block.majorVersion);
+    Xi::Config::Hashes::compute(*this, blockLongHash.get(), block.majorVersion);
   }
 
   return blockLongHash.get();

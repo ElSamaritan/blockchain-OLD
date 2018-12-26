@@ -1073,7 +1073,7 @@ uint32_t DatabaseBlockchainCache::getTopBlockIndex() const {
 
 uint8_t DatabaseBlockchainCache::getBlockMajorVersionForHeight(uint32_t height) const {
   UpgradeManager upgradeManager;
-  for (auto version : Config::BlockVersion::versions())
+  for (auto version : Xi::Config::BlockVersion::versions())
     upgradeManager.addMajorBlockVersion(version, currency.upgradeHeight(version));
   return upgradeManager.getBlockMajorVersion(height);
 }

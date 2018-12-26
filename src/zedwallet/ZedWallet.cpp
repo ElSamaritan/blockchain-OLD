@@ -20,12 +20,11 @@
 #include <zedwallet/Menu.h>
 #include <zedwallet/ParseArguments.h>
 #include <zedwallet/Tools.h>
-#include <config/WalletConfig.h>
+#include <Xi/Config/WalletConfig.h>
 
 #include "CommonCLI.h"
 
 int main(int argc, char **argv) {
-  CommonCLI::verifyDevExecution(argc, argv);
 /* On ctrl+c the program seems to throw "xi-wallet.exe has stopped
    working" when calling exit(0)... I'm not sure why, this is a bit of
    a hack, it disables that - possibly some deconstructers calling

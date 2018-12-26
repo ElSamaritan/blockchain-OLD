@@ -88,8 +88,8 @@ void PeerlistManager::Peerlist::trim() {
 }
 
 PeerlistManager::PeerlistManager()
-    : m_whitePeerlist(m_peers_white, CryptoNote::Config::P2P::maximumWhiteListedPeers()),
-      m_grayPeerlist(m_peers_gray, CryptoNote::Config::P2P::maximumGrayListedPeers()) {}
+    : m_whitePeerlist(m_peers_white, Xi::Config::P2P::maximumWhiteListedPeers()),
+      m_grayPeerlist(m_peers_gray, Xi::Config::P2P::maximumGrayListedPeers()) {}
 
 //--------------------------------------------------------------------------------------------------
 bool PeerlistManager::init(bool allow_local_ip) {

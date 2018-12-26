@@ -15,10 +15,10 @@
 #include <Xi/Utils/ExternalIncludePop.h>
 
 #include <CommonCLI/CommonCLI.h>
-#include <config/CryptoNoteConfig.h>
-#include <config/WalletConfig.h>
+#include <Xi/Version.h>
+#include <Xi/Config.h>
+#include <Xi/Config/WalletConfig.h>
 #include <zedwallet/Tools.h>
-#include "version.h"
 
 template <class Container>
 void split(const std::string& str, Container& cont, char delim = ' ') {
@@ -48,7 +48,7 @@ bool parseDaemonAddressFromString(std::string& host, uint16_t& port, const std::
   }
 
   host = parts.at(0);
-  port = CryptoNote::Config::Network::rpcPort();
+  port = Xi::Config::Network::rpcPort();
   return true;
 }
 
@@ -59,14 +59,12 @@ Config parseArguments(int argc, char** argv) {
   defaultRemoteDaemon << config.host << ":" << config.port;
 
   cxxopts::Options options(argv[0], CommonCLI::header());
+  CommonCLI::emplaceCLIOptions(options);
 
-  bool help, version;
   std::string remoteDaemon;
 
   // clang-format off
   options.add_options("Core")
-    ("h,help", "Display this help message", cxxopts::value<bool>(help)->implicit_value("true"))
-    ("v,version", "Output software version information", cxxopts::value<bool>(version)->default_value("false")->implicit_value("true"))
     ("debug", "Enable " + WalletConfig::walletdName + " debugging to "+ WalletConfig::walletName + ".log",
       cxxopts::value<bool>(config.debug)->default_value("false")->implicit_value("true"));
 
@@ -82,21 +80,12 @@ Config parseArguments(int argc, char** argv) {
   // clang-format on
 
   try {
-    options.parse(argc, argv);
+    const auto result = options.parse(argc, argv);
+    if (CommonCLI::handleCLIOptions(options, result)) exit(0);
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Error: Unable to parse command line argument options: " << e.what() << std::endl << std::endl;
     std::cout << options.help({}) << std::endl;
     exit(1);
-  }
-
-  if (help)  // Do we want to display the help message?
-  {
-    std::cout << options.help({}) << std::endl;
-    exit(0);
-  } else if (version)  // Do we want to display the software version?
-  {
-    std::cout << CommonCLI::header() << std::endl;
-    exit(0);
   }
 
   if (!config.walletFile.empty()) {

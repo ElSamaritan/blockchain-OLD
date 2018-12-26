@@ -15,9 +15,11 @@
 #include <nlohmann/json.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
+#include <Xi/Config/NetworkType.h>
+#include <Xi/Config/Network.h>
 #include <Xi/Http/SSLServerConfiguration.h>
 
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 #include <CryptoNoteCore/DataBaseConfig.h>
 #include <Logging/ILogger.h>
 #include "Common/PathTools.h"
@@ -43,6 +45,7 @@ struct DaemonConfiguration {
 
   int logLevel;
   int feeAmount;
+  ::Xi::Config::Network::Type network;
   uint16_t rpcPort;
   uint16_t p2pPort;
   uint16_t p2pExternalPort;
@@ -75,15 +78,16 @@ DaemonConfiguration initConfiguration() {
   config.checkPoints = "default";
   config.logFile = "xi-daemon.log";
   config.logLevel = Logging::WARNING;
-  config.dbMaxOpenFiles = CryptoNote::Config::Database::maximumOpenFiles();
-  config.dbReadCacheSize = CryptoNote::Config::Database::readBufferSize();
-  config.dbThreads = CryptoNote::Config::Database::backgroundThreads();
-  config.dbWriteBufferSize = CryptoNote::Config::Database::writeBufferSize();
+  config.dbMaxOpenFiles = Xi::Config::Database::maximumOpenFiles();
+  config.dbReadCacheSize = Xi::Config::Database::readBufferSize();
+  config.dbThreads = Xi::Config::Database::backgroundThreads();
+  config.dbWriteBufferSize = Xi::Config::Database::writeBufferSize();
+  config.network = ::Xi::Config::Network::defaultNetworkType();
   config.p2pInterface = "0.0.0.0";
-  config.p2pPort = CryptoNote::Config::P2P::defaultPort();
+  config.p2pPort = Xi::Config::P2P::defaultPort();
   config.p2pExternalPort = 0;
   config.rpcInterface = "127.0.0.1";
-  config.rpcPort = CryptoNote::Config::Network::rpcPort();
+  config.rpcPort = Xi::Config::Network::rpcPort();
   config.noConsole = false;
   config.enableBlockExplorer = false;
   config.localIp = false;
@@ -107,13 +111,9 @@ DaemonConfiguration initConfiguration(const char* path) {
 
 void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
   cxxopts::Options options(argv[0], CommonCLI::header());
+  CommonCLI::emplaceCLIOptions(options);
 
   // clang-format off
-  options.add_options("Core")
-    ("help", "Display this help message", cxxopts::value<bool>()->implicit_value("true"))
-    ("os-version", "Output Operating System version information", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
-    ("version","Output daemon version information",cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
-
   options.add_options("Genesis Block")
     ("genesis-block-reward-address", "Specify the address for any premine genesis block rewards", cxxopts::value<std::vector<std::string>>(), "<address>")
     ("print-genesis-tx", "Print the genesis block transaction hex and exits", cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
@@ -137,6 +137,10 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     ("fee-amount", "Sets the convenience charge amount for light wallets that use the daemon", cxxopts::value<int>()->default_value("0"), "#");
 
   options.add_options("Network")
+    ("network", "The network type you want to connect to, mostly you want to use 'MainNet' here.",
+     cxxopts::value<std::string>()->default_value(Xi::to_string(Xi::Config::Network::defaultNetworkType())),
+     "[MainNet|StageNet|TestNet|LocalTestNet]")
+
     ("allow-local-ip", "Allow the local IP to be added to the peer list", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
     ("hide-my-port", "Do not announce yourself as a peerlist candidate", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
     ("p2p-bind-ip", "Interface IP address for the P2P service", cxxopts::value<std::string>()->default_value(config.p2pInterface), "<ip>")
@@ -174,18 +178,6 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
 
     if (cli.count("genesis-block-reward-address") > 0) {
       config.genesisAwardAddresses = cli["genesis-block-reward-address"].as<std::vector<std::string>>();
-    }
-
-    if (cli.count("help") > 0) {
-      config.help = cli["help"].as<bool>();
-    }
-
-    if (cli.count("version") > 0) {
-      config.version = cli["version"].as<bool>();
-    }
-
-    if (cli.count("os-version") > 0) {
-      config.osVersion = cli["os-version"].as<bool>();
     }
 
     if (cli.count("print-genesis-tx") > 0) {
@@ -238,6 +230,10 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
         throw cxxopts::OptionException("db-compression must be one of none, lz4 or lz4hc");
       }
       config.dbCompression = compression;
+    }
+
+    if (cli.count("network") > 0) {
+      config.network = Xi::lexical_cast<::Xi::Config::Network::Type>(cli["network"].as<std::string>());
     }
 
     if (cli.count("local-ip") > 0) {
@@ -300,20 +296,8 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
       config.feeAmount = cli["fee-amount"].as<int>();
     }
 
-    if (config.help)  // Do we want to display the help message?
-    {
-      std::cout << options.help({}) << std::endl;
-      exit(0);
-    } else if (config.version)  // Do we want to display the software version?
-    {
-      std::cout << CommonCLI::header() << std::endl;
-      exit(0);
-    } else if (config.osVersion)  // Do we want to display the OS version information?
-    {
-      std::cout << CommonCLI::header() << "OS: " << Tools::get_os_version_string() << std::endl;
-      exit(0);
-    }
-  } catch (const cxxopts::OptionException& e) {
+    if (CommonCLI::handleCLIOptions(options, cli)) exit(0);
+  } catch (const std::exception& e) {
     std::cout << "Error: Unable to parse command line argument options: " << e.what() << std::endl
               << std::endl
               << options.help({}) << std::endl;
@@ -373,6 +357,10 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
     if (!CryptoNote::DataBaseConfig::parseCompression(compression, config.dbCompression)) {
       throw std::runtime_error{"Invalid db compression in json configuration."};
     }
+  }
+
+  if (j.find("network") != j.end()) {
+    config.network = Xi::lexical_cast<::Xi::Config::Network::Type>(j["network"].get<std::string>());
   }
 
   if (j.find("allow-local-ip") != j.end()) {
@@ -456,6 +444,7 @@ json asJSON(const DaemonConfiguration& config) {
                 {"db-threads", config.dbThreads},
                 {"db-write-buffer-size", config.dbWriteBufferSize},
                 {"db-compression", compressionString},
+                {"network", Xi::to_string(config.network)},
                 {"allow-local-ip", config.localIp},
                 {"hide-my-port", config.hideMyPort},
                 {"p2p-bind-ip", config.p2pInterface},

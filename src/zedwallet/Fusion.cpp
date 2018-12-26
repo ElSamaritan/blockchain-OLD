@@ -6,14 +6,14 @@
 #include <zedwallet/Fusion.h>
 /////////////////////////////
 
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 
 #include <Wallet/WalletGreen.h>
 #include <Wallet/WalletUtils.h>
 
 #include <zedwallet/ColouredMsg.h>
 #include <zedwallet/Tools.h>
-#include <config/WalletConfig.h>
+#include <Xi/Config/WalletConfig.h>
 
 size_t makeFusionTransaction(CryptoNote::WalletGreen &wallet, uint64_t threshold, uint32_t height) {
   uint64_t bestThreshold = threshold;

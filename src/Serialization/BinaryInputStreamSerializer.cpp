@@ -22,7 +22,7 @@
 #include <stdexcept>
 
 #include <Common/StreamTools.h>
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 #include <Xi/Global.h>
 
 #include "SerializationOverloads.h"
@@ -110,7 +110,7 @@ bool BinaryInputStreamSerializer::operator()(std::string& value, Common::StringV
   readVarint(stream, size);
 
   /* Can't take up more than a block size */
-  if (size > CryptoNote::Config::Limits::maximumBlockExtraSize() && std::string(name.getData()) == "mm_tag") {
+  if (size > Xi::Config::Limits::maximumBlockExtraSize() && std::string(name.getData()) == "mm_tag") {
     std::vector<char> temp;
     temp.resize(1);
 
