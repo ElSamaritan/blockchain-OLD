@@ -20,9 +20,9 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool send
 
 void doTransfer(std::string address, uint64_t amount, uint64_t fee, std::string extra,
                 std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool integratedAddress, uint64_t mixin,
-                std::string nodeAddress, uint32_t nodeFee, std::string originalAddress);
+                std::string nodeAddress, uint32_t nodeFee, std::string originalAddress, uint64_t unlockTimestamp);
 
-void splitTX(CryptoNote::WalletGreen &wallet, const CryptoNote::TransactionParameters splitTXParams, uint32_t nodeFee);
+void splitTX(CryptoNote::WalletGreen& wallet, const CryptoNote::TransactionParameters splitTXParams, uint32_t nodeFee);
 
 void sendTX(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::TransactionParameters p, uint32_t height,
             bool retried = false, uint32_t nodeFee = 0);
@@ -38,7 +38,7 @@ bool parseIntegratedAddress(std::string address);
 
 bool parseFee(std::string feeString);
 
-bool handleTransferError(const std::system_error &e, bool retried, uint32_t height);
+bool handleTransferError(const std::system_error& e, bool retried, uint32_t height);
 
 AddressType parseAddress(std::string address);
 
@@ -53,6 +53,10 @@ Maybe<std::pair<AddressType, std::string>> getAddress(std::string msg);
 Maybe<uint64_t> getFee();
 
 Maybe<uint64_t> getTransferAmount();
+
+Maybe<uint64_t> getUnlockTimestamp();
+
+bool parseUnlockTimestamp(const std::string& str, uint64_t& out);
 
 Maybe<std::pair<std::string, std::string>> extractIntegratedAddress(std::string integratedAddress);
 

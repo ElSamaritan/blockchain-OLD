@@ -40,6 +40,10 @@ namespace Xi {
  */
 bool starts_with(const std::string& str, const std::string& prefix);
 
+std::string trim_left(std::string str);
+std::string trim_right(std::string str);
+std::string trim(std::string str);
+
 /*!
  * \brief to_lower converts a string to lower case respecting the locale
  * \param str the string to be converted to lower case
