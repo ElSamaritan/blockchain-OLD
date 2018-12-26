@@ -8,7 +8,7 @@
 #include <vector>
 #include <cinttypes>
 
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 
 #include <Xi/Http/SSLClientConfiguration.h>
 
@@ -58,7 +58,7 @@ struct Config {
   std::string host = "127.0.0.1";
 
   /* The daemon port */
-  uint16_t port = CryptoNote::Config::Network::rpcPort();
+  uint16_t port = Xi::Config::Network::rpcPort();
 
   /* The wallet file path */
   std::string walletFile = "";

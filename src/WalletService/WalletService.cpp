@@ -289,7 +289,7 @@ std::tuple<std::string, std::string> decodeIntegratedAddress(const std::string& 
   }
 
   /* The prefix needs to be the same as the base58 prefix */
-  if (prefix != CryptoNote::Config::Coin::addressBas58Prefix()) {
+  if (prefix != Xi::Config::Coin::addressBas58Prefix()) {
     throw std::system_error(make_error_code(CryptoNote::error::BAD_ADDRESS));
   }
 
@@ -477,11 +477,11 @@ void WalletService::getNodeFee() {
 
   if (!m_node_address.empty() && m_node_fee != 0) {
     // Partially borrowed from <zedwallet/Tools.h>
-    uint32_t div = static_cast<uint32_t>(pow(10, CryptoNote::Config::Coin::numberOfDecimalPoints()));
+    uint32_t div = static_cast<uint32_t>(pow(10, Xi::Config::Coin::numberOfDecimalPoints()));
     uint32_t coins = m_node_fee / div;
     uint32_t cents = m_node_fee % div;
     std::stringstream stream;
-    stream << std::setfill('0') << std::setw(CryptoNote::Config::Coin::numberOfDecimalPoints()) << cents;
+    stream << std::setfill('0') << std::setw(Xi::Config::Coin::numberOfDecimalPoints()) << cents;
     std::string amount = std::to_string(coins) + "." + stream.str();
 
     logger(Logging::INFO, Logging::RED) << "You have connected to a node that charges "
@@ -1387,7 +1387,7 @@ std::error_code WalletService::createIntegratedAddress(const std::string& addres
   std::string keys = Common::asString(ba);
 
   /* Encode prefix + paymentID + keys as an address */
-  integratedAddress = Tools::Base58::encode_addr(CryptoNote::Config::Coin::addressBas58Prefix(), paymentId + keys);
+  integratedAddress = Tools::Base58::encode_addr(Xi::Config::Coin::addressBas58Prefix(), paymentId + keys);
 
   return std::error_code();
 }

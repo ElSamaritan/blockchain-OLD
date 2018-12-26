@@ -27,7 +27,6 @@
 namespace CryptoNote {
 
 class P2pContext;
-class P2pNode;
 
 class P2pConnectionProxy : public IP2pConnection {
  public:

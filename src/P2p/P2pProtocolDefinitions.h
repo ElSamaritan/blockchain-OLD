@@ -10,7 +10,7 @@
 #include <list>
 
 #include <Xi/Global.h>
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 
 #include "P2pProtocolTypes.h"
 #include "crypto/crypto.h"

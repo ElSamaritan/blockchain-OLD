@@ -41,6 +41,20 @@ namespace Xi {
 bool starts_with(const std::string& str, const std::string& prefix);
 
 /*!
+ * \brief to_lower converts a string to lower case respecting the locale
+ * \param str the string to be converted to lower case
+ * \return the lower case representation of the string
+ */
+std::string to_lower(const std::string& str);
+
+/*!
+ * \brief to_upper converts a string to upper case respecting the locale
+ * \param str the string to be converted to upper case
+ * \return the upper case representation of the string
+ */
+std::string to_upper(const std::string& str);
+
+/*!
  * Parses a string representation into a corresponding data structure.
  *
  * \attention Do not overuse this method for more complex structures, it is better to implement a custom parser then.

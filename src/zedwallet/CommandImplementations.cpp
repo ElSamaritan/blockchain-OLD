@@ -32,7 +32,7 @@
 #include <zedwallet/Tools.h>
 #include <zedwallet/Transfer.h>
 #include <zedwallet/Types.h>
-#include <config/WalletConfig.h>
+#include <Xi/Config/WalletConfig.h>
 
 void changePassword(std::shared_ptr<WalletInfo> walletInfo) {
   /* Check the user knows the current password */
@@ -212,7 +212,7 @@ void printHashrate(uint64_t difficulty) {
   }
 
   /* Hashrate is difficulty divided by block target time */
-  uint32_t hashrate = static_cast<uint32_t>(round(difficulty / CryptoNote::Config::Time::blockTimeSeconds()));
+  uint32_t hashrate = static_cast<uint32_t>(round(difficulty / Xi::Config::Time::blockTimeSeconds()));
 
   std::cout << "Network hashrate: " << SuccessMsg(Common::get_mining_speed(hashrate))
             << " (Based on the last local block)" << std::endl;

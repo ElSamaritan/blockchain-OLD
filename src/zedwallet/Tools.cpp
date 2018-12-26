@@ -21,7 +21,7 @@
 
 #include <zedwallet/ColouredMsg.h>
 #include <zedwallet/PasswordContainer.h>
-#include <config/WalletConfig.h>
+#include <Xi/Config/WalletConfig.h>
 
 void confirmPassword(const std::string &walletPass, const std::string &msg) {
   /* Password container requires an rvalue, we don't want to wipe our current
@@ -183,7 +183,7 @@ std::string createIntegratedAddress(const std::string &address, const std::strin
   std::string keys = Common::asString(ba);
 
   /* Encode prefix + paymentID + keys as an address */
-  return Tools::Base58::encode_addr(CryptoNote::Config::Coin::addressBas58Prefix(), paymentID + keys);
+  return Tools::Base58::encode_addr(Xi::Config::Coin::addressBas58Prefix(), paymentID + keys);
 }
 
 uint32_t getScanHeight() {

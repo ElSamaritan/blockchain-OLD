@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <string>
+#include <locale>
 #include <stdexcept>
 #include <algorithm>
 
@@ -35,4 +36,21 @@ template <>
 uint64_t lexical_cast<uint64_t>(const std::string &value) {
   return std::stoull(value);
 }
+
+std::string to_lower(const std::string &str) {
+  const std::locale loc{};
+  std::string reval;
+  reval.resize(str.size(), '\0');
+  std::transform(str.begin(), str.end(), reval.begin(), [&](auto c) { return std::tolower(c, loc); });
+  return reval;
+}
+
+std::string to_upper(const std::string &str) {
+  const std::locale loc{};
+  std::string reval;
+  reval.resize(str.size(), '\0');
+  std::transform(str.begin(), str.end(), reval.begin(), [&](auto c) { return std::toupper(c, loc); });
+  return reval;
+}
+
 }  // namespace Xi

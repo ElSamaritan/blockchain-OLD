@@ -17,7 +17,7 @@
 
 #include "P2pNodeConfig.h"
 
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 
 namespace CryptoNote {
 
@@ -29,14 +29,14 @@ const size_t P2P_DEFAULT_PEERLIST_GET_TRY_COUNT = 10;
 
 }  // namespace
 
-P2pNodeConfig::P2pNodeConfig()
-    : timedSyncInterval(std::chrono::seconds(Config::P2P::handshakeInterval())),
-      handshakeTimeout(std::chrono::milliseconds(Config::P2P::handshakeTimeout())),
+P2pNodeConfig::P2pNodeConfig(Xi::Config::Network::Type network)
+    : timedSyncInterval(std::chrono::seconds(Xi::Config::P2P::handshakeInterval())),
+      handshakeTimeout(std::chrono::milliseconds(Xi::Config::P2P::handshakeTimeout())),
       connectInterval(P2P_DEFAULT_CONNECT_INTERVAL),
-      connectTimeout(std::chrono::milliseconds(Config::P2P::connectionTimeout())),
-      networkId(CryptoNote::Config::Network::identifier()),
-      expectedOutgoingConnectionsCount(Config::P2P::connectionsCount()),
-      whiteListConnectionsPercent(Config::P2P::whiteListPreferenceThreshold()),
+      connectTimeout(std::chrono::milliseconds(Xi::Config::P2P::connectionTimeout())),
+      networkId(Xi::Config::Network::identifier(network)),
+      expectedOutgoingConnectionsCount(Xi::Config::P2P::connectionsCount()),
+      whiteListConnectionsPercent(Xi::Config::P2P::whiteListPreferenceThreshold()),
       peerListConnectRange(P2P_DEFAULT_CONNECT_RANGE),
       peerListGetTryCount(P2P_DEFAULT_PEERLIST_GET_TRY_COUNT) {}
 
@@ -54,14 +54,7 @@ size_t P2pNodeConfig::getExpectedOutgoingConnectionsCount() const { return expec
 
 size_t P2pNodeConfig::getWhiteListConnectionsPercent() const { return whiteListConnectionsPercent; }
 
-boost::uuids::uuid P2pNodeConfig::getNetworkId() const {
-  if (getTestnet()) {
-    boost::uuids::uuid copy = networkId;
-    copy.data[0] += 1;
-    return copy;
-  }
-  return networkId;
-}
+boost::uuids::uuid P2pNodeConfig::getNetworkId() const { return networkId; }
 
 size_t P2pNodeConfig::getPeerListConnectRange() const { return peerListConnectRange; }
 

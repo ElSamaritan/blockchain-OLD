@@ -10,7 +10,7 @@
 #include <fstream>
 
 #include <crypto/CryptoTypes.h>
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 
 #include "Common/CommandLine.h"
 #include "Common/Util.h"

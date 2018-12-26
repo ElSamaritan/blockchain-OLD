@@ -14,7 +14,7 @@
 #include <chrono>
 
 #include "Common/StringTools.h"
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 #include "CryptoNoteCore/CachedBlock.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
@@ -44,7 +44,7 @@ MinerEvent BlockchainUpdatedEvent() {
 
 void adjustMergeMiningTag(BlockTemplate& blockTemplate) {
   CachedBlock cachedBlock(blockTemplate);
-  if (blockTemplate.majorVersion >= ::CryptoNote::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
+  if (blockTemplate.majorVersion >= ::Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
     CryptoNote::TransactionExtraMergeMiningTag mmTag;
     mmTag.depth = 0;
     mmTag.merkleRoot = cachedBlock.getAuxiliaryBlockHeaderHash();

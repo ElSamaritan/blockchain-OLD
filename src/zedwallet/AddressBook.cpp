@@ -19,7 +19,7 @@
 #include <zedwallet/ColouredMsg.h>
 #include <zedwallet/Tools.h>
 #include <zedwallet/Transfer.h>
-#include <config/WalletConfig.h>
+#include <Xi/Config/WalletConfig.h>
 
 const std::string getAddressBookName(AddressBook addressBook) {
   while (true) {

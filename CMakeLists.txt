@@ -47,7 +47,6 @@ option(XI_BUILD_TESTSUITE "Builds the xi test suite, see ./tests" OFF)
 include(cmake/CompilerCheck.cmake)
 include(cmake/CompilerConfiguration.cmake)
 include(cmake/Platform.cmake)
-include(cmake/Version.cmake)
 include(cmake/XiMakeLibrary.cmake)
 
 ### Enable test integration

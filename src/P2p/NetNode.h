@@ -21,6 +21,8 @@
 #include <System/TcpConnection.h>
 #include <System/TcpListener.h>
 
+#include <Xi/Config/NetworkType.h>
+
 #include "CryptoNoteCore/OnceInInterval.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "Common/CommandLine.h"
@@ -103,8 +105,8 @@ class NodeServer : public IP2pEndpoint {
  public:
   static void init_options(boost::program_options::options_description& desc);
 
-  NodeServer(System::Dispatcher& dispatcher, CryptoNote::CryptoNoteProtocolHandler& payload_handler,
-             Logging::ILogger& log);
+  NodeServer(System::Dispatcher& dispatcher, ::Xi::Config::Network::Type network,
+             CryptoNote::CryptoNoteProtocolHandler& payload_handler, Logging::ILogger& log);
 
   bool run();
   bool init(const NetNodeConfig& config);

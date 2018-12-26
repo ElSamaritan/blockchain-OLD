@@ -17,7 +17,7 @@
 
 #include "CachedTransaction.h"
 #include <Common/Varint.h>
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 #include "CryptoNoteTools.h"
 
 using namespace Crypto;

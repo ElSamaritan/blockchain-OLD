@@ -27,9 +27,6 @@ struct MiningConfig {
   size_t blocksLimit;
   uint64_t firstBlockTimestamp;
   int64_t blockTimestampInterval;
-  bool help;
-  bool version;
-
   ::Xi::Http::SSLClientConfiguration ssl;
 };
 

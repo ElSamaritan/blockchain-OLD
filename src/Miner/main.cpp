@@ -16,7 +16,6 @@
 #include <System/Dispatcher.h>
 
 int main(int argc, char** argv) {
-  CommonCLI::verifyDevExecution(argc, argv);
   try {
     CryptoNote::MiningConfig config;
     config.parse(argc, argv);

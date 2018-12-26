@@ -78,7 +78,7 @@ bool Currency::init() {
 bool Currency::generateGenesisBlock() {
   genesisBlockTemplate = boost::value_initialized<BlockTemplate>();
 
-  std::string genesisCoinbaseTxHex = CryptoNote::Config::Coin::genesisTransactionHash();
+  std::string genesisCoinbaseTxHex = Xi::Config::Coin::genesisTransactionHash();
   BinaryArray minerTxBlob;
 
   bool r =
@@ -89,54 +89,65 @@ bool Currency::generateGenesisBlock() {
     return false;
   }
 
-  genesisBlockTemplate.majorVersion = Config::BlockVersion::BlockVersionCheckpoint<0>::version();
-  genesisBlockTemplate.minorVersion = Config::BlockVersion::minorVersionNoVotingIndicator();
+  genesisBlockTemplate.majorVersion = Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version();
+  genesisBlockTemplate.minorVersion = Xi::Config::BlockVersion::minorVersionNoVotingIndicator();
   genesisBlockTemplate.timestamp = 1544732468;
   genesisBlockTemplate.nonce = 70;
-  if (m_testnet) {
-    ++genesisBlockTemplate.nonce;
-  }
+  if (!isMainNet()) genesisBlockTemplate.nonce += static_cast<uint8_t>(network());
+
   // miner::find_nonce_for_given_block(bl, 1, 0);
   cachedGenesisBlock.reset(new CachedBlock(genesisBlockTemplate));
   return true;
 }
 
 size_t Currency::difficultyBlocksCountByVersion(uint8_t version) const {
-  return CryptoNote::Config::Difficulty::windowSize(version) + 1;
+  return Xi::Config::Difficulty::windowSize(version) + 1;
 }
 
-uint8_t Currency::maxTxVersion() const { return CryptoNote::Config::Transaction::maximumVersion(); }
+uint8_t Currency::maxTxVersion() const { return Xi::Config::Transaction::maximumVersion(); }
 
-uint8_t Currency::minTxVersion() const { return CryptoNote::Config::Transaction::minimumVersion(); }
+uint8_t Currency::minTxVersion() const { return Xi::Config::Transaction::minimumVersion(); }
 
 size_t Currency::timestampCheckWindow(uint32_t blockHeight, uint8_t majorVersion) const {
   XI_UNUSED(blockHeight);
-  return CryptoNote::Config::Difficulty::windowSize(majorVersion);
+  return Xi::Config::Difficulty::windowSize(majorVersion);
 }
 
 uint64_t Currency::blockFutureTimeLimit(uint32_t blockHeight, uint8_t majorVersion) const {
   XI_UNUSED(blockHeight);
-  return static_cast<uint64_t>(std::chrono::seconds{CryptoNote::Config::Difficulty::timeLimit(majorVersion)}.count());
+  return static_cast<uint64_t>(std::chrono::seconds{Xi::Config::Difficulty::timeLimit(majorVersion)}.count());
 }
 
 size_t Currency::rewardBlocksWindowByBlockVersion(uint8_t blockMajorVersion) const {
-  return CryptoNote::Config::Reward::window(blockMajorVersion);
+  return Xi::Config::Reward::window(blockMajorVersion);
 }
 
 uint64_t Currency::blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const {
-  return CryptoNote::Config::Reward::fullRewardZone(blockMajorVersion);
+  return Xi::Config::Reward::fullRewardZone(blockMajorVersion);
 }
 
 uint64_t Currency::defaultDustThreshold(uint32_t height) const {
-  return CryptoNote::Config::Dust::dust(CryptoNote::Config::BlockVersion::version(height));
+  return Xi::Config::Dust::dust(Xi::Config::BlockVersion::version(height));
 }
 
 uint64_t Currency::defaultFusionDustThreshold(uint32_t height) const {
-  return CryptoNote::Config::Dust::fusionDust(CryptoNote::Config::BlockVersion::version(height));
+  return Xi::Config::Dust::fusionDust(Xi::Config::BlockVersion::version(height));
 }
 
 uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
-  return CryptoNote::Config::BlockVersion::upgradeHeight(majorVersion);
+  return Xi::Config::BlockVersion::upgradeHeight(majorVersion);
+}
+
+std::string Currency::blocksFileName() const { return m_blocksFileName + "." + Xi::to_lower(Xi::to_string(network())); }
+
+std::string Currency::blockIndexesFileName() const {
+  return m_blockIndexesFileName + "." + Xi::to_lower(Xi::to_string(network()));
+  ;
+}
+
+std::string Currency::txPoolFileName() const {
+  return m_txPoolFileName + "." + Xi::to_lower(Xi::to_string(network()));
+  ;
 }
 
 bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize,
@@ -160,7 +171,7 @@ bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size
   }
 
   uint64_t penalizedBaseReward = getPenalizedAmount(baseReward, medianSize, currentBlockSize);
-  uint64_t penalizedFee = blockMajorVersion >= Config::BlockVersion::BlockVersionCheckpoint<1>::version()
+  uint64_t penalizedFee = blockMajorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()
                               ? getPenalizedAmount(fee, medianSize, currentBlockSize)
                               : fee;
 
@@ -255,7 +266,7 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
     return false;
   }
 
-  tx.version = Config::Transaction::version();
+  tx.version = Xi::Config::Transaction::version();
   // lock
   tx.unlockTime = height + m_minedMoneyUnlockWindow;
   tx.inputs.push_back(in);
@@ -412,11 +423,11 @@ bool Currency::parseAmount(const std::string& str, uint64_t& amount) const {
 uint64_t Currency::nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
                                   std::vector<uint64_t> cumulativeDifficulties) const {
   XI_UNUSED(blockIndex);
-  return CryptoNote::Config::Difficulty::nextDifficulty(version, timestamps, cumulativeDifficulties);
+  return Xi::Config::Difficulty::nextDifficulty(version, timestamps, cumulativeDifficulties);
 }
 
 bool Currency::checkProofOfWorkV1(const CachedBlock& block, uint64_t currentDifficulty) const {
-  if (Config::BlockVersion::BlockVersionCheckpoint<0>::version() != block.getBlock().majorVersion) {
+  if (Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version() != block.getBlock().majorVersion) {
     return false;
   }
 
@@ -425,7 +436,7 @@ bool Currency::checkProofOfWorkV1(const CachedBlock& block, uint64_t currentDiff
 
 bool Currency::checkProofOfWorkV2(const CachedBlock& cachedBlock, uint64_t currentDifficulty) const {
   const auto& block = cachedBlock.getBlock();
-  if (block.majorVersion < Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
+  if (block.majorVersion < Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
     return false;
   }
 
@@ -460,7 +471,7 @@ bool Currency::checkProofOfWorkV2(const CachedBlock& cachedBlock, uint64_t curre
 
 bool Currency::checkProofOfWork(const CachedBlock& block, uint64_t currentDiffic) const {
   switch (block.getBlock().majorVersion) {
-    case Config::BlockVersion::BlockVersionCheckpoint<0>::version():
+    case Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version():
       return checkProofOfWorkV1(block, currentDiffic);
 
     default:
@@ -530,56 +541,57 @@ Currency::Currency(Currency&& currency)
       m_blockIndexesFileName(currency.m_blockIndexesFileName),
       m_txPoolFileName(currency.m_txPoolFileName),
       m_genesisBlockReward(currency.m_genesisBlockReward),
-      m_testnet(currency.m_testnet),
+      m_network(currency.m_network),
       genesisBlockTemplate(std::move(currency.genesisBlockTemplate)),
       cachedGenesisBlock(new CachedBlock(genesisBlockTemplate)),
       logger(currency.logger) {}
 
 CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
-  maxBlockNumber(Config::Limits::maximumHeight());
-  maxBlockBlobSize(Config::Limits::maximumBlockBlobSize());
-  maxTxSize(Config::Limits::maximumTransactionSize());
-  publicAddressBase58Prefix(Config::Coin::addressBas58Prefix());
-  minedMoneyUnlockWindow(Config::Time::minerRewardUnlockBlocksCount());
+  maxBlockNumber(Xi::Config::Limits::maximumHeight());
+  maxBlockBlobSize(Xi::Config::Limits::maximumBlockBlobSize());
+  maxTxSize(Xi::Config::Limits::maximumTransactionSize());
+  publicAddressBase58Prefix(Xi::Config::Coin::addressBas58Prefix());
+  minedMoneyUnlockWindow(Xi::Config::Time::minerRewardUnlockBlocksCount());
 
-  moneySupply(Config::Coin::totalSupply());
-  emissionSpeedFactor(Config::Coin::emissionSpeed());
-  genesisBlockReward(Config::Coin::amountOfPremine());
+  moneySupply(Xi::Config::Coin::totalSupply());
+  emissionSpeedFactor(Xi::Config::Coin::emissionSpeed());
+  genesisBlockReward(Xi::Config::Coin::amountOfPremine());
 
-  minerTxBlobReservedSize(Config::Limits::blockBlobCoinbaseReservedSize());
+  minerTxBlobReservedSize(Xi::Config::Limits::blockBlobCoinbaseReservedSize());
 
-  numberOfDecimalPlaces(Config::Coin::numberOfDecimalPoints());
+  numberOfDecimalPlaces(Xi::Config::Coin::numberOfDecimalPoints());
 
-  mininumFee(Config::Coin::minimumFee());
+  mininumFee(Xi::Config::Coin::minimumFee());
 
-  difficultyTarget(Config::Time::blockTimeSeconds());
+  difficultyTarget(Xi::Config::Time::blockTimeSeconds());
 
-  maxBlockSizeInitial(Config::Limits::initialBlockBlobSizeLimit());
-  maxBlockSizeGrowthSpeedNumerator(Config::Limits::blockBlobSizeGrowthNumerator());
-  maxBlockSizeGrowthSpeedDenominator(Config::Limits::blockBlobSizeGrowthDenominator());
+  maxBlockSizeInitial(Xi::Config::Limits::initialBlockBlobSizeLimit());
+  maxBlockSizeGrowthSpeedNumerator(Xi::Config::Limits::blockBlobSizeGrowthNumerator());
+  maxBlockSizeGrowthSpeedDenominator(Xi::Config::Limits::blockBlobSizeGrowthDenominator());
 
-  lockedTxAllowedDeltaSeconds(static_cast<uint64_t>(Config::Limits::maximumTimeWindowForLockedTransation().count()));
-  lockedTxAllowedDeltaBlocks(Config::Limits::maximumBlockWindowForLockedTransation());
+  lockedTxAllowedDeltaSeconds(
+      static_cast<uint64_t>(Xi::Config::Limits::maximumTimeWindowForLockedTransation().count()));
+  lockedTxAllowedDeltaBlocks(Xi::Config::Limits::maximumBlockWindowForLockedTransation());
 
-  mempoolTxLiveTime(static_cast<uint64_t>(Config::Limits::maximumTransactionLivetimeSpan().count()));
+  mempoolTxLiveTime(static_cast<uint64_t>(Xi::Config::Limits::maximumTransactionLivetimeSpan().count()));
   mempoolTxFromAltBlockLiveTime(
-      static_cast<uint64_t>(Config::Limits::maximumTransactionLivetimeSpanFromAltBlocks().count()));
-  numberOfPeriodsToForgetTxDeletedFromPool(Config::Limits::minimumTransactionLivetimeSpansUntilDeletion());
+      static_cast<uint64_t>(Xi::Config::Limits::maximumTransactionLivetimeSpanFromAltBlocks().count()));
+  numberOfPeriodsToForgetTxDeletedFromPool(Xi::Config::Limits::minimumTransactionLivetimeSpansUntilDeletion());
 
-  fusionTxMaxSize(Config::Limits::maximumFusionTransactionSize());
-  fusionTxMinInputCount(Config::Limits::minimumFusionTransactionInputCount());
-  fusionTxMinInOutCountRatio(Config::Limits::minimumFusionTransactionInputOutputRatio());
+  fusionTxMaxSize(Xi::Config::Limits::maximumFusionTransactionSize());
+  fusionTxMinInputCount(Xi::Config::Limits::minimumFusionTransactionInputCount());
+  fusionTxMinInOutCountRatio(Xi::Config::Limits::minimumFusionTransactionInputOutputRatio());
 
-  upgradeVotingThreshold(Config::Limits::upgradeVotingThreshold());
-  upgradeVotingWindow(Config::Limits::upgradeVotingWindow());
-  upgradeWindow(Config::Limits::upgradeWindow());
+  upgradeVotingThreshold(Xi::Config::Limits::upgradeVotingThreshold());
+  upgradeVotingWindow(Xi::Config::Limits::upgradeVotingWindow());
+  upgradeWindow(Xi::Config::Limits::upgradeWindow());
 
-  blocksFileName(CryptoNote::Config::Database::blocksFilename());
-  blockIndexesFileName(CryptoNote::Config::Database::blockIndicesFilename());
-  txPoolFileName(CryptoNote::Config::Database::pooldataFilename());
+  blocksFileName(Xi::Config::Database::blocksFilename());
+  blockIndexesFileName(Xi::Config::Database::blockIndicesFilename());
+  txPoolFileName(Xi::Config::Database::pooldataFilename());
 
   isBlockexplorer(false);
-  testnet(false);
+  network(::Xi::Config::Network::defaultNetworkType());
 }
 
 Transaction CurrencyBuilder::generateGenesisTransaction() {
@@ -595,7 +607,7 @@ Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<Accoun
   tx.inputs.clear();
   tx.outputs.clear();
   tx.extra.clear();
-  tx.version = CryptoNote::Config::Transaction::version();
+  tx.version = Xi::Config::Transaction::version();
   tx.unlockTime = m_currency.m_minedMoneyUnlockWindow;
   KeyPair txkey = generateKeyPair();
   addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);

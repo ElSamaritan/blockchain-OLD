@@ -23,6 +23,10 @@
 
 #pragma once
 
+#include <Xi/Utils/ExternalIncludePush.h>
+#include <cxxopts.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
+
 #include <string>
 
 namespace CommonCLI {
@@ -50,11 +54,16 @@ std::string insecureClientWarning();
 std::string insecureServerWarning();
 
 /*!
- * \brief verifyDevelopmentExecution checks whether the current version is build from master or if
- * not whether the user provided the --dev-mode flag.
- *
- * If this is a development version and the --dev-mode flag is not provided it will print an
- * error message and exit the program.
+ * \brief emplaceCLIOptions will add common options for CLI applications to the option parser interface
+ * \param options The parser that will handle the options
  */
-void verifyDevExecution(int& argc, char** argv);
+void emplaceCLIOptions(cxxopts::Options& options);
+
+/*!
+ * \brief handleCLIOptions handles common options given by the CLI
+ * \param option The options that have been parsed
+ * \param result The parsed options result
+ * \return true if the application should exit, otherwise false
+ */
+bool handleCLIOptions(cxxopts::Options& options, const cxxopts::ParseResult& result);
 }  // namespace CommonCLI

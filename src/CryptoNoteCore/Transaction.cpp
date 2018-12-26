@@ -21,7 +21,7 @@
 
 #include "Account.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 
 #include <boost/optional.hpp>
 #include <numeric>
@@ -154,7 +154,7 @@ TransactionImpl::TransactionImpl() {
   TransactionExtraPublicKey pk = {txKeys.publicKey};
   extra.set(pk);
 
-  transaction.version = CryptoNote::Config::Transaction::version();
+  transaction.version = Xi::Config::Transaction::version();
   transaction.unlockTime = 0;
   transaction.extra = extra.serialize();
 

@@ -9,7 +9,7 @@
 #include <string>
 
 #include <zedwallet/Types.h>
-#include <config/WalletConfig.h>
+#include <Xi/Config/WalletConfig.h>
 
 enum AddressType { NotAnAddress, IntegratedAddress, StandardAddress };
 

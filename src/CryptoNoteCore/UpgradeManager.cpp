@@ -19,7 +19,7 @@
 
 #include <stdexcept>
 
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 
 namespace CryptoNote {
 
@@ -39,7 +39,7 @@ uint8_t UpgradeManager::getBlockMajorVersion(uint32_t blockIndex) const {
     }
   }
 
-  return Config::BlockVersion::BlockVersionCheckpoint<0>::version();
+  return Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version();
 }
 
 }  // namespace CryptoNote

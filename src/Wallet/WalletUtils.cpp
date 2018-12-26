@@ -18,14 +18,14 @@
 #include "WalletUtils.h"
 
 #include "CryptoNoteCore/CryptoNote.h"
-#include <config/Mixin.h>
+#include <Xi/Config/Mixin.h>
 #include "crypto/crypto.h"
 #include "Wallet/WalletErrors.h"
 
 namespace CryptoNote {
 
 uint16_t getDefaultMixinByHeight(const uint32_t height) {
-  return Config::Mixin::defaultValue(Config::BlockVersion::version(height));
+  return Xi::Config::Mixin::defaultValue(Xi::Config::BlockVersion::version(height));
 }
 
 void throwIfKeysMismatch(const Crypto::SecretKey& secretKey, const Crypto::PublicKey& expectedPublicKey,

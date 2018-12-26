@@ -10,10 +10,10 @@
 #include <cstring>
 
 #include <Xi/Global.h>
+#include <Xi/Version.h>
 
 #include "CommonCLI.h"
 #include "PaymentGateService.h"
-#include "version.h"
 
 #ifdef WIN32
 #ifndef NOMINMAX
@@ -291,7 +291,6 @@ int unregisterService() {
 }
 
 int main(int argc, char** argv) {
-  CommonCLI::verifyDevExecution(argc, argv);
   PaymentGateService pg;
   ppg = &pg;
 

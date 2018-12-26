@@ -26,7 +26,7 @@
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/Currency.h"
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 #include <Logging/LoggerRef.h>
 
 namespace CryptoNote {
@@ -194,7 +194,7 @@ class BasicUpgradeDetector : public UpgradeDetectorBase {
     for (size_t i = height + 1 - m_currency.upgradeVotingWindow(); i <= height; ++i) {
       const auto& b = m_blockchain[i].bl;
       if ((b.majorVersion == m_targetVersion - 1) &&
-          (b.minorVersion == Config::BlockVersion::minorVersionVotingIndicator()))
+          (b.minorVersion == Xi::Config::BlockVersion::minorVersionVotingIndicator()))
         voteCounter += 1;
     }
 

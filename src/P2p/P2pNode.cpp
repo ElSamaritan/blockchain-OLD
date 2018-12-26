@@ -16,7 +16,7 @@
 #include <System/TcpConnection.h>
 #include <System/TcpConnector.h>
 
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
@@ -101,7 +101,7 @@ void doWithTimeoutAndThrow(System::Dispatcher& dispatcher, std::chrono::nanoseco
 
 }  // namespace
 
-P2pNode::P2pNode(const P2pNodeConfig& cfg, Dispatcher& dispatcher, Logging::ILogger& log,
+P2pNode::P2pNode(int, const P2pNodeConfig& cfg, Dispatcher& dispatcher, Logging::ILogger& log,
                  const Crypto::Hash& genesisHash, PeerIdType peerId)
     : logger(log, "P2pNode:" + std::to_string(cfg.getBindPort())),
       m_stopRequested(false),
@@ -394,14 +394,14 @@ bool P2pNode::fetchPeerList(ContextPtr connection) {
       return false;
     }
 
-    if (response.node_data.version < CryptoNote::Config::P2P::minimumVersion()) {
+    if (response.node_data.version < Xi::Config::P2P::minimumVersion()) {
       logger(DEBUGGING) << *connection << "COMMAND_HANDSHAKE Failed, peer is wrong version: "
                         << std::to_string(response.node_data.version);
       return false;
-    } else if ((response.node_data.version - CryptoNote::Config::P2P::currentVersion()) >=
-               CryptoNote::Config::P2P::upgradeNotificationWindow()) {
+    } else if ((response.node_data.version - Xi::Config::P2P::currentVersion()) >=
+               Xi::Config::P2P::upgradeNotificationWindow()) {
       logger(WARNING) << *connection << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please visit: "
-                      << CryptoNote::Config::Coin::downloadUrl() << " for the latest version.";
+                      << Xi::Config::Coin::downloadUrl() << " for the latest version.";
     }
 
     return handleRemotePeerList(response.local_peerlist, response.node_data.local_time);
@@ -446,7 +446,7 @@ std::list<PeerlistEntry> P2pNode::getLocalPeerList() const {
 basic_node_data P2pNode::getNodeData() const {
   basic_node_data nodeData;
   nodeData.network_id = m_cfg.getNetworkId();
-  nodeData.version = CryptoNote::Config::P2P::currentVersion();
+  nodeData.version = Xi::Config::P2P::currentVersion();
   nodeData.local_time = time(nullptr);
   nodeData.peer_id = m_myPeerId;
 
@@ -534,7 +534,7 @@ void P2pNode::handleNodeData(const basic_node_data& node, P2pContext& context) {
     throw std::runtime_error(msg.str());
   }
 
-  if (node.version < CryptoNote::Config::P2P::minimumVersion()) {
+  if (node.version < Xi::Config::P2P::minimumVersion()) {
     std::ostringstream msg;
     msg << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! (" << std::to_string(node.version) << ")";
     throw std::runtime_error(msg.str());

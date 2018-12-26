@@ -18,7 +18,7 @@
 #include <Xi/Http/SSLServerConfiguration.h>
 
 #include "CommonCLI/CommonCLI.h"
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 #include <Logging/ILogger.h>
 
 using nlohmann::json;
@@ -70,12 +70,10 @@ inline WalletServiceConfiguration initConfiguration() {
   config.daemonAddress = "127.0.0.1";
   config.bindAddress = "127.0.0.1";
   config.logFile = "service.log";
-  config.daemonPort = CryptoNote::Config::Network::rpcPort();
-  config.bindPort = CryptoNote::Config::Network::pgPort();
+  config.daemonPort = Xi::Config::Network::rpcPort();
+  config.bindPort = Xi::Config::Network::pgPort();
   config.logLevel = Logging::INFO;
   config.legacySecurity = false;
-  config.help = false;
-  config.version = false;
   config.dumpConfig = false;
   config.generateNewContainer = false;
   config.daemonize = false;
@@ -89,12 +87,9 @@ inline WalletServiceConfiguration initConfiguration() {
 
 inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& config) {
   cxxopts::Options options(argv[0], CommonCLI::header());
+  CommonCLI::emplaceCLIOptions(options);
 
   // clang-format off
-  options.add_options("Core")
-    ("h,help", "Display this help message", cxxopts::value<bool>()->implicit_value("true"))
-    ("v,version", "Output software version information", cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
-
   options.add_options("Daemon")
     ("daemon-address", "The daemon host to use for node operations",cxxopts::value<std::string>()->default_value(config.daemonAddress), "<ip>")
     ("daemon-port", "The daemon RPC port to use for node operations", cxxopts::value<uint16_t>()->default_value(std::to_string(config.daemonPort)), "<port>");
@@ -142,14 +137,6 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
 
   try {
     auto cli = options.parse(argc, argv);
-
-    if (cli.count("help") > 0) {
-      config.help = cli["help"].as<bool>();
-    }
-
-    if (cli.count("version") > 0) {
-      config.version = cli["version"].as<bool>();
-    }
 
     if (cli.count("config") > 0) {
       config.configFile = cli["config"].as<std::string>();
@@ -251,15 +238,7 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
       config.scanHeight = cli["scan-height"].as<uint32_t>();
     }
 
-    if (config.help)  // Do we want to display the help message?
-    {
-      std::cout << options.help({}) << std::endl;
-      exit(0);
-    } else if (config.version)  // Do we want to display the software version?
-    {
-      std::cout << CommonCLI::header() << std::endl;
-      exit(0);
-    }
+    if (CommonCLI::handleCLIOptions(options, cli)) exit(0);
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Error: Unable to parse command line argument options: " << e.what() << std::endl
               << std::endl

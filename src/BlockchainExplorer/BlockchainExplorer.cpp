@@ -27,7 +27,7 @@
 #include "Common/StdInputStream.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
-#include <config/CryptoNoteConfig.h>
+#include <Xi/Config.h>
 
 #include "CryptoNoteCore/ITransaction.h"
 
@@ -423,14 +423,14 @@ uint64_t BlockchainExplorer::getRewardBlocksWindow(uint8_t majorVersion) {
   if (state.load() != INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
-  return Config::Reward::window(majorVersion);
+  return Xi::Config::Reward::window(majorVersion);
 }
 
 uint64_t BlockchainExplorer::getFullRewardMaxBlockSize(uint8_t majorVersion) {
   if (state.load() != INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
-  return Config::Reward::fullRewardZone(majorVersion);
+  return Xi::Config::Reward::fullRewardZone(majorVersion);
 }
 
 bool BlockchainExplorer::isSynchronized() {
