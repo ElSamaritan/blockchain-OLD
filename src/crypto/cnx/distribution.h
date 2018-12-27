@@ -21,28 +21,12 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <iostream>
-#include <string>
+#pragma once
 
-#include <crypto/cnx/cnx.h>
-#include <Common/StringTools.h>
+#include <cinttypes>
 
-std::string makeHash(std::string data) {
-  Crypto::CNX::Hash_v0 hashFn;
-  Crypto::Hash hash;
-  hashFn(data.c_str(), data.length(), hash);
-  std::string hashString;
-  hashString.resize(sizeof(hash));
-  for (std::size_t i = 0; i < sizeof(hash); ++i) hashString[i] = reinterpret_cast<char*>(&hash)[i];
-  return Common::base64Encode(hashString);
+namespace Crypto {
+namespace CNX {
+uint32_t get_soft_shell_index(uint32_t random);
 }
-
-int main(int, char**) {
-  std::string currentLine;
-  while (!std::cin.eof()) {
-    std::getline(std::cin, currentLine, '\n');
-    if (currentLine.empty()) continue;
-    std::string data = Common::base64Decode(currentLine);
-    std::cout << makeHash(data) << std::endl;
-  }
-}
+}  // namespace Crypto

@@ -32,5 +32,5 @@ void CryptoNote::Hashes::InitBlockchain::operator()(const CryptoNote::CachedBloc
 
 void CryptoNote::Hashes::CNX_v0::operator()(const CryptoNote::CachedBlock &block, Crypto::Hash &hash) const {
   const auto &rawHashingBlock = block.getParentBlockHashingBinaryArray(true);
-  Crypto::CNX::Hash_v0{}(rawHashingBlock.data(), rawHashingBlock.size(), hash, block.getBlockIndex());
+  Crypto::CNX::Hash_v0{}(rawHashingBlock.data(), rawHashingBlock.size(), hash);
 }

@@ -28,7 +28,7 @@
 #include <random>
 
 #include "crypto/keccak.h"
-
+#include "crypto/cnx/distribution.h"
 #include "crypto/cnx/randomizer.h"
 #include "crypto/cnx/mersenne-twister.h"
 
@@ -124,7 +124,9 @@ void init_salt(char *salt, size_t saltLength, Crypto::Hash &hash, Crypto::CN_ADA
 
 }  // namespace
 
-void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::Hash &hash, uint32_t height) const {
+#include <iostream>
+
+void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::Hash &hash) const {
   static thread_local std::unique_ptr<Randomizer> __Randomizer = std::make_unique<Randomizer>(maxRandomizerSize());
   static thread_local std::unique_ptr<MersenneTwister> __Twister = std::make_unique<MersenneTwister>(0);
   static thread_local std::vector<char> __Salt;
@@ -132,8 +134,10 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
   std::memset(&hash, 0, sizeof(hash));
   cn_fast_hash(data, length, reinterpret_cast<char *>(&hash));
 
-  for (std::size_t i = 0; i < 1; ++i) {
-    const uint32_t offset = offsetForHeight(height);
+  for (std::size_t i = 0; i < 8 * 256_kB;) {
+    uint32_t softShellIndex = get_soft_shell_index(*reinterpret_cast<uint32_t *>(&hash));
+
+    const uint32_t offset = offsetForHeight(softShellIndex);
     const uint32_t scratchpadSize = scratchpadSizeForOffset(offset);
     const uint32_t randomizerSize = randomizerSizeForOffset(offset);
 
@@ -146,7 +150,7 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
     init_salt(__Salt.data(), __Randomizer->size(), hash, &__Randomizer->Handle);
     cn_fast_hash(__Salt.data(), __Randomizer->size(), reinterpret_cast<char *>(&hash));
 
-    const uint32_t seed = (*reinterpret_cast<uint32_t *>(&hash)) ^ height;
+    const uint32_t seed = (*reinterpret_cast<uint32_t *>(&hash)) ^ softShellIndex;
     __Twister->set_seed(seed);
 
     const uint8_t lookup[]{2, 4, 8};
@@ -164,5 +168,6 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
     cn_adaptive_slow_hash(data, length, reinterpret_cast<char *>(&hash), variant(), false, scratchpadSize / 2,
                           &__Randomizer->Handle, __Salt.data(), tempLookup[tempLookupIndex], xx, yy, zz, ww,
                           scratchpadSize);
+    i += scratchpadSize;
   }
 }
