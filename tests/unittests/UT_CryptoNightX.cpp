@@ -45,16 +45,11 @@ TEST(CryptoNightX, HashConsistency) {
   data->resize(NumBlocks * BlockSize / 2);
   std::generate(data->begin(), data->end(), std::ref(rbe));
 
-  const uint32_t DesiredIterations = 16;
-  const uint32_t WaveLength = 2 * HashFn::windowSize();
-  const uint32_t Incrementor = WaveLength / DesiredIterations;
-  for (uint32_t h = 0; h <= WaveLength; h += Incrementor) {
-    for (std::size_t i = 0; i < NumBlocks; ++i) {
-      Crypto::Hash h0;
-      HashFn{}(reinterpret_cast<uint8_t*>(data->data()) + i * BlockSize, BlockSize, h0, h);
-      Crypto::Hash h1;
-      HashFn{}(reinterpret_cast<uint8_t*>(data->data()) + i * BlockSize, BlockSize, h1, h);
-      for (uint8_t k = 0; k < 32; ++k) EXPECT_EQ(h0.data[k], h1.data[k]);
-    }
+  for (std::size_t i = 0; i < NumBlocks; ++i) {
+    Crypto::Hash h0;
+    HashFn{}(reinterpret_cast<uint8_t*>(data->data()) + i * BlockSize, BlockSize, h0);
+    Crypto::Hash h1;
+    HashFn{}(reinterpret_cast<uint8_t*>(data->data()) + i * BlockSize, BlockSize, h1);
+    for (uint8_t k = 0; k < 32; ++k) EXPECT_EQ(h0.data[k], h1.data[k]);
   }
 }

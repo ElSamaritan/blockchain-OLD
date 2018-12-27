@@ -27,10 +27,10 @@
 #include <crypto/cnx/cnx.h>
 #include <Common/StringTools.h>
 
-std::string makeHash(std::string data, uint32_t height) {
+std::string makeHash(std::string data) {
   Crypto::CNX::Hash_v0 hashFn;
   Crypto::Hash hash;
-  hashFn(data.c_str(), data.length(), hash, height);
+  hashFn(data.c_str(), data.length(), hash);
   std::string hashString;
   hashString.resize(sizeof(hash));
   for (std::size_t i = 0; i < sizeof(hash); ++i) hashString[i] = reinterpret_cast<char*>(&hash)[i];
@@ -43,7 +43,6 @@ int main(int, char**) {
     std::getline(std::cin, currentLine, '\n');
     if (currentLine.empty()) continue;
     std::string data = Common::base64Decode(currentLine);
-    for (uint32_t i = 0; i < Crypto::CNX::Hash_v0::windowSize() * 2 + 1; i += 512)
-      std::cout << makeHash(data, i) << std::endl;
+    std::cout << makeHash(data) << std::endl;
   }
 }

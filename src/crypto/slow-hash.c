@@ -942,9 +942,10 @@ void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, char *salt, u
     void (*const fn)(uint8_t * inPlaceOperand, const int8_t *appliedOperand, uint8_t op) =
         CN_ADAPTIVE_OP_LOOKUP[r->operationsIndex];
     for (uint32_t j = 0; j < r->size; ++j) {
-      fn(scratchpad + (r->indices[j] % memory), r->values, r->operators[j]);
+      const uint32_t scratchpadIndex = r->indices[j] % memory;
+      fn(scratchpad + scratchpadIndex, r->values + j, r->operators[j]);
+      r->operationsIndex = scratchpad[scratchpadIndex];
     }
-    r->operationsIndex = scratchpad[i];
   }
 }
 
