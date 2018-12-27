@@ -69,3 +69,20 @@ AmityCoin
 
 CrypteNote, Bytecoin, Turtlecoin, Monero Project
     https://github.com/turtlecoin/turtlecoin/blob/development/LICENSE
+
+
+
+Additionally, we want to shout out some special thanks to the following users.
+
+* angrywasp
+  He is the developer of the NervaCoin and our hash algorithm was inspired
+  by his great work on CryptoNigh-Adaptive.
+
+* zpalmtree
+  One, or the most, active developer of TurtleCoin who developed many parts
+  of the code base, we are reusing, due to his robust and well thought
+  implementations.
+
+* zawy
+  For his open source development of LWMA, which serves great and is a crucial
+  part of this blockchain.
