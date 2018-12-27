@@ -638,6 +638,7 @@ bool RpcServer::f_on_blocks_list_json(const F_COMMAND_RPC_GET_BLOCKS_LIST::reque
     block_short.height = i;
     block_short.hash = Common::podToHex(block_hash);
     block_short.tx_count = blk.transactionHashes.size() + 1;
+    block_short.tx_min_fee = m_core.getCurrency().minimumFee();
 
     res.blocks.push_back(block_short);
 
@@ -805,6 +806,7 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
     block_short.hash = Common::podToHex(blockHash);
     block_short.difficulty = blkDetails.difficulty;
     block_short.tx_count = blk.transactionHashes.size() + 1;
+    block_short.tx_min_fee = m_core.getCurrency().minimumFee();
     res.block = block_short;
   }
 
