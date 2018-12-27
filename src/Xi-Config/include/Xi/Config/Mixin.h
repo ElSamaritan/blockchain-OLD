@@ -39,12 +39,9 @@
 
 // clang-format off
 //                 (_Index, _Version, _Min, _Max, _Default)
-MakeMixinCheckpoint(     0,        1,    0,    4,        0)
-MakeMixinCheckpoint(     1,        6,    0,   10,        0)
-MakeMixinCheckpoint(     2,        8,    0,   20,        8)
-MakeMixinCheckpoint(     3,        9,    0,   30,       20)
+MakeMixinCheckpoint(     0,        1,    0,   10,        0)
 // clang-format on
 
-#define CURRENT_MIXIN_CHECKPOINT_INDEX 3
+#define CURRENT_MIXIN_CHECKPOINT_INDEX 0
 
 #include "Xi/Config/_Impl/EndMixinConfig.h"

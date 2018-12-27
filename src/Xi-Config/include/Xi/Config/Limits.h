@@ -53,7 +53,7 @@ inline constexpr uint64_t blockBlobSizeGrowthDenominator() {
 }
 
 /* +++ Voting +++ */
-inline constexpr uint8_t upgradeVotingThreshold() { return 90; }
+inline constexpr uint8_t upgradeVotingThreshold() { return 70; }
 inline constexpr uint32_t upgradeVotingWindow() { return Time::expectedBlocksPerDay(); }
 inline constexpr uint32_t upgradeWindow() { return Time::expectedBlocksPerDay(); }
 
