@@ -486,8 +486,9 @@ struct f_block_short_response {
   uint64_t timestamp;
   uint32_t height;
   std::string hash;
-  uint64_t tx_count;
   uint64_t cumul_size;
+  uint64_t tx_count;
+  uint64_t tx_min_fee;
 
   void serialize(ISerializer &s) {
     KV_MEMBER(difficulty)
@@ -496,6 +497,7 @@ struct f_block_short_response {
     KV_MEMBER(hash)
     KV_MEMBER(cumul_size)
     KV_MEMBER(tx_count)
+    KV_MEMBER(tx_min_fee)
   }
 };
 
