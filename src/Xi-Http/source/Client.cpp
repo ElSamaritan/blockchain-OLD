@@ -25,7 +25,6 @@
 
 #include <chrono>
 #include <thread>
-#include <thread>
 #include <atomic>
 #include <functional>
 #include <memory>
@@ -61,7 +60,9 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
     while (keepRunning) {
       try {
         boost::system::error_code ec;
-        io.run(ec);
+        auto tasksHandled = io.run(ec);
+        io.reset();
+        if (tasksHandled == 0) std::this_thread::sleep_for(std::chrono::milliseconds{20});
       } catch (...) {
         // TODO Logging
       }
@@ -91,6 +92,8 @@ uint16_t Xi::Http::Client::port() const { return m_port; }
 std::future<Xi::Http::Response> Xi::Http::Client::send(Xi::Http::Request &&request) {
   if (request.host().empty()) request.setHost(host());
   if (request.port() == 0) request.setPort(port());
+  request.headers().setAcceptedContentEncodings(
+      {ContentEncoding::Gzip, ContentEncoding::Deflate, ContentEncoding::Identity});
   if (!m_sslConfig.Disabled) {
     request.setSSLRequired(true);
     return m_worker->makeHttpsSession()->run(std::move(request));

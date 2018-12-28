@@ -29,8 +29,8 @@ Xi::Http::HttpClientSession::HttpClientSession(boost::asio::io_context& io,
 
 void Xi::Http::HttpClientSession::doPrepareRun() {}
 
-void Xi::Http::HttpClientSession::doOnHostResolved(resolver_t::results_type results) {
-  boost::asio::async_connect(m_socket, results.begin(), results.end(),
+void Xi::Http::HttpClientSession::doOnHostResolved(resolver_t::iterator begin, resolver_t::iterator end) {
+  boost::asio::async_connect(m_socket, begin, end,
                              std::bind(&ClientSession::onConnected, shared_from_this(), std::placeholders::_1));
 }
 

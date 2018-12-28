@@ -53,7 +53,7 @@ class HttpClientSession : public ClientSession {
 
  protected:
   void doPrepareRun() override;
-  void doOnHostResolved(resolver_t::results_type results) override;
+  void doOnHostResolved(resolver_t::iterator begin, resolver_t::iterator end) override;
   void doOnConnected() override;
   void doOnRequestWritten() override;
   void doOnResponseRecieved() override;

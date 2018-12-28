@@ -56,7 +56,7 @@ Xi::Http::ClientSession::future_t Xi::Http::ClientSession::run(Xi::Http::Request
 void Xi::Http::ClientSession::onHostResolved(boost::beast::error_code ec, resolver_t::results_type results) {
   try {
     checkErrorCode(ec);
-    doOnHostResolved(std::move(results));
+    doOnHostResolved(results.begin(), results.end());
   } catch (...) {
     fail(std::current_exception());
   }
@@ -124,6 +124,7 @@ void Xi::Http::ClientSession::run() {
 
   const auto host = m_request.find(boost::beast::http::field::host);
   if (host == m_request.end()) throw std::runtime_error{"request has no host"};
+
   m_resolver.async_resolve(
       std::string{host->value()}, m_port.c_str(),
       std::bind(&ClientSession::onHostResolved, shared_from_this(), std::placeholders::_1, std::placeholders::_2));

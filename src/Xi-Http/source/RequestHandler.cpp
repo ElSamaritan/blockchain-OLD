@@ -27,7 +27,9 @@
 
 Xi::Http::Response Xi::Http::RequestHandler::operator()(const Xi::Http::Request &request) {
   try {
-    return doHandleRequest(request);
+    auto response = doHandleRequest(request);
+    emplaceContentEncoding(request, response);
+    return response;
   } catch (...) {
     try {
       return fail(std::current_exception());
@@ -62,6 +64,19 @@ Xi::Http::Response Xi::Http::RequestHandler::doMakeNotImplemented() { return Res
 
 Xi::Http::Response Xi::Http::RequestHandler::doMakeInternalServerError(const std::string &why) {
   return Response{StatusCode::InternalServerError, why};
+}
+
+void Xi::Http::RequestHandler::emplaceContentEncoding(const Xi::Http::Request &request, Xi::Http::Response &response) {
+  try {
+    if (request.headers().acceptsContentEncoding(ContentEncoding::Gzip))
+      response.headers().setContentEncoding(ContentEncoding::Gzip);
+    else if (request.headers().acceptsContentEncoding(ContentEncoding::Deflate))
+      response.headers().setContentEncoding(ContentEncoding::Deflate);
+    else
+      response.headers().setContentEncoding(ContentEncoding::Identity);
+  } catch (...) {
+    response.headers().setContentEncoding(ContentEncoding::Identity);
+  }
 }
 
 Xi::Http::Response Xi::Http::RequestHandler::fail(std::exception_ptr ex) {

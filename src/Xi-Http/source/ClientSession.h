@@ -107,7 +107,7 @@ class ClientSession : public std::enable_shared_from_this<ClientSession> {
    */
 
   virtual void doPrepareRun() = 0;
-  virtual void doOnHostResolved(resolver_t::results_type results) = 0;
+  virtual void doOnHostResolved(resolver_t::iterator begin, resolver_t::iterator end) = 0;
   virtual void doOnConnected() = 0;
   virtual void doOnRequestWritten() = 0;
   virtual void doOnResponseRecieved() = 0;

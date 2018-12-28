@@ -100,6 +100,7 @@ class RequestHandler {
   virtual Response doMakeInternalServerError(const std::string& why);
 
  private:
+  void emplaceContentEncoding(const Request& request, Response& response);
   Response fail(std::exception_ptr ex);
 };
 }  // namespace Http

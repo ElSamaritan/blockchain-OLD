@@ -25,6 +25,7 @@
 
 #include <vector>
 #include <thread>
+#include <chrono>
 #include <stdexcept>
 #include <atomic>
 
@@ -60,7 +61,9 @@ struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
         while (keepRunning) {
           try {
             boost::system::error_code ec;
-            io.run(ec);
+            const auto tasksHandled = io.run(ec);
+            io.reset();
+            if (tasksHandled == 0) std::this_thread::sleep_for(std::chrono::milliseconds{20});
           } catch (...) {
             // TODO Logging
           }

@@ -119,6 +119,13 @@ class HeaderContainer final {
   boost::optional<std::vector<::Xi::Http::ContentEncoding>> acceptedContentEncodings() const;
 
   /*!
+   * \brief acceptsContentEncoding returns true if the acceptedContentEncodings contains the given encoding
+   * \param encoding The encoding to check for support
+   * \return true if and only if the request support the given encoding
+   */
+  bool acceptsContentEncoding(::Xi::Http::ContentEncoding encoding) const;
+
+  /*!
    * \brief setContentEncoding indicates which encoding was used for a response.
    */
   void setContentEncoding(::Xi::Http::ContentEncoding encoding);

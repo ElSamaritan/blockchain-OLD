@@ -148,6 +148,15 @@ boost::optional<std::vector<Xi::Http::ContentEncoding> > Xi::Http::HeaderContain
     return boost::optional<std::vector<Xi::Http::ContentEncoding> >{};
 }
 
+bool Xi::Http::HeaderContainer::acceptsContentEncoding(Xi::Http::ContentEncoding encoding) const {
+  const auto acceptedEncodings = acceptedContentEncodings();
+  if (acceptedEncodings) {
+    return std::find(acceptedEncodings->begin(), acceptedEncodings->end(), encoding) != acceptedEncodings->end();
+  } else {
+    return false;
+  }
+}
+
 void Xi::Http::HeaderContainer::setContentEncoding(Xi::Http::ContentEncoding encoding) {
   set(ContentEncoding, to_string(encoding));
 }

@@ -36,8 +36,8 @@ void Xi::Http::HttpsClientSession::doPrepareRun() {
   }
 }
 
-void Xi::Http::HttpsClientSession::doOnHostResolved(resolver_t::results_type results) {
-  boost::asio::async_connect(m_stream.next_layer(), results.begin(), results.end(),
+void Xi::Http::HttpsClientSession::doOnHostResolved(resolver_t::iterator begin, resolver_t::iterator end) {
+  boost::asio::async_connect(m_stream.next_layer(), begin, end,
                              std::bind(&ClientSession::onConnected, shared_from_this(), std::placeholders::_1));
 }
 
