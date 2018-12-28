@@ -72,15 +72,16 @@ CrypteNote, Bytecoin, Turtlecoin, Monero Project
 
 
 
-Additionally, we want to shout out some special thanks to the following users.
+Additionally, we would like to give shoutouts and some special thanks to the 
+following developers.
 
 * angrywasp
-  He is the developer of the NervaCoin and our hash algorithm was inspired
-  by his great work on CryptoNigh-Adaptive.
+  As the developer of  Nerva our hash algorithm was inspired
+  by his great work on CryptoNight-Adaptive.
 
 * zpalmtree
-  One, or the most, active developer of TurtleCoin who developed many parts
-  of the code base, we are reusing, due to his robust and well thought
+  One of, or the most,  active developer of TurtleCoin who has developed many 
+  parts of the code base, we are reusing, due to his robust and well thought
   implementations.
 
 * zawy
