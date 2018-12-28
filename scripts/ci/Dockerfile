@@ -24,7 +24,7 @@
 FROM ubuntu:bionic
 
 RUN apt update                   && \
-    apt install -y openssl          \
+    apt install -y openssl       && \
     rm -rf /var/lib/apt/lists/*
 
 
