@@ -44,8 +44,9 @@ std::vector<Xi::Http::HeaderContainer::Header> headersToCopy{
     {Xi::Http::HeaderContainer::WWWAuthenticate, Xi::Http::HeaderContainer::Authorization,
      Xi::Http::HeaderContainer::Connection, Xi::Http::HeaderContainer::KeepAlive, Xi::Http::HeaderContainer::Accept,
      Xi::Http::HeaderContainer::AcceptCharset, Xi::Http::HeaderContainer::AcceptEncoding,
-     Xi::Http::HeaderContainer::ContentType, Xi::Http::HeaderContainer::ContentEncoding,
-     Xi::Http::HeaderContainer::Location, Xi::Http::HeaderContainer::Allow, Xi::Http::HeaderContainer::Server}};
+     Xi::Http::HeaderContainer::AccessControlAllowOrigin, Xi::Http::HeaderContainer::ContentType,
+     Xi::Http::HeaderContainer::ContentEncoding, Xi::Http::HeaderContainer::Location, Xi::Http::HeaderContainer::Allow,
+     Xi::Http::HeaderContainer::Server}};
 }
 
 Xi::Http::BeastConversion::api_request_t Xi::Http::BeastConversion::operator()(

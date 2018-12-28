@@ -132,7 +132,7 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
   options.add_options("RPC")
     ("enable-blockexplorer", "Enable the Blockchain Explorer RPC", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
     ("enable-cors", "Adds header 'Access-Control-Allow-Origin' to the RPC responses using the <domain>. Uses the value specified as the domain. Use * for all.",
-      cxxopts::value<std::vector<std::string>>()->implicit_value("*"), "<domain>")
+      cxxopts::value<std::string>()->implicit_value("*"), "<domain>")
     ("fee-address", "Sets the convenience charge <address> for light wallets that use the daemon", cxxopts::value<std::string>(), "<address>")
     ("fee-amount", "Sets the convenience charge amount for light wallets that use the daemon", cxxopts::value<int>()->default_value("0"), "#");
 

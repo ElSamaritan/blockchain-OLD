@@ -485,6 +485,7 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.difficulty = m_core.getDifficultyForNextBlock();
   res.tx_count = m_core.getBlockchainTransactionCount() - res.height;  // without coinbase
   res.tx_pool_size = m_core.getPoolTransactionCount();
+  res.tx_min_fee = m_core.getCurrency().minimumFee();
   res.alt_blocks_count = m_core.getAlternativeBlockCount();
   uint64_t total_conn = m_p2p.get_connections_count();
   res.outgoing_connections_count = m_p2p.get_outgoing_connections_count();
@@ -638,7 +639,6 @@ bool RpcServer::f_on_blocks_list_json(const F_COMMAND_RPC_GET_BLOCKS_LIST::reque
     block_short.height = i;
     block_short.hash = Common::podToHex(block_hash);
     block_short.tx_count = blk.transactionHashes.size() + 1;
-    block_short.tx_min_fee = m_core.getCurrency().minimumFee();
 
     res.blocks.push_back(block_short);
 
@@ -806,7 +806,6 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
     block_short.hash = Common::podToHex(blockHash);
     block_short.difficulty = blkDetails.difficulty;
     block_short.tx_count = blk.transactionHashes.size() + 1;
-    block_short.tx_min_fee = m_core.getCurrency().minimumFee();
     res.block = block_short;
   }
 

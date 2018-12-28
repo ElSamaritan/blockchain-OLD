@@ -268,6 +268,7 @@ int main(int argc, char* argv[]) {
     CryptoNote::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
     CryptoNote::NodeServer p2psrv(dispatcher, config.network, cprotocol, logManager);
     auto rpcServer = std::make_shared<CryptoNote::RpcServer>(dispatcher, logManager, ccore, p2psrv, cprotocol);
+    if (!config.enableCors.empty()) rpcServer->enableCors(config.enableCors);
 
     cprotocol.set_p2p_endpoint(&p2psrv);
     DaemonCommandsHandler dch(ccore, p2psrv, logManager, rpcServer.get());
