@@ -42,8 +42,8 @@ inline constexpr uint64_t maximumBlockBlobSize() { return 10_MB; }
 inline constexpr uint64_t maximumBlockExtraSize() { return 140_kB; }
 
 inline constexpr uint64_t initialBlockBlobSizeLimit() { return 200_kB; }
-inline constexpr std::chrono::seconds blockBlobSizeGrowthTimeWindow() { return 5_m; }
-inline constexpr uint64_t blockBlobSizeGrowthIncrementor() { return 100_kB; }
+inline constexpr std::chrono::seconds blockBlobSizeGrowthTimeWindow() { return 24_h; }
+inline constexpr uint64_t blockBlobSizeGrowthIncrementor() { return 5_kB; }
 inline constexpr uint64_t blockBlobCoinbaseReservedSize() { return 600_Bytes; }
 
 inline constexpr uint64_t blockBlobSizeGrowthNumerator() { return blockBlobSizeGrowthIncrementor(); }
