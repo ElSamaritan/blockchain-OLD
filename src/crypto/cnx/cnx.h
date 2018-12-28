@@ -31,7 +31,7 @@
 namespace Crypto {
 namespace CNX {
 
-struct Hash_v0 : Configuration<64, 512, 1024, 32_kB, 2_MB> {
+struct Hash_v0 : Configuration<64, 2_kB, 16_kB, 256_kB, 2_MB> {
   void operator()(const void *data, size_t length, Hash &hash) const;
 };
 

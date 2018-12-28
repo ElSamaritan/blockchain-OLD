@@ -36,4 +36,4 @@ BENCHMARK_DEFINE_F(HashBasedBenchmark, BM_CryptoNightX)(benchmark::State& state)
   }
 }
 
-BENCHMARK_REGISTER_F(HashBasedBenchmark, BM_CryptoNightX)->Unit(benchmark::kMillisecond)->Iterations(10)->Threads(12);
+BENCHMARK_REGISTER_F(HashBasedBenchmark, BM_CryptoNightX)->Unit(benchmark::kMillisecond)->Iterations(4);
