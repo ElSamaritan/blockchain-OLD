@@ -21,19 +21,22 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <benchmark/benchmark.h>
+#if defined(__cplusplus)
+extern "C" {
+#endif  // __cplusplus
 
-#include "HashBasedBenchmark.h"
-#include "crypto/cnx/cnx.h"
+#include <inttypes.h>
 
-using HashAlgorithm = Crypto::CNX::Hash_v0;
+void hash_extra_blake(const void *data, size_t length, char *hash);
+void hash_extra_groestl(const void *data, size_t length, char *hash);
+void hash_extra_jh(const void *data, size_t length, char *hash);
+void hash_extra_skein(const void *data, size_t length, char *hash);
 
-BENCHMARK_DEFINE_F(HashBasedBenchmark, BM_CryptoNightX)(benchmark::State& state) {
-  unsigned char const* data = HashBasedBenchmark::data();
-  for (auto _ : state) {
-    (void)_;
-    for (std::size_t i = 0; i < BlockCount; ++i) HashAlgorithm{}(data + i * BlockSize, BlockSize, HashPlaceholder);
-  }
+typedef void (*hashExtraFunction)(const void *data, size_t length, char *hash);
+
+static const hashExtraFunction hash_extra_functions[4] = {hash_extra_blake, hash_extra_groestl, hash_extra_jh,
+                                                          hash_extra_skein};
+
+#if defined(__cplusplus)
 }
-
-BENCHMARK_REGISTER_F(HashBasedBenchmark, BM_CryptoNightX)->Unit(benchmark::kMillisecond)->Iterations(10)->Threads(4);
+#endif  // __cplusplus

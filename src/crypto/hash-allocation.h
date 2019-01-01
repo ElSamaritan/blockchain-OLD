@@ -21,19 +21,29 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <benchmark/benchmark.h>
+#if defined(__cplusplus)
+extern "C" {
+#endif  // __cplusplus
 
-#include "HashBasedBenchmark.h"
-#include "crypto/cnx/cnx.h"
+#include <inttypes.h>
 
-using HashAlgorithm = Crypto::CNX::Hash_v0;
+/*!
+ * \brief allocate the scratch buffer using OS support for huge pages, if available
+ *
+ * This function tries to allocate the scratch buffer using a single "huge page" (instead of the usual 4KB page sizes)
+ * to reduce TLB misses during the random accesses to the scratch buffer.  This is one of the important speed
+ * optimizations needed to make CryptoNight faster.
+ *
+ * \param pageSize The required memory for the scratchpad
+ * \return a thread local pointer to the memory allocated, with at least pageSize memory
+ */
+uint8_t* xi_hash_allocate_state(uint32_t pageSize);
 
-BENCHMARK_DEFINE_F(HashBasedBenchmark, BM_CryptoNightX)(benchmark::State& state) {
-  unsigned char const* data = HashBasedBenchmark::data();
-  for (auto _ : state) {
-    (void)_;
-    for (std::size_t i = 0; i < BlockCount; ++i) HashAlgorithm{}(data + i * BlockSize, BlockSize, HashPlaceholder);
-  }
+/*!
+ * \brief frees the thread local allocated scratch buffer
+ */
+void xi_hash_free_state();
+
+#if defined(__cplusplus)
 }
-
-BENCHMARK_REGISTER_F(HashBasedBenchmark, BM_CryptoNightX)->Unit(benchmark::kMillisecond)->Iterations(10)->Threads(4);
+#endif  // __cplusplus

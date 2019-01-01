@@ -21,19 +21,4 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <benchmark/benchmark.h>
-
-#include "HashBasedBenchmark.h"
-#include "crypto/cnx/cnx.h"
-
-using HashAlgorithm = Crypto::CNX::Hash_v0;
-
-BENCHMARK_DEFINE_F(HashBasedBenchmark, BM_CryptoNightX)(benchmark::State& state) {
-  unsigned char const* data = HashBasedBenchmark::data();
-  for (auto _ : state) {
-    (void)_;
-    for (std::size_t i = 0; i < BlockCount; ++i) HashAlgorithm{}(data + i * BlockSize, BlockSize, HashPlaceholder);
-  }
-}
-
-BENCHMARK_REGISTER_F(HashBasedBenchmark, BM_CryptoNightX)->Unit(benchmark::kMillisecond)->Iterations(10)->Threads(4);
+#pragma once

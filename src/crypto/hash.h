@@ -12,6 +12,7 @@
 
 #include <crypto/CryptoTypes.h>
 #include "generic-ops.h"
+#include "hash-extra-ops.h"
 
 // Standard Cryptonight Definitions
 #define CN_PAGE_SIZE 2097152

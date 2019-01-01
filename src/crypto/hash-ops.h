@@ -61,6 +61,8 @@ void hash_permutation(union hash_state *state);
 void hash_process(union hash_state *state, const uint8_t *buf, size_t count);
 #endif
 
+#include "hash-extra-ops.h"
+
 enum {
   CN_ADAPTIVE_NOP = 0,
   CN_ADAPTIVE_ADD,
@@ -98,11 +100,6 @@ void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, char *salt, u
 void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t rand_iters,
                            CN_ADAPTIVE_RandomValues *r, char *sp_bytes, uint8_t init_size_blk, uint16_t xx, uint16_t yy,
                            uint16_t zz, uint16_t ww, uint32_t memory, uint32_t pageSize);
-
-void hash_extra_blake(const void *data, size_t length, char *hash);
-void hash_extra_groestl(const void *data, size_t length, char *hash);
-void hash_extra_jh(const void *data, size_t length, char *hash);
-void hash_extra_skein(const void *data, size_t length, char *hash);
 
 void tree_hash(const char (*hashes)[HASH_SIZE], size_t count, char *root_hash);
 size_t tree_depth(size_t count);
