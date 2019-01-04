@@ -51,6 +51,7 @@ find_package(
         serialization
         program_options
         iostreams
+        random
         ${Boost_COMPONENTS_EXTRA}
 )
 if(NOT MSVC)

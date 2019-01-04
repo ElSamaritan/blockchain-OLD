@@ -101,6 +101,18 @@ target_link_libraries(
     System
 )
 
+xi_make_library(Crypto Xi-Crypto)
+target_link_libraries(
+  Xi.Crypto
+
+  PUBLIC
+    Xi.Core
+
+  PRIVATE
+    openssl
+    boost
+)
+
 xi_make_library(Config Xi-Config)
 target_link_libraries(Xi.Config PUBLIC Xi.Core)
 
