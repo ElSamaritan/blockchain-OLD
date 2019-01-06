@@ -21,56 +21,29 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/CrashUploader.h"
 
-#include <Xi/Utils/ExternalIncludePush.h>
-#include <cxxopts.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/Version.h>
+#include <Xi/Config/Network.h>
+#include <Xi/Http/Client.h>
+#include <Xi/Http/MultipartFormDataBuilder.h>
 
-#include <string>
+Xi::CrashUploader::CrashUploader(const std::string& breapkpadHost, uint16_t port)
+    : m_host{breapkpadHost}, m_port{port} {}
 
-namespace CommonCLI {
-/*!
- * \brief header returns an appropiate header to display including a message telling you you are
- * on a testing version, if so
- * \return a header to display at startup
- */
-std::string header();
+Xi::CrashUploader::~CrashUploader() {}
 
-/*!
- * \brief checks wheter this version was built from non master branch source code
- * \return true if this version is not built from master branch, otherwise false
- */
-bool isDevVersion();
-
-/*!
- * \brief insecureClientWarning returns a message to be printed for insecure client setups
- */
-std::string insecureClientWarning();
-
-/*!
- * \brief insecureClientWarning returns a message to be printed for insecure server setups
- */
-std::string insecureServerWarning();
-
-/*!
- * \brief emplaceCLIOptions will add common options for CLI applications to the option parser interface
- * \param options The parser that will handle the options
- */
-void emplaceCLIOptions(cxxopts::Options& options);
-
-/*!
- * \brief handleCLIOptions handles common options given by the CLI
- * \param option The options that have been parsed
- * \param result The parsed options result
- * \return true if the application should exit, otherwise false
- */
-bool handleCLIOptions(cxxopts::Options& options, const cxxopts::ParseResult& result);
-
-/*!
- * \brief make_crash_dumper creates a crash dumper if breakpad was linked and enabled.
- * \param the application running the crash dumper, used to determine in which application the bug occured
- * \return a null pointer the actual crash dumper implementation.
- */
-void* make_crash_dumper(const std::string& applicationId);
-}  // namespace CommonCLI
+boost::optional<std::string> Xi::CrashUploader::upload(const std::string& file, const std::string& application) {
+  try {
+    Xi::Http::Client client{Xi::Config::Network::breakpadServer(), 80, Xi::Http::SSLClientConfiguration::NoSSL};
+    Xi::Http::MultipartFormDataBuilder builder;
+    builder.addField("prod", application);
+    builder.addField("ver", PROJECT_VERSION_LONG);
+    builder.addFile("upload_file_minidump", file);
+    auto request = builder.request("/crashreports");
+    const auto response = client.send(std::move(request)).get();
+    return response.body();
+  } catch (...) {
+    return boost::optional<std::string>{};
+  }
+}

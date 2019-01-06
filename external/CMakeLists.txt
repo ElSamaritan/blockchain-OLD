@@ -1,11 +1,11 @@
 ﻿include(ExternalProject)
 
 # Not contained in build system
-## Required
+## Required On Linux
 include(madler-zlib.cmake)
-include(boostorg-boost.cmake)
 
-## Optional
+## Required
+include(boostorg-boost.cmake)
 include(openssl-openssl.cmake)
 
 # Contained in buildsystem using submodules
@@ -16,6 +16,10 @@ include(nlohmann-json.cmake)
 include(yhirose-cpp-linenoise.cmake)
 include(jarro2783-cxxopts.cmake)
 include(ruslo-leathers.cmake)
+
+if(XI_BREAKPAD)
+  include(google-breakpad.cmake)
+endif()
 
 if(XI_BUILD_TESTSUITE)
   include(google-test.cmake)

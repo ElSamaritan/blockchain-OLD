@@ -41,11 +41,14 @@ class context;
 namespace Xi {
 namespace Http {
 struct SSLClientConfiguration {
+  static const SSLClientConfiguration NoSSL;
+
   bool Disabled;
   bool VerifyPeers;
   std::string TrustedFile;
 
-  SSLClientConfiguration();
+  explicit SSLClientConfiguration(bool disabled = false, bool verifiyPeers = true,
+                                  const std::string& trustedFile = "./certs/trusted.pem");
   ~SSLClientConfiguration() = default;
 
   void initializeContext(boost::asio::ssl::context& ctx);

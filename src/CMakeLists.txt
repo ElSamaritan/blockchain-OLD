@@ -118,10 +118,20 @@ target_link_libraries(
     json
 )
 
+if(XI_BREAKPAD)
+  xi_make_library(CrashHandler Xi-CrashHandler)
+  target_link_libraries(Xi.CrashHandler PRIVATE Xi.Version Xi.Config Xi.Http Common gbreakpad boost)
+  target_compile_definitions(Xi.CrashHandler INTERFACE XI_USE_BREAKPAD)
+endif()
+
 file(GLOB_RECURSE CommonCLI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI/*")
 add_library(CommonCLI STATIC ${CommonCLI_SOURCES})
 target_include_directories(CommonCLI PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI")
-target_link_libraries(CommonCLI PUBLIC cxxopts Xi.Version Xi.Core Common)
+if(XI_BREAKPAD)
+  target_link_libraries(CommonCLI PUBLIC cxxopts Xi.Version Xi.Core Common PRIVATE Xi.CrashHandler)
+else()
+  target_link_libraries(CommonCLI PUBLIC cxxopts Xi.Version Xi.Core Common)
+endif()
 
 set(
     XI_LIBRARIES
@@ -212,18 +222,18 @@ if(XI_BUILD_EXECUTABLES)
   add_executable(PGService ${service} ${XI_PG_SOURCES_OS})
 
   if(MSVC)
-    set(XI_EXTRA_OS_LIBRARIES Rpcrt4)
+    set(XI_EXTRA_EXEC_LIBRARIES Rpcrt4)
 
     target_include_directories(CLIDaemon PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
     target_include_directories(CLIMiner PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
     target_include_directories(CLIWallet PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
     target_include_directories(PGService PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
-  endif()
+  endif() # MSVC
 
-  target_link_libraries(CLIDaemon P2P Rpc Serialization System Xi.Http Logging CryptoNoteCore Crypto Common CommonCLI rocksdb boost cxxopts ${XI_EXTRA_OS_LIBRARIES})
-  target_link_libraries(CLIWallet CommonCLI Mnemonics Wallet NodeRpcProxy Transfers Rpc Xi.Http CryptoNoteCore System Logging Common CommonCLI boost cxxopts)
-  target_link_libraries(CLIMiner CommonCLI CryptoNoteCore Rpc Serialization System Xi.Http Logging Common CommonCLI Crypto boost cxxopts)
-  target_link_libraries(PGService WalletService JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto Rpc Xi.Http System Logging Common rocksdb boost cxxopts ${XI_EXTRA_OS_LIBRARIES})
+  target_link_libraries(CLIDaemon P2P Rpc Serialization System Xi.Http Logging CryptoNoteCore Crypto Common CommonCLI rocksdb boost cxxopts ${XI_EXTRA_EXEC_LIBRARIES})
+  target_link_libraries(CLIWallet CommonCLI Mnemonics Wallet NodeRpcProxy Transfers Rpc Xi.Http CryptoNoteCore System Logging Common CommonCLI boost cxxopts ${XI_EXTRA_EXEC_LIBRARIES})
+  target_link_libraries(CLIMiner CommonCLI CryptoNoteCore Rpc Serialization System Xi.Http Logging Common CommonCLI Crypto boost cxxopts ${XI_EXTRA_EXEC_LIBRARIES})
+  target_link_libraries(PGService WalletService JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto Rpc Xi.Http System Logging Common rocksdb boost cxxopts ${XI_EXTRA_EXEC_LIBRARIES})
 
   # Finally build the binaries
   set_property(TARGET CLIDaemon PROPERTY OUTPUT_NAME "xi-daemon")
@@ -233,8 +243,19 @@ if(XI_BUILD_EXECUTABLES)
 
   # Install targets
   install(
-    TARGETS CLIDaemon CLIWallet CLIMiner PGService
-    RUNTIME DESTINATION bin
+    TARGETS
+      CLIDaemon
+      CLIWallet
+      CLIMiner
+      PGService
+
+    PERMISSIONS
+      OWNER_EXECUTE
+      GROUP_EXECUTE
+      WORLD_EXECUTE
+
+    RUNTIME DESTINATION
+      bin
   )
 
   # Install license
