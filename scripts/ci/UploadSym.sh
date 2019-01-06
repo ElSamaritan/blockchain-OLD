@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # ============================================================================================== #
 #                                                                                                #
 #                                       Xi Blockchain                                            #
@@ -21,24 +23,6 @@
 #                                                                                                #
 # ============================================================================================== #
 
-FROM ubuntu:bionic
+set +e
 
-RUN apt update                   && \
-    apt install -y openssl       && \
-    rm -rf /var/lib/apt/lists/*
-
-
-COPY ./.install/bin /usr/local/bin
-
-# P2P Port
-EXPOSE 22868
-
-# RPC Port
-EXPOSE 22869
-
-# PGService Port
-EXPOSE 38070
-
-RUN mkdir -p /xi/certs
-WORKDIR /xi
-VOLUME [ "/xi/certs" ]
+curl -F "symfile=@$1" "$BREAKPAD_HOST/symfiles"

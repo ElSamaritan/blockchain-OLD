@@ -35,19 +35,27 @@
 namespace {
 // clang-format off
 const std::string DevelpmentVersionHeader = R"(
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ATTENTION   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!                                                                                       !
-! You are running a development version! The program may contain bugs or is not         !
-! compatible with the mainnet. In case you accidentally ran into this version and do    !
-! not want to use it to for testing purposes you should visit our github page           !
-!     https://gitlab.com/galaxia-project/blockchain/xi                                  !
-! . Or if you want to build xi yourself make sure you are building from the master      !
-! branch.                                                                               !
-!                                                                                       !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ATTENTION   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ATTENTION   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !                                                                                       !
+   ! You are running a development version! The program may contain bugs or is not         !
+   ! compatible with the mainnet. In case you accidentally ran into this version and do    !
+   ! not want to use it to for testing purposes you should visit our github page           !
+   !     https://gitlab.com/galaxia-project/blockchain/xi                                  !
+   ! . Or if you want to build xi yourself make sure you are building from the master      !
+   ! branch.                                                                               !
+   !                                                                                       !
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ATTENTION   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 )";
 // clang-format on
 }  // namespace
+
+#if defined(XI_USE_BREAKPAD)
+#include <Xi/CrashHandler.h>
+
+namespace {
+Xi::CrashHandlerConfig BreakpadConfig;
+}
+#endif  // XI_USE_BREAKPAD
 
 std::string CommonCLI::header() {
   std::stringstream programHeader;
@@ -114,6 +122,21 @@ void CommonCLI::emplaceCLIOptions(cxxopts::Options& options) {
       ("version", "Output software version information")
       ("os-version", "Output Operating System version information");
 
+#if defined(XI_USE_BREAKPAD)
+  options.add_options("Breakpad")
+      ("breakpad-enable", "Enables creation of crash dumps to help developers reconstruct bugs occuring in release builds.",
+       cxxopts::value<bool>(BreakpadConfig.IsEnabled)->implicit_value("true")->default_value("false"))
+
+      ("breakpad-out", "Output directory for storing crash dumps",
+       cxxopts::value<std::string>(BreakpadConfig.OutputPath)->default_value(BreakpadConfig.OutputPath));
+
+  if(!isDevVersion())
+    options.add_options("Breakpad")
+      ("breakpad-upload", "Enables auto upload of crash dumps to the galaxia project breakpad server.",
+       cxxopts::value<bool>(BreakpadConfig.IsUploadEnabled)->implicit_value("true")->default_value("false"));
+
+#endif  // XI_USE_BREAKPAD
+
   options.add_options("License")
       ("license", "Print the project license and exits.")
       ("third-party","Prints a summary of all third party libraries used by this project.")
@@ -131,7 +154,7 @@ bool CommonCLI::handleCLIOptions(cxxopts::Options& options, const cxxopts::Parse
     std::cout << options.help({}) << std::endl;
     return true;
   } else if (result.count("version")) {
-    std::cout << header() << std::endl;
+    std::cout << "v" << PROJECT_VERSION_LONG << std::endl;
     return true;
   } else if (result.count("license")) {
     std::cout << Xi::Version::license() << std::endl;
@@ -150,6 +173,18 @@ bool CommonCLI::handleCLIOptions(cxxopts::Options& options, const cxxopts::Parse
               << "\n You are using a development version and did not provide the --dev-mode flag. Exiting..."
               << std::endl;
     return true;
-  } else
+  } else {
     return false;
+  }
+}
+
+void* CommonCLI::make_crash_dumper(const std::string& applicationId) {
+#if defined(XI_USE_BREAKPAD)
+  if (BreakpadConfig.IsEnabled) {
+    BreakpadConfig.Application = applicationId;
+    if (!isDevVersion()) BreakpadConfig.IsUploadEnabled = false;
+    return new Xi::CrashHandler(BreakpadConfig);
+  }
+#endif  // XI_USE_BREAKPAD
+  return nullptr;
 }

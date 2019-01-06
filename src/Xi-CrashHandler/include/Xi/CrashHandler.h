@@ -23,54 +23,34 @@
 
 #pragma once
 
-#include <Xi/Utils/ExternalIncludePush.h>
-#include <cxxopts.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
-
+#include <memory>
 #include <string>
 
-namespace CommonCLI {
-/*!
- * \brief header returns an appropiate header to display including a message telling you you are
- * on a testing version, if so
- * \return a header to display at startup
- */
-std::string header();
+#include "Xi/CrashHandlerConfig.h"
+
+namespace Xi {
+struct _CrashHandler_Impl;
 
 /*!
- * \brief checks wheter this version was built from non master branch source code
- * \return true if this version is not built from master branch, otherwise false
+ * \brief The CrashHandler class handles crashes of the application by creating crash dumps and uploading them
+ *
+ * In order to create crash dumps you need to create an instance of this class and store it as long as possible. This
+ * class itself will register for termination calls and try to create/upload crash dumps just in time before the
+ * application exits.
  */
-bool isDevVersion();
+class CrashHandler {
+ public:
+  /*!
+   * \brief CrashHandler constructs a new crash handler
+   * \param config The configuration specifying where to upload crash dumps and wheter to upload them
+   */
+  CrashHandler(const CrashHandlerConfig& config);
+  CrashHandler(const CrashHandler&) = delete;
+  CrashHandler& operator=(const CrashHandler&) = delete;
+  ~CrashHandler() = default;
 
-/*!
- * \brief insecureClientWarning returns a message to be printed for insecure client setups
- */
-std::string insecureClientWarning();
+ private:
+  std::shared_ptr<_CrashHandler_Impl> m_impl;
+};
 
-/*!
- * \brief insecureClientWarning returns a message to be printed for insecure server setups
- */
-std::string insecureServerWarning();
-
-/*!
- * \brief emplaceCLIOptions will add common options for CLI applications to the option parser interface
- * \param options The parser that will handle the options
- */
-void emplaceCLIOptions(cxxopts::Options& options);
-
-/*!
- * \brief handleCLIOptions handles common options given by the CLI
- * \param option The options that have been parsed
- * \param result The parsed options result
- * \return true if the application should exit, otherwise false
- */
-bool handleCLIOptions(cxxopts::Options& options, const cxxopts::ParseResult& result);
-
-/*!
- * \brief make_crash_dumper creates a crash dumper if breakpad was linked and enabled.
- * \param the application running the crash dumper, used to determine in which application the bug occured
- * \return a null pointer the actual crash dumper implementation.
- */
-void* make_crash_dumper(const std::string& applicationId);
-}  // namespace CommonCLI
+}  // namespace Xi

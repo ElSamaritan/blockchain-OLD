@@ -29,7 +29,9 @@
 #include <type_traits>
 #include <sstream>
 
+#include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/optional.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
 
 namespace Xi {
 /*!

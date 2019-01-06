@@ -23,54 +23,40 @@
 
 #pragma once
 
-#include <Xi/Utils/ExternalIncludePush.h>
-#include <cxxopts.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
-
 #include <string>
 
-namespace CommonCLI {
-/*!
- * \brief header returns an appropiate header to display including a message telling you you are
- * on a testing version, if so
- * \return a header to display at startup
- */
-std::string header();
+#include <Xi/Utils/ExternalIncludePush.h>
+#include <boost/optional.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
 
-/*!
- * \brief checks wheter this version was built from non master branch source code
- * \return true if this version is not built from master branch, otherwise false
- */
-bool isDevVersion();
+#include <Xi/Global.h>
 
+namespace Xi {
 /*!
- * \brief insecureClientWarning returns a message to be printed for insecure client setups
+ * \brief The CrashUploader class encapsulates the process of uploading a crash dump to the breakpad server
  */
-std::string insecureClientWarning();
+class CrashUploader {
+ public:
+  /*!
+   * \brief CrashUploader constructs a new object to upload crash dumps
+   * \param breapkpadHost The server hosting the breakpad server
+   * \param port The server post for reaching the breakpad server
+   */
+  explicit CrashUploader(const std::string &breapkpadHost, uint16_t port);
+  XI_DELETE_COPY(CrashUploader);
+  XI_DEFAULT_MOVE(CrashUploader);
+  ~CrashUploader();
 
-/*!
- * \brief insecureClientWarning returns a message to be printed for insecure server setups
- */
-std::string insecureServerWarning();
+  /*!
+   * \brief upload sends a crash dump to the breakpad server
+   * \param file The crash dump file path
+   * \param application The application that produced the crash dump
+   * \return A string if the uploaded succeeded, otherwise no value
+   */
+  boost::optional<std::string> upload(const std::string &file, const std::string &application);
 
-/*!
- * \brief emplaceCLIOptions will add common options for CLI applications to the option parser interface
- * \param options The parser that will handle the options
- */
-void emplaceCLIOptions(cxxopts::Options& options);
-
-/*!
- * \brief handleCLIOptions handles common options given by the CLI
- * \param option The options that have been parsed
- * \param result The parsed options result
- * \return true if the application should exit, otherwise false
- */
-bool handleCLIOptions(cxxopts::Options& options, const cxxopts::ParseResult& result);
-
-/*!
- * \brief make_crash_dumper creates a crash dumper if breakpad was linked and enabled.
- * \param the application running the crash dumper, used to determine in which application the bug occured
- * \return a null pointer the actual crash dumper implementation.
- */
-void* make_crash_dumper(const std::string& applicationId);
-}  // namespace CommonCLI
+ private:
+  const std::string m_host;
+  const uint16_t m_port;
+};
+}  // namespace Xi

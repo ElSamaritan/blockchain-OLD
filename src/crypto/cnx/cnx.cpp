@@ -166,7 +166,7 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
     auto ww = static_cast<uint16_t>(seed % __Twister->next(1, 200000));
     cn_adaptive_slow_hash(data, length, reinterpret_cast<char *>(&hash), variant(), false, scratchpadSize / 2,
                           &__Randomizer->Handle, __Salt.data(), tempLookup[tempLookupIndex], xx, yy, zz, ww,
-                          scratchpadSize);
+                          scratchpadSize, maxScratchpadSize());
     accumulatedScratchpad += scratchpadSize;
   }
 }

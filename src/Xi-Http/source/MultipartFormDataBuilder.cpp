@@ -21,56 +21,60 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/Http/MultipartFormDataBuilder.h"
+
+#include <fstream>
+#include <utility>
 
 #include <Xi/Utils/ExternalIncludePush.h>
-#include <cxxopts.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/filesystem.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
-#include <string>
+#include <Xi/Utils/Base64.h>
 
-namespace CommonCLI {
-/*!
- * \brief header returns an appropiate header to display including a message telling you you are
- * on a testing version, if so
- * \return a header to display at startup
- */
-std::string header();
+namespace {
+const std::string LF{"\r\n"};
+const std::string NewLine{"\n"};
 
-/*!
- * \brief checks wheter this version was built from non master branch source code
- * \return true if this version is not built from master branch, otherwise false
- */
-bool isDevVersion();
+std::string makeDisposition(const std::string &name) {
+  return std::string{"Content-Disposition: form-data; name=\""} + name + "\"";
+}
+std::string makeContentType(Xi::Http::ContentType type) { return std::string{"Content-Type: "} + Xi::to_string(type); }
+}  // namespace
 
-/*!
- * \brief insecureClientWarning returns a message to be printed for insecure client setups
- */
-std::string insecureClientWarning();
+Xi::Http::MultipartFormDataBuilder::MultipartFormDataBuilder()
+    : m_boundary{boost::lexical_cast<std::string>(boost::uuids::random_generator{}())}, m_body{NewLine} {}
 
-/*!
- * \brief insecureClientWarning returns a message to be printed for insecure server setups
- */
-std::string insecureServerWarning();
+Xi::Http::MultipartFormDataBuilder::~MultipartFormDataBuilder() {}
 
-/*!
- * \brief emplaceCLIOptions will add common options for CLI applications to the option parser interface
- * \param options The parser that will handle the options
- */
-void emplaceCLIOptions(cxxopts::Options& options);
+void Xi::Http::MultipartFormDataBuilder::addFile(const std::string &name, const std::string &filepath,
+                                                 ContentType type) {
+  std::ifstream file;
+  if (type == ContentType::Binary)
+    file = std::ifstream{filepath, std::ios::in | std::ios::binary};
+  else
+    file = std::ifstream{filepath, std::ios::in};
+  const boost::filesystem::path p{filepath};
+  m_body << "--" << m_boundary << LF << makeDisposition(name) << "; filename=\"" << p.filename() << "." << p.stem()
+         << "\"" << LF << "Content-Type: " << makeContentType(Xi::Http::ContentType::Binary) << LF << LF;
+  std::copy(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(),
+            std::ostreambuf_iterator<char>(m_body));
+  m_body << LF;
+}
 
-/*!
- * \brief handleCLIOptions handles common options given by the CLI
- * \param option The options that have been parsed
- * \param result The parsed options result
- * \return true if the application should exit, otherwise false
- */
-bool handleCLIOptions(cxxopts::Options& options, const cxxopts::ParseResult& result);
+void Xi::Http::MultipartFormDataBuilder::addField(const std::string &name, const std::string &value) {
+  m_body << "--" << m_boundary << LF << makeDisposition(name) << LF << LF << value << LF;
+}
 
-/*!
- * \brief make_crash_dumper creates a crash dumper if breakpad was linked and enabled.
- * \param the application running the crash dumper, used to determine in which application the bug occured
- * \return a null pointer the actual crash dumper implementation.
- */
-void* make_crash_dumper(const std::string& applicationId);
-}  // namespace CommonCLI
+Xi::Http::Request Xi::Http::MultipartFormDataBuilder::request(const std::string &target, Method method) const {
+  Request reval{target, method};
+  reval.headers().set(HeaderContainer::ContentType,
+                      Xi::to_string(ContentType::MultipartFormData) + "; boundary=" + m_boundary);
+  std::string body = m_body.str() + "--" + m_boundary + "--" + LF;
+  reval.setBody(std::move(body));
+  return reval;
+}

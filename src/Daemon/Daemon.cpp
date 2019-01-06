@@ -166,6 +166,9 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  auto crashDumper = CommonCLI::make_crash_dumper("xi-daemon");
+  (void)crashDumper;
+
   try {
     auto modulePath = Common::NativePathToGeneric(argv[0]);
     auto cfgLogFile = Common::NativePathToGeneric(config.logFile);
@@ -319,7 +322,7 @@ int main(int argc, char* argv[]) {
 
   } catch (const std::exception& e) {
     logger(ERROR, BRIGHT_RED) << "Exception: " << e.what();
-    return 1;
+    throw e;
   }
 
   logger(INFO) << "Node stopped.";

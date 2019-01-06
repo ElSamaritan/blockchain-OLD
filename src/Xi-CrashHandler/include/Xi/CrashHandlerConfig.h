@@ -23,54 +23,19 @@
 
 #pragma once
 
-#include <Xi/Utils/ExternalIncludePush.h>
-#include <cxxopts.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
-
 #include <string>
 
-namespace CommonCLI {
+namespace Xi {
 /*!
- * \brief header returns an appropiate header to display including a message telling you you are
- * on a testing version, if so
- * \return a header to display at startup
+ * \brief The CrashHandlerConfig struct stores general configuration to handle crashes.
  */
-std::string header();
+struct CrashHandlerConfig {
+  bool IsEnabled;  ///< Enables dump creation, if true a crash dump file will be created once the application crashes.
+  bool IsUploadEnabled;  ///< If crash dumps are enabled and this as well the dump will be automatically uploaded to the
+                         ///< breakpad server
+  std::string OutputPath;   ///< Path to store crash dumps
+  std::string Application;  ///< The current application identifier running
 
-/*!
- * \brief checks wheter this version was built from non master branch source code
- * \return true if this version is not built from master branch, otherwise false
- */
-bool isDevVersion();
-
-/*!
- * \brief insecureClientWarning returns a message to be printed for insecure client setups
- */
-std::string insecureClientWarning();
-
-/*!
- * \brief insecureClientWarning returns a message to be printed for insecure server setups
- */
-std::string insecureServerWarning();
-
-/*!
- * \brief emplaceCLIOptions will add common options for CLI applications to the option parser interface
- * \param options The parser that will handle the options
- */
-void emplaceCLIOptions(cxxopts::Options& options);
-
-/*!
- * \brief handleCLIOptions handles common options given by the CLI
- * \param option The options that have been parsed
- * \param result The parsed options result
- * \return true if the application should exit, otherwise false
- */
-bool handleCLIOptions(cxxopts::Options& options, const cxxopts::ParseResult& result);
-
-/*!
- * \brief make_crash_dumper creates a crash dumper if breakpad was linked and enabled.
- * \param the application running the crash dumper, used to determine in which application the bug occured
- * \return a null pointer the actual crash dumper implementation.
- */
-void* make_crash_dumper(const std::string& applicationId);
-}  // namespace CommonCLI
+  CrashHandlerConfig();
+};
+}  // namespace Xi

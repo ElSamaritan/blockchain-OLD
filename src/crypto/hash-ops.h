@@ -97,7 +97,7 @@ void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, char *salt, u
                                       uint32_t variant);
 void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t rand_iters,
                            CN_ADAPTIVE_RandomValues *r, char *sp_bytes, uint8_t init_size_blk, uint16_t xx, uint16_t yy,
-                           uint16_t zz, uint16_t ww, uint32_t memory);
+                           uint16_t zz, uint16_t ww, uint32_t memory, uint32_t pageSize);
 
 void hash_extra_blake(const void *data, size_t length, char *hash);
 void hash_extra_groestl(const void *data, size_t length, char *hash);

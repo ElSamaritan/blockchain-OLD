@@ -35,6 +35,9 @@ int main(int argc, char **argv) {
 
   Config config = parseArguments(argc, argv);
 
+  auto crashDumper = CommonCLI::make_crash_dumper("xi-wallet");
+  (void)crashDumper;
+
   std::cout << InformationMsg(CommonCLI::header()) << std::endl;
 
   if (config.ssl.isInsecure()) {

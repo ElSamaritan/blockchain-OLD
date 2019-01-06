@@ -712,41 +712,6 @@ BOOL SetLockPagesPrivilege(HANDLE hProcess, BOOL bEnable) {
 THREADV uint32_t allocated_memory = 0;
 
 /**
- * @brief allocate the 2MB scratch buffer using OS support for huge pages, if available
- *
- * This function tries to allocate the 2MB scratch buffer using a single
- * 2MB "huge page" (instead of the usual 4KB page sizes) to reduce TLB misses
- * during the random accesses to the scratch buffer.  This is one of the
- * important speed optimizations needed to make CryptoNight faster.
- *
- * No parameters.  Updates a thread-local pointer, hp_state, to point to
- * the allocated buffer.
- */
-
-void slow_hash_allocate_state(uint32_t PAGE_SIZE) {
-  allocated_memory = PAGE_SIZE;
-
-  if (hp_state != NULL) return;
-
-#if defined(_MSC_VER) || defined(__MINGW32__)
-  SetLockPagesPrivilege(GetCurrentProcess(), TRUE);
-  hp_state = (uint8_t *)VirtualAlloc(hp_state, PAGE_SIZE, MEM_LARGE_PAGES | MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-#else
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__NetBSD__)
-  hp_state = mmap(0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, 0, 0);
-#else
-  hp_state = mmap(0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, 0, 0);
-#endif
-  if (hp_state == MAP_FAILED) hp_state = NULL;
-#endif
-  hp_allocated = 1;
-  if (hp_state == NULL) {
-    hp_allocated = 0;
-    hp_state = (uint8_t *)malloc(PAGE_SIZE);
-  }
-}
-
-/**
  *@brief frees the state allocated by slow_hash_allocate_state
  */
 
@@ -766,6 +731,46 @@ void slow_hash_free_state(uint32_t PAGE_SIZE) {
 
   hp_state = NULL;
   hp_allocated = 0;
+}
+
+/**
+ * @brief allocate the 2MB scratch buffer using OS support for huge pages, if available
+ *
+ * This function tries to allocate the 2MB scratch buffer using a single
+ * 2MB "huge page" (instead of the usual 4KB page sizes) to reduce TLB misses
+ * during the random accesses to the scratch buffer.  This is one of the
+ * important speed optimizations needed to make CryptoNight faster.
+ *
+ * No parameters.  Updates a thread-local pointer, hp_state, to point to
+ * the allocated buffer.
+ */
+
+void slow_hash_allocate_state(uint32_t PAGE_SIZE) {
+  if (hp_state != NULL) {
+    if(allocated_memory < PAGE_SIZE)
+      slow_hash_free_state(allocated_memory);
+    else
+      return;
+  }
+
+  allocated_memory = PAGE_SIZE;
+
+#if defined(_MSC_VER) || defined(__MINGW32__)
+  SetLockPagesPrivilege(GetCurrentProcess(), TRUE);
+  hp_state = (uint8_t *)VirtualAlloc(hp_state, PAGE_SIZE, MEM_LARGE_PAGES | MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+#else
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__NetBSD__)
+  hp_state = mmap(0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, 0, 0);
+#else
+  hp_state = mmap(0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, 0, 0);
+#endif
+  if (hp_state == MAP_FAILED) hp_state = NULL;
+#endif
+  hp_allocated = 1;
+  if (hp_state == NULL) {
+    hp_allocated = 0;
+    hp_state = (uint8_t *)malloc(PAGE_SIZE);
+  }
 }
 
 /**
@@ -823,6 +828,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int light, int va
   static void (*const extra_hashes[4])(const void *, size_t, char *) = {hash_extra_blake, hash_extra_groestl,
                                                                         hash_extra_jh, hash_extra_skein};
 
+  if(PAGE_SIZE > allocated_memory && hp_state != NULL) slow_hash_free_state(allocated_memory);
   slow_hash_allocate_state(PAGE_SIZE);
 
   /* CryptoNight Step 1:  Use Keccak1600 to initialize the 'state' (and 'text') buffers from the data. */
@@ -953,7 +959,7 @@ void cn_adaptive_randomize_scratchpad(CN_ADAPTIVE_RandomValues *r, char *salt, u
 
 void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int variant, int prehashed, size_t rand_iters,
                            CN_ADAPTIVE_RandomValues *r, char *sp_bytes, uint8_t init_size_blk, uint16_t xx, uint16_t yy,
-                           uint16_t zz, uint16_t ww, uint32_t memory) {
+                           uint16_t zz, uint16_t ww, uint32_t memory, uint32_t pageSize) {
   uint32_t init_size_byte = (init_size_blk * AES_BLOCK_SIZE);
   RDATA_ALIGN16 uint8_t expandedKey[240]; /* These buffers are aligned to use later with SSE functions */
 
@@ -973,10 +979,7 @@ void cn_adaptive_slow_hash(const void *data, size_t length, char *hash, int vari
   static void (*const extra_hashes[4])(const void *, size_t, char *) = {hash_extra_blake, hash_extra_groestl,
                                                                         hash_extra_jh, hash_extra_skein};
 
-  // quick hack to make sure the pad is the right size when transitioning to the new fork
-  if (memory != allocated_memory && hp_state != NULL) slow_hash_free_state(allocated_memory);
-
-  if (hp_state == NULL) slow_hash_allocate_state(memory);
+  slow_hash_allocate_state(pageSize);
 
   /* CryptoNight Step 1:  Use Keccak1600 to initialize the 'state' (and 'text') buffers from the data. */
   if (prehashed) {

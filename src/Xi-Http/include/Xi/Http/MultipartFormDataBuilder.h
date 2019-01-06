@@ -23,54 +23,50 @@
 
 #pragma once
 
-#include <Xi/Utils/ExternalIncludePush.h>
-#include <cxxopts.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
-
+#include <sstream>
 #include <string>
 
-namespace CommonCLI {
-/*!
- * \brief header returns an appropiate header to display including a message telling you you are
- * on a testing version, if so
- * \return a header to display at startup
- */
-std::string header();
+#include <Xi/Global.h>
 
-/*!
- * \brief checks wheter this version was built from non master branch source code
- * \return true if this version is not built from master branch, otherwise false
- */
-bool isDevVersion();
+#include "Xi/Http/Request.h"
 
+namespace Xi {
+namespace Http {
 /*!
- * \brief insecureClientWarning returns a message to be printed for insecure client setups
+ * \brief The MultipartFormDataBuilder class encapsulates building multipart form data request with convinient methods.
  */
-std::string insecureClientWarning();
+class MultipartFormDataBuilder {
+ public:
+  MultipartFormDataBuilder();
+  XI_DELETE_COPY(MultipartFormDataBuilder);
+  XI_DEFAULT_MOVE(MultipartFormDataBuilder);
+  ~MultipartFormDataBuilder();
 
-/*!
- * \brief insecureClientWarning returns a message to be printed for insecure server setups
- */
-std::string insecureServerWarning();
+  /*!
+   * \brief addFile adds a file to the request
+   * \param name The form name of the file
+   * \param filepath The path to the file that should be included in the request.
+   * \param type The content type of the file.
+   */
+  void addFile(const std::string& name, const std::string& filepath, ContentType type = ContentType::Binary);
 
-/*!
- * \brief emplaceCLIOptions will add common options for CLI applications to the option parser interface
- * \param options The parser that will handle the options
- */
-void emplaceCLIOptions(cxxopts::Options& options);
+  /*!
+   * \brief addField adds a key value pair to the request
+   * \param name The form property identifier
+   * \param value The value of the property
+   */
+  void addField(const std::string& name, const std::string& value);
 
-/*!
- * \brief handleCLIOptions handles common options given by the CLI
- * \param option The options that have been parsed
- * \param result The parsed options result
- * \return true if the application should exit, otherwise false
- */
-bool handleCLIOptions(cxxopts::Options& options, const cxxopts::ParseResult& result);
+  /*!
+   * \brief request creates a request setup as multipart/form-data
+   * \param target The server target path to send to
+   * \param method The method used to send the requesst
+   */
+  Request request(const std::string& target, Method method = Method::Post) const;
 
-/*!
- * \brief make_crash_dumper creates a crash dumper if breakpad was linked and enabled.
- * \param the application running the crash dumper, used to determine in which application the bug occured
- * \return a null pointer the actual crash dumper implementation.
- */
-void* make_crash_dumper(const std::string& applicationId);
-}  // namespace CommonCLI
+ private:
+  std::string m_boundary;
+  std::stringstream m_body;
+};
+}  // namespace Http
+}  // namespace Xi

@@ -21,24 +21,25 @@
 #                                                                                                #
 # ============================================================================================== #
 
-FROM ubuntu:bionic
+param(
+    [Parameter(Mandatory=$true)][string]$SymFile
+)
 
-RUN apt update                   && \
-    apt install -y openssl       && \
-    rm -rf /var/lib/apt/lists/*
+$Uri = "http://$($env:BREAKPAD_HOST)/symfiles"
+$Encoding = New-Object System.Text.UTF8Encoding $False
+$Boundary = [System.Guid]::NewGuid().ToString()
+$LF = "`r`n"
 
+$Content = [IO.File]::ReadAllText($SymFile)
+[IO.File]::WriteAllText($SymFile, $Content, $Encoding)
+$Content = [IO.File]::ReadAllText($SymFile)
 
-COPY ./.install/bin /usr/local/bin
+$BodyLines = (
+    "--$Boundary",
+    "Content-Disposition: form-data; name=`"symfile`"; filename=`"$SymFile`"",
+    "Content-Type: application/octet-stream$LF",
+    $Content,
+    "--$Boundary--$LF"
+) -join $LF
 
-# P2P Port
-EXPOSE 22868
-
-# RPC Port
-EXPOSE 22869
-
-# PGService Port
-EXPOSE 38070
-
-RUN mkdir -p /xi/certs
-WORKDIR /xi
-VOLUME [ "/xi/certs" ]
+Invoke-RestMethod -Uri $Uri -Method Post -ContentType "multipart/form-data; boundary=`"$Boundary`"" -Body $BodyLines

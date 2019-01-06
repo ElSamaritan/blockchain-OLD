@@ -44,9 +44,15 @@ variables:
     - mkdir -p .build
     - cd .build
     - rm -f CMakeCache.txt || true
-    - cmake -DCMAKE_INSTALL_PREFIX:PATH=../.install -DCMAKE_BUILD_TYPE=Release -DXI_BUILD_TESTSUITE=ON ..
+    - cmake -DCMAKE_INSTALL_PREFIX:PATH=../.install -DCMAKE_BUILD_TYPE=Release -DXI_BREAKPAD=ON -DXI_BUILD_TESTSUITE=ON ..
     - make -j 2
     - make install
+    - cd ../.install/bin
+    - dump_syms ./xi-daemon > ../../.build/src/xi-daemon.sym && strip ./xi-daemon
+    - dump_syms ./xi-wallet > ../../.build/src/xi-wallet.sym && strip ./xi-wallet
+    - dump_syms ./xi-miner > ../../.build/src/xi-miner.sym && strip ./xi-miner
+    - dump_syms ./xi-pgservice > ../../.build/src/xi-pgservice.sym && strip ./xi-pgservice
+
   cache:
     key: "$CI_COMMIT_REF_SLUG-$CI_JOB_NAME"
     paths: [.build/]
@@ -76,13 +82,21 @@ Windows 10 - Build:
     - if not exist ".\.build" mkdir .\.build
     - cd .\.build
     - IF EXIST CMakeCache.txt DEL /F CMakeCache.txt
-    - cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_INSTALL_PREFIX:PATH=../.install -DCMAKE_BUILD_TYPE=Release -DXI_BUILD_TESTSUITE=ON ..
+    - cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_INSTALL_PREFIX:PATH=../.install -DCMAKE_BUILD_TYPE=Release -DXI_BREAKPAD=ON -DXI_BUILD_TESTSUITE=ON ..
     - cmake --build . --config Release
+    - cmake --build . --target install --config Release
+    - cd .\src\Release
+    - CALL ..\..\..\external\google-breakpad\src\tools\windows\binaries\dump_syms.exe xi-daemon.pdb > xi-daemon.sym
+    - CALL ..\..\..\external\google-breakpad\src\tools\windows\binaries\dump_syms.exe xi-wallet.pdb > xi-wallet.sym
+    - CALL ..\..\..\external\google-breakpad\src\tools\windows\binaries\dump_syms.exe xi-miner.pdb > xi-miner.sym
+    - CALL ..\..\..\external\google-breakpad\src\tools\windows\binaries\dump_syms.exe xi-pgservice.pdb > xi-pgservice.sym
   cache:
     key: "%CI_COMMIT_REF_SLUG%-%CI_JOB_NAME%"
     paths: [.build/]
   artifacts:
-    paths: [.build/]
+    paths:
+      - .build/
+      - .install/
   dependencies: []
 
 # ================================================================================================================== #
@@ -122,7 +136,7 @@ Windows 10 - Test:
   dependencies: ["Windows 10 - Build"]
   script:
     - cd .\.build
-    - ctest -VV
+    - ctest -VV -C Release
 
 # ================================================================================================================== #
 #                                                                                                                    #
@@ -170,14 +184,19 @@ CppLint:
   stage: deploy
   tags:
     - docker
+  variables:
+    BREAKPAD_HOST: "207.180.240.156:80"
   script:
-    - cd ./.build
-    - make install
-    - cd ..
+    - mv ./.install ./Xi
+    - cd ./.build/src
+    - /bin/bash ../../scripts/ci/UploadSym.sh xi-daemon.sym
+    - /bin/bash ../../scripts/ci/UploadSym.sh xi-wallet.sym
+    - /bin/bash ../../scripts/ci/UploadSym.sh xi-miner.sym
+    - /bin/bash ../../scripts/ci/UploadSym.sh xi-pgservice.sym
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
     paths:
-      - .install/
+      - Xi/
 
 Ubuntu Bionic:
   <<: *linux_deploy_definition
@@ -198,15 +217,19 @@ Windows 10:
   stage: deploy
   tags:
     - windows
+  variables:
+    BREAKPAD_HOST: "207.180.240.156:80"
   dependencies: ["Windows 10 - Build"]
   script:
-    - cd .\.build
-    - cmake --build . --target install --config Release
-    - cd ..
+    - MOVE .install Xi
+    - PowerShell -File .\scripts\ci\UploadSym.ps1 .\.build\src\Release\xi-daemon.sym
+    - PowerShell -File .\scripts\ci\UploadSym.ps1 .\.build\src\Release\xi-wallet.sym
+    - PowerShell -File .\scripts\ci\UploadSym.ps1 .\.build\src\Release\xi-miner.sym
+    - PowerShell -File .\scripts\ci\UploadSym.ps1 .\.build\src\Release\xi-pgservice.sym
   artifacts:
     name: "%CI_JOB_NAME%-%CI_COMMIT_REF_NAME%"
     paths:
-      - .install/
+      - Xi/
 
 Docker:
   image: docker:stable
@@ -219,18 +242,3 @@ Docker:
   only:
     - develop
     - master
-
-pages:
-  stage: deploy
-  tags:
-    - docker
-  image: ubuntu:bionic
-  dependencies:
-    - CppCheck
-    - CppLint
-  script: "mv ./.site ./public"
-  artifacts:
-    paths:
-      - public
-  only:
-    - develop

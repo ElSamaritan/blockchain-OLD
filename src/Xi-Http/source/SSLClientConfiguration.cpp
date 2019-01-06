@@ -39,10 +39,13 @@ const std::string VerifyPeersName{"disable-peer-verification"};
 const std::string TrustedFileName{"certs-bundle"};
 }  // namespace
 
-Xi::Http::SSLClientConfiguration::SSLClientConfiguration() {
-  Disabled = false;
-  VerifyPeers = true;
-  TrustedFile = "./certs/trusted.pem";
+const Xi::Http::SSLClientConfiguration Xi::Http::SSLClientConfiguration::NoSSL{true, false, ""};
+
+Xi::Http::SSLClientConfiguration::SSLClientConfiguration(bool disabled, bool verifiyPeers,
+                                                         const std::string &trustedFile) {
+  Disabled = disabled;
+  VerifyPeers = verifiyPeers;
+  TrustedFile = trustedFile;
 }
 
 void Xi::Http::SSLClientConfiguration::initializeContext(boost::asio::ssl::context &ctx) {

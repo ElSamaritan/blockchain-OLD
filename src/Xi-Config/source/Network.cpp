@@ -39,3 +39,5 @@ std::vector<std::string> Xi::Config::Network::seedNodes(Type network) {
   else
     return std::vector<std::string>(_SeedNodes, std::end(_SeedNodes));
 }
+
+std::string Xi::Config::Network::breakpadServer() { return "207.180.240.156"; }
