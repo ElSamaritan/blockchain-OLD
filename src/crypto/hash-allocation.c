@@ -25,11 +25,12 @@
 
 #include <stdlib.h>
 
-#if defined(_MSC_VER)
+#include "crypto/hash-predef.h"
+
+#if defined(_MSC_VER) || defined (__MINGW32__)
 #include <Windows.h>
-#define THREADV __declspec(thread)
 #else
-#define THREADV __thread
+#include <sys/mman.h>
 #endif
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
@@ -93,7 +94,7 @@ uint8_t *xi_hash_allocate_state(uint32_t pageSize)
   return __AllocatedMemory;
 }
 
-void xi_hash_free_state()
+void xi_hash_free_state(void)
 {
   if (__AllocatedMemory == NULL) return;
 

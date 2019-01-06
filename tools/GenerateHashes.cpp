@@ -21,37 +21,29 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <gtest/gtest.h>
+#include <iostream>
+#include <string>
 
-#include <array>
-#include <random>
-#include <memory>
-#include <climits>
+#include <crypto/cnx/cnx.h>
+#include <Common/StringTools.h>
 
-#include "crypto/hash.h"
-#include "crypto/cnx/cnx.h"
+std::string makeHash(std::string data, bool forceSoftwareAES) {
+  Crypto::CNX::Hash_v0 hashFn;
+  Crypto::Hash hash;
+  hashFn(data.c_str(), data.length(), hash);
+  std::string hashString;
+  hashString.resize(sizeof(hash));
+  for (std::size_t i = 0; i < sizeof(hash); ++i) hashString[i] = reinterpret_cast<char*>(&hash)[i];
+  return Common::base64Encode(hashString);
+}
 
-namespace {
-using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, uint16_t>;
-
-using HashFn = Crypto::CNX::Hash_v0;
-}  // namespace
-
-TEST(CryptoNightX, HashConsistency) {
-  const uint8_t NumBlocks = 100;
-  const uint8_t BlockSize = 76;
-  auto data = std::make_unique<std::vector<uint16_t>>();
-  random_bytes_engine rbe;
-  data->resize(NumBlocks * BlockSize / 2);
-  std::generate(data->begin(), data->end(), std::ref(rbe));
-
-  for (std::size_t i = 0; i < NumBlocks; ++i) {
-    std::array<Crypto::Hash, 4> hashes;
-    for (size_t j = 0; j < hashes.size(); ++j)
-      HashFn{}(reinterpret_cast<uint8_t*>(data->data()) + i * BlockSize, BlockSize, hashes[j], (j % 2) > 0);
-
-    for (size_t j = 0; j < hashes.size() - 1; ++j) {
-      for (uint8_t k = 0; k < 32; ++k) EXPECT_EQ(hashes[j].data[k], hashes[j + 1].data[k]);
-    }
+int main(int, char**) {
+  std::string currentLine;
+  while (!std::cin.eof()) {
+    std::getline(std::cin, currentLine, '\n');
+    if (currentLine.empty()) continue;
+    std::string data = Common::base64Decode(currentLine);
+    std::cout << makeHash(data, true) << std::endl;
+    std::cout << makeHash(data, false) << std::endl;
   }
 }

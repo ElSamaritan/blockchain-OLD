@@ -21,37 +21,26 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <gtest/gtest.h>
+#pragma once
 
-#include <array>
-#include <random>
-#include <memory>
-#include <climits>
+#if defined(__cplusplus)
+extern "C" {
+#endif  // __cplusplus
 
-#include "crypto/hash.h"
-#include "crypto/cnx/cnx.h"
+#include <emmintrin.h>
 
-namespace {
-using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, uint16_t>;
+#if defined(_MSC_VER)
+#include <intrin.h>
+#include <wmmintrin.h>
+#include <Windows.h>
+#elif defined(__MINGW32__)
+#include <intrin.h>
+#include <Windows.h>
+#else  // !defined(_MSC_VER) && !defined(__MINGW32__)
+#include <wmmintrin.h>
+#include <sys/mman.h>
+#endif  // !defined(_MSC_VER) && !defined(__MINGW32__)
 
-using HashFn = Crypto::CNX::Hash_v0;
-}  // namespace
-
-TEST(CryptoNightX, HashConsistency) {
-  const uint8_t NumBlocks = 100;
-  const uint8_t BlockSize = 76;
-  auto data = std::make_unique<std::vector<uint16_t>>();
-  random_bytes_engine rbe;
-  data->resize(NumBlocks * BlockSize / 2);
-  std::generate(data->begin(), data->end(), std::ref(rbe));
-
-  for (std::size_t i = 0; i < NumBlocks; ++i) {
-    std::array<Crypto::Hash, 4> hashes;
-    for (size_t j = 0; j < hashes.size(); ++j)
-      HashFn{}(reinterpret_cast<uint8_t*>(data->data()) + i * BlockSize, BlockSize, hashes[j], (j % 2) > 0);
-
-    for (size_t j = 0; j < hashes.size() - 1; ++j) {
-      for (uint8_t k = 0; k < 32; ++k) EXPECT_EQ(hashes[j].data[k], hashes[j + 1].data[k]);
-    }
-  }
+#if defined(__cplusplus)
 }
+#endif  // __cplusplus

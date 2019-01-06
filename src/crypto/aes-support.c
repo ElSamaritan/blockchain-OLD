@@ -21,37 +21,48 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <gtest/gtest.h>
+#include "crypto/aes-support.h"
 
-#include <array>
-#include <random>
-#include <memory>
-#include <climits>
+#include <stdlib.h>
+#include <string.h>
 
-#include "crypto/hash.h"
-#include "crypto/cnx/cnx.h"
+#include "crypto/hash-predef.h"
 
-namespace {
-using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, uint16_t>;
+#if defined(_MSC_VER)
+#include <Windows.h>
+#define crypto_aes_support_cpuid(info, x) __cpuidex(info, x, 0)
+#else
+void crypto_aes_support_cpuid(int CPUInfo[4], int InfoType) {
+  ASM __volatile__("cpuid"
+                   : "=a"(CPUInfo[0]), "=b"(CPUInfo[1]), "=c"(CPUInfo[2]), "=d"(CPUInfo[3])
+                   : "a"(InfoType), "c"(0));
+}
+#endif
 
-using HashFn = Crypto::CNX::Hash_v0;
-}  // namespace
+int check_aes_hardware_support(void)
+{
+  int cpuid_results[4];
+  static int supported = -1;
 
-TEST(CryptoNightX, HashConsistency) {
-  const uint8_t NumBlocks = 100;
-  const uint8_t BlockSize = 76;
-  auto data = std::make_unique<std::vector<uint16_t>>();
-  random_bytes_engine rbe;
-  data->resize(NumBlocks * BlockSize / 2);
-  std::generate(data->begin(), data->end(), std::ref(rbe));
+  if (supported >= 0) return supported;
 
-  for (std::size_t i = 0; i < NumBlocks; ++i) {
-    std::array<Crypto::Hash, 4> hashes;
-    for (size_t j = 0; j < hashes.size(); ++j)
-      HashFn{}(reinterpret_cast<uint8_t*>(data->data()) + i * BlockSize, BlockSize, hashes[j], (j % 2) > 0);
+  crypto_aes_support_cpuid(cpuid_results, 1);
+  return supported = cpuid_results[2] & (1 << 25);
+}
 
-    for (size_t j = 0; j < hashes.size() - 1; ++j) {
-      for (uint8_t k = 0; k < 32; ++k) EXPECT_EQ(hashes[j].data[k], hashes[j + 1].data[k]);
-    }
+int check_aes_hardware_disabled(void)
+{
+  static int use = -1;
+
+  if (use != -1) return use;
+
+  const char *env = getenv("XI_USE_SOFTWARE_AES");
+  if (!env) {
+    use = 0;
+  } else if (!strcmp(env, "0") || !strcmp(env, "no")) {
+    use = 0;
+  } else {
+    use = 1;
   }
+  return use;
 }

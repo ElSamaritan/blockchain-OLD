@@ -24,6 +24,7 @@
 #include "CryptoNoteCore/HashAlgorithms.h"
 
 #include "crypto/cnx/cnx.h"
+#include "crypto/hash-predef.h"
 
 void CryptoNote::Hashes::InitBlockchain::operator()(const CryptoNote::CachedBlock &block, Crypto::Hash &hash) const {
   const auto &rawHashingBlock = block.getBlockHashingBinaryArray();

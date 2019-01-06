@@ -29,6 +29,7 @@
 #include "Xi/Crypto/MersenneTwister.h"
 
 #include <cstdint>
+#include <cstring>
 #include <algorithm>
 
 #define SIZE 624u

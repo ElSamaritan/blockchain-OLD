@@ -21,37 +21,59 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <gtest/gtest.h>
+#pragma once
 
-#include <array>
-#include <random>
-#include <memory>
-#include <climits>
+#if defined(__cplusplus)
+extern "C" {
+#endif  // __cplusplus
 
-#include "crypto/hash.h"
-#include "crypto/cnx/cnx.h"
+// STATIC
+#if !defined(STATIC)
+#if defined(_MSC_VER)
+#define STATIC static
+#else  // _MSC_VER
+#define STATIC static
+#endif  // !_MSC_VER
+#endif  // !defined(STATIC)
 
-namespace {
-using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, uint16_t>;
+// INLINE
+#if !defined(INLINE)
+#if defined(_MSC_VER)
+#define INLINE __inline
+#else  // _MSC_VER
+#define INLINE inline
+#endif  // !_MSC_VER
+#endif
 
-using HashFn = Crypto::CNX::Hash_v0;
-}  // namespace
+// ASM
+#if !defined(ASM)
+#if defined(__INTEL_COMPILER)
+#define ASM __asm__
+#elif !defined(_MSC_VER)
+#define ASM __asm__
+#else  // !_MSC_VER
+#define ASM __asm
+#endif  // _MSC_VER
+#endif  // !defined(ASM)
 
-TEST(CryptoNightX, HashConsistency) {
-  const uint8_t NumBlocks = 100;
-  const uint8_t BlockSize = 76;
-  auto data = std::make_unique<std::vector<uint16_t>>();
-  random_bytes_engine rbe;
-  data->resize(NumBlocks * BlockSize / 2);
-  std::generate(data->begin(), data->end(), std::ref(rbe));
+// THREADV
+#if !defined(THREADV)
+#if defined(_MSC_VER)
+#define THREADV __declspec(thread)
+#else  // defined(_MSC_VER)
+#define THREADV __thread
+#endif  // !defined(_MSC_VER)
+#endif  // !defined(THREADV)
 
-  for (std::size_t i = 0; i < NumBlocks; ++i) {
-    std::array<Crypto::Hash, 4> hashes;
-    for (size_t j = 0; j < hashes.size(); ++j)
-      HashFn{}(reinterpret_cast<uint8_t*>(data->data()) + i * BlockSize, BlockSize, hashes[j], (j % 2) > 0);
+// RDATA_ALIGN16
+#if !defined(RDATA_ALIGN16)
+#if defined(_MSC_VER)
+#define RDATA_ALIGN16 __declspec(align(16))
+#else  // defined(_MSC_VER)
+#define RDATA_ALIGN16 __attribute__((aligned(16)))
+#endif  // !defined(_MSC_VER)
+#endif  // !defined(RDATA_ALIGN16)
 
-    for (size_t j = 0; j < hashes.size() - 1; ++j) {
-      for (uint8_t k = 0; k < 32; ++k) EXPECT_EQ(hashes[j].data[k], hashes[j + 1].data[k]);
-    }
-  }
+#if defined(__cplusplus)
 }
+#endif  // __cplusplus

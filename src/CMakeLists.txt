@@ -199,7 +199,7 @@ target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI boost json lineno
 target_link_libraries(BlockchainExplorer PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Common PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(CommonCLI PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
-target_link_libraries(Crypto PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
+target_link_libraries(Crypto PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config Xi.Crypto)
 target_link_libraries(Logging PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Mnemonics PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(NodeRpcProxy PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)

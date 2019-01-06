@@ -42,7 +42,7 @@ uint8_t* xi_hash_allocate_state(uint32_t pageSize);
 /*!
  * \brief frees the thread local allocated scratch buffer
  */
-void xi_hash_free_state();
+void xi_hash_free_state(void);
 
 #if defined(__cplusplus)
 }

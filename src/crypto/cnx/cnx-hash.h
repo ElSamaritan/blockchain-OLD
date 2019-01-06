@@ -21,37 +21,36 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <gtest/gtest.h>
+#pragma once
 
-#include <array>
-#include <random>
-#include <memory>
-#include <climits>
+#if defined(__cplusplus)
+extern "C" {
+#endif  // defined(__cplusplus)
 
-#include "crypto/hash.h"
-#include "crypto/cnx/cnx.h"
+#include <stddef.h>
+#include <inttypes.h>
 
-namespace {
-using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, uint16_t>;
+enum {
+  CNX_HASH_SIZE = 32,         ///< The size in bytes of the generated hash
+  CNX_INDIRECTIONS_MAX = 16,  ///< The maximum amount of stored 128bit scratchpad values used for indirections
+  CNX_INDICES_SIZE = 256,     ///< The amount of random indices expected in the config
+  CNX_INDICES_MAX = 128 / 8,  ///<< The maximum index expected (AES Block Size / Bits per Byte)
+};
 
-using HashFn = Crypto::CNX::Hash_v0;
-}  // namespace
+enum {
+  CNX_FLAGS_HARDWARE_AES =
+      1 << 0,  ///< Useds as a flag for the config to indicate hardware accelerated aes computation should be used.
+};
 
-TEST(CryptoNightX, HashConsistency) {
-  const uint8_t NumBlocks = 100;
-  const uint8_t BlockSize = 76;
-  auto data = std::make_unique<std::vector<uint16_t>>();
-  random_bytes_engine rbe;
-  data->resize(NumBlocks * BlockSize / 2);
-  std::generate(data->begin(), data->end(), std::ref(rbe));
+typedef struct cnx_hash_config cnx_hash_config;
+struct cnx_hash_config {
+  uint32_t scratchpad_size;
+  uint32_t iterations;
+  int8_t flags;
+};
 
-  for (std::size_t i = 0; i < NumBlocks; ++i) {
-    std::array<Crypto::Hash, 4> hashes;
-    for (size_t j = 0; j < hashes.size(); ++j)
-      HashFn{}(reinterpret_cast<uint8_t*>(data->data()) + i * BlockSize, BlockSize, hashes[j], (j % 2) > 0);
+void cnx_hash(const uint8_t* data, const size_t length, const cnx_hash_config* config, uint8_t* hash);
 
-    for (size_t j = 0; j < hashes.size() - 1; ++j) {
-      for (uint8_t k = 0; k < 32; ++k) EXPECT_EQ(hashes[j].data[k], hashes[j + 1].data[k]);
-    }
-  }
+#if defined(__cplusplus)
 }
+#endif  // defined(__cplusplus)
