@@ -36,7 +36,8 @@ enum class BlockValidationError {
   BLOCK_REWARD_MISMATCH,
   CHECKPOINT_BLOCK_HASH_MISMATCH,
   PROOF_OF_WORK_TOO_WEAK,
-  TRANSACTION_ABSENT_IN_POOL
+  TRANSACTION_ABSENT_IN_POOL,
+  TRANSACTION_DUPLICATES,
 };
 
 // custom category:
@@ -78,6 +79,8 @@ class BlockValidationErrorCategory : public std::error_category {
         return "Proof of work is too weak";
       case BlockValidationError::TRANSACTION_ABSENT_IN_POOL:
         return "Block's transaction is absent in transaction pool";
+      case BlockValidationError::TRANSACTION_DUPLICATES:
+        return "Block contains duplicated transactions";
       default:
         return "Unknown error";
     }

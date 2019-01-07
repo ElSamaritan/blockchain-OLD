@@ -13,10 +13,8 @@
 #include <type_traits>
 #include <vector>
 
-#include <crypto/CryptoTypes.h>
-
-#include "generic-ops.h"
-#include "hash.h"
+#include "crypto/CryptoTypes.h"
+#include "crypto/hash.h"
 
 namespace Crypto {
 
@@ -247,8 +245,3 @@ inline bool check_ring_signature(const Hash &prefix_hash, const KeyImage &image,
 }
 
 }  // namespace Crypto
-
-CRYPTO_MAKE_HASHABLE(PublicKey)
-CRYPTO_MAKE_HASHABLE(KeyImage)
-CRYPTO_MAKE_COMPARABLE(Signature)
-CRYPTO_MAKE_COMPARABLE(SecretKey)

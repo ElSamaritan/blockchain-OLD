@@ -11,7 +11,6 @@
 #include <stddef.h>
 
 #include <crypto/CryptoTypes.h>
-#include "generic-ops.h"
 #include "hash-extra-ops.h"
 
 // Standard Cryptonight Definitions
@@ -87,5 +86,3 @@ inline void tree_hash_from_branch(const Hash *branch, size_t depth, const Hash &
                         reinterpret_cast<const char *>(&leaf), path, reinterpret_cast<char *>(&root_hash));
 }
 }  // namespace Crypto
-
-CRYPTO_MAKE_HASHABLE(Hash)

@@ -11,6 +11,7 @@
 #include <unordered_set>
 
 #include <Xi/Global.h>
+#include <Xi/Algorithm/IsUnique.h>
 
 #include "Core.h"
 #include "Common/ShuffleGenerator.h"
@@ -654,6 +655,9 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     return error::BlockValidationError::DIFFICULTY_OVERHEAD;
   }
 
+  if (!Xi::Algorithm::is_unique(blockTemplate.transactionHashes.begin(), blockTemplate.transactionHashes.end()))
+    return error::BlockValidationError::TRANSACTION_DUPLICATES;
+
   // This allows us to accept blocks with transaction mixins for the mined money unlock window
   // that may be using older mixin rules on the network. This helps to clear out the transaction
   // pool during a network soft fork that requires a mixin lower or upper bound change
@@ -676,7 +680,6 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   }
 
   uint64_t cumulativeFee = 0;
-
   for (const auto& transaction : transactions) {
     uint64_t fee = 0;
     auto transactionValidationResult = validateTransaction(transaction, validatorState, cache, fee, previousBlockIndex);
@@ -2036,6 +2039,11 @@ void Core::fillBlockTemplate(BlockTemplate& block, size_t medianSize, size_t max
     size_t blockSizeLimit = maxTotalSize;
 
     if (blockSizeLimit < transactionsSize + cachedTransaction.getTransactionBinaryArray().size()) {
+      continue;
+    }
+
+    if (std::find(block.transactionHashes.begin(), block.transactionHashes.end(),
+                  cachedTransaction.getTransactionHash()) != block.transactionHashes.end()) {
       continue;
     }
 
