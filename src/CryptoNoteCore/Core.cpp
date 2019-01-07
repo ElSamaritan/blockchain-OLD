@@ -1132,19 +1132,11 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
 
   b = boost::value_initialized<BlockTemplate>();
   b.majorVersion = getBlockMajorVersionForHeight(height);
+  b.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
   if (b.majorVersion == Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version()) {
-    b.minorVersion = currency.upgradeHeight(Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) ==
-                             IUpgradeDetector::UNDEF_HEIGHT
-                         ? Xi::Config::BlockVersion::minorVersionNoVotingIndicator()
-                         : Xi::Config::BlockVersion::minorVersionVotingIndicator();
   } else if (b.majorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
-    // If we know we will introduce a new major version in the future we should vote for it.
-    const bool isMajorChangeUpcoming = currency.upgradeHeight(b.majorVersion + 1) != IUpgradeDetector::UNDEF_HEIGHT;
-    b.minorVersion = isMajorChangeUpcoming ? Xi::Config::BlockVersion::minorVersionVotingIndicator()
-                                           : Xi::Config::BlockVersion::minorVersionNoVotingIndicator();
-
     b.parentBlock.majorVersion = Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version();
-    b.parentBlock.majorVersion = Xi::Config::BlockVersion::minorVersionNoVotingIndicator();
+    b.parentBlock.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
     b.parentBlock.transactionCount = 1;
 
     TransactionExtraMergeMiningTag mmTag = boost::value_initialized<decltype(mmTag)>();
@@ -1538,10 +1530,10 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   minerReward = 0;
 
   if (upgradeManager->getBlockMajorVersion(cachedBlock.getBlockIndex()) != block.majorVersion) {
-    return error::BlockValidationError::WRONG_VERSION;
+    return error::BlockValidationError::WRONG_BLOCK_MAJOR_VERSION;
   }
   if (!Xi::Config::BlockVersion::validateMinorVersion(block.minorVersion)) {
-    return error::BlockValidationError::WRONG_VERSION;
+    return error::BlockValidationError::WRONG_BLOCK_MINOR_VERSION;
   }
 
   if (block.majorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
