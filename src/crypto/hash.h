@@ -43,35 +43,6 @@ inline Hash cn_fast_hash(const void *data, size_t length) {
   return h;
 }
 
-// Standard CryptoNight
-inline void cn_slow_hash_v0(const void *data, size_t length, Hash &hash) {
-  cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), 0, 0, 0, CN_PAGE_SIZE, CN_SCRATCHPAD, CN_ITERATIONS);
-}
-
-inline void cn_slow_hash_v1(const void *data, size_t length, Hash &hash) {
-  cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), 0, 1, 0, CN_PAGE_SIZE, CN_SCRATCHPAD, CN_ITERATIONS);
-}
-
-inline void cn_slow_hash_v2(const void *data, size_t length, Hash &hash) {
-  cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), 0, 2, 0, CN_PAGE_SIZE, CN_SCRATCHPAD, CN_ITERATIONS);
-}
-
-// Standard CryptoNight Lite
-inline void cn_lite_slow_hash_v0(const void *data, size_t length, Hash &hash) {
-  cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), 1, 0, 0, CN_LITE_PAGE_SIZE, CN_LITE_SCRATCHPAD,
-               CN_LITE_ITERATIONS);
-}
-
-inline void cn_lite_slow_hash_v1(const void *data, size_t length, Hash &hash) {
-  cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), 1, 1, 0, CN_LITE_PAGE_SIZE, CN_LITE_SCRATCHPAD,
-               CN_LITE_ITERATIONS);
-}
-
-inline void cn_lite_slow_hash_v2(const void *data, size_t length, Hash &hash) {
-  cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), 1, 2, 0, CN_LITE_PAGE_SIZE, CN_LITE_SCRATCHPAD,
-               CN_LITE_ITERATIONS);
-}
-
 inline void tree_hash(const Hash *hashes, size_t count, Hash &root_hash) {
   tree_hash(reinterpret_cast<const char(*)[HASH_SIZE]>(hashes), count, reinterpret_cast<char *>(&root_hash));
 }

@@ -21,17 +21,13 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include <string>
+#include <cinttypes>
 
-#include <CryptoNoteCore/HashAlgorithms.h>
-
-#include "Xi/Config/_Impl/BeginHashes.h"
-
-// clang-format off
-//                (_Index, _Version,                    _Algorithm)
-MakeHashCheckpoint(     0,        1,  ::CryptoNote::Hashes::CNX_v0)
-// clang-format on
-
-#define CURRENT_HASH_CHECKPOINT_INDEX 0
-
-#include "Xi/Config/_Impl/EndHashes.h"
+namespace Xi {
+namespace Crypto {
+namespace Chacha8 {
+void generate_key(const std::string& password, uint8_t* data, size_t len);
+}
+}  // namespace Crypto
+}  // namespace Xi

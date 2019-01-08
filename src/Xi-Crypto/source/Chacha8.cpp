@@ -21,17 +21,15 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/Crypto/Chacha8.h"
 
-#include <CryptoNoteCore/HashAlgorithms.h>
+#include <limits>
 
-#include "Xi/Config/_Impl/BeginHashes.h"
+#include <Xi/Utils/ExternalIncludePush.h>
+#include <openssl/evp.h>
+#include <Xi/Utils/ExternalIncludePop.h>
 
-// clang-format off
-//                (_Index, _Version,                    _Algorithm)
-MakeHashCheckpoint(     0,        1,  ::CryptoNote::Hashes::CNX_v0)
-// clang-format on
-
-#define CURRENT_HASH_CHECKPOINT_INDEX 0
-
-#include "Xi/Config/_Impl/EndHashes.h"
+void Xi::Crypto::Chacha8::generate_key(const std::string &password, uint8_t *data, size_t len) {
+  PKCS5_PBKDF2_HMAC(password.data(), static_cast<int>(password.size()), NULL, 0, std::numeric_limits<uint16_t>::max(),
+                    EVP_sha512(), static_cast<int>(len), data);
+}

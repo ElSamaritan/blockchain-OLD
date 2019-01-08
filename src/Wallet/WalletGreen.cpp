@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The BBSCoin Developers
 // Copyright (c) 2018, The Karbo Developers
@@ -23,6 +23,7 @@
 #include <System/RemoteContext.h>
 
 #include <Xi/Global.h>
+#include <Xi/Crypto/Chacha8.h>
 
 #include "CryptoNoteCore/ITransaction.h"
 
@@ -349,7 +350,7 @@ void WalletGreen::initWithKeys(const std::string& path, const std::string& passw
   prefix->version = static_cast<uint8_t>(WalletSerializerV2::SERIALIZATION_VERSION);
   prefix->nextIv = Crypto::rand<Crypto::chacha8_iv>();
 
-  Crypto::generate_chacha8_key(password, m_key);
+  Xi::Crypto::Chacha8::generate_key(password, m_key.data, CHACHA8_KEY_SIZE);
 
   uint64_t creationTimestamp;
 
@@ -425,7 +426,7 @@ void WalletGreen::exportWallet(const std::string& path, bool encrypt, WalletSave
     if (encrypt) {
       newStorageKey = m_key;
     } else {
-      generate_chacha8_key("", newStorageKey);
+      Xi::Crypto::Chacha8::generate_key("", newStorageKey.data, CHACHA8_KEY_SIZE);
     }
 
     copyContainerStoragePrefix(m_containerStorage, m_key, newStorage, newStorageKey);
@@ -457,7 +458,7 @@ void WalletGreen::load(const std::string& path, const std::string& password, std
 
   stopBlockchainSynchronizer();
 
-  generate_chacha8_key(password, m_key);
+  Xi::Crypto::Chacha8::generate_key(password, m_key.data, CHACHA8_KEY_SIZE);
 
   std::ifstream walletFileStream(path, std::ios_base::binary);
   int version = walletFileStream.peek();
@@ -895,7 +896,7 @@ void WalletGreen::changePassword(const std::string& oldPassword, const std::stri
   }
 
   Crypto::chacha8_key newKey;
-  Crypto::generate_chacha8_key(newPassword, newKey);
+  Xi::Crypto::Chacha8::generate_key(newPassword, newKey.data, CHACHA8_KEY_SIZE);
 
   m_containerStorage.atomicUpdate([this, newKey](ContainerStorage& newStorage) {
     copyContainerStoragePrefix(m_containerStorage, m_key, newStorage, newKey);
