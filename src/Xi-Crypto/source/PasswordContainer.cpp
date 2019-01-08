@@ -37,17 +37,9 @@ Xi::Crypto::PasswordContainer::PasswordContainer(const std::string &password) {
   m_hash = computeHash(password);
 }
 
-bool Xi::Crypto::PasswordContainer::operator()(const std::string &password) {
-  if (hashEqual(m_hash, computeHash(password))) {
-    generateConfig();
-    m_hash = computeHash(password);
-    return true;
-  } else {
-    return false;
-  }
+bool Xi::Crypto::PasswordContainer::validate(const std::string &password) const {
+  return hashEqual(m_hash, computeHash(password));
 }
-
-const Xi::Crypto::PasswordContainer::hash_t &Xi::Crypto::PasswordContainer::hash() const { return m_hash; }
 
 Xi::Crypto::PasswordContainer::hash_t Xi::Crypto::PasswordContainer::computeHash(const std::string &password) const {
   hash_t hash;

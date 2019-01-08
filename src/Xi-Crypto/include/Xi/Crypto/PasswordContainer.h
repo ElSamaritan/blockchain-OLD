@@ -59,16 +59,11 @@ class PasswordContainer {
   ~PasswordContainer() = default;
 
   /*!
-   * \brief operator () validates a given user password against the expected password
+   * \brief validate checks a given user password against the expected password
    * \param password The user provided password to check.
    * \return True if access should be granted otherwise false
    */
-  bool operator()(const std::string& password);
-
-  /*!
-   * \brief hash the stored password hash
-   */
-  const hash_t& hash() const;
+  bool validate(const std::string& password) const;
 
  private:
   hash_t computeHash(const std::string& password) const;

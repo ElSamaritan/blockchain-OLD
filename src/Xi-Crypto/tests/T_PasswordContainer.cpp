@@ -49,21 +49,8 @@ class XI_TESTSUITE : public ::testing::Test {
   }
 };
 
-TEST_F(XI_TESTSUITE, AcceptsPassword) { EXPECT_TRUE(container->operator()(password)); }
+TEST_F(XI_TESTSUITE, AcceptsPassword) { EXPECT_TRUE(container->validate(password)); }
 
 TEST_F(XI_TESTSUITE, DeclinesPassword) {
-  EXPECT_FALSE(container->operator()(std::string{password.rbegin(), password.rend()}));
-}
-
-TEST_F(XI_TESTSUITE, AltersHash) {
-  using namespace ::testing;
-
-  auto hash = container->hash();
-  for (size_t i = 0; i < 4; ++i) {
-    EXPECT_TRUE(container->operator()(password));
-    EXPECT_THAT(hash, Not(ContainerEq(container->hash())));
-    hash = container->hash();
-    EXPECT_FALSE(container->operator()(std::string{password.rbegin(), password.rend()}));
-    EXPECT_THAT(hash, ContainerEq(container->hash()));
-  }
+  EXPECT_FALSE(container->validate(std::string{password.rbegin(), password.rend()}));
 }
