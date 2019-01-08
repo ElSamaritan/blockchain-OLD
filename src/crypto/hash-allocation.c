@@ -82,7 +82,9 @@ uint8_t *xi_hash_allocate_state(uint32_t pageSize)
 #else
   __AllocatedMemory = mmap(0, pageSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, 0, 0);
 #endif
-  if (__AllocatedMemory == MAP_FAILED) __AllocatedMemory = NULL;
+  if (__AllocatedMemory == MAP_FAILED) {
+    __AllocatedMemory = NULL;
+  }
 #endif
   if (__AllocatedMemory == NULL) {
     __AllocatedOnHeap = 0;

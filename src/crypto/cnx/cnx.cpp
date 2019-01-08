@@ -43,14 +43,15 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
   cn_fast_hash(data, length, reinterpret_cast<char *>(&hash));
 
   std::size_t accumulatedScratchpad = 0;
-  for (std::size_t i = 0; accumulatedScratchpad < 3 * 128_kB; ++i) {
+  for (std::size_t i = 0; accumulatedScratchpad < 2 * 256_kB; ++i) {
     uint32_t softShellIndex = get_soft_shell_index(*reinterpret_cast<uint32_t *>(&hash));
     const uint32_t offset = offsetForHeight(softShellIndex);
     const uint32_t scratchpadSize = scratchpadSizeForOffset(offset);
+    const uint8_t cpuTicks = cpuTicksForOffset(offset);
     int8_t flags = 0;
     if (!forceSoftwareAES && check_aes_hardware_support() && !check_aes_hardware_disabled())
       flags |= CNX_FLAGS_HARDWARE_AES;
-    const cnx_hash_config config{scratchpadSize, scratchpadSize / 2, flags};
+    const cnx_hash_config config{scratchpadSize, scratchpadSize / 2, cpuTicks, flags};
     cnx_hash((const uint8_t *)data, length, &config, hash.data);
 
     accumulatedScratchpad += scratchpadSize;

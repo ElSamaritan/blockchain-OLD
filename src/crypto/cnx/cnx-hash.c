@@ -25,6 +25,7 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <errno.h>
 
 #include "crypto/hash-predef.h"
 #include "crypto/hash-allocation.h"
@@ -123,10 +124,10 @@ union __cnx_cpu_register {
 
 typedef struct __cnx_cpu_state __cnx_cpu_state;
 struct __cnx_cpu_state {
+  RDATA_ALIGN16 __cnx_cpu_register registers;
   uint16_t* ram;
   uint32_t ram_size;
   uint32_t program_counter;
-  __cnx_cpu_register registers;
   uint8_t accumulator_index;
 };
 
@@ -279,18 +280,71 @@ STATIC INLINE void __cnx_cpu_tick(__cnx_cpu_state* cpu) {
   cpu->program_counter = (cpu->program_counter + 1) % cpu->ram_size;
 }
 
+#if defined(_MSC_VER)
+#if !defined(_WIN64)
+#define MUL() low = mul128(buffer[0], cpu.registers.b16[8], &high);
+#else
+#define MUL() low = _umul128(buffer[0], cpu.registers.b16[8], &high);
+#endif
+#else
+#if defined(__x86_64__)
+STATIC INLINE uint64_t _umul128(const uint64_t left, const uint64_t right, uint64_t* high)
+{
+  uint64_t low;
+  ASM("mulq %3\n\t" : "=d"(*high), "=a"(low) : "%a"(left), "rm"(right) : "cc");
+  return low;
+}
+#define MUL() low = _umul128(buffer[0], cpu.registers.b16[8], &high);
+#else
+#define MUL() low = mul128(buffer[0], cpu.registers.b16[8], &high);
+#endif
+#endif
+
+#define PRE_AES()                                                                                 \
+  scratchpad_index = __cnx_cpu_translate_address(&cpu, cpu.registers.b16[cpu.accumulator_index],  \
+      scratchpad_size / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;                                         \
+  _3 = _mm_load_si128(R128(&scratchpad[scratchpad_index]));                                       \
+  _1 = _mm_load_si128(R128(&cpu.registers.b16[0]))
+
+#define POST_AES()                                            \
+  _mm_store_si128(R128(buffer), _3); \
+  scratchpad_pointer = U64(&scratchpad[scratchpad_index]); \
+  _mm_store_si128(R128(scratchpad_pointer), _mm_xor_si128(_2, _3)); \
+  cpu.registers.b64[0] ^= scratchpad_pointer[0]; \
+  cpu.registers.b64[1] = scratchpad_pointer[1]; \
+  cpu.registers.b64[2] = scratchpad_pointer[0]; \
+  cpu.registers.b64[3] ^= scratchpad_pointer[1]; \
+  scratchpad_index = __cnx_cpu_translate_address(&cpu, cpu.registers.b16[cpu.accumulator_index], \
+      scratchpad_size / AES_KEY_SIZE) * AES_KEY_SIZE; \
+  scratchpad_pointer = U64(&scratchpad[scratchpad_index]); \
+  cpu.registers.b64[2] = scratchpad_pointer[0]; \
+  cpu.registers.b64[3] = scratchpad_pointer[1]; \
+  MUL(); \
+  cpu.registers.b64[0] += high; \
+  cpu.registers.b64[1] += low; \
+  scratchpad_pointer = U64(&scratchpad[scratchpad_index]); \
+  scratchpad_pointer[0] = cpu.registers.b64[0]; \
+  scratchpad_pointer[1] = cpu.registers.b64[1]; \
+  cpu.registers.b64[0] ^= cpu.registers.b64[2]; \
+  cpu.registers.b64[1] ^= cpu.registers.b64[3]; \
+  _2 = _3
+
 void cnx_hash(const uint8_t *data, const size_t length, const cnx_hash_config *config, uint8_t *hash)
 {
   uint8_t* scratchpad = xi_hash_allocate_state(config->scratchpad_size);
   uint32_t scratchpad_size = config->scratchpad_size;
   uint8_t use_hw_aes = (config->flags & CNX_FLAGS_HARDWARE_AES);
-  if(!use_hw_aes) __oaes = (oaes_ctx *)oaes_alloc();
+  if(use_hw_aes == 0) __oaes = (oaes_ctx *)oaes_alloc();
 
+  uint32_t scratchpad_index;
+  uint64_t *scratchpad_pointer = NULL;
   __cnx_cpu_state cpu;
   uint8_t text[INIT_SIZE_BYTE];
   RDATA_ALIGN16 __cnx_hash_state state;
   RDATA_ALIGN16 uint8_t expandedKey[240];
   RDATA_ALIGN16 uint64_t buffer[4];
+  RDATA_ALIGN16 uint64_t high, low;
+  RDATA_ALIGN16 __m128i _1, _2, _3;
 
   /* CryptoNight Step 1:  Use Keccak1600 to initialize the 'state' (and 'text') buffers from the data. */
   keccak1600(data, (int)length, (uint8_t*)&state.hs);
@@ -324,53 +378,30 @@ void cnx_hash(const uint8_t *data, const size_t length, const cnx_hash_config *c
   cpu.registers.b64[1] = U64(&state.data.k[0])[1] ^ U64(&state.data.k[32])[1];
   cpu.registers.b64[2] = U64(&state.data.k[16])[0] ^ U64(&state.data.k[48])[0];
   cpu.registers.b64[3] = U64(&state.data.k[16])[1] ^ U64(&state.data.k[48])[1];
+  _2 = _mm_load_si128(R128(&cpu.registers.b64[2]));
 
-
-  if(use_hw_aes){
-    RDATA_ALIGN16 __m128i _1, _2, _3, _4;
+  if(use_hw_aes > 0){
     for(uint32_t i = 0; i < config->iterations / REG_NUM; ++i) {
       for(uint8_t j = 0; j < REG_NUM; ++j) {
         cpu.accumulator_index = j;
-
-        for(uint8_t k = 0; k < 8; ++k)
+        for(uint8_t k = 0; k < config->cpu_ticks; ++k)
           __cnx_cpu_tick(&cpu);
 
-        _1 = _mm_load_si128(R128(&cpu.registers.b64[0]));
-        _2 = _mm_load_si128(R128(&cpu.registers.b64[2]));
-        _3 = _mm_aesenc_si128(_1, _2);
-
-        uint32_t index = __cnx_cpu_translate_address(&cpu, cpu.registers.b16[j], scratchpad_size / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
-        _4 = _mm_load_si128(R128(&scratchpad[index]));
-        _3 = _mm_xor_si128(_3, _4);
-        _mm_store_si128(R128(&buffer[0]), _3);
-        _mm_store_si128(R128(&buffer[2]), _4);
-
-        for(uint8_t k = 0; k < 2; ++k)
-          *((uint64_t*)&scratchpad[index + k * 8]) = buffer[k];
-        for(uint8_t k = 0; k < 4; ++k)
-          cpu.registers.b64[k] ^= buffer[k];
+        PRE_AES();
+        _3 = _mm_aesenc_si128(_3, _1);
+        POST_AES();
       }
     }
   } else {
     for(uint32_t i = 0; i < config->iterations / REG_NUM; ++i) {
       for(uint8_t j = 0; j < REG_NUM; ++j) {
         cpu.accumulator_index = j;
-
-        for(uint8_t k = 0; k < 8; ++k)
+        for(uint8_t k = 0; k < config->cpu_ticks; ++k)
           __cnx_cpu_tick(&cpu);
 
-        aesb_single_round((uint8_t*)&cpu.registers.b16[0], (uint8_t*)&buffer[0], (uint8_t*)&cpu.registers.b64[2]);
-
-        uint32_t index = __cnx_cpu_translate_address(&cpu, cpu.registers.b16[j], scratchpad_size / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
-        buffer[2] = ((uint64_t*)&scratchpad[index])[0];
-        buffer[3] = ((uint64_t*)&scratchpad[index])[1];
-        buffer[0] = buffer[0] ^ buffer[2];
-        buffer[1] = buffer[1] ^ buffer[3];
-
-        for(uint8_t k = 0; k < 2; ++k)
-          *((uint64_t*)&scratchpad[index + k * 8]) = buffer[k];
-        for(uint8_t k = 0; k < 4; ++k)
-          cpu.registers.b64[k] ^= buffer[k];
+        PRE_AES();
+        aesb_single_round((uint8_t *)&_3, (uint8_t *)&_3, (uint8_t *)&_1);
+        POST_AES();
       }
     }
   }
@@ -412,6 +443,6 @@ void cnx_hash(const uint8_t *data, const size_t length, const cnx_hash_config *c
   xi_hash_free_state();
   scratchpad = NULL;
   scratchpad_size = 0;
-  if(!use_hw_aes) oaes_free((OAES_CTX **)(&__oaes));
+  if(use_hw_aes == 0) oaes_free((OAES_CTX **)(&__oaes));
   use_hw_aes = 0;
 }

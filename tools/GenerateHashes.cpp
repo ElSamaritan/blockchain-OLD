@@ -30,7 +30,7 @@
 std::string makeHash(std::string data, bool forceSoftwareAES) {
   Crypto::CNX::Hash_v0 hashFn;
   Crypto::Hash hash;
-  hashFn(data.c_str(), data.length(), hash);
+  hashFn(data.c_str(), data.length(), hash, forceSoftwareAES);
   std::string hashString;
   hashString.resize(sizeof(hash));
   for (std::size_t i = 0; i < sizeof(hash); ++i) hashString[i] = reinterpret_cast<char*>(&hash)[i];

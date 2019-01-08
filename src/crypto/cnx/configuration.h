@@ -28,9 +28,18 @@
 namespace Crypto {
 namespace CNX {
 
-template <uint32_t _WindowSize, uint32_t _MinScratchpadSize, uint32_t _MaxScratchpadSize>
+template <uint32_t _WindowSize, uint8_t _MinCPUTicks, uint8_t _MaxCPUTicks, uint32_t _MinScratchpadSize,
+          uint32_t _MaxScratchpadSize>
 struct Configuration {
   static constexpr uint32_t windowSize() { return _WindowSize; }
+
+  static constexpr uint8_t minCPUTicks() { return _MinCPUTicks; }
+  static constexpr uint8_t maxCPUTicks() { return _MaxCPUTicks; }
+  static constexpr uint8_t cpuTicksForOffset(uint32_t offset) {
+    return minCPUTicks() +
+           static_cast<uint8_t>((static_cast<uint32_t>(maxCPUTicks() - minCPUTicks()) * (windowSize() - offset)) /
+                                windowSize());
+  }
 
   static constexpr uint32_t minScratchpadSize() { return _MinScratchpadSize; }
   static constexpr uint32_t maxScratchpadSize() { return _MaxScratchpadSize; }
