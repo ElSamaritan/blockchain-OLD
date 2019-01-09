@@ -30,7 +30,7 @@
 namespace Xi {
 namespace Config {
 namespace BlockVersion {
-inline constexpr uint8_t expectedMinorVersion() { return 1; }
+inline constexpr uint8_t expectedMinorVersion() { return 0; }
 inline constexpr bool validateMinorVersion(uint8_t minorVersion) { return minorVersion == expectedMinorVersion(); }
 }  // namespace BlockVersion
 }  // namespace Config

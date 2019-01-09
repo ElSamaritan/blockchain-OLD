@@ -62,8 +62,8 @@ inline uint64_t genesisTimestamp() { return 1544396293; }
  * - You should see your premine appear in the previously generated wallet.
  */
 inline std::string genesisTransactionHash() {
-  return "010a01ff000180d0cfba856002bdb307508868ad6112df4a97a8902c7f564fbd22d71c90d7449ea49c248cb1ec210194797465d9341d0"
-         "ef42f9c13913817931ada6515c197d7179a7c0c1c60509d4f";
+  return "010a01ff000180d0cfba856002c6c3a68db101c61c33cee23a75a03467530ff14cc6dce86997f2477efc888ec821011fba095b06d9bf8"
+         "791cf0b9520d997f2b1004995f2a52cfeb139eb164e6ac52d";
 }
 
 static_assert(emissionSpeed() <= 8 * sizeof(uint64_t), "Bad emission speed.");
