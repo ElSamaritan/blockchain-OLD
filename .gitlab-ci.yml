@@ -189,10 +189,10 @@ CppLint:
   script:
     - mv ./.install ./Xi
     - cd ./.build/src
-    - /bin/bash ../../scripts/ci/UploadSym.sh xi-daemon.sym
-    - /bin/bash ../../scripts/ci/UploadSym.sh xi-wallet.sym
-    - /bin/bash ../../scripts/ci/UploadSym.sh xi-miner.sym
-    - /bin/bash ../../scripts/ci/UploadSym.sh xi-pgservice.sym
+    # - /bin/bash ../../scripts/ci/UploadSym.sh xi-daemon.sym
+    # - /bin/bash ../../scripts/ci/UploadSym.sh xi-wallet.sym
+    # - /bin/bash ../../scripts/ci/UploadSym.sh xi-miner.sym
+    # - /bin/bash ../../scripts/ci/UploadSym.sh xi-pgservice.sym
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
     paths:
@@ -222,10 +222,10 @@ Windows 10:
   dependencies: ["Windows 10 - Build"]
   script:
     - MOVE .install Xi
-    - PowerShell -File .\scripts\ci\UploadSym.ps1 .\.build\src\Release\xi-daemon.sym
-    - PowerShell -File .\scripts\ci\UploadSym.ps1 .\.build\src\Release\xi-wallet.sym
-    - PowerShell -File .\scripts\ci\UploadSym.ps1 .\.build\src\Release\xi-miner.sym
-    - PowerShell -File .\scripts\ci\UploadSym.ps1 .\.build\src\Release\xi-pgservice.sym
+    # - PowerShell -File .\scripts\ci\UploadSym.ps1 .\.build\src\Release\xi-daemon.sym
+    # - PowerShell -File .\scripts\ci\UploadSym.ps1 .\.build\src\Release\xi-wallet.sym
+    # - PowerShell -File .\scripts\ci\UploadSym.ps1 .\.build\src\Release\xi-miner.sym
+    # - PowerShell -File .\scripts\ci\UploadSym.ps1 .\.build\src\Release\xi-pgservice.sym
   artifacts:
     name: "%CI_JOB_NAME%-%CI_COMMIT_REF_NAME%"
     paths:
