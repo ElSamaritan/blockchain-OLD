@@ -130,10 +130,12 @@ void CommonCLI::emplaceCLIOptions(cxxopts::Options& options) {
       ("breakpad-out", "Output directory for storing crash dumps",
        cxxopts::value<std::string>(BreakpadConfig.OutputPath)->default_value(BreakpadConfig.OutputPath));
 
-  if(!isDevVersion())
+  if(isDevVersion())
+  {
     options.add_options("Breakpad")
       ("breakpad-upload", "Enables auto upload of crash dumps to the galaxia project breakpad server.",
        cxxopts::value<bool>(BreakpadConfig.IsUploadEnabled)->implicit_value("true")->default_value("false"));
+  }
 
 #endif  // XI_USE_BREAKPAD
 
