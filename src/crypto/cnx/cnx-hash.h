@@ -46,7 +46,8 @@ typedef struct cnx_hash_config cnx_hash_config;
 struct cnx_hash_config {
   uint32_t scratchpad_size;
   uint32_t iterations;
-  uint8_t cpu_ticks;
+  uint8_t* salt;
+  uint32_t salt_size;
   int8_t flags;
 };
 

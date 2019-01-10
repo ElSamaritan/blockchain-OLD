@@ -249,6 +249,8 @@ STATIC INLINE void __cnx_cpu_register_instruction(__cnx_cpu_state* cpu, const ui
 
 STATIC INLINE void __cnx_cpu_tick(__cnx_cpu_state* cpu) {
   const uint16_t value = cpu->ram[cpu->program_counter];
+  cpu->program_counter = (cpu->program_counter + 1) % cpu->ram_size;
+
   const uint8_t instruction = __cnx_cpu_get_instruction(value);
   switch (instruction) {
     case LOAD:
@@ -276,8 +278,6 @@ STATIC INLINE void __cnx_cpu_tick(__cnx_cpu_state* cpu) {
       __cnx_cpu_register_instruction(cpu, instruction, value);
       break;
   }
-
-  cpu->program_counter = (cpu->program_counter + 1) % cpu->ram_size;
 }
 
 #if defined(_MSC_VER)
@@ -349,7 +349,9 @@ void cnx_hash(const uint8_t *data, const size_t length, const cnx_hash_config *c
   /* CryptoNight Step 1:  Use Keccak1600 to initialize the 'state' (and 'text') buffers from the data. */
   keccak1600(data, (int)length, (uint8_t*)&state.hs);
   memcpy(text, state.data.init, INIT_SIZE_BYTE);
-
+  for(uint8_t i = 0; i < INIT_SIZE_BYTE; ++i) {
+    text[i] ^= config->salt[i % config->salt_size];
+  }
 
   /* CryptoNight Step 2:  Iteratively encrypt the results from Keccak to fill scratchpad */
   const uint32_t init_rounds = scratchpad_size / INIT_SIZE_BYTE;
@@ -384,25 +386,31 @@ void cnx_hash(const uint8_t *data, const size_t length, const cnx_hash_config *c
     for(uint32_t i = 0; i < config->iterations / REG_NUM; ++i) {
       for(uint8_t j = 0; j < REG_NUM; ++j) {
         cpu.accumulator_index = j;
-        for(uint8_t k = 0; k < config->cpu_ticks; ++k)
-          __cnx_cpu_tick(&cpu);
-
-        PRE_AES();
-        _3 = _mm_aesenc_si128(_3, _1);
-        POST_AES();
+        __cnx_cpu_tick(&cpu);
+        if(__cnx_cpu_get_cmp_flag(cpu.registers.b16[j])) {
+          PRE_AES();
+          _3 = _mm_aesenc_si128(_3, _1);
+          POST_AES();
+        }
       }
+      PRE_AES();
+      _3 = _mm_aesenc_si128(_3, _1);
+      POST_AES();
     }
   } else {
     for(uint32_t i = 0; i < config->iterations / REG_NUM; ++i) {
       for(uint8_t j = 0; j < REG_NUM; ++j) {
         cpu.accumulator_index = j;
-        for(uint8_t k = 0; k < config->cpu_ticks; ++k)
-          __cnx_cpu_tick(&cpu);
-
-        PRE_AES();
-        aesb_single_round((uint8_t *)&_3, (uint8_t *)&_3, (uint8_t *)&_1);
-        POST_AES();
+        __cnx_cpu_tick(&cpu);
+        if(__cnx_cpu_get_cmp_flag(cpu.registers.b16[j])) {
+          PRE_AES();
+          aesb_single_round((uint8_t *)&_3, (uint8_t *)&_3, (uint8_t *)&_1);
+          POST_AES();
+        }
       }
+      PRE_AES();
+      aesb_single_round((uint8_t *)&_3, (uint8_t *)&_3, (uint8_t *)&_1);
+      POST_AES();
     }
   }
 
