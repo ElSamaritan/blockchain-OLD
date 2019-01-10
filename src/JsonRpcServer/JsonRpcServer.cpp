@@ -44,6 +44,15 @@ Xi::Http::Response JsonRpcServer::doHandleRequest(const Xi::Http::Request& reque
     logger(Logging::TRACE) << "HTTP request came: \n" << request.body();
 
     if (request.target() == "/json_rpc") {
+      if (request.method() == Xi::Http::Method::Options) {
+        Xi::Http::Response response;
+        response.headers().setAllow({Xi::Http::Method::Post, Xi::Http::Method::Options});
+        response.headers().setContentType(Xi::Http::ContentType::Json);
+        return response;
+      } else if (request.method() != Xi::Http::Method::Post) {
+        return makeBadRequest("Only POST and OPTIONS methods are allowed.");
+      }
+
       std::istringstream jsonInputStream(request.body());
       Common::JsonValue jsonRpcRequest;
       Common::JsonValue jsonRpcResponse(Common::JsonValue::OBJECT);
