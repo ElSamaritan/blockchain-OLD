@@ -70,10 +70,18 @@ RpcServer::HandlerFunction jsonMethod(bool (RpcServer::*handler)(typename Comman
     if (!loadFromJson(static_cast<typename Command::request&>(req), request.body())) {
       return false;
     }
-    auto result = (obj->*handler)(req, res);
+
     if (!obj->getCorsDomain().empty()) {
       response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, obj->getCorsDomain());
     }
+    response.headers().setContentType(Xi::Http::ContentType::Json);
+
+    if (request.method() != Xi::Http::Method::Post && request.method() != Xi::Http::Method::Get) {
+      response = obj->makeBadRequest("Only OPTIONS, POST and GET requests are allowed.");
+      return false;
+    }
+
+    auto result = (obj->*handler)(req, res);
     response.headers().setContentType(Xi::Http::ContentType::Json);
     response.setBody(storeToJson(res.data()));
     return result;
@@ -136,7 +144,11 @@ Xi::Http::Response RpcServer::doHandleRequest(const Xi::Http::Request& request) 
     return makeInternalServerError("core is busy");
   else {
     Xi::Http::Response response;
-    it->second.handler(this, request, response);
+    if (!on_options_request(request, response)) {
+      if (request.method() != Xi::Http::Method::Post && request.method() != Xi::Http::Method::Get)
+        return makeBadRequest("Only OPTIONS, GET and POST methods are allowed.");
+      it->second.handler(this, request, response);
+    }
     return response;
   }
 }
@@ -144,9 +156,6 @@ Xi::Http::Response RpcServer::doHandleRequest(const Xi::Http::Request& request) 
 bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& response) {
   using namespace JsonRpc;
 
-  if (!getCorsDomain().empty()) {
-    response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, getCorsDomain());
-  }
   response.headers().setContentType(Xi::Http::ContentType::Json);
 
   JsonRpcRequest jsonRequest;
@@ -212,6 +221,16 @@ const std::string& RpcServer::getCorsDomain() { return m_cors; }
 
 bool RpcServer::isCoreReady() {
   return m_core.getCurrency().isTestNet() || m_p2p.get_payload_object().isSynchronized();
+}
+
+bool RpcServer::on_options_request(const RpcServer::HttpRequest& request, RpcServer::HttpResponse& response) {
+  if (!getCorsDomain().empty()) {
+    response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, getCorsDomain());
+  }
+  response.headers().setAccessControlRequestMethods({Xi::Http::Method::Post, Xi::Http::Method::Options});
+  response.headers().setAllow({Xi::Http::Method::Post, Xi::Http::Method::Get, Xi::Http::Method::Options});
+  response.headers().setContentType(Xi::Http::ContentType::Json);
+  return request.method() == Xi::Http::Method::Options;
 }
 
 bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req,

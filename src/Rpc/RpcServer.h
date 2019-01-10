@@ -60,6 +60,14 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   bool processJsonRpcRequest(const HttpRequest& request, HttpResponse& response);
   bool isCoreReady();
 
+  /*!
+   * \brief on_options_request sets standard headers for incoming requests
+   * \param request The request coming in
+   * \param response The response to built and send back to the client
+   * \return true if the request was a purly OPTION request and shouldnt be handled further
+   */
+  bool on_options_request(const HttpRequest& request, HttpResponse& response);
+
   // json handlers
   bool on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req, COMMAND_RPC_GET_BLOCKS_FAST::response& res);
   bool on_query_blocks(const COMMAND_RPC_QUERY_BLOCKS::request& req, COMMAND_RPC_QUERY_BLOCKS::response& res);

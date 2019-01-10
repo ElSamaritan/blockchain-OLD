@@ -28,7 +28,11 @@
 Xi::Http::Response Xi::Http::RequestHandler::operator()(const Xi::Http::Request &request) {
   try {
     auto response = doHandleRequest(request);
-    emplaceContentEncoding(request, response);
+    if (!response.body().empty()) {
+      emplaceContentEncoding(request, response);
+    }
+    response.headers().setAcceptedContentEncodings(
+        {ContentEncoding::Gzip, ContentEncoding::Deflate, ContentEncoding::Identity});
     return response;
   } catch (...) {
     try {

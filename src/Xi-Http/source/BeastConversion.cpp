@@ -46,7 +46,7 @@ std::vector<Xi::Http::HeaderContainer::Header> headersToCopy{
      Xi::Http::HeaderContainer::AcceptCharset, Xi::Http::HeaderContainer::AcceptEncoding,
      Xi::Http::HeaderContainer::AccessControlAllowOrigin, Xi::Http::HeaderContainer::ContentType,
      Xi::Http::HeaderContainer::ContentEncoding, Xi::Http::HeaderContainer::Location, Xi::Http::HeaderContainer::Allow,
-     Xi::Http::HeaderContainer::Server}};
+     Xi::Http::HeaderContainer::Server, Xi::Http::HeaderContainer::AccessControlAllowMethods}};
 }
 
 Xi::Http::BeastConversion::api_request_t Xi::Http::BeastConversion::operator()(

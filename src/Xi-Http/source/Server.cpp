@@ -107,11 +107,14 @@ void Xi::Http::Server::start(const std::string& address, uint16_t port) {
   m_listener = std::make_shared<_Listener>(address, port, handler(), *dispatcher());
 
   m_sslConfig.initializeContext(m_listener->ctx);
+  m_host = address;
 
   m_listener->run(1);
 }
 
 void Xi::Http::Server::stop() { m_listener.reset(); }
+
+const std::string& Xi::Http::Server::host() const { return m_host; }
 
 void Xi::Http::Server::setDispatcher(std::shared_ptr<Xi::Concurrent::IDispatcher> dispatcher) {
   m_dispatcher = dispatcher;
