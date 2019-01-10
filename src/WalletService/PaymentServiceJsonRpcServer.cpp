@@ -135,7 +135,7 @@ void PaymentServiceJsonRpcServer::processJsonRpcRequest(const Common::JsonValue&
       }
       clientPassword = req("password").getString();
 
-      if (config.rpcSecret->validate(clientPassword)) {
+      if (!config.rpcSecret->validate(clientPassword)) {
         makeInvalidPasswordResponse(resp);
         return;
       }
