@@ -71,7 +71,9 @@ RpcServer::HandlerFunction jsonMethod(bool (RpcServer::*handler)(typename Comman
       return false;
     }
     auto result = (obj->*handler)(req, res);
-    response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, obj->getCorsDomain());
+    if (!obj->getCorsDomain().empty()) {
+      response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, obj->getCorsDomain());
+    }
     response.headers().setContentType(Xi::Http::ContentType::Json);
     response.setBody(storeToJson(res.data()));
     return result;
@@ -142,7 +144,9 @@ Xi::Http::Response RpcServer::doHandleRequest(const Xi::Http::Request& request) 
 bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& response) {
   using namespace JsonRpc;
 
-  response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, getCorsDomain());
+  if (!getCorsDomain().empty()) {
+    response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, getCorsDomain());
+  }
   response.headers().setContentType(Xi::Http::ContentType::Json);
 
   JsonRpcRequest jsonRequest;
