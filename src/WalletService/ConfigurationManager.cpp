@@ -20,7 +20,7 @@
 
 namespace PaymentService {
 
-ConfigurationManager::ConfigurationManager() { rpcSecret = Crypto::Hash(); }
+ConfigurationManager::ConfigurationManager() {}
 
 bool ConfigurationManager::init(int argc, char** argv) {
   serviceConfig = initConfiguration();
@@ -113,8 +113,7 @@ bool ConfigurationManager::init(int argc, char** argv) {
   }
 
   if (!serviceConfig.rpcPassword.empty()) {
-    std::vector<uint8_t> rawData(serviceConfig.rpcPassword.begin(), serviceConfig.rpcPassword.end());
-    Crypto::cn_slow_hash_v0(rawData.data(), rawData.size(), rpcSecret);
+    rpcSecret = std::make_unique<Xi::Crypto::PasswordContainer>(serviceConfig.rpcPassword);
     serviceConfig.rpcPassword = "";
   }
 

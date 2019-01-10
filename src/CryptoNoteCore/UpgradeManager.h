@@ -30,10 +30,9 @@ namespace CryptoNote {
 class UpgradeManager : public IUpgradeManager {
  public:
   UpgradeManager();
-  virtual ~UpgradeManager();
+  virtual ~UpgradeManager() override;
 
   virtual void addMajorBlockVersion(uint8_t targetVersion, uint32_t upgradeHeight) override;
-
   virtual uint8_t getBlockMajorVersion(uint32_t blockIndex) const override;
 
  private:

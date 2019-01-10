@@ -44,6 +44,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 option(XI_BUILD_EXECUTABLES "Builds the executables for this project (daemon, wallet...)." ON)
 option(XI_BREAKPAD "Includes the breakpad crash dumper. More options will be availabe it turned on." OFF)
 option(XI_BUILD_TESTSUITE "Builds the xi test suite, see ./tests" OFF)
+option(XI_BUILD_TOOLS "Builds tooling executables used in development" OFF)
 
 include(cmake/CompilerCheck.cmake)
 include(cmake/CompilerConfiguration.cmake)
@@ -57,6 +58,10 @@ endif() # XI_BUILD_TESTSUITE
 
 add_subdirectory(external)
 add_subdirectory(src)
+
+if(XI_BUILD_TOOLS)
+  add_subdirectory(tools)
+endif() # XI_BUILD_TOOLS
 
 if(XI_BUILD_TESTSUITE)
   add_subdirectory(tests)

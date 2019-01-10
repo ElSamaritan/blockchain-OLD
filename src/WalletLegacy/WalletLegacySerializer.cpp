@@ -8,6 +8,8 @@
 
 #include <stdexcept>
 
+#include <Xi/Crypto/Chacha8.h>
+
 #include "Common/MemoryInputStream.h"
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
@@ -76,7 +78,7 @@ void WalletLegacySerializer::saveKeys(CryptoNote::ISerializer& serializer) {
 Crypto::chacha8_iv WalletLegacySerializer::encrypt(const std::string& plain, const std::string& password,
                                                    std::string& cipher) {
   Crypto::chacha8_key key;
-  Crypto::generate_chacha8_key(password, key);
+  Xi::Crypto::Chacha8::generate_key(password, key.data, CHACHA8_KEY_SIZE);
 
   cipher.resize(plain.size());
 
@@ -134,7 +136,7 @@ void WalletLegacySerializer::deserialize(std::istream& stream, const std::string
 void WalletLegacySerializer::decrypt(const std::string& cipher, std::string& plain, Crypto::chacha8_iv iv,
                                      const std::string& password) {
   Crypto::chacha8_key key;
-  Crypto::generate_chacha8_key(password, key);
+  Xi::Crypto::Chacha8::generate_key(password, key.data, CHACHA8_KEY_SIZE);
 
   plain.resize(cipher.size());
 

@@ -27,7 +27,7 @@
 
 namespace CryptoNote {
 namespace Hashes {
-struct InitBlockchain {
+struct CNX_Init {
   void operator()(const CachedBlock& block, Crypto::Hash& hash) const;
 };
 

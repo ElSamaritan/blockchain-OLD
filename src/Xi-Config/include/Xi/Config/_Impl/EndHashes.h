@@ -25,6 +25,8 @@
 
 #include <cinttypes>
 
+#include <crypto/CryptoTypes.h>
+
 #include "Xi/Config/Hashes.h"
 
 #undef MakeHashCheckpoint
@@ -39,16 +41,17 @@ namespace Hashes {
 
 struct HashCheckpointResolver {
   template <uint8_t>
-  static inline void compute(const CryptoNote::CachedBlock& block, Crypto::Hash& hash, uint8_t version);
+  static inline void compute(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash, uint8_t version);
 };
 
 template <>
-inline void HashCheckpointResolver::compute<0>(const CryptoNote::CachedBlock& block, Crypto::Hash& hash, uint8_t) {
+inline void HashCheckpointResolver::compute<0>(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash, uint8_t) {
   typename HashCheckpoint<0>::algorithm hashFn{};
   hashFn(block, hash);
 }
 template <uint8_t _Index>
-inline void HashCheckpointResolver::compute(const CryptoNote::CachedBlock& block, Crypto::Hash& hash, uint8_t version) {
+inline void HashCheckpointResolver::compute(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash,
+                                            uint8_t version) {
   if (version >= HashCheckpoint<_Index>::version()) {
     typename HashCheckpoint<_Index>::algorithm hashFn{};
     hashFn(block, hash);
@@ -56,7 +59,7 @@ inline void HashCheckpointResolver::compute(const CryptoNote::CachedBlock& block
     return compute<_Index - 1>(block, hash, version);
 }
 
-inline void compute(const CryptoNote::CachedBlock& block, Crypto::Hash& hash, uint8_t version) {
+inline void compute(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash, uint8_t version) {
   HashCheckpointResolver::compute<CURRENT_HASH_CHECKPOINT_INDEX>(block, hash, version);
 }
 

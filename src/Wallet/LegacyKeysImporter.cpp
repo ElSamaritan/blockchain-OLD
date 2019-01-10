@@ -9,6 +9,8 @@
 #include <vector>
 #include <system_error>
 
+#include <Xi/Crypto/Chacha8.h>
+
 #include "Common/StringTools.h"
 
 #include "CryptoNoteCore/Currency.h"
@@ -51,7 +53,7 @@ void loadKeysFromFile(const std::string& filename, const std::string& password, 
   }
 
   chacha8_key key;
-  generate_chacha8_key(password, key);
+  Xi::Crypto::Chacha8::generate_key(password, key.data, CHACHA8_KEY_SIZE);
   std::string account_data;
   account_data.resize(keys_file_data.account_data.size());
   chacha8(keys_file_data.account_data.data(), keys_file_data.account_data.size(), key, keys_file_data.iv,

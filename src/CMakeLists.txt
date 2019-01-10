@@ -101,6 +101,18 @@ target_link_libraries(
     System
 )
 
+xi_make_library(Crypto Xi-Crypto)
+target_link_libraries(
+  Xi.Crypto
+
+  PUBLIC
+    Xi.Core
+
+  PRIVATE
+    openssl
+    boost
+)
+
 xi_make_library(Config Xi-Config)
 target_link_libraries(Xi.Config PUBLIC Xi.Core)
 
@@ -182,19 +194,19 @@ target_link_libraries(
 )
 target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core boost json linenoise Xi.Http Xi.Config)
-target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Serialization CryptoNoteCore System Logging Common Crypto Xi.Core boost json linenoise Xi.Http Xi.Config)
-target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI boost json linenoise cxxopts Xi.Http Xi.Config)
+target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Serialization CryptoNoteCore System Logging Common Crypto Xi.Core boost json linenoise Xi.Http Xi.Config Xi.Crypto)
+target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI boost json linenoise cxxopts Xi.Http Xi.Config Xi.Crypto)
 target_link_libraries(BlockchainExplorer PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Common PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(CommonCLI PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
-target_link_libraries(Crypto PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
+target_link_libraries(Crypto PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config Xi.Crypto)
 target_link_libraries(Logging PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Mnemonics PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(NodeRpcProxy PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(P2P PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Serialization PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Transfers PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
-target_link_libraries(JsonRpcServer PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
+target_link_libraries(JsonRpcServer PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config Xi.Crypto)
 
 if(XI_BUILD_EXECUTABLES)
   if(MSVC)

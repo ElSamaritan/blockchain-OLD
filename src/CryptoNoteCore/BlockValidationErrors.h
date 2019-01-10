@@ -25,7 +25,8 @@ namespace error {
 
 enum class BlockValidationError {
   VALIDATION_SUCCESS = 0,
-  WRONG_VERSION,
+  WRONG_BLOCK_MAJOR_VERSION,
+  WRONG_BLOCK_MINOR_VERSION,
   PARENT_BLOCK_SIZE_TOO_BIG,
   PARENT_BLOCK_WRONG_VERSION,
   TIMESTAMP_TOO_FAR_IN_FUTURE,
@@ -35,7 +36,8 @@ enum class BlockValidationError {
   BLOCK_REWARD_MISMATCH,
   CHECKPOINT_BLOCK_HASH_MISMATCH,
   PROOF_OF_WORK_TOO_WEAK,
-  TRANSACTION_ABSENT_IN_POOL
+  TRANSACTION_ABSENT_IN_POOL,
+  TRANSACTION_DUPLICATES,
 };
 
 // custom category:
@@ -53,8 +55,10 @@ class BlockValidationErrorCategory : public std::error_category {
     switch (code) {
       case BlockValidationError::VALIDATION_SUCCESS:
         return "Block validated successfully";
-      case BlockValidationError::WRONG_VERSION:
-        return "Wrong block version";
+      case BlockValidationError::WRONG_BLOCK_MAJOR_VERSION:
+        return "Wrong block major version";
+      case BlockValidationError::WRONG_BLOCK_MINOR_VERSION:
+        return "Wrong block minor version";
       case BlockValidationError::PARENT_BLOCK_SIZE_TOO_BIG:
         return "Parent block size is too big";
       case BlockValidationError::PARENT_BLOCK_WRONG_VERSION:
@@ -75,6 +79,8 @@ class BlockValidationErrorCategory : public std::error_category {
         return "Proof of work is too weak";
       case BlockValidationError::TRANSACTION_ABSENT_IN_POOL:
         return "Block's transaction is absent in transaction pool";
+      case BlockValidationError::TRANSACTION_DUPLICATES:
+        return "Block contains duplicated transactions";
       default:
         return "Unknown error";
     }
