@@ -60,36 +60,48 @@ struct Signature {
 
 }  // namespace Crypto
 
-#define MAKE_GENERIC_OPS(_T)                                                                                    \
-  namespace Crypto {                                                                                            \
-  static inline bool operator==(const _T& lhs, const _T& rhs) {                                                 \
-    return ::std::memcmp(lhs.data, rhs.data, sizeof(_T)) == 0;                                                  \
-  }                                                                                                             \
-  static inline bool operator!=(const _T& lhs, const _T& rhs) {                                                 \
-    return ::std::memcmp(lhs.data, rhs.data, sizeof(_T)) != 0;                                                  \
-  }                                                                                                             \
-  static inline bool operator<(const _T& lhs, const _T& rhs) {                                                  \
-    return ::std::memcmp(lhs.data, rhs.data, sizeof(_T)) < 0;                                                   \
-  }                                                                                                             \
-  static inline bool operator<=(const _T& lhs, const _T& rhs) {                                                 \
-    return ::std::memcmp(lhs.data, rhs.data, sizeof(_T)) < 1;                                                   \
-  }                                                                                                             \
-  static inline bool operator>(const _T& lhs, const _T& rhs) {                                                  \
-    return ::std::memcmp(lhs.data, rhs.data, sizeof(_T)) > 0;                                                   \
-  }                                                                                                             \
-  static inline bool operator>=(const _T& lhs, const _T& rhs) {                                                 \
-    return ::std::memcmp(lhs.data, rhs.data, sizeof(_T)) > -1;                                                  \
-  }                                                                                                             \
-  static inline std::size_t hash_value(const _T& value) {                                                       \
-    return boost::hash_range(value.data, value.data + sizeof(_T));                                              \
-  }                                                                                                             \
-  }                                                                                                             \
-  namespace std {                                                                                               \
-  template <>                                                                                                   \
-  struct hash<_T> {                                                                                             \
-    size_t operator()(const _T& value) const { return boost::hash_range(value.data, value.data + sizeof(_T)); } \
-  };                                                                                                            \
-  }
+#define MAKE_GENERIC_OPS(_T)                                                                \
+  namespace Crypto {                                                                        \
+  static inline bool operator==(const _T& lhs, const _T& rhs) {                             \
+    return ::std::memcmp(lhs.data, rhs.data, sizeof(_T)) == 0;                              \
+  }                                                                                         \
+  static inline bool operator!=(const _T& lhs, const _T& rhs) {                             \
+    return ::std::memcmp(lhs.data, rhs.data, sizeof(_T)) != 0;                              \
+  }                                                                                         \
+  static inline bool operator<(const _T& lhs, const _T& rhs) {                              \
+    return ::std::memcmp(lhs.data, rhs.data, sizeof(_T)) < 0;                               \
+  }                                                                                         \
+  static inline bool operator<=(const _T& lhs, const _T& rhs) {                             \
+    return ::std::memcmp(lhs.data, rhs.data, sizeof(_T)) < 1;                               \
+  }                                                                                         \
+  static inline bool operator>(const _T& lhs, const _T& rhs) {                              \
+    return ::std::memcmp(lhs.data, rhs.data, sizeof(_T)) > 0;                               \
+  }                                                                                         \
+  static inline bool operator>=(const _T& lhs, const _T& rhs) {                             \
+    return ::std::memcmp(lhs.data, rhs.data, sizeof(_T)) > -1;                              \
+  }                                                                                         \
+  static inline std::size_t hash_value(const _T& value) {                                   \
+    const uint64_t m = UINT64_C(0xc6a4a7935bd1e995);                                        \
+    const int r = 47;                                                                       \
+    std::size_t seed = 0;                                                                   \
+    for (std::size_t i = 0; i < sizeof(_T) / sizeof(std::size_t); ++i) {                    \
+      std::size_t k = *reinterpret_cast<std::size_t*>(value.data[i * sizeof(std::size_t)]); \
+      k *= m;                                                                               \
+      k ^= k >> r;                                                                          \
+      k *= m;                                                                               \
+      seed ^= k;                                                                            \
+      seed *= m;                                                                            \
+      seed += 0xe6546b64;                                                                   \
+    }                                                                                       \
+    return seed;                                                                            \
+  }                                                                                         \
+  }                                                                                         \
+  namespace std {                                                                           \
+  template <>                                                                               \
+  struct hash<_T> {                                                                         \
+    size_t operator()(const _T& value) const { return Crypto::hash_value(value); }          \
+  };                                                                                        \
+  }  // namespace std
 
 MAKE_GENERIC_OPS(::Crypto::Hash)
 MAKE_GENERIC_OPS(::Crypto::PublicKey)
