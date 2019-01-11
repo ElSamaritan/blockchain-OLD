@@ -32,9 +32,11 @@ set(
   XI_VERSION_INPUT_FILES
     "${CMAKE_CURRENT_LIST_DIR}/Version.h.in"
     "${CMAKE_CURRENT_LIST_DIR}/Version.cpp.in"
+    "${PROJECT_SOURCE_DIR}/VERSION"
     "${PROJECT_SOURCE_DIR}/LICENSE"
     "${PROJECT_SOURCE_DIR}/THIRD_PARTY"
     "${PROJECT_SOURCE_DIR}/THIRD_PARTY_LICENSE"
+    ${versionScript}
 )
 
 set(
@@ -43,23 +45,24 @@ set(
     "${XI_VERSION_SOURCE_DIR}/Version.cpp"
 )
 
+add_custom_target(
+  Xi.Version.Generate
+  COMMAND ${CMAKE_COMMAND}
+      -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+      -DXI_VERSION_OUT_DIR=${XI_VERSION_OUT_DIR}
+      -DXI_VERSION_SOURCE_DIR=${CMAKE_CURRENT_LIST_DIR}
+      -P ${versionScript}
+  BYPRODUCTS ${XI_VERSION_OUTPUT_FILES}
+  COMMENT "Updating version information..."
+)
+
 file(
   MAKE_DIRECTORY
     ${XI_VERSION_INCLUDE_DIR}/Xi
     ${XI_VERSION_SOURCE_DIR}
 )
 
-add_custom_command(
-    OUTPUT ${XI_VERSION_OUTPUT_FILES}
-    COMMAND ${CMAKE_COMMAND}
-        -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
-        -DXI_VERSION_OUT_DIR=${XI_VERSION_OUT_DIR}
-        -DXI_VERSION_SOURCE_DIR=${CMAKE_CURRENT_LIST_DIR}
-        -P ${versionScript}
-    COMMENT "Updating version information..."
-    DEPENDS ${XI_VERSION_INPUT_FILES} ${versionScript}
-)
-
 set_source_files_properties(${XI_VERSION_INPUT_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
 add_library(Xi.Version STATIC ${XI_VERSION_OUTPUT_FILES} ${XI_VERSION_INPUT_FILES})
 target_include_directories(Xi.Version PUBLIC ${XI_VERSION_INCLUDE_DIR})
+add_dependencies(Xi.Version Xi.Version.Generate)
