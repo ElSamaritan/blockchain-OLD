@@ -46,6 +46,9 @@ Xi::Http::Response JsonRpcServer::doHandleRequest(const Xi::Http::Request& reque
     if (request.target() == "/json_rpc") {
       if (request.method() == Xi::Http::Method::Options) {
         Xi::Http::Response response;
+        if (config.serviceConfig.corsHeader != "") {
+          response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, config.serviceConfig.corsHeader);
+        }
         response.headers().setAllow({Xi::Http::Method::Post, Xi::Http::Method::Options});
         response.headers().setContentType(Xi::Http::ContentType::Json);
         return response;
