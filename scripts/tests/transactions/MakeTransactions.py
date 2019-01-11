@@ -5,7 +5,6 @@ import json
 import requests
 from random import randint
 from time import sleep
-from turtlecoin import Walletd as WalletAPI
 
 class Transfer:
     Address = ''
@@ -53,6 +52,9 @@ class PGService:
 
     def getAddress(self):
         return self.makeCall("getAddresses")
+
+    def reset(self):
+        return self.makeCall("reset")
 
     def sendTransaction(self, transaction: Transaction):
         transfers = []
@@ -114,15 +116,16 @@ class Wallet:
             jsonResult['result']['availableBalance'], 
             jsonResult['result']['lockedAmount'])
 
-    def initialize(self):
-        self.Address = self.Api.getAddress()['result']['addresses'][0]
-        self.updateBalance()
-        print(self)
-
     def sendTransaction(self, transaction: Transaction):
         print("\nSending transaction from %s...%s" % (self.Address, transaction))
         jsonResult = self.Api.sendTransaction(transaction)
         print("Transaction sent: %s" % jsonResult['result']['transactionHash'])
+
+    def initialize(self):
+        self.Address = self.Api.getAddress()['result']['addresses'][0]
+        self.Api.reset()
+        self.updateBalance()
+        print(self)
 
 
 with open("MakeTransactions.yml", 'r') as ymlfile:
@@ -159,17 +162,26 @@ def makeRandomTransaction():
 
     transaction.Fee = randint(MinFee, MaxFee)
     transaction.Anonymity = randint(MinMixin, MaxMixin)
+
+    totalAmount = transaction.Fee
     for reciever in recievers:
         transfer = Transfer()
         transfer.Address = reciever
         transfer.Amount = randint(MinAmount, MaxAmount)
         transaction.Transfers.append(transfer)
+        totalAmount += transfer.Amount
 
-    try:
-        senderWallet.sendTransaction(transaction)
-    except ValueError as error:
-        print("Error sending transaction: '%s'" % error)
+    if totalAmount > senderWallet.Balance.Available:
+        print("Not enough balance. Required: %.6f Available: %.6f" % (prettyAmount(totalAmount), prettyAmount(senderWallet.Balance.Available)))
+    else:    
+        try:
+            senderWallet.sendTransaction(transaction)
+        except ValueError as error:
+            print("Error sending transaction: '%s'" % error)
 
 while True:
     makeRandomTransaction()
     sleep(60.0 / float(TPM))
+    for wallet in wallets:
+        wallet.updateBalance()
+        print("\n %s" % wallet)
