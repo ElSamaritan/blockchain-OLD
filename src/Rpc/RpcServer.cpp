@@ -226,8 +226,8 @@ bool RpcServer::isCoreReady() {
 bool RpcServer::on_options_request(const RpcServer::HttpRequest& request, RpcServer::HttpResponse& response) {
   if (!getCorsDomain().empty()) {
     response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, getCorsDomain());
+    response.headers().setAccessControlRequestMethods({Xi::Http::Method::Post, Xi::Http::Method::Options});
   }
-  response.headers().setAccessControlRequestMethods({Xi::Http::Method::Post, Xi::Http::Method::Options});
   response.headers().setAllow({Xi::Http::Method::Post, Xi::Http::Method::Get, Xi::Http::Method::Options});
   response.headers().setContentType(Xi::Http::ContentType::Json);
   return request.method() == Xi::Http::Method::Options;
