@@ -1373,12 +1373,12 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
     if (input.type() == typeid(KeyInput)) {
       const KeyInput& in = boost::get<KeyInput>(input);
       if (!state.spentKeyImages.insert(in.keyImage).second) {
-        return error::TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT;
+        return error::TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT_IN_TRANSACTION;
       }
 
       if (!checkpoints.isInCheckpointZone(blockIndex + 1)) {
         if (cache->checkIfSpent(in.keyImage, blockIndex)) {
-          return error::TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT;
+          return error::TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT_IN_CACHE;
         }
 
         std::vector<PublicKey> outputKeys;

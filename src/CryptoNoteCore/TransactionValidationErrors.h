@@ -31,7 +31,8 @@ enum class TransactionValidationError {
   INPUT_INVALID_DOMAIN_KEYIMAGES,
   INPUT_IDENTICAL_KEYIMAGES,
   INPUT_IDENTICAL_OUTPUT_INDEXES,
-  INPUT_KEYIMAGE_ALREADY_SPENT,
+  INPUT_KEYIMAGE_ALREADY_SPENT_IN_TRANSACTION,
+  INPUT_KEYIMAGE_ALREADY_SPENT_IN_CACHE,
   INPUT_INVALID_GLOBAL_INDEX,
   INPUT_SPEND_LOCKED_OUT,
   INPUT_INVALID_SIGNATURES,
@@ -78,8 +79,10 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Transaction has identical key images";
       case TransactionValidationError::INPUT_IDENTICAL_OUTPUT_INDEXES:
         return "Transaction has identical output indexes";
-      case TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT:
-        return "Transaction is already present in the queue";
+      case TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT_IN_TRANSACTION:
+        return "Transaction key image is already spent in the transaction";
+      case TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT_IN_CACHE:
+        return "Transaction key image is already spent in the cache";
       case TransactionValidationError::INPUT_INVALID_GLOBAL_INDEX:
         return "Transaction has input with invalid global index";
       case TransactionValidationError::INPUT_SPEND_LOCKED_OUT:
