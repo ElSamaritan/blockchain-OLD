@@ -38,6 +38,7 @@ enum class BlockValidationError {
   PROOF_OF_WORK_TOO_WEAK,
   TRANSACTION_ABSENT_IN_POOL,
   TRANSACTION_DUPLICATES,
+  TRANSACTION_INCONSISTENCY
 };
 
 // custom category:
@@ -81,6 +82,8 @@ class BlockValidationErrorCategory : public std::error_category {
         return "Block's transaction is absent in transaction pool";
       case BlockValidationError::TRANSACTION_DUPLICATES:
         return "Block contains duplicated transactions";
+      case BlockValidationError::TRANSACTION_INCONSISTENCY:
+        return "Block template and raw block have inconsistent transactions";
       default:
         return "Unknown error";
     }

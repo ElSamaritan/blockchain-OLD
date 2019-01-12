@@ -631,7 +631,6 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   auto coinbaseTransactionSize = getObjectBinarySize(blockTemplate.baseTransaction);
   assert(coinbaseTransactionSize < std::numeric_limits<decltype(coinbaseTransactionSize)>::max());
   auto cumulativeBlockSize = coinbaseTransactionSize + cumulativeSize;
-  TransactionValidatorState validatorState;
 
   auto previousBlockIndex = cache->getBlockIndex(previousBlockHash);
 
@@ -655,8 +654,23 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     return error::BlockValidationError::DIFFICULTY_OVERHEAD;
   }
 
-  if (!Xi::Algorithm::is_unique(blockTemplate.transactionHashes.begin(), blockTemplate.transactionHashes.end()))
-    return error::BlockValidationError::TRANSACTION_DUPLICATES;
+  {
+    std::vector<Crypto::Hash> transactionHashes{transactions.size()};
+    std::transform(transactions.begin(), transactions.end(), transactionHashes.begin(),
+                   [](const auto& transaction) { return transaction.getTransactionHash(); });
+    if (!Xi::Algorithm::is_unique(blockTemplate.transactionHashes.begin(), blockTemplate.transactionHashes.end()))
+      return error::BlockValidationError::TRANSACTION_DUPLICATES;
+    if (!Xi::Algorithm::is_unique(transactionHashes.begin(), transactionHashes.end()))
+      return error::BlockValidationError::TRANSACTION_DUPLICATES;
+    if (blockTemplate.transactionHashes.size() != transactions.size())
+      return error::BlockValidationError::TRANSACTION_INCONSISTENCY;
+    for (const auto& transaction : transactions) {
+      auto search = std::find(blockTemplate.transactionHashes.begin(), blockTemplate.transactionHashes.end(),
+                              transaction.getTransactionHash());
+      if (search == blockTemplate.transactionHashes.end())
+        return error::BlockValidationError::TRANSACTION_INCONSISTENCY;
+    }
+  }
 
   // This allows us to accept blocks with transaction mixins for the mined money unlock window
   // that may be using older mixin rules on the network. This helps to clear out the transaction
@@ -679,6 +693,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     }
   }
 
+  TransactionValidatorState validatorState;
   uint64_t cumulativeFee = 0;
   for (const auto& transaction : transactions) {
     uint64_t fee = 0;
