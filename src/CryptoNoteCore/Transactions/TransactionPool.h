@@ -33,7 +33,9 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
+#include <Xi/Global.h>
 #include <crypto/crypto.h>
+#include <Common/ObserverManager.h>
 #include <Logging/LoggerMessage.h>
 #include <Logging/LoggerRef.h>
 
@@ -43,10 +45,18 @@
 #include "CryptoNoteCore/Transactions/TransactionValidatiorState.h"
 
 namespace CryptoNote {
+class ITransactionPoolObserver;
 
 class TransactionPool : public ITransactionPool {
+  XI_DELETE_COPY(TransactionPool);
+  XI_DELETE_MOVE(TransactionPool);
+
  public:
   TransactionPool(Logging::ILogger& logger);
+  ~TransactionPool() override;
+
+  void addObserver(ITransactionPoolObserver* observer) override;
+  void removeObserver(ITransactionPoolObserver* observer) override;
 
   bool pushTransaction(CachedTransaction&& transaction, TransactionValidatorState&& transactionState) override;
   const CachedTransaction& getTransaction(const Crypto::Hash& hash) const override;
@@ -100,6 +110,8 @@ class TransactionPool : public ITransactionPool {
   TransactionsContainer::index<PaymentIdTag>::type& paymentIdIndex;
 
   Logging::LoggerRef logger;
+
+  Tools::ObserverManager<ITransactionPoolObserver> m_observers;
 
   using mutex_t = boost::shared_mutex;
   using read_lock_t = boost::shared_lock<mutex_t>;

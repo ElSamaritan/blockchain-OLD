@@ -210,7 +210,7 @@ Core::Core(const Currency& currency, Logging::ILogger& logger, Checkpoints&& che
       initialized(false) {
   for (auto version : Xi::Config::BlockVersion::versions())
     upgradeManager->addMajorBlockVersion(version, currency.upgradeHeight(version));
-  transactionPool = std::unique_ptr<ITransactionPoolCleanWrapper>(new TransactionPoolCleanWrapper(
+  m_transactionPool = std::unique_ptr<ITransactionPoolCleanWrapper>(new TransactionPoolCleanWrapper(
       std::unique_ptr<ITransactionPool>(new TransactionPool(logger)),
       std::unique_ptr<ITimeProvider>(new RealTimeProvider()), logger, currency.mempoolTxLiveTime()));
 }
@@ -845,7 +845,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
 }
 
 void Core::actualizePoolTransactions() {
-  auto& pool = *transactionPool;
+  auto& pool = *m_transactionPool;
   auto hashes = pool.getTransactionHashes();
 
   for (auto& hash : hashes) {
@@ -859,7 +859,7 @@ void Core::actualizePoolTransactions() {
 }
 
 void Core::actualizePoolTransactionsLite(const TransactionValidatorState& validatorState) {
-  auto& pool = *transactionPool;
+  auto& pool = *m_transactionPool;
   auto hashes = pool.getTransactionHashes();
 
   for (auto& hash : hashes) {
@@ -939,13 +939,13 @@ std::error_code Core::submitBlock(BinaryArray&& rawBlockTemplate) {
 
   rawBlock.transactions.reserve(blockTemplate.transactionHashes.size());
   for (const auto& transactionHash : blockTemplate.transactionHashes) {
-    if (!transactionPool->checkIfTransactionPresent(transactionHash)) {
+    if (!m_transactionPool->checkIfTransactionPresent(transactionHash)) {
       logger(Logging::WARNING) << "The transaction " << Common::podToHex(transactionHash)
                                << " is absent in transaction pool";
       return error::BlockValidationError::TRANSACTION_ABSENT_IN_POOL;
     }
 
-    rawBlock.transactions.emplace_back(transactionPool->getTransaction(transactionHash).getTransactionBinaryArray());
+    rawBlock.transactions.emplace_back(m_transactionPool->getTransaction(transactionHash).getTransactionBinaryArray());
   }
 
   CachedBlock cachedBlock(blockTemplate);
@@ -1043,7 +1043,7 @@ bool Core::addTransactionToPool(CachedTransaction&& cachedTransaction) {
 
   auto transactionHash = cachedTransaction.getTransactionHash();
 
-  if (!transactionPool->pushTransaction(std::move(cachedTransaction), std::move(validatorState))) {
+  if (!m_transactionPool->pushTransaction(std::move(cachedTransaction), std::move(validatorState))) {
     logger(Logging::DEBUGGING) << "Failed to push transaction " << transactionHash << " to pool, already exists";
     return false;
   }
@@ -1097,7 +1097,7 @@ bool Core::isTransactionValidForPool(const CachedTransaction& cachedTransaction,
 std::vector<Crypto::Hash> Core::getPoolTransactionHashes() const {
   throwIfNotInitialized();
 
-  return transactionPool->getTransactionHashes();
+  return m_transactionPool->getTransactionHashes();
 }
 
 bool Core::getPoolChanges(const Crypto::Hash& lastBlockHash, const std::vector<Crypto::Hash>& knownHashes,
@@ -1110,7 +1110,7 @@ bool Core::getPoolChanges(const Crypto::Hash& lastBlockHash, const std::vector<C
 
   addedTransactions.reserve(newTransactions.size());
   for (const auto& hash : newTransactions) {
-    addedTransactions.emplace_back(transactionPool->getTransaction(hash).getTransactionBinaryArray());
+    addedTransactions.emplace_back(m_transactionPool->getTransaction(hash).getTransactionBinaryArray());
   }
 
   return getTopBlockHash() == lastBlockHash;
@@ -1129,7 +1129,7 @@ bool Core::getPoolChangesLite(const Crypto::Hash& lastBlockHash, const std::vect
     TransactionPrefixInfo transactionPrefixInfo;
     transactionPrefixInfo.txHash = hash;
     transactionPrefixInfo.txPrefix =
-        static_cast<const TransactionPrefix&>(transactionPool->getTransaction(hash).getTransaction());
+        static_cast<const TransactionPrefix&>(m_transactionPool->getTransaction(hash).getTransaction());
     addedTransactions.emplace_back(std::move(transactionPrefixInfo));
   }
 
@@ -1300,7 +1300,7 @@ CoreStatistics Core::getCoreStatistics() const {
 
 size_t Core::getPoolTransactionCount() const {
   throwIfNotInitialized();
-  return transactionPool->getTransactionCount();
+  return m_transactionPool->getTransactionCount();
 }
 
 size_t Core::getBlockchainTransactionCount() const {
@@ -1344,7 +1344,7 @@ std::vector<Transaction> Core::getPoolTransactions() const {
   throwIfNotInitialized();
 
   std::vector<Transaction> transactions;
-  auto hashes = transactionPool->getPoolTransactions();
+  auto hashes = m_transactionPool->getPoolTransactions();
   std::transform(std::begin(hashes), std::end(hashes), std::back_inserter(transactions),
                  [&](const CachedTransaction& tx) { return tx.getTransaction(); });
   return transactions;
@@ -1980,7 +1980,7 @@ void Core::fillQueryBlockDetails(uint32_t fullOffset, uint32_t currentIndex, siz
 void Core::getTransactionPoolDifference(const std::vector<Crypto::Hash>& knownHashes,
                                         std::vector<Crypto::Hash>& newTransactions,
                                         std::vector<Crypto::Hash>& deletedTransactions) const {
-  auto t = transactionPool->getTransactionHashes();
+  auto t = m_transactionPool->getTransactionHashes();
 
   std::unordered_set<Crypto::Hash> poolTransactions(t.begin(), t.end());
   std::unordered_set<Crypto::Hash> knownTransactions(knownHashes.begin(), knownHashes.end());
@@ -2029,7 +2029,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, size_t medianSize, size_t max
 
   TransactionSpentInputsChecker spentInputsChecker;
 
-  std::vector<CachedTransaction> poolTransactions = transactionPool->getPoolTransactions();
+  std::vector<CachedTransaction> poolTransactions = m_transactionPool->getPoolTransactions();
   for (auto it = poolTransactions.rbegin(); it != poolTransactions.rend() && it->getTransactionFee() == 0; ++it) {
     const CachedTransaction& transaction = *it;
 
@@ -2270,7 +2270,7 @@ TransactionDetails Core::getTransactionDetails(const Crypto::Hash& transactionHa
   throwIfNotInitialized();
 
   IBlockchainCache* segment = findSegmentContainingTransaction(transactionHash);
-  bool foundInPool = transactionPool->checkIfTransactionPresent(transactionHash);
+  bool foundInPool = m_transactionPool->checkIfTransactionPresent(transactionHash);
   if (segment == nullptr && !foundInPool) {
     throw std::runtime_error("Requested transaction wasn't found.");
   }
@@ -2317,12 +2317,12 @@ TransactionDetails Core::getTransactionDetails(const Crypto::Hash& transactionHa
     transaction = createTransaction(rawTransaction);
   } else {
     transactionDetails.inBlockchain = false;
-    transactionDetails.timestamp = transactionPool->getTransactionReceiveTime(transactionHash);
+    transactionDetails.timestamp = m_transactionPool->getTransactionReceiveTime(transactionHash);
 
-    transactionDetails.size = transactionPool->getTransaction(transactionHash).getTransactionBinaryArray().size();
-    transactionDetails.fee = transactionPool->getTransaction(transactionHash).getTransactionFee();
+    transactionDetails.size = m_transactionPool->getTransaction(transactionHash).getTransactionBinaryArray().size();
+    transactionDetails.fee = m_transactionPool->getTransaction(transactionHash).getTransactionFee();
 
-    rawTransaction = transactionPool->getTransaction(transactionHash).getTransaction();
+    rawTransaction = m_transactionPool->getTransaction(transactionHash).getTransaction();
     transaction = createTransaction(rawTransaction);
   }
 
@@ -2455,7 +2455,7 @@ std::vector<Crypto::Hash> Core::getTransactionHashesByPaymentId(const Hash& paym
   auto mainChain = chainsLeaves[0];
 
   std::vector<Crypto::Hash> hashes = mainChain->getTransactionHashesByPaymentId(paymentId);
-  std::vector<Crypto::Hash> poolHashes = transactionPool->getTransactionHashesByPaymentId(paymentId);
+  std::vector<Crypto::Hash> poolHashes = m_transactionPool->getTransactionHashesByPaymentId(paymentId);
 
   hashes.reserve(hashes.size() + poolHashes.size());
   std::move(poolHashes.begin(), poolHashes.end(), std::back_inserter(hashes));
@@ -2504,7 +2504,7 @@ IBlockchainCache* Core::findSegmentContainingTransaction(const Crypto::Hash& tra
 bool Core::hasTransaction(const Crypto::Hash& transactionHash) const {
   throwIfNotInitialized();
   return findSegmentContainingTransaction(transactionHash) != nullptr ||
-         transactionPool->checkIfTransactionPresent(transactionHash);
+         m_transactionPool->checkIfTransactionPresent(transactionHash);
 }
 
 void Core::transactionPoolCleaningProcedure() {
@@ -2514,7 +2514,7 @@ void Core::transactionPoolCleaningProcedure() {
     for (;;) {
       timer.sleep(OUTDATED_TRANSACTION_POLLING_INTERVAL);
 
-      auto deletedTransactions = transactionPool->clean(getTopBlockIndex());
+      auto deletedTransactions = m_transactionPool->clean(getTopBlockIndex());
       notifyObservers(
           makeDelTransactionMessage(std::move(deletedTransactions), Messages::DeleteTransaction::Reason::Outdated));
     }
@@ -2544,5 +2544,8 @@ uint64_t Core::get_current_blockchain_height() const {
 }
 
 std::time_t Core::getStartTime() const { return start_time; }
+
+const ITransactionPool& Core::transactionPool() const { return *m_transactionPool; }
+ITransactionPool& Core::transactionPool() { return *m_transactionPool; }
 
 }  // namespace CryptoNote

@@ -18,39 +18,40 @@
 #include "Logging/ILogger.h"
 #include "Logging/LoggerRef.h"
 
+#include <Xi/Global.h>
 #include <System/ContextGroup.h>
 
 namespace CryptoNote {
 
 class TransactionPoolCleanWrapper : public ITransactionPoolCleanWrapper {
+  XI_DELETE_COPY(TransactionPoolCleanWrapper);
+  XI_DEFAULT_MOVE(TransactionPoolCleanWrapper);
+
  public:
   TransactionPoolCleanWrapper(std::unique_ptr<ITransactionPool>&& transactionPool,
                               std::unique_ptr<ITimeProvider>&& timeProvider, Logging::ILogger& logger,
                               uint64_t timeout);
 
-  TransactionPoolCleanWrapper(const TransactionPoolCleanWrapper&) = delete;
-  TransactionPoolCleanWrapper(TransactionPoolCleanWrapper&& other) = delete;
+  ~TransactionPoolCleanWrapper() override;
 
-  TransactionPoolCleanWrapper& operator=(const TransactionPoolCleanWrapper&) = delete;
-  TransactionPoolCleanWrapper& operator=(TransactionPoolCleanWrapper&&) = delete;
+  void addObserver(ITransactionPoolObserver* observer) override;
+  void removeObserver(ITransactionPoolObserver* observer) override;
 
-  virtual ~TransactionPoolCleanWrapper();
+  bool pushTransaction(CachedTransaction&& tx, TransactionValidatorState&& transactionState) override;
+  const CachedTransaction& getTransaction(const Crypto::Hash& hash) const override;
+  bool removeTransaction(const Crypto::Hash& hash) override;
 
-  virtual bool pushTransaction(CachedTransaction&& tx, TransactionValidatorState&& transactionState) override;
-  virtual const CachedTransaction& getTransaction(const Crypto::Hash& hash) const override;
-  virtual bool removeTransaction(const Crypto::Hash& hash) override;
+  size_t getTransactionCount() const override;
+  std::vector<Crypto::Hash> getTransactionHashes() const override;
+  bool checkIfTransactionPresent(const Crypto::Hash& hash) const override;
 
-  virtual size_t getTransactionCount() const override;
-  virtual std::vector<Crypto::Hash> getTransactionHashes() const override;
-  virtual bool checkIfTransactionPresent(const Crypto::Hash& hash) const override;
+  const TransactionValidatorState& getPoolTransactionValidationState() const override;
+  std::vector<CachedTransaction> getPoolTransactions() const override;
 
-  virtual const TransactionValidatorState& getPoolTransactionValidationState() const override;
-  virtual std::vector<CachedTransaction> getPoolTransactions() const override;
+  uint64_t getTransactionReceiveTime(const Crypto::Hash& hash) const override;
+  std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
 
-  virtual uint64_t getTransactionReceiveTime(const Crypto::Hash& hash) const override;
-  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
-
-  virtual std::vector<Crypto::Hash> clean(const uint32_t height) override;
+  std::vector<Crypto::Hash> clean(const uint32_t height) override;
 
  private:
   std::unique_ptr<ITransactionPool> transactionPool;

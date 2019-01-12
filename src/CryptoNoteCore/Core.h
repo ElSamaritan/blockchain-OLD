@@ -107,6 +107,9 @@ class Core : public ICore, public ICoreInformation {
   virtual std::time_t getStartTime() const;
 
   // ICoreInformation
+  const ITransactionPool& transactionPool() const override;
+  ITransactionPool& transactionPool() override;
+
   virtual size_t getPoolTransactionCount() const override;
   virtual size_t getBlockchainTransactionCount() const override;
   virtual size_t getAlternativeBlockCount() const override;
@@ -138,7 +141,7 @@ class Core : public ICore, public ICoreInformation {
   std::unique_ptr<IUpgradeManager> upgradeManager;
   std::vector<std::unique_ptr<IBlockchainCache>> chainsStorage;
   std::vector<IBlockchainCache*> chainsLeaves;
-  std::unique_ptr<ITransactionPoolCleanWrapper> transactionPool;
+  std::unique_ptr<ITransactionPoolCleanWrapper> m_transactionPool;
   std::unordered_set<IBlockchainCache*> mainChainSet;
 
   std::string dataFolder;

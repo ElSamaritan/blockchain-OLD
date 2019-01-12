@@ -26,6 +26,14 @@ TransactionPoolCleanWrapper::TransactionPoolCleanWrapper(std::unique_ptr<ITransa
 
 TransactionPoolCleanWrapper::~TransactionPoolCleanWrapper() {}
 
+void TransactionPoolCleanWrapper::addObserver(ITransactionPoolObserver* observer) {
+  transactionPool->addObserver(observer);
+}
+
+void TransactionPoolCleanWrapper::removeObserver(ITransactionPoolObserver* observer) {
+  transactionPool->removeObserver(observer);
+}
+
 bool TransactionPoolCleanWrapper::pushTransaction(CachedTransaction&& tx,
                                                   TransactionValidatorState&& transactionState) {
   return !isTransactionRecentlyDeleted(tx.getTransactionHash()) &&

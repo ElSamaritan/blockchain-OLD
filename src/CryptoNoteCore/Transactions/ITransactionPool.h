@@ -28,6 +28,7 @@
 namespace CryptoNote {
 
 struct TransactionValidatorState;
+class ITransactionPoolObserver;
 
 class ITransactionPool {
  public:
@@ -35,6 +36,9 @@ class ITransactionPool {
 
  public:
   virtual ~ITransactionPool() = default;
+
+  virtual void addObserver(ITransactionPoolObserver* observer) = 0;
+  virtual void removeObserver(ITransactionPoolObserver* observer) = 0;
 
   virtual bool pushTransaction(CachedTransaction&& tx, TransactionValidatorState&& transactionState) = 0;
   virtual const CachedTransaction& getTransaction(const Crypto::Hash& hash) const = 0;

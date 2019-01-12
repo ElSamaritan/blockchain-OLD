@@ -17,11 +17,15 @@
 
 #pragma once
 
-namespace CryptoNote {
-class ITransationPoolObserver {
- public:
-  virtual ~ITransationPoolObserver() = default;
+#include <crypto/CryptoTypes.h>
 
-  virtual void txDeletedFromPool() = 0;
+namespace CryptoNote {
+class ITransactionPoolObserver {
+ public:
+ public:
+  virtual ~ITransactionPoolObserver() = default;
+
+  virtual void transactionDeletedFromPool(const Crypto::Hash& hash) = 0;
+  virtual void transactionAddedToPool(const Crypto::Hash& hash) = 0;
 };
 }  // namespace CryptoNote

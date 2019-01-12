@@ -20,6 +20,7 @@
 #include <Common/int-util.h>
 
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
+#include "CryptoNoteCore/Transactions/ITransactionPoolObserver.h"
 #include "CryptoNoteCore/Transactions/TransactionExtra.h"
 
 namespace CryptoNote {
@@ -37,6 +38,11 @@ TransactionPool::TransactionPool(Logging::ILogger& logger)
       transactionCostIndex(transactions.get<TransactionCostTag>()),
       paymentIdIndex(transactions.get<PaymentIdTag>()),
       logger(logger, "TransactionPool") {}
+
+TransactionPool::~TransactionPool() { m_observers.clear(); }
+
+void TransactionPool::addObserver(ITransactionPoolObserver* observer) { m_observers.add(observer); }
+void TransactionPool::removeObserver(ITransactionPoolObserver* observer) { m_observers.remove(observer); }
 
 bool TransactionPool::pushTransaction(CachedTransaction&& transaction, TransactionValidatorState&& transactionState) {
   auto pendingTx = PendingTransactionInfo{static_cast<uint64_t>(time(nullptr)), std::move(transaction)};
@@ -59,7 +65,17 @@ bool TransactionPool::pushTransaction(CachedTransaction&& transaction, Transacti
   mergeStates(poolState, transactionState);
 
   logger(Logging::DEBUGGING) << "pushed transaction " << pendingTx.getTransactionHash() << " to pool";
-  return transactionHashIndex.emplace(std::move(pendingTx)).second;
+  bool inserted = transactionHashIndex.emplace(std::move(pendingTx)).second;
+  if (inserted) {
+    try {
+      m_observers.notify(&ITransactionPoolObserver::transactionAddedToPool, transaction.getTransactionHash());
+    } catch (std::exception& e) {
+      logger(Logging::ERROR) << "TransactionPoolObserver threw: '" << e.what() << "'";
+    } catch (...) {
+      logger(Logging::ERROR) << "TransactionPoolObserver threw unknown exception.";
+    }
+  }
+  return inserted;
 }
 
 const CachedTransaction& TransactionPool::getTransaction(const Crypto::Hash& hash) const {
@@ -78,6 +94,14 @@ bool TransactionPool::removeTransaction(const Crypto::Hash& hash) {
 
   excludeFromState(poolState, it->cachedTransaction);
   transactionHashIndex.erase(it);
+
+  try {
+    m_observers.notify(&ITransactionPoolObserver::transactionDeletedFromPool, hash);
+  } catch (std::exception& e) {
+    logger(Logging::ERROR) << "TransactionPoolObserver threw: '" << e.what() << "'";
+  } catch (...) {
+    logger(Logging::ERROR) << "TransactionPoolObserver threw unknown exception.";
+  }
 
   logger(Logging::DEBUGGING) << "transaction " << hash << " removed from pool";
   return true;

@@ -77,6 +77,9 @@ class ICore {
 
   virtual bool addTransactionToPool(const BinaryArray& transactionBinaryArray) = 0;
 
+  virtual const class ITransactionPool& transactionPool() const = 0;
+  virtual class ITransactionPool& transactionPool() = 0;
+
   virtual std::vector<Crypto::Hash> getPoolTransactionHashes() const = 0;
   virtual bool getPoolChanges(const Crypto::Hash& lastBlockHash, const std::vector<Crypto::Hash>& knownHashes,
                               std::vector<BinaryArray>& addedTransactions,
