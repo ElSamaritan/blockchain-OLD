@@ -15,12 +15,18 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "TransactionValidationErrors.h"
+#pragma once
+
+#include <memory>
+
+#include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 
 namespace CryptoNote {
-namespace error {
+std::unique_ptr<ITransactionBuilder> createTransaction();
+std::unique_ptr<ITransactionBuilder> createTransaction(const BinaryArray& transactionBlob);
+std::unique_ptr<ITransactionBuilder> createTransaction(const Transaction& tx);
 
-TransactionValidationErrorCategory TransactionValidationErrorCategory::INSTANCE;
-
-}
+std::unique_ptr<ITransactionReader> createTransactionPrefix(const TransactionPrefix& prefix,
+                                                            const Crypto::Hash& transactionHash);
+std::unique_ptr<ITransactionReader> createTransactionPrefix(const Transaction& fullTransaction);
 }  // namespace CryptoNote

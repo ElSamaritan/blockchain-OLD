@@ -19,8 +19,8 @@
 
 #include <vector>
 
-#include "CryptoNoteFormatUtils.h"
-#include "TransactionExtra.h"
+#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
+#include "CryptoNoteCore/Transactions/TransactionExtra.h"
 
 namespace CryptoNote {
 

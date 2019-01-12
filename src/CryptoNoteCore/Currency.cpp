@@ -24,7 +24,7 @@
 #include "CryptoNoteFormatUtils.h"
 #include "CryptoNoteTools.h"
 #include "Difficulty.h"
-#include "TransactionExtra.h"
+#include "Transactions/TransactionExtra.h"
 #include "UpgradeDetector.h"
 
 #undef ERROR

@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "ITransactionPoolCleaner.h"
+#include "CryptoNoteCore/Transactions/ITransactionPoolCleaner.h"
 
 #include <chrono>
 #include <unordered_map>
@@ -14,7 +14,7 @@
 #include "crypto/crypto.h"
 
 #include "CryptoNoteCore/ITimeProvider.h"
-#include "ITransactionPool.h"
+#include "CryptoNoteCore/Transactions/ITransactionPool.h"
 #include "Logging/ILogger.h"
 #include "Logging/LoggerRef.h"
 

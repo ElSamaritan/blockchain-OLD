@@ -25,16 +25,15 @@
 #include "CryptoNoteCore/ITimeProvider.h"
 #include "CryptoNoteCore/CoreErrors.h"
 #include "CryptoNoteCore/MemoryBlockchainStorage.h"
-#include "CryptoNoteCore/TransactionExtra.h"
-#include "CryptoNoteCore/TransactionPool.h"
-#include "CryptoNoteCore/TransactionPoolCleaner.h"
+#include "CryptoNoteCore/Transactions/TransactionExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionPool.h"
+#include "CryptoNoteCore/Transactions/TransactionPoolCleaner.h"
+#include "CryptoNoteCore/Transactions/TransactionApi.h"
+#include "CryptoNoteCore/Transactions/Mixins.h"
 #include "CryptoNoteCore/UpgradeManager.h"
-#include "CryptoNoteCore/Mixins.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandlerCommon.h"
 
 #include <System/Timer.h>
-
-#include "TransactionApi.h"
 
 using namespace Crypto;
 
@@ -2286,7 +2285,7 @@ TransactionDetails Core::getTransactionDetails(const Crypto::Hash& transactionHa
     segment = chainsLeaves[0];
   }
 
-  std::unique_ptr<ITransaction> transaction;
+  std::unique_ptr<ITransactionBuilder> transaction;
   Transaction rawTransaction;
   TransactionDetails transactionDetails;
   if (!foundInPool) {

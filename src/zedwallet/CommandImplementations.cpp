@@ -14,7 +14,7 @@
 #include <Common/StringTools.h>
 
 #include <CryptoNoteCore/Account.h>
-#include <CryptoNoteCore/TransactionExtra.h>
+#include <CryptoNoteCore/Transactions/TransactionExtra.h>
 
 #ifndef MSVC
 #include <fstream>

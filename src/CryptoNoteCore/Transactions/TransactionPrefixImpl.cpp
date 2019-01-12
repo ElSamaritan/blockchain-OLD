@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "CryptoNoteCore/ITransaction.h"
+#include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 
 #include <numeric>
 #include <system_error>
@@ -23,8 +23,8 @@
 #include <Xi/Global.h>
 
 #include "CryptoNoteCore/CryptoNoteBasic.h"
-#include "CryptoNoteCore/TransactionApiExtra.h"
-#include "TransactionUtils.h"
+#include "CryptoNoteCore/Transactions/TransactionApiExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 
 using namespace Crypto;

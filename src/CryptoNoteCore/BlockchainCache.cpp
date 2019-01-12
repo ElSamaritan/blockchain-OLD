@@ -21,10 +21,10 @@
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/BlockchainStorage.h"
-#include "CryptoNoteCore/TransactionExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionValidatiorState.h"
 
 #include "Serialization/SerializationOverloads.h"
-#include "TransactionValidatiorState.h"
 
 namespace CryptoNote {
 

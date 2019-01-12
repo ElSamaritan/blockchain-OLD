@@ -26,7 +26,7 @@
 #include "Common/StringTools.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
-#include "CryptoNoteCore/TransactionApi.h"
+#include "CryptoNoteCore/Transactions/TransactionApi.h"
 
 using namespace Common;
 using namespace Crypto;

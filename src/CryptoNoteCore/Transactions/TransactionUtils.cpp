@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -15,14 +15,15 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "TransactionUtils.h"
+#include "CryptoNoteCore/Transactions/TransactionUtils.h"
 
 #include <unordered_set>
 
-#include "crypto/crypto.h"
+#include <crypto/crypto.h>
+
 #include "CryptoNoteCore/Account.h"
-#include "CryptoNoteFormatUtils.h"
-#include "TransactionExtra.h"
+#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
+#include "CryptoNoteCore/Transactions/TransactionExtra.h"
 
 using namespace Crypto;
 

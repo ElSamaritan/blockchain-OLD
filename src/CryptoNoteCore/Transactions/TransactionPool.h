@@ -21,8 +21,7 @@
 #include <cinttypes>
 #include <unordered_map>
 
-#include "crypto/crypto.h"
-
+#include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/composite_key.hpp>
 #include <boost/multi_index/hashed_index.hpp>
@@ -30,10 +29,18 @@
 #include <boost/multi_index/mem_fun.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 
-#include "ITransactionPool.h"
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
+
+#include <crypto/crypto.h>
 #include <Logging/LoggerMessage.h>
 #include <Logging/LoggerRef.h>
-#include "TransactionValidatiorState.h"
+
+#include "CryptoNoteCore/Transactions/ITransactionPool.h"
+#include "CryptoNoteCore/Transactions/TransactionPriortiyComparator.h"
+#include "CryptoNoteCore/Transactions/PendingTransactionInfo.h"
+#include "CryptoNoteCore/Transactions/TransactionValidatiorState.h"
 
 namespace CryptoNote {
 
@@ -41,35 +48,22 @@ class TransactionPool : public ITransactionPool {
  public:
   TransactionPool(Logging::ILogger& logger);
 
-  virtual bool pushTransaction(CachedTransaction&& transaction, TransactionValidatorState&& transactionState) override;
-  virtual const CachedTransaction& getTransaction(const Crypto::Hash& hash) const override;
-  virtual bool removeTransaction(const Crypto::Hash& hash) override;
+  bool pushTransaction(CachedTransaction&& transaction, TransactionValidatorState&& transactionState) override;
+  const CachedTransaction& getTransaction(const Crypto::Hash& hash) const override;
+  bool removeTransaction(const Crypto::Hash& hash) override;
 
-  virtual size_t getTransactionCount() const override;
-  virtual std::vector<Crypto::Hash> getTransactionHashes() const override;
-  virtual bool checkIfTransactionPresent(const Crypto::Hash& hash) const override;
+  size_t getTransactionCount() const override;
+  std::vector<Crypto::Hash> getTransactionHashes() const override;
+  bool checkIfTransactionPresent(const Crypto::Hash& hash) const override;
 
-  virtual const TransactionValidatorState& getPoolTransactionValidationState() const override;
-  virtual std::vector<CachedTransaction> getPoolTransactions() const override;
+  const TransactionValidatorState& getPoolTransactionValidationState() const override;
+  std::vector<CachedTransaction> getPoolTransactions() const override;
 
-  virtual uint64_t getTransactionReceiveTime(const Crypto::Hash& hash) const override;
-  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
+  uint64_t getTransactionReceiveTime(const Crypto::Hash& hash) const override;
+  std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
 
  private:
   TransactionValidatorState poolState;
-
-  struct PendingTransactionInfo {
-    uint64_t receiveTime;
-    CachedTransaction cachedTransaction;
-    boost::optional<Crypto::Hash> paymentId;
-
-    const Crypto::Hash& getTransactionHash() const;
-  };
-
-  struct TransactionPriorityComparator {
-    // lhs > hrs
-    bool operator()(const PendingTransactionInfo& lhs, const PendingTransactionInfo& rhs) const;
-  };
 
   struct TransactionHashTag {};
   struct TransactionCostTag {};
@@ -106,6 +100,18 @@ class TransactionPool : public ITransactionPool {
   TransactionsContainer::index<PaymentIdTag>::type& paymentIdIndex;
 
   Logging::LoggerRef logger;
+
+  using mutex_t = boost::shared_mutex;
+  using read_lock_t = boost::shared_lock<mutex_t>;
+  using write_lock_t = boost::unique_lock<mutex_t>;
+
+  /*!
+   * \brief m_mutationMutex should always be locked using the according lock_guard
+   *
+   * The mutex protects from concurrent mutation of the state. The locks implement a multiple read single write
+   * protection. Thus if you want to read data use read_lock_t and if you are mutating the data use wirte_lock_t.
+   */
+  mutex_t m_mutationMutex;
 };
 
 }  // namespace CryptoNote

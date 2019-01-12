@@ -22,7 +22,7 @@
 
 #include "AddBlockErrors.h"
 #include "BlockValidationErrors.h"
-#include "TransactionValidationErrors.h"
+#include "CryptoNoteCore/Transactions/TransactionValidationErrors.h"
 
 namespace CryptoNote {
 namespace error {

@@ -21,7 +21,7 @@
 #include <limits>
 #include <vector>
 #include "crypto/hash.h"
-#include "CryptoNoteCore/ITransaction.h"
+#include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 #include "Common/IObservable.h"
 #include "Common/IStreamSerializable.h"
 

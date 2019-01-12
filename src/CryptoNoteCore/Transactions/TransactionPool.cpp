@@ -15,42 +15,14 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "TransactionPool.h"
+#include "CryptoNoteCore/Transactions/TransactionPool.h"
 
-#include "Common/int-util.h"
-#include "CryptoNoteBasicImpl.h"
-#include "CryptoNoteCore/TransactionExtra.h"
+#include <Common/int-util.h>
+
+#include "CryptoNoteCore/CryptoNoteBasicImpl.h"
+#include "CryptoNoteCore/Transactions/TransactionExtra.h"
 
 namespace CryptoNote {
-
-// lhs > hrs
-bool TransactionPool::TransactionPriorityComparator::operator()(const PendingTransactionInfo& lhs,
-                                                                const PendingTransactionInfo& rhs) const {
-  const CachedTransaction& left = lhs.cachedTransaction;
-  const CachedTransaction& right = rhs.cachedTransaction;
-
-  // price(lhs) = lhs.fee / lhs.blobSize
-  // price(lhs) > price(rhs) -->
-  // lhs.fee / lhs.blobSize > rhs.fee / rhs.blobSize -->
-  // lhs.fee * rhs.blobSize > rhs.fee * lhs.blobSize
-  uint64_t lhs_hi, lhs_lo = mul128(left.getTransactionFee(), right.getTransactionBinaryArray().size(), &lhs_hi);
-  uint64_t rhs_hi, rhs_lo = mul128(right.getTransactionFee(), left.getTransactionBinaryArray().size(), &rhs_hi);
-
-  return
-      // prefer more profitable transactions
-      (lhs_hi > rhs_hi) || (lhs_hi == rhs_hi && lhs_lo > rhs_lo) ||
-      // prefer smaller
-      (lhs_hi == rhs_hi && lhs_lo == rhs_lo &&
-       left.getTransactionBinaryArray().size() < right.getTransactionBinaryArray().size()) ||
-      // prefer older
-      (lhs_hi == rhs_hi && lhs_lo == rhs_lo &&
-       left.getTransactionBinaryArray().size() == right.getTransactionBinaryArray().size() &&
-       lhs.receiveTime < rhs.receiveTime);
-}
-
-const Crypto::Hash& TransactionPool::PendingTransactionInfo::getTransactionHash() const {
-  return cachedTransaction.getTransactionHash();
-}
 
 size_t TransactionPool::PaymentIdHasher::operator()(const boost::optional<Crypto::Hash>& paymentId) const {
   if (!paymentId) {

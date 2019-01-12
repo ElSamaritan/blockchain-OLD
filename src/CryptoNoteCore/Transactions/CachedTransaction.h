@@ -17,8 +17,11 @@
 
 #pragma once
 
+#include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/optional.hpp>
-#include <CryptoNoteCore/CryptoNote.h>
+#include <Xi/Utils/ExternalIncludePop.h>
+
+#include "CryptoNoteCore/CryptoNote.h"
 
 namespace CryptoNote {
 

@@ -19,14 +19,20 @@
 
 #include <vector>
 #include <cinttypes>
+#include <unordered_set>
 
-#include "CachedTransaction.h"
+#include <crypto/CryptoTypes.h>
+
+#include "CryptoNoteCore/Transactions/CachedTransaction.h"
 
 namespace CryptoNote {
 
 struct TransactionValidatorState;
 
 class ITransactionPool {
+ public:
+  using transaction_hashes_container_t = std::vector<Crypto::Hash>;
+
  public:
   virtual ~ITransactionPool() = default;
 

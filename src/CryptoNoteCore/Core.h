@@ -11,10 +11,13 @@
 #include <unordered_map>
 #include <string>
 
+#include <Logging/LoggerMessage.h>
+#include <System/ContextGroup.h>
+
 #include "BlockchainCache.h"
 #include "BlockchainMessages.h"
 #include "CachedBlock.h"
-#include "CachedTransaction.h"
+#include "Transactions/CachedTransaction.h"
 #include "Currency.h"
 #include "Checkpoints.h"
 #include "IBlockchainCache.h"
@@ -22,15 +25,12 @@
 #include "ICore.h"
 #include "ICoreInformation.h"
 #include "IMainChainStorage.h"
-#include "ITransactionPool.h"
-#include "ITransactionPoolCleaner.h"
+#include "CryptoNoteCore/Transactions/ITransactionPool.h"
+#include "CryptoNoteCore/Transactions/ITransactionPoolCleaner.h"
 #include "IUpgradeManager.h"
-#include <Logging/LoggerMessage.h>
 #include "MessageQueue.h"
-#include "TransactionValidatiorState.h"
+#include "CryptoNoteCore/Transactions/TransactionValidatiorState.h"
 #include "SwappedVector.h"
-
-#include <System/ContextGroup.h>
 
 namespace CryptoNote {
 

@@ -11,10 +11,11 @@
 #include <string>
 #include <sstream>
 
-#include "CachedTransaction.h"
-#include "TransactionApi.h"
-#include "Wallet/WalletErrors.h"
 #include <Xi/Config.h>
+
+#include "CryptoNoteCore/Transactions/CachedTransaction.h"
+#include "CryptoNoteCore/Transactions/TransactionApi.h"
+#include "Wallet/WalletErrors.h"
 
 namespace CryptoNote {
 class Mixins {

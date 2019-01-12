@@ -27,7 +27,7 @@
 #include "Account.h"
 #include "CryptoNoteBasicImpl.h"
 #include "CryptoNoteSerialization.h"
-#include "TransactionExtra.h"
+#include "Transactions/TransactionExtra.h"
 #include "CryptoNoteTools.h"
 
 #include <Xi/Config.h>

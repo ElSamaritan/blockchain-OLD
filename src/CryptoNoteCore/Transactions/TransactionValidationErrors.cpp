@@ -15,35 +15,12 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
-
-#include "CryptoNoteCore/CryptoNoteBasic.h"
+#include "CryptoNoteCore/Transactions/TransactionValidationErrors.h"
 
 namespace CryptoNote {
+namespace error {
 
-struct BlockInfo {
-  uint32_t height;
-  Crypto::Hash id;
+TransactionValidationErrorCategory TransactionValidationErrorCategory::INSTANCE;
 
-  BlockInfo() { clear(); }
-
-  void clear() {
-    height = 0;
-    id = CryptoNote::NULL_HASH;
-  }
-
-  bool empty() const { return id == CryptoNote::NULL_HASH; }
-};
-
-class ITransactionValidator {
- public:
-  virtual ~ITransactionValidator() {}
-
-  virtual bool checkTransactionInputs(const CryptoNote::Transaction& tx, BlockInfo& maxUsedBlock) = 0;
-  virtual bool checkTransactionInputs(const CryptoNote::Transaction& tx, BlockInfo& maxUsedBlock,
-                                      BlockInfo& lastFailed) = 0;
-  virtual bool haveSpentKeyImages(const CryptoNote::Transaction& tx) = 0;
-  virtual bool checkTransactionSize(size_t blobSize) = 0;
-};
-
+}
 }  // namespace CryptoNote

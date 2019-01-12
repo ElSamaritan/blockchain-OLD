@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "CryptoNoteCore/CryptoNoteBasic.h"
-#include "CryptoNoteCore/ITransaction.h"
+#include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 
 namespace CryptoNote {
 

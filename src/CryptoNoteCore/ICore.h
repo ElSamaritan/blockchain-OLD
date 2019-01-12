@@ -13,7 +13,7 @@
 #include "BlockchainExplorer/BlockchainExplorerData.h"
 #include "BlockchainMessages.h"
 #include "CachedBlock.h"
-#include "CachedTransaction.h"
+#include "Transactions/CachedTransaction.h"
 #include "CoreStatistics.h"
 #include "ICoreObserver.h"
 #include "ICoreDefinitions.h"

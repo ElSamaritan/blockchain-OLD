@@ -4,7 +4,7 @@
 //
 // Please see the included LICENSE file for more information.
 
-#include "TransactionValidatiorState.h"
+#include "CryptoNoteCore/Transactions/TransactionValidatiorState.h"
 
 namespace CryptoNote {
 

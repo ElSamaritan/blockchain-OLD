@@ -30,7 +30,7 @@
 #include <CryptoNoteCore/BlockchainStorage.h>
 #include <CryptoNoteCore/CryptoNoteTools.h>
 #include <CryptoNoteCore/CryptoNoteBasicImpl.h>
-#include "CryptoNoteCore/TransactionExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionExtra.h"
 
 namespace CryptoNote {
 
