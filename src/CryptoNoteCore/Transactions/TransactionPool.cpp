@@ -18,10 +18,12 @@
 #include "CryptoNoteCore/Transactions/TransactionPool.h"
 
 #include <Common/int-util.h>
+#include <crypto/CryptoTypes.h>
 
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/Transactions/ITransactionPoolObserver.h"
 #include "CryptoNoteCore/Transactions/TransactionExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionUtils.h"
 
 namespace CryptoNote {
 
@@ -37,7 +39,8 @@ TransactionPool::TransactionPool(Logging::ILogger& logger)
     : transactionHashIndex(transactions.get<TransactionHashTag>()),
       transactionCostIndex(transactions.get<TransactionCostTag>()),
       paymentIdIndex(transactions.get<PaymentIdTag>()),
-      logger(logger, "TransactionPool") {}
+      logger(logger, "TransactionPool"),
+      m_keyImages{logger} {}
 
 TransactionPool::~TransactionPool() { m_observers.clear(); }
 

@@ -23,18 +23,27 @@
 
 #pragma once
 
-#include <cinttypes>
+#include <exception>
+#include <system_error>
 
-#include "CryptoNoteCore/CryptoNote.h"
+#include <Xi/Utils/ExternalIncludePush.h>
+#include <boost/variant.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
 
-namespace CryptoNote {
+#include <Xi/Global.h>
 
-struct BlockInfo {
-  const BlockHeader Header;
-  const uint32_t Height;
+namespace Xi {
+class Error {
+ public:
+  explicit Error(std::exception_ptr e);
+  explicit Error(std::error_code ec);
+  XI_DEFAULT_MOVE(Error);
+  XI_DEFAULT_COPY(Error);
+  ~Error() = default;
 
-  BlockInfo(const BlockHeader& header, uint32_t height) : Header{header}, Height{height} {}
-  ~BlockInfo() = default;
+  std::string message() const;
+
+ private:
+  boost::variant<std::exception_ptr, std::error_code> m_error;
 };
-
-}  // namespace CryptoNote
+}  // namespace Xi

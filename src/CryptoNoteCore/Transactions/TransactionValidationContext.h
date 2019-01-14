@@ -25,16 +25,51 @@
 
 #include <cinttypes>
 
-#include "CryptoNoteCore/CryptoNote.h"
+#include <Xi/Utils/ExternalIncludePush.h>
+#include <boost/optional.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
+
+#include <Xi/Global.h>
+
+#include <crypto/CryptoTypes.h>
+
+#include "CryptoNoteCore/Checkpoints.h"
+#include "CryptoNoteCore/IUpgradeManager.h"
+#include "CryptoNoteCore/IBlockchainCache.h"
+#include "CryptoNoteCore/Currency.h"
+#include "CryptoNoteCore/BlockInfo.h"
 
 namespace CryptoNote {
+class IBlockchainCache;
 
-struct BlockInfo {
-  const BlockHeader Header;
-  const uint32_t Height;
+class TransactionValidationContext {
+ public:
+  explicit TransactionValidationContext(const IBlockchainCache& blockchain, const IUpgradeManager& upgradeManager,
+                                        const Currency& currency, const Checkpoints& checkpoints);
+  explicit TransactionValidationContext(const IBlockchainCache& blockchain, const IUpgradeManager& upgradeManager,
+                                        const Currency& currency, const Checkpoints& checkpoints,
+                                        const BlockHeader& header, uint32_t height);
+  ~TransactionValidationContext();
 
-  BlockInfo(const BlockHeader& header, uint32_t height) : Header{header}, Height{height} {}
-  ~BlockInfo() = default;
+  const IBlockchainCache& blockchain() const;
+  const IUpgradeManager& upgradeManager() const;
+  const Currency& currency() const;
+
+  const Crypto::KeyImagesSet& keyImages() const;
+
+  bool isContainedInBlock() const;
+  bool isContainedInCheckpointsRange() const;
+  BlockInfo containingBlock() const;
+
+  uint32_t validationHeight() const;
+  uint8_t validationMajorBlockVersion() const;
+
+ private:
+  const IBlockchainCache& m_blockchain;
+  const IUpgradeManager& m_upgradeManager;
+  const Currency& m_currency;
+  const Checkpoints& m_checkpoints;
+  boost::optional<BlockInfo> m_block;
+  Crypto::KeyImagesSet m_keyImages;
 };
-
 }  // namespace CryptoNote

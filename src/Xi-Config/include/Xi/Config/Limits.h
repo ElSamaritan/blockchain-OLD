@@ -52,14 +52,6 @@ inline constexpr uint64_t blockBlobSizeGrowthDenominator() {
          Xi::Config::Time::blockTimeSeconds();
 }
 
-/* +++ Voting +++ */
-inline constexpr uint8_t upgradeVotingThreshold() { return 70; }
-inline constexpr uint32_t upgradeVotingWindow() { return Time::expectedBlocksPerDay(); }
-inline constexpr uint32_t upgradeWindow() { return Time::expectedBlocksPerDay(); }
-
-static_assert(upgradeVotingWindow() > 1u, "Bad upgrade votin window.");
-static_assert(upgradeVotingThreshold() > 0u && upgradeVotingThreshold() <= 100u, "Bad upgrade voting threshold (%).");
-
 /* +++ RPC +++ */
 inline constexpr uint64_t maximumRPCBlocksQueryCount() { return 500; }
 

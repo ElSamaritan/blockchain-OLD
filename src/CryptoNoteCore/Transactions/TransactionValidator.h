@@ -23,18 +23,55 @@
 
 #pragma once
 
-#include <cinttypes>
+#include <Xi/Global.h>
 
 #include "CryptoNoteCore/CryptoNote.h"
+#include "CryptoNoteCore/Transactions/ITransactionValidator.h"
+#include "CryptoNoteCore/Transactions/CachedTransaction.h"
+#include "CryptoNoteCore/Transactions/TransactionValidationContext.h"
+#include "CryptoNoteCore/Transactions/TransactionValidationErrors.h"
 
 namespace CryptoNote {
 
-struct BlockInfo {
-  const BlockHeader Header;
-  const uint32_t Height;
+class TransactionValidator : public ITransactionValidator {
+  XI_DELETE_COPY(TransactionValidator);
+  XI_DELETE_MOVE(TransactionValidator);
 
-  BlockInfo(const BlockHeader& header, uint32_t height) : Header{header}, Height{height} {}
-  ~BlockInfo() = default;
+ public:
+  TransactionValidator(const TransactionValidationContext& ctx);
+  ~TransactionValidator() override = default;
+
+  const TransactionValidationContext& context() const;
+
+ protected:
+  TransactionValidationResult doValidate(const Transaction& transaction) const override;
+
+ private:
+  TransactionValidationResult makeError(error::TransactionValidationError e) const;
+
+  bool hasUnsupportedVersion(const uint8_t version) const;
+  bool containsUnsupportedInputTypes(const Transaction& transaction) const;
+  bool containsUnsupportedOutputTypes(const Transaction& transaction) const;
+  bool containsEmptyOutput(const Transaction& transaction) const;
+  bool containsInvalidOutputKey(const std::vector<Crypto::PublicKey>& keys) const;
+  bool hasInputOverflow(const Transaction& transaction) const;
+  bool hasOutputOverflow(const Transaction& transaction) const;
+  bool containsKeyImageDuplicates(const std::vector<Crypto::KeyImage>& keyImages) const;
+
+  static bool isInvalidDomainKeyImage(const Crypto::KeyImage& keyImage);
+  bool containsInvalidDomainKeyImage(const std::vector<Crypto::KeyImage>& keyImages) const;
+
+  bool containsSpendedKey(const Crypto::KeyImage& keyImage) const;
+  bool containsSpendedKey(const Crypto::KeyImage& keyImage, uint32_t height) const;
+  bool containsSpendedKey(const Crypto::KeyImagesSet& keyImages) const;
+
+  error::TransactionValidationError validateKeyInput(const KeyInput& keyInput, size_t inputIndex,
+                                                     const CachedTransaction& transaction) const;
+  error::TransactionValidationError validateInputs(const CachedTransaction& transaction) const;
+
+  error::TransactionValidationError validateMixin(const CachedTransaction& transaction) const;
+
+ private:
+  const TransactionValidationContext& m_context;
 };
-
 }  // namespace CryptoNote

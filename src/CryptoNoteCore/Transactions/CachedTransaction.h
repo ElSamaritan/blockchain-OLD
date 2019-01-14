@@ -17,6 +17,10 @@
 
 #pragma once
 
+#include <vector>
+
+#include <crypto/CryptoTypes.h>
+
 #include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/optional.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
@@ -34,6 +38,12 @@ class CachedTransaction {
   const Crypto::Hash& getTransactionHash() const;
   const Crypto::Hash& getTransactionPrefixHash() const;
   const BinaryArray& getTransactionBinaryArray() const;
+  size_t getBlobSize() const;
+  const std::vector<Crypto::KeyImage>& getKeyImages() const;
+  const Crypto::KeyImagesSet& getKeyImagesSet() const;
+  const std::vector<Crypto::PublicKey>& getOutputKeys() const;
+  uint64_t getInputAmount() const;
+  uint64_t getOutputAmount() const;
   uint64_t getTransactionFee() const;
 
  private:
@@ -41,6 +51,11 @@ class CachedTransaction {
   mutable boost::optional<BinaryArray> transactionBinaryArray;
   mutable boost::optional<Crypto::Hash> transactionHash;
   mutable boost::optional<Crypto::Hash> transactionPrefixHash;
+  mutable boost::optional<std::vector<Crypto::KeyImage>> keyImages;
+  mutable boost::optional<Crypto::KeyImagesSet> keyImagesSet;
+  mutable boost::optional<std::vector<Crypto::PublicKey>> outputKeys;
+  mutable boost::optional<uint64_t> inputAmount;
+  mutable boost::optional<uint64_t> outputAmount;
   mutable boost::optional<uint64_t> transactionFee;
 };
 

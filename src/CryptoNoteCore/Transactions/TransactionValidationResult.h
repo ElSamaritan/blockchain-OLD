@@ -23,18 +23,34 @@
 
 #pragma once
 
-#include <cinttypes>
+#include <vector>
 
-#include "CryptoNoteCore/CryptoNote.h"
+#include <Xi/Utils/ExternalIncludePush.h>
+#include <boost/optional.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
+
+#include <Xi/Global.h>
+#include <Xi/Error.h>
+
+#include <crypto/CryptoTypes.h>
+
+#include "CryptoNoteCore/Transactions/CachedTransaction.h"
+#include "CryptoNoteCore/Transactions/TransactionValidationErrors.h"
 
 namespace CryptoNote {
+class TransactionValidationResult {
+ public:
+  explicit TransactionValidationResult(Xi::Error err);
+  explicit TransactionValidationResult(CachedTransaction&& transaction);
+  XI_DEFAULT_COPY(TransactionValidationResult);
+  XI_DEFAULT_MOVE(TransactionValidationResult);
+  ~TransactionValidationResult() = default;
 
-struct BlockInfo {
-  const BlockHeader Header;
-  const uint32_t Height;
+  const boost::optional<Xi::Error>& error() const;
+  const std::vector<CachedTransaction>& transactions() const;
 
-  BlockInfo(const BlockHeader& header, uint32_t height) : Header{header}, Height{height} {}
-  ~BlockInfo() = default;
+ private:
+  boost::optional<Xi::Error> m_error;
+  std::vector<CachedTransaction> m_transactions;
 };
-
 }  // namespace CryptoNote

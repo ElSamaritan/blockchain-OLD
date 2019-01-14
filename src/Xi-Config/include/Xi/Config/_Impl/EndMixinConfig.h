@@ -40,13 +40,13 @@ struct MixinCheckpointResolver {
   static inline bool isZeroMixinAllowed(uint8_t version);
 
   template <uint8_t _Index>
-  static inline uint16_t minimum(uint8_t version);
+  static inline uint8_t minimum(uint8_t version);
 
   template <uint8_t _Index>
-  static inline uint16_t maximum(uint8_t version);
+  static inline uint8_t maximum(uint8_t version);
 
   template <uint8_t _Index>
-  static inline uint16_t defaultValue(uint8_t version);
+  static inline uint8_t defaultValue(uint8_t version);
 };
 
 template <>
@@ -62,11 +62,11 @@ inline bool MixinCheckpointResolver::isZeroMixinAllowed(uint8_t version) {
 }
 
 template <>
-inline uint16_t MixinCheckpointResolver::minimum<0>(uint8_t) {
+inline uint8_t MixinCheckpointResolver::minimum<0>(uint8_t) {
   return MixinCheckpoint<0>::minimum();
 }
 template <uint8_t _Index>
-inline uint16_t MixinCheckpointResolver::minimum(uint8_t version) {
+inline uint8_t MixinCheckpointResolver::minimum(uint8_t version) {
   if (version >= MixinCheckpoint<_Index>::version())
     return MixinCheckpoint<_Index>::minimum();
   else
@@ -74,11 +74,11 @@ inline uint16_t MixinCheckpointResolver::minimum(uint8_t version) {
 }
 
 template <>
-inline uint16_t MixinCheckpointResolver::maximum<0>(uint8_t) {
+inline uint8_t MixinCheckpointResolver::maximum<0>(uint8_t) {
   return MixinCheckpoint<0>::minimum();
 }
 template <uint8_t _Index>
-inline uint16_t MixinCheckpointResolver::maximum(uint8_t version) {
+inline uint8_t MixinCheckpointResolver::maximum(uint8_t version) {
   if (version >= MixinCheckpoint<_Index>::version())
     return MixinCheckpoint<_Index>::maximum();
   else
@@ -86,11 +86,11 @@ inline uint16_t MixinCheckpointResolver::maximum(uint8_t version) {
 }
 
 template <>
-inline uint16_t MixinCheckpointResolver::defaultValue<0>(uint8_t) {
+inline uint8_t MixinCheckpointResolver::defaultValue<0>(uint8_t) {
   return MixinCheckpoint<0>::defaultValue();
 }
 template <uint8_t _Index>
-inline uint16_t MixinCheckpointResolver::defaultValue(uint8_t version) {
+inline uint8_t MixinCheckpointResolver::defaultValue(uint8_t version) {
   if (version >= MixinCheckpoint<_Index>::version())
     return MixinCheckpoint<_Index>::defaultValue();
   else
@@ -100,13 +100,13 @@ inline uint16_t MixinCheckpointResolver::defaultValue(uint8_t version) {
 inline bool isZeroMixinAllowed(uint8_t version) {
   return MixinCheckpointResolver::isZeroMixinAllowed<CURRENT_MIXIN_CHECKPOINT_INDEX>(version);
 }
-inline uint16_t minimum(uint8_t version) {
+inline uint8_t minimum(uint8_t version) {
   return MixinCheckpointResolver::minimum<CURRENT_MIXIN_CHECKPOINT_INDEX>(version);
 }
-inline uint16_t maximum(uint8_t version) {
+inline uint8_t maximum(uint8_t version) {
   return MixinCheckpointResolver::maximum<CURRENT_MIXIN_CHECKPOINT_INDEX>(version);
 }
-inline uint16_t defaultValue(uint8_t version) {
+inline uint8_t defaultValue(uint8_t version) {
   return MixinCheckpointResolver::defaultValue<CURRENT_MIXIN_CHECKPOINT_INDEX>(version);
 }
 

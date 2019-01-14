@@ -21,20 +21,25 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/Error.h"
 
-#include <cinttypes>
+Xi::Error::Error(std::exception_ptr e) : m_error{e} {}
+Xi::Error::Error(std::error_code ec) : m_error{ec} {}
 
-#include "CryptoNoteCore/CryptoNote.h"
-
-namespace CryptoNote {
-
-struct BlockInfo {
-  const BlockHeader Header;
-  const uint32_t Height;
-
-  BlockInfo(const BlockHeader& header, uint32_t height) : Header{header}, Height{height} {}
-  ~BlockInfo() = default;
-};
-
-}  // namespace CryptoNote
+std::string Xi::Error::message() const {
+  if (m_error.type() == typeid(std::exception_ptr)) {
+    auto e = boost::get<std::exception_ptr>(m_error);
+    try {
+      std::rethrow_exception(e);
+    } catch (const std::exception& e) {
+      return e.what();
+    } catch (...) {
+      return "Unknown type has been thrown.";
+    }
+  } else if (m_error.type() == typeid(std::error_code)) {
+    auto ec = boost::get<std::error_code>(m_error);
+    return ec.message();
+  } else {
+    return "Error wrapper contains unknown error type.";
+  }
+}

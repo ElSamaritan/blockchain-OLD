@@ -44,9 +44,9 @@ struct MixinCheckpoint;
   struct MixinCheckpoint<_Index> {                                                                               \
     static inline constexpr uint8_t index() { return _Index; }                                                   \
     static inline constexpr uint8_t version() { return _Version; }                                               \
-    static inline constexpr uint16_t minimum() { return _Min; }                                                  \
-    static inline constexpr uint16_t maximum() { return _Max; }                                                  \
-    static inline constexpr uint16_t defaultValue() { return _Default; }                                         \
+    static inline constexpr uint8_t minimum() { return _Min; }                                                   \
+    static inline constexpr uint8_t maximum() { return _Max; }                                                   \
+    static inline constexpr uint8_t defaultValue() { return _Default; }                                          \
     static_assert(::Xi::Config::BlockVersion::exists(_Version), "Non existing major block version referenced."); \
   };                                                                                                             \
   }                                                                                                              \

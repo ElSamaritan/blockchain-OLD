@@ -1003,6 +1003,9 @@ bool Core::getRandomOutputs(uint64_t amount, uint16_t count, std::vector<uint32_
                                                 {globalIndexes.data(), globalIndexes.size()}, publicKeys)) {
     case ExtractOutputKeysResult::SUCCESS:
       return true;
+    case ExtractOutputKeysResult::TIME_PROVIDER_FAILED:
+      logger(Logging::DEBUGGING) << "Time provider failed to yield a valid timestamp.";
+      return false;
     case ExtractOutputKeysResult::INVALID_GLOBAL_INDEX:
       logger(Logging::DEBUGGING) << "Invalid global index is given";
       return false;
@@ -1387,12 +1390,12 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
     if (input.type() == typeid(KeyInput)) {
       const KeyInput& in = boost::get<KeyInput>(input);
       if (!state.spentKeyImages.insert(in.keyImage).second) {
-        return error::TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT_IN_TRANSACTION;
+        return error::TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT;
       }
 
       if (!checkpoints.isInCheckpointZone(blockIndex + 1)) {
         if (cache->checkIfSpent(in.keyImage, blockIndex)) {
-          return error::TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT_IN_CACHE;
+          return error::TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT;
         }
 
         std::vector<PublicKey> outputKeys;
@@ -1420,8 +1423,7 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
                       [&outputKeyPointers](const Crypto::PublicKey& key) { outputKeyPointers.push_back(&key); });
         if (!Crypto::check_ring_signature(cachedTransaction.getTransactionPrefixHash(), in.keyImage,
                                           outputKeyPointers.data(), outputKeyPointers.size(),
-                                          transaction.signatures[inputIndex].data(),
-                                          blockIndex >= Xi::Config::Transaction::keyCheckingActivitationBlockIndex())) {
+                                          transaction.signatures[inputIndex].data(), true)) {
           return error::TransactionValidationError::INPUT_INVALID_SIGNATURES;
         }
       }
@@ -1437,7 +1439,7 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
   return error::TransactionValidationError::VALIDATION_SUCCESS;
 }
 
-std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t& fee, uint32_t blockIndex) {
+std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t& fee, uint32_t) {
   if (transaction.inputs.empty()) {
     return error::TransactionValidationError::EMPTY_INPUTS;
   }
@@ -1467,8 +1469,7 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
   static const Crypto::KeyImage Z = {{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
-  if (Z == Z) {
-  }
+  XI_UNUSED(Z);
   static const Crypto::KeyImage I = {{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
@@ -1495,8 +1496,7 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
       // outputIndexes are packed here, first is absolute, others are offsets to previous,
       // so first can be zero, others can't
       // Fix discovered by Monero Lab and suggested by "fluffypony" (bitcointalk.org)
-      if (!(scalarmultKey(in.keyImage, L) == I) &&
-          blockIndex >= Xi::Config::Transaction::keyCheckingActivitationBlockIndex()) {
+      if (!(scalarmultKey(in.keyImage, L) == I)) {
         return error::TransactionValidationError::INPUT_INVALID_DOMAIN_KEYIMAGES;
       }
 
@@ -1515,7 +1515,7 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
   }
 
   if (summaryOutputAmount > summaryInputAmount) {
-    return error::TransactionValidationError::WRONG_AMOUNT;
+    return error::TransactionValidationError::INPUT_AMOUNT_INSUFFICIENT;
   }
 
   assert(transaction.signatures.size() == transaction.inputs.size());
@@ -1547,10 +1547,10 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   minerReward = 0;
 
   if (upgradeManager->getBlockMajorVersion(cachedBlock.getBlockIndex()) != block.majorVersion) {
-    return error::BlockValidationError::WRONG_BLOCK_MAJOR_VERSION;
+    return error::BlockValidationError::WRONG_MAJOR_VERSION;
   }
   if (!Xi::Config::BlockVersion::validateMinorVersion(block.minorVersion)) {
-    return error::BlockValidationError::WRONG_BLOCK_MINOR_VERSION;
+    return error::BlockValidationError::WRONG_MINOR_VERSION;
   }
 
   if (block.majorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
@@ -1583,11 +1583,11 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   }
 
   if (block.baseTransaction.inputs.size() != 1) {
-    return error::TransactionValidationError::INPUT_WRONG_COUNT;
+    return error::TransactionValidationError::BASE_INPUT_WRONG_COUNT;
   }
 
   if (block.baseTransaction.inputs[0].type() != typeid(BaseInput)) {
-    return error::TransactionValidationError::INPUT_UNEXPECTED_TYPE;
+    return error::TransactionValidationError::BASE_INPUT_UNEXPECTED_TYPE;
   }
 
   if (boost::get<BaseInput>(block.baseTransaction.inputs[0]).blockIndex != previousBlockIndex + 1) {
@@ -1595,7 +1595,7 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   }
 
   if (!(block.baseTransaction.unlockTime == previousBlockIndex + 1 + currency.minedMoneyUnlockWindow())) {
-    return error::TransactionValidationError::WRONG_TRANSACTION_UNLOCK_TIME;
+    return error::TransactionValidationError::BASE_TRANSACTION_WRONG_UNLOCK_TIME;
   }
 
   for (const auto& output : block.baseTransaction.outputs) {

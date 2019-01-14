@@ -692,13 +692,23 @@ bool BlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime) const 
 }
 
 bool BlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const {
+  const auto timestamp = time(nullptr);
+  if (timestamp < 0) {
+    return false;
+  } else {
+    return isTransactionSpendTimeUnlocked(unlockTime, blockIndex, static_cast<uint64_t>(timestamp));
+  }
+}
+
+bool BlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex,
+                                                     uint64_t timestamp) const {
   if (unlockTime < currency.maxBlockHeight()) {
     // interpret as block index
     return blockIndex + currency.lockedTxAllowedDeltaBlocks() >= unlockTime;
+  } else {
+    // interpret as time
+    return static_cast<uint64_t>(timestamp) + currency.lockedTxAllowedDeltaSeconds() >= unlockTime;
   }
-
-  // interpret as time
-  return static_cast<uint64_t>(time(nullptr)) + currency.lockedTxAllowedDeltaSeconds() >= unlockTime;
 }
 
 ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount,
@@ -745,6 +755,18 @@ std::vector<uint32_t> BlockchainCache::getRandomOutsByAmount(Amount amount, size
 ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount, uint32_t blockIndex,
                                                               Common::ArrayView<uint32_t> globalIndexes,
                                                               std::vector<Crypto::PublicKey>& publicKeys) const {
+  const auto timestamp = time(nullptr);
+  if (timestamp < 0) {
+    return ExtractOutputKeysResult::TIME_PROVIDER_FAILED;
+  } else {
+    return extractKeyOutputKeys(amount, blockIndex, globalIndexes, publicKeys, static_cast<uint64_t>(timestamp));
+  }
+}
+
+ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount, uint32_t blockIndex,
+                                                              Common::ArrayView<uint32_t> globalIndexes,
+                                                              std::vector<Crypto::PublicKey>& publicKeys,
+                                                              uint64_t timestamp) const {
   assert(!globalIndexes.isEmpty());
   assert(std::is_sorted(globalIndexes.begin(), globalIndexes.end()));                             // sorted
   assert(std::adjacent_find(globalIndexes.begin(), globalIndexes.end()) == globalIndexes.end());  // unique
@@ -752,7 +774,7 @@ ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount, u
   return extractKeyOutputs(amount, blockIndex, globalIndexes,
                            [&](const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex) {
                              XI_UNUSED(globalIndex);
-                             if (!isTransactionSpendTimeUnlocked(info.unlockTime, blockIndex)) {
+                             if (!isTransactionSpendTimeUnlocked(info.unlockTime, blockIndex, timestamp)) {
                                return ExtractOutputKeysResult::OUTPUT_LOCKED;
                              }
 

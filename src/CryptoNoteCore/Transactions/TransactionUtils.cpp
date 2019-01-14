@@ -18,6 +18,10 @@
 #include "CryptoNoteCore/Transactions/TransactionUtils.h"
 
 #include <unordered_set>
+#include <numeric>
+#include <iterator>
+#include <exception>
+#include <algorithm>
 
 #include <crypto/crypto.h>
 
@@ -53,9 +57,58 @@ size_t getRequiredSignaturesCount(const TransactionInput& in) {
 uint64_t getTransactionInputAmount(const TransactionInput& in) {
   if (in.type() == typeid(KeyInput)) {
     return boost::get<KeyInput>(in).amount;
+  } else {
+    return 0;
   }
+}
 
-  return 0;
+uint64_t getTransactionInputAmount(const Transaction& transaction) {
+  return std::accumulate(transaction.inputs.begin(), transaction.inputs.end(), 0ULL,
+                         [](uint64_t acc, const auto& input) { return acc + getTransactionInputAmount(input); });
+}
+
+uint64_t getTransactionOutputAmount(const TransactionOutput& out) { return out.amount; }
+
+uint64_t getTransactionOutputAmount(const Transaction& transaction) {
+  return std::accumulate(transaction.outputs.begin(), transaction.outputs.end(), 0ULL,
+                         [](uint64_t acc, const auto& out) { return acc + getTransactionOutputAmount(out); });
+}
+
+boost::optional<KeyImage> getTransactionInputKeyImage(const TransactionInput& input) {
+  if (input.type() == typeid(KeyInput)) {
+    return boost::optional<KeyImage>{boost::get<KeyInput>(input).keyImage};
+  } else {
+    return boost::optional<KeyImage>{};
+  }
+}
+
+std::vector<KeyImage> getTransactionKeyImages(const Transaction& transaction) {
+  std::vector<KeyImage> reval{};
+  reval.reserve(transaction.inputs.size());
+  for (const auto& input : transaction.inputs) {
+    auto keyImage = getTransactionInputKeyImage(input);
+    if (keyImage) {
+      reval.push_back(*keyImage);
+    }
+  }
+  return reval;
+}
+
+PublicKey getTransactionOutputKey(const TransactionOutputTarget& target) {
+  if (target.type() == typeid(KeyOutput)) {
+    return boost::get<KeyOutput>(target).key;
+  } else {
+    throw std::runtime_error{"Unexpected transaction output type."};
+  }
+}
+
+PublicKey getTransactionOutputKey(const TransactionOutput& output) { return getTransactionOutputKey(output.target); }
+
+std::vector<PublicKey> getTransactionOutputKeys(const Transaction& transaction) {
+  std::vector<PublicKey> keys;
+  std::transform(transaction.outputs.begin(), transaction.outputs.end(), std::back_inserter(keys),
+                 [](const auto& output) { return getTransactionOutputKey(output); });
+  return keys;
 }
 
 TransactionTypes::InputType getTransactionInputType(const TransactionInput& in) {
@@ -154,6 +207,17 @@ bool findOutputsToAccount(const CryptoNote::TransactionPrefix& transaction, cons
   }
 
   return true;
+}
+
+std::vector<uint32_t> getTransactionInputIndices(const KeyInput& input) {
+  std::vector<uint32_t> indices{};
+  if (input.outputIndexes.empty()) return indices;
+  indices.reserve(input.outputIndexes.size());
+  indices[0] = input.outputIndexes[0];
+  for (size_t i = 1; i < input.outputIndexes.size(); ++i) {
+    indices[i] = indices[i - 1] + input.outputIndexes[i];
+  }
+  return indices;
 }
 
 }  // namespace CryptoNote

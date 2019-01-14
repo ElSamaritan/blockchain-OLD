@@ -37,8 +37,6 @@ inline constexpr uint8_t version() { return 1; }
 inline constexpr uint8_t minimumVersion() { return 1; }
 inline constexpr uint8_t maximumVersion() { return 1; }
 
-inline constexpr uint32_t keyCheckingActivitationBlockIndex() { return 1; }
-
 }  // namespace Transaction
 }  // namespace Config
 }  // namespace Xi

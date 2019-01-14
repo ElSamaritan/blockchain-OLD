@@ -21,20 +21,13 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "CryptoNoteCore/Transactions/TransactionValidationResult.h"
 
-#include <cinttypes>
+#include <utility>
 
-#include "CryptoNoteCore/CryptoNote.h"
+CryptoNote::TransactionValidationResult::TransactionValidationResult(Xi::Error err) : m_error{err} {}
 
-namespace CryptoNote {
-
-struct BlockInfo {
-  const BlockHeader Header;
-  const uint32_t Height;
-
-  BlockInfo(const BlockHeader& header, uint32_t height) : Header{header}, Height{height} {}
-  ~BlockInfo() = default;
-};
-
-}  // namespace CryptoNote
+CryptoNote::TransactionValidationResult::TransactionValidationResult(CryptoNote::CachedTransaction &&transaction)
+    : m_transactions{} {
+  m_transactions.emplace_back(std::move(transaction));
+}

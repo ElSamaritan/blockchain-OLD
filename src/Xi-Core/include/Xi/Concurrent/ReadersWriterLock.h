@@ -21,20 +21,33 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include <Xi/Utils/ExternalIncludePush.h>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
 
-#include <cinttypes>
-
-#include "CryptoNoteCore/CryptoNote.h"
-
-namespace CryptoNote {
-
-struct BlockInfo {
-  const BlockHeader Header;
-  const uint32_t Height;
-
-  BlockInfo(const BlockHeader& header, uint32_t height) : Header{header}, Height{height} {}
-  ~BlockInfo() = default;
+namespace Xi {
+namespace Concurrent {
+struct ReadersWriterLock {
+  mutable boost::shared_mutex mutex;
+  operator boost::shared_mutex&() const { return mutex; }
 };
 
-}  // namespace CryptoNote
+#define XI_CONCURRENT_LOCK_READ(X)                               \
+  boost::shared_lock<boost::shared_mutex> __##X##__READ_LOCK{X}; \
+  (void)__##X##__READ_LOCK
+
+#define XI_CONCURRENT_LOCK_PREPARE_WRITE(X)                          \
+  boost::upgrade_lock<boost::shared_mutex> __##X##__PREPARE_LOCK{X}; \
+  (void)__##X##__PREPARE_LOCK
+
+#define XI_CONCURRENT_LOCK_ACQUIRE_WRITE(X)                                                        \
+  boost::upgrade_to_unique_lock<boost::shared_mutex> __##X##__ACQUIRE_LOCK{__##X##__PREPARE_LOCK}; \
+  (void)__##X##__ACQUIRE_LOCK
+
+#define XI_CONCURRENT_LOCK_WRITE(X)                               \
+  boost::unique_lock<boost::shared_mutex> __##X##__WRITE_LOCK{X}; \
+  (void)__##X##__WRITE_LOCK
+
+}  // namespace Concurrent
+}  // namespace Xi

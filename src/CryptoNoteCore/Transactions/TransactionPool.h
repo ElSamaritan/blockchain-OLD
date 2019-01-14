@@ -20,6 +20,7 @@
 #include <vector>
 #include <cinttypes>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/multi_index_container.hpp>
@@ -43,6 +44,7 @@
 #include "CryptoNoteCore/Transactions/TransactionPriortiyComparator.h"
 #include "CryptoNoteCore/Transactions/PendingTransactionInfo.h"
 #include "CryptoNoteCore/Transactions/TransactionValidatiorState.h"
+#include "CryptoNoteCore/Transactions/KeyImagesMap.h"
 
 namespace CryptoNote {
 class ITransactionPoolObserver;
@@ -110,8 +112,9 @@ class TransactionPool : public ITransactionPool {
   TransactionsContainer::index<PaymentIdTag>::type& paymentIdIndex;
 
   Logging::LoggerRef logger;
-
   Tools::ObserverManager<ITransactionPoolObserver> m_observers;
+
+  KeyImagesMap m_keyImages;
 
   using mutex_t = boost::shared_mutex;
   using read_lock_t = boost::shared_lock<mutex_t>;

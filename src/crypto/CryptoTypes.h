@@ -27,6 +27,7 @@
 #include <cstring>
 #include <utility>
 #include <functional>
+#include <unordered_set>
 
 #include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/functional/hash.hpp>
@@ -53,6 +54,7 @@ struct KeyDerivation {
 struct KeyImage {
   uint8_t data[32];
 };
+using KeyImagesSet = std::unordered_set<KeyImage>;
 
 struct Signature {
   uint8_t data[64];

@@ -21,20 +21,44 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "CryptoNoteCore/Transactions/KeyImagesMap.h"
 
-#include <cinttypes>
+#include <algorithm>
+#include <iterator>
 
-#include "CryptoNoteCore/CryptoNote.h"
+CryptoNote::KeyImagesMap::KeyImagesMap(Logging::ILogger &logger) : m_logger{logger, "TxPool"} {}
 
-namespace CryptoNote {
+CryptoNote::KeyImagesMap::~KeyImagesMap() {}
 
-struct BlockInfo {
-  const BlockHeader Header;
-  const uint32_t Height;
+Crypto::KeyImagesSet CryptoNote::KeyImagesMap::keyImages() const {
+  XI_CONCURRENT_LOCK_READ(m_mutationLock);
+  Crypto::KeyImagesSet reval;
+  std::transform(m_keyImages.begin(), m_keyImages.end(), std::inserter(reval, reval.begin()),
+                 [](const auto &pair) { return pair.first; });
+  return reval;
+}
 
-  BlockInfo(const BlockHeader& header, uint32_t height) : Header{header}, Height{height} {}
-  ~BlockInfo() = default;
-};
+std::unordered_set<CryptoNote::KeyImagesMap::transaction_id_t> CryptoNote::KeyImagesMap::transactionsByKeyImage(
+    const CryptoNote::KeyImagesMap::key_image_t &keyImage) const {
+  XI_CONCURRENT_LOCK_READ(m_mutationLock);
+  auto search = m_keyImages.find(keyImage);
+  if (search == m_keyImages.end())
+    return std::unordered_set<transaction_id_t>{};
+  else
+    return search->second;
+}
 
-}  // namespace CryptoNote
+bool CryptoNote::KeyImagesMap::contains(const CryptoNote::KeyImagesMap::key_image_t &keyImage) const {
+  XI_CONCURRENT_LOCK_READ(m_mutationLock);
+  return m_keyImages.find(keyImage) != m_keyImages.end();
+}
+
+bool CryptoNote::KeyImagesMap::addTransactionInputs(const CryptoNote::KeyImagesMap::transaction_id_t &txId,
+                                                    const CryptoNote::Transaction &tx) {
+  XI_CONCURRENT_LOCK_WRITE(m_mutationLock);
+  (void)txId;
+  for (const auto &input : tx.inputs) {
+    if (input.type() != typeid(KeyInput)) continue;
+  }
+  return true;
+}

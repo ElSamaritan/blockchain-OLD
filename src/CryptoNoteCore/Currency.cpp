@@ -122,6 +122,14 @@ size_t Currency::rewardBlocksWindowByBlockVersion(uint8_t blockMajorVersion) con
   return Xi::Config::Reward::window(blockMajorVersion);
 }
 
+uint8_t Currency::minimumMixin(uint8_t blockMajorVersion) const {
+  return Xi::Config::Mixin::minimum(blockMajorVersion);
+}
+
+uint8_t Currency::maximumMixin(uint8_t blockMajorVersion) const {
+  return Xi::Config::Mixin::maximum(blockMajorVersion);
+}
+
 uint64_t Currency::blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const {
   return Xi::Config::Reward::fullRewardZone(blockMajorVersion);
 }
@@ -531,12 +539,6 @@ Currency::Currency(Currency&& currency)
       m_fusionTxMaxSize(currency.m_fusionTxMaxSize),
       m_fusionTxMinInputCount(currency.m_fusionTxMinInputCount),
       m_fusionTxMinInOutCountRatio(currency.m_fusionTxMinInOutCountRatio),
-      m_upgradeHeightV2(currency.m_upgradeHeightV2),
-      m_upgradeHeightV3(currency.m_upgradeHeightV3),
-      m_upgradeHeightV4(currency.m_upgradeHeightV4),
-      m_upgradeVotingThreshold(currency.m_upgradeVotingThreshold),
-      m_upgradeVotingWindow(currency.m_upgradeVotingWindow),
-      m_upgradeWindow(currency.m_upgradeWindow),
       m_blocksFileName(currency.m_blocksFileName),
       m_blockIndexesFileName(currency.m_blockIndexesFileName),
       m_txPoolFileName(currency.m_txPoolFileName),
@@ -581,10 +583,6 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
   fusionTxMaxSize(Xi::Config::Limits::maximumFusionTransactionSize());
   fusionTxMinInputCount(Xi::Config::Limits::minimumFusionTransactionInputCount());
   fusionTxMinInOutCountRatio(Xi::Config::Limits::minimumFusionTransactionInputOutputRatio());
-
-  upgradeVotingThreshold(Xi::Config::Limits::upgradeVotingThreshold());
-  upgradeVotingWindow(Xi::Config::Limits::upgradeVotingWindow());
-  upgradeWindow(Xi::Config::Limits::upgradeWindow());
 
   blocksFileName(Xi::Config::Database::blocksFilename());
   blockIndexesFileName(Xi::Config::Database::blockIndicesFilename());
@@ -655,24 +653,6 @@ CurrencyBuilder& CurrencyBuilder::numberOfDecimalPlaces(size_t val) {
     m_currency.m_coin *= 10;
   }
 
-  return *this;
-}
-
-CurrencyBuilder& CurrencyBuilder::upgradeVotingThreshold(unsigned int val) {
-  if (val <= 0 || val > 100) {
-    throw std::invalid_argument("val at upgradeVotingThreshold()");
-  }
-
-  m_currency.m_upgradeVotingThreshold = val;
-  return *this;
-}
-
-CurrencyBuilder& CurrencyBuilder::upgradeWindow(uint32_t val) {
-  if (val <= 0) {
-    throw std::invalid_argument("val at upgradeWindow()");
-  }
-
-  m_currency.m_upgradeWindow = val;
   return *this;
 }
 

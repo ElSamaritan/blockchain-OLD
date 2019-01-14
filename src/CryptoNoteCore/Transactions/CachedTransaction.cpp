@@ -17,10 +17,13 @@
 
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"
 
+#include <exception>
+
 #include <Xi/Config.h>
 #include <Common/Varint.h>
 
 #include "CryptoNoteCore/CryptoNoteTools.h"
+#include "CryptoNoteCore/Transactions/TransactionUtils.h"
 
 using namespace Crypto;
 using namespace CryptoNote;
@@ -62,26 +65,52 @@ const BinaryArray& CachedTransaction::getTransactionBinaryArray() const {
   return transactionBinaryArray.get();
 }
 
+size_t CachedTransaction::getBlobSize() const { return getObjectBinarySize(getTransaction()); }
+
+const std::vector<KeyImage>& CachedTransaction::getKeyImages() const {
+  if (!keyImages.is_initialized()) {
+    keyImages = getTransactionKeyImages(getTransaction());
+  }
+  return keyImages.get();
+}
+
+const Crypto::KeyImagesSet& CachedTransaction::getKeyImagesSet() const {
+  if (!keyImagesSet.is_initialized()) {
+    Crypto::KeyImagesSet set{};
+    for (const auto& keyImage : getKeyImages()) {
+      if (!set.insert(keyImage).second)
+        throw std::runtime_error{
+            "CachedTransaction contains duplicate key images, make sure to check getKeyImages for duplicates first."};
+    }
+    keyImagesSet = set;
+  }
+  return keyImagesSet.get();
+}
+
+const std::vector<PublicKey>& CachedTransaction::getOutputKeys() const {
+  if (!outputKeys.is_initialized()) {
+    outputKeys = getTransactionOutputKeys(getTransaction());
+  }
+  return outputKeys.get();
+}
+
+uint64_t CachedTransaction::getInputAmount() const {
+  if (!inputAmount.is_initialized()) {
+    inputAmount = getTransactionInputAmount(getTransaction());
+  }
+  return inputAmount.get();
+}
+
+uint64_t CachedTransaction::getOutputAmount() const {
+  if (!outputAmount.is_initialized()) {
+    outputAmount = getTransactionOutputAmount(getTransaction());
+  }
+  return outputAmount.get();
+}
+
 uint64_t CachedTransaction::getTransactionFee() const {
   if (!transactionFee.is_initialized()) {
-    uint64_t summaryInputAmount = 0;
-    uint64_t summaryOutputAmount = 0;
-    for (auto& out : transaction.outputs) {
-      summaryOutputAmount += out.amount;
-    }
-
-    for (auto& in : transaction.inputs) {
-      if (in.type() == typeid(KeyInput)) {
-        summaryInputAmount += boost::get<KeyInput>(in).amount;
-      } else if (in.type() == typeid(BaseInput)) {
-        return 0;
-      } else {
-        assert(false && "Unknown out type");
-      }
-    }
-
-    transactionFee = summaryInputAmount - summaryOutputAmount;
+    transactionFee = getInputAmount() - getOutputAmount();
   }
-
   return transactionFee.get();
 }
