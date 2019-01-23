@@ -2,6 +2,7 @@
 .data/
 .install/
 .site/
+.directory
 cpplint.xml
 cppcheck.xml
 CMakeLists.txt.user*
