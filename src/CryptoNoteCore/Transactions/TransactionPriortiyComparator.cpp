@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -29,8 +29,8 @@
 
 bool CryptoNote::TransactionPriorityComparator::operator()(const CryptoNote::PendingTransactionInfo& lhs,
                                                            const CryptoNote::PendingTransactionInfo& rhs) const {
-  const CachedTransaction& left = lhs.cachedTransaction;
-  const CachedTransaction& right = rhs.cachedTransaction;
+  const CachedTransaction& left = lhs.transaction();
+  const CachedTransaction& right = rhs.transaction();
 
   // price(lhs) = lhs.fee / lhs.blobSize
   // price(lhs) > price(rhs) -->
@@ -48,5 +48,5 @@ bool CryptoNote::TransactionPriorityComparator::operator()(const CryptoNote::Pen
       // prefer older
       (lhs_hi == rhs_hi && lhs_lo == rhs_lo &&
        left.getTransactionBinaryArray().size() == right.getTransactionBinaryArray().size() &&
-       lhs.receiveTime < rhs.receiveTime);
+       lhs.receiveTime() < rhs.receiveTime());
 }

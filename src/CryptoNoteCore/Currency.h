@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <boost/utility.hpp>
+#include <Xi/Global.h>
 #include <Xi/Config.h>
 #include "crypto/hash.h"
 #include "Logging/LoggerRef.h"
@@ -22,7 +23,10 @@ class AccountBase;
 
 class Currency {
  public:
+  XI_DELETE_COPY(Currency);
+
   uint32_t maxBlockHeight() const { return m_maxBlockHeight; }
+
   size_t maxBlockBlobSize() const { return m_maxBlockBlobSize; }
   size_t maxTxSize() const { return m_maxTxSize; }
   uint8_t maxTxVersion() const;

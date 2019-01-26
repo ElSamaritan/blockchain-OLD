@@ -50,7 +50,6 @@ PaymentGateService::PaymentGateService()
       config(),
       service(nullptr),
       logger(),
-      currencyBuilder(logger),
       fileLogger(Logging::TRACE),
       consoleLogger(Logging::INFO) {
   consoleLogger.setPattern("%D %T %L ");
@@ -82,6 +81,9 @@ bool PaymentGateService::init(int argc, char** argv) {
   fileLogger.attachToStream(fileStream);
   logger.addLogger(fileLogger);
 
+  CryptoNote::CurrencyBuilder builder{log.getLogger()};
+  currency = std::make_unique<CryptoNote::Currency>(builder.network(config.serviceConfig.network).currency());
+
   return true;
 }
 
@@ -93,7 +95,7 @@ WalletConfiguration PaymentGateService::getWalletConfig() const {
   };
 }
 
-const CryptoNote::Currency PaymentGateService::getCurrency() { return currencyBuilder.currency(); }
+const CryptoNote::Currency& PaymentGateService::getCurrency() const { return *currency; }
 
 void PaymentGateService::run() {
   System::Dispatcher localDispatcher;
@@ -134,7 +136,7 @@ void PaymentGateService::stop() {
 
 void PaymentGateService::runRpcProxy(Logging::LoggerRef& log) {
   log(Logging::INFO) << "Starting Payment Gate with remote node";
-  CryptoNote::Currency currency = currencyBuilder.currency();
+  const CryptoNote::Currency& currency = getCurrency();
 
   std::unique_ptr<CryptoNote::INode> node(
       PaymentService::NodeFactory::createNode(config.serviceConfig.daemonAddress, config.serviceConfig.daemonPort,

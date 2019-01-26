@@ -607,6 +607,7 @@ std::unique_ptr<IBlockchainCache> DatabaseBlockchainCache::split(uint32_t splitB
   transactionsCount = boost::none;
 
   logger(Logging::DEBUGGING) << "split completed";
+
   // return new cache
   return cache;
 }
@@ -926,6 +927,7 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   txHashes.insert(txHashes.begin(), cachedBaseTransaction.getTransactionHash());
 
   batch.insertCachedBlock(blockInfo, getTopBlockIndex() + 1, txHashes);
+
   batch.insertRawBlock(getTopBlockIndex() + 1, std::move(rawBlock));
 
   uint16_t transactionIndex = 0;
@@ -991,7 +993,6 @@ bool DatabaseBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime
   return isTransactionSpendTimeUnlocked(unlockTime, getTopBlockIndex());
 }
 
-// TODO: pass time
 bool DatabaseBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const {
   const auto timestamp = time(nullptr);
   if (timestamp < 0) {

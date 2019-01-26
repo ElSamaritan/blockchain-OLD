@@ -34,21 +34,44 @@ void TransactionPoolCleanWrapper::removeObserver(ITransactionPoolObserver* obser
   transactionPool->removeObserver(observer);
 }
 
-bool TransactionPoolCleanWrapper::pushTransaction(CachedTransaction&& tx,
-                                                  TransactionValidatorState&& transactionState) {
-  return !isTransactionRecentlyDeleted(tx.getTransactionHash()) &&
-         transactionPool->pushTransaction(std::move(tx), std::move(transactionState));
+std::size_t TransactionPoolCleanWrapper::size() const { return transactionPool->size(); }
+
+Crypto::Hash TransactionPoolCleanWrapper::stateHash() const { return transactionPool->stateHash(); }
+
+Xi::Result<void> TransactionPoolCleanWrapper::pushTransaction(BinaryArray transactionBlob) {
+  return transactionPool->pushTransaction(std::move(transactionBlob));
 }
 
-const CachedTransaction& TransactionPoolCleanWrapper::getTransaction(const Crypto::Hash& hash) const {
+Xi::Result<void> TransactionPoolCleanWrapper::pushTransaction(Transaction transaction) {
+  return transactionPool->pushTransaction(std::move(transaction));
+}
+
+bool TransactionPoolCleanWrapper::containsTransaction(const Crypto::Hash& hash) const {
+  return transactionPool->containsTransaction(hash);
+}
+
+bool TransactionPoolCleanWrapper::containsKeyImage(const Crypto::KeyImage& keyImage) const {
+  return transactionPool->containsKeyImage(keyImage);
+}
+
+void TransactionPoolCleanWrapper::serialize(ISerializer& serializer) { return transactionPool->serialize(serializer); }
+
+ITransactionPool::TransactionQueryResult TransactionPoolCleanWrapper::queryTransaction(const Crypto::Hash& hash) const {
+  return transactionPool->queryTransaction(hash);
+}
+
+std::vector<CachedTransaction> TransactionPoolCleanWrapper::eligiblePoolTransactions(
+    TransactionValidationResult::EligibleIndex index) const {
+  return transactionPool->eligiblePoolTransactions(index);
+}
+
+CachedTransaction TransactionPoolCleanWrapper::getTransaction(const Crypto::Hash& hash) const {
   return transactionPool->getTransaction(hash);
 }
 
 bool TransactionPoolCleanWrapper::removeTransaction(const Crypto::Hash& hash) {
   return transactionPool->removeTransaction(hash);
 }
-
-size_t TransactionPoolCleanWrapper::getTransactionCount() const { return transactionPool->getTransactionCount(); }
 
 std::vector<Crypto::Hash> TransactionPoolCleanWrapper::getTransactionHashes() const {
   return transactionPool->getTransactionHashes();
@@ -77,7 +100,7 @@ std::vector<Crypto::Hash> TransactionPoolCleanWrapper::getTransactionHashesByPay
 
 std::vector<Crypto::Hash> TransactionPoolCleanWrapper::clean(const uint32_t height) {
   try {
-    uint64_t currentTime = timeProvider->now();
+    uint64_t currentTime = timeProvider->posixNow().value();
     auto transactionHashes = transactionPool->getTransactionHashes();
 
     std::vector<Crypto::Hash> deletedTransactions;

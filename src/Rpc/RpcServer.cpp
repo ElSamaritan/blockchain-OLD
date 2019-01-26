@@ -507,7 +507,8 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.height = m_core.getTopBlockIndex() + 1;
   res.difficulty = m_core.getDifficultyForNextBlock();
   res.tx_count = m_core.getBlockchainTransactionCount() - res.height;  // without coinbase
-  res.tx_pool_size = m_core.getPoolTransactionCount();
+  res.tx_pool_size = m_core.transactionPool().size();
+  res.tx_pool_state = m_core.transactionPool().stateHash();
   res.tx_min_fee = m_core.getCurrency().minimumFee();
   res.alt_blocks_count = m_core.getAlternativeBlockCount();
   uint64_t total_conn = m_p2p.get_connections_count();
@@ -519,7 +520,8 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.network_height = std::max(static_cast<uint32_t>(1), m_protocol.getBlockchainHeight());
   res.upgrade_heights = Xi::Config::BlockVersion::forks();
   res.supported_height = res.upgrade_heights.empty() ? 0 : *res.upgrade_heights.rbegin();
-  res.hashrate = (uint32_t)round(res.difficulty / Xi::Config::Time::blockTimeSeconds());
+  res.hashrate =
+      (uint32_t)round(res.difficulty / Xi::Config::Time::blockTimeSeconds());  // TODO Not a good approximation
   res.synced = ((uint64_t)res.height == (uint64_t)res.network_height);
   res.network = Xi::to_string(m_core.getCurrency().network());
   res.major_version = m_core.getBlockDetails(m_core.getTopBlockIndex()).majorVersion;
@@ -582,7 +584,7 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
   Crypto::Hash transactionHash = Crypto::cn_fast_hash(transactions.back().data(), transactions.back().size());
   logger(DEBUGGING) << "transaction " << transactionHash << " came in on_send_raw_tx";
 
-  if (!m_core.addTransactionToPool(transactions.back())) {
+  if (m_core.transactionPool().pushTransaction(transactions.back()).isError()) {
     logger(DEBUGGING) << "[on_send_raw_tx]: tx verification failed";
     res.status = "Failed";
     return true;

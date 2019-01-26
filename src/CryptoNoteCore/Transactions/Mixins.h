@@ -13,6 +13,8 @@
 
 #include <Xi/Config.h>
 
+#include <Common/StringTools.h>
+
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"
 #include "CryptoNoteCore/Transactions/TransactionApi.h"
 #include "Wallet/WalletErrors.h"
@@ -101,15 +103,16 @@ class Mixins {
     const uint64_t mixin = ringSize - 1;
 
     std::stringstream str;
+    const auto& hash = transaction.getTransactionHash();
 
     if (mixin > maxMixin) {
-      str << "Transaction " << transaction.getTransactionHash()
+      str << "Transaction " << Common::toHex(hash.data, sizeof(hash))
           << " is not valid. Reason: transaction mixin is too large (" << mixin << "). Maximum mixin allowed is "
           << maxMixin;
 
       return std::make_tuple(false, str.str());
     } else if (mixin < minMixin) {
-      str << "Transaction " << transaction.getTransactionHash()
+      str << "Transaction " << Common::toHex(hash.data, sizeof(hash))
           << " is not valid. Reason: transaction mixin is too small (" << mixin << "). Minimum mixin allowed is "
           << minMixin;
 

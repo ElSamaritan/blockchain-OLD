@@ -67,7 +67,6 @@ class UseGenesis {
 
 struct CachedBlockInfo;
 struct CachedTransactionInfo;
-class ITransactionPool;
 
 class IBlockchainCache {
  public:

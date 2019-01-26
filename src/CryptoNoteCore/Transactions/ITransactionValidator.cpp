@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -23,11 +23,35 @@
 
 #include "CryptoNoteCore/Transactions/ITransactionValidator.h"
 
-CryptoNote::TransactionValidationResult CryptoNote::ITransactionValidator::validate(
-    const CryptoNote::Transaction &transaction) const {
+Xi::Result<CryptoNote::TransactionValidationResult> CryptoNote::ITransactionValidator::validate(
+    Transaction transaction) const {
+  return validate(CachedTransaction{std::move(transaction)});
+}
+
+Xi::Result<CryptoNote::TransactionValidationResult> CryptoNote::ITransactionValidator::validate(
+    CachedTransaction transaction) const {
   try {
-    return doValidate(transaction);
+    const auto result = doValidate(transaction);
+    if (result.isError()) {
+      return result.error();
+    } else {
+      return Xi::make_result<TransactionValidationResult>(std::move(transaction), result.value());
+    }
   } catch (...) {
-    return TransactionValidationResult{Xi::Error{std::current_exception()}};
+    return Xi::make_error(std::current_exception());
+  }
+}
+
+Xi::Result<CryptoNote::TransactionValidationResult> CryptoNote::ITransactionValidator::updateValidation(
+    const CryptoNote::CachedTransaction &transaction) const {
+  try {
+    const auto result = doValidate(transaction);
+    if (result.isError()) {
+      return result.error();
+    } else {
+      return Xi::make_result<TransactionValidationResult>(result.value());
+    }
+  } catch (...) {
+    return Xi::make_error(std::current_exception());
   }
 }

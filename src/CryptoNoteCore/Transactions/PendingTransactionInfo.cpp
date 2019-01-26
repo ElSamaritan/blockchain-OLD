@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -21,8 +21,18 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Transactions/PendingTransactionInfo.h"
 
-const Crypto::Hash &CryptoNote::PendingTransactionInfo::getTransactionHash() const {
-  return cachedTransaction.getTransactionHash();
+CryptoNote::PendingTransactionInfo::PendingTransactionInfo(CachedTransaction tx,
+                                                           CryptoNote::TransactionValidationResult::EligibleIndex index,
+                                                           PosixTimestamp time)
+    : m_transaction{std::make_shared<CachedTransaction>(std::move(tx))}, m_eligibleIndex{index}, m_receiveTime{time} {}
+
+const CryptoNote::CachedTransaction &CryptoNote::PendingTransactionInfo::transaction() const { return *m_transaction; }
+
+CryptoNote::TransactionValidationResult::EligibleIndex CryptoNote::PendingTransactionInfo::eligibleIndex() const {
+  return m_eligibleIndex;
 }
+
+CryptoNote::PosixTimestamp CryptoNote::PendingTransactionInfo::receiveTime() const { return m_receiveTime; }

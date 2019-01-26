@@ -78,7 +78,7 @@ bool Currency::init() {
 bool Currency::generateGenesisBlock() {
   genesisBlockTemplate = boost::value_initialized<BlockTemplate>();
 
-  std::string genesisCoinbaseTxHex = Xi::Config::Coin::genesisTransactionHash();
+  std::string genesisCoinbaseTxHex = Xi::Config::Coin::genesisTransactionHash(network());
   BinaryArray minerTxBlob;
 
   bool r =
@@ -153,10 +153,7 @@ std::string Currency::blockIndexesFileName() const {
   ;
 }
 
-std::string Currency::txPoolFileName() const {
-  return m_txPoolFileName + "." + Xi::to_lower(Xi::to_string(network()));
-  ;
-}
+std::string Currency::txPoolFileName() const { return m_txPoolFileName + "." + Xi::to_lower(Xi::to_string(network())); }
 
 bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize,
                               uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward,
@@ -225,9 +222,9 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
   }
 
   std::vector<uint64_t> outAmounts;
-  decompose_amount_into_digits(blockReward, defaultDustThreshold(height),
-                               [&outAmounts](uint64_t a_chunk) { outAmounts.push_back(a_chunk); },
-                               [&outAmounts](uint64_t a_dust) { outAmounts.push_back(a_dust); });
+  decompose_amount_into_digits(
+      blockReward, defaultDustThreshold(height), [&outAmounts](uint64_t a_chunk) { outAmounts.push_back(a_chunk); },
+      [&outAmounts](uint64_t a_dust) { outAmounts.push_back(a_dust); });
 
   if (!(1 <= maxOuts)) {
     logger(ERROR, BRIGHT_RED) << "max_out must be non-zero";

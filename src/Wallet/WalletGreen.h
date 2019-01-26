@@ -296,9 +296,9 @@ class WalletGreen : public IWallet,
                                                  const Currency& currency);
   ReceiverAmounts splitAmount(uint64_t amount, const AccountPublicAddress& destination, uint64_t dustThreshold);
 
-  std::unique_ptr<CryptoNote::ITransactionBuilder> makeTransaction(const std::vector<ReceiverAmounts>& decomposedOutputs,
-                                                            std::vector<InputInfo>& keysInfo, const std::string& extra,
-                                                            uint64_t unlockTimestamp);
+  std::unique_ptr<CryptoNote::ITransactionBuilder> makeTransaction(
+      const std::vector<ReceiverAmounts>& decomposedOutputs, std::vector<InputInfo>& keysInfo, const std::string& extra,
+      uint64_t unlockTimestamp);
 
   void sendTransaction(const CryptoNote::Transaction& cryptoNoteTransaction);
   size_t validateSaveAndSendTransaction(const ITransactionReader& transaction,
@@ -332,6 +332,7 @@ class WalletGreen : public IWallet,
   void deleteUnlockTransactionJob(const Crypto::Hash& transactionHash);
   void startBlockchainSynchronizer();
   void stopBlockchainSynchronizer();
+
   void addUnconfirmedTransaction(const ITransactionReader& transaction);
   void removeUnconfirmedTransaction(const Crypto::Hash& transactionHash);
 

@@ -212,7 +212,7 @@ bool findOutputsToAccount(const CryptoNote::TransactionPrefix& transaction, cons
 std::vector<uint32_t> getTransactionInputIndices(const KeyInput& input) {
   std::vector<uint32_t> indices{};
   if (input.outputIndexes.empty()) return indices;
-  indices.reserve(input.outputIndexes.size());
+  indices.resize(input.outputIndexes.size());
   indices[0] = input.outputIndexes[0];
   for (size_t i = 1; i < input.outputIndexes.size(); ++i) {
     indices[i] = indices[i - 1] + input.outputIndexes[i];

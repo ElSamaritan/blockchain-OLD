@@ -20,10 +20,15 @@
 #include <vector>
 #include <cinttypes>
 #include <unordered_set>
+#include <functional>
+
+#include <Xi/Result.h>
 
 #include <crypto/CryptoTypes.h>
+#include <Serialization/ISerializer.h>
 
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"
+#include "CryptoNoteCore/Transactions/PendingTransactionInfo.h"
 
 namespace CryptoNote {
 
@@ -33,6 +38,7 @@ class ITransactionPoolObserver;
 class ITransactionPool {
  public:
   using transaction_hashes_container_t = std::vector<Crypto::Hash>;
+  using TransactionQueryResult = boost::optional<PendingTransactionInfo>;
 
  public:
   virtual ~ITransactionPool() = default;
@@ -40,11 +46,48 @@ class ITransactionPool {
   virtual void addObserver(ITransactionPoolObserver* observer) = 0;
   virtual void removeObserver(ITransactionPoolObserver* observer) = 0;
 
-  virtual bool pushTransaction(CachedTransaction&& tx, TransactionValidatorState&& transactionState) = 0;
-  virtual const CachedTransaction& getTransaction(const Crypto::Hash& hash) const = 0;
+  /*!
+   * \brief size Number of transactions in the pool.
+   */
+  virtual std::size_t size() const = 0;
+
+  /*!
+   * \brief stateHash Returns a hash of the state of the pool. If the pool returns the same hash multiple times the
+   * state is unchanged.
+   */
+  virtual Crypto::Hash stateHash() const = 0;
+
+  /*!
+   * \brief pushTransaction parses the binary representation of a transaction and pushs it
+   * \param transaction the binary representation of a transaction
+   * \return nothing if successfull, otherwise an error
+   */
+  virtual Xi::Result<void> pushTransaction(BinaryArray transaction) = 0;
+
+  virtual Xi::Result<void> pushTransaction(Transaction transaction) = 0;
+  virtual TransactionQueryResult queryTransaction(const Crypto::Hash& hash) const = 0;
+  virtual bool containsTransaction(const Crypto::Hash& hash) const = 0;
+  virtual bool containsKeyImage(const Crypto::KeyImage& keyImage) const = 0;
+
+  /*!
+   * \brief serialize loads/stores the state of the transaction pool from/into a serializer
+   * \param serializer the interface for decoding/encoding data pushed
+   */
+  virtual void serialize(ISerializer& serializer) = 0;
+
+  /*!
+   * \brief eligiblePoolTransactions queries pool transactions ready to be mined and sorts them to prioratize more
+   * profitable transactions.
+   * \param index The eligble index of the blockchain the returned transactions must be eligible
+   * \return all transactions contained in the pool satisfying the index requirement
+   */
+  virtual std::vector<CachedTransaction> eligiblePoolTransactions(
+      TransactionValidationResult::EligibleIndex index) const = 0;
+
+  // DEPRECATED BEGIN
+  virtual CachedTransaction getTransaction(const Crypto::Hash& hash) const = 0;
   virtual bool removeTransaction(const Crypto::Hash& hash) = 0;
 
-  virtual size_t getTransactionCount() const = 0;
   virtual std::vector<Crypto::Hash> getTransactionHashes() const = 0;
   virtual bool checkIfTransactionPresent(const Crypto::Hash& hash) const = 0;
 

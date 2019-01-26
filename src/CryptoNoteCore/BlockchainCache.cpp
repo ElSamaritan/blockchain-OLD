@@ -30,8 +30,8 @@ namespace CryptoNote {
 
 namespace {
 
-UseGenesis addGenesisBlock = UseGenesis(true);
-UseGenesis skipGenesisBlock = UseGenesis(false);
+const UseGenesis addGenesisBlock = UseGenesis(true);
+const UseGenesis skipGenesisBlock = UseGenesis(false);
 
 template <class T, class F>
 void splitGlobalIndexes(T& sourceContainer, T& destinationContainer, uint32_t splitBlockIndex, F lowerBoundFunction) {
@@ -201,11 +201,6 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
   uint16_t transactionBlockIndex = 0;
   auto baseTransaction = cachedBlock.getBlock().baseTransaction;
   pushTransaction(CachedTransaction(std::move(baseTransaction)), blockIndex, transactionBlockIndex++);
-
-  for (auto& cachedTransaction : cachedTransactions) {
-    pushTransaction(cachedTransaction, blockIndex, transactionBlockIndex++);
-  }
-
   storage->pushBlock(std::move(rawBlock));
 
   logger(Logging::DEBUGGING) << "Block " << cachedBlock.getBlockHash() << " successfully pushed";
@@ -725,11 +720,9 @@ std::vector<uint32_t> BlockchainCache::getRandomOutsByAmount(Amount amount, size
   }
 
   auto& outs = it->second.outputs;
-  auto end = std::find_if(outs.rbegin(), outs.rend(),
-                          [&](PackedOutIndex index) {
-                            return index.data.blockIndex <= blockIndex - currency.minedMoneyUnlockWindow();
-                          })
-                 .base();
+  auto end = std::find_if(outs.rbegin(), outs.rend(), [&](PackedOutIndex index) {
+               return index.data.blockIndex <= blockIndex - currency.minedMoneyUnlockWindow();
+             }).base();
   uint32_t dist = static_cast<uint32_t>(std::distance(outs.begin(), end));
   dist = std::min(static_cast<uint32_t>(count), dist);
   ShuffleGenerator<uint32_t, Crypto::random_engine<uint32_t>> generator(dist);

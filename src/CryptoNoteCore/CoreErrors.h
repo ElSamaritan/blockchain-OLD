@@ -23,7 +23,7 @@
 namespace CryptoNote {
 namespace error {
 
-enum class CoreErrorCode { NOT_INITIALIZED, CORRUPTED_BLOCKCHAIN };
+enum class CoreErrorCode { NOT_INITIALIZED, CORRUPTED_BLOCKCHAIN, GENESIS_BLOCK_NOT_FOUND };
 
 // custom category:
 class CoreErrorCategory : public std::error_category {
@@ -42,6 +42,8 @@ class CoreErrorCategory : public std::error_category {
         return "Core is not initialized";
       case CoreErrorCode::CORRUPTED_BLOCKCHAIN:
         return "Blockchain storage is corrupted";
+      case CoreErrorCode::GENESIS_BLOCK_NOT_FOUND:
+        return "Genesis block is not valid in the queried blockchain cache";
       default:
         return "Unknown error";
     }

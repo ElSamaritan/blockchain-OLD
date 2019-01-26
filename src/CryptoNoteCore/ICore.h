@@ -75,8 +75,6 @@ class ICore {
   virtual bool getRandomOutputs(uint64_t amount, uint16_t count, std::vector<uint32_t>& globalIndexes,
                                 std::vector<Crypto::PublicKey>& publicKeys) const = 0;
 
-  virtual bool addTransactionToPool(const BinaryArray& transactionBinaryArray) = 0;
-
   virtual const class ITransactionPool& transactionPool() const = 0;
   virtual class ITransactionPool& transactionPool() = 0;
 

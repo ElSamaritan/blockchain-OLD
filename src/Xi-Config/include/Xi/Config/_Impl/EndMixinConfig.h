@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -75,7 +75,7 @@ inline uint8_t MixinCheckpointResolver::minimum(uint8_t version) {
 
 template <>
 inline uint8_t MixinCheckpointResolver::maximum<0>(uint8_t) {
-  return MixinCheckpoint<0>::minimum();
+  return MixinCheckpoint<0>::maximum();
 }
 template <uint8_t _Index>
 inline uint8_t MixinCheckpointResolver::maximum(uint8_t version) {
@@ -94,7 +94,7 @@ inline uint8_t MixinCheckpointResolver::defaultValue(uint8_t version) {
   if (version >= MixinCheckpoint<_Index>::version())
     return MixinCheckpoint<_Index>::defaultValue();
   else
-    return maximum<_Index - 1>(version);
+    return defaultValue<_Index - 1>(version);
 }
 
 inline bool isZeroMixinAllowed(uint8_t version) {

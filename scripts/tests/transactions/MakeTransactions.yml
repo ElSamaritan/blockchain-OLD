@@ -9,10 +9,10 @@ Wallets:
 MinimumFee: 100
 MaximumFee: 500
 
-MinimumAmount:   1000000
-MaximumAmount: 500000000
+MinimumAmount:   100000
+MaximumAmount:   200000
 
 MinAnonymity: 0
-MaxAnonymity: 0
+MaxAnonymity: 3
 
-TransactionsPerMinute: 10
+TransactionsPerMinute: 200

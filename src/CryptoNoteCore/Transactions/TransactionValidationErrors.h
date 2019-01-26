@@ -23,50 +23,65 @@
 #include <tuple>
 #include <system_error>
 
+#include <Xi/Error.h>
+
 namespace CryptoNote {
 
 namespace error {
 
 enum class TransactionValidationError {
   VALIDATION_SUCCESS = 0,  ///< The validation succeeded.
-  TOO_LARGE,               ///< The binary size of the transaction is too large.
-  EMPTY_INPUTS,            ///< The transaction has no inputs.
-  INPUT_UNKNOWN_TYPE,
-  INPUT_EMPTY_OUTPUT_USAGE,        ///< One of the inputs has no outputs in the transaction and would disapper.
-  INPUT_INVALID_DOMAIN_KEYIMAGES,  ///< The identifier to protect double spending was computed using a wrong domain.
-                                   ///< That way a user could create different key images for the same input and double
-                                   ///< spending could not be detected.
-  INPUT_IDENTICAL_KEYIMAGES,       ///< The transaction contains a double spending
-  INPUT_IDENTICAL_OUTPUT_INDEXES,
-  INPUT_KEYIMAGE_ALREADY_SPENT,
-  INPUT_INVALID_GLOBAL_INDEX,  ///< The input used could not be found.
-  INPUT_SPEND_LOCKED_OUT,    ///< An input used for the transaction is an output of a transaction that is still locked.
-  INPUT_INVALID_SIGNATURES,  ///< The signing signature of the input is invalid. Its likely that a user tried to use
-                             ///< coins he does not own.
-  INPUT_WRONG_SIGNATURES_COUNT,
-  INPUTS_AMOUNT_OVERFLOW,        ///< The sum of all amounts of the transaction input caused a memory overflow
-  BASE_INPUT_WRONG_COUNT,        ///< The miner reward transaction has an invalid amount of inputs
-  BASE_INPUT_WRONG_BLOCK_INDEX,  ///< The encoded block index of the miner reward input is wrong.
-  BASE_INPUT_UNEXPECTED_TYPE,  ///< The type of the miner reward input transaction has an unexpected type that cannot be
-                               ///< processes.
-  INPUT_AMOUNT_INSUFFICIENT,   ///< The sum of inputs to the transaction is lower than the sum of outputs.
-  INPUT_INVALID_SIGNATURES_COUNT,  ///< The number of signatures to sign each input/output pair is not equal to the
-                                   ///< number of outputs.
-  INPUT_INVALID_UNKNOWN,  ///< An error occured during input validation thats has no mapping to this error collection.
-  FEE_INSUFFICIENT,       ///< A transaction was pushed to the transaction pool with unsifficient fees.
-  OUTPUT_ZERO_AMOUNT,     ///< One of the outputs actually has no amount attached to it
-  OUTPUT_INVALID_KEY,
-  OUTPUT_INVALID_REQUIRED_SIGNATURES_COUNT,
-  OUTPUT_UNEXPECTED_TYPE,
-  OUTPUT_UNKNOWN_TYPE,
-  OUTPUTS_AMOUNT_OVERFLOW,             ///< The sum of amounts of all outputs caused a memory overflow
-  BASE_TRANSACTION_WRONG_UNLOCK_TIME,  ///< Only used for base transactions, if the miner has not used the correct
-                                       ///< unlocking window
-  INVALID_VERSION,  ///< The version is not supported. This protects against user trying to use new transaction versions
-                    ///< that are currently not supported.
-  INVALID_MIXIN,
-  INPUT_MIXIN_TOO_HIGH,
-  INPUT_MIXIN_TOO_LOW,
+
+  INVALID_BINARY_REPRESNETATION = 1,  ///< A binary blob was provided which could not be parsed into a transaction
+
+  EXISTS_IN_BLOCKCHAIN = 2,  ///< The transaction was already mined
+  EXISTS_IN_POOL = 3,        ///< The transaction is already present in the pool.
+  TOO_LARGE = 4,             ///< The binary size of the transaction is too large.
+  TOO_LARGE_FOR_REWARD_ZONE =
+      35,            ///< The pool denied the transaction being to large to get a sufficient reward for mining it.
+  EMPTY_INPUTS = 5,  ///< The transaction has no inputs.
+  INPUT_UNKNOWN_TYPE = 6,
+  INPUT_EMPTY_OUTPUT_USAGE = 7,        ///< One of the inputs has no outputs in the transaction and would disapper.
+  INPUT_INVALID_DOMAIN_KEYIMAGES = 8,  ///< The identifier to protect double spending was computed using a wrong domain.
+                                       ///< That way a user could create different key images for the same input and
+                                       ///< double spending could not be detected.
+  INPUT_IDENTICAL_KEYIMAGES = 9,       ///< The transaction contains a double spending
+  INPUT_IDENTICAL_OUTPUT_INDEXES = 10,
+  INPUT_KEYIMAGE_ALREADY_SPENT = 11,
+  INPUT_INVALID_GLOBAL_INDEX = 12,  ///< The input used could not be found.
+  INPUT_SPEND_LOCKED_OUT =
+      13,  ///< An input used for the transaction is an output of a transaction that is still locked.
+  INPUT_INVALID_SIGNATURES = 14,  ///< The signing signature of the input is invalid. Its likely that a user tried to
+                                  ///< use coins he does not own.
+  INPUT_WRONG_SIGNATURES_COUNT = 15,
+  INPUTS_AMOUNT_OVERFLOW = 16,          ///< The sum of all amounts of the transaction input caused a memory overflow
+  BASE_INPUT_WRONG_COUNT = 17,          ///< The miner reward transaction has an invalid amount of inputs
+  BASE_INPUT_WRONG_BLOCK_INDEX = 18,    ///< The encoded block index of the miner reward input is wrong.
+  BASE_INPUT_UNEXPECTED_TYPE = 19,      ///< The type of the miner reward input transaction has an unexpected type that
+                                        ///< cannot be processes.
+  INPUT_AMOUNT_INSUFFICIENT = 20,       ///< The sum of inputs to the transaction is lower than the sum of outputs.
+  INPUT_INVALID_SIGNATURES_COUNT = 21,  ///< The number of signatures to sign each input/output pair is not equal to the
+                                        ///< number of outputs.
+  INPUT_INVALID_UNKNOWN =
+      22,                   ///< An error occured during input validation thats has no mapping to this error collection.
+  FEE_INSUFFICIENT = 23,    ///< A transaction was pushed to the transaction pool with unsifficient fees.
+  OUTPUT_ZERO_AMOUNT = 24,  ///< One of the outputs actually has no amount attached to it
+  OUTPUT_INVALID_KEY = 25,
+  OUTPUT_INVALID_REQUIRED_SIGNATURES_COUNT = 26,
+  OUTPUT_UNEXPECTED_TYPE = 27,
+  OUTPUT_UNKNOWN_TYPE = 28,
+  OUTPUTS_AMOUNT_OVERFLOW = 29,             ///< The sum of amounts of all outputs caused a memory overflow
+  BASE_TRANSACTION_WRONG_UNLOCK_TIME = 30,  ///< Only used for base transactions, if the miner has not used the correct
+                                            ///< unlocking window
+  INVALID_VERSION = 31,  ///< The version is not supported. This protects against user trying to use new transaction
+                         ///< versions that are currently not supported.
+  INVALID_MIXIN = 32,
+  INPUT_MIXIN_TOO_HIGH = 33,
+  INPUT_MIXIN_TOO_LOW = 34,
+
+  __NUM = 36  ///< The count of different enum values, if you add a new one use this as its value and increase this by
+              ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation and
+              ///< tickets aso.
 };
 
 // custom category:
@@ -84,6 +99,8 @@ class TransactionValidationErrorCategory : public std::error_category {
     switch (code) {
       case TransactionValidationError::VALIDATION_SUCCESS:
         return "Transaction successfully validated";
+      case TransactionValidationError::INVALID_BINARY_REPRESNETATION:
+        return "Failed to parse transaction blob";
       case TransactionValidationError::EMPTY_INPUTS:
         return "Transaction has no inputs";
       case TransactionValidationError::INPUT_UNKNOWN_TYPE:
@@ -97,7 +114,7 @@ class TransactionValidationErrorCategory : public std::error_category {
       case TransactionValidationError::INPUT_IDENTICAL_OUTPUT_INDEXES:
         return "Transaction has identical output indexes";
       case TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT:
-        return "Transaction key image is already spent in another transaction";
+        return "Transaction key image is already spent.";
       case TransactionValidationError::INPUT_INVALID_GLOBAL_INDEX:
         return "Transaction has input with invalid global index";
       case TransactionValidationError::INPUT_SPEND_LOCKED_OUT:
@@ -114,6 +131,8 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Wrong input type";
       case TransactionValidationError::INPUT_AMOUNT_INSUFFICIENT:
         return "Transaction contains more output than input";
+      case TransactionValidationError::INPUT_INVALID_SIGNATURES_COUNT:
+        return "Transaction has a wrong amount of signatures attached.";
       case TransactionValidationError::INPUT_INVALID_UNKNOWN:
         return "Transaction input validation yielded an error that is not known to the transaction validation routine.";
       case TransactionValidationError::FEE_INSUFFICIENT:
@@ -138,6 +157,10 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Mixin too large or too small";
       case TransactionValidationError::INVALID_VERSION:
         return "Transaction has an unknown version";
+      case TransactionValidationError::TOO_LARGE:
+        return "The binary size of the transaction is too large.";
+      case TransactionValidationError::TOO_LARGE_FOR_REWARD_ZONE:
+        return "The pool denied the transaction being to large to get a sufficient reward for mining it.";
       default:
         return "Unknown error";
     }
@@ -153,6 +176,12 @@ inline std::error_code make_error_code(CryptoNote::error::TransactionValidationE
 
 }  // namespace error
 }  // namespace CryptoNote
+
+namespace Xi {
+inline Error make_error(CryptoNote::error::TransactionValidationError e) {
+  return Error{CryptoNote::error::make_error_code(e)};
+}
+}  // namespace Xi
 
 namespace std {
 

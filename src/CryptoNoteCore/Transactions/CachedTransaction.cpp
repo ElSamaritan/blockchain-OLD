@@ -1,19 +1,25 @@
-﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+﻿/* ============================================================================================== *
+ *                                                                                                *
+ *                                       Xi Blockchain                                            *
+ *                                                                                                *
+ * ---------------------------------------------------------------------------------------------- *
+ * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * ---------------------------------------------------------------------------------------------- *
+ *                                                                                                *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ *                                                                                                *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the *
+ * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.                                            *
+ *                                                                                                *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;      *
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.      *
+ * See the GNU General Public License for more details.                                           *
+ *                                                                                                *
+ * You should have received a copy of the GNU General Public License along with this program.     *
+ * If not, see <https://www.gnu.org/licenses/>.                                                   *
+ *                                                                                                *
+ * ============================================================================================== */
 
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"
 
@@ -24,16 +30,34 @@
 
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Transactions/TransactionUtils.h"
+#include "CryptoNoteCore/Transactions/TransactionApiExtra.h"
 
 using namespace Crypto;
 using namespace CryptoNote;
 
-CachedTransaction::CachedTransaction(Transaction&& transaction) : transaction(std::move(transaction)) {}
+CachedTransaction::CachedTransaction()
+    : transactionBinaryArray{boost::none},
+      transactionHash{boost::none},
+      transactionPrefixHash{boost::none},
+      keyImages{boost::none},
+      keyImagesSet{boost::none},
+      outputKeys{boost::none},
+      paymentIdEvaluated{false},
+      paymentId{boost::none},
+      inputAmount{boost::none},
+      outputAmount{boost::none},
+      transactionFee{boost::none} {}
 
-CachedTransaction::CachedTransaction(const Transaction& transaction) : transaction(transaction) {}
+CachedTransaction::CachedTransaction(Transaction&& transaction) : CachedTransaction() {
+  this->transaction = std::move(transaction);
+}
 
-CachedTransaction::CachedTransaction(const BinaryArray& transactionBinaryArray)
-    : transactionBinaryArray(transactionBinaryArray) {
+CachedTransaction::CachedTransaction(const Transaction& transaction) : CachedTransaction() {
+  this->transaction = transaction;
+}
+
+CachedTransaction::CachedTransaction(const BinaryArray& transactionBinaryArray) : CachedTransaction() {
+  this->transactionBinaryArray = transactionBinaryArray;
   if (!fromBinaryArray<Transaction>(transaction, this->transactionBinaryArray.get())) {
     throw std::runtime_error("CachedTransaction::CachedTransaction(BinaryArray&&), deserealization error.");
   }
@@ -65,7 +89,7 @@ const BinaryArray& CachedTransaction::getTransactionBinaryArray() const {
   return transactionBinaryArray.get();
 }
 
-size_t CachedTransaction::getBlobSize() const { return getObjectBinarySize(getTransaction()); }
+size_t CachedTransaction::getBlobSize() const { return getTransactionBinaryArray().size(); }
 
 const std::vector<KeyImage>& CachedTransaction::getKeyImages() const {
   if (!keyImages.is_initialized()) {
@@ -92,6 +116,17 @@ const std::vector<PublicKey>& CachedTransaction::getOutputKeys() const {
     outputKeys = getTransactionOutputKeys(getTransaction());
   }
   return outputKeys.get();
+}
+
+const boost::optional<Hash>& CachedTransaction::getPaymentId() const {
+  if (!paymentIdEvaluated) {
+    Crypto::Hash pid{};
+    if (getPaymentIdFromTxExtra(getTransaction().extra, pid)) {
+      paymentId = pid;
+    }
+    paymentIdEvaluated = true;
+  }
+  return paymentId;
 }
 
 uint64_t CachedTransaction::getInputAmount() const {

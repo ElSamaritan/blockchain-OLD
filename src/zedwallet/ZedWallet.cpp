@@ -10,6 +10,7 @@
 #include <CryptoNoteCore/Currency.h>
 #include <NodeRpcProxy/NodeErrors.h>
 #include <Logging/FileLogger.h>
+#include <Logging/ConsoleLogger.h>
 #include <Logging/LoggerManager.h>
 
 #ifdef _WIN32
@@ -53,16 +54,20 @@ int main(int argc, char **argv) {
   logManager.setMaxLevel(Logging::DEBUGGING);
 
   Logging::FileLogger fileLogger;
+  Logging::ConsoleLogger coutLogger;
 
   if (config.debug) {
     fileLogger.init(WalletConfig::walletName + ".log");
     logManager.addLogger(fileLogger);
   }
+  if (config.verbose) {
+    logManager.addLogger(coutLogger);
+  }
 
   Logging::LoggerRef logger(logManager, WalletConfig::walletName);
 
   /* Currency contains our coin parameters, such as decimal places, supply */
-  const CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logManager).currency();
+  const CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logManager).network(config.network).currency();
 
   System::Dispatcher localDispatcher;
   System::Dispatcher *dispatcher = &localDispatcher;

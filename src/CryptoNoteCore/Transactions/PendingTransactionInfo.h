@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -24,23 +24,48 @@
 #pragma once
 
 #include <cinttypes>
+#include <chrono>
+
+#include <Xi/Global.h>
 
 #include <crypto/CryptoTypes.h>
 
-#include <Xi/Utils/ExternalIncludePush.h>
-#include <boost/optional.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
-
+#include "CryptoNoteCore/Time/Time.h"
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"
+#include "CryptoNoteCore/Transactions/TransactionValidationResult.h"
 
 namespace CryptoNote {
 
-struct PendingTransactionInfo {
-  uint64_t receiveTime;
-  CachedTransaction cachedTransaction;
-  boost::optional<Crypto::Hash> paymentId;
+/*!
+ * \brief The PendingTransactionInfo class stores information about a pending transaction in the pool.
+ */
+class PendingTransactionInfo {
+ public:
+  PendingTransactionInfo(CachedTransaction tx, TransactionValidationResult::EligibleIndex index, PosixTimestamp time);
+  XI_DEFAULT_COPY(PendingTransactionInfo);
+  XI_DEFAULT_MOVE(PendingTransactionInfo);
+  ~PendingTransactionInfo() = default;
 
-  const Crypto::Hash& getTransactionHash() const;
+  /*!
+   * \brief transaction Content of the pending transaction.
+   */
+  const CachedTransaction& transaction() const;
+
+  /*!
+   * \brief eligibleIndex The minimum blockchain index for the transaction to be eligibale to be mined.
+   */
+  TransactionValidationResult::EligibleIndex eligibleIndex() const;
+
+  /*!
+   * \brief receiveTime UTC time the transaction has been recieved.
+   * \return UTC timestamp
+   */
+  PosixTimestamp receiveTime() const;
+
+ private:
+  std::shared_ptr<CachedTransaction> m_transaction;
+  TransactionValidationResult::EligibleIndex m_eligibleIndex;
+  PosixTimestamp m_receiveTime;
 };
 
 }  // namespace CryptoNote

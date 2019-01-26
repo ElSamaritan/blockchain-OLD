@@ -25,6 +25,12 @@ cmake_policy(PUSH)
 if(CMAKE_VERSION VERSION_GREATER "3.12")
   cmake_policy(SET CMP0074 OLD)
 endif()
+
+set(OPENSSL_USE_STATIC_LIBS ON)
+if(MSVC)
+  set(OPENSSL_MSVC_STATIC_RT ON)
+endif()
+
 find_package(OpenSSL REQUIRED COMPONENTS SSL Crypto)
 cmake_policy(POP)
 

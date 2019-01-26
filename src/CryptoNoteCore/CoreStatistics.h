@@ -26,12 +26,14 @@ namespace CryptoNote {
 
 struct CoreStatistics {
   uint64_t transactionPoolSize;
+  std::string transactionPoolState;
   uint64_t blockchainHeight;
   uint64_t alternativeBlockCount;
   std::string topBlockHashString;
 
   void serialize(ISerializer& s) {
     s(transactionPoolSize, "tx_pool_size");
+    s(transactionPoolState, "tx_pool_state");
     s(blockchainHeight, "blockchain_height");
     s(alternativeBlockCount, "alternative_blocks");
     s(topBlockHashString, "top_block_id_str");

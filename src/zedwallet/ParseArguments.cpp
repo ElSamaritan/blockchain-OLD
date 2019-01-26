@@ -64,9 +64,14 @@ Config parseArguments(int argc, char** argv) {
   std::string remoteDaemon;
 
   // clang-format off
-  options.add_options("Core")
+  options.add_options("Development")
     ("debug", "Enable " + WalletConfig::walletdName + " debugging to "+ WalletConfig::walletName + ".log",
-      cxxopts::value<bool>(config.debug)->default_value("false")->implicit_value("true"));
+      cxxopts::value<bool>(config.debug)->default_value("false")->implicit_value("true"))
+    ("verbose", "Enables verbose logging for debugging purposes.",
+      cxxopts::value<bool>(config.verbose)->default_value("false")->implicit_value("true"))
+    ("network", "The network type you want to connect to, mostly you want to use 'MainNet' here.",
+     cxxopts::value<std::string>()->default_value(Xi::to_string(Xi::Config::Network::defaultNetworkType())),
+     "[MainNet|StageNet|TestNet|LocalTestNet]");
 
   options.add_options("Daemon")
     ("r,remote-daemon", "The daemon <host:port> combination to use for node operations.",
@@ -76,12 +81,17 @@ Config parseArguments(int argc, char** argv) {
     ("w,wallet-file", "Open the wallet <file>", cxxopts::value<std::string>(config.walletFile), "<file>")
     ("p,password", "Use the password <pass> to open the wallet", cxxopts::value<std::string>(config.walletPass), "<pass>");
 
+
   config.ssl.emplaceCLIConfiguration(options);
   // clang-format on
 
   try {
     const auto result = options.parse(argc, argv);
     if (CommonCLI::handleCLIOptions(options, result)) exit(0);
+
+    if (result.count("network")) {
+      config.network = Xi::lexical_cast<Xi::Config::Network::Type>(result["network"].as<std::string>());
+    }
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Error: Unable to parse command line argument options: " << e.what() << std::endl << std::endl;
     std::cout << options.help({}) << std::endl;

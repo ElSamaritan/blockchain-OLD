@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -23,20 +23,26 @@
 
 #pragma once
 
+#include <Xi/Result.h>
+
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"
 #include "CryptoNoteCore/Transactions/TransactionValidationResult.h"
-#include "CryptoNoteCore/Transactions/TransactionValidationContext.h"
 
 namespace CryptoNote {
 
 class ITransactionValidator {
  public:
+  ITransactionValidator() = default;
   virtual ~ITransactionValidator() = default;
 
-  virtual TransactionValidationResult validate(const Transaction& transaction) const;
+  Xi::Result<TransactionValidationResult> validate(Transaction transaction) const;
+  Xi::Result<TransactionValidationResult> validate(CachedTransaction transaction) const;
+
+  Xi::Result<TransactionValidationResult> updateValidation(const CachedTransaction& transaction) const;
 
  protected:
-  virtual TransactionValidationResult doValidate(const Transaction& transaction) const = 0;
+  virtual Xi::Result<TransactionValidationResult::EligibleIndex> doValidate(
+      const CachedTransaction& transaction) const = 0;
 };
 
 }  // namespace CryptoNote
