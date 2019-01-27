@@ -24,7 +24,7 @@ class PaymentGateService {
 
   const PaymentService::ConfigurationManager& getConfig() const { return config; }
   PaymentService::WalletConfiguration getWalletConfig() const;
-  const CryptoNote::Currency getCurrency();
+  const CryptoNote::Currency& getCurrency() const;
 
   void run();
   void stop();
@@ -41,7 +41,7 @@ class PaymentGateService {
   System::Event* stopEvent;
   PaymentService::ConfigurationManager config;
   PaymentService::WalletService* service;
-  CryptoNote::CurrencyBuilder currencyBuilder;
+  std::unique_ptr<CryptoNote::Currency> m_currency;
 
   Logging::LoggerGroup logger;
   std::ofstream fileStream;

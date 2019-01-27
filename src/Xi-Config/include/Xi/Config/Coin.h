@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -28,10 +28,12 @@
 #include <Xi/Utils/ConstExprMath.h>
 #include <Xi/Utils/Conversion.h>
 
+#include "Xi/Config/NetworkType.h"
+
 namespace Xi {
 namespace Config {
 namespace Coin {
-inline std::string name() { return "XI"; }
+inline std::string name() { return "Xi"; }
 inline constexpr uint32_t addressBas58Prefix() { return 22583; }
 constexpr uint8_t numberOfDecimalPoints() { return 6; }
 constexpr uint64_t toAtomicUnits(uint64_t coins) { return coins * Xi::pow(10, numberOfDecimalPoints()); }
@@ -61,10 +63,7 @@ inline uint64_t genesisTimestamp() { return 1544396293; }
  * - Recompile, setup your seed nodes, and start mining
  * - You should see your premine appear in the previously generated wallet.
  */
-inline std::string genesisTransactionHash() {
-  return "010a01ff000180d0cfba8560025b2d2ee86de45e3ba741e074959a3e8287492496128bfd7faec62d42d917f0b821018fa97999f30ef64"
-         "ca6f7b82c989893af503539b5d27e8855c4435ada875b8c22";
-}
+std::string genesisTransactionHash(Network::Type network);
 
 static_assert(emissionSpeed() <= 8 * sizeof(uint64_t), "Bad emission speed.");
 }  // namespace Coin

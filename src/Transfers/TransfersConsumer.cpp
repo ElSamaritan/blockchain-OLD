@@ -14,7 +14,7 @@
 #include "Common/BlockingQueue.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
-#include "CryptoNoteCore/TransactionApi.h"
+#include "CryptoNoteCore/Transactions/TransactionApi.h"
 
 #include "Wallet/IWallet.h"
 #include "CryptoNoteCore/INode.h"

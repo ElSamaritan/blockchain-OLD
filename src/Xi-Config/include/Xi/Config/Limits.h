@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -51,14 +51,6 @@ inline constexpr uint64_t blockBlobSizeGrowthDenominator() {
   return static_cast<uint64_t>(std::chrono::seconds{blockBlobSizeGrowthTimeWindow()}.count()) /
          Xi::Config::Time::blockTimeSeconds();
 }
-
-/* +++ Voting +++ */
-inline constexpr uint8_t upgradeVotingThreshold() { return 70; }
-inline constexpr uint32_t upgradeVotingWindow() { return Time::expectedBlocksPerDay(); }
-inline constexpr uint32_t upgradeWindow() { return Time::expectedBlocksPerDay(); }
-
-static_assert(upgradeVotingWindow() > 1u, "Bad upgrade votin window.");
-static_assert(upgradeVotingThreshold() > 0u && upgradeVotingThreshold() <= 100u, "Bad upgrade voting threshold (%).");
 
 /* +++ RPC +++ */
 inline constexpr uint64_t maximumRPCBlocksQueryCount() { return 500; }

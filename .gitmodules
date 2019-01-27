@@ -28,3 +28,6 @@
 [submodule "external/google-breakpad"]
 	path = external/google-breakpad
 	url = ../external/google-breakpad
+[submodule "external/google-sparsehash-c11"]
+	path = external/google-sparsehash-c11
+	url = ../external/google-sparsehash-c11

@@ -25,7 +25,7 @@
 #include <Xi/Global.h>
 #include <Xi/Crypto/Chacha8.h>
 
-#include "CryptoNoteCore/ITransaction.h"
+#include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 
 #include "Common/ScopeExit.h"
 #include "Common/ShuffleGenerator.h"
@@ -40,7 +40,7 @@
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
-#include "CryptoNoteCore/TransactionApi.h"
+#include "CryptoNoteCore/Transactions/TransactionApi.h"
 #include "crypto/crypto.h"
 #include "Transfers/TransfersContainer.h"
 #include "WalletSerializationV1.h"
@@ -2283,10 +2283,10 @@ bool WalletGreen::eraseForeignTransfers(size_t transactionId, size_t firstTransf
       });
 }
 
-std::unique_ptr<CryptoNote::ITransaction> WalletGreen::makeTransaction(
+std::unique_ptr<CryptoNote::ITransactionBuilder> WalletGreen::makeTransaction(
     const std::vector<ReceiverAmounts>& decomposedOutputs, std::vector<InputInfo>& keysInfo, const std::string& extra,
     uint64_t unlockTimestamp) {
-  std::unique_ptr<ITransaction> tx = createTransaction();
+  std::unique_ptr<ITransactionBuilder> tx = createTransaction();
 
   typedef std::pair<const AccountPublicAddress*, uint64_t> AmountToAddress;
   std::vector<AmountToAddress> amountsToAddresses;
@@ -3275,7 +3275,7 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint16_t mixin,
   AccountPublicAddress destination = getChangeDestination(destinationAddress, sourceAddresses);
   m_logger(DEBUGGING) << "Destination address " << m_currency.accountAddressAsString(destination);
 
-  std::unique_ptr<ITransaction> fusionTransaction;
+  std::unique_ptr<ITransactionBuilder> fusionTransaction;
   size_t transactionSize;
   int round = 0;
   uint64_t transactionAmount = 0;

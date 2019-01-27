@@ -17,6 +17,7 @@
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Currency.h"
+#include "CryptoNoteCore/Transactions/ITransactionPool.h"
 #include "P2p/LevinProtocol.h"
 
 #include <Common/FormatTools.h>
@@ -381,7 +382,7 @@ int CryptoNoteProtocolHandler::handle_notify_new_transactions(int command, NOTIF
   if (context.m_state != CryptoNoteConnectionContext::state_normal) return 1;
 
   for (auto tx_blob_it = arg.txs.begin(); tx_blob_it != arg.txs.end();) {
-    if (!m_core.addTransactionToPool(*tx_blob_it)) {
+    if (m_core.transactionPool().pushTransaction(*tx_blob_it).isError()) {
       m_logger(Logging::DEBUGGING) << context << "Tx verification failed";
       tx_blob_it = arg.txs.erase(tx_blob_it);
     } else {

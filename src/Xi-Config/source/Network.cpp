@@ -33,7 +33,7 @@ boost::uuids::uuid Xi::Config::Network::identifier(Xi::Config::Network::Type net
 
 std::vector<std::string> Xi::Config::Network::seedNodes(Type network) {
   static const char* _SeedNodes[] = {"207.180.240.151:22868", "207.180.240.152:22868"};
-  static const char* _LocalNodes[] = {"xi-daemon:22868"};
+  static const char* _LocalNodes[] = {"127.0.0.1:22868"};
   if (network == LocalTestNet)
     return std::vector<std::string>(_LocalNodes, std::end(_LocalNodes));
   else

@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <boost/utility.hpp>
+#include <Xi/Global.h>
 #include <Xi/Config.h>
 #include "crypto/hash.h"
 #include "Logging/LoggerRef.h"
@@ -22,7 +23,10 @@ class AccountBase;
 
 class Currency {
  public:
+  XI_DELETE_COPY(Currency);
+
   uint32_t maxBlockHeight() const { return m_maxBlockHeight; }
+
   size_t maxBlockBlobSize() const { return m_maxBlockBlobSize; }
   size_t maxTxSize() const { return m_maxTxSize; }
   uint8_t maxTxVersion() const;
@@ -44,9 +48,14 @@ class Currency {
   size_t numberOfDecimalPlaces() const { return m_numberOfDecimalPlaces; }
   uint64_t coin() const { return m_coin; }
 
+  uint8_t minimumMixin(uint8_t blockMajorVersion) const;
+  uint8_t maximumMixin(uint8_t blockMajorVersion) const;
+
   uint64_t minimumFee() const { return m_mininumFee; }
   uint64_t defaultDustThreshold(uint32_t height) const;
   uint64_t defaultFusionDustThreshold(uint32_t height) const;
+
+  uint32_t upgradeHeight(uint8_t majorVersion) const;
 
   uint64_t difficultyTarget() const { return m_difficultyTarget; }
   size_t difficultyBlocksCountByVersion(uint8_t version) const;
@@ -65,14 +74,6 @@ class Currency {
   size_t fusionTxMaxSize() const { return m_fusionTxMaxSize; }
   size_t fusionTxMinInputCount() const { return m_fusionTxMinInputCount; }
   size_t fusionTxMinInOutCountRatio() const { return m_fusionTxMinInOutCountRatio; }
-
-  uint32_t upgradeHeight(uint8_t majorVersion) const;
-  unsigned int upgradeVotingThreshold() const { return m_upgradeVotingThreshold; }
-  uint32_t upgradeVotingWindow() const { return m_upgradeVotingWindow; }
-  uint32_t upgradeWindow() const { return m_upgradeWindow; }
-  uint32_t minNumberVotingBlocks() const { return (m_upgradeVotingWindow * m_upgradeVotingThreshold + 99) / 100; }
-  uint32_t maxUpgradeDistance() const { return 7 * m_upgradeWindow; }
-  uint32_t calculateUpgradeHeight(uint32_t voteCompleteHeight) const { return voteCompleteHeight + m_upgradeWindow; }
 
   std::string blocksFileName() const;
   std::string blockIndexesFileName() const;
@@ -164,13 +165,6 @@ class Currency {
   size_t m_fusionTxMaxSize;
   size_t m_fusionTxMinInputCount;
   size_t m_fusionTxMinInOutCountRatio;
-
-  uint32_t m_upgradeHeightV2;
-  uint32_t m_upgradeHeightV3;
-  uint32_t m_upgradeHeightV4;
-  unsigned int m_upgradeVotingThreshold;
-  uint32_t m_upgradeVotingWindow;
-  uint32_t m_upgradeWindow;
 
   std::string m_blocksFileName;
   std::string m_blockIndexesFileName;
@@ -306,25 +300,6 @@ class CurrencyBuilder : boost::noncopyable {
     m_currency.m_fusionTxMinInOutCountRatio = val;
     return *this;
   }
-
-  CurrencyBuilder& upgradeHeightV2(uint32_t val) {
-    m_currency.m_upgradeHeightV2 = val;
-    return *this;
-  }
-  CurrencyBuilder& upgradeHeightV3(uint32_t val) {
-    m_currency.m_upgradeHeightV3 = val;
-    return *this;
-  }
-  CurrencyBuilder& upgradeHeightV4(uint32_t val) {
-    m_currency.m_upgradeHeightV4 = val;
-    return *this;
-  }
-  CurrencyBuilder& upgradeVotingThreshold(unsigned int val);
-  CurrencyBuilder& upgradeVotingWindow(uint32_t val) {
-    m_currency.m_upgradeVotingWindow = val;
-    return *this;
-  }
-  CurrencyBuilder& upgradeWindow(uint32_t val);
 
   CurrencyBuilder& blocksFileName(const std::string& val) {
     m_currency.m_blocksFileName = val;

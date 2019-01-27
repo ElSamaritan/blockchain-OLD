@@ -99,6 +99,7 @@ target_link_libraries(
     leathers
     cxxopts
     System
+    sparsehash
 )
 
 xi_make_library(Crypto Xi-Crypto)

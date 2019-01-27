@@ -23,7 +23,7 @@
 
 #include <Xi/Global.h>
 
-#include "CryptoNoteCore/ITransaction.h"
+#include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 #include "Transfers/ITransfersContainer.h"
 #include "Common/IStreamSerializable.h"
 

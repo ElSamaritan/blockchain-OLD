@@ -41,11 +41,11 @@ message(STATUS "[--XI--] Current Version: ${XI_VERSION}")
 
 # Read license files
 file(READ ${license_file} XI_LICENSE HEX)
-string(REGEX REPLACE "(..)" "0x\\1, " XI_LICENSE ${XI_LICENSE})
+string(REGEX REPLACE "(..)" "'\\\\x\\1', " XI_LICENSE ${XI_LICENSE})
 file(READ ${third_party_file} XI_THIRD_PARTY HEX)
-string(REGEX REPLACE "(..)" "0x\\1, " XI_THIRD_PARTY ${XI_THIRD_PARTY})
+string(REGEX REPLACE "(..)" "'\\\\x\\1', " XI_THIRD_PARTY ${XI_THIRD_PARTY})
 file(READ ${third_party_license_file} XI_THIRD_PARTY_LICENSE HEX)
-string(REGEX REPLACE "(..)" "0x\\1, " XI_THIRD_PARTY_LICENSE ${XI_THIRD_PARTY_LICENSE})
+string(REGEX REPLACE "(..)" "'\\\\x\\1', " XI_THIRD_PARTY_LICENSE ${XI_THIRD_PARTY_LICENSE})
 
 # Evaluate git version
 if(DEFINED ENV{CI})

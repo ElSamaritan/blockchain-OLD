@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -44,9 +44,9 @@ struct MixinCheckpoint;
   struct MixinCheckpoint<_Index> {                                                                               \
     static inline constexpr uint8_t index() { return _Index; }                                                   \
     static inline constexpr uint8_t version() { return _Version; }                                               \
-    static inline constexpr uint16_t minimum() { return _Min; }                                                  \
-    static inline constexpr uint16_t maximum() { return _Max; }                                                  \
-    static inline constexpr uint16_t defaultValue() { return _Default; }                                         \
+    static inline constexpr uint8_t minimum() { return _Min; }                                                   \
+    static inline constexpr uint8_t maximum() { return _Max; }                                                   \
+    static inline constexpr uint8_t defaultValue() { return _Default; }                                          \
     static_assert(::Xi::Config::BlockVersion::exists(_Version), "Non existing major block version referenced."); \
   };                                                                                                             \
   }                                                                                                              \

@@ -13,7 +13,7 @@
 #include "BlockchainExplorer/BlockchainExplorerData.h"
 #include "BlockchainMessages.h"
 #include "CachedBlock.h"
-#include "CachedTransaction.h"
+#include "Transactions/CachedTransaction.h"
 #include "CoreStatistics.h"
 #include "ICoreObserver.h"
 #include "ICoreDefinitions.h"
@@ -75,7 +75,8 @@ class ICore {
   virtual bool getRandomOutputs(uint64_t amount, uint16_t count, std::vector<uint32_t>& globalIndexes,
                                 std::vector<Crypto::PublicKey>& publicKeys) const = 0;
 
-  virtual bool addTransactionToPool(const BinaryArray& transactionBinaryArray) = 0;
+  virtual const class ITransactionPool& transactionPool() const = 0;
+  virtual class ITransactionPool& transactionPool() = 0;
 
   virtual std::vector<Crypto::Hash> getPoolTransactionHashes() const = 0;
   virtual bool getPoolChanges(const Crypto::Hash& lastBlockHash, const std::vector<Crypto::Hash>& knownHashes,

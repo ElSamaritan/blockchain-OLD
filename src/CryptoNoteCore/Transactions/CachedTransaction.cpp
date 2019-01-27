@@ -1,0 +1,163 @@
+﻿/* ============================================================================================== *
+ *                                                                                                *
+ *                                       Xi Blockchain                                            *
+ *                                                                                                *
+ * ---------------------------------------------------------------------------------------------- *
+ * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * ---------------------------------------------------------------------------------------------- *
+ *                                                                                                *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ *                                                                                                *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the *
+ * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.                                            *
+ *                                                                                                *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;      *
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.      *
+ * See the GNU General Public License for more details.                                           *
+ *                                                                                                *
+ * You should have received a copy of the GNU General Public License along with this program.     *
+ * If not, see <https://www.gnu.org/licenses/>.                                                   *
+ *                                                                                                *
+ * ============================================================================================== */
+
+#include "CryptoNoteCore/Transactions/CachedTransaction.h"
+
+#include <exception>
+
+#include <Xi/Config.h>
+#include <Common/Varint.h>
+
+#include "CryptoNoteCore/CryptoNoteTools.h"
+#include "CryptoNoteCore/Transactions/TransactionUtils.h"
+#include "CryptoNoteCore/Transactions/TransactionApiExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionValidationErrors.h"
+
+using namespace Crypto;
+using namespace CryptoNote;
+
+CachedTransaction::CachedTransaction()
+    : transactionBinaryArray{boost::none},
+      transactionHash{boost::none},
+      transactionPrefixHash{boost::none},
+      keyImages{boost::none},
+      keyImagesSet{boost::none},
+      outputKeys{boost::none},
+      paymentIdEvaluated{false},
+      paymentId{boost::none},
+      inputAmount{boost::none},
+      outputAmount{boost::none},
+      transactionFee{boost::none} {}
+
+Xi::Result<CachedTransaction> CachedTransaction::fromBinaryArray(const BinaryArray& blob) {
+  Transaction transaction{};
+  if (!::fromBinaryArray<Transaction>(transaction, blob)) {
+    return Xi::make_error(error::TransactionValidationError::INVALID_BINARY_REPRESNETATION);
+  } else {
+    CachedTransaction reval{transaction};
+    reval.transactionBinaryArray = blob;
+    return Xi::make_result<CachedTransaction>(std::move(reval));
+  }
+}
+
+CachedTransaction::CachedTransaction(Transaction&& transaction) : CachedTransaction() {
+  this->transaction = std::move(transaction);
+}
+
+CachedTransaction::CachedTransaction(const Transaction& transaction) : CachedTransaction() {
+  this->transaction = transaction;
+}
+
+CachedTransaction::CachedTransaction(const BinaryArray& transactionBinaryArray) : CachedTransaction() {
+  this->transactionBinaryArray = transactionBinaryArray;
+  if (!::fromBinaryArray<Transaction>(transaction, this->transactionBinaryArray.get())) {
+    throw std::runtime_error("CachedTransaction::CachedTransaction(BinaryArray&&), deserealization error.");
+  }
+}
+
+const Transaction& CachedTransaction::getTransaction() const { return transaction; }
+
+const Crypto::Hash& CachedTransaction::getTransactionHash() const {
+  if (!transactionHash.is_initialized()) {
+    transactionHash = getBinaryArrayHash(getTransactionBinaryArray());
+  }
+
+  return transactionHash.get();
+}
+
+const Crypto::Hash& CachedTransaction::getTransactionPrefixHash() const {
+  if (!transactionPrefixHash.is_initialized()) {
+    transactionPrefixHash = getObjectHash(static_cast<const TransactionPrefix&>(transaction));
+  }
+
+  return transactionPrefixHash.get();
+}
+
+const BinaryArray& CachedTransaction::getTransactionBinaryArray() const {
+  if (!transactionBinaryArray.is_initialized()) {
+    transactionBinaryArray = toBinaryArray(transaction);
+  }
+
+  return transactionBinaryArray.get();
+}
+
+size_t CachedTransaction::getBlobSize() const { return getTransactionBinaryArray().size(); }
+
+const std::vector<KeyImage>& CachedTransaction::getKeyImages() const {
+  if (!keyImages.is_initialized()) {
+    keyImages = getTransactionKeyImages(getTransaction());
+  }
+  return keyImages.get();
+}
+
+const Crypto::KeyImagesSet& CachedTransaction::getKeyImagesSet() const {
+  if (!keyImagesSet.is_initialized()) {
+    Crypto::KeyImagesSet set{};
+    for (const auto& keyImage : getKeyImages()) {
+      if (!set.insert(keyImage).second)
+        throw std::runtime_error{
+            "CachedTransaction contains duplicate key images, make sure to check getKeyImages for duplicates first."};
+    }
+    keyImagesSet = set;
+  }
+  return keyImagesSet.get();
+}
+
+const std::vector<PublicKey>& CachedTransaction::getOutputKeys() const {
+  if (!outputKeys.is_initialized()) {
+    outputKeys = getTransactionOutputKeys(getTransaction());
+  }
+  return outputKeys.get();
+}
+
+const boost::optional<Hash>& CachedTransaction::getPaymentId() const {
+  if (!paymentIdEvaluated) {
+    Crypto::Hash pid{};
+    if (getPaymentIdFromTxExtra(getTransaction().extra, pid)) {
+      paymentId = pid;
+    }
+    paymentIdEvaluated = true;
+  }
+  return paymentId;
+}
+
+uint64_t CachedTransaction::getInputAmount() const {
+  if (!inputAmount.is_initialized()) {
+    inputAmount = getTransactionInputAmount(getTransaction());
+  }
+  return inputAmount.get();
+}
+
+uint64_t CachedTransaction::getOutputAmount() const {
+  if (!outputAmount.is_initialized()) {
+    outputAmount = getTransactionOutputAmount(getTransaction());
+  }
+  return outputAmount.get();
+}
+
+uint64_t CachedTransaction::getTransactionFee() const {
+  if (!transactionFee.is_initialized()) {
+    transactionFee = getInputAmount() - getOutputAmount();
+  }
+  return transactionFee.get();
+}

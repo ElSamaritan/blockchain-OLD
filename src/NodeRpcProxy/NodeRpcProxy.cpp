@@ -16,7 +16,7 @@
 #include <System/Event.h>
 #include <System/EventLock.h>
 #include <System/Timer.h>
-#include <CryptoNoteCore/TransactionApi.h>
+#include <CryptoNoteCore/Transactions/TransactionApi.h>
 #include <Logging/ILogger.h>
 
 #include "Common/StringTools.h"

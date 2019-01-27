@@ -71,12 +71,17 @@ class DatabaseBlockchainCache : public IBlockchainCache {
 
   bool isTransactionSpendTimeUnlocked(uint64_t unlockTime) const override;
   bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const override;
+  bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex, uint64_t timestamp) const override;
 
   ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
                                                std::vector<Crypto::PublicKey>& publicKeys) const override;
   ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, uint32_t blockIndex,
                                                Common::ArrayView<uint32_t> globalIndexes,
                                                std::vector<Crypto::PublicKey>& publicKeys) const override;
+  ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, uint32_t blockIndex,
+                                               Common::ArrayView<uint32_t> globalIndexes,
+                                               std::vector<Crypto::PublicKey>& publicKeys,
+                                               uint64_t timestamp) const override;
 
   ExtractOutputKeysResult extractKeyOtputIndexes(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
                                                  std::vector<PackedOutIndex>& outIndexes) const override;

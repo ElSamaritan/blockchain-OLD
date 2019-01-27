@@ -29,7 +29,7 @@
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include <Xi/Config.h>
 
-#include "CryptoNoteCore/ITransaction.h"
+#include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 
 using namespace Logging;
 using namespace Crypto;

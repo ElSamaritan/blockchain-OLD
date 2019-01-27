@@ -46,6 +46,7 @@
 using Common::JsonValue;
 using namespace CryptoNote;
 using namespace Logging;
+using namespace boost::filesystem;
 
 void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const bool blockExplorerMode,
                           LoggerManager& logManager) {
@@ -252,7 +253,7 @@ int main(int argc, char* argv[]) {
       dbShutdownOnExit.cancel();
       database.shutdown();
 
-      database.destroy(dbConfig);
+      database.destoy(dbConfig);
 
       database.init(dbConfig);
       dbShutdownOnExit.resume();
@@ -267,6 +268,21 @@ int main(int argc, char* argv[]) {
 
     ccore.load();
     logger(INFO) << "Core initialized OK";
+
+    // BEGIN ----------------- IMPORT TRANSACTION POOL
+    logger(INFO) << "Initializing transaction pool...";
+    const auto transactionPoolFile = path(config.dataDirectory) / currency.txPoolFileName();
+    if (!exists(transactionPoolFile)) {
+      logger(INFO) << "no transaction pool file present, skipping import.";
+    } else {
+      std::ifstream poolFileStream{transactionPoolFile.string(), std::ios::in | std::ios::binary};
+      Common::StdInputStream poolInputStream{poolFileStream};
+      BinaryInputStreamSerializer poolSerializer(poolInputStream);
+      ccore.transactionPool().serialize(poolSerializer);
+      logger(INFO) << "Imported " << ccore.transactionPool().size() << " pending pool transactions.";
+    }
+    logger(INFO) << "Transaction Pool initialized OK";
+    // END ----------------- IMPORT TRANSACTION POOL
 
     CryptoNote::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
     CryptoNote::NodeServer p2psrv(dispatcher, config.network, cprotocol, logManager);
@@ -316,6 +332,18 @@ int main(int argc, char* argv[]) {
     // deinitialize components
     logger(INFO) << "Deinitializing p2p...";
     p2psrv.deinit();
+
+    // BEGIN ----------------- EXPORT TRANSACTION POOL
+    logger(INFO) << "Exporting transaction pool...";
+    {
+      std::ofstream poolFileStream{transactionPoolFile.string(), std::ios::out | std::ios::binary | std::ios::trunc};
+      Common::StdOutputStream poolInputStream{poolFileStream};
+      BinaryOutputStreamSerializer poolSerializer(poolInputStream);
+      ccore.transactionPool().serialize(poolSerializer);
+      logger(INFO) << "Exported " << ccore.transactionPool().size() << " pending pool transactions.";
+    }
+    logger(INFO) << "Transaction Pool epxported OK";
+    // END ----------------- EXPORT TRANSACTION POOL
 
     cprotocol.set_p2p_endpoint(nullptr);
     ccore.save();

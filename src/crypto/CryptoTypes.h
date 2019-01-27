@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -27,6 +27,7 @@
 #include <cstring>
 #include <utility>
 #include <functional>
+#include <unordered_set>
 
 #include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/functional/hash.hpp>
@@ -53,6 +54,7 @@ struct KeyDerivation {
 struct KeyImage {
   uint8_t data[32];
 };
+using KeyImagesSet = std::unordered_set<KeyImage>;
 
 struct Signature {
   uint8_t data[64];

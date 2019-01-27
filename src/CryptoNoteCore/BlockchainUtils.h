@@ -19,7 +19,7 @@
 
 #include <vector>
 
-#include "CachedTransaction.h"
+#include "Transactions/CachedTransaction.h"
 #include "CryptoNoteCore/CryptoNote.h"
 #include "CryptoNoteTools.h"
 
