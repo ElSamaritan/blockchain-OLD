@@ -55,7 +55,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   XI_DELETE_MOVE(TransactionPool);
 
  public:
-  TransactionPool(IBlockchain& blockchain, Logging::ILogger& logger);
+  TransactionPool(IBlockchain& blockchain, Logging::ILogger& m_logger);
   ~TransactionPool() override;
 
   // ------------------------------------- ITransactionPool Begin ------------------------------------------------------
@@ -70,10 +70,19 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   Xi::Result<void> pushTransaction(Transaction transaction) override;
   bool containsTransaction(const Crypto::Hash& hash) const override;
   bool containsKeyImage(const Crypto::KeyImage& keyImage) const override;
+
+  /*!
+   * \copydoc ITransactionPool::serialize(ISerializer)
+   *
+   * Transactions and their receive time will be serialized. Eligible indices will be skipped as can and should
+   * be recalcuated once the cache gets restored, othwerise they may wont be up to date.
+   */
   void serialize(ISerializer& serializer) override;
+
   TransactionQueryResult queryTransaction(const Crypto::Hash& hash) const override;
   std::vector<CachedTransaction> eligiblePoolTransactions(
       TransactionValidationResult::EligibleIndex index) const override;
+  Xi::Concurrent::RecursiveLock::lock_t acquireExclusiveAccess() const override;
   // -------------------------------------- ITransactionPool End -------------------------------------------------------
 
   // ----------------------------------- IBlockchainObserver Begin -----------------------------------------------------
@@ -138,8 +147,31 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
    */
   Xi::Result<TransactionValidationResult::EligibleIndex> currentEligibleIndex() const;
 
+  /*!
+   * \brief insertTransaction tries to enqueue a new transaction
+   * \param transaction the transaction to enqueue
+   * \param reason why the transaction is added
+   * \return Nothing if the transaction was successfully added otherwise an error
+   */
   Xi::Result<void> insertTransaction(Transaction transaction, ITransactionPoolObserver::AdditionReason reason);
+
+  /*!
+   * \brief insertTransaction tries to enqueue a new transaction
+   * \param transaction the transaction to enqueue
+   * \param reason why the transaction is added
+   * \return Nothing if the transaction was successfully added otherwise an error
+   */
   Xi::Result<void> insertTransaction(CachedTransaction transaction, ITransactionPoolObserver::AdditionReason reason);
+
+  /*!
+   * \brief insertTransaction tries to enqueue a new transaction
+   * \param transaction the transaction to enqueue
+   * \param receiveTime the posxi timestamp the transaction was received
+   * \param reason why the transaction is added
+   * \return Nothing if the transaction was successfully added otherwise an error
+   */
+  Xi::Result<void> insertTransaction(CachedTransaction transaction, PosixTimestamp receiveTime,
+                                     ITransactionPoolObserver::AdditionReason reason);
 
   /*!
    * \brief computeStateHash calculates a hash of all contained transactions
@@ -156,7 +188,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
    * \brief evaluateBlockVersionUpgradeConstraints reevaluates all transactions that may got invalid due to higher
    * constraints after a major version upgrade
    */
-  void evaluateBlockVersionUpgradeConstraints(uint8_t version);
+  void evaluateBlockVersionUpgradeConstraints();
 
  private:
   IBlockchain& m_blockchain;                                     ///< The blockchain this pool operates on
@@ -164,6 +196,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   Xi::Concurrent::RecursiveLock m_access;                        ///< Mutex fron concurrent read single write access
   mutable boost::optional<Crypto::Hash> m_stateHash;  ///< Lazy initialized and cached tree hash of all transactions
   boost::optional<uint8_t> m_eligibleBlockVersion;    ///< Stores the block version all transactions are elgible for.
+  Logging::LoggerRef m_logger;
 
   template <typename _KeyT, typename _ValueT>
   using _hash_map = std::unordered_map<_KeyT, _ValueT>;
@@ -182,16 +215,10 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   std::vector<Crypto::Hash> getTransactionHashes() const override;
   bool checkIfTransactionPresent(const Crypto::Hash& hash) const override;
 
-  const TransactionValidatorState& getPoolTransactionValidationState() const override;
   std::vector<CachedTransaction> getPoolTransactions() const override;
 
   uint64_t getTransactionReceiveTime(const Crypto::Hash& hash) const override;
   std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
-
- private:
-  TransactionValidatorState poolState;
-
-  Logging::LoggerRef logger;
 };
 
 }  // namespace CryptoNote

@@ -65,6 +65,10 @@ std::vector<CachedTransaction> TransactionPoolCleanWrapper::eligiblePoolTransact
   return transactionPool->eligiblePoolTransactions(index);
 }
 
+Xi::Concurrent::RecursiveLock::lock_t TransactionPoolCleanWrapper::acquireExclusiveAccess() const {
+  return transactionPool->acquireExclusiveAccess();
+}
+
 CachedTransaction TransactionPoolCleanWrapper::getTransaction(const Crypto::Hash& hash) const {
   return transactionPool->getTransaction(hash);
 }
@@ -79,10 +83,6 @@ std::vector<Crypto::Hash> TransactionPoolCleanWrapper::getTransactionHashes() co
 
 bool TransactionPoolCleanWrapper::checkIfTransactionPresent(const Crypto::Hash& hash) const {
   return transactionPool->checkIfTransactionPresent(hash);
-}
-
-const TransactionValidatorState& TransactionPoolCleanWrapper::getPoolTransactionValidationState() const {
-  return transactionPool->getPoolTransactionValidationState();
 }
 
 std::vector<CachedTransaction> TransactionPoolCleanWrapper::getPoolTransactions() const {

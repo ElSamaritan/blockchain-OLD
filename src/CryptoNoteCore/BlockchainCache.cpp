@@ -200,7 +200,13 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
 
   uint16_t transactionBlockIndex = 0;
   auto baseTransaction = cachedBlock.getBlock().baseTransaction;
+
   pushTransaction(CachedTransaction(std::move(baseTransaction)), blockIndex, transactionBlockIndex++);
+
+  for (const auto& transaction : cachedTransactions) {
+    pushTransaction(transaction, blockIndex, transactionBlockIndex++);
+  }
+
   storage->pushBlock(std::move(rawBlock));
 
   logger(Logging::DEBUGGING) << "Block " << cachedBlock.getBlockHash() << " successfully pushed";
@@ -602,11 +608,10 @@ void BlockchainCache::getRawTransactions(const std::vector<Crypto::Hash>& reques
     auto it = index.find(transactionHash);
     if (it == index.end()) {
       missedTransactions.emplace_back(transactionHash);
-      continue;
+    } else {
+      // assert(startIndex <= it->blockIndex);
+      foundTransactions.emplace_back(getRawTransaction(it->blockIndex, it->transactionIndex));
     }
-
-    // assert(startIndex <= it->blockIndex);
-    foundTransactions.emplace_back(getRawTransaction(it->blockIndex, it->transactionIndex));
   }
 }
 
@@ -720,9 +725,11 @@ std::vector<uint32_t> BlockchainCache::getRandomOutsByAmount(Amount amount, size
   }
 
   auto& outs = it->second.outputs;
-  auto end = std::find_if(outs.rbegin(), outs.rend(), [&](PackedOutIndex index) {
-               return index.data.blockIndex <= blockIndex - currency.minedMoneyUnlockWindow();
-             }).base();
+  auto end = std::find_if(outs.rbegin(), outs.rend(),
+                          [&](PackedOutIndex index) {
+                            return index.data.blockIndex <= blockIndex - currency.minedMoneyUnlockWindow();
+                          })
+                 .base();
   uint32_t dist = static_cast<uint32_t>(std::distance(outs.begin(), end));
   dist = std::min(static_cast<uint32_t>(count), dist);
   ShuffleGenerator<uint32_t, Crypto::random_engine<uint32_t>> generator(dist);

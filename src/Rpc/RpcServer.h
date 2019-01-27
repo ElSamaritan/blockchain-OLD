@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 
+#include <Xi/Concurrent/RecursiveLock.h>
 #include <Xi/Http/RequestHandler.h>
 #include <Xi/Http/Server.h>
 
@@ -135,6 +136,7 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   std::string m_cors;
   std::string m_fee_address;
   uint32_t m_fee_amount;
+  Xi::Concurrent::RecursiveLock m_submissionAccess;
 };
 
 }  // namespace CryptoNote

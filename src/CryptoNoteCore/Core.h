@@ -12,6 +12,7 @@
 #include <string>
 
 #include <Xi/Result.h>
+#include <Xi/Concurrent/RecursiveLock.h>
 
 #include <Common/ObserverManager.h>
 #include <Logging/LoggerMessage.h>
@@ -178,7 +179,7 @@ class Core : public ICore,
   bool initialized;
 
   time_t start_time;
-
+  Xi::Concurrent::RecursiveLock m_access;
   size_t blockMedianSize;
 
   void throwIfNotInitialized() const;
@@ -249,6 +250,7 @@ class Core : public ICore,
 
   void initRootSegment();
   void importBlocksFromStorage();
+  void importTransactionPool();
   void cutSegment(IBlockchainCache& segment, uint32_t startIndex);
 
   void switchMainChainStorage(uint32_t splitBlockIndex, IBlockchainCache& newChain);

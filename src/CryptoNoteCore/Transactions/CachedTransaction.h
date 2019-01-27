@@ -31,6 +31,8 @@
 #include <boost/optional.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
+#include <Xi/Result.h>
+
 #include "CryptoNoteCore/CryptoNote.h"
 
 namespace CryptoNote {
@@ -39,8 +41,16 @@ class CachedTransaction {
   CachedTransaction();
 
  public:
+  static Xi::Result<CachedTransaction> fromBinaryArray(const BinaryArray& blob);
+
+ public:
   explicit CachedTransaction(Transaction&& transaction);
   explicit CachedTransaction(const Transaction& transaction);
+
+  /*!
+   * \deprecated user CachedTransaction::fromBinaryArray
+   * \throws std::runtime_error if blob is illformed
+   */
   explicit CachedTransaction(const BinaryArray& transactionBinaryArray);
   const Transaction& getTransaction() const;
   const Crypto::Hash& getTransactionHash() const;

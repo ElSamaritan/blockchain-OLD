@@ -31,12 +31,14 @@
 namespace Xi {
 namespace Concurrent {
 struct RecursiveLock {
+  using lock_t = boost::recursive_mutex::scoped_lock;
+
   mutable boost::recursive_mutex mutex;
   operator boost::recursive_mutex&() const { return mutex; }
 };
 
-#define XI_CONCURRENT_RLOCK(X)                           \
-  boost::recursive_mutex::scoped_lock __##X##__RLOCK{X}; \
+#define XI_CONCURRENT_RLOCK(X)                               \
+  ::Xi::Concurrent::RecursiveLock::lock_t __##X##__RLOCK{X}; \
   (void)__##X##__RLOCK
 }  // namespace Concurrent
 }  // namespace Xi

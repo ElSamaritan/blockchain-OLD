@@ -73,7 +73,7 @@ std::string serialize(const Value& value, const std::string& name) {
   return ss.str();
 }
 
-std::string serialize(const RawBlock& value, const std::string& name);
+std::string serialize(const RawBlock& value, const std::string &name);
 
 template <class Key, class Value>
 std::pair<std::string, std::string> serialize(const std::string& keyPrefix, const Key& key, const Value& value) {
@@ -93,7 +93,7 @@ void deserialize(const std::string& serialized, Value& value, const std::string&
   serializer(value, name);
 }
 
-void deserialize(const std::string& serialized, RawBlock& value, const std::string& name);
+void deserialize(const std::string& serialized, RawBlock& value, const std::string &name);
 
 template <class Key, class Value>
 void serializeKeys(std::vector<std::string>& rawKeys, const std::string keyPrefix,

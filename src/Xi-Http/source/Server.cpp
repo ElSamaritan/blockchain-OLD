@@ -82,9 +82,13 @@ struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
   }
 
   void doOnAccept(boost::asio::ip::tcp::socket socket) override {
-    std::make_shared<ServerSessionDetector>(std::move(socket), ctx,
-                                            std::shared_ptr<IServerSessionBuilder>{shared_from_this(), this})
-        ->run();
+    if (!keepRunning) {
+      return;
+    } else {
+      std::make_shared<ServerSessionDetector>(std::move(socket), ctx,
+                                              std::shared_ptr<IServerSessionBuilder>{shared_from_this(), this})
+          ->run();
+    }
   }
 
   std::shared_ptr<ServerSession> makeHttpServerSession(ServerSession::socket_t socket,

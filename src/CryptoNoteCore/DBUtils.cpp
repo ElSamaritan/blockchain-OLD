@@ -17,6 +17,8 @@
 
 #include "DBUtils.h"
 
+#include <Xi/Global.h>
+
 namespace {
 const std::string RAW_BLOCK_NAME = "raw_block";
 const std::string RAW_TXS_NAME = "raw_txs";
@@ -25,6 +27,7 @@ const std::string RAW_TXS_NAME = "raw_txs";
 namespace CryptoNote {
 namespace DB {
 std::string serialize(const RawBlock& value, const std::string& name) {
+  XI_UNUSED(name);
   std::stringstream ss;
   Common::StdOutputStream stream(ss);
   CryptoNote::BinaryOutputStreamSerializer serializer(stream);
@@ -36,6 +39,7 @@ std::string serialize(const RawBlock& value, const std::string& name) {
 }
 
 void deserialize(const std::string& serialized, RawBlock& value, const std::string& name) {
+  XI_UNUSED(name);
   std::stringstream ss(serialized);
   Common::StdInputStream stream(ss);
   CryptoNote::BinaryInputStreamSerializer serializer(stream);

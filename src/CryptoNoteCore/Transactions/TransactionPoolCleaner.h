@@ -48,6 +48,7 @@ class TransactionPoolCleanWrapper : public ITransactionPool {
   TransactionQueryResult queryTransaction(const Crypto::Hash& hash) const override;
   std::vector<CachedTransaction> eligiblePoolTransactions(
       TransactionValidationResult::EligibleIndex index) const override;
+  Xi::Concurrent::RecursiveLock::lock_t acquireExclusiveAccess() const override;
 
   CachedTransaction getTransaction(const Crypto::Hash& hash) const override;
   bool removeTransaction(const Crypto::Hash& hash) override;
@@ -55,7 +56,6 @@ class TransactionPoolCleanWrapper : public ITransactionPool {
   std::vector<Crypto::Hash> getTransactionHashes() const override;
   bool checkIfTransactionPresent(const Crypto::Hash& hash) const override;
 
-  const TransactionValidatorState& getPoolTransactionValidationState() const override;
   std::vector<CachedTransaction> getPoolTransactions() const override;
 
   uint64_t getTransactionReceiveTime(const Crypto::Hash& hash) const override;

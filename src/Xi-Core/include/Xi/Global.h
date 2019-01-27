@@ -38,6 +38,13 @@ inline void Unreferenced(Ts&&...) {}
   { (decltype(Xi::Unreferenced(__VA_ARGS__)))0; }
 
 /*!
+ * \def XI_UNUSED_REVAL Marks a return value as intentionally unused. Mainly used for RAII objects.
+ */
+#define XI_UNUSED_REVAL(X)            \
+  auto __UNUSED_REVAL_##__LINE__ = X; \
+  XI_UNUSED(__UNUSED_REVAL_##__LINE__)
+
+/*!
  * \def XI_DELETE_COPY(CLASS_NAME) deletes any possible default generated copy constructor/assignment for CLASS_NAME
  */
 #define XI_DELETE_COPY(CLASS_NAME)        \

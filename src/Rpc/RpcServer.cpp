@@ -998,6 +998,7 @@ bool RpcServer::on_get_currency_id(const COMMAND_RPC_GET_CURRENCY_ID::request& /
 }
 
 bool RpcServer::on_submitblock(const COMMAND_RPC_SUBMITBLOCK::request& req, COMMAND_RPC_SUBMITBLOCK::response& res) {
+  XI_CONCURRENT_RLOCK(m_submissionAccess);
   if (req.size() != 1) {
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_WRONG_PARAM, "Wrong param"};
   }

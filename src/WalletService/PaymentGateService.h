@@ -41,7 +41,7 @@ class PaymentGateService {
   System::Event* stopEvent;
   PaymentService::ConfigurationManager config;
   PaymentService::WalletService* service;
-  std::unique_ptr<CryptoNote::Currency> currency;
+  std::unique_ptr<CryptoNote::Currency> m_currency;
 
   Logging::LoggerGroup logger;
   std::ofstream fileStream;

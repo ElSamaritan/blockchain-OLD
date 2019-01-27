@@ -31,6 +31,7 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Transactions/TransactionUtils.h"
 #include "CryptoNoteCore/Transactions/TransactionApiExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionValidationErrors.h"
 
 using namespace Crypto;
 using namespace CryptoNote;
@@ -48,6 +49,17 @@ CachedTransaction::CachedTransaction()
       outputAmount{boost::none},
       transactionFee{boost::none} {}
 
+Xi::Result<CachedTransaction> CachedTransaction::fromBinaryArray(const BinaryArray& blob) {
+  Transaction transaction{};
+  if (!::fromBinaryArray<Transaction>(transaction, blob)) {
+    return Xi::make_error(error::TransactionValidationError::INVALID_BINARY_REPRESNETATION);
+  } else {
+    CachedTransaction reval{transaction};
+    reval.transactionBinaryArray = blob;
+    return Xi::make_result<CachedTransaction>(std::move(reval));
+  }
+}
+
 CachedTransaction::CachedTransaction(Transaction&& transaction) : CachedTransaction() {
   this->transaction = std::move(transaction);
 }
@@ -58,7 +70,7 @@ CachedTransaction::CachedTransaction(const Transaction& transaction) : CachedTra
 
 CachedTransaction::CachedTransaction(const BinaryArray& transactionBinaryArray) : CachedTransaction() {
   this->transactionBinaryArray = transactionBinaryArray;
-  if (!fromBinaryArray<Transaction>(transaction, this->transactionBinaryArray.get())) {
+  if (!::fromBinaryArray<Transaction>(transaction, this->transactionBinaryArray.get())) {
     throw std::runtime_error("CachedTransaction::CachedTransaction(BinaryArray&&), deserealization error.");
   }
 }

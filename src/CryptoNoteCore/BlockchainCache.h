@@ -184,8 +184,19 @@ class BlockchainCache : public IBlockchainCache {
   virtual std::vector<BinaryArray> getRawTransactions(const std::vector<Crypto::Hash>& transactions,
                                                       std::vector<Crypto::Hash>& missedTransactions) const override;
   virtual std::vector<BinaryArray> getRawTransactions(const std::vector<Crypto::Hash>& transactions) const override;
+
+  /*!
+   * \brief getRawTransactions queries a single segment for transaction blobs
+   * \param transactions hashes of transactions to query
+   * \param foundTransactions raw transactions blobs of all transactions found
+   * \param missedTransactions hashes of queried transactions that could not be found in this segment
+   *
+   * \attention This method only queries this segment and not its parents or children. It is up to the caller
+   * to ensure to propagate correctly.
+   */
   void getRawTransactions(const std::vector<Crypto::Hash>& transactions, std::vector<BinaryArray>& foundTransactions,
                           std::vector<Crypto::Hash>& missedTransactions) const override;
+
   virtual RawBlock getBlockByIndex(uint32_t index) const override;
   virtual BinaryArray getRawTransaction(uint32_t blockIndex, uint32_t transactionIndex) const override;
   virtual std::vector<Crypto::Hash> getTransactionHashes() const override;

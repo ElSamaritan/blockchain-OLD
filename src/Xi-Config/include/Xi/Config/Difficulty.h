@@ -44,7 +44,7 @@
 
 // clang-format off
 //                      (_Index, _Version, _Window, _Initial, _TimeLimit,                           _Algorithm)
-MakeDifficultyCheckpoint(     0,        1,      64,     1000,        2_h,     ::CryptoNote::Difficulty::LWMA_3)
+MakeDifficultyCheckpoint(     0,        1,    1024,      100,        2_h,     ::CryptoNote::Difficulty::LWMA_3)
 // clang-format on
 
 #define CURRENT_DIFFICULTY_CHECKPOINT_INDEX 0

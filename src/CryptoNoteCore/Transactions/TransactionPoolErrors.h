@@ -40,7 +40,11 @@ enum class TransactionPoolError {
   BLOCKCHAIN_UNINITIALIZED = 1,
   NOT_FOUND = 2,
   MAIN_CHAIN_MISSING = 3,
-  INPUT_UNLOCKS_TOO_FAR_IN_FUTURE = 4
+  INPUT_UNLOCKS_TOO_FAR_IN_FUTURE = 4,
+  ALREADY_MINED = 5,  ///< The transaction being pushed is already present in the main chain. This may occur if the main
+                      ///< chain switches and both chains mined the transaction already.
+
+  __NUM = 6
 };
 
 class TransactionPoolErrorCategory : public std::error_category {
@@ -65,6 +69,8 @@ class TransactionPoolErrorCategory : public std::error_category {
         return "The transactions inputs used will unlock too far in future, please retry the transaction later.";
       case TransactionPoolError::NOT_FOUND:
         return "The queried transaction could not be found.";
+      case TransactionPoolError::ALREADY_MINED:
+        return "The transaction that is pushed is already present in the main chain.";
       default:
         return "Unknown error";
     }

@@ -23,6 +23,7 @@
 #include <functional>
 
 #include <Xi/Result.h>
+#include <Xi/Concurrent/RecursiveLock.h>
 
 #include <crypto/CryptoTypes.h>
 #include <Serialization/ISerializer.h>
@@ -38,7 +39,7 @@ class ITransactionPoolObserver;
 class ITransactionPool {
  public:
   using transaction_hashes_container_t = std::vector<Crypto::Hash>;
-  using TransactionQueryResult = boost::optional<PendingTransactionInfo>;
+  using TransactionQueryResult = std::shared_ptr<PendingTransactionInfo>;
 
  public:
   virtual ~ITransactionPool() = default;
@@ -84,14 +85,19 @@ class ITransactionPool {
   virtual std::vector<CachedTransaction> eligiblePoolTransactions(
       TransactionValidationResult::EligibleIndex index) const = 0;
 
-  // DEPRECATED BEGIN
+  /*!
+   * \brief acquireExclusiveAccess locks the transaction pool for exclusive access
+   * \return a RAII object holding the log, once destroyed your exclusive access is gone
+   */
+  virtual Xi::Concurrent::RecursiveLock::lock_t acquireExclusiveAccess() const = 0;
+
+  // DEPRECATED BEGIN | These interfaces may change or get adopted to the new inteface declaration
   virtual CachedTransaction getTransaction(const Crypto::Hash& hash) const = 0;
   virtual bool removeTransaction(const Crypto::Hash& hash) = 0;
 
   virtual std::vector<Crypto::Hash> getTransactionHashes() const = 0;
   virtual bool checkIfTransactionPresent(const Crypto::Hash& hash) const = 0;
 
-  virtual const TransactionValidatorState& getPoolTransactionValidationState() const = 0;
   virtual std::vector<CachedTransaction> getPoolTransactions() const = 0;
 
   virtual uint64_t getTransactionReceiveTime(const Crypto::Hash& hash) const = 0;

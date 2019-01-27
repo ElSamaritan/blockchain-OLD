@@ -535,6 +535,8 @@ bool Core::queryBlocksDetailed(const std::vector<Crypto::Hash>& knownBlockHashes
 
 void Core::getTransactions(const std::vector<Crypto::Hash>& transactionHashes, std::vector<BinaryArray>& transactions,
                            std::vector<Crypto::Hash>& missedHashes) const {
+  XI_CONCURRENT_RLOCK(m_access);
+
   assert(!chainsLeaves.empty());
   assert(!chainsStorage.empty());
   throwIfNotInitialized();
@@ -561,13 +563,17 @@ void Core::getTransactions(const std::vector<Crypto::Hash>& transactionHashes, s
   for (size_t chain = 1; chain < chainsLeaves.size(); ++chain) {
     segment = chainsLeaves[chain];
 
-    while (mainChainSet.count(segment) == 0 && !leftTransactions.empty()) {
+    while (segment != nullptr && !leftTransactions.empty()) {
       std::vector<Crypto::Hash> missedTransactions;
       segment->getRawTransactions(leftTransactions, transactions, missedTransactions);
 
       leftTransactions = std::move(missedTransactions);
       segment = segment->getParent();
     }
+  }
+
+  if (leftTransactions.empty()) {
+    return;
   }
 
   missedHashes.insert(missedHashes.end(), leftTransactions.begin(), leftTransactions.end());
@@ -620,6 +626,10 @@ std::vector<Crypto::Hash> Core::findBlockchainSupplement(const std::vector<Crypt
 
 std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlock) {
   throwIfNotInitialized();
+
+  XI_CONCURRENT_RLOCK(m_access);
+  XI_UNUSED_REVAL(transactionPool().acquireExclusiveAccess());
+
   uint32_t blockIndex = cachedBlock.getBlockIndex();
   Crypto::Hash blockHash = cachedBlock.getBlockHash();
   std::ostringstream os;
@@ -674,17 +684,6 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   if (currentDifficulty == 0) {
     logger(Logging::DEBUGGING) << "Block " << blockStr << " has difficulty overhead";
     return error::BlockValidationError::DIFFICULTY_OVERHEAD;
-  }
-
-  {
-    BlockTemplate bT;
-    fromBinaryArray(bT, rawBlock.block);
-    CachedBlock iC{bT};
-    Crypto::Hash blockHash = iC.getBlockHash();
-    std::ostringstream os;
-    os << blockIndex << " (" << blockHash << ")";
-    std::string blockStr = os.str();
-    logger() << blockStr;
   }
 
   {
@@ -792,7 +791,6 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
           logger(Logging::INFO) << "Block " << blockStr << " added to main chain";
         }
 
-        notifyObservers(makeDelTransactionMessage(std::move(hashes), Messages::DeleteTransaction::Reason::InBlock));
         m_blockchainObservers.notify(&IBlockchainObserver::blockAdded, cachedBlock.getBlockIndex(),
                                      cachedBlock.getBlockHash());
       } else {
@@ -929,6 +927,9 @@ std::error_code Core::addBlock(RawBlock&& rawBlock) {
 
 std::error_code Core::submitBlock(BinaryArray&& rawBlockTemplate) {
   throwIfNotInitialized();
+
+  XI_CONCURRENT_RLOCK(m_access);
+  XI_UNUSED_REVAL(transactionPool().acquireExclusiveAccess());
 
   BlockTemplate blockTemplate;
   bool result = fromBinaryArray(blockTemplate, rawBlockTemplate);
@@ -1067,6 +1068,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
                             uint64_t& difficulty, uint32_t& height) const {
   throwIfNotInitialized();
 
+  XI_CONCURRENT_RLOCK(m_access);
   height = getTopBlockIndex() + 1;
   difficulty = getDifficultyForNextBlock();
   if (difficulty == 0) {
@@ -1558,6 +1560,10 @@ void Core::save() {
 }
 
 void Core::load() {
+  if (isInitialized()) {
+    throw std::runtime_error{"core is already initialized"};
+  }
+
   initRootSegment();
 
   start_time = std::time(nullptr);
@@ -2318,10 +2324,9 @@ TransactionDetails Core::getTransactionDetails(const Crypto::Hash& transactionHa
   transactionDetails.outputs.reserve(transaction->getOutputCount());
   std::vector<uint32_t> globalIndexes;
   globalIndexes.reserve(transaction->getOutputCount());
-  if (!transactionDetails.inBlockchain || !getTransactionGlobalIndexes(transactionDetails.hash, globalIndexes)) {
-    for (size_t i = 0; i < transaction->getOutputCount(); ++i) {
-      globalIndexes.push_back(0);
-    }
+  if (!transactionDetails.inBlockchain || getTransactionGlobalIndexes(transactionDetails.hash, globalIndexes)) {
+    globalIndexes.clear();
+    globalIndexes.resize(transaction->getOutputCount(), 0);
   }
 
   assert(transaction->getOutputCount() == globalIndexes.size());

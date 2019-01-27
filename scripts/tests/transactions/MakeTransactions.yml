@@ -13,6 +13,6 @@ MinimumAmount:   100000
 MaximumAmount:   200000
 
 MinAnonymity: 0
-MaxAnonymity: 3
+MaxAnonymity: 0
 
 TransactionsPerMinute: 200
