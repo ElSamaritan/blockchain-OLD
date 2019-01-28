@@ -569,8 +569,16 @@ int CryptoNoteProtocolHandler::handle_request_chain(int command, NOTIFY_REQUEST_
   }
 
   NOTIFY_RESPONSE_CHAIN_ENTRY::request r;
-  r.m_block_ids = m_core.findBlockchainSupplement(
+  auto idQueryResult = m_core.findBlockchainSupplement(
       arg.block_ids, Xi::Config::Network::blockIdentifiersSynchronizationBatchSize(), r.total_height, r.start_height);
+  if (idQueryResult.isError()) {
+    m_logger(Logging::ERROR) << context
+                             << "Failed to handle NOTIFY_REQUEST_CHAIN. Blockchain supplement query returned error: "
+                             << idQueryResult.error().message();
+    context.m_state = CryptoNoteConnectionContext::state_shutdown;
+    return 1;
+  }
+  r.m_block_ids = idQueryResult.take();
 
   m_logger(Logging::TRACE) << context << "-->>NOTIFY_RESPONSE_CHAIN_ENTRY: m_start_height=" << r.start_height
                            << ", m_total_height=" << r.total_height << ", m_block_ids.size()=" << r.m_block_ids.size();

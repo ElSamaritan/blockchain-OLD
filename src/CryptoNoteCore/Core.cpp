@@ -609,16 +609,17 @@ uint64_t Core::getDifficultyForNextBlock() const {
   return m_currency.nextDifficulty(nextBlockMajorVersion, topBlockIndex, timestamps, difficulties);
 }
 
-std::vector<Crypto::Hash> Core::findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds,
-                                                         size_t maxCount, uint32_t& totalBlockCount,
-                                                         uint32_t& startBlockIndex) const {
+Xi::Result<std::vector<Crypto::Hash>> Core::findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds,
+                                                                     size_t maxCount, uint32_t& totalBlockCount,
+                                                                     uint32_t& startBlockIndex) const {
   assert(!remoteBlockIds.empty());
   assert(remoteBlockIds.back() == getBlockHashByIndex(0));
   throwIfNotInitialized();
 
   totalBlockCount = getTopBlockIndex() + 1;
+  startBlockIndex = (uint32_t)-1;
   auto startIndexResult = findBlockchainSupplement(remoteBlockIds);
-  if (startIndexResult.isError()) return {};
+  if (startIndexResult.isError()) return startIndexResult.error();
   startBlockIndex = startIndexResult.value();
 
   return getBlockHashes(startBlockIndex, static_cast<uint32_t>(maxCount));
@@ -1450,7 +1451,7 @@ Xi::Result<uint32_t> Core::findBlockchainSupplement(const std::vector<Crypto::Ha
   for (auto& hash : remoteBlockIds) {
     IBlockchainCache* blockchainSegment = findMainChainSegmentContainingBlock(hash);
     if (blockchainSegment != nullptr) {
-      if (!blockchainSegment->hasBlock(m_currency.genesisBlockHash())) {
+      if (findIndexInChain(blockchainSegment, m_currency.genesisBlockHash()) == nullptr) {
         return Xi::make_error(error::CoreErrorCode::GENESIS_BLOCK_NOT_FOUND);
       } else {
         return Xi::make_result<uint32_t>(blockchainSegment->getBlockIndex(hash));

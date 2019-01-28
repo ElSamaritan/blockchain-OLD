@@ -82,9 +82,9 @@ class Core : public ICore,
   virtual BlockTemplate getBlockByHash(const Crypto::Hash& blockHash) const override;
 
   virtual std::vector<Crypto::Hash> buildSparseChain() const override;
-  virtual std::vector<Crypto::Hash> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds,
-                                                             size_t maxCount, uint32_t& totalBlockCount,
-                                                             uint32_t& startBlockIndex) const override;
+  virtual Xi::Result<std::vector<Crypto::Hash>> findBlockchainSupplement(
+      const std::vector<Crypto::Hash>& remoteBlockIds, size_t maxCount, uint32_t& totalBlockCount,
+      uint32_t& startBlockIndex) const override;
 
   virtual std::vector<RawBlock> getBlocks(uint32_t minIndex, uint32_t count) const override;
   virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<RawBlock>& blocks,

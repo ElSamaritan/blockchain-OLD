@@ -5,7 +5,11 @@
 // Please see the included LICENSE file for more information.
 
 #pragma once
+
 #include <vector>
+
+#include <Xi/Result.h>
+
 #include <CryptoNoteCore/CryptoNote.h>
 
 #include "AddBlockErrors.h"
@@ -40,9 +44,9 @@ class ICore {
   virtual BlockTemplate getBlockByHash(const Crypto::Hash& blockHash) const = 0;
 
   virtual std::vector<Crypto::Hash> buildSparseChain() const = 0;
-  virtual std::vector<Crypto::Hash> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds,
-                                                             size_t maxCount, uint32_t& totalBlockCount,
-                                                             uint32_t& startBlockIndex) const = 0;
+  virtual Xi::Result<std::vector<Crypto::Hash>> findBlockchainSupplement(
+      const std::vector<Crypto::Hash>& remoteBlockIds, size_t maxCount, uint32_t& totalBlockCount,
+      uint32_t& startBlockIndex) const = 0;
 
   virtual std::vector<RawBlock> getBlocks(uint32_t startIndex, uint32_t count) const = 0;
   virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<RawBlock>& blocks,

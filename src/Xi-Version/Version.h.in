@@ -30,7 +30,7 @@
  */
 
 #define PROJECT_NAME "XI"
-#define PROJECT_SITE "http://xiproject.io"
+#define PROJECT_SITE "https://xiproject.io"
 #define PROJECT_COPYRIGHT "Copyright 2018-2019, The Galaxia Project Developers"
 #define APP_VER_MAJOR @XI_VERSION_MAJOR@
 #define APP_VER_MINOR @XI_VERSION_MINOR@

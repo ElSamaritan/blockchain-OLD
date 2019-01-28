@@ -248,14 +248,20 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req,
 
   uint32_t totalBlockCount;
   uint32_t startBlockIndex;
-  std::vector<Crypto::Hash> supplement = m_core.findBlockchainSupplement(
+  auto supplementQuery = m_core.findBlockchainSupplement(
       req.block_ids, Xi::Config::Limits::maximumRPCBlocksQueryCount(), totalBlockCount, startBlockIndex);
+
+  if (supplementQuery.isError()) {
+    logger(Logging::ERROR) << "Failed to query blockchain supplement: " << supplementQuery.error().message();
+    res.status = "Failed";
+    return false;
+  }
 
   res.current_height = totalBlockCount;
   res.start_height = startBlockIndex;
 
   std::vector<Crypto::Hash> missedHashes;
-  m_core.getBlocks(supplement, res.blocks, missedHashes);
+  m_core.getBlocks(supplementQuery.value(), res.blocks, missedHashes);
   assert(missedHashes.empty());
 
   res.status = CORE_RPC_STATUS_OK;
