@@ -1,33 +1,33 @@
 [submodule "external/google-benchmark"]
 	path = external/google-benchmark
-	url = ../external/google-benchmark.git
+	url = https://gitlab.com/galaxia-project/blockchain/external/google-benchmark.git
 [submodule "external/google-test"]
 	path = external/google-test
-	url = ../external/google-test.git
+	url = https://gitlab.com/galaxia-project/blockchain/external/google-test.git
 [submodule "external/facebook-rocksdb"]
 	path = external/facebook-rocksdb
-	url = ../external/facebook-rocksdb.git
+	url = https://gitlab.com/galaxia-project/blockchain/external/facebook-rocksdb.git
 [submodule "external/nlohmann-json"]
 	path = external/nlohmann-json
-	url = ../external/nlohmann-json.git
+	url = https://gitlab.com/galaxia-project/blockchain/external/nlohmann-json.git
 [submodule "external/jarro2783-cxxopts"]
 	path = external/jarro2783-cxxopts
-	url = ../external/jarro2783-cxxopts.git
+	url = https://gitlab.com/galaxia-project/blockchain/external/jarro2783-cxxopts.git
 [submodule "external/yhirose-cpp-linenoise"]
 	path = external/yhirose-cpp-linenoise
-	url = ../external/yhirose-cpp-linenoise.git
+	url = https://gitlab.com/galaxia-project/blockchain/external/yhirose-cpp-linenoise.git
 [submodule "external/miniupnp"]
 	path = external/miniupnp
-	url = ../external/miniupnp.git
+	url = https://gitlab.com/galaxia-project/blockchain/external/miniupnp.git
 [submodule "external/ruslo-leathers"]
 	path = external/ruslo-leathers
-	url = ../external/ruslo-leathers.git
+	url = https://gitlab.com/galaxia-project/blockchain/external/ruslo-leathers.git
 [submodule "external/lz4-lz4"]
 	path = external/lz4-lz4
-	url = ../External/lz4-lz4
+	url = https://gitlab.com/galaxia-project/blockchain/external/lz4-lz4
 [submodule "external/google-breakpad"]
 	path = external/google-breakpad
-	url = ../external/google-breakpad
+	url = https://gitlab.com/galaxia-project/blockchain/external/google-breakpad
 [submodule "external/google-sparsehash-c11"]
 	path = external/google-sparsehash-c11
-	url = ../external/google-sparsehash-c11
+	url = https://gitlab.com/galaxia-project/blockchain/external/google-sparsehash-c11
