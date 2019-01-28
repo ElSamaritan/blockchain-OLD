@@ -43,7 +43,7 @@ constexpr uint64_t minimumFee() { return 100; }
 constexpr uint32_t emissionSpeed() { return 21; }
 
 inline std::string licenseUrl() { return "https://gitlab.com/galaxia-project/blockchain/xi/blob/develop/LICENSE"; }
-inline std::string downloadUrl() { return "http://release.xi.galaxiaproject.org"; }
+inline std::string downloadUrl() { return "http://release.xiproject.io"; }
 
 /*
  * This is the unix timestamp of the first "mined" block (technically block 2, not the genesis block)
