@@ -6,7 +6,7 @@
 # This file is part of the Galaxia Project - Xi Blockchain                                       #
 # ---------------------------------------------------------------------------------------------- #
 #                                                                                                #
-# Copyright 2018 Galaxia Project Developers                                                      #
+# Copyright 2018-2019 Galaxia Project Developers                                                 #
 #                                                                                                #
 # This program is free software: you can redistribute it and/or modify it under the terms of the #
 # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -21,24 +21,13 @@
 #                                                                                                #
 # ============================================================================================== #
 
-FROM ubuntu:bionic
-
-RUN apt update                   && \
-    apt install -y openssl       && \
-    rm -rf /var/lib/apt/lists/*
-
-
-COPY ./.install/bin /usr/local/bin
-
-# P2P Port
-EXPOSE 22868
-
-# RPC Port
-EXPOSE 22869
-
-# PGService Port
-EXPOSE 38070
-
-RUN mkdir -p /xi/certs
-WORKDIR /xi
-VOLUME [ "/xi/certs" ]
+function Get-Generator {
+    if($IsWindows)
+    {
+        return "Visual Studio 15 2017 Win64"
+    }
+    else
+    {
+        return "Unix Makefiles"
+    }
+}

@@ -10,7 +10,7 @@
 #include <cstring>
 
 #include <Xi/Global.h>
-#include <Xi/Version.h>
+#include <Xi/Version/Version.h>
 
 #include "CommonCLI.h"
 #include "PaymentGateService.h"

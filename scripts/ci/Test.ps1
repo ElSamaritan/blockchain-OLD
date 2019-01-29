@@ -1,5 +1,3 @@
-#!/bin/sh
-
 # ============================================================================================== #
 #                                                                                                #
 #                                       Xi Blockchain                                            #
@@ -8,7 +6,7 @@
 # This file is part of the Galaxia Project - Xi Blockchain                                       #
 # ---------------------------------------------------------------------------------------------- #
 #                                                                                                #
-# Copyright 2018 Galaxia Project Developers                                                      #
+# Copyright 2018-2019 Galaxia Project Developers                                                 #
 #                                                                                                #
 # This program is free software: you can redistribute it and/or modify it under the terms of the #
 # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -23,18 +21,29 @@
 #                                                                                                #
 # ============================================================================================== #
 
-TAG="v$(head -n 1 VERSION)"
+param(
+    [Parameter(Mandatory=$false)][string]$BuildPath = $null
+)
 
-if [ "$CI_COMMIT_REF_NAME" == "master" ]; then
-    EXTRA=""
-elif [ "$CI_COMMIT_REF_NAME" == "develop" ]; then
-    EXTRA="dev-"
-else
-    echo "Docker will be only deployed for master and develop branch."
-    exit 1
-fi
+Import-Module -Name "$PSScriptRoot\modules\WriteLog.psm1" -Force
+Import-Module -Name "$PSScriptRoot\modules\InvokeCommand.psm1" -Force
+Import-Module -Name "$PSScriptRoot\modules\GetConfiguration.psm1" -Force
 
-docker build -t "registry.gitlab.com/galaxia-project/blockchain/xi:$EXTRA$TAG" --file ./scripts/ci/Dockerfile .
-docker tag "registry.gitlab.com/galaxia-project/blockchain/xi:$EXTRA$TAG" "registry.gitlab.com/galaxia-project/blockchain/xi:"$EXTRA"latest"
-docker push "registry.gitlab.com/galaxia-project/blockchain/xi:"$EXTRA"latest"
-docker push "registry.gitlab.com/galaxia-project/blockchain/xi:$EXTRA$TAG" 
+try
+{
+    $CMakeBuildPath = Get-Configuration CMAKE_BUILD_PATH -DefaultValue .build -ProvidedValue $BuildPath -Required
+    Push-Location $CMakeBuildPath
+    try
+    {
+        Invoke-Command { ctest -VV }
+    }
+    finally
+    {
+        Pop-Location
+    }
+}
+catch
+{
+    $Host.SetShouldExit(-1)
+    throw
+}

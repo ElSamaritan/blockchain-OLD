@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <cmath>
 
-#include <Xi/Version.h>
+#include <Xi/Version/Version.h>
 #include <Xi/Global.h>
 #include <Xi/Concurrent/SystemDispatcher.h>
 
@@ -532,7 +532,7 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.network = Xi::to_string(m_core.getCurrency().network());
   res.major_version = m_core.getBlockDetails(m_core.getTopBlockIndex()).majorVersion;
   res.minor_version = m_core.getBlockDetails(m_core.getTopBlockIndex()).minorVersion;
-  res.version = PROJECT_VERSION;
+  res.version = APP_VERSION;
   res.status = CORE_RPC_STATUS_OK;
   res.start_time = (uint64_t)m_core.getStartTime();
   return true;

@@ -26,7 +26,10 @@
 #include <sstream>
 #include <iostream>
 
-#include <Xi/Version.h>
+#include <Xi/Version/Version.h>
+#include <Xi/Version/BuildInfo.h>
+#include <Xi/Version/ProjectInfo.h>
+#include <Xi/Version/License.h>
 #include <Xi/Config/Ascii.h>
 #include <Xi/Config.h>
 
@@ -61,7 +64,7 @@ std::string CommonCLI::header() {
   std::stringstream programHeader;
   programHeader << std::endl
                 << asciiArt << std::endl
-                << " " << Xi::Config::Coin::name() << " v" << PROJECT_VERSION_LONG << std::endl
+                << " " << Xi::Config::Coin::name() << " v" << APP_VERSION << " (" << BUILD_COMMIT_ID << ")" << std::endl
                 << " This software is distributed under the General Public License v3.0" << std::endl
                 << std::endl
                 << " " << PROJECT_COPYRIGHT << std::endl
@@ -83,10 +86,10 @@ std::string CommonCLI::header() {
 
 bool CommonCLI::isDevVersion() {
   return
-#ifdef XI_DEV_VERSION
-      true
-#else
+#if defined(XI_CHANNEL_STABLE) || defined(XI_CHANNEL_BETA)
       false
+#else
+      true
 #endif
       ;
 }
@@ -120,6 +123,7 @@ void CommonCLI::emplaceCLIOptions(cxxopts::Options& options) {
   options.add_options("Core")
       ("help", "Display this help message")
       ("version", "Output software version information")
+      ("vversion", "Output verbose software version information")
       ("os-version", "Output Operating System version information");
 
 #if defined(XI_USE_BREAKPAD)
@@ -156,7 +160,25 @@ bool CommonCLI::handleCLIOptions(cxxopts::Options& options, const cxxopts::Parse
     std::cout << options.help({}) << std::endl;
     return true;
   } else if (result.count("version")) {
-    std::cout << "v" << PROJECT_VERSION_LONG << std::endl;
+    std::cout << "v" << APP_VERSION << " (" << BUILD_COMMIT_ID << ")" << std::endl;
+    return true;
+  } else if (result.count("vversion")) {
+    // clang-format off
+    std::cout
+        << "Version\t\t: v" << APP_VERSION
+        << "\nChannel\t\t: " << BUILD_CHANNEL
+        << "\nBuild Type\t: " << BUILD_TYPE
+        << "\nBuild Timestamp\t: " << BUILD_TIMESTAMP
+        << "\nGit Commit\t: " << BUILD_COMMIT_ID
+        << "\nGit Branch\t: " << BUILD_BRANCH
+        << "\nC Compiler\t: " << BUILD_C_COMPILER_INFO
+        << "\nCXX Compiler\t: " << BUILD_CXX_COMPILER_INFO
+        << "\nBoost Version\t: " << BUILD_BOOST_VERSION
+        << "\nOpenSSL Version\t: " << BUILD_OPENSSL_VERSION
+        << "\n\n"
+        << PROJECT_COPYRIGHT
+    << std::endl;
+    // clang-format on
     return true;
   } else if (result.count("license")) {
     std::cout << Xi::Version::license() << std::endl;
@@ -187,6 +209,8 @@ void* CommonCLI::make_crash_dumper(const std::string& applicationId) {
     if (!isDevVersion()) BreakpadConfig.IsUploadEnabled = false;
     return new Xi::CrashHandler(BreakpadConfig);
   }
+#else
+  (void)applicationId;
 #endif  // XI_USE_BREAKPAD
   return nullptr;
 }

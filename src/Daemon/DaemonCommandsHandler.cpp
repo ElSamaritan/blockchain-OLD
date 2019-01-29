@@ -8,7 +8,7 @@
 
 #include <ctime>
 
-#include <Xi/Version.h>
+#include <Xi/Version/Version.h>
 #include <Xi/Global.h>
 
 #include "P2p/NetNode.h"
@@ -74,7 +74,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
 //--------------------------------------------------------------------------------
 std::string DaemonCommandsHandler::get_commands_str() {
   std::stringstream ss;
-  ss << Xi::Config::Coin::name() << " v" << PROJECT_VERSION_LONG << ENDL;
+  ss << Xi::Config::Coin::name() << " v" << APP_VERSION << ENDL;
   ss << "Commands: " << ENDL;
   std::string usage = m_consoleHandler.getUsage();
   boost::replace_all(usage, "\n", "\n  ");

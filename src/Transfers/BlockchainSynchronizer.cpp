@@ -550,6 +550,7 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
           break;
         }
 
+        BOOST_FALLTHROUGH;
       case UpdateConsumersResult::addedNewBlocks:
         setFutureState(State::blockchainSync);
         m_observerManager.notify(&IBlockchainSynchronizerObserver::synchronizationProgressUpdated, processedBlockCount,
@@ -558,7 +559,7 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
     }
   }
 
-  if (checkIfShouldStop()) {  // Sic!
+  if (checkIfShouldStop()) {
     m_logger(WARNING, BRIGHT_YELLOW) << "Block processing is interrupted";
     m_observerManager.notify(&IBlockchainSynchronizerObserver::synchronizationCompleted,
                              std::make_error_code(std::errc::interrupted));

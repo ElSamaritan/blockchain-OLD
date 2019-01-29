@@ -6,7 +6,7 @@
 # This file is part of the Galaxia Project - Xi Blockchain                                       #
 # ---------------------------------------------------------------------------------------------- #
 #                                                                                                #
-# Copyright 2018 Galaxia Project Developers                                                      #
+# Copyright 2018-2019 Galaxia Project Developers                                                 #
 #                                                                                                #
 # This program is free software: you can redistribute it and/or modify it under the terms of the #
 # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -131,7 +131,7 @@ target_link_libraries(
     json
 )
 
-if(XI_BREAKPAD)
+if(XI_BUILD_BREAKPAD)
   xi_make_library(CrashHandler Xi-CrashHandler)
   target_link_libraries(Xi.CrashHandler PRIVATE Xi.Version Xi.Config Xi.Http Common gbreakpad boost)
   target_compile_definitions(Xi.CrashHandler INTERFACE XI_USE_BREAKPAD)
@@ -140,7 +140,7 @@ endif()
 file(GLOB_RECURSE CommonCLI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI/*")
 add_library(CommonCLI STATIC ${CommonCLI_SOURCES})
 target_include_directories(CommonCLI PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI")
-if(XI_BREAKPAD)
+if(XI_BUILD_BREAKPAD)
   target_link_libraries(CommonCLI PUBLIC cxxopts Xi.Version Xi.Core Common PRIVATE Xi.CrashHandler)
 else()
   target_link_libraries(CommonCLI PUBLIC cxxopts Xi.Version Xi.Core Common)

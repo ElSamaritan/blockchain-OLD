@@ -15,7 +15,7 @@
 #include <Xi/Utils/ExternalIncludePop.h>
 
 #include <CommonCLI/CommonCLI.h>
-#include <Xi/Version.h>
+#include <Xi/Version/Version.h>
 #include <Xi/Config.h>
 #include <Xi/Config/WalletConfig.h>
 #include <zedwallet/Tools.h>

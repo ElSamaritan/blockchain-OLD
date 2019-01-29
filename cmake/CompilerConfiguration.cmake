@@ -6,7 +6,7 @@
 # This file is part of the Galaxia Project - Xi Blockchain                                       #
 # ---------------------------------------------------------------------------------------------- #
 #                                                                                                #
-# Copyright 2018 Galaxia Project Developers                                                      #
+# Copyright 2018-2019 Galaxia Project Developers                                                 #
 #                                                                                                #
 # This program is free software: you can redistribute it and/or modify it under the terms of the #
 # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -60,11 +60,11 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO"${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MT")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:10485760 /ignore:4099 /ignore:4217 /ignore:4049 /NODEFAULTLIB:MSVCRT")
 
-    if(XI_BREAKPAD)
+    if(XI_BUILD_BREAKPAD)
       set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /Zi")
       set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MAP /debug /opt:ref")
-    endif() # XI_BREAKPAD
+    endif() # XI_BUILD_BREAKPAD
 else() # NOT MSVC
   if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     # This option has no effect in glibc version less than 2.20.
@@ -143,14 +143,14 @@ else() # NOT MSVC
   set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${RELEASE_FLAGS}")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${RELEASE_FLAGS}")
 
-  if(XI_BREAKPAD)
+  if(XI_BUILD_BREAKPAD)
     if(XI_C_COMPILER_GNU)
       set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g")
     endif()
     if(XI_CXX_COMPILER_GNU)
       set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
     endif()
-  endif()
+  endif() # XI_BUILD_BREAKPAD
 
   ## Statically link our binaries
   if(NOT APPLE)

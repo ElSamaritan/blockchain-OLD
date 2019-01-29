@@ -1,14 +1,16 @@
 ﻿#include "Xi/Config/Network.h"
 
-#include <Xi/Version.h>
+#include <Xi/Version/BuildInfo.h>
 
 Xi::Config::Network::Type Xi::Config::Network::defaultNetworkType() {
-#ifndef XI_DEV_VERSION
-  return MainNet;
-#elif defined(_DEBUG)
+#if defined(_DEBUG)
   return LocalTestNet;
-#else
+#elif defined(BUILD_CHANNEL_CLUTTER) || defined(BUILD_CHANNEL_EDGE)
   return TestNet;
+#elif defined(BUILD_CHANNEL_BETA)
+  return StageNet;
+#elif defined(BUILD_CHANNEL_STABLE)
+  return MainNet;
 #endif
 }
 

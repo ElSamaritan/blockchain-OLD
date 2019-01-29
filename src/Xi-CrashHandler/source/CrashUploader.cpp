@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -23,7 +23,7 @@
 
 #include "Xi/CrashUploader.h"
 
-#include <Xi/Version.h>
+#include <Xi/Version/Version.h>
 #include <Xi/Config/Network.h>
 #include <Xi/Http/Client.h>
 #include <Xi/Http/MultipartFormDataBuilder.h>
@@ -38,7 +38,7 @@ boost::optional<std::string> Xi::CrashUploader::upload(const std::string& file, 
     Xi::Http::Client client{Xi::Config::Network::breakpadServer(), 80, Xi::Http::SSLClientConfiguration::NoSSL};
     Xi::Http::MultipartFormDataBuilder builder;
     builder.addField("prod", application);
-    builder.addField("ver", PROJECT_VERSION_LONG);
+    builder.addField("ver", APP_VERSION);
     builder.addFile("upload_file_minidump", file);
     auto request = builder.request("/crashreports");
     const auto response = client.send(std::move(request)).get();

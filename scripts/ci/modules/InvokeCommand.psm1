@@ -6,7 +6,7 @@
 # This file is part of the Galaxia Project - Xi Blockchain                                       #
 # ---------------------------------------------------------------------------------------------- #
 #                                                                                                #
-# Copyright 2018 Galaxia Project Developers                                                      #
+# Copyright 2018-2019 Galaxia Project Developers                                                 #
 #                                                                                                #
 # This program is free software: you can redistribute it and/or modify it under the terms of the #
 # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -21,25 +21,17 @@
 #                                                                                                #
 # ============================================================================================== #
 
-param(
-    [Parameter(Mandatory=$true)][string]$SymFile
-)
+#Requires -Modules WriteLog
 
-$Uri = "http://$($env:BREAKPAD_HOST)/symfiles"
-$Encoding = New-Object System.Text.UTF8Encoding $False
-$Boundary = [System.Guid]::NewGuid().ToString()
-$LF = "`r`n"
-
-$Content = [IO.File]::ReadAllText($SymFile)
-[IO.File]::WriteAllText($SymFile, $Content, $Encoding)
-$Content = [IO.File]::ReadAllText($SymFile)
-
-$BodyLines = (
-    "--$Boundary",
-    "Content-Disposition: form-data; name=`"symfile`"; filename=`"$SymFile`"",
-    "Content-Type: application/octet-stream$LF",
-    $Content,
-    "--$Boundary--$LF"
-) -join $LF
-
-Invoke-RestMethod -Uri $Uri -Method Post -ContentType "multipart/form-data; boundary=`"$Boundary`"" -Body $BodyLines
+function Invoke-Command
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)][scriptblock]$Command,
+        [Parameter(Mandatory=$false)][string]$ErrorMessage = ("Error executing command {0}" -f $Command)
+    )
+    & $Command
+    if ($LastExitCode -ne 0) {
+        throw ("Invoke-Command: " + $ErrorMessage)
+    }
+}

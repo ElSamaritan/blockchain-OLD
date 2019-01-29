@@ -2,6 +2,7 @@
 .data/
 .install/
 .site/
+.packages/
 .directory
 cpplint.xml
 cppcheck.xml

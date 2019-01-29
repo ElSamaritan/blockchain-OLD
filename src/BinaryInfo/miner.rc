@@ -1,6 +1,8 @@
 #include <Windows.h>
 #include <winresrc.h>
-#include <Xi/Version.h>
+#include <Xi/Version/Version.h>
+#include <Xi/Version/ProjectInfo.h>
+#include <Xi/Version/BuildInfo.h>
 
 /*!
  * \attention This file must be ANSI encoded in order to be parsed correctly by MSVC resource compiler.
@@ -16,8 +18,8 @@
 IDI_ICON1 ICON DISCARDABLE "miner.ico"
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV,APP_VER_BUILD
-PRODUCTVERSION APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV,APP_VER_BUILD
+FILEVERSION APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV
+PRODUCTVERSION APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV
 FILEFLAGSMASK 0x3fL
 FILEFLAGS VER_DEBUG
 FILEOS VOS__WINDOWS32
@@ -29,12 +31,11 @@ BEGIN
     BLOCK "000004b0"
     BEGIN
       VALUE "CompanyName",      PROJECT_SITE
-      VALUE "FileDescription",  PROJECT_NAME " Miner " PROJECT_VERSION_LONG
-      VALUE "FileVersion",      PROJECT_VERSION_BUILD_NO
+      VALUE "FileDescription",  PROJECT_NAME " Miner v" APP_VERSION " (" BUILD_CHANNEL ")"
       VALUE "LegalCopyright",   PROJECT_COPYRIGHT
       VALUE "OriginalFilename", "xi-miner.exe"
       VALUE "ProductName",      PROJECT_NAME
-      VALUE "ProductVersion",   PROJECT_VERSION
+      VALUE "ProductVersion",   APP_VERSION " (" BUILD_CHANNEL ")"
     END
   END
   BLOCK "VarFileInfo"
