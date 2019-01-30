@@ -45,7 +45,7 @@ class Core : public ICore,
              public IBlockchain, /* TODO move to Blockchain class */
              ITransactionPoolObserver {
  public:
-  Core(const Currency& m_currency, Logging::ILogger& logger, Checkpoints&& checkpoints, System::Dispatcher& dispatcher,
+  Core(const Currency& currency, Logging::ILogger& logger, Checkpoints&& checkpoints, System::Dispatcher& dispatcher,
        std::unique_ptr<IBlockchainCacheFactory>&& blockchainCacheFactory,
        std::unique_ptr<IMainChainStorage>&& mainChainStorage);
   virtual ~Core() override;

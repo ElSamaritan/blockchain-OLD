@@ -28,7 +28,7 @@ namespace CryptoNote {
 
 JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup,
                              PaymentService::ConfigurationManager& config)
-    : Server(), config(config), stopEvent(stopEvent), logger(loggerGroup, "JsonRpcServer") {
+    : Server(), config(config), system{sys}, stopEvent(stopEvent), logger(loggerGroup, "JsonRpcServer") {
   setDispatcher(std::make_shared<Xi::Concurrent::SystemDispatcher>(sys));
   setSSLConfiguration(config.serviceConfig.sslServer);
 }

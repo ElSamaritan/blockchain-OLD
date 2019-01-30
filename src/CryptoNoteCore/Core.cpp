@@ -191,7 +191,8 @@ Core::Core(const Currency& currency, Logging::ILogger& logger, Checkpoints&& che
       m_upgradeManager(new UpgradeManager()),
       blockchainCacheFactory(std::move(blockchainCacheFactory)),
       mainChainStorage(std::move(mainchainStorage)),
-      initialized(false) {
+      initialized(false),
+      m_access{} {
   for (auto version : Xi::Config::BlockVersion::versions())
     m_upgradeManager->addMajorBlockVersion(version, currency.upgradeHeight(version));
   m_transactionPool = std::make_unique<TransactionPoolCleanWrapper>(

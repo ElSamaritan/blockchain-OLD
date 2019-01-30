@@ -57,8 +57,8 @@ find_package(
 
 if(XI_CXX_COMPILER_GNU)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};rt;zlib;boost_system")
-elseif(XI_CXX_COMPILER_AppleClang)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES};zlib;boost_system")
+elseif(APPLE)
+  set(Boost_LIBRARIES "${Boost_LIBRARIES};zlib")
 endif()
 
 cmake_policy(POP)
@@ -66,6 +66,16 @@ cmake_policy(POP)
 add_library(boost INTERFACE IMPORTED GLOBAL)
 target_include_directories(boost INTERFACE ${Boost_INCLUDE_DIRS})
 target_link_libraries(boost INTERFACE ${Boost_LIBRARIES})
+
+if(APPLE)
+  target_compile_definitions(
+    boost
+
+    INTERFACE
+      "BOOST_ERROR_CODE_HEADER_ONLY"
+      "BOOST_SYSTEM_NO_DEPRECATED"
+  )
+endif()
 
 set(Boost_VERSION ${Boost_VERSION} CACHE STRING "Boost Version" FORCE)
 mark_as_advanced(Boost_VERSION)
