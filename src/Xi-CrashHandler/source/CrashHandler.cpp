@@ -119,6 +119,22 @@ static bool dumpCallback(const google_breakpad::MinidumpDescriptor& descriptor, 
   return succeeded;
 }
 #endif  // BOOST_OS_LINUX
+
+#if BOOST_OS_MACOS
+static bool dumpCallback(const char *dump_dir,
+                         const char *minidump_id,
+                         void *context, bool succeeded) {
+  const std::string file = std::string{dump_dir} + std::string{minidump_id} + std::string{".dmp"};
+  if (succeeded) {
+    std::cout << "Dump file created: " << file << std::endl;
+    const auto impl = static_cast<Xi::_CrashHandler_Impl*>(context);
+    if (impl->config.IsUploadEnabled) upload(file, impl->config.Application);
+  } else {
+    std::cout << "Dump file creation failed.";
+  }
+  return succeeded;
+}
+#endif // BOOST_OS_MACOS
 }  // namespace
 
 Xi::CrashHandler::CrashHandler(const Xi::CrashHandlerConfig& config) {
@@ -142,4 +158,9 @@ Xi::CrashHandler::CrashHandler(const Xi::CrashHandlerConfig& config) {
   m_impl->handle =
       std::make_unique<google_breakpad::ExceptionHandler>(desc, nullptr, dumpCallback, m_impl.get(), true, -1);
 #endif  // BOOST_OS_LINUX
+
+#if BOOST_OS_MACOS
+  m_impl->handle = std::make_unique<google_breakpad::ExceptionHandler>(
+      config.OutputPath, nullptr, dumpCallback, m_impl.get(), true, "");
+#endif // BOOST_OS_MACOS
 }

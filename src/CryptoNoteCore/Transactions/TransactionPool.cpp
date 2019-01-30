@@ -48,7 +48,7 @@ using Error = CryptoNote::error::TransactionPoolError;
 namespace CryptoNote {
 
 TransactionPool::TransactionPool(IBlockchain& blockchain, Logging::ILogger& logger)
-    : m_blockchain{blockchain}, m_keyImageReferences{}, m_logger(logger, "txpool") {
+    : m_blockchain{blockchain}, m_observers{}, m_access{}, m_logger(logger, "txpool"), m_keyImageReferences{} {
   blockchain.addObserver(this);
 }
 

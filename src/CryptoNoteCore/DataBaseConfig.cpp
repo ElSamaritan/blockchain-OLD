@@ -89,7 +89,7 @@ void DataBaseConfig::setCompression(DataBaseConfig::Compression _compression) { 
 
 namespace Common {
 template <>
-void Common::toString(const CryptoNote::DataBaseConfig::Compression &compression, std::string &out) {
+void toString(const CryptoNote::DataBaseConfig::Compression &compression, std::string &out) {
   using CryptoNote::DataBaseConfig;
 
   switch (compression) {

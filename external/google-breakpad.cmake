@@ -47,7 +47,7 @@ if (WIN32)
     list(APPEND BREAKPAD_INCLUDE_DIRS "${BREAKPAD_SOURCE_DIR}/src/client/windows")
 endif(WIN32)
 
-if (UNIX)
+if (UNIX AND NOT APPLE)
     set(BREAKPAD_SRCS ${BREAKPAD_SRCS}
         "${BREAKPAD_SOURCE_DIR}/src/client/minidump_file_writer.cc"
         "${BREAKPAD_SOURCE_DIR}/src/client/linux/log/log.cc"
@@ -69,7 +69,7 @@ if (UNIX)
         "${BREAKPAD_SOURCE_DIR}/src/client/linux/crash_generation/crash_generation_client.cc"
     )
     list(APPEND BREAKPAD_INCLUDE_DIRS "${BREAKPAD_SOURCE_DIR}/src/client/linux")
-endif(UNIX)
+endif(UNIX AND NOT APPLE)
 
 if (APPLE)
     set(BREAKPAD_SRCS ${BREAKPAD_SRCS}
@@ -89,6 +89,7 @@ if (APPLE)
         "${BREAKPAD_SOURCE_DIR}/src/common/mac/string_utilities.cc"
         "${BREAKPAD_SOURCE_DIR}/src/common/mac/MachIPC.mm"
     )
+  list(APPEND BREAKPAD_INCLUDE_DIRS "${BREAKPAD_SOURCE_DIR}/src/client/mac")
 endif(APPLE)
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -103,3 +104,11 @@ target_include_directories(gbreakpad PUBLIC ${BREAKPAD_INCLUDE_DIRS})
 if(WIN32)
   target_link_libraries(gbreakpad INTERFACE wininet)
 endif() # WIN32
+
+if(APPLE)
+  find_library(APPLE_CORE_FOUNDATION CoreFoundation)
+  if(NOT APPLE_CORE_FOUNDATION)
+    message(FATAL_ERROR "Unable to find CoreFoundation framework, required for gbreakpad.")
+  endif()
+  target_link_libraries(gbreakpad INTERFACE ${APPLE_CORE_FOUNDATION})
+endif()

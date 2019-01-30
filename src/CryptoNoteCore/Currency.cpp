@@ -130,7 +130,7 @@ uint8_t Currency::maximumMixin(uint8_t blockMajorVersion) const {
   return Xi::Config::Mixin::maximum(blockMajorVersion);
 }
 
-uint64_t Currency::blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const {
+size_t Currency::blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const {
   return Xi::Config::Reward::fullRewardZone(blockMajorVersion);
 }
 

@@ -26,7 +26,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "Context.h"
+#include "OSXContext.h"
 #include "ErrorMessage.h"
 
 namespace System {

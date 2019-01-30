@@ -132,7 +132,7 @@ std::unordered_map<std::string, RpcServer::RpcHandler<RpcServer::HandlerFunction
 
 RpcServer::RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, Core& c, NodeServer& p2p,
                      ICryptoNoteProtocolHandler& protocol)
-    : Xi::Http::Server(), logger(log, "RpcServer"), m_core(c), m_p2p(p2p), m_protocol(protocol) {
+    : Xi::Http::Server(), logger(log, "RpcServer"), m_core(c), m_p2p(p2p), m_protocol(protocol), m_submissionAccess{} {
   setDispatcher(std::make_shared<Xi::Concurrent::SystemDispatcher>(dispatcher));
 }
 
