@@ -70,6 +70,12 @@ Windows 10 - Build:
   variables:
     CI_TARGET_OS: "Windows 10"
 
+macOS - Build:
+  <<: *generic_build_definition
+  tags: ["macOS"]
+  variables:
+    CI_TARGET_OS: "macOS"
+
 # ================================================================================================================== #
 #                                                                                                                    #
 #                                                      ANALYZE                                                       #
@@ -118,6 +124,7 @@ Packages:
     - "Ubuntu Bionic - Build"
     - "openSuse Leap - Build"
     - "Windows 10 - Build"
+    - "macOS - Build"
   script: pwsh -File ./scripts/ci/DeployPackages.ps1
   only:
     - develop
