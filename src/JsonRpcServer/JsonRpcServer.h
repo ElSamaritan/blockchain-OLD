@@ -60,7 +60,6 @@ class JsonRpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   // HttpServer
   virtual Xi::Http::Response doHandleRequest(const Xi::Http::Request& request) override;
 
-  System::Dispatcher& system;
   System::Event& stopEvent;
   Logging::LoggerRef logger;
 };

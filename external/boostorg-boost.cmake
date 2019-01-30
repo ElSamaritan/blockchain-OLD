@@ -53,8 +53,10 @@ find_package(
         iostreams
         ${Boost_COMPONENTS_EXTRA}
 )
-if(NOT MSVC)
+if(XI_CXX_COMPILER_GNU)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};rt;zlib")
+elseif(XI_CXX_COMPILER_AppleClang)
+  set(Boost_LIBRARIES "${Boost_LIBRARIES};zlib")
 endif()
 cmake_policy(POP)
 

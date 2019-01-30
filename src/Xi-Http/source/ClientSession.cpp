@@ -43,7 +43,7 @@
 #include "HttpClientSession.h"
 
 Xi::Http::ClientSession::ClientSession(boost::asio::io_context &io, std::shared_ptr<IClientSessionBuilder> builder)
-    : m_io{io}, m_resolver{io}, m_redirectionCounter{0}, m_builder{builder}, m_sslRequired{false} {}
+    : m_io{io}, m_resolver{io}, m_redirectionCounter{0}, m_sslRequired{false}, m_builder{builder} {}
 
 Xi::Http::ClientSession::future_t Xi::Http::ClientSession::run(Xi::Http::Request &&request) {
   m_request = m_conversion(request);

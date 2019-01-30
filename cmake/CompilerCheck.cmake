@@ -48,6 +48,7 @@ endmacro() # xi_check_compiler
 
 xi_check_compiler("GNU" "GCC/G++" 8 8.2)
 xi_check_compiler("MSVC" "Visual Studio C++" 19.10 19.15)
+xi_check_compiler("AppleClang" "macOS Compiler" 10.0.0.0 10.0.0.1)
 
 if(NOT XI_CXX_COMPILER)
   message(FATAL_ERROR "The C++ compiler you are using (${CMAKE_CXX_COMPILER_ID}) is currently not supported.")

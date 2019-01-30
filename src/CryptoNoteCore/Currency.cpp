@@ -122,7 +122,7 @@ size_t Currency::rewardBlocksWindowByBlockVersion(uint8_t blockMajorVersion) con
   return Xi::Config::Reward::window(blockMajorVersion);
 }
 
-uint64_t Currency::blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const {
+size_t Currency::blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const {
   return Xi::Config::Reward::fullRewardZone(blockMajorVersion);
 }
 

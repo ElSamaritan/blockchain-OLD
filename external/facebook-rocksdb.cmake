@@ -30,6 +30,13 @@ if(MSVC)
       -DCMAKE_SHARED_LINKER_FLAGS="/ignore:4221"
       -DCMAKE_STATIC_LINKER_FLAGS="/ignore:4221"
   )
+elseif(XI_C_COMPILER_AppleClang OR XI_CXX_COMPILER_AppleClang)
+  set(
+    ROCKSDB_EXTRA_CMAKE_ARGS
+      -DENABLE_PTHREAD_MUTEX_ADAPTIVE_NP=OFF
+      -DCMAKE_SHARED_LINKER_FLAGS="-no_warning_for_no_symbols"
+      -DCMAKE_STATIC_LINKER_FLAGS="-no_warning_for_no_symbols"
+    )
 else()
   set(ROCKSDB_EXTRA_CMAKE_ARGS -DENABLE_PTHREAD_MUTEX_ADAPTIVE_NP=OFF)
 endif()
