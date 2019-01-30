@@ -41,8 +41,8 @@ try
     $CMakeSourcePath = Get-Configuration CMAKE_SOURCE_PATH -DefaultValue $(Get-Location) -Required
     $CMakeBuildPath = Get-Configuration CMAKE_BUILD_PATH -DefaultValue .build -ProvidedValue $BuildPath -Required
     $CMakeInstallPrefix = Get-Configuration CMAKE_INSTALL_PATH -DefaultValue ".install" -ProvidedValue $InstallPrefix
-    $CMakeInstallPath = "$CMakeInstallPrefix\Xi\v$($BuildEnvironment.Version)"
-    $CMakeSymbolsPath = Get-Configuration CMAKE_SYMBOLS_PATH -DefaultValue "$CMakeInstallPrefix\symbols\v$($BuildEnvironment.Version)"
+    $CMakeInstallPath = "$CMakeInstallPrefix\bin"
+    $CMakeSymbolsPath = Get-Configuration CMAKE_SYMBOLS_PATH -DefaultValue "$CMakeInstallPrefix\symbols"
 
     $CMakeSourcePath = Get-Resolve-Path $CMakeSourcePath
     $CMakeBuildPath = Get-Resolve-Path $CMakeBuildPath

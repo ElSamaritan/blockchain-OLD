@@ -23,6 +23,7 @@
 
 Import-Module -Name "$PSScriptRoot\modules\WriteLog.psm1" -Force
 Import-Module -Name "$PSScriptRoot\modules\InvokeCommand.psm1" -Force
+Import-Module -Name "$PSScriptRoot\modules\GetResolvePath.psm1" -Force
 
 $PackagesPath = $(Get-Resolve-Path ".packages")
 $PackagesInfoPath = "$PackagesPath\packages.json"

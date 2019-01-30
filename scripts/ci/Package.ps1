@@ -33,32 +33,38 @@ Import-Module -Name "$PSScriptRoot\modules\GetPackageHashCollection.psm1" -Force
 Import-Module -Name "$PSScriptRoot\modules\GetPackageInfo.psm1" -Force
 
 $CMakeInstallPrefix = Get-Configuration CMAKE_INSTALL_PATH -DefaultValue ".install" -ProvidedValue $InstallPrefix
+$CMakeInstallBinaries = Get-Resolve-Path "$CMakeInstallPrefix\bin"
+$CMakeInstallSymbols = Get-Resolve-Path "$CMakeInstallPrefix\symbols"
 
 $PackageInfo = Get-PackageInfo
 
+$VersionInstallBinaries = "$CMakeInstallPrefix\Xi\v$($PackageInfo.Environment.Version)"
+$VersionInstallSymbols  = "$CMakeInstallPrefix\symbols\v$($PackageInfo.Environment.Version)"
 if(-Not ($PackageInfo.Environment.Channel -Like "stable"))
 {
-    Write-Log "Detected non stable release. Applying postfix channel to version directory..."
-    Move-Item -Path "$CMakeInstallPrefix\Xi\v$($PackageInfo.Environment.Version)" `
-        -Destination "$CMakeInstallPrefix\Xi\v$($PackageInfo.Environment.Version)-$($PackageInfo.Environment.Channel)" `
-        -ErrorAction SilentlyContinue
-    Move-Item -Path "$CMakeInstallPrefix\symbols\v$($PackageInfo.Environment.Version)" `
-        -Destination "$CMakeInstallPrefix\symbols\v$($PackageInfo.Environment.Version)-$($PackageInfo.Environment.Channel)" `
-        -ErrorAction SilentlyContinue
+    Write-Log "Non stable channel create postfix for version directory"
+    $VersionInstallBinaries = "$VersionInstallBinaries-$($PackageInfo.Environment.Channel)"
+    $VersionInstallSymbols = "$VersionInstallSymbols-$($PackageInfo.Environment.Channel)"   
 }
+
+Write-Log "Moving install to version named directory..."
+New-Item $VersionInstallBinaries -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
+Move-Item -Path "$CMakeInstallBinaries\*" -Destination $VersionInstallBinaries -ErrorAction SilentlyContinue
+Remove-Item -Path $CMakeInstallBinaries -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+New-Item $VersionInstallSymbols -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
+Move-Item -Path "$CMakeInstallSymbols\*" -Destination $VersionInstallSymbols -ErrorAction SilentlyContinue
 
 Write-Log "Building package..."
 
-$CMakePackagesOut = $(Get-Resolve-Path ".packages")
+$CMakePackagesOut = Get-Resolve-Path ".packages"
 $ArchivePath = "$CMakePackagesOut\$($PackageInfo.ArchivePath)"
 $LatestPath = "$CMakePackagesOut\$($PackageInfo.LatestPath)"
 
-if(Test-Path $ArchivePath)
-{
-    Write-Log "Packaging directory already exists, clearing..."   
-    Remove-Item -Recurse -Force -Path $ArchivePath
-}
+Remove-Item -Recurse -Force -Path $ArchivePath -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Path $ArchivePath | Out-Null
+
+Remove-Item -Recurse -Force -Path $LatestPath -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path $LatestPath | Out-Null
 
 $CMakeBinariesPath = $(Get-Resolve-Path "$CMakeInstallPrefix\Xi")
 $CMakeSymbolsPath = $(Get-Resolve-Path "$CMakeInstallPrefix\symbols")
@@ -71,7 +77,6 @@ Compress-Archive -Path $CMakeSymbolsPath -DestinationPath "$ArchivePath\symbols.
 
 Write-Log "Writing package info..."
 $PackageInfo.Hashes = Get-PackageHashCollection -Path "$ArchivePath\binaries.zip"
-
 ConvertTo-Json $PackageInfo | Set-Content -Path "$ArchivePath\info.json"
 
 Write-Log "Copying latest package..."

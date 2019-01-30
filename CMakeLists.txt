@@ -41,7 +41,7 @@ set(CMAKE_SUPPRESS_REGENERATION ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 ## Options for configuring build system
-option(XI_BUILD_CHANNEL "The distributation channel this build is used for." "clutter")
+set(XI_BUILD_CHANNEL "clutter" CACHE STRING "The distributation channel this build is used for. [stable|beta|edge|clutter]")
 option(XI_BUILD_EXECUTABLES "Builds the executables for this project (daemon, wallet...)." ON)
 option(XI_BUILD_BREAKPAD "Includes the breakpad crash dumper. More options will be availabe it turned on." OFF)
 option(XI_BUILD_TESTSUITE "Builds the xi test suite, see ./tests" OFF)

@@ -38,6 +38,7 @@
 #include <Xi/Utils/ExternalIncludePop.h>
 
 #include <Xi/Version/Version.h>
+#include <Xi/Version/BuildInfo.h>
 #include <Xi/Config/Network.h>
 #include <Xi/Utils/String.h>
 #include <Xi/Http/MultipartFormDataBuilder.h>
@@ -129,7 +130,7 @@ Xi::CrashHandler::CrashHandler(const Xi::CrashHandlerConfig& config) {
   m_impl->config = config;
 
 #if BOOST_OS_WINDOWS
-  m_impl->reportInfo[L"ver"] = to_wstring(std::string{PROJECT_VERSION_LONG});
+  m_impl->reportInfo[L"ver"] = to_wstring(std::string{APP_VERSION " (" BUILD_CHANNEL " )"});
   m_impl->reportInfo[L"prod"] = to_wstring(config.Application);
   m_impl->handle = std::make_unique<google_breakpad::ExceptionHandler>(
       to_wstring(config.OutputPath), nullptr, dumpCallback, m_impl.get(),

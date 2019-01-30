@@ -42,7 +42,7 @@ try
     $CMakeSourcePath = Get-Configuration CMAKE_SOURCE_PATH -DefaultValue $(Get-Location) -Required
     $CMakeBuildPath = Get-Configuration CMAKE_BUILD_PATH -DefaultValue .build -ProvidedValue $BuildPath -Required
     $CMakeInstallPrefix = Get-Configuration CMAKE_INSTALL_PATH -DefaultValue ".install" -ProvidedValue $InstallPrefix
-    $CMakeInstallPath = "$CMakeInstallPrefix\Xi\v$($BuildEnvironment.Version)"
+    $CMakeInstallPath = "$CMakeInstallPrefix\bin"
     $CMakeGenerator = Get-Configuration CMAKE_GENERATOR -DefaultValue $(Get-Generator)
     $CMakeBuildType = Get-Configuration CMAKE_BUILD_TYPE -DefaultValue Release
 
