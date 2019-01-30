@@ -10,7 +10,7 @@
 #include <cstring>
 
 #include <Xi/Global.h>
-#include <Xi/Version.h>
+#include <Xi/Version/Version.h>
 
 #include "CommonCLI.h"
 #include "PaymentGateService.h"
@@ -298,6 +298,8 @@ int main(int argc, char** argv) {
     if (!pg.init(argc, argv)) {
       return 0;  // help message requested or so
     }
+    auto crashDumper = CommonCLI::make_crash_dumper("xi-pgservice");
+    (void)crashDumper;
 
     std::cout << CommonCLI::header() << std::endl;
 
@@ -326,7 +328,7 @@ int main(int argc, char** argv) {
     }
   } catch (std::exception& ex) {
     std::cerr << "Fatal error: " << ex.what() << std::endl;
-    return 1;
+    throw ex;
   }
 
   return 0;

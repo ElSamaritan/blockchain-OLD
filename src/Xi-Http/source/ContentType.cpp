@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -39,6 +39,8 @@ std::string Xi::to_string(Xi::Http::ContentType status) {
       return "application/text";
     case Http::ContentType::Binary:
       return "application/octet-stream";
+    case Http::ContentType::MultipartFormData:
+      return "multipart/form-data";
     default:
       throw std::runtime_error{"unknow content type could not be parsed into a string representation"};
   }
@@ -59,6 +61,8 @@ Xi::Http::ContentType lexical_cast<Xi::Http::ContentType>(const std::string &val
     return Http::ContentType::Text;
   else if (value == to_string(Http::ContentType::Binary))
     return Http::ContentType::Binary;
+  else if (value == to_string(Http::ContentType::MultipartFormData))
+    return Http::ContentType::MultipartFormData;
   else
     throw std::runtime_error{"unable to find a corresponding content type for the provided string"};
 }

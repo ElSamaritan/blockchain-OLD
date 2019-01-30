@@ -30,7 +30,7 @@
 #include <CryptoNoteCore/BlockchainStorage.h>
 #include <CryptoNoteCore/CryptoNoteTools.h>
 #include <CryptoNoteCore/CryptoNoteBasicImpl.h>
-#include "CryptoNoteCore/TransactionExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionExtra.h"
 
 namespace CryptoNote {
 
@@ -607,6 +607,7 @@ std::unique_ptr<IBlockchainCache> DatabaseBlockchainCache::split(uint32_t splitB
   transactionsCount = boost::none;
 
   logger(Logging::DEBUGGING) << "split completed";
+
   // return new cache
   return cache;
 }
@@ -926,6 +927,7 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   txHashes.insert(txHashes.begin(), cachedBaseTransaction.getTransactionHash());
 
   batch.insertCachedBlock(blockInfo, getTopBlockIndex() + 1, txHashes);
+
   batch.insertRawBlock(getTopBlockIndex() + 1, std::move(rawBlock));
 
   uint16_t transactionIndex = 0;
@@ -991,15 +993,24 @@ bool DatabaseBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime
   return isTransactionSpendTimeUnlocked(unlockTime, getTopBlockIndex());
 }
 
-// TODO: pass time
 bool DatabaseBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const {
+  const auto timestamp = time(nullptr);
+  if (timestamp < 0) {
+    return false;
+  } else {
+    return isTransactionSpendTimeUnlocked(unlockTime, blockIndex, static_cast<uint64_t>(timestamp));
+  }
+}
+
+bool DatabaseBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex,
+                                                             uint64_t timestamp) const {
   if (unlockTime < currency.maxBlockHeight()) {
     // interpret as block index
     return blockIndex + currency.lockedTxAllowedDeltaBlocks() >= unlockTime;
+  } else {
+    // interpret as time
+    return static_cast<uint64_t>(timestamp) + currency.lockedTxAllowedDeltaSeconds() >= unlockTime;
   }
-
-  // interpret as time
-  return static_cast<uint64_t>(time(nullptr)) + currency.lockedTxAllowedDeltaSeconds() >= unlockTime;
 }
 
 ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputKeys(
@@ -1010,20 +1021,33 @@ ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputKeys(
 ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputKeys(
     uint64_t amount, uint32_t blockIndex, Common::ArrayView<uint32_t> globalIndexes,
     std::vector<Crypto::PublicKey>& publicKeys) const {
-  return extractKeyOutputs(
-      amount, blockIndex, globalIndexes,
-      [this, &publicKeys, blockIndex](const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex) {
-        if (!isTransactionSpendTimeUnlocked(info.unlockTime, blockIndex)) {
-          logger(Logging::DEBUGGING) << "extractKeyOutputKeys: output " << globalIndex << " is locked";
-          return ExtractOutputKeysResult::OUTPUT_LOCKED;
-        }
+  const auto timestamp = time(nullptr);
+  if (timestamp < 0) {
+    return ExtractOutputKeysResult::TIME_PROVIDER_FAILED;
+  } else {
+    return extractKeyOutputKeys(amount, blockIndex, globalIndexes, publicKeys, static_cast<uint64_t>(timestamp));
+  }
+}
 
-        auto& output = info.outputs[index.data.outputIndex];
-        assert(output.type() == typeid(KeyOutput));
-        publicKeys.push_back(boost::get<KeyOutput>(output).key);
+ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputKeys(uint64_t amount, uint32_t blockIndex,
+                                                                      Common::ArrayView<uint32_t> globalIndexes,
+                                                                      std::vector<Crypto::PublicKey>& publicKeys,
+                                                                      uint64_t timestamp) const {
+  assert(!globalIndexes.isEmpty());
+  assert(std::is_sorted(globalIndexes.begin(), globalIndexes.end()));                             // sorted
+  assert(std::adjacent_find(globalIndexes.begin(), globalIndexes.end()) == globalIndexes.end());  // unique
 
-        return ExtractOutputKeysResult::SUCCESS;
-      });
+  return extractKeyOutputs(amount, blockIndex, globalIndexes,
+                           [&](const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex) {
+                             XI_UNUSED(globalIndex);
+                             if (!isTransactionSpendTimeUnlocked(info.unlockTime, blockIndex, timestamp)) {
+                               return ExtractOutputKeysResult::OUTPUT_LOCKED;
+                             }
+
+                             assert(info.outputs[index.data.outputIndex].type() == typeid(KeyOutput));
+                             publicKeys.push_back(boost::get<KeyOutput>(info.outputs[index.data.outputIndex]).key);
+                             return ExtractOutputKeysResult::SUCCESS;
+                           });
 }
 
 ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOtputIndexes(uint64_t amount,

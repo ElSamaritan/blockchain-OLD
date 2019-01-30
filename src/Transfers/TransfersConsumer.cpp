@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The BBSCoin Developers
 // Copyright (c) 2018, The Karbo Developers
 // Copyright (c) 2018, The TurtleCoin Developers
@@ -14,7 +14,7 @@
 #include "Common/BlockingQueue.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
-#include "CryptoNoteCore/TransactionApi.h"
+#include "CryptoNoteCore/Transactions/TransactionApi.h"
 
 #include "Wallet/IWallet.h"
 #include "CryptoNoteCore/INode.h"

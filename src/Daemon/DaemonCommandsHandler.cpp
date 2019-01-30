@@ -8,7 +8,7 @@
 
 #include <ctime>
 
-#include <Xi/Version.h>
+#include <Xi/Version/Version.h>
 #include <Xi/Global.h>
 
 #include "P2p/NetNode.h"
@@ -74,7 +74,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
 //--------------------------------------------------------------------------------
 std::string DaemonCommandsHandler::get_commands_str() {
   std::stringstream ss;
-  ss << Xi::Config::Coin::name() << " v" << PROJECT_VERSION_LONG << ENDL;
+  ss << Xi::Config::Coin::name() << " v" << APP_VERSION << ENDL;
   ss << "Commands: " << ENDL;
   std::string usage = m_consoleHandler.getUsage();
   boost::replace_all(usage, "\n", "\n  ");
@@ -276,7 +276,8 @@ bool DaemonCommandsHandler::print_tx(const std::vector<std::string>& args) {
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_pool(const std::vector<std::string>& args) {
   XI_UNUSED(args);
-  std::cout << "Pool state: \n";
+  auto txpoolHash = m_core.transactionPool().stateHash();
+  std::cout << "Pool state (" << Common::toHex(txpoolHash.data, sizeof(decltype(txpoolHash))) << "): \n";
   auto pool = m_core.getPoolTransactions();
 
   for (const auto& tx : pool) {

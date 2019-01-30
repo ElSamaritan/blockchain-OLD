@@ -17,8 +17,6 @@
 
 #include "RocksDBWrapper.h"
 
-#include <Xi/Utils/String.h>
-
 #include "rocksdb/cache.h"
 #include "rocksdb/table.h"
 #include "rocksdb/db.h"
@@ -47,30 +45,17 @@ void RocksDBWrapper::init(const DataBaseConfig& config) {
   logger(INFO) << "Opening DB in " << dataDir;
 
   rocksdb::DB* dbPtr;
+
   rocksdb::Options dbOptions = getDBOptions(config);
-  switch (config.getCompression()) {
-    case DataBaseConfig::Compression::LZ4:
-      dbOptions.compression = rocksdb::CompressionType::kLZ4Compression;
-      break;
-    case DataBaseConfig::Compression::LZ4HC:
-      dbOptions.compression = rocksdb::CompressionType::kLZ4HCCompression;
-      break;
-    case DataBaseConfig::Compression::None:
-      dbOptions.compression = rocksdb::CompressionType::kNoCompression;
-      break;
-    default:
-      throw std::runtime_error{"Unknown compression set in DataBaseConfig."};
-  }
-  dbOptions.compression = rocksdb::CompressionType::kLZ4Compression;
   rocksdb::Status status = rocksdb::DB::Open(dbOptions, dataDir, &dbPtr);
   if (status.ok()) {
     logger(INFO) << "DB opened in " << dataDir;
   } else if (!status.ok() && status.IsInvalidArgument()) {
     logger(INFO) << "DB not found in " << dataDir << ". Creating new DB...";
     dbOptions.create_if_missing = true;
-    rocksdb::Status innerStatus = rocksdb::DB::Open(dbOptions, dataDir, &dbPtr);
-    if (!innerStatus.ok()) {
-      logger(ERROR) << "DB Error. DB can't be created in " << dataDir << ". Error: " << innerStatus.ToString();
+    status = rocksdb::DB::Open(dbOptions, dataDir, &dbPtr);
+    if (!status.ok()) {
+      logger(ERROR) << "DB Error. DB can't be created in " << dataDir << ". Error: " << status.ToString();
       throw std::system_error(make_error_code(CryptoNote::error::DataBaseErrorCodes::INTERNAL_ERROR));
     }
   } else if (status.IsIOError()) {
@@ -97,7 +82,7 @@ void RocksDBWrapper::shutdown() {
   state.store(NOT_INITIALIZED);
 }
 
-void RocksDBWrapper::destroy(const DataBaseConfig& config) {
+void RocksDBWrapper::destoy(const DataBaseConfig& config) {
   if (state.load() != NOT_INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::DataBaseErrorCodes::ALREADY_INITIALIZED));
   }

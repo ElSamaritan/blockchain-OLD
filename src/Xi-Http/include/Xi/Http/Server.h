@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -66,6 +66,11 @@ class Server : std::enable_shared_from_this<Server> {
    */
   void stop();
 
+  /*!
+   * \brief host The host address this server was started with, \see start
+   */
+  const std::string& host() const;
+
   void setDispatcher(std::shared_ptr<Concurrent::IDispatcher> dispatcher);
   std::shared_ptr<Concurrent::IDispatcher> dispatcher() const;
 
@@ -76,6 +81,7 @@ class Server : std::enable_shared_from_this<Server> {
   std::shared_ptr<RequestHandler> m_handler;
   std::shared_ptr<Concurrent::IDispatcher> m_dispatcher;
   SSLServerConfiguration m_sslConfig;
+  std::string m_host;
 
   struct _Listener;
   std::shared_ptr<_Listener> m_listener;

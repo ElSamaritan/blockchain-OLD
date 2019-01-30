@@ -34,7 +34,7 @@ const std::string walletdName = "xi-pgservice";
 const std::string coinName = Xi::Config::Coin::name();
 
 /* Where can your users contact you for support? E.g. discord */
-const std::string contactLink = "https://discord.gg/WQJVmBz";
+const std::string contactLink = "https://support.xiproject.io";
 
 /* The number of decimals your coin has */
 const int numDecimalPlaces = Xi::Config ::Coin::numberOfDecimalPoints();

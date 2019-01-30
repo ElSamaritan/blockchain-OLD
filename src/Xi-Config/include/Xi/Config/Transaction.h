@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -36,8 +36,6 @@ inline constexpr uint8_t version() { return 1; }
 
 inline constexpr uint8_t minimumVersion() { return 1; }
 inline constexpr uint8_t maximumVersion() { return 1; }
-
-inline constexpr uint32_t keyCheckingActivitationBlockIndex() { return 1; }
 
 }  // namespace Transaction
 }  // namespace Config

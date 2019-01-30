@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -66,4 +66,11 @@ void emplaceCLIOptions(cxxopts::Options& options);
  * \return true if the application should exit, otherwise false
  */
 bool handleCLIOptions(cxxopts::Options& options, const cxxopts::ParseResult& result);
+
+/*!
+ * \brief make_crash_dumper creates a crash dumper if breakpad was linked and enabled.
+ * \param the application running the crash dumper, used to determine in which application the bug occured
+ * \return a null pointer the actual crash dumper implementation.
+ */
+void* make_crash_dumper(const std::string& applicationId);
 }  // namespace CommonCLI

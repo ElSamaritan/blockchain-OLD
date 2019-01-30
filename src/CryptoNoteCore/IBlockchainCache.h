@@ -21,19 +21,19 @@
 #include <limits>
 #include <utility>
 
-#include <CryptoNoteCore/CryptoNote.h>
+#include <Common/ArrayView.h>
 
+#include "CryptoNoteCore/CryptoNote.h"
 #include "CryptoNoteCore/CachedBlock.h"
-#include "CryptoNoteCore/CachedTransaction.h"
-#include "CryptoNoteCore/TransactionValidatiorState.h"
-#include "Common/ArrayView.h"
+#include "CryptoNoteCore/Transactions/CachedTransaction.h"
+#include "CryptoNoteCore/Transactions/TransactionValidatiorState.h"
 
 namespace CryptoNote {
 
 class ISerializer;
 struct TransactionValidatorState;
 
-enum class ExtractOutputKeysResult { SUCCESS, INVALID_GLOBAL_INDEX, OUTPUT_LOCKED };
+enum class ExtractOutputKeysResult { SUCCESS, INVALID_GLOBAL_INDEX, OUTPUT_LOCKED, TIME_PROVIDER_FAILED };
 
 union PackedOutIndex {
   struct {
@@ -67,7 +67,6 @@ class UseGenesis {
 
 struct CachedBlockInfo;
 struct CachedTransactionInfo;
-class ITransactionPool;
 
 class IBlockchainCache {
  public:
@@ -89,12 +88,17 @@ class IBlockchainCache {
 
   virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime) const = 0;
   virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const = 0;
+  virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex, uint64_t timestamp) const = 0;
 
   virtual ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
                                                        std::vector<Crypto::PublicKey>& publicKeys) const = 0;
   virtual ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, uint32_t blockIndex,
                                                        Common::ArrayView<uint32_t> globalIndexes,
                                                        std::vector<Crypto::PublicKey>& publicKeys) const = 0;
+  virtual ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, uint32_t blockIndex,
+                                                       Common::ArrayView<uint32_t> globalIndexes,
+                                                       std::vector<Crypto::PublicKey>& publicKeys,
+                                                       uint64_t timestamp) const = 0;
 
   virtual ExtractOutputKeysResult extractKeyOtputIndexes(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
                                                          std::vector<PackedOutIndex>& outIndexes) const = 0;

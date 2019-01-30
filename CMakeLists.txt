@@ -6,7 +6,7 @@
  # This file is part of the Galaxia Project - Xi Blockchain                                       #
  # ---------------------------------------------------------------------------------------------- #
  #                                                                                                #
- # Copyright 2018 Galaxia Project Developers                                                      #
+ # Copyright 2018-2019 Galaxia Project Developers                                                 #
  #                                                                                                #
  # This program is free software: you can redistribute it and/or modify it under the terms of the #
  # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -41,8 +41,11 @@ set(CMAKE_SUPPRESS_REGENERATION ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 ## Options for configuring build system
+option(XI_BUILD_CHANNEL "The distributation channel this build is used for." "clutter")
 option(XI_BUILD_EXECUTABLES "Builds the executables for this project (daemon, wallet...)." ON)
+option(XI_BUILD_BREAKPAD "Includes the breakpad crash dumper. More options will be availabe it turned on." OFF)
 option(XI_BUILD_TESTSUITE "Builds the xi test suite, see ./tests" OFF)
+option(XI_BUILD_TOOLS "Builds tooling executables used in development" OFF)
 
 include(cmake/CompilerCheck.cmake)
 include(cmake/CompilerConfiguration.cmake)
@@ -56,6 +59,10 @@ endif() # XI_BUILD_TESTSUITE
 
 add_subdirectory(external)
 add_subdirectory(src)
+
+if(XI_BUILD_TOOLS)
+  add_subdirectory(tools)
+endif() # XI_BUILD_TOOLS
 
 if(XI_BUILD_TESTSUITE)
   add_subdirectory(tests)

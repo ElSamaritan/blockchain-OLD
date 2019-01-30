@@ -256,6 +256,7 @@ struct COMMAND_RPC_GET_INFO {
     uint64_t difficulty;
     uint64_t tx_count;
     uint64_t tx_pool_size;
+    Crypto::Hash tx_pool_state;
     uint64_t tx_min_fee;
     uint64_t alt_blocks_count;
     uint64_t outgoing_connections_count;
@@ -280,6 +281,7 @@ struct COMMAND_RPC_GET_INFO {
       KV_MEMBER(difficulty)
       KV_MEMBER(tx_count)
       KV_MEMBER(tx_pool_size)
+      KV_MEMBER(tx_pool_state)
       KV_MEMBER(tx_min_fee)
       KV_MEMBER(alt_blocks_count)
       KV_MEMBER(outgoing_connections_count)

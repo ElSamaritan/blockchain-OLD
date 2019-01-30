@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "CryptoNoteCore/ITransaction.h"
+#include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 #include "Transfers/ITransfersContainer.h"
 #include "Wallet/IWallet.h"
 

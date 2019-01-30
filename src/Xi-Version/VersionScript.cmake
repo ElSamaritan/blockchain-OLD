@@ -6,7 +6,7 @@
 # This file is part of the Galaxia Project - Xi Blockchain                                       #
 # ---------------------------------------------------------------------------------------------- #
 #                                                                                                #
-# Copyright 2018 Galaxia Project Developers                                                      #
+# Copyright 2018-2019 Galaxia Project Developers                                                 #
 #                                                                                                #
 # This program is free software: you can redistribute it and/or modify it under the terms of the #
 # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -36,16 +36,21 @@ string(REPLACE "." ";" VERSION_LIST ${XI_VERSION})
 list(GET VERSION_LIST 0 XI_VERSION_MAJOR)
 list(GET VERSION_LIST 1 XI_VERSION_MINOR)
 list(GET VERSION_LIST 2 XI_VERSION_PATCH)
-list(GET VERSION_LIST 3 XI_VERSION_TWEAK)
 message(STATUS "[--XI--] Current Version: ${XI_VERSION}")
+
+# Build Channel
+string(TOUPPER ${XI_BUILD_CHANNEL} XI_BUILD_CHANNEL_ID)
+
+# Timestamp
+string(TIMESTAMP BUILD_TIMESTAMP "%Y-%m-%dT%H:%M:%SZ" UTC)
 
 # Read license files
 file(READ ${license_file} XI_LICENSE HEX)
-string(REGEX REPLACE "(..)" "0x\\1, " XI_LICENSE ${XI_LICENSE})
+string(REGEX REPLACE "(..)" "'\\\\x\\1', " XI_LICENSE ${XI_LICENSE})
 file(READ ${third_party_file} XI_THIRD_PARTY HEX)
-string(REGEX REPLACE "(..)" "0x\\1, " XI_THIRD_PARTY ${XI_THIRD_PARTY})
+string(REGEX REPLACE "(..)" "'\\\\x\\1', " XI_THIRD_PARTY ${XI_THIRD_PARTY})
 file(READ ${third_party_license_file} XI_THIRD_PARTY_LICENSE HEX)
-string(REGEX REPLACE "(..)" "0x\\1, " XI_THIRD_PARTY_LICENSE ${XI_THIRD_PARTY_LICENSE})
+string(REGEX REPLACE "(..)" "'\\\\x\\1', " XI_THIRD_PARTY_LICENSE ${XI_THIRD_PARTY_LICENSE})
 
 # Evaluate git version
 if(DEFINED ENV{CI})
@@ -77,37 +82,34 @@ else()
     endif()
 endif() # DEFINED ENV{APPVEYOR}
 
-set(version_header_in_file "${XI_VERSION_SOURCE_DIR}/Version.h.in")
-set(version_header_out_file "${XI_VERSION_OUT_DIR}/include/Xi/Version.h")
-set(version_header_temp_file "${XI_VERSION_OUT_DIR}/Version.h")
-set(version_source_in_file "${XI_VERSION_SOURCE_DIR}/Version.cpp.in")
-set(version_source_out_file "${XI_VERSION_OUT_DIR}/source/Version.cpp")
-set(version_source_temp_file "${XI_VERSION_OUT_DIR}/Version.cpp")
+function(xi_make_version_info_file file)
+  set(file_in "${XI_VERSION_SOURCE_DIR}/${file}.in")
+  set(file_temp "${XI_VERSION_OUT_DIR}/${file}")
 
-# First we configure the files into temporary files withour replacing maybe existing files
-configure_file(${version_header_in_file} ${version_header_temp_file})
-configure_file(${version_source_in_file} ${version_source_temp_file})
+  get_filename_component(file_ext ${file} EXT)
+  if(file_ext STREQUAL ".cpp")
+    set(file_odir "${XI_VERSION_OUT_DIR}/source")
+  else()
+    set(file_odir "${XI_VERSION_OUT_DIR}/include/Xi/Version")
+  endif()
+  set(file_out "${file_odir}/${file}")
 
-# Now we check whether the output file already exists and compare their hashes
-# this way we wont modify the sources if nothing changed at all and reduce compilation time
-if(EXISTS ${version_header_out_file})
-    file(MD5 ${version_header_out_file} currentHash)
-    file(MD5 ${version_header_temp_file} newHash)
+  configure_file(${file_in} ${file_temp})
 
-    if(NOT currentHash STREQUAL newHash)
-        file(COPY ${version_header_temp_file} DESTINATION "${XI_VERSION_OUT_DIR}/include/Xi/")
-    endif()
-else()
-    file(COPY ${version_header_temp_file} DESTINATION "${XI_VERSION_OUT_DIR}/include/Xi/")
-endif()
+  if(EXISTS ${file_out})
+      file(MD5 ${file_out} currentHash)
+      file(MD5 ${file_temp} newHash)
 
-if(EXISTS ${version_source_out_file})
-    file(MD5 ${version_source_out_file} currentHash)
-    file(MD5 ${version_source_temp_file} newHash)
+      if(NOT currentHash STREQUAL newHash)
+          file(COPY ${file_temp} DESTINATION "${file_odir}")
+      endif()
+  else()
+      file(COPY ${file_temp} DESTINATION "${file_odir}")
+  endif()
+endfunction()
 
-    if(NOT currentHash STREQUAL newHash)
-        file(COPY ${version_source_temp_file} DESTINATION "${XI_VERSION_OUT_DIR}/source/")
-    endif()
-else()
-    file(COPY ${version_source_temp_file} DESTINATION "${XI_VERSION_OUT_DIR}/source/")
-endif()
+file(GLOB XI_VERSION_INPUT_FILES RELATIVE ${XI_VERSION_SOURCE_DIR} "${XI_VERSION_SOURCE_DIR}/*.in")
+foreach(input_file ${XI_VERSION_INPUT_FILES})
+  string(REPLACE ".in" "" input_file ${input_file})
+  xi_make_version_info_file(${input_file})
+endforeach()

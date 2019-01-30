@@ -6,7 +6,7 @@
 # This file is part of the Galaxia Project - Xi Blockchain                                       #
 # ---------------------------------------------------------------------------------------------- #
 #                                                                                                #
-# Copyright 2018 Galaxia Project Developers                                                      #
+# Copyright 2018-2019 Galaxia Project Developers                                                 #
 #                                                                                                #
 # This program is free software: you can redistribute it and/or modify it under the terms of the #
 # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -25,9 +25,24 @@ cmake_policy(PUSH)
 if(CMAKE_VERSION VERSION_GREATER "3.12")
   cmake_policy(SET CMP0074 OLD)
 endif()
+
+set(OPENSSL_USE_STATIC_LIBS ON)
+if(MSVC)
+  set(OPENSSL_MSVC_STATIC_RT ON)
+endif()
+
 find_package(OpenSSL REQUIRED COMPONENTS SSL Crypto)
 cmake_policy(POP)
 
+if(UNIX)
+  set(OPENSSL_EXTRA_LIBS dl)
+else()
+  set(OPENSSL_EXTRA_LIBS)
+endif()
+
 add_library(openssl INTERFACE IMPORTED GLOBAL)
 target_include_directories(openssl INTERFACE ${OPENSSL_INCLUDE_DIR})
-target_link_libraries(openssl INTERFACE ${OPENSSL_LIBRARIES})
+target_link_libraries(openssl INTERFACE ${OPENSSL_LIBRARIES} ${OPENSSL_EXTRA_LIBS})
+
+set(OPENSSL_VERSION ${OPENSSL_VERSION} CACHE STRING "OpenSSL Version" FORCE)
+mark_as_advanced(OPENSSL_VERSION)

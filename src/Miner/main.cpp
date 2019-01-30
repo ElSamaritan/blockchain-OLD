@@ -20,6 +20,9 @@ int main(int argc, char** argv) {
     CryptoNote::MiningConfig config;
     config.parse(argc, argv);
 
+    auto crashDumper = CommonCLI::make_crash_dumper("xi-miner");
+    (void)crashDumper;
+
     if (config.ssl.isInsecure()) {
       std::cout << CommonCLI::insecureClientWarning() << std::endl;
     }
@@ -34,7 +37,7 @@ int main(int argc, char** argv) {
     app.start();
   } catch (std::exception& e) {
     std::cerr << "Fatal: " << e.what() << std::endl;
-    return 1;
+    throw e;
   }
 
   return 0;

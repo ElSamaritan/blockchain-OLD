@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -37,6 +37,7 @@
 #include "Xi/Http/ContentType.h"
 #include "Xi/Http/ContentEncoding.h"
 #include "Xi/Http/BasicCredentials.h"
+#include "Xi/Http/Method.h"
 
 namespace Xi {
 namespace Http {
@@ -66,8 +67,11 @@ class HeaderContainer final {
     Location = 176,        ///< Indicates the URL to redirect a page to.
     Allow = 22,            ///< Lists the set of HTTP request methods support by a resource.
     Server = 286,          ///< Contains information about the software used by the origin server to handle the request.
-    AccessControlAllowOrigin = 16  ///< The Access-Control-Allow-Origin response header indicates whether the response
-                                   ///< can be shared with requesting code from the given origin.
+    AccessControlAllowOrigin = 16,  ///< The Access-Control-Allow-Origin response header indicates whether the response
+                                    ///< can be shared with requesting code from the given origin.
+    AccessControlAllowMethods =
+        15,  ///< The Access-Control-Allow-Methods response header specifies the method or methods allowed when
+             ///< accessing the resource in response to a preflight request.
   };
 
   using iterator = std::map<Header, std::string>::iterator;
@@ -98,6 +102,11 @@ class HeaderContainer final {
    * \brief setBasicAuthorization sets the authorization credentials required to authenticate a request with the server
    */
   void setBasicAuthorization(const BasicCredentials& credentials);
+
+  /*!
+   * \brief setAllow sets the allowed method to quer
+   */
+  void setAllow(std::initializer_list<Method> method);
 
   /*!
    * \brief basicAuthorization returns the basic credentials, if set, if the value is set but invalid an exception is
@@ -158,6 +167,12 @@ class HeaderContainer final {
    * \return null if the header is not set, otherwise the raw content stored
    */
   boost::optional<std::string> get(Header header) const;
+
+  /*!
+   * \brief setAccessControlRequestMethods sets allowed request methods for the queried endpoint
+   * \param methods All methods supported for the endpoint queried
+   */
+  void setAccessControlRequestMethods(std::initializer_list<Xi::Http::Method> methods);
 
   /*!
    * \brief set sets the value of a header to a raw string

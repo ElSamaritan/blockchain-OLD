@@ -5,7 +5,11 @@
 // Please see the included LICENSE file for more information.
 
 #pragma once
+
 #include <vector>
+
+#include <Xi/Result.h>
+
 #include <CryptoNoteCore/CryptoNote.h>
 
 #include "AddBlockErrors.h"
@@ -13,7 +17,7 @@
 #include "BlockchainExplorer/BlockchainExplorerData.h"
 #include "BlockchainMessages.h"
 #include "CachedBlock.h"
-#include "CachedTransaction.h"
+#include "Transactions/CachedTransaction.h"
 #include "CoreStatistics.h"
 #include "ICoreObserver.h"
 #include "ICoreDefinitions.h"
@@ -40,9 +44,9 @@ class ICore {
   virtual BlockTemplate getBlockByHash(const Crypto::Hash& blockHash) const = 0;
 
   virtual std::vector<Crypto::Hash> buildSparseChain() const = 0;
-  virtual std::vector<Crypto::Hash> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds,
-                                                             size_t maxCount, uint32_t& totalBlockCount,
-                                                             uint32_t& startBlockIndex) const = 0;
+  virtual Xi::Result<std::vector<Crypto::Hash>> findBlockchainSupplement(
+      const std::vector<Crypto::Hash>& remoteBlockIds, size_t maxCount, uint32_t& totalBlockCount,
+      uint32_t& startBlockIndex) const = 0;
 
   virtual std::vector<RawBlock> getBlocks(uint32_t startIndex, uint32_t count) const = 0;
   virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<RawBlock>& blocks,
@@ -75,7 +79,8 @@ class ICore {
   virtual bool getRandomOutputs(uint64_t amount, uint16_t count, std::vector<uint32_t>& globalIndexes,
                                 std::vector<Crypto::PublicKey>& publicKeys) const = 0;
 
-  virtual bool addTransactionToPool(const BinaryArray& transactionBinaryArray) = 0;
+  virtual const class ITransactionPool& transactionPool() const = 0;
+  virtual class ITransactionPool& transactionPool() = 0;
 
   virtual std::vector<Crypto::Hash> getPoolTransactionHashes() const = 0;
   virtual bool getPoolChanges(const Crypto::Hash& lastBlockHash, const std::vector<Crypto::Hash>& knownHashes,

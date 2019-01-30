@@ -11,10 +11,17 @@
 #include <unordered_map>
 #include <string>
 
+#include <Xi/Result.h>
+#include <Xi/Concurrent/RecursiveLock.h>
+
+#include <Common/ObserverManager.h>
+#include <Logging/LoggerMessage.h>
+#include <System/ContextGroup.h>
+
 #include "BlockchainCache.h"
 #include "BlockchainMessages.h"
 #include "CachedBlock.h"
-#include "CachedTransaction.h"
+#include "Transactions/CachedTransaction.h"
 #include "Currency.h"
 #include "Checkpoints.h"
 #include "IBlockchainCache.h"
@@ -22,28 +29,49 @@
 #include "ICore.h"
 #include "ICoreInformation.h"
 #include "IMainChainStorage.h"
-#include "ITransactionPool.h"
-#include "ITransactionPoolCleaner.h"
 #include "IUpgradeManager.h"
-#include <Logging/LoggerMessage.h>
 #include "MessageQueue.h"
-#include "TransactionValidatiorState.h"
 #include "SwappedVector.h"
-
-#include <System/ContextGroup.h>
+#include "CryptoNoteCore/Blockchain/IBlockchain.h"
+#include "CryptoNoteCore/Transactions/ITransactionPool.h"
+#include "CryptoNoteCore/Transactions/ITransactionPoolObserver.h"
+#include "CryptoNoteCore/Transactions/ITransactionPoolCleaner.h"
+#include "CryptoNoteCore/Transactions/TransactionValidatiorState.h"
 
 namespace CryptoNote {
 
-class Core : public ICore, public ICoreInformation {
+class Core : public ICore,
+             public ICoreInformation,
+             public IBlockchain, /* TODO move to Blockchain class */
+             ITransactionPoolObserver {
  public:
-  Core(const Currency& currency, Logging::ILogger& logger, Checkpoints&& checkpoints, System::Dispatcher& dispatcher,
+  Core(const Currency& m_currency, Logging::ILogger& logger, Checkpoints&& checkpoints, System::Dispatcher& dispatcher,
        std::unique_ptr<IBlockchainCacheFactory>&& blockchainCacheFactory,
        std::unique_ptr<IMainChainStorage>&& mainChainStorage);
-  virtual ~Core();
+  virtual ~Core() override;
 
   virtual bool addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) override;
   virtual bool removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) override;
 
+  // --------------------------------------------- IBlockchain BEGIN ---------------------------------------------------
+ public:
+  void addObserver(IBlockchainObserver* observer) override;
+  void removeObserver(IBlockchainObserver* observer) override;
+
+  const Currency& currency() const override;
+  const IBlockchainCache* mainChain() const override;
+  const IUpgradeManager& upgradeManager() const override;
+  const ITimeProvider& timeProvider() const override;
+  bool isInitialized() const override;
+  // ---------------------------------------------- IBlockchain END ----------------------------------------------------
+
+  // ------------------------------------- ITransactionPoolObserver BEGIN ----------------------------------------------
+ private:
+  void transactionDeletedFromPool(const Crypto::Hash& hash, ITransactionPoolObserver::DeletionReason reason) override;
+  void transactionAddedToPool(const Crypto::Hash& hash, ITransactionPoolObserver::AdditionReason reason) override;
+  // -------------------------------------- ITransactionPoolObserver END -----------------------------------------------
+
+ public:
   virtual uint32_t getTopBlockIndex() const override;
   virtual Crypto::Hash getTopBlockHash() const override;
   virtual Crypto::Hash getBlockHashByIndex(uint32_t blockIndex) const override;
@@ -54,9 +82,9 @@ class Core : public ICore, public ICoreInformation {
   virtual BlockTemplate getBlockByHash(const Crypto::Hash& blockHash) const override;
 
   virtual std::vector<Crypto::Hash> buildSparseChain() const override;
-  virtual std::vector<Crypto::Hash> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds,
-                                                             size_t maxCount, uint32_t& totalBlockCount,
-                                                             uint32_t& startBlockIndex) const override;
+  virtual Xi::Result<std::vector<Crypto::Hash>> findBlockchainSupplement(
+      const std::vector<Crypto::Hash>& remoteBlockIds, size_t maxCount, uint32_t& totalBlockCount,
+      uint32_t& startBlockIndex) const override;
 
   virtual std::vector<RawBlock> getBlocks(uint32_t minIndex, uint32_t count) const override;
   virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<RawBlock>& blocks,
@@ -89,8 +117,6 @@ class Core : public ICore, public ICoreInformation {
   virtual bool getRandomOutputs(uint64_t amount, uint16_t count, std::vector<uint32_t>& globalIndexes,
                                 std::vector<Crypto::PublicKey>& publicKeys) const override;
 
-  virtual bool addTransactionToPool(const BinaryArray& transactionBinaryArray) override;
-
   virtual std::vector<Crypto::Hash> getPoolTransactionHashes() const override;
   virtual bool getPoolChanges(const Crypto::Hash& lastBlockHash, const std::vector<Crypto::Hash>& knownHashes,
                               std::vector<BinaryArray>& addedTransactions,
@@ -107,7 +133,9 @@ class Core : public ICore, public ICoreInformation {
   virtual std::time_t getStartTime() const;
 
   // ICoreInformation
-  virtual size_t getPoolTransactionCount() const override;
+  const ITransactionPool& transactionPool() const override;
+  ITransactionPool& transactionPool() override;
+
   virtual size_t getBlockchainTransactionCount() const override;
   virtual size_t getAlternativeBlockCount() const override;
   virtual uint64_t getTotalGeneratedAmount() const override;
@@ -130,18 +158,20 @@ class Core : public ICore, public ICoreInformation {
   virtual uint64_t get_current_blockchain_height() const;
 
  private:
-  const Currency& currency;
+  const Currency& m_currency;
   System::Dispatcher& dispatcher;
   System::ContextGroup contextGroup;
   Logging::LoggerRef logger;
   Checkpoints checkpoints;
-  std::unique_ptr<IUpgradeManager> upgradeManager;
+  std::unique_ptr<IUpgradeManager> m_upgradeManager;
   std::vector<std::unique_ptr<IBlockchainCache>> chainsStorage;
   std::vector<IBlockchainCache*> chainsLeaves;
-  std::unique_ptr<ITransactionPoolCleanWrapper> transactionPool;
+  std::unique_ptr<ITransactionPool> m_transactionPool;
   std::unordered_set<IBlockchainCache*> mainChainSet;
 
   std::string dataFolder;
+  Tools::ObserverManager<IBlockchainObserver> m_blockchainObservers;
+  std::unique_ptr<ITimeProvider> m_timeProvider;
 
   IntrusiveLinkedList<MessageQueue<BlockchainMessage>> queueList;
   std::unique_ptr<IBlockchainCacheFactory> blockchainCacheFactory;
@@ -149,10 +179,11 @@ class Core : public ICore, public ICoreInformation {
   bool initialized;
 
   time_t start_time;
-
+  Xi::Concurrent::RecursiveLock m_access;
   size_t blockMedianSize;
 
   void throwIfNotInitialized() const;
+
   bool extractTransactions(const std::vector<BinaryArray>& rawTransactions,
                            std::vector<CachedTransaction>& transactions, uint64_t& cumulativeSize);
 
@@ -160,7 +191,7 @@ class Core : public ICore, public ICoreInformation {
   std::error_code validateTransaction(const CachedTransaction& transaction, TransactionValidatorState& state,
                                       IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex);
 
-  uint32_t findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds) const;
+  Xi::Result<uint32_t> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds) const;
   std::vector<Crypto::Hash> getBlockHashes(uint32_t startBlockIndex, uint32_t maxCount) const;
 
   std::error_code validateBlock(const CachedBlock& block, IBlockchainCache* cache, uint64_t& minerReward);
@@ -202,8 +233,8 @@ class Core : public ICore, public ICoreInformation {
 
   uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
   size_t calculateCumulativeBlocksizeLimit(uint32_t height) const;
-  void fillBlockTemplate(BlockTemplate& block, size_t medianSize, size_t maxCumulativeSize, size_t& transactionsSize,
-                         uint64_t& fee) const;
+  void fillBlockTemplate(BlockTemplate& block, uint32_t height, size_t medianSize, size_t maxCumulativeSize,
+                         size_t& transactionsSize, uint64_t& fee) const;
   void deleteAlternativeChains();
   void deleteLeaf(size_t leafIndex);
   void mergeMainChainSegments();
@@ -212,19 +243,14 @@ class Core : public ICore, public ICoreInformation {
                                            bool foundInPool) const;
   void notifyOnSuccess(error::AddBlockErrorCode opResult, uint32_t previousBlockIndex, const CachedBlock& cachedBlock,
                        const IBlockchainCache& cache);
-  void copyTransactionsToPool(IBlockchainCache* alt);
-
-  void actualizePoolTransactions();
-  void actualizePoolTransactionsLite(
-      const TransactionValidatorState& validatorState);  // Checks pool txs only for double spend.
 
   void transactionPoolCleaningProcedure();
   void updateBlockMedianSize();
-  bool addTransactionToPool(CachedTransaction&& cachedTransaction);
   bool isTransactionValidForPool(const CachedTransaction& cachedTransaction, TransactionValidatorState& validatorState);
 
   void initRootSegment();
   void importBlocksFromStorage();
+  void importTransactionPool();
   void cutSegment(IBlockchainCache& segment, uint32_t startIndex);
 
   void switchMainChainStorage(uint32_t splitBlockIndex, IBlockchainCache& newChain);

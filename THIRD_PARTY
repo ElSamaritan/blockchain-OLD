@@ -21,6 +21,11 @@ google test
     https://github.com/google/googletest
     BSD 3-Clause "New" or "Revised" License
 
+google breakpad
+    Copyright (c) 2006 Google Inc.
+    https://chromium.googlesource.com/breakpad/breakpad
+    https://github.com/google/breakpad/blob/master/LICENSE
+
 cxxopts
     Copyright (c) 2014 Jarryd Beck
     https://github.com/jarro2783/cxxopts

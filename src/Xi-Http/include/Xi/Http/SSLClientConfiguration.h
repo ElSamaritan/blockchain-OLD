@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -41,11 +41,14 @@ class context;
 namespace Xi {
 namespace Http {
 struct SSLClientConfiguration {
+  static const SSLClientConfiguration NoSSL;
+
   bool Disabled;
   bool VerifyPeers;
   std::string TrustedFile;
 
-  SSLClientConfiguration();
+  explicit SSLClientConfiguration(bool disabled = false, bool verifiyPeers = true,
+                                  const std::string& trustedFile = "./certs/trusted.pem");
   ~SSLClientConfiguration() = default;
 
   void initializeContext(boost::asio::ssl::context& ctx);

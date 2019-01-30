@@ -6,7 +6,7 @@
 # This file is part of the Galaxia Project - Xi Blockchain                                       #
 # ---------------------------------------------------------------------------------------------- #
 #                                                                                                #
-# Copyright 2018 Galaxia Project Developers                                                      #
+# Copyright 2018-2019 Galaxia Project Developers                                                 #
 #                                                                                                #
 # This program is free software: you can redistribute it and/or modify it under the terms of the #
 # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -23,8 +23,7 @@
 
 stages:
   - build
-  - test
-  - analysis
+  - analyze
   - deploy
 
 variables:
@@ -36,105 +35,51 @@ variables:
 #                                                                                                                    #
 # ================================================================================================================== #
 
-.linux_build_template: &linux_build_definition
+.generic_build_template: &generic_build_definition
   stage: build
-  tags:
-    - docker
-  script:
-    - mkdir -p .build
-    - cd .build
-    - rm -f CMakeCache.txt || true
-    - cmake -DCMAKE_INSTALL_PREFIX:PATH=../.install -DCMAKE_BUILD_TYPE=Release -DXI_BUILD_TESTSUITE=ON ..
-    - make -j 2
-    - make install
+  dependencies: []
+  script: 
+    - pwsh -File ./scripts/ci/Build.ps1
+    - pwsh -File ./scripts/ci/Test.ps1
+    - pwsh -File ./scripts/ci/Package.ps1
   cache:
     key: "$CI_COMMIT_REF_SLUG-$CI_JOB_NAME"
     paths: [.build/]
   artifacts:
-    paths:
-      - .build/
-      - .install/
-  dependencies: []
+    paths: [".packages/"]
+
+.linux_build_template: &linux_build_definition
+  <<: *generic_build_definition
+  tags: ["docker"]
 
 Ubuntu Bionic - Build:
   <<: *linux_build_definition
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
-
-Ubuntu Xenial - Build:
-  <<: *linux_build_definition
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:xenial
+  variables:
+    CI_TARGET_OS: "Debian"
 
 openSuse Leap - Build:
   <<: *linux_build_definition
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
+  variables:
+    CI_TARGET_OS: "RPM"
 
 Windows 10 - Build:
-  stage: build
-  tags:
-    - windows
-  script:
-    - if not exist ".\.build" mkdir .\.build
-    - cd .\.build
-    - IF EXIST CMakeCache.txt DEL /F CMakeCache.txt
-    - cmake -G "Visual Studio 15 2017 Win64" -DCMAKE_INSTALL_PREFIX:PATH=../.install -DCMAKE_BUILD_TYPE=Release -DXI_BUILD_TESTSUITE=ON ..
-    - cmake --build . --config Release
-  cache:
-    key: "%CI_COMMIT_REF_SLUG%-%CI_JOB_NAME%"
-    paths: [.build/]
-  artifacts:
-    paths: [.build/]
-  dependencies: []
+  <<: *generic_build_definition
+  tags: ["windows"]
+  variables:
+    CI_TARGET_OS: "Windows"
 
 # ================================================================================================================== #
 #                                                                                                                    #
-#                                                      TESTS                                                         #
-#                                                                                                                    #
-# ================================================================================================================== #
-
-
-.linux_test_template: &linux_test_definition
-  stage: test
-  tags:
-    - docker
-  script:
-    - cd ./.build
-    - ctest -VV
-
-Ubuntu Bionic - Test:
-  <<: *linux_test_definition
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
-  dependencies: ["Ubuntu Bionic - Build"]
-
-Ubuntu Xenial - Test:
-  <<: *linux_test_definition
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:xenial
-  dependencies: ["Ubuntu Xenial - Build"]
-
-openSuse Leap - Test:
-  <<: *linux_test_definition
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
-  dependencies: ["openSuse Leap - Build"]
-
-Windows 10 - Test:
-  stage: test
-  tags:
-    - windows
-  dependencies: ["Windows 10 - Build"]
-  script:
-    - cd .\.build
-    - ctest -VV
-
-# ================================================================================================================== #
-#                                                                                                                    #
-#                                                           ANALYSIS                                                 #
+#                                                      ANALYZE                                                       #
 #                                                                                                                    #
 # ================================================================================================================== #
 
 CppCheck:
-  stage: analysis
+  stage: analyze
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/cppcheck:latest
-  tags:
-    - docker
+  tags: ["docker"]
   script: "/bin/bash ./scripts/ci/CppCheck.sh"
   dependencies: []
   artifacts:
@@ -146,10 +91,9 @@ CppCheck:
     - master
 
 CppLint:
-  stage: analysis
+  stage: analyze
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/cpplint:latest
-  tags:
-    - docker
+  tags: ["docker"]
   dependencies: []
   script: "/bin/bash ./scripts/ci/CppLint.sh"
   artifacts:
@@ -166,71 +110,16 @@ CppLint:
 #                                                                                                                    #
 # ================================================================================================================== #
 
-.linux_deploy_template: &linux_deploy_definition
+Packages:
   stage: deploy
-  tags:
-    - docker
-  script:
-    - cd ./.build
-    - make install
-    - cd ..
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
-    paths:
-      - .install/
-
-Ubuntu Bionic:
-  <<: *linux_deploy_definition
+  tags: ["docker"]
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
-  dependencies: ["Ubuntu Bionic - Build"]
-
-Ubuntu Xenial:
-  <<: *linux_deploy_definition
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:xenial
-  dependencies: ["Ubuntu Xenial - Build"]
-
-openSuse Leap:
-  <<: *linux_deploy_definition
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
-  dependencies: ["openSuse Leap - Build"]
-
-Windows 10:
-  stage: deploy
-  tags:
-    - windows
-  dependencies: ["Windows 10 - Build"]
-  script:
-    - cd .\.build
-    - cmake --build . --target install --config Release
-    - cd ..
-  artifacts:
-    name: "%CI_JOB_NAME%-%CI_COMMIT_REF_NAME%"
-    paths:
-      - .install/
-
-Docker:
-  image: docker:stable
-  stage: deploy
-  tags:
-    - dind
-  dependencies: ["Ubuntu Bionic - Build"]
-  before_script: ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
-  script: "/bin/sh ./scripts/ci/DeployDocker.sh"
+  dependencies: 
+    - "Ubuntu Bionic - Build"
+    - "openSuse Leap - Build"
+    - "Windows 10 - Build"
+  script: pwsh -File ./scripts/ci/DeployPackages.ps1
   only:
     - develop
+    - release-candidate
     - master
-
-pages:
-  stage: deploy
-  tags:
-    - docker
-  image: ubuntu:bionic
-  dependencies:
-    - CppCheck
-    - CppLint
-  script: "mv ./.site ./public"
-  artifacts:
-    paths:
-      - public
-  only:
-    - develop

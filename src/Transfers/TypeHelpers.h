@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "CryptoNoteCore/ITransaction.h"
+#include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 #include <functional>
 #include <cstring>
 

@@ -29,7 +29,7 @@
 
 #include <Xi/Global.h>
 
-#include <Xi/Version.h>
+#include <Xi/Version/Version.h>
 #include <Xi/Config.h>
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"

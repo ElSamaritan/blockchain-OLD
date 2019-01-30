@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -26,7 +26,7 @@
 #include "Common/StringTools.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
-#include "CryptoNoteCore/TransactionApi.h"
+#include "CryptoNoteCore/Transactions/TransactionApi.h"
 
 using namespace Common;
 using namespace Crypto;
@@ -545,6 +545,7 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
           break;
         }
 
+        BOOST_FALLTHROUGH;
       case UpdateConsumersResult::addedNewBlocks:
         setFutureState(State::blockchainSync);
         m_observerManager.notify(&IBlockchainSynchronizerObserver::synchronizationProgressUpdated, processedBlockCount,
@@ -553,7 +554,7 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
     }
   }
 
-  if (checkIfShouldStop()) {  // Sic!
+  if (checkIfShouldStop()) {
     m_logger(WARNING, BRIGHT_YELLOW) << "Block processing is interrupted";
     m_observerManager.notify(&IBlockchainSynchronizerObserver::synchronizationCompleted,
                              std::make_error_code(std::errc::interrupted));

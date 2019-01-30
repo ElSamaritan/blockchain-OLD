@@ -19,7 +19,7 @@
 
 #include <CryptoNoteCore/CryptoNoteBasicImpl.h>
 #include <CryptoNoteCore/CryptoNoteTools.h>
-#include <CryptoNoteCore/TransactionExtra.h>
+#include <CryptoNoteCore/Transactions/TransactionExtra.h>
 
 #include "Wallet/IWallet.h"
 

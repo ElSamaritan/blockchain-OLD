@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -80,6 +80,10 @@ static_assert(
     static_cast<boost::beast::http::field>(Xi::Http::HeaderContainer::AccessControlAllowOrigin) ==
         boost::beast::http::field::access_control_allow_origin,
     "The casted value must correspond to the enum used by the beast library because they are internally casted.");
+static_assert(
+    static_cast<boost::beast::http::field>(Xi::Http::HeaderContainer::AccessControlAllowMethods) ==
+        boost::beast::http::field::access_control_allow_methods,
+    "The casted value must correspond to the enum used by the beast library because they are internally casted.");
 
 void Xi::Http::HeaderContainer::setRequiredAuthenticationScheme(Xi::Http::AuthenticationType authType) {
   set(WWWAuthenticate, to_string(authType));
@@ -99,6 +103,14 @@ void Xi::Http::HeaderContainer::setBasicAuthorization(const std::string &usernam
 
 void Xi::Http::HeaderContainer::setBasicAuthorization(const Xi::Http::BasicCredentials &credentials) {
   set(Authorization, to_string(AuthenticationType::Basic) + " " + Base64::encode(to_string(credentials)));
+}
+
+void Xi::Http::HeaderContainer::setAllow(std::initializer_list<Method> method) {
+  if (method.size() == 0) throw std::invalid_argument{"you need to support at least one method."};
+  std::stringstream builder{};
+  builder << to_string(*method.begin());
+  for (auto it = std::next(method.begin()); it != method.end(); ++it) builder << ", " << to_string(*it);
+  set(Allow, builder.str());
 }
 
 boost::optional<Xi::Http::BasicCredentials> Xi::Http::HeaderContainer::basicAuthorization() const {
@@ -195,6 +207,14 @@ boost::optional<std::string> Xi::Http::HeaderContainer::get(Xi::Http::HeaderCont
     return boost::optional<std::string>{};
   else
     return boost::optional<std::string>{search->second};
+}
+
+void Xi::Http::HeaderContainer::setAccessControlRequestMethods(std::initializer_list<Xi::Http::Method> methods) {
+  if (methods.size() == 0) throw std::invalid_argument{"you need to support at least one method."};
+  std::stringstream builder{};
+  builder << to_string(*methods.begin());
+  for (auto it = std::next(methods.begin()); it != methods.end(); ++it) builder << ", " << to_string(*it);
+  set(AccessControlAllowMethods, builder.str());
 }
 
 void Xi::Http::HeaderContainer::set(Xi::Http::HeaderContainer::Header header, const std::string &raw) {

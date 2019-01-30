@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -36,6 +36,13 @@ inline void Unreferenced(Ts&&...) {}
  */
 #define XI_UNUSED(...) \
   { (decltype(Xi::Unreferenced(__VA_ARGS__)))0; }
+
+/*!
+ * \def XI_UNUSED_REVAL Marks a return value as intentionally unused. Mainly used for RAII objects.
+ */
+#define XI_UNUSED_REVAL(X)            \
+  auto __UNUSED_REVAL_##__LINE__ = X; \
+  XI_UNUSED(__UNUSED_REVAL_##__LINE__)
 
 /*!
  * \def XI_DELETE_COPY(CLASS_NAME) deletes any possible default generated copy constructor/assignment for CLASS_NAME

@@ -23,8 +23,9 @@
 #include <System/RemoteContext.h>
 
 #include <Xi/Global.h>
+#include <Xi/Crypto/Chacha8.h>
 
-#include "CryptoNoteCore/ITransaction.h"
+#include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 
 #include "Common/ScopeExit.h"
 #include "Common/ShuffleGenerator.h"
@@ -39,7 +40,7 @@
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
-#include "CryptoNoteCore/TransactionApi.h"
+#include "CryptoNoteCore/Transactions/TransactionApi.h"
 #include "crypto/crypto.h"
 #include "Transfers/TransfersContainer.h"
 #include "WalletSerializationV1.h"
@@ -349,7 +350,7 @@ void WalletGreen::initWithKeys(const std::string& path, const std::string& passw
   prefix->version = static_cast<uint8_t>(WalletSerializerV2::SERIALIZATION_VERSION);
   prefix->nextIv = Crypto::rand<Crypto::chacha8_iv>();
 
-  Crypto::generate_chacha8_key(password, m_key);
+  Xi::Crypto::Chacha8::generate_key(password, m_key.data, CHACHA8_KEY_SIZE);
 
   uint64_t creationTimestamp;
 
@@ -425,7 +426,7 @@ void WalletGreen::exportWallet(const std::string& path, bool encrypt, WalletSave
     if (encrypt) {
       newStorageKey = m_key;
     } else {
-      generate_chacha8_key("", newStorageKey);
+      Xi::Crypto::Chacha8::generate_key("", newStorageKey.data, CHACHA8_KEY_SIZE);
     }
 
     copyContainerStoragePrefix(m_containerStorage, m_key, newStorage, newStorageKey);
@@ -457,7 +458,7 @@ void WalletGreen::load(const std::string& path, const std::string& password, std
 
   stopBlockchainSynchronizer();
 
-  generate_chacha8_key(password, m_key);
+  Xi::Crypto::Chacha8::generate_key(password, m_key.data, CHACHA8_KEY_SIZE);
 
   std::ifstream walletFileStream(path, std::ios_base::binary);
   int version = walletFileStream.peek();
@@ -895,7 +896,7 @@ void WalletGreen::changePassword(const std::string& oldPassword, const std::stri
   }
 
   Crypto::chacha8_key newKey;
-  Crypto::generate_chacha8_key(newPassword, newKey);
+  Xi::Crypto::Chacha8::generate_key(newPassword, newKey.data, CHACHA8_KEY_SIZE);
 
   m_containerStorage.atomicUpdate([this, newKey](ContainerStorage& newStorage) {
     copyContainerStoragePrefix(m_containerStorage, m_key, newStorage, newKey);
@@ -2282,10 +2283,10 @@ bool WalletGreen::eraseForeignTransfers(size_t transactionId, size_t firstTransf
       });
 }
 
-std::unique_ptr<CryptoNote::ITransaction> WalletGreen::makeTransaction(
+std::unique_ptr<CryptoNote::ITransactionBuilder> WalletGreen::makeTransaction(
     const std::vector<ReceiverAmounts>& decomposedOutputs, std::vector<InputInfo>& keysInfo, const std::string& extra,
     uint64_t unlockTimestamp) {
-  std::unique_ptr<ITransaction> tx = createTransaction();
+  std::unique_ptr<ITransactionBuilder> tx = createTransaction();
 
   typedef std::pair<const AccountPublicAddress*, uint64_t> AmountToAddress;
   std::vector<AmountToAddress> amountsToAddresses;
@@ -3274,7 +3275,7 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint16_t mixin,
   AccountPublicAddress destination = getChangeDestination(destinationAddress, sourceAddresses);
   m_logger(DEBUGGING) << "Destination address " << m_currency.accountAddressAsString(destination);
 
-  std::unique_ptr<ITransaction> fusionTransaction;
+  std::unique_ptr<ITransactionBuilder> fusionTransaction;
   size_t transactionSize;
   int round = 0;
   uint64_t transactionAmount = 0;

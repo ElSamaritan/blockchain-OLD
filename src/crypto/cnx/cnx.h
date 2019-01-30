@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -31,8 +31,8 @@
 namespace Crypto {
 namespace CNX {
 
-struct Hash_v0 : Configuration<64, 2_kB, 16_kB, 256_kB, 2_MB> {
-  void operator()(const void *data, size_t length, Hash &hash) const;
+struct Hash_v0 : Configuration<64, 128_kB, 512_kB> {
+  void operator()(const void *data, size_t length, Hash &hash, bool forceSoftwareAES = false) const;
 };
 
 }  // namespace CNX

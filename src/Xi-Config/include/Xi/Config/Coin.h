@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -28,10 +28,12 @@
 #include <Xi/Utils/ConstExprMath.h>
 #include <Xi/Utils/Conversion.h>
 
+#include "Xi/Config/NetworkType.h"
+
 namespace Xi {
 namespace Config {
 namespace Coin {
-inline std::string name() { return "XI"; }
+inline std::string name() { return "Xi"; }
 inline constexpr uint32_t addressBas58Prefix() { return 22583; }
 constexpr uint8_t numberOfDecimalPoints() { return 6; }
 constexpr uint64_t toAtomicUnits(uint64_t coins) { return coins * Xi::pow(10, numberOfDecimalPoints()); }
@@ -41,7 +43,7 @@ constexpr uint64_t minimumFee() { return 100; }
 constexpr uint32_t emissionSpeed() { return 21; }
 
 inline std::string licenseUrl() { return "https://gitlab.com/galaxia-project/blockchain/xi/blob/develop/LICENSE"; }
-inline std::string downloadUrl() { return "http://release.xi.galaxiaproject.org"; }
+inline std::string downloadUrl() { return "https://releases.xiproject.io"; }
 
 /*
  * This is the unix timestamp of the first "mined" block (technically block 2, not the genesis block)
@@ -61,10 +63,7 @@ inline uint64_t genesisTimestamp() { return 1544396293; }
  * - Recompile, setup your seed nodes, and start mining
  * - You should see your premine appear in the previously generated wallet.
  */
-inline std::string genesisTransactionHash() {
-  return "010a01ff000180d0cfba856002bdb307508868ad6112df4a97a8902c7f564fbd22d71c90d7449ea49c248cb1ec210194797465d9341d0"
-         "ef42f9c13913817931ada6515c197d7179a7c0c1c60509d4f";
-}
+std::string genesisTransactionHash(Network::Type network);
 
 static_assert(emissionSpeed() <= 8 * sizeof(uint64_t), "Bad emission speed.");
 }  // namespace Coin

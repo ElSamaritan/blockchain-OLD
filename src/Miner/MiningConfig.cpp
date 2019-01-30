@@ -19,7 +19,7 @@
 #include <cxxopts.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
-#include <Xi/Version.h>
+#include <Xi/Version/Version.h>
 #include <Xi/Config.h>
 
 #include "Common/StringTools.h"

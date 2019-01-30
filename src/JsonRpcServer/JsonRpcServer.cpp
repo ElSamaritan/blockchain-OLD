@@ -44,6 +44,14 @@ Xi::Http::Response JsonRpcServer::doHandleRequest(const Xi::Http::Request& reque
     logger(Logging::TRACE) << "HTTP request came: \n" << request.body();
 
     if (request.target() == "/json_rpc") {
+      if (request.method() == Xi::Http::Method::Options) {
+        Xi::Http::Response response;
+        emplaceDefaultHeaders(response);
+        return response;
+      } else if (request.method() != Xi::Http::Method::Post) {
+        return makeBadRequest("Only POST and OPTIONS methods are allowed.");
+      }
+
       std::istringstream jsonInputStream(request.body());
       Common::JsonValue jsonRpcRequest;
       Common::JsonValue jsonRpcResponse(Common::JsonValue::OBJECT);
@@ -62,9 +70,7 @@ Xi::Http::Response JsonRpcServer::doHandleRequest(const Xi::Http::Request& reque
       jsonOutputStream << jsonRpcResponse;
 
       Xi::Http::Response resp;
-      if (config.serviceConfig.corsHeader != "") {
-        resp.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, config.serviceConfig.corsHeader);
-      }
+      emplaceDefaultHeaders(resp);
 
       resp.setStatus(Xi::Http::StatusCode::Ok);
       resp.setBody(jsonOutputStream.str());
@@ -78,6 +84,15 @@ Xi::Http::Response JsonRpcServer::doHandleRequest(const Xi::Http::Request& reque
     logger(Logging::WARNING) << "Error while processing http request: " << e.what();
     return makeInternalServerError();
   }
+}
+
+void JsonRpcServer::emplaceDefaultHeaders(Xi::Http::Response& response) const {
+  if (!config.serviceConfig.corsHeader.empty()) {
+    response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, config.serviceConfig.corsHeader);
+    response.headers().setAccessControlRequestMethods({Xi::Http::Method::Post, Xi::Http::Method::Options});
+  }
+  response.headers().setAllow({Xi::Http::Method::Post, Xi::Http::Method::Options});
+  response.headers().setContentType(Xi::Http::ContentType::Json);
 }
 
 void JsonRpcServer::prepareJsonResponse(const Common::JsonValue& req, Common::JsonValue& resp) {

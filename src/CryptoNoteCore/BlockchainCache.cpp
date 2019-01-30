@@ -21,17 +21,17 @@
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/BlockchainStorage.h"
-#include "CryptoNoteCore/TransactionExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionValidatiorState.h"
 
 #include "Serialization/SerializationOverloads.h"
-#include "TransactionValidatiorState.h"
 
 namespace CryptoNote {
 
 namespace {
 
-UseGenesis addGenesisBlock = UseGenesis(true);
-UseGenesis skipGenesisBlock = UseGenesis(false);
+const UseGenesis addGenesisBlock = UseGenesis(true);
+const UseGenesis skipGenesisBlock = UseGenesis(false);
 
 template <class T, class F>
 void splitGlobalIndexes(T& sourceContainer, T& destinationContainer, uint32_t splitBlockIndex, F lowerBoundFunction) {
@@ -200,10 +200,11 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
 
   uint16_t transactionBlockIndex = 0;
   auto baseTransaction = cachedBlock.getBlock().baseTransaction;
+
   pushTransaction(CachedTransaction(std::move(baseTransaction)), blockIndex, transactionBlockIndex++);
 
-  for (auto& cachedTransaction : cachedTransactions) {
-    pushTransaction(cachedTransaction, blockIndex, transactionBlockIndex++);
+  for (const auto& transaction : cachedTransactions) {
+    pushTransaction(transaction, blockIndex, transactionBlockIndex++);
   }
 
   storage->pushBlock(std::move(rawBlock));
@@ -607,11 +608,10 @@ void BlockchainCache::getRawTransactions(const std::vector<Crypto::Hash>& reques
     auto it = index.find(transactionHash);
     if (it == index.end()) {
       missedTransactions.emplace_back(transactionHash);
-      continue;
+    } else {
+      // assert(startIndex <= it->blockIndex);
+      foundTransactions.emplace_back(getRawTransaction(it->blockIndex, it->transactionIndex));
     }
-
-    // assert(startIndex <= it->blockIndex);
-    foundTransactions.emplace_back(getRawTransaction(it->blockIndex, it->transactionIndex));
   }
 }
 
@@ -692,13 +692,23 @@ bool BlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime) const 
 }
 
 bool BlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const {
+  const auto timestamp = time(nullptr);
+  if (timestamp < 0) {
+    return false;
+  } else {
+    return isTransactionSpendTimeUnlocked(unlockTime, blockIndex, static_cast<uint64_t>(timestamp));
+  }
+}
+
+bool BlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex,
+                                                     uint64_t timestamp) const {
   if (unlockTime < currency.maxBlockHeight()) {
     // interpret as block index
     return blockIndex + currency.lockedTxAllowedDeltaBlocks() >= unlockTime;
+  } else {
+    // interpret as time
+    return static_cast<uint64_t>(timestamp) + currency.lockedTxAllowedDeltaSeconds() >= unlockTime;
   }
-
-  // interpret as time
-  return static_cast<uint64_t>(time(nullptr)) + currency.lockedTxAllowedDeltaSeconds() >= unlockTime;
 }
 
 ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount,
@@ -745,6 +755,18 @@ std::vector<uint32_t> BlockchainCache::getRandomOutsByAmount(Amount amount, size
 ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount, uint32_t blockIndex,
                                                               Common::ArrayView<uint32_t> globalIndexes,
                                                               std::vector<Crypto::PublicKey>& publicKeys) const {
+  const auto timestamp = time(nullptr);
+  if (timestamp < 0) {
+    return ExtractOutputKeysResult::TIME_PROVIDER_FAILED;
+  } else {
+    return extractKeyOutputKeys(amount, blockIndex, globalIndexes, publicKeys, static_cast<uint64_t>(timestamp));
+  }
+}
+
+ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount, uint32_t blockIndex,
+                                                              Common::ArrayView<uint32_t> globalIndexes,
+                                                              std::vector<Crypto::PublicKey>& publicKeys,
+                                                              uint64_t timestamp) const {
   assert(!globalIndexes.isEmpty());
   assert(std::is_sorted(globalIndexes.begin(), globalIndexes.end()));                             // sorted
   assert(std::adjacent_find(globalIndexes.begin(), globalIndexes.end()) == globalIndexes.end());  // unique
@@ -752,7 +774,7 @@ ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount, u
   return extractKeyOutputs(amount, blockIndex, globalIndexes,
                            [&](const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex) {
                              XI_UNUSED(globalIndex);
-                             if (!isTransactionSpendTimeUnlocked(info.unlockTime, blockIndex)) {
+                             if (!isTransactionSpendTimeUnlocked(info.unlockTime, blockIndex, timestamp)) {
                                return ExtractOutputKeysResult::OUTPUT_LOCKED;
                              }
 

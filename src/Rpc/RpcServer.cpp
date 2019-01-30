@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <cmath>
 
-#include <Xi/Version.h>
+#include <Xi/Version/Version.h>
 #include <Xi/Global.h>
 #include <Xi/Concurrent/SystemDispatcher.h>
 
@@ -19,7 +19,7 @@
 #include "Common/StringTools.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Core.h"
-#include "CryptoNoteCore/TransactionExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionExtra.h"
 #include <Xi/Config.h>
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandlerCommon.h"
 #include "P2p/NetNode.h"
@@ -70,8 +70,18 @@ RpcServer::HandlerFunction jsonMethod(bool (RpcServer::*handler)(typename Comman
     if (!loadFromJson(static_cast<typename Command::request&>(req), request.body())) {
       return false;
     }
+
+    if (!obj->getCorsDomain().empty()) {
+      response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, obj->getCorsDomain());
+    }
+    response.headers().setContentType(Xi::Http::ContentType::Json);
+
+    if (request.method() != Xi::Http::Method::Post && request.method() != Xi::Http::Method::Get) {
+      response = obj->makeBadRequest("Only OPTIONS, POST and GET requests are allowed.");
+      return false;
+    }
+
     auto result = (obj->*handler)(req, res);
-    response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, obj->getCorsDomain());
     response.headers().setContentType(Xi::Http::ContentType::Json);
     response.setBody(storeToJson(res.data()));
     return result;
@@ -134,7 +144,11 @@ Xi::Http::Response RpcServer::doHandleRequest(const Xi::Http::Request& request) 
     return makeInternalServerError("core is busy");
   else {
     Xi::Http::Response response;
-    it->second.handler(this, request, response);
+    if (!on_options_request(request, response)) {
+      if (request.method() != Xi::Http::Method::Post && request.method() != Xi::Http::Method::Get)
+        return makeBadRequest("Only OPTIONS, GET and POST methods are allowed.");
+      it->second.handler(this, request, response);
+    }
     return response;
   }
 }
@@ -142,7 +156,6 @@ Xi::Http::Response RpcServer::doHandleRequest(const Xi::Http::Request& request) 
 bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& response) {
   using namespace JsonRpc;
 
-  response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, getCorsDomain());
   response.headers().setContentType(Xi::Http::ContentType::Json);
 
   JsonRpcRequest jsonRequest;
@@ -210,6 +223,16 @@ bool RpcServer::isCoreReady() {
   return m_core.getCurrency().isTestNet() || m_p2p.get_payload_object().isSynchronized();
 }
 
+bool RpcServer::on_options_request(const RpcServer::HttpRequest& request, RpcServer::HttpResponse& response) {
+  if (!getCorsDomain().empty()) {
+    response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, getCorsDomain());
+    response.headers().setAccessControlRequestMethods({Xi::Http::Method::Post, Xi::Http::Method::Options});
+  }
+  response.headers().setAllow({Xi::Http::Method::Post, Xi::Http::Method::Get, Xi::Http::Method::Options});
+  response.headers().setContentType(Xi::Http::ContentType::Json);
+  return request.method() == Xi::Http::Method::Options;
+}
+
 bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req,
                               COMMAND_RPC_GET_BLOCKS_FAST::response& res) {
   // TODO code duplication see InProcessNode::doGetNewBlocks()
@@ -225,14 +248,20 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req,
 
   uint32_t totalBlockCount;
   uint32_t startBlockIndex;
-  std::vector<Crypto::Hash> supplement = m_core.findBlockchainSupplement(
+  auto supplementQuery = m_core.findBlockchainSupplement(
       req.block_ids, Xi::Config::Limits::maximumRPCBlocksQueryCount(), totalBlockCount, startBlockIndex);
+
+  if (supplementQuery.isError()) {
+    logger(Logging::ERROR) << "Failed to query blockchain supplement: " << supplementQuery.error().message();
+    res.status = "Failed";
+    return false;
+  }
 
   res.current_height = totalBlockCount;
   res.start_height = startBlockIndex;
 
   std::vector<Crypto::Hash> missedHashes;
-  m_core.getBlocks(supplement, res.blocks, missedHashes);
+  m_core.getBlocks(supplementQuery.value(), res.blocks, missedHashes);
   assert(missedHashes.empty());
 
   res.status = CORE_RPC_STATUS_OK;
@@ -484,7 +513,8 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.height = m_core.getTopBlockIndex() + 1;
   res.difficulty = m_core.getDifficultyForNextBlock();
   res.tx_count = m_core.getBlockchainTransactionCount() - res.height;  // without coinbase
-  res.tx_pool_size = m_core.getPoolTransactionCount();
+  res.tx_pool_size = m_core.transactionPool().size();
+  res.tx_pool_state = m_core.transactionPool().stateHash();
   res.tx_min_fee = m_core.getCurrency().minimumFee();
   res.alt_blocks_count = m_core.getAlternativeBlockCount();
   uint64_t total_conn = m_p2p.get_connections_count();
@@ -496,12 +526,13 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.network_height = std::max(static_cast<uint32_t>(1), m_protocol.getBlockchainHeight());
   res.upgrade_heights = Xi::Config::BlockVersion::forks();
   res.supported_height = res.upgrade_heights.empty() ? 0 : *res.upgrade_heights.rbegin();
-  res.hashrate = (uint32_t)round(res.difficulty / Xi::Config::Time::blockTimeSeconds());
+  res.hashrate =
+      (uint32_t)round(res.difficulty / Xi::Config::Time::blockTimeSeconds());  // TODO Not a good approximation
   res.synced = ((uint64_t)res.height == (uint64_t)res.network_height);
   res.network = Xi::to_string(m_core.getCurrency().network());
   res.major_version = m_core.getBlockDetails(m_core.getTopBlockIndex()).majorVersion;
   res.minor_version = m_core.getBlockDetails(m_core.getTopBlockIndex()).minorVersion;
-  res.version = PROJECT_VERSION;
+  res.version = APP_VERSION;
   res.status = CORE_RPC_STATUS_OK;
   res.start_time = (uint64_t)m_core.getStartTime();
   return true;
@@ -559,7 +590,7 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
   Crypto::Hash transactionHash = Crypto::cn_fast_hash(transactions.back().data(), transactions.back().size());
   logger(DEBUGGING) << "transaction " << transactionHash << " came in on_send_raw_tx";
 
-  if (!m_core.addTransactionToPool(transactions.back())) {
+  if (m_core.transactionPool().pushTransaction(transactions.back()).isError()) {
     logger(DEBUGGING) << "[on_send_raw_tx]: tx verification failed";
     res.status = "Failed";
     return true;
@@ -973,6 +1004,7 @@ bool RpcServer::on_get_currency_id(const COMMAND_RPC_GET_CURRENCY_ID::request& /
 }
 
 bool RpcServer::on_submitblock(const COMMAND_RPC_SUBMITBLOCK::request& req, COMMAND_RPC_SUBMITBLOCK::response& res) {
+  XI_CONCURRENT_RLOCK(m_submissionAccess);
   if (req.size() != 1) {
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_WRONG_PARAM, "Wrong param"};
   }

@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 
+#include <Xi/Concurrent/RecursiveLock.h>
 #include <Xi/Http/RequestHandler.h>
 #include <Xi/Http/Server.h>
 
@@ -59,6 +60,14 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   Xi::Http::Response doHandleRequest(const Xi::Http::Request& request) override;
   bool processJsonRpcRequest(const HttpRequest& request, HttpResponse& response);
   bool isCoreReady();
+
+  /*!
+   * \brief on_options_request sets standard headers for incoming requests
+   * \param request The request coming in
+   * \param response The response to built and send back to the client
+   * \return true if the request was a purly OPTION request and shouldnt be handled further
+   */
+  bool on_options_request(const HttpRequest& request, HttpResponse& response);
 
   // json handlers
   bool on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req, COMMAND_RPC_GET_BLOCKS_FAST::response& res);
@@ -127,6 +136,7 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   std::string m_cors;
   std::string m_fee_address;
   uint32_t m_fee_amount;
+  Xi::Concurrent::RecursiveLock m_submissionAccess;
 };
 
 }  // namespace CryptoNote

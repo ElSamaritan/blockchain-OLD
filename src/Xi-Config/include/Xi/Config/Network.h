@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -27,11 +27,12 @@
 #include <vector>
 #include <stdexcept>
 
+#include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/uuid/uuid.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
 
 #include <Xi/Utils/Conversion.h>
 
-#include "Xi/Config/Limits.h"
 #include "Xi/Config/NetworkType.h"
 
 namespace Xi {
@@ -40,6 +41,8 @@ namespace Network {
 Type defaultNetworkType();
 boost::uuids::uuid identifier(Type network);
 std::vector<std::string> seedNodes(Type network);
+
+std::string breakpadServer();
 
 static inline constexpr uint16_t p2pPort() { return 22868; }
 static inline constexpr uint16_t rpcPort() { return 22869; }

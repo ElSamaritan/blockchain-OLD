@@ -6,7 +6,7 @@
 # This file is part of the Galaxia Project - Xi Blockchain                                       #
 # ---------------------------------------------------------------------------------------------- #
 #                                                                                                #
-# Copyright 2018 Galaxia Project Developers                                                      #
+# Copyright 2018-2019 Galaxia Project Developers                                                 #
 #                                                                                                #
 # This program is free software: you can redistribute it and/or modify it under the terms of the #
 # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -45,16 +45,3 @@ source_group("" FILES ${XI_BENCHMARK_SOURCE_FILES})
 add_executable(TestSuite.Benchmark ${XI_BENCHMARK_SOURCE_FILES})
 target_link_libraries(TestSuite.Benchmark PRIVATE benchmark_main Common Crypto CryptoNoteCore Serialization Logging rocksdb)
 target_include_directories(TestSuite.Benchmark PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/benchmark")
-
-# tools
-option(XI_BUILD_TESTSUITE_TOOLS "Build a toolset for cross platform testing" ON)
-if(XI_BUILD_TESTSUITE_TOOLS)
-  file(GLOB XI_TOOLS_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/tools/*.cpp")
-  source_group("" FILES ${XI_TOOLS_SOURCE_FILES})
-  foreach(xiTool ${XI_TOOLS_SOURCE_FILES})
-    get_filename_component(xiToolName ${xiTool} NAME_WE)
-    set(xiToolTarget "TestSuite.Tools.${xiToolName}")
-    add_executable(${xiToolTarget} ${xiTool})
-    target_link_libraries(${xiToolTarget} PRIVATE Common Crypto CryptoNoteCore Serialization Logging rocksdb)
-  endforeach() # xiTool
-endif() # XI_BUILD_TESTSUITE_TOOLS

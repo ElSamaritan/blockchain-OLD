@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -24,10 +24,11 @@
 #include "CryptoNoteCore/HashAlgorithms.h"
 
 #include "crypto/cnx/cnx.h"
+#include "crypto/hash-predef.h"
 
-void CryptoNote::Hashes::InitBlockchain::operator()(const CryptoNote::CachedBlock &block, Crypto::Hash &hash) const {
+void CryptoNote::Hashes::CNX_Init::operator()(const CryptoNote::CachedBlock &block, Crypto::Hash &hash) const {
   const auto &rawHashingBlock = block.getBlockHashingBinaryArray();
-  cn_slow_hash_v0(rawHashingBlock.data(), rawHashingBlock.size(), hash);
+  Crypto::CNX::Hash_v0{}(rawHashingBlock.data(), rawHashingBlock.size(), hash);
 }
 
 void CryptoNote::Hashes::CNX_v0::operator()(const CryptoNote::CachedBlock &block, Crypto::Hash &hash) const {

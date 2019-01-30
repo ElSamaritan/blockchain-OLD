@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -39,10 +39,13 @@ const std::string VerifyPeersName{"disable-peer-verification"};
 const std::string TrustedFileName{"certs-bundle"};
 }  // namespace
 
-Xi::Http::SSLClientConfiguration::SSLClientConfiguration() {
-  Disabled = false;
-  VerifyPeers = true;
-  TrustedFile = "./certs/trusted.pem";
+const Xi::Http::SSLClientConfiguration Xi::Http::SSLClientConfiguration::NoSSL{true, false, ""};
+
+Xi::Http::SSLClientConfiguration::SSLClientConfiguration(bool disabled, bool verifiyPeers,
+                                                         const std::string &trustedFile) {
+  Disabled = disabled;
+  VerifyPeers = verifiyPeers;
+  TrustedFile = trustedFile;
 }
 
 void Xi::Http::SSLClientConfiguration::initializeContext(boost::asio::ssl::context &ctx) {

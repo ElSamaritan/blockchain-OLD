@@ -60,6 +60,7 @@ struct WalletServiceConfiguration {
 
   uint32_t scanHeight;
 
+  ::Xi::Config::Network::Type network;
   ::Xi::Http::SSLClientConfiguration sslClient;
   ::Xi::Http::SSLServerConfiguration sslServer;
 };
@@ -81,6 +82,7 @@ inline WalletServiceConfiguration initConfiguration() {
   config.unregisterService = false;
   config.printAddresses = false;
   config.syncFromZero = false;
+  config.network = Xi::Config::Network::defaultNetworkType();
 
   return config;
 };
@@ -111,11 +113,14 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
     ("spend-key", "Generate a wallet container with this secret spend <key>", cxxopts::value<std::string>(), "<key>")
     ("mnemonic-seed", "Generate a wallet container with this Mnemonic <seed>", cxxopts::value<std::string>(), "<seed>")
     ("scan-height", "Start scanning for transactions from this Blockchain height", cxxopts::value<uint32_t>()->default_value("0"), "#")
-    ("SYNC_FROM_ZERO", "Force the wallet to sync from 0", cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
+    ("sync-from-zero", "Force the wallet to sync from 0", cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
 
   options.add_options("Network")
     ("bind-address", "Interface IP address for the RPC service", cxxopts::value<std::string>()->default_value(config.bindAddress), "<ip>")
-    ("bind-port", "TCP port for the RPC service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.bindPort)), "<port>");
+    ("bind-port", "TCP port for the RPC service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.bindPort)), "<port>")
+    ("network", "The network type you want to connect to, mostly you want to use 'MainNet' here.",
+     cxxopts::value<std::string>()->default_value(Xi::to_string(Xi::Config::Network::defaultNetworkType())),
+     "[MainNet|StageNet|TestNet|LocalTestNet]");
 
   options.add_options("RPC")
     ("enable-cors", "Adds header 'Access-Control-Allow-Origin' to the RPC responses. Uses the value specified as the domain. Use * for all.",
@@ -230,12 +235,16 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
       config.printAddresses = cli["address"].as<bool>();
     }
 
-    if (cli.count("SYNC_FROM_ZERO") > 0) {
-      config.syncFromZero = cli["SYNC_FROM_ZERO"].as<bool>();
+    if (cli.count("sync-from-zero") > 0) {
+      config.syncFromZero = cli["sync-from-zero"].as<bool>();
     }
 
     if (cli.count("scan-height") > 0) {
       config.scanHeight = cli["scan-height"].as<uint32_t>();
+    }
+
+    if (cli.count("network") > 0) {
+      config.network = Xi::lexical_cast<::Xi::Config::Network::Type>(cli["network"].as<std::string>());
     }
 
     if (CommonCLI::handleCLIOptions(options, cli)) exit(0);
@@ -312,6 +321,9 @@ inline void handleSettings(const std::string configFile, WalletServiceConfigurat
   if (j.find("ssl-server") != j.end()) {
     config.sslServer.load(j["ssl-server"]);
   }
+  if (j.find("network") != j.end()) {
+    config.network = Xi::lexical_cast<::Xi::Config::Network::Type>(j["network"]);
+  }
 }
 
 inline json asJSON(const WalletServiceConfiguration& config) {
@@ -332,7 +344,8 @@ inline json asJSON(const WalletServiceConfiguration& config) {
                 {"rpc-password", config.rpcPassword},
                 {"server-root", config.serverRoot},
                 {"ssl-client", sslClient},
-                {"ssl-server", sslServer}};
+                {"ssl-server", sslServer},
+                {"network", Xi::to_string(config.network)}};
   return j;
 };
 

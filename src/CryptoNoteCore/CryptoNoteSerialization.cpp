@@ -38,7 +38,7 @@
 #include <Xi/Config.h>
 #include "CryptoNoteFormatUtils.h"
 #include "CryptoNoteTools.h"
-#include "TransactionExtra.h"
+#include "Transactions/TransactionExtra.h"
 
 using namespace Common;
 

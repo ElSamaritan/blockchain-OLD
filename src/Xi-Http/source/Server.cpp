@@ -6,7 +6,7 @@
  * This file is part of the Galaxia Project - Xi Blockchain                                       *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018 Galaxia Project Developers                                                      *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -82,9 +82,13 @@ struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
   }
 
   void doOnAccept(boost::asio::ip::tcp::socket socket) override {
-    std::make_shared<ServerSessionDetector>(std::move(socket), ctx,
-                                            std::shared_ptr<IServerSessionBuilder>{shared_from_this(), this})
-        ->run();
+    if (!keepRunning) {
+      return;
+    } else {
+      std::make_shared<ServerSessionDetector>(std::move(socket), ctx,
+                                              std::shared_ptr<IServerSessionBuilder>{shared_from_this(), this})
+          ->run();
+    }
   }
 
   std::shared_ptr<ServerSession> makeHttpServerSession(ServerSession::socket_t socket,
@@ -107,11 +111,14 @@ void Xi::Http::Server::start(const std::string& address, uint16_t port) {
   m_listener = std::make_shared<_Listener>(address, port, handler(), *dispatcher());
 
   m_sslConfig.initializeContext(m_listener->ctx);
+  m_host = address;
 
   m_listener->run(1);
 }
 
 void Xi::Http::Server::stop() { m_listener.reset(); }
+
+const std::string& Xi::Http::Server::host() const { return m_host; }
 
 void Xi::Http::Server::setDispatcher(std::shared_ptr<Xi::Concurrent::IDispatcher> dispatcher) {
   m_dispatcher = dispatcher;

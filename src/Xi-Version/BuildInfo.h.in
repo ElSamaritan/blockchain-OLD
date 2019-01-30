@@ -1,0 +1,44 @@
+/* ============================================================================================== *
+ *                                                                                                *
+ *                                       Xi Blockchain                                            *
+ *                                                                                                *
+ * ---------------------------------------------------------------------------------------------- *
+ * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * ---------------------------------------------------------------------------------------------- *
+ *                                                                                                *
+ * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ *                                                                                                *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the *
+ * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.                                            *
+ *                                                                                                *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;      *
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.      *
+ * See the GNU General Public License for more details.                                           *
+ *                                                                                                *
+ * You should have received a copy of the GNU General Public License along with this program.     *
+ * If not, see <https://www.gnu.org/licenses/>.                                                   *
+ *                                                                                                *
+ * ============================================================================================== */
+
+#pragma once
+
+#include <string>
+
+/*
+ * This file is generated, don't change it.
+ */
+
+#define BUILD_COMMIT_ID "@GIT_COMMIT_HASH@"
+#define BUILD_BRANCH "@GIT_BRANCH@"
+
+#define BUILD_C_COMPILER_INFO "@CMAKE_C_COMPILER_ID@ (@CMAKE_C_COMPILER_VERSION@)"
+#define BUILD_CXX_COMPILER_INFO "@CMAKE_CXX_COMPILER_ID@ (@CMAKE_CXX_COMPILER_VERSION@)"
+
+#define BUILD_OPENSSL_VERSION "@OPENSSL_VERSION@"
+#define BUILD_BOOST_VERSION "@Boost_VERSION@"
+
+#define BUILD_TYPE "@CMAKE_BUILD_TYPE@"
+#define BUILD_TIMESTAMP "@BUILD_TIMESTAMP@"
+#define BUILD_CHANNEL_@XI_BUILD_CHANNEL_ID@ 1
+#define BUILD_CHANNEL "@XI_BUILD_CHANNEL@"

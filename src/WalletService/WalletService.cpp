@@ -26,9 +26,9 @@
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
-#include "CryptoNoteCore/TransactionExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionExtra.h"
 #include "CryptoNoteCore/Account.h"
-#include "CryptoNoteCore/Mixins.h"
+#include "CryptoNoteCore/Transactions/Mixins.h"
 
 #include <System/EventLock.h>
 #include <System/RemoteContext.h>

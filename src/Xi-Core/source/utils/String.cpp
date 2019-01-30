@@ -65,5 +65,4 @@ std::string to_upper(const std::string &str) {
   std::transform(str.begin(), str.end(), reval.begin(), [&](auto c) { return std::toupper(c, loc); });
   return reval;
 }
-
 }  // namespace Xi

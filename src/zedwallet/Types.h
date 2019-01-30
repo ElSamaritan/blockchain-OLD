@@ -54,8 +54,14 @@ struct Config {
   /* Should we log walletd logs to a file */
   bool debug = false;
 
+  /* Enables verbose logging to standard output buffer */
+  bool verbose = false;
+
   /* The daemon host */
   std::string host = "127.0.0.1";
+
+  /* The network to connect to, ie. MainNet/StageNet ... */
+  Xi::Config::Network::Type network = Xi::Config::Network::defaultNetworkType();
 
   /* The daemon port */
   uint16_t port = Xi::Config::Network::rpcPort();
