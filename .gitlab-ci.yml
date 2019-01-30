@@ -56,19 +56,19 @@ Ubuntu Bionic - Build:
   <<: *linux_build_definition
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
   variables:
-    CI_TARGET_OS: "Debian"
+    CI_TARGET_OS: "Ubuntu Bionic"
 
 openSuse Leap - Build:
   <<: *linux_build_definition
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
   variables:
-    CI_TARGET_OS: "RPM"
+    CI_TARGET_OS: "openSuse Leap"
 
 Windows 10 - Build:
   <<: *generic_build_definition
   tags: ["windows"]
   variables:
-    CI_TARGET_OS: "Windows"
+    CI_TARGET_OS: "Windows 10"
 
 # ================================================================================================================== #
 #                                                                                                                    #

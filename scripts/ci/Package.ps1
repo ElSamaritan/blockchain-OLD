@@ -51,8 +51,6 @@ Write-Log "Moving install to version named directory..."
 New-Item $VersionInstallBinaries -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
 Move-Item -Path "$CMakeInstallBinaries\*" -Destination $VersionInstallBinaries -ErrorAction SilentlyContinue
 Remove-Item -Path $CMakeInstallBinaries -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
-New-Item $VersionInstallSymbols -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
-Move-Item -Path "$CMakeInstallSymbols\*" -Destination $VersionInstallSymbols -ErrorAction SilentlyContinue
 
 Write-Log "Building package..."
 

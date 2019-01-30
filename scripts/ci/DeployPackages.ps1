@@ -37,7 +37,7 @@ Write-Log "Downloading current packages info..."
 Invoke-WebRequest -Uri "https://releases.xiproject.io/packages.json" -OutFile $PackagesInfoPath
 $PackageInfo = Get-Content $PackagesInfoPath | Out-String | ConvertFrom-Json
 
-$NewPackages = (Get-ChildItem -Recurse -Path "$PackagesPath\$($PackageInfo.VersionPath)" -Filter info.json)
+$NewPackages = (Get-ChildItem -Recurse -Path "$PackagesPath\$($PackageInfo.VersionPath)\*" -Filter info.json)
 foreach ($NewPackage in $NewPackages) 
 {
     Write-Log "Adding package $NewPackage"
