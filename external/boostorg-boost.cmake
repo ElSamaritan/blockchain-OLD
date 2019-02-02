@@ -56,9 +56,9 @@ find_package(
 )
 
 if(XI_CXX_COMPILER_GNU)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES};rt;zlib;boost_system")
+  list(APPEND Boost_LIBRARIES rt zlib)
 elseif(APPLE)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES};zlib")
+  list(APPEND Boost_LIBRARIES zlib)
 endif()
 
 cmake_policy(POP)
