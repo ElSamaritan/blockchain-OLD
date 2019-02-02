@@ -70,6 +70,7 @@ centOS 7 - Build:
   image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/centos:7
   variables:
     CI_TARGET_OS: "centOS 7"
+  before_script: [". /opt/rh/devtoolset-8/enable"]
 
 debian 9 - Build:
   <<: *linux_build_definition

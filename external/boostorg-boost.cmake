@@ -65,17 +65,7 @@ cmake_policy(POP)
 
 add_library(boost INTERFACE IMPORTED GLOBAL)
 target_include_directories(boost INTERFACE ${Boost_INCLUDE_DIRS})
-target_link_libraries(boost INTERFACE ${Boost_LIBRARIES})
-
-if(APPLE)
-  target_compile_definitions(
-    boost
-
-    INTERFACE
-      "BOOST_ERROR_CODE_HEADER_ONLY"
-      "BOOST_SYSTEM_NO_DEPRECATED"
-  )
-endif()
+target_link_libraries(boost INTERFACE ${Boost_LIBRARIES} ${Boost_SYSTEM_LIBRARY})
 
 set(Boost_VERSION ${Boost_VERSION} CACHE STRING "Boost Version" FORCE)
 mark_as_advanced(Boost_VERSION)

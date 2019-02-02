@@ -23,7 +23,7 @@
 
 # Enable the c++14 standard support
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # We do not support 32-bit builds. When and if we do, this can be removed.
