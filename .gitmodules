@@ -28,3 +28,6 @@
 [submodule "external/google-sparsehash-c11"]
 	path = external/google-sparsehash-c11
 	url = https://gitlab.com/galaxia-project/blockchain/external/google-sparsehash-c11.git
+[submodule "external/nlohmann-json"]
+	path = external/nlohmann-json
+	url = https://gitlab.com/galaxia-project/blockchain/external/nlohmann-json.git
