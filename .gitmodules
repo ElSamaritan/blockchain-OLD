@@ -24,10 +24,10 @@
 	url = https://gitlab.com/galaxia-project/blockchain/external/ruslo-leathers.git
 [submodule "external/lz4-lz4"]
 	path = external/lz4-lz4
-	url = https://gitlab.com/galaxia-project/blockchain/external/lz4-lz4
+	url = https://gitlab.com/galaxia-project/blockchain/external/lz4-lz4.git
 [submodule "external/google-breakpad"]
 	path = external/google-breakpad
-	url = https://gitlab.com/galaxia-project/blockchain/external/google-breakpad
+	url = https://gitlab.com/galaxia-project/blockchain/external/google-breakpad.git
 [submodule "external/google-sparsehash-c11"]
 	path = external/google-sparsehash-c11
-	url = https://gitlab.com/galaxia-project/blockchain/external/google-sparsehash-c11
+	url = https://gitlab.com/galaxia-project/blockchain/external/google-sparsehash-c11.git
