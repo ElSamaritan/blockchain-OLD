@@ -146,8 +146,8 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string>& args) {
   CryptoNote::COMMAND_RPC_GET_BLOCK_HEADERS_RANGE::response res;
   CryptoNote::JsonRpc::JsonRpcError error_resp;
 
-  req.start_height = start_index;
-  req.end_height = end_index;
+  req.start_height = start_index + 1;
+  req.end_height = end_index + 1;
 
   if (!m_prpc_server->on_get_block_headers_range(req, res, error_resp) || res.status != CORE_RPC_STATUS_OK) {
     std::cout << "Response status was expected to be '" << CORE_RPC_STATUS_OK "' actually is '" << res.status << "'."
