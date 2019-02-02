@@ -7,9 +7,6 @@
 [submodule "external/facebook-rocksdb"]
 	path = external/facebook-rocksdb
 	url = https://gitlab.com/galaxia-project/blockchain/external/facebook-rocksdb.git
-[submodule "external/nlohmann-json"]
-	path = external/nlohmann-json
-	url = https://gitlab.com/galaxia-project/blockchain/external/nlohmann-json.git
 [submodule "external/jarro2783-cxxopts"]
 	path = external/jarro2783-cxxopts
 	url = https://gitlab.com/galaxia-project/blockchain/external/jarro2783-cxxopts.git
