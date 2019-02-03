@@ -14,8 +14,9 @@
 #include <nlohmann/json.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
-#include <Xi/Http/SSLClientConfiguration.h>
-#include <Xi/Http/SSLServerConfiguration.h>
+#include <Serialization/SerializationTools.h>
+
+#include <Xi/Http/SSLConfiguration.h>
 
 #include "CommonCLI/CommonCLI.h"
 #include <Xi/Config.h>
@@ -61,8 +62,7 @@ struct WalletServiceConfiguration {
   uint32_t scanHeight;
 
   ::Xi::Config::Network::Type network;
-  ::Xi::Http::SSLClientConfiguration sslClient;
-  ::Xi::Http::SSLServerConfiguration sslServer;
+  ::Xi::Http::SSLConfiguration ssl;
 };
 
 inline WalletServiceConfiguration initConfiguration() {
@@ -136,8 +136,7 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
     ("unregister-service", "Unregisters this program from being a Windows service", cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
 #endif
 
-  config.sslClient.emplaceCLIConfiguration(options);
-  config.sslServer.emplaceCLIConfiguration(options);
+  config.ssl.emplaceOptions(options, ::Xi::Http::SSLConfiguration::Usage::Both);
   // clang-format on
 
   try {
@@ -315,11 +314,10 @@ inline void handleSettings(const std::string configFile, WalletServiceConfigurat
     config.serverRoot = j["server-root"].get<std::string>();
   }
 
-  if (j.find("ssl-client") != j.end()) {
-    config.sslClient.load(j["ssl-client"]);
-  }
-  if (j.find("ssl-server") != j.end()) {
-    config.sslServer.load(j["ssl-server"]);
+  if (j.find("ssl") != j.end()) {
+    if (!CryptoNote::loadFromJson(config.ssl, j["ssl-client"].dump())) {
+      throw std::runtime_error{"Invalid ssl configuration in json configuration."};
+    }
   }
   if (j.find("network") != j.end()) {
     config.network = Xi::lexical_cast<::Xi::Config::Network::Type>(j["network"]);
@@ -327,10 +325,6 @@ inline void handleSettings(const std::string configFile, WalletServiceConfigurat
 }
 
 inline json asJSON(const WalletServiceConfiguration& config) {
-  json sslClient = json{};
-  config.sslClient.store(sslClient);
-  json sslServer = json{};
-  config.sslServer.store(sslServer);
   json j = json{{"daemon-address", config.daemonAddress},
                 {"daemon-port", config.daemonPort},
                 {"log-file", config.logFile},
@@ -343,8 +337,7 @@ inline json asJSON(const WalletServiceConfiguration& config) {
                 {"rpc-legacy-security", config.legacySecurity},
                 {"rpc-password", config.rpcPassword},
                 {"server-root", config.serverRoot},
-                {"ssl-client", sslClient},
-                {"ssl-server", sslServer},
+                {"ssl", CryptoNote::storeToJson(config.ssl)},
                 {"network", Xi::to_string(config.network)}};
   return j;
 };

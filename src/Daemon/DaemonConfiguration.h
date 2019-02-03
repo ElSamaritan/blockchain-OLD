@@ -17,7 +17,9 @@
 
 #include <Xi/Config/NetworkType.h>
 #include <Xi/Config/Network.h>
-#include <Xi/Http/SSLServerConfiguration.h>
+#include <Xi/Http/SSLConfiguration.h>
+
+#include <Serialization/SerializationTools.h>
 
 #include <Xi/Config.h>
 #include <CryptoNoteCore/DataBaseConfig.h>
@@ -54,7 +56,7 @@ struct DaemonConfiguration {
   uint64_t dbWriteBufferSize;
   uint64_t dbReadCacheSize;
   CryptoNote::DataBaseConfig::Compression dbCompression = CryptoNote::DataBaseConfig::Compression::LZ4;
-  ::Xi::Http::SSLServerConfiguration ssl;
+  ::Xi::Http::SSLConfiguration ssl;
 
   bool noConsole;
   bool enableBlockExplorer;
@@ -162,7 +164,7 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     ("db-threads", "Number of background threads used for compaction and flush operations", cxxopts::value<uint16_t>()->default_value(std::to_string(config.dbThreads)), "#")
     ("db-write-buffer-size", "Size of the database write buffer in megabytes (MB)", cxxopts::value<uint64_t>()->default_value(std::to_string(config.dbWriteBufferSize)), "#");
 
-  config.ssl.emplaceCLIConfiguration(options);
+  config.ssl.emplaceOptions(options, ::Xi::Http::SSLConfiguration::Usage::Server);
   // clang-format on
 
   try {
@@ -424,15 +426,15 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
   }
 
   if (j.find("ssl") != j.end()) {
-    config.ssl.load(j["ssl"]);
+    if (!CryptoNote::loadFromJson(config.ssl, j["ssl"].dump())) {
+      throw std::runtime_error{"Invalid ssl configuration in daemon json config."};
+    }
   }
 };
 
 json asJSON(const DaemonConfiguration& config) {
   std::string compressionString;
   Common::toString(config.dbCompression, compressionString);
-  json ssl = json{};
-  config.ssl.store(ssl);
 
   json j = json{{"data-dir", config.dataDirectory},
                 {"load-checkpoints", config.checkPoints},
@@ -460,7 +462,7 @@ json asJSON(const DaemonConfiguration& config) {
                 {"enable-cors", config.enableCors},
                 {"fee-address", config.feeAddress},
                 {"fee-amount", config.feeAmount},
-                {"ssl", ssl}};
+                {"ssl", CryptoNote::storeToJson(config.ssl)}};
 
   return j;
 };

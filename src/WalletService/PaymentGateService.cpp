@@ -107,11 +107,8 @@ void PaymentGateService::run() {
   Tools::SignalHandler::install(std::bind(&stopSignalHandler, this));
 
   Logging::LoggerRef log(logger, "run");
-  if (config.serviceConfig.sslClient.isInsecure()) {
+  if (config.serviceConfig.ssl.isInsecure(::Xi::Http::SSLConfiguration::Usage::Both)) {
     log(Logging::WARNING) << "\n" << CommonCLI::insecureClientWarning() << std::endl;
-  }
-  if (config.serviceConfig.sslServer.isInsecure()) {
-    log(Logging::WARNING) << "\n" << CommonCLI::insecureServerWarning() << std::endl;
   }
 
   runRpcProxy(log);
@@ -138,9 +135,8 @@ void PaymentGateService::runRpcProxy(Logging::LoggerRef& log) {
   log(Logging::INFO) << "Starting Payment Gate with remote node";
   const CryptoNote::Currency& currency = getCurrency();
 
-  std::unique_ptr<CryptoNote::INode> node(
-      PaymentService::NodeFactory::createNode(config.serviceConfig.daemonAddress, config.serviceConfig.daemonPort,
-                                              config.serviceConfig.sslClient, log.getLogger()));
+  std::unique_ptr<CryptoNote::INode> node(PaymentService::NodeFactory::createNode(
+      config.serviceConfig.daemonAddress, config.serviceConfig.daemonPort, config.serviceConfig.ssl, log.getLogger()));
 
   runWalletService(currency, *node);
 }
@@ -173,7 +169,7 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
     auto rpcServer = std::make_shared<PaymentService::PaymentServiceJsonRpcServer>(*dispatcher, *stopEvent, *service,
                                                                                    logger, config);
     rpcServer->setHandler(rpcServer);
-    rpcServer->setSSLConfiguration(config.serviceConfig.sslServer);
+    rpcServer->setSSLConfiguration(config.serviceConfig.ssl);
     rpcServer->start(config.serviceConfig.bindAddress, config.serviceConfig.bindPort);
 
     Logging::LoggerRef(logger, "PaymentGateService")(Logging::INFO, Logging::BRIGHT_WHITE)

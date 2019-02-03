@@ -32,8 +32,8 @@ TEST(XI_TESTSUITE, HTTPGetRequestWithRedirection) {
   using namespace ::testing;
   using namespace ::Xi::Http;
 
-  SSLClientConfiguration config;
-  config.Disabled = true;
+  SSLConfiguration config;
+  config.setEnabled(true);
 
   Client client{"google.de", 80, config};
   const uint16_t NumRequests = 1;
@@ -52,8 +52,9 @@ TEST(XI_TESTSUITE, HTTPSGetRequestWithRedirection) {
   using namespace ::testing;
   using namespace ::Xi::Http;
 
-  SSLClientConfiguration config;
-  config.VerifyPeers = false;
+  SSLConfiguration config;
+  config.setEnabled(true);
+  config.setVerifyPeers(false);
 
   Client client{"github.com", 443, config};
   const uint16_t NumRequests = 1;

@@ -48,10 +48,7 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
   boost::asio::io_context io;
   boost::asio::ssl::context ctx{boost::asio::ssl::context::sslv23_client};
 
-  _Worker() {
-    // ctx.set_verify_mode(boost::asio::ssl::verify_peer);
-    ctx.set_verify_mode(boost::asio::ssl::verify_none);
-  }
+  _Worker() {}
 
   void run() { thread = std::thread{std::bind(&_Worker::operator(), shared_from_this())}; }
   void stop() { keepRunning = false; }
@@ -77,9 +74,9 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
   }
 };
 
-Xi::Http::Client::Client(const std::string &host, uint16_t port, SSLClientConfiguration config)
+Xi::Http::Client::Client(const std::string &host, uint16_t port, SSLConfiguration config)
     : m_host{host}, m_port{port}, m_sslConfig{config}, m_worker{new _Worker} {
-  m_sslConfig.initializeContext(m_worker->ctx);
+  m_sslConfig.initializeClientContext(m_worker->ctx);
   m_worker->run();
 }
 
@@ -94,7 +91,8 @@ std::future<Xi::Http::Response> Xi::Http::Client::send(Xi::Http::Request &&reque
   if (request.port() == 0) request.setPort(port());
   request.headers().setAcceptedContentEncodings(
       {ContentEncoding::Gzip, ContentEncoding::Deflate, ContentEncoding::Identity});
-  if (!m_sslConfig.Disabled) {
+  // TODO: request type should be determined on schema not config.
+  if (!m_sslConfig.enabled()) {
     request.setSSLRequired(true);
     return m_worker->makeHttpsSession()->run(std::move(request));
   } else

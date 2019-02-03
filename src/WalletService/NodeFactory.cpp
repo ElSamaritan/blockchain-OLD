@@ -149,7 +149,7 @@ NodeFactory::NodeFactory() {}
 NodeFactory::~NodeFactory() {}
 
 CryptoNote::INode* NodeFactory::createNode(const std::string& daemonAddress, uint16_t daemonPort,
-                                           Xi::Http::SSLClientConfiguration sslConfig, Logging::ILogger& logger) {
+                                           Xi::Http::SSLConfiguration sslConfig, Logging::ILogger& logger) {
   std::unique_ptr<CryptoNote::INode> node(new CryptoNote::NodeRpcProxy(daemonAddress, daemonPort, sslConfig, logger));
 
   NodeInitObserver initObserver;

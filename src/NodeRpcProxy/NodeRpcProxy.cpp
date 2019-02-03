@@ -50,8 +50,8 @@ std::error_code interpretResponseStatus(const std::string& status) {
 
 }  // namespace
 
-NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort,
-                           Xi::Http::SSLClientConfiguration sslConfig, Logging::ILogger& logger)
+NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort, Xi::Http::SSLConfiguration sslConfig,
+                           Logging::ILogger& logger)
     : m_logger(logger, "NodeRpcProxy"),
       m_rpcTimeout(10000),
       m_pullInterval(5000),

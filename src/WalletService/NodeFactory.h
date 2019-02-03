@@ -21,7 +21,7 @@
 
 #include <string>
 
-#include <Xi/Http/SSLClientConfiguration.h>
+#include <Xi/Http/SSLConfiguration.h>
 
 #include "Logging/LoggerRef.h"
 
@@ -30,7 +30,7 @@ namespace PaymentService {
 class NodeFactory {
  public:
   static CryptoNote::INode* createNode(const std::string& daemonAddress, uint16_t daemonPort,
-                                       Xi::Http::SSLClientConfiguration sslConfig, Logging::ILogger& logger);
+                                       Xi::Http::SSLConfiguration sslConfig, Logging::ILogger& logger);
   static CryptoNote::INode* createNodeStub();
 
  private:

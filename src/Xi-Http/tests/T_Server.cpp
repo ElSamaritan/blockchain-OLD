@@ -70,7 +70,7 @@ class XI_TESTSUITE : public ::testing::Test {
   const uint16_t Port = 48008;
   Server server{};
 
-  SSLClientConfiguration clientConfig;
+  SSLConfiguration clientConfig;
   Client client{"127.0.0.1", Port, clientConfig};
   std::shared_ptr<MockRequestHandler> mock = std::make_shared<MockRequestHandler>();
 

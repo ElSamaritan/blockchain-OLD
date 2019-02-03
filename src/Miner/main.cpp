@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
     auto crashDumper = CommonCLI::make_crash_dumper("xi-miner");
     (void)crashDumper;
 
-    if (config.ssl.isInsecure()) {
+    if (config.ssl.isInsecure(::Xi::Http::SSLConfiguration::Usage::Client)) {
       std::cout << CommonCLI::insecureClientWarning() << std::endl;
     }
 

@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <string>
 
-#include <Xi/Http/SSLClientConfiguration.h>
+#include <Xi/Http/SSLConfiguration.h>
 
 namespace CryptoNote {
 
@@ -27,7 +27,7 @@ struct MiningConfig {
   size_t blocksLimit;
   uint64_t firstBlockTimestamp;
   int64_t blockTimestampInterval;
-  ::Xi::Http::SSLClientConfiguration ssl;
+  ::Xi::Http::SSLConfiguration ssl;
 };
 
 }  // namespace CryptoNote

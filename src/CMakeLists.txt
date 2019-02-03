@@ -129,7 +129,8 @@ target_link_libraries(
     Xi.Core
     boost
     cxxopts
-    json
+    Serialization
+    Common
 )
 
 if(XI_BUILD_BREAKPAD)

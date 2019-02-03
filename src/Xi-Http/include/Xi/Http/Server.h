@@ -30,7 +30,7 @@
 #include <Xi/Concurrent/IDispatcher.h>
 
 #include "Xi/Http/RequestHandler.h"
-#include "Xi/Http/SSLServerConfiguration.h"
+#include "Xi/Http/SSLConfiguration.h"
 
 namespace Xi {
 namespace Http {
@@ -74,13 +74,13 @@ class Server : std::enable_shared_from_this<Server> {
   void setDispatcher(std::shared_ptr<Concurrent::IDispatcher> dispatcher);
   std::shared_ptr<Concurrent::IDispatcher> dispatcher() const;
 
-  SSLServerConfiguration sslConfiguration() const;
-  void setSSLConfiguration(SSLServerConfiguration config);
+  SSLConfiguration sslConfiguration() const;
+  void setSSLConfiguration(SSLConfiguration config);
 
  private:
   std::shared_ptr<RequestHandler> m_handler;
   std::shared_ptr<Concurrent::IDispatcher> m_dispatcher;
-  SSLServerConfiguration m_sslConfig;
+  SSLConfiguration m_sslConfig;
   std::string m_host;
 
   struct _Listener;

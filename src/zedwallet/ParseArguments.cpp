@@ -82,7 +82,7 @@ Config parseArguments(int argc, char** argv) {
     ("p,password", "Use the password <pass> to open the wallet", cxxopts::value<std::string>(config.walletPass), "<pass>");
 
 
-  config.ssl.emplaceCLIConfiguration(options);
+  config.ssl.emplaceOptions(options, ::Xi::Http::SSLConfiguration::Usage::Client);
   // clang-format on
 
   try {

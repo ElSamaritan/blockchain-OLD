@@ -78,6 +78,7 @@ struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
       for (auto& thread : runner) thread.join();
       io.stop();
     } catch (...) {
+      /* */
     }
   }
 
@@ -85,9 +86,13 @@ struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
     if (!keepRunning) {
       return;
     } else {
-      std::make_shared<ServerSessionDetector>(std::move(socket), ctx,
-                                              std::shared_ptr<IServerSessionBuilder>{shared_from_this(), this})
-          ->run();
+      try {
+        std::make_shared<ServerSessionDetector>(std::move(socket), ctx,
+                                                std::shared_ptr<IServerSessionBuilder>{shared_from_this(), this})
+            ->run();
+      } catch (...) {
+        /* */
+      }
     }
   }
 
@@ -110,7 +115,7 @@ void Xi::Http::Server::start(const std::string& address, uint16_t port) {
   if (m_handler.get() == nullptr) throw std::runtime_error{"you must provide a handler in order to start the server"};
   m_listener = std::make_shared<_Listener>(address, port, handler(), *dispatcher());
 
-  m_sslConfig.initializeContext(m_listener->ctx);
+  m_sslConfig.initializeServerContext(m_listener->ctx);
   m_host = address;
 
   m_listener->run(1);
@@ -126,6 +131,6 @@ void Xi::Http::Server::setDispatcher(std::shared_ptr<Xi::Concurrent::IDispatcher
 
 std::shared_ptr<Xi::Concurrent::IDispatcher> Xi::Http::Server::dispatcher() const { return m_dispatcher; }
 
-Xi::Http::SSLServerConfiguration Xi::Http::Server::sslConfiguration() const { return m_sslConfig; }
+Xi::Http::SSLConfiguration Xi::Http::Server::sslConfiguration() const { return m_sslConfig; }
 
-void Xi::Http::Server::setSSLConfiguration(Xi::Http::SSLServerConfiguration config) { m_sslConfig = config; }
+void Xi::Http::Server::setSSLConfiguration(SSLConfiguration config) { m_sslConfig = config; }

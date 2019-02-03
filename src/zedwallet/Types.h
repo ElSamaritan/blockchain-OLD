@@ -10,7 +10,7 @@
 
 #include <Xi/Config.h>
 
-#include <Xi/Http/SSLClientConfiguration.h>
+#include <Xi/Http/SSLConfiguration.h>
 
 #include <Serialization/ISerializer.h>
 
@@ -73,7 +73,7 @@ struct Config {
   std::string walletPass = "";
 
   /* Configuration of SSL usage using the HTTP(S) client. */
-  ::Xi::Http::SSLClientConfiguration ssl;
+  ::Xi::Http::SSLConfiguration ssl;
 };
 
 struct AddressBookEntry {

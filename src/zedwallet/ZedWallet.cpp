@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 
   std::cout << InformationMsg(CommonCLI::header()) << std::endl;
 
-  if (config.ssl.isInsecure()) {
+  if (config.ssl.isInsecure(::Xi::Http::SSLConfiguration::Usage::Client)) {
     std::cout << WarningMsg(CommonCLI::insecureClientWarning()) << std::endl;
   }
 

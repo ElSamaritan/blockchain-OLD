@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
     logger(INFO, BRIGHT_BLUE) << CommonCLI::header() << std::endl;
-    if (config.ssl.isInsecure()) {
+    if (config.ssl.isInsecure(::Xi::Http::SSLConfiguration::Usage::Server)) {
       logger(WARNING) << "\n" << CommonCLI::insecureServerWarning() << std::endl;
     }
     logger(INFO) << "Program Working Directory: " << argv[0];

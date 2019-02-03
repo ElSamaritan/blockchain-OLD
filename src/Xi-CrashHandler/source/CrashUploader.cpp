@@ -35,7 +35,7 @@ Xi::CrashUploader::~CrashUploader() {}
 
 boost::optional<std::string> Xi::CrashUploader::upload(const std::string& file, const std::string& application) {
   try {
-    Xi::Http::Client client{Xi::Config::Network::breakpadServer(), 80, Xi::Http::SSLClientConfiguration::NoSSL};
+    Xi::Http::Client client{Xi::Config::Network::breakpadServer(), 80, Xi::Http::SSLConfiguration{}};
     Xi::Http::MultipartFormDataBuilder builder;
     builder.addField("prod", application);
     builder.addField("ver", APP_VERSION);

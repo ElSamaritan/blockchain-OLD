@@ -100,7 +100,7 @@ std::string CommonCLI::insecureClientWarning() {
    !                                                                                       !
    ! Your client is not setup to be most secure. To increase you secuirity please read our !
    ! tutorial on setting up ssl correctly.                                                 !
-   !     https://galaxia-project.gitlab.io/end-user-documentation/ssl                      !
+   !     https://doc.xiproject.io/ssl/                                                     !
    !                                                                                       !
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 )";
@@ -112,7 +112,7 @@ std::string CommonCLI::insecureServerWarning() {
    !                                                                                       !
    ! Your sever is not setup to be most secure. To increase you secuirity please read our  !
    ! tutorial on setting up ssl correctly.                                                 !
-   !     https://galaxia-project.gitlab.io/end-user-documentation/ssl                      !
+   !     https://doc.xiproject.io/ssl/                                                     !
    !                                                                                       !
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 )";

@@ -30,7 +30,7 @@ JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, 
                              PaymentService::ConfigurationManager& config)
     : Server(), config(config), system{sys}, stopEvent(stopEvent), logger(loggerGroup, "JsonRpcServer") {
   setDispatcher(std::make_shared<Xi::Concurrent::SystemDispatcher>(sys));
-  setSSLConfiguration(config.serviceConfig.sslServer);
+  setSSLConfiguration(config.serviceConfig.ssl);
 }
 
 void JsonRpcServer::start(const std::string& bindAddress, uint16_t bindPort) {
