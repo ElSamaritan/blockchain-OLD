@@ -42,8 +42,10 @@ foreach ($NewPackage in $NewPackages)
 {
     Write-Log "Adding package $NewPackage"
     $NewPackageInfo = Get-Content $NewPackage | Out-String | ConvertFrom-Json
-    $PackageInfo += $NewPackageInfo
+    $PackageInfo += $NewPackageInfo.ArchivePath -replace "\\", "/"
+    $PackageInfo += $NewPackageInfo.LatestPath -replace "\\", "/"
 }
+$PackageInfo = $PackageInfo | Select-Object -Unique
 
 Write-Log "Updating packages info..."
 ConvertTo-Json $PackageInfo | Set-Content -Path $PackagesInfoPath

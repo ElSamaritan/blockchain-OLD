@@ -144,8 +144,7 @@ CppLint:
 
 Packages:
   stage: deploy
-  tags: ["docker"]
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
+  tags: ["windows"]
   dependencies: 
     - "Ubuntu Bionic - Build"
     - "Ubuntu Xenial - Build"
