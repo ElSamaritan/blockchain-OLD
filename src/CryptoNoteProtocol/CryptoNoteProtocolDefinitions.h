@@ -36,14 +36,8 @@ namespace CryptoNote {
 /*                                                                      */
 /************************************************************************/
 
-// just to keep backward compatibility with BlockCompleteEntry serialization
-struct RawBlockLegacy {
-  BinaryArray block;
-  std::vector<BinaryArray> transactions;
-};
-
 struct NOTIFY_NEW_BLOCK_request {
-  RawBlockLegacy b;
+  RawBlock b;
   uint32_t current_blockchain_height;
   uint32_t hop;
 };
@@ -85,7 +79,7 @@ struct NOTIFY_REQUEST_GET_OBJECTS {
 
 struct NOTIFY_RESPONSE_GET_OBJECTS_request {
   std::vector<std::string> txs;
-  std::vector<RawBlockLegacy> blocks;
+  std::vector<RawBlock> blocks;
   std::vector<Crypto::Hash> missed_ids;
   uint32_t current_blockchain_height;
 };
@@ -136,5 +130,28 @@ struct NOTIFY_REQUEST_TX_POOL_request {
 struct NOTIFY_REQUEST_TX_POOL {
   const static int ID = BC_COMMANDS_POOL_BASE + 8;
   typedef NOTIFY_REQUEST_TX_POOL_request request;
+};
+
+// -------------------------------------------------- LITE -----------------------------------------------------------
+struct NOTIFY_NEW_LITE_BLOCK_request {
+  RawBlock b;
+  uint32_t current_blockchain_height;
+  uint32_t hop;
+};
+
+struct NOTIFY_NEW_LITE_BLOCK {
+  const static int ID = BC_COMMANDS_POOL_BASE + 9;
+  typedef NOTIFY_NEW_LITE_BLOCK_request request;
+};
+
+struct NOTIFY_MISSING_TXS_request {
+  Crypto::Hash blockHash;
+  uint32_t current_blockchain_height;
+  std::vector<Crypto::Hash> missing_txs;
+};
+
+struct NOTIFY_MISSING_TXS {
+  const static int ID = BC_COMMANDS_POOL_BASE + 10;
+  typedef NOTIFY_MISSING_TXS_request request;
 };
 }  // namespace CryptoNote

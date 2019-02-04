@@ -15,6 +15,7 @@
 
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
+#include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteCore/Transactions/ITransactionPool.h"
@@ -44,52 +45,7 @@ void relay_post_notify(IP2pEndpoint& p2p, typename t_parametr::request& arg,
   p2p.externalRelayNotifyToAll(t_parametr::ID, LevinProtocol::encode(arg), excludeConnection);
 }
 
-std::vector<RawBlockLegacy> convertRawBlocksToRawBlocksLegacy(const std::vector<RawBlock>& rawBlocks) {
-  std::vector<RawBlockLegacy> legacy;
-  legacy.reserve(rawBlocks.size());
-
-  for (const auto& rawBlock : rawBlocks) {
-    legacy.emplace_back(RawBlockLegacy{rawBlock.block, rawBlock.transactions});
-  }
-
-  return legacy;
-}
-
-std::vector<RawBlock> convertRawBlocksLegacyToRawBlocks(const std::vector<RawBlockLegacy>& legacy) {
-  std::vector<RawBlock> rawBlocks;
-  rawBlocks.reserve(legacy.size());
-
-  for (const auto& legacyBlock : legacy) {
-    rawBlocks.emplace_back(RawBlock{legacyBlock.block, legacyBlock.transactions});
-  }
-
-  return rawBlocks;
-}
-
 }  // namespace
-
-// unpack to strings to maintain protocol compatibility with older versions
-static inline void serialize(RawBlockLegacy& rawBlock, ISerializer& serializer) {
-  std::string block;
-  std::vector<std::string> transactions;
-  if (serializer.type() == ISerializer::INPUT) {
-    serializer(block, "block");
-    serializer(transactions, "txs");
-    rawBlock.block.reserve(block.size());
-    rawBlock.transactions.reserve(transactions.size());
-    std::copy(block.begin(), block.end(), std::back_inserter(rawBlock.block));
-    std::transform(transactions.begin(), transactions.end(), std::back_inserter(rawBlock.transactions),
-                   [](const std::string& s) { return BinaryArray(s.begin(), s.end()); });
-  } else {
-    block.reserve(rawBlock.block.size());
-    transactions.reserve(rawBlock.transactions.size());
-    std::copy(rawBlock.block.begin(), rawBlock.block.end(), std::back_inserter(block));
-    std::transform(rawBlock.transactions.begin(), rawBlock.transactions.end(), std::back_inserter(transactions),
-                   [](BinaryArray& s) { return std::string(s.begin(), s.end()); });
-    serializer(block, "block");
-    serializer(transactions, "txs");
-  }
-}
 
 static inline void serialize(NOTIFY_NEW_BLOCK_request& request, ISerializer& s) {
   s(request.b, "b");
@@ -416,7 +372,7 @@ int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_RE
         << context << "NOTIFY_RESPONSE_GET_OBJECTS: request.txs.empty() != true";
   }
 
-  rsp.blocks = convertRawBlocksToRawBlocksLegacy(rawBlocks);
+  rsp.blocks = rawBlocks;
 
   m_logger(Logging::TRACE) << context << "-->>NOTIFY_RESPONSE_GET_OBJECTS: blocks.size()=" << rsp.blocks.size()
                            << ", txs.size()=" << rsp.txs.size()
@@ -447,7 +403,7 @@ int CryptoNoteProtocolHandler::handle_response_get_objects(int command, NOTIFY_R
   blockTemplates.resize(arg.blocks.size());
   cachedBlocks.reserve(arg.blocks.size());
 
-  std::vector<RawBlock> rawBlocks = convertRawBlocksLegacyToRawBlocks(arg.blocks);
+  std::vector<RawBlock> rawBlocks = std::move(arg.blocks);
 
   for (size_t index = 0; index < rawBlocks.size(); ++index) {
     if (!fromBinaryArray(blockTemplates[index], rawBlocks[index].block)) {

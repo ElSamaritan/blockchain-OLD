@@ -206,7 +206,7 @@ target_link_libraries(Crypto PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Conf
 target_link_libraries(Logging PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Mnemonics PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(NodeRpcProxy PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
-target_link_libraries(P2P PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
+target_link_libraries(P2P PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config Xi.Protocol)
 target_link_libraries(Serialization PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Transfers PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(JsonRpcServer PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config Xi.Crypto)

@@ -25,9 +25,6 @@ namespace CryptoNote {
 inline bool serialize(uuid& v, Common::StringView name, ISerializer& s) { return s.binary(&v, sizeof(v), name); }
 
 struct network_config {
-  void serialize(ISerializer& s){KV_MEMBER(connections_count) KV_MEMBER(handshake_interval) KV_MEMBER(packet_max_size)
-                                     KV_MEMBER(config_id)}
-
   uint32_t connections_count;
   uint32_t connection_timeout;
   uint32_t ping_connection_timeout;
@@ -35,6 +32,10 @@ struct network_config {
   uint32_t packet_max_size;
   uint32_t config_id;
   uint32_t send_peerlist_sz;
+
+  void serialize(ISerializer& s) {
+    KV_MEMBER(connections_count) KV_MEMBER(handshake_interval) KV_MEMBER(packet_max_size) KV_MEMBER(config_id)
+  }
 };
 
 struct basic_node_data {
