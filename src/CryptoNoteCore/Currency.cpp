@@ -164,7 +164,7 @@ bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size
   uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
   if (alreadyGeneratedCoins == 0 && m_genesisBlockReward != 0) {
     baseReward = m_genesisBlockReward;
-    std::cout << "Genesis block reward: " << baseReward << std::endl;
+    logger(TRACE) << "Genesis block reward: " << baseReward;
   }
 
   size_t blockGrantedFullRewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
@@ -222,9 +222,9 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
   }
 
   std::vector<uint64_t> outAmounts;
-  decompose_amount_into_digits(
-      blockReward, defaultDustThreshold(height), [&outAmounts](uint64_t a_chunk) { outAmounts.push_back(a_chunk); },
-      [&outAmounts](uint64_t a_dust) { outAmounts.push_back(a_dust); });
+  decompose_amount_into_digits(blockReward, defaultDustThreshold(height),
+                               [&outAmounts](uint64_t a_chunk) { outAmounts.push_back(a_chunk); },
+                               [&outAmounts](uint64_t a_dust) { outAmounts.push_back(a_dust); });
 
   if (!(1 <= maxOuts)) {
     logger(ERROR, BRIGHT_RED) << "max_out must be non-zero";

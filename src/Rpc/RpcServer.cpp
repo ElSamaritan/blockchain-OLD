@@ -258,7 +258,7 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req,
   }
 
   res.current_height = totalBlockCount;
-  res.start_height = startBlockIndex;
+  res.start_height = startBlockIndex + 1;
 
   std::vector<Crypto::Hash> missedHashes;
   m_core.getBlocks(supplementQuery.value(), res.blocks, missedHashes);
@@ -648,7 +648,10 @@ bool RpcServer::f_on_blocks_list_json(const F_COMMAND_RPC_GET_BLOCKS_LIST::reque
     return false;
   }
 
-  if (m_core.getTopBlockIndex() + 1 <= req.height) {
+  if (req.height < 1) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_SMALL_HEIGHT, "Height must be at least 1."};
+  }
+  if (m_core.getTopBlockIndex() + 1 < req.height) {
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_BIG_HEIGHT,
                                 std::string("To big height: ") + std::to_string(req.height) +
                                     ", current blockchain height = " + std::to_string(m_core.getTopBlockIndex())};
@@ -698,6 +701,9 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
     if (height < 1) {
       throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
                                   "Internal error: can't get block by invalid height '0'."};
+    } else if (height > m_core.getTopBlockIndex() + 1) {
+      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_BIG_HEIGHT,
+                                  std::string{"Requested height '"} + std::to_string(height) + "' is too big."};
     }
     hash = m_core.getBlockHashByIndex(height - 1);
   } catch (boost::bad_lexical_cast&) {
@@ -721,7 +727,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
 
   block_header_response block_header;
   res.block.height = boost::get<BaseInput>(blk.baseTransaction.inputs.front()).blockIndex + 1;
-  fill_block_header_response(blk, false, res.block.height, hash, block_header);
+  fill_block_header_response(blk, false, res.block.height - 1, hash, block_header);
 
   res.block.major_version = block_header.major_version;
   res.block.minor_version = block_header.minor_version;
@@ -1171,7 +1177,7 @@ bool RpcServer::on_get_block_headers_range(const COMMAND_RPC_GET_BLOCK_HEADERS_R
     CryptoNote::BlockTemplate blk = m_core.getBlockByHash(block_hash);
 
     res.headers.push_back(block_header_response());
-    fill_block_header_response(blk, false, h, block_hash, res.headers.back());
+    fill_block_header_response(blk, false, h - 1, block_hash, res.headers.back());
 
     // TODO: Error handling like in monero?
     /*block blk;
