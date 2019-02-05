@@ -107,4 +107,8 @@ struct RawBlock {
   std::vector<BinaryArray> transactions;
 };
 
+struct LiteBlock {
+  BinaryArray blockTemplate;
+};
+
 }  // namespace CryptoNote
