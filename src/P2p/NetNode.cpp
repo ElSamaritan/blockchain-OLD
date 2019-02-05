@@ -109,15 +109,15 @@ const command_line::arg_descriptor<uint32_t> arg_p2p_external_port = {
     "p2p-external-port", "External port for p2p network protocol (if port forwarding used with NAT)", 0};
 const command_line::arg_descriptor<bool> arg_p2p_allow_local_ip = {
     "allow-local-ip", "Allow local ip add to peer list, mostly in debug purposes"};
-const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_add_peer = {
-    "add-peer", "Manually add peer to local peerlist"};
-const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_add_priority_node = {
+const command_line::arg_descriptor<std::vector<std::string>> arg_p2p_add_peer = {"add-peer",
+                                                                                 "Manually add peer to local peerlist"};
+const command_line::arg_descriptor<std::vector<std::string>> arg_p2p_add_priority_node = {
     "add-priority-node", "Specify list of peers to connect to and attempt to keep the connection open"};
-const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_add_exclusive_node = {
+const command_line::arg_descriptor<std::vector<std::string>> arg_p2p_add_exclusive_node = {
     "add-exclusive-node",
     "Specify list of peers to connect to only."
     " If this option is given the options add-priority-node and seed-node are ignored"};
-const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_seed_node = {
+const command_line::arg_descriptor<std::vector<std::string>> arg_p2p_seed_node = {
     "seed-node", "Connect to a node to retrieve peer addresses, and disconnect"};
 const command_line::arg_descriptor<bool> arg_p2p_hide_my_port = {
     "hide-my-port", "Do not announce yourself as peerlist candidate", false, true};
@@ -191,8 +191,10 @@ int invokeAdaptor(const BinaryArray& reqBuf, BinaryArray& resBuf, P2pConnectionC
 
   Request req = boost::value_initialized<Request>();
 
-  if (!LevinProtocol::decode(reqBuf, req)) {
-    throw std::runtime_error("Failed to load_from_binary in command " + std::to_string(command));
+  auto decodeResult = LevinProtocol::decode(reqBuf, req);
+  if (decodeResult.isError()) {
+    throw std::runtime_error("Failed to load_from_binary in command " + std::to_string(command) +
+                             " with error= " + decodeResult.error().message());
   }
 
   Response res = boost::value_initialized<Response>();
@@ -570,10 +572,12 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
   get_local_node_data(arg.node_data);
   m_payload_handler.get_payload_sync_data(arg.payload_data);
 
-  if (!proto.invoke(COMMAND_HANDSHAKE::ID, arg, rsp)) {
+  auto handshakeResult = proto.invoke(COMMAND_HANDSHAKE::ID, arg, rsp);
+  if (handshakeResult.isError()) {
     logger(Logging::DEBUGGING)
         << context
-        << "A daemon on the network has departed. MSG: Failed to invoke COMMAND_HANDSHAKE, closing connection.";
+        << "A daemon on the network has departed. MSG: Failed to invoke COMMAND_HANDSHAKE, closing connection. ERR: "
+        << handshakeResult.error().message();
     return false;
   }
 
@@ -640,7 +644,11 @@ bool NodeServer::timedSync() {
 
 bool NodeServer::handleTimedSyncResponse(const BinaryArray& in, P2pConnectionContext& context) {
   COMMAND_TIMED_SYNC::response rsp;
-  if (!LevinProtocol::decode<COMMAND_TIMED_SYNC::response>(in, rsp)) {
+  auto decodeResult = LevinProtocol::decode<COMMAND_TIMED_SYNC::response>(in, rsp);
+
+  if (decodeResult.isError()) {
+    logger(Logging::ERROR) << context
+                           << "COMMAND_TIMED_SYNC: failed to decode blob, error: " << decodeResult.error().message();
     return false;
   }
 
@@ -1091,10 +1099,12 @@ bool NodeServer::try_ping(basic_node_data& node_data, P2pConnectionContext& cont
   try {
     COMMAND_PING::request req;
     COMMAND_PING::response rsp;
-    System::Context<> pingContext(m_dispatcher, [&] {
+    System::Context<Xi::Result<void>> pingContext(m_dispatcher, [&]() -> Xi::Result<void> {
+      XI_ERROR_TRY();
       System::TcpConnector connector(m_dispatcher);
       auto connection = connector.connect(System::Ipv4Address(ip), static_cast<uint16_t>(port));
-      LevinProtocol(connection).invoke(COMMAND_PING::ID, req, rsp);
+      return LevinProtocol(connection).invoke(COMMAND_PING::ID, req, rsp);
+      XI_ERROR_CATCH();
     });
 
     System::Context<> timeoutContext(m_dispatcher, [&] {
@@ -1103,7 +1113,12 @@ bool NodeServer::try_ping(basic_node_data& node_data, P2pConnectionContext& cont
       safeInterrupt(pingContext);
     });
 
-    pingContext.get();
+    auto pingResult = pingContext.get();
+    if (pingResult.isError()) {
+      logger(DEBUGGING) << context << "ping faild \" from" << ip << ":" << port << ", hsh_peer_id=" << peerId
+                        << ", error=" << pingResult.error().message();
+      return false;
+    }
 
     if (rsp.status != PING_OK_RESPONSE_STATUS_TEXT || peerId != rsp.peer_id) {
       logger(DEBUGGING) << context << "Back ping invoke wrong response \"" << rsp.status << "\" from" << ip << ":"
@@ -1276,7 +1291,7 @@ bool NodeServer::connect_to_peerlist(const std::vector<NetworkAddress>& peers) {
 }
 
 bool NodeServer::parse_peers_and_add_to_container(const boost::program_options::variables_map& vm,
-                                                  const command_line::arg_descriptor<std::vector<std::string> >& arg,
+                                                  const command_line::arg_descriptor<std::vector<std::string>>& arg,
                                                   std::vector<NetworkAddress>& container) {
   std::vector<std::string> perrs = command_line::get_arg(vm, arg);
 
