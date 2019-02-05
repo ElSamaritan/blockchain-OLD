@@ -1032,21 +1032,17 @@ bool RpcServer::on_submitblock(const COMMAND_RPC_SUBMITBLOCK::request& req, COMM
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_WRONG_BLOCKBLOB, "Wrong block blob"};
   }
 
-  auto blockToSend = blockblob;
-  auto submitResult = m_core.submitBlock(std::move(blockblob));
+  auto submitResult = m_core.submitBlock(BinaryArray{blockblob});
   if (submitResult != error::AddBlockErrorCondition::BLOCK_ADDED) {
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_BLOCK_NOT_ACCEPTED, "Block not accepted"};
   }
 
   if (submitResult == error::AddBlockErrorCode::ADDED_TO_MAIN ||
       submitResult == error::AddBlockErrorCode::ADDED_TO_ALTERNATIVE_AND_SWITCHED) {
-    NOTIFY_NEW_BLOCK::request newBlockMessage;
-    newBlockMessage.b = prepareRawBlock(std::move(blockToSend));
-    newBlockMessage.hop = 0;
-    newBlockMessage.current_blockchain_height =
-        m_core.getTopBlockIndex() + 1;  //+1 because previous version of core sent m_blocks.size()
-
-    m_protocol.relayBlock(newBlockMessage);
+    auto blockTemplate = fromBinaryArray<BlockTemplate>(blockblob);  // safe as long as core checked it for us.
+    LiteBlock blockToRelay;
+    blockToRelay.blockTemplate = std::move(blockblob);
+    m_protocol.relayBlock(std::move(blockToRelay));
   }
 
   res.status = CORE_RPC_STATUS_OK;
