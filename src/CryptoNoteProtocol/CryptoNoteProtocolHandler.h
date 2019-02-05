@@ -105,6 +105,10 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
                      const std::vector<CachedBlock>& cachedBlocks);
 
  private:
+  int doPushLiteBlock(CryptoNoteConnectionContext& context, uint32_t hops, LiteBlock block,
+                      std::vector<CachedTransaction> txs);
+
+ private:
   System::Dispatcher& m_dispatcher;
   ICore& m_core;
   const Currency& m_currency;
