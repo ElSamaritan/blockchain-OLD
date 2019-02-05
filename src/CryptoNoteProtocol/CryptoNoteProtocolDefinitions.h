@@ -135,12 +135,32 @@ struct NOTIFY_NEW_LITE_BLOCK {
   typedef NOTIFY_NEW_LITE_BLOCK_request request;
 };
 
+struct NOTIFY_MISSING_TXS_REQUEST {
   uint32_t current_blockchain_height;
   std::vector<Crypto::Hash> missing_txs;
 };
 
-struct NOTIFY_MISSING_TXS {
-  const static int ID = BC_COMMANDS_POOL_BASE + 10;
-  typedef NOTIFY_MISSING_TXS_request request;
+struct NOTIFY_MISSING_TXS_RESPONSE {
+  std::vector<BinaryArray> txs;
 };
+
+struct NOTIFY_MISSING_TXS_REQUEST_ENTRY {
+  const static int ID = BC_COMMANDS_POOL_BASE + 8;
+  typedef NOTIFY_MISSING_TXS_REQUEST request;
+};
+
+struct NOTIFY_MISSING_TXS_RESPONSE_ENTRY {
+  const static int ID = BC_COMMANDS_POOL_BASE + 9;
+  typedef NOTIFY_MISSING_TXS_RESPONSE request;
+};
+
+// struct NOTIFY_MISSING_TXS_request {
+//  uint32_t current_blockchain_height;
+//  std::vector<Crypto::Hash> missing_txs;
+//};
+
+// struct NOTIFY_MISSING_TXS {
+//  const static int ID = BC_COMMANDS_POOL_BASE + 8;
+//  typedef NOTIFY_MISSING_TXS_request request;
+//};
 }  // namespace CryptoNote

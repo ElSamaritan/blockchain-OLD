@@ -28,6 +28,7 @@ struct NOTIFY_NEW_BLOCK_request;
 struct ICryptoNoteProtocol {
   virtual ~ICryptoNoteProtocol() = default;
 
+  virtual void relayBlock(LiteBlock&& arg) = 0;
   virtual void relayTransactions(const std::vector<BinaryArray>& transactions) = 0;
 };
 
