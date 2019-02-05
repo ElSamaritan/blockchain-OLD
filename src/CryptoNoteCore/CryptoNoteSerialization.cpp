@@ -442,7 +442,7 @@ void serialize(RawBlock& rawBlock, ISerializer& serializer) {
     serializer(blockSize, "block_size");
     rawBlock.block.resize(static_cast<size_t>(blockSize));
   } else {
-    auto blockSize = rawBlock.block.size();
+    uint64_t blockSize = rawBlock.block.size();
     serializer(blockSize, "block_size");
   }
 
@@ -469,6 +469,18 @@ void serialize(RawBlock& rawBlock, ISerializer& serializer) {
       serializer.binary(txBlob.data(), txBlob.size(), "transaction");
     }
   }
+}
+
+void serialize(LiteBlock& block, ISerializer& serializer) {
+  if (serializer.type() == ISerializer::INPUT) {
+    uint64_t size;
+    serializer(size, "size");
+    block.blockTemplate.resize(size);
+  } else {
+    uint64_t size = block.blockTemplate.size();
+    serializer(size, "size");
+  }
+  serializer.binary(block.blockTemplate.data(), block.blockTemplate.size(), "blob");
 }
 
 }  // namespace CryptoNote
