@@ -666,6 +666,14 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     return error::AddBlockErrorCode::DESERIALIZATION_FAILED;
   }
 
+  for (uint64_t i = 0; i < transactions.size(); ++i) {
+    if (blockTemplate.transactionHashes[i] != transactions[i].getTransactionHash()) {
+      logger(Logging::DEBUGGING)
+          << "BlockTemplate and raw transactions are inconsisten, may out of sync or wrongly ordered";
+      return error::BlockValidationError::TRANSACTION_INCONSISTENCY;
+    }
+  }
+
   auto coinbaseTransactionSize = getObjectBinarySize(blockTemplate.baseTransaction);
   assert(coinbaseTransactionSize < std::numeric_limits<decltype(coinbaseTransactionSize)>::max());
   auto cumulativeBlockSize = coinbaseTransactionSize + cumulativeSize;
