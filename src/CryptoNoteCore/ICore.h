@@ -72,6 +72,16 @@ class ICore {
   virtual std::error_code addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlock) = 0;
   virtual std::error_code addBlock(RawBlock&& rawBlock) = 0;
 
+  /*!
+   * \brief addBlock tries to add block with already known transaction details
+   * \param block A lite block missing transaction transaction details
+   * \param txs Lite blocks may require additional transaction information from the publisher, if known they will be
+   * placed here
+   * \return A result of missing hashes if partial data was not found, otherwise an error that may contain a
+   * success error code.
+   */
+  virtual Xi::Result<std::vector<Crypto::Hash>> addBlock(LiteBlock block, std::vector<CachedTransaction> txs = {}) = 0;
+
   virtual std::error_code submitBlock(BinaryArray&& rawBlockTemplate) = 0;
 
   virtual bool getTransactionGlobalIndexes(const Crypto::Hash& transactionHash,

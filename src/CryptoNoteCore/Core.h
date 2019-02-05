@@ -109,6 +109,8 @@ class Core : public ICore,
 
   virtual std::error_code addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlock) override;
   virtual std::error_code addBlock(RawBlock&& rawBlock) override;
+  virtual Xi::Result<std::vector<Crypto::Hash>> addBlock(LiteBlock rawLiteBlock,
+                                                         std::vector<CachedTransaction> txs) override;
 
   virtual std::error_code submitBlock(BinaryArray&& rawBlockTemplate) override;
 
