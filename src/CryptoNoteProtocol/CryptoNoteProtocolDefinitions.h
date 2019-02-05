@@ -35,27 +35,18 @@ namespace CryptoNote {
 /************************************************************************/
 /*                                                                      */
 /************************************************************************/
-
-struct NOTIFY_NEW_BLOCK_request {
-  RawBlock b;
-  uint32_t current_blockchain_height;
-  uint32_t hop;
+// just to keep backward compatibility with BlockCompleteEntry serialization
+struct RawBlockLegacy {
+  BinaryArray blockTemplate;
+  std::vector<BinaryArray> transactions;
 };
 
-struct NOTIFY_NEW_BLOCK {
-  const static int ID = BC_COMMANDS_POOL_BASE + 1;
-  typedef NOTIFY_NEW_BLOCK_request request;
-};
-
-/************************************************************************/
-/*                                                                      */
-/************************************************************************/
 struct NOTIFY_NEW_TRANSACTIONS_request {
   std::vector<BinaryArray> txs;
 };
 
 struct NOTIFY_NEW_TRANSACTIONS {
-  const static int ID = BC_COMMANDS_POOL_BASE + 2;
+  const static int ID = BC_COMMANDS_POOL_BASE + 1;
   typedef NOTIFY_NEW_TRANSACTIONS_request request;
 };
 
@@ -73,24 +64,24 @@ struct NOTIFY_REQUEST_GET_OBJECTS_request {
 };
 
 struct NOTIFY_REQUEST_GET_OBJECTS {
-  const static int ID = BC_COMMANDS_POOL_BASE + 3;
+  const static int ID = BC_COMMANDS_POOL_BASE + 2;
   typedef NOTIFY_REQUEST_GET_OBJECTS_request request;
 };
 
 struct NOTIFY_RESPONSE_GET_OBJECTS_request {
   std::vector<std::string> txs;
-  std::vector<RawBlock> blocks;
+  std::vector<RawBlockLegacy> blocks;
   std::vector<Crypto::Hash> missed_ids;
   uint32_t current_blockchain_height;
 };
 
 struct NOTIFY_RESPONSE_GET_OBJECTS {
-  const static int ID = BC_COMMANDS_POOL_BASE + 4;
+  const static int ID = BC_COMMANDS_POOL_BASE + 3;
   typedef NOTIFY_RESPONSE_GET_OBJECTS_request request;
 };
 
 struct NOTIFY_REQUEST_CHAIN {
-  const static int ID = BC_COMMANDS_POOL_BASE + 6;
+  const static int ID = BC_COMMANDS_POOL_BASE + 4;
 
   struct request {
     std::vector<Crypto::Hash>
@@ -114,7 +105,7 @@ struct NOTIFY_RESPONSE_CHAIN_ENTRY_request {
 };
 
 struct NOTIFY_RESPONSE_CHAIN_ENTRY {
-  const static int ID = BC_COMMANDS_POOL_BASE + 7;
+  const static int ID = BC_COMMANDS_POOL_BASE + 5;
   typedef NOTIFY_RESPONSE_CHAIN_ENTRY_request request;
 };
 
@@ -128,24 +119,22 @@ struct NOTIFY_REQUEST_TX_POOL_request {
 };
 
 struct NOTIFY_REQUEST_TX_POOL {
-  const static int ID = BC_COMMANDS_POOL_BASE + 8;
+  const static int ID = BC_COMMANDS_POOL_BASE + 6;
   typedef NOTIFY_REQUEST_TX_POOL_request request;
 };
 
 // -------------------------------------------------- LITE -----------------------------------------------------------
 struct NOTIFY_NEW_LITE_BLOCK_request {
-  RawBlock b;
+  LiteBlock b;
   uint32_t current_blockchain_height;
   uint32_t hop;
 };
 
 struct NOTIFY_NEW_LITE_BLOCK {
-  const static int ID = BC_COMMANDS_POOL_BASE + 9;
+  const static int ID = BC_COMMANDS_POOL_BASE + 7;
   typedef NOTIFY_NEW_LITE_BLOCK_request request;
 };
 
-struct NOTIFY_MISSING_TXS_request {
-  Crypto::Hash blockHash;
   uint32_t current_blockchain_height;
   std::vector<Crypto::Hash> missing_txs;
 };

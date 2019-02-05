@@ -73,7 +73,6 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
 
  private:
   //----------------- commands handlers ----------------------------------------------
-  int handle_notify_new_block(int command, NOTIFY_NEW_BLOCK::request& arg, CryptoNoteConnectionContext& context);
   int handle_notify_new_transactions(int command, NOTIFY_NEW_TRANSACTIONS::request& arg,
                                      CryptoNoteConnectionContext& context);
   int handle_request_get_objects(int command, NOTIFY_REQUEST_GET_OBJECTS::request& arg,
@@ -86,7 +85,6 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
   int handleRequestTxPool(int command, NOTIFY_REQUEST_TX_POOL::request& arg, CryptoNoteConnectionContext& context);
 
   //----------------- i_cryptonote_protocol ----------------------------------
-  virtual void relayBlock(NOTIFY_NEW_BLOCK::request& arg) override;
   virtual void relayTransactions(const std::vector<BinaryArray>& transactions) override;
 
   //----------------------------------------------------------------------------------
