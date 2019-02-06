@@ -652,7 +652,7 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized() {
                    << ENDL;
     m_logger(INFO, BRIGHT_MAGENTA) << "===================================================" << ENDL << ENDL;
 
-    m_logger(INFO, BRIGHT_BLUE) << asciiArt << ENDL;
+    m_logger(INFO, BRIGHT_BLUE) << Xi::Config::asciiArt(true) << ENDL;
 
     m_observerManager.notify(&ICryptoNoteProtocolObserver::blockchainSynchronized, m_core.getTopBlockIndex());
   }
