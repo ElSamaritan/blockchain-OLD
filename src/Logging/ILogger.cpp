@@ -69,4 +69,22 @@ const char ILogger::COLOR_DELIMETER = '\x1F';
 
 const std::array<std::string, 6> ILogger::LEVEL_NAMES = {{"FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"}};
 
+const std::string &defaultColor(Level level) {
+  switch (level) {
+    case FATAL:
+      return MAGENTA;
+    case ERROR:
+      return RED;
+    case WARNING:
+      return YELLOW;
+    case INFO:
+      return WHITE;
+    case DEBUGGING:
+      return GREEN;
+    case TRACE:
+      return CYAN;
+  }
+  return DEFAULT;
+}
+
 }  // namespace Logging
