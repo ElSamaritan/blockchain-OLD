@@ -35,7 +35,7 @@ void LoggerManager::operator()(const std::string& category, Level level, boost::
 
 void LoggerManager::configure(const JsonValue& val) {
   std::unique_lock<std::mutex> lock(reconfigureLock);
-  loggers.clear();
+  m_commonLoggers.clear();
   LoggerGroup::loggers.clear();
   Level globalLevel;
   if (val.contains("globalLevel")) {
@@ -109,8 +109,8 @@ void LoggerManager::configure(const JsonValue& val) {
           }
         }
 
-        loggers.emplace_back(std::move(logger));
-        addLogger(*loggers.back());
+        m_commonLoggers.emplace_back(std::move(logger));
+        addLogger(*m_commonLoggers.back());
       }
     } else {
       throw std::runtime_error("loggers parameter has wrong type");

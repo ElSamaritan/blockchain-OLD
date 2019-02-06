@@ -692,19 +692,18 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized() {
     m_logger(INFO, BRIGHT_MAGENTA) << "===[ " + std::string(Xi::Config::Coin::name()) +
                                           " Tip! ]============================="
                                    << ENDL;
-    m_logger(INFO, WHITE) << " Always exit " + WalletConfig::daemonName + " and " + WalletConfig::walletName +
-                                 " with the \"exit\" command to preserve your chain and wallet data."
-                          << ENDL;
-    m_logger(INFO, WHITE) << " Use the \"help\" command to see a list of available commands." << ENDL;
-    m_logger(INFO, WHITE) << " Use the \"backup\" command in " + WalletConfig::walletName +
-                                 " to display your keys/seed for restoring a corrupted wallet."
-                          << ENDL;
-    m_logger(INFO, WHITE) << " If you need more assistance, you can contact us for support at " +
-                                 WalletConfig::contactLink
-                          << ENDL;
+    m_logger(INFO) << " Always exit " + WalletConfig::daemonName + " and " + WalletConfig::walletName +
+                          " with the \"exit\" command to preserve your chain and wallet data."
+                   << ENDL;
+    m_logger(INFO) << " Use the \"help\" command to see a list of available commands." << ENDL;
+    m_logger(INFO) << " Use the \"backup\" command in " + WalletConfig::walletName +
+                          " to display your keys/seed for restoring a corrupted wallet."
+                   << ENDL;
+    m_logger(INFO) << " If you need more assistance, you can contact us for support at " + WalletConfig::contactLink
+                   << ENDL;
     m_logger(INFO, BRIGHT_MAGENTA) << "===================================================" << ENDL << ENDL;
 
-    m_logger(INFO, BRIGHT_BLUE) << asciiArt << ENDL;
+    m_logger(INFO, BRIGHT_BLUE) << Xi::Config::asciiArt(true) << ENDL;
 
     m_observerManager.notify(&ICryptoNoteProtocolObserver::blockchainSynchronized, m_core.getTopBlockIndex());
   }

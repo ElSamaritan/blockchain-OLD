@@ -30,6 +30,7 @@
 #include <string>
 
 namespace CommonCLI {
+
 /*!
  * \brief header returns an appropiate header to display including a message telling you you are
  * on a testing version, if so

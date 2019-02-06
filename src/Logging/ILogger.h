@@ -43,6 +43,8 @@ extern const std::string BRIGHT_CYAN;
 extern const std::string BRIGHT_MAGENTA;
 extern const std::string DEFAULT;
 
+const std::string& defaultColor(Level level);
+
 class ILogger {
  public:
   const static char COLOR_DELIMETER;

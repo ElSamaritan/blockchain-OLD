@@ -36,7 +36,7 @@ class LoggerManager : public LoggerGroup {
                           const std::string& body) override;
 
  private:
-  std::vector<std::unique_ptr<CommonLogger>> loggers;
+  std::vector<std::unique_ptr<CommonLogger>> m_commonLoggers;
   std::mutex reconfigureLock;
 };
 
