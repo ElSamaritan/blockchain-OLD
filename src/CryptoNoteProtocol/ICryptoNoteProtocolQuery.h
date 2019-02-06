@@ -25,6 +25,8 @@ class ICryptoNoteProtocolObserver;
 
 class ICryptoNoteProtocolQuery {
  public:
+  virtual ~ICryptoNoteProtocolQuery() = default;
+
   virtual bool addObserver(ICryptoNoteProtocolObserver* observer) = 0;
   virtual bool removeObserver(ICryptoNoteProtocolObserver* observer) = 0;
 

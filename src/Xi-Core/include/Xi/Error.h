@@ -74,10 +74,43 @@ class Error {
    */
   std::string message() const;
 
+  /*!
+   * \brief isException true if the underyling error is encoded as an exception.
+   */
+  bool isException() const;
+
+  /*!
+   * \brief exception the underyling exception error encoding.
+   */
+  std::exception_ptr exception() const;
+
+  /*!
+   * \brief isErrorCode true if the underlying error is encoded as an error code.
+   */
+  bool isErrorCode() const;
+
+  /*!
+   * \brief errorCode the underyling error code encoding.
+   */
+  std::error_code errorCode() const;
+
  private:
   boost::variant<std::exception_ptr, std::error_code> m_error;
 };
 
 inline Error make_error(std::exception_ptr e) { return Error{e}; }
 inline Error make_error(std::error_code ec) { return Error{ec}; }
+
+#define XI_ERROR_TRY() \
+  try {                \
+    do { /* */         \
+  } while (0)
+
+#define XI_ERROR_CATCH()                               \
+  }                                                    \
+  catch (...) {                                        \
+    return ::Xi::make_error(std::current_exception()); \
+  }                                                    \
+  do { /* */                                           \
+  } while (0)
 }  // namespace Xi

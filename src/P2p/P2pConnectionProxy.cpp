@@ -95,7 +95,10 @@ void P2pConnectionProxy::stop() { m_context.stop(); }
 
 void P2pConnectionProxy::writeHandshake(const P2pMessage& message) {
   CORE_SYNC_DATA coreSync;
-  LevinProtocol::decode(message.data, coreSync);
+  auto decodeResult = LevinProtocol::decode(message.data, coreSync);
+  if (decodeResult.isError()) {
+    throw std::runtime_error{std::string{"Error decoding WRITE_HANDSHAKE: "} + decodeResult.error().message()};
+  }
 
   if (m_context.isIncoming()) {
     // response
@@ -117,8 +120,10 @@ void P2pConnectionProxy::writeHandshake(const P2pMessage& message) {
 
 void P2pConnectionProxy::handleHandshakeRequest(const LevinProtocol::Command& cmd) {
   COMMAND_HANDSHAKE::request req;
-  if (!LevinProtocol::decode<COMMAND_HANDSHAKE::request>(cmd.buf, req)) {
-    throw std::runtime_error("Failed to decode COMMAND_HANDSHAKE request");
+  auto decodeResult = LevinProtocol::decode<COMMAND_HANDSHAKE::request>(cmd.buf, req);
+  if (decodeResult.isError()) {
+    throw std::runtime_error(std::string{"Failed to decode COMMAND_HANDSHAKE request, error:"} +
+                             decodeResult.error().message());
   }
 
   m_node.handleNodeData(req.node_data, m_context);
@@ -132,8 +137,9 @@ void P2pConnectionProxy::handleHandshakeResponse(const LevinProtocol::Command& c
   }
 
   COMMAND_HANDSHAKE::response res;
-  if (!LevinProtocol::decode(cmd.buf, res)) {
-    throw std::runtime_error("Invalid handshake message format");
+  auto decodeResult = LevinProtocol::decode(cmd.buf, res);
+  if (decodeResult.isError()) {
+    throw std::runtime_error(std::string{"Invalid handshake message format, error: "} + decodeResult.error().message());
   }
 
   m_node.handleNodeData(res.node_data, m_context);
@@ -145,7 +151,10 @@ void P2pConnectionProxy::handleHandshakeResponse(const LevinProtocol::Command& c
 void P2pConnectionProxy::handleTimedSync(const LevinProtocol::Command& cmd) {
   if (cmd.isResponse) {
     COMMAND_TIMED_SYNC::response res;
-    LevinProtocol::decode(cmd.buf, res);
+    auto decodeResult = LevinProtocol::decode(cmd.buf, res);
+    if (decodeResult.isError()) {
+      throw std::runtime_error{std::string{"Error decoding TIMED_SYNC: "} + decodeResult.error().message()};
+    }
     m_node.handleRemotePeerList(res.local_peerlist, res.local_time);
   } else {
     // we ignore information from the request

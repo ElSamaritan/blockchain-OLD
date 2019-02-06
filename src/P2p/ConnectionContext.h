@@ -23,8 +23,12 @@
 #include <string>
 
 #include <boost/uuid/uuid.hpp>
-#include "Common/StringTools.h"
-#include "crypto/hash.h"
+#include <boost/optional.hpp>
+
+#include <Common/StringTools.h>
+#include <crypto/hash.h>
+
+#include "P2p/PendingLiteBlock.h"
 
 namespace CryptoNote {
 
@@ -49,6 +53,7 @@ struct CryptoNoteConnectionContext {
   state m_state = state_befor_handshake;
   std::list<Crypto::Hash> m_needed_objects;
   std::unordered_set<Crypto::Hash> m_requested_objects;
+  boost::optional<PendingLiteBlock> m_pending_lite_block;
   uint32_t m_remote_blockchain_height = 0;
   uint32_t m_last_response_height = 0;
 };

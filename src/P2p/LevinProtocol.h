@@ -18,8 +18,11 @@
 #pragma once
 
 #include "CryptoNoteCore/CryptoNote.h"
+
+#include <Xi/Result.h>
 #include <Common/MemoryInputStream.h>
 #include <Common/VectorOutputStream.h>
+
 #include "Serialization/KVBinaryInputStreamSerializer.h"
 #include "Serialization/KVBinaryOutputStreamSerializer.h"
 
@@ -47,17 +50,19 @@ class LevinProtocol {
   LevinProtocol(System::TcpConnection& connection);
 
   template <typename Request, typename Response>
-  bool invoke(uint32_t command, const Request& request, Response& response) {
+  Xi::Result<void> invoke(uint32_t command, const Request& request, Response& response) {
+    XI_ERROR_TRY();
     sendMessage(command, encode(request), true);
 
     Command cmd;
     readCommand(cmd);
 
     if (!cmd.isResponse) {
-      return false;
+      throw std::runtime_error{"Expected response from invocation, actually got none."};
     }
 
     return decode(cmd.buf, response);
+    XI_ERROR_CATCH();
   }
 
   template <typename Request>
@@ -80,16 +85,13 @@ class LevinProtocol {
   void sendReply(uint32_t command, const BinaryArray& out, int32_t returnCode);
 
   template <typename T>
-  static bool decode(const BinaryArray& buf, T& value) {
-    try {
-      Common::MemoryInputStream stream(buf.data(), buf.size());
-      KVBinaryInputStreamSerializer serializer(stream);
-      serialize(value, serializer);
-    } catch (std::exception&) {
-      return false;
-    }
-
-    return true;
+  static Xi::Result<void> decode(const BinaryArray& buf, T& value) {
+    XI_ERROR_TRY();
+    Common::MemoryInputStream stream(buf.data(), buf.size());
+    KVBinaryInputStreamSerializer serializer(stream);
+    serialize(value, serializer);
+    return Xi::make_result<void>();
+    XI_ERROR_CATCH();
   }
 
   template <typename T>

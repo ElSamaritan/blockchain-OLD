@@ -383,6 +383,7 @@ void Core::getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<R
                      std::vector<Crypto::Hash>& missedHashes) const {
   throwIfNotInitialized();
 
+  blocks.reserve(blockHashes.size());
   for (const auto& hash : blockHashes) {
     IBlockchainCache* blockchainSegment = findSegmentContainingBlock(hash);
     if (blockchainSegment == nullptr) {
@@ -390,6 +391,7 @@ void Core::getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<R
     } else {
       uint32_t blockIndex = blockchainSegment->getBlockIndex(hash);
       assert(blockIndex <= blockchainSegment->getTopBlockIndex());
+      assert(hash == blockchainSegment->getBlockHash(blockIndex));
 
       blocks.push_back(blockchainSegment->getBlockByIndex(blockIndex));
     }
@@ -647,7 +649,9 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   const auto& blockTemplate = cachedBlock.getBlock();
   const auto& previousBlockHash = blockTemplate.previousBlockHash;
 
-  assert(rawBlock.transactions.size() == blockTemplate.transactionHashes.size());
+  if (rawBlock.transactions.size() != blockTemplate.transactionHashes.size()) {
+    return error::BlockValidationError::TRANSACTION_INCONSISTENCY;
+  }
 
   auto cache = findSegmentContainingBlock(previousBlockHash);
   if (cache == nullptr) {
@@ -660,6 +664,14 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   if (!extractTransactions(rawBlock.transactions, transactions, cumulativeSize)) {
     logger(Logging::DEBUGGING) << "Couldn't deserialize raw block transactions in block " << blockStr;
     return error::AddBlockErrorCode::DESERIALIZATION_FAILED;
+  }
+
+  for (uint64_t i = 0; i < transactions.size(); ++i) {
+    if (blockTemplate.transactionHashes[i] != transactions[i].getTransactionHash()) {
+      logger(Logging::DEBUGGING)
+          << "BlockTemplate and raw transactions are inconsisten, may out of sync or wrongly ordered";
+      return error::BlockValidationError::TRANSACTION_INCONSISTENCY;
+    }
   }
 
   auto coinbaseTransactionSize = getObjectBinarySize(blockTemplate.baseTransaction);
@@ -809,17 +821,19 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
           std::swap(chainsLeaves[0], chainsLeaves[endpointIndex]);
           updateMainChainSet();
           updateBlockMedianSize();
-
-          switchMainChainStorage(chainsLeaves[0]->getStartBlockIndex(), *chainsLeaves[0]);
+          auto splitIndex = findCommonRoot(*mainChainStorage, *chainsLeaves[0]);
+          switchMainChainStorage(splitIndex, *chainsLeaves[0]);
           ret = error::AddBlockErrorCode::ADDED_TO_ALTERNATIVE_AND_SWITCHED;
 
           uint32_t commonRoot = findCommonRoot(*mainChainStorage, *chainsLeaves[endpointIndex]);
           m_blockchainObservers.notify(&IBlockchainObserver::mainChainSwitched, std::cref(*chainsLeaves[endpointIndex]),
                                        std::cref(*chainsLeaves[0]), commonRoot);
 
-          logger(Logging::INFO) << "Resolved: " << blockStr
-                                << ", Previous: " << chainsLeaves[endpointIndex]->getTopBlockIndex() << " ("
-                                << chainsLeaves[endpointIndex]->getTopBlockHash() << ")";
+          logger(Logging::INFO, Logging::YELLOW)
+              << "Resolved: " << blockStr << ", Previous: " << chainsLeaves[endpointIndex]->getTopBlockIndex() << " ("
+              << chainsLeaves[endpointIndex]->getTopBlockHash() << ")";
+        } else {
+          ret = error::AddBlockErrorCode::ADDED_TO_ALTERNATIVE;
         }
       }
     } else {
@@ -927,6 +941,67 @@ std::error_code Core::addBlock(RawBlock&& rawBlock) {
   return addBlock(cachedBlock, std::move(rawBlock));
 }
 
+Xi::Result<std::vector<Crypto::Hash>> Core::addBlock(LiteBlock block, std::vector<CachedTransaction> txs) {
+  XI_ERROR_TRY();
+  throwIfNotInitialized();
+
+  XI_CONCURRENT_RLOCK(m_access);
+  XI_UNUSED_REVAL(transactionPool().acquireExclusiveAccess());
+
+  BlockTemplate blockTemplate;
+  if (!fromBinaryArray(blockTemplate, std::move(block.blockTemplate))) {
+    logger(Logging::TRACE) << "Lite block has invalid blob";
+    return Xi::make_error(error::AddBlockErrorCode::DESERIALIZATION_FAILED);
+  }
+
+  // Quick check, we can skip everything if this fails
+  if (findSegmentContainingBlock(blockTemplate.previousBlockHash) == nullptr) {
+    logger(Logging::TRACE) << "Lite block rejected as orphaned";
+    return Xi::make_error(error::AddBlockErrorCode::REJECTED_AS_ORPHANED);
+  }
+
+  RawBlock filledRawBlock;
+  filledRawBlock.block = toBinaryArray(blockTemplate);
+  filledRawBlock.transactions.reserve(blockTemplate.transactionHashes.size());
+  std::set<Crypto::Hash> providedTxs;
+  std::transform(txs.begin(), txs.end(), std::inserter(providedTxs, providedTxs.begin()),
+                 [](auto& iTx) { return iTx.getTransactionHash(); });
+
+  std::vector<Crypto::Hash> missingTXs{};
+  for (const auto& iTxHash : blockTemplate.transactionHashes) {
+    if (providedTxs.find(iTxHash) != providedTxs.end()) {
+      auto iTx =
+          std::find_if(txs.begin(), txs.end(), [&](const auto& tx) { return tx.getTransactionHash() == iTxHash; });
+      assert(iTx != txs.end());
+      filledRawBlock.transactions.emplace_back(iTx->getTransactionBinaryArray());
+    } else {
+      auto poolQueryResult = transactionPool().queryTransaction(iTxHash);
+      // We are not validating, even if the transaction is not contained by the pool we may have alternative chains
+      // containing it.
+      if (poolQueryResult.get() == nullptr) {
+        auto segment = findSegmentContainingTransaction(iTxHash);
+        if (segment == nullptr) {
+          missingTXs.push_back(iTxHash);
+        } else {
+          filledRawBlock.transactions.push_back(segment->getRawTransactions({iTxHash})[0]);
+        }
+      } else {
+        filledRawBlock.transactions.push_back(poolQueryResult->transaction().getTransactionBinaryArray());
+      }
+    }
+  }
+
+  if (missingTXs.empty()) {
+    logger(Logging::TRACE) << "Lite block is fully known and will be tried to add";
+    return Xi::make_error(addBlock(CachedBlock{std::move(blockTemplate)}, std::move(filledRawBlock)));
+  } else {
+    logger(Logging::TRACE) << "Lite block has missing transactions.";
+    return Xi::make_result<std::vector<Crypto::Hash>>(std::move(missingTXs));
+  }
+
+  XI_ERROR_CATCH();
+}
+
 std::error_code Core::submitBlock(BinaryArray&& rawBlockTemplate) {
   throwIfNotInitialized();
 
@@ -955,8 +1030,7 @@ std::error_code Core::submitBlock(BinaryArray&& rawBlockTemplate) {
     }
   }
 
-  CachedBlock cachedBlock(blockTemplate);
-  return addBlock(cachedBlock, std::move(rawBlock));
+  return addBlock(CachedBlock{blockTemplate}, std::move(rawBlock));
 }
 
 bool Core::getTransactionGlobalIndexes(const Crypto::Hash& transactionHash,

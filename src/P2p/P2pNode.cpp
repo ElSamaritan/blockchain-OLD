@@ -385,8 +385,9 @@ bool P2pNode::fetchPeerList(ContextPtr connection) {
       throw std::runtime_error("Received unexpected reply");
     }
 
-    if (!LevinProtocol::decode(cmd.buf, response)) {
-      throw std::runtime_error("Invalid reply format");
+    auto decodeResult = LevinProtocol::decode(cmd.buf, response);
+    if (decodeResult.isError()) {
+      throw std::runtime_error(std::string{"Invalid reply format"} + decodeResult.error().message());
     }
 
     if (response.node_data.network_id != request.node_data.network_id) {
@@ -508,7 +509,11 @@ void P2pNode::tryPing(P2pContext& ctx) {
       LevinProtocol proto(connection);
       COMMAND_PING::request request;
       COMMAND_PING::response response;
-      proto.invoke(COMMAND_PING::ID, request, response);
+      auto pingResult = proto.invoke(COMMAND_PING::ID, request, response);
+      if (pingResult.isError()) {
+        logger(Logging::DEBUGGING) << ctx << "back ping invoke failed from" << peerAddress
+                                   << ", error=" << pingResult.error().message();
+      }
 
       if (response.status == PING_OK_RESPONSE_STATUS_TEXT && response.peer_id == ctx.getPeerId()) {
         PeerlistEntry entry;

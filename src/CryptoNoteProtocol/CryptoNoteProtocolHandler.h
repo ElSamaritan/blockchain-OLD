@@ -73,7 +73,6 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
 
  private:
   //----------------- commands handlers ----------------------------------------------
-  int handle_notify_new_block(int command, NOTIFY_NEW_BLOCK::request& arg, CryptoNoteConnectionContext& context);
   int handle_notify_new_transactions(int command, NOTIFY_NEW_TRANSACTIONS::request& arg,
                                      CryptoNoteConnectionContext& context);
   int handle_request_get_objects(int command, NOTIFY_REQUEST_GET_OBJECTS::request& arg,
@@ -84,12 +83,19 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
   int handle_response_chain_entry(int command, NOTIFY_RESPONSE_CHAIN_ENTRY::request& arg,
                                   CryptoNoteConnectionContext& context);
   int handleRequestTxPool(int command, NOTIFY_REQUEST_TX_POOL::request& arg, CryptoNoteConnectionContext& context);
+  int handle_notify_new_lite_block(int command, NOTIFY_NEW_LITE_BLOCK::request& arg,
+                                   CryptoNoteConnectionContext& context);
+
+  int handle_notify_missing_txs_request(int command, NOTIFY_MISSING_TXS_REQUEST_ENTRY::request& arg,
+                                        CryptoNoteConnectionContext& context);
+  int handle_notify_missing_txs_response(int command, NOTIFY_MISSING_TXS_RESPONSE_ENTRY::request& arg,
+                                         CryptoNoteConnectionContext& context);
 
   //----------------- i_cryptonote_protocol ----------------------------------
-  virtual void relayBlock(NOTIFY_NEW_BLOCK::request& arg) override;
+  virtual void relayBlock(LiteBlock&& arg) override;
   virtual void relayTransactions(const std::vector<BinaryArray>& transactions) override;
-
   //----------------------------------------------------------------------------------
+
   uint32_t get_current_blockchain_height();
   bool request_missing_objects(CryptoNoteConnectionContext& context, bool check_having_blocks);
   bool on_connection_synchronized();
@@ -97,6 +103,10 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
   void recalculateMaxObservedHeight(const CryptoNoteConnectionContext& context);
   int processObjects(CryptoNoteConnectionContext& context, std::vector<RawBlock>&& rawBlocks,
                      const std::vector<CachedBlock>& cachedBlocks);
+
+ private:
+  int doPushLiteBlock(CryptoNoteConnectionContext& context, uint32_t hops, uint32_t height, LiteBlock block,
+                      std::vector<CachedTransaction> txs);
 
  private:
   System::Dispatcher& m_dispatcher;

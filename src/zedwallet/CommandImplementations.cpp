@@ -322,7 +322,7 @@ void printOutgoingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
   XI_UNUSED(node);
   assert(t.totalAmount < 0);
   const uint64_t absTotalAmount = static_cast<uint64_t>(std::abs(t.totalAmount));
-  assert(t.fee < absTotalAmount);
+  assert(t.fee <= absTotalAmount);
 
   std::cout << WarningMsg("Outgoing transfer:") << std::endl
             << WarningMsg("Hash: " + Common::podToHex(t.hash)) << std::endl;
