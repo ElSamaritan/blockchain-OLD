@@ -29,6 +29,7 @@
 namespace CryptoNote {
 struct PendingLiteBlock {
   LiteBlock Block;
+  uint32_t Height;
   uint32_t Hops;
   std::unordered_set<Crypto::Hash> MissingTransactions;
 };

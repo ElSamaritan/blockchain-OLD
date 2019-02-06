@@ -543,8 +543,8 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
   return 0;
 }
 
-int CryptoNoteProtocolHandler::doPushLiteBlock(CryptoNoteConnectionContext& context, uint32_t hops, LiteBlock block,
-                                               std::vector<CachedTransaction> txs) {
+int CryptoNoteProtocolHandler::doPushLiteBlock(CryptoNoteConnectionContext& context, uint32_t hops, uint32_t height,
+                                               LiteBlock block, std::vector<CachedTransaction> txs) {
   context.m_pending_lite_block = boost::none;
   auto result = m_core.addBlock(LiteBlock{block}, std::move(txs));
   if (result.isError()) {
@@ -559,10 +559,10 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(CryptoNoteConnectionContext& cont
       auto ec = error.errorCode();
       if (ec == error::AddBlockErrorCondition::BLOCK_ADDED) {
         if (ec == error::AddBlockErrorCode::ADDED_TO_MAIN) {
-          NOTIFY_NEW_LITE_BLOCK::request arg{std::move(block), m_core.getTopBlockIndex() + 1, hops + 1};
+          NOTIFY_NEW_LITE_BLOCK::request arg{std::move(block), height, hops + 1};
           relay_post_notify<NOTIFY_NEW_LITE_BLOCK>(*m_p2p, arg, &context.m_connection_id);
         } else if (ec == error::AddBlockErrorCode::ADDED_TO_ALTERNATIVE_AND_SWITCHED) {
-          NOTIFY_NEW_LITE_BLOCK::request arg{std::move(block), m_core.getTopBlockIndex() + 1, hops + 1};
+          NOTIFY_NEW_LITE_BLOCK::request arg{std::move(block), height, hops + 1};
           relay_post_notify<NOTIFY_NEW_LITE_BLOCK>(*m_p2p, arg, &context.m_connection_id);
           requestMissingPoolTransactions(context);
         } else {
@@ -588,7 +588,7 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(CryptoNoteConnectionContext& cont
     missingTxRequest.current_blockchain_height = m_core.getTopBlockIndex() + 1;
     missingTxRequest.missing_txs = result.take();
     context.m_pending_lite_block = PendingLiteBlock{
-        std::move(block), hops, {missingTxRequest.missing_txs.begin(), missingTxRequest.missing_txs.end()}};
+        std::move(block), hops, height, {missingTxRequest.missing_txs.begin(), missingTxRequest.missing_txs.end()}};
 
     if (!post_notify<NOTIFY_MISSING_TXS_REQUEST_ENTRY>(*m_p2p, missingTxRequest, context)) {
       m_logger(Logging::ERROR)
@@ -794,7 +794,7 @@ int CryptoNoteProtocolHandler::handle_notify_new_lite_block(int command, NOTIFY_
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
   }
-  return doPushLiteBlock(context, arg.hop, std::move(arg.b), {});
+  return doPushLiteBlock(context, arg.hop, arg.current_blockchain_height, std::move(arg.b), {});
 }
 
 int CryptoNoteProtocolHandler::handle_notify_missing_txs_request(int command,
@@ -879,7 +879,8 @@ int CryptoNoteProtocolHandler::handle_notify_missing_txs_response(int command,
     transactions.emplace_back(std::move(iTx));
   }
 
-  return doPushLiteBlock(context, pendingLiteBlock.Hops, std::move(pendingLiteBlock.Block), std::move(transactions));
+  return doPushLiteBlock(context, pendingLiteBlock.Hops, pendingLiteBlock.Height, std::move(pendingLiteBlock.Block),
+                         std::move(transactions));
 
 #undef TXS_RES_DROP
 }
