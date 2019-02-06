@@ -78,7 +78,7 @@ const std::string &defaultColor(Level level) {
     case WARNING:
       return YELLOW;
     case INFO:
-      return WHITE;
+      return DEFAULT;
     case DEBUGGING:
       return GREEN;
     case TRACE:

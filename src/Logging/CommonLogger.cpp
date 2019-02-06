@@ -84,6 +84,6 @@ void CommonLogger::disableCategory(const std::string& category) { disabledCatego
 
 void CommonLogger::setMaxLevel(Level level) { logLevel = level; }
 
-CommonLogger::CommonLogger(Level level) : logLevel(level), pattern("%D %T %L [%C] ") {}
+CommonLogger::CommonLogger(Level level) : logLevel(level), pattern("%D %T [%C] ") {}
 
 }  // namespace Logging
