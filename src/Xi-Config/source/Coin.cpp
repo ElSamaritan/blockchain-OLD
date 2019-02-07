@@ -8,6 +8,9 @@ std::string Xi::Config::Coin::genesisTransactionHash(Network::Type network) {
     case Network::Type::LocalTestNet:
       return "010a01ff000180d0cfba856002dd217151a9b4a8eb649f7a3b4f9e6297edeb18f660ae7d37f6ccf2d670a66e9621013dd05540b96"
              "b429d0afa30d2767120f1b4e5236cedc15c238dd8820a97fca06d";
+    case Network::Type::StageNet:
+      return "010a01ff000180d0cfba8560026a98f4c224b44c0b7f8d2691506e463106dcf156123d12cead028148c47c817221014f56085f13a"
+             "7fd31c8643e1e3eca5d4a6bf14110f82fe035507abd94decc290a";
 
     default:
       break;

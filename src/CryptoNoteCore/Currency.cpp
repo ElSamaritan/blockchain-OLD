@@ -91,7 +91,7 @@ bool Currency::generateGenesisBlock() {
 
   genesisBlockTemplate.majorVersion = Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version();
   genesisBlockTemplate.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
-  genesisBlockTemplate.timestamp = 1546019777;
+  genesisBlockTemplate.timestamp = 1549506945;
   genesisBlockTemplate.nonce = 70;
   if (!isMainNet()) genesisBlockTemplate.nonce += static_cast<uint8_t>(network());
 
