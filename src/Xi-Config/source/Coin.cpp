@@ -9,11 +9,24 @@ std::string Xi::Config::Coin::genesisTransactionHash(Network::Type network) {
       return "010a01ff000180d0cfba856002dd217151a9b4a8eb649f7a3b4f9e6297edeb18f660ae7d37f6ccf2d670a66e9621013dd05540b96"
              "b429d0afa30d2767120f1b4e5236cedc15c238dd8820a97fca06d";
     case Network::Type::StageNet:
-      return "010a01ff000180d0cfba8560026a98f4c224b44c0b7f8d2691506e463106dcf156123d12cead028148c47c817221014f56085f13a"
-             "7fd31c8643e1e3eca5d4a6bf14110f82fe035507abd94decc290a";
+      return "010a01ff000180d0cfba85600293b8e6651ed60ea85422f72ddad592657f526f9eef533402d9d376496554fb2a210116e47849c9e"
+             "01edee59093a2fe84a2f46a43342d4b12f4e66f2549dcdb41bef8";
 
     default:
       break;
   }
   throw std::runtime_error{"unexpected network type, cannot provide genesis transaction hash."};
+}
+
+uint64_t Xi::Config::Coin::genesisTimestamp(Xi::Config::Network::Type network) {
+  switch (network) {
+    case Network::Type::StageNet:
+      return 1549582639;
+    case Network::Type::TestNet:
+      return 1544396293;
+    case Network::Type::LocalTestNet:
+      return 1544396293;
+    default:
+      return 0;
+  }
 }

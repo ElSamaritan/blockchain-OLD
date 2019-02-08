@@ -45,7 +45,7 @@ constexpr uint32_t emissionSpeed() { return 21; }
 inline std::string licenseUrl() { return "https://gitlab.com/galaxia-project/blockchain/xi/blob/develop/LICENSE"; }
 inline std::string downloadUrl() { return "https://releases.xiproject.io"; }
 
-inline uint64_t genesisTimestamp() { return 1549506945; }
+uint64_t genesisTimestamp(Xi::Config::Network::Type network);
 
 /*
  * How to generate a premine:

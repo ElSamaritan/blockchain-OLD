@@ -91,7 +91,7 @@ bool Currency::generateGenesisBlock() {
 
   genesisBlockTemplate.majorVersion = Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version();
   genesisBlockTemplate.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
-  genesisBlockTemplate.timestamp = 1549506945;
+  genesisBlockTemplate.timestamp = Xi::Config::Coin::genesisTimestamp(network());
   genesisBlockTemplate.nonce = 70;
   if (!isMainNet()) genesisBlockTemplate.nonce += static_cast<uint8_t>(network());
 
@@ -154,6 +154,8 @@ std::string Currency::blockIndexesFileName() const {
 }
 
 std::string Currency::txPoolFileName() const { return m_txPoolFileName + "." + Xi::to_lower(Xi::to_string(network())); }
+
+uint64_t Currency::genesisTimestamp() const { return Xi::Config::Coin::genesisTimestamp(network()); }
 
 bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize,
                               uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward,
