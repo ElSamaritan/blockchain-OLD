@@ -86,7 +86,7 @@ std::string CommonCLI::header() {
 
 bool CommonCLI::isDevVersion() {
   return
-#if defined(XI_CHANNEL_STABLE) || defined(XI_CHANNEL_BETA)
+#if defined(BUILD_CHANNEL_STABLE) || defined(BUILD_CHANNEL_BETA)
       false
 #else
       true

@@ -1226,7 +1226,7 @@ uint64_t WalletGreen::scanHeightToTimestamp(const uint32_t scanHeight) {
   secondsSinceLaunch = (secondsSinceLaunch * 95) / 100;
 
   /* Get the genesis block timestamp and add the time since launch */
-  timestamp = Xi::Config::Coin::genesisTimestamp() + secondsSinceLaunch;
+  timestamp = m_currency.genesisTimestamp() + secondsSinceLaunch;
 
   /* Timestamp in the future */
   if (timestamp >= static_cast<uint64_t>(std::time(nullptr))) {
