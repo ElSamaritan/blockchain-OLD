@@ -36,10 +36,10 @@ const std::string ASCIIArt = R"(
     \______  (____  /____(____  /__/\_ \__(____  /  |____|     |__|   \____/\__|  |\___  >\___  >__|
            \/     \/          \/      \/       \/                          \______|    \/     \/
 
-       *                       ____  ___.___
+       *                       ____  ___.___                   *
                                \   \/  /|   |
-                        ______  \     / |   |                                           *
-                       /_____/  /     \ |   |
+                                \     / |   |                                           *
+                                /     \ |   |
                                /___/\  \|___|         *
                 *                    \_/                        Welcome to the galaxia project community.
     *
@@ -55,8 +55,16 @@ bool replace(std::string& str, const std::string& from, const std::string& to) {
 
 size_t replace_all(std::string& str, const std::string& from, const std::string& to) {
   size_t count = 0;
-  while (replace(str, from, to)) ++count;
+  for (size_t start_pos = str.find(from); start_pos != std::string::npos; start_pos = str.find(from, start_pos)) {
+    str.replace(start_pos, from.length(), to);
+    start_pos += to.length();
+    count += 1;
+  }
   return count;
+}
+
+void colorize(std::string& str, const std::string& target, const std::string& col) {
+  replace_all(str, target, col + target + col);
 }
 }  // namespace
 
@@ -64,10 +72,41 @@ std::string Xi::Config::asciiArt(bool colored) {
   if (!colored) {
     return ASCIIArt;
   } else {
-    auto coloredAscii = Logging::BRIGHT_BLUE + ASCIIArt;
-    replace_all(coloredAscii, "*", Logging::BRIGHT_YELLOW + "*" + Logging::BRIGHT_BLUE);
-    replace(coloredAscii, "Welcome to the galixia project community.",
-            Logging::WHITE + "Welcome to the galixia project community." + Logging::BRIGHT_BLUE);
+    static const std::string _GalaxiaProjectColor = Logging::CYAN;
+    static const std::string _XiColor = Logging::GREEN;
+    static const std::string _StarsColor = Logging::YELLOW;
+    static const std::string _WelcomeColor = Logging::DEFAULT;
+
+    auto coloredAscii = _GalaxiaProjectColor + ASCIIArt;
+    colorize(coloredAscii, "*", _StarsColor);
+    colorize(coloredAscii,
+             "________       .__                .__         __________                   __               __",
+             _GalaxiaProjectColor);
+    colorize(coloredAscii,
+             "/  _____/_____  |  | _____  ___  __|__|____    \\______   \\_______  ____    |__| ____   _____/  |_",
+             _GalaxiaProjectColor);
+    colorize(coloredAscii,
+             "/   \\  ___\\__  \\ |  | \\__  \\ \\  \\/  /  \\__  \\    |     ___/\\_  __ \\/  _ \\   |  |/ __ \\_/ "
+             "___\\   __\\",
+             _GalaxiaProjectColor);
+    colorize(
+        coloredAscii,
+        "\\    \\_\\  \\/ __ \\|  |__/ __ \\_>    <|  |/ __ \\_  |    |     |  | \\(  <_> )  |  \\  ___/\\  \\___|  |",
+        _GalaxiaProjectColor);
+    colorize(coloredAscii,
+             "\\______  (____  /____(____  /__/\\_ \\__(____  /  |____|     |__|   \\____/\\__|  |\\___  >\\___  >__|",
+             _GalaxiaProjectColor);
+    colorize(coloredAscii,
+             "\\/     \\/          \\/      \\/       \\/                          \\______|    \\/     \\/",
+             _GalaxiaProjectColor);
+
+    colorize(coloredAscii, "____  ___.___ ", _XiColor);
+    colorize(coloredAscii, "\\   \\/  /|   |", _XiColor);
+    colorize(coloredAscii, " \\     / |   |", _XiColor);
+    colorize(coloredAscii, " /     \\ |   |", _XiColor);
+    colorize(coloredAscii, "/___/\\  \\|___|", _XiColor);
+    colorize(coloredAscii, "      \\_/", _XiColor);
+    colorize(coloredAscii, "Welcome to the galaxia project community.", _WelcomeColor);
     return coloredAscii;
   }
 }

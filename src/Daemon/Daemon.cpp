@@ -167,8 +167,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  auto crashDumper = CommonCLI::make_crash_dumper("xi-daemon");
-  (void)crashDumper;
+  XI_UNUSED_REVAL(CommonCLI::make_crash_dumper("xi-daemon"));
 
   try {
     auto modulePath = Common::NativePathToGeneric(argv[0]);

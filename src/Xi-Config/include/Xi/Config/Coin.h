@@ -45,11 +45,6 @@ constexpr uint32_t emissionSpeed() { return 21; }
 inline std::string licenseUrl() { return "https://gitlab.com/galaxia-project/blockchain/xi/blob/develop/LICENSE"; }
 inline std::string downloadUrl() { return "https://releases.xiproject.io"; }
 
-/*
- * This is the unix timestamp of the first "mined" block (technically block 2, not the genesis block)
- * You can get this value by doing "print_block 2" in xi-daemon. It is used to know what timestamp.\xi-
- * to import from when the block height cannot be found in the node or the node is offline.
- */
 inline uint64_t genesisTimestamp() { return 1549506945; }
 
 /*
