@@ -14,9 +14,9 @@
 
   - Version: Use `xi-daemon --vversion` to obtain the version information.
     ```
-    <paste the output here>
+    <replace this with the output>
     ```
   - Operating System: Use `xi-daemon --os-version` to obtain you operating system version information.
     ```
-    <paste the output here>
+    <replace this with the output>
     ```
