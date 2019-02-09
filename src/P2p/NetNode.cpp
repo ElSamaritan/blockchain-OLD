@@ -36,9 +36,10 @@
 #include "Common/Util.h"
 #include "crypto/crypto.h"
 
-#include "ConnectionContext.h"
-#include "LevinProtocol.h"
-#include "P2pProtocolDefinitions.h"
+#include "P2p/ConnectionContext.h"
+#include "P2p/LevinProtocol.h"
+#include "P2p/P2pProtocolDefinitions.h"
+#include "P2p/UPNPErrorMessage.h"
 
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
@@ -71,10 +72,11 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
     if (result == 1) {
       std::ostringstream portString;
       portString << port;
-      if (UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(),
-                              portString.str().c_str(), lanAddress, Xi::Config::Coin::name().c_str(), "TCP", 0,
-                              "0") != 0) {
-        logger(ERROR) << "UPNP_AddPortMapping failed.";
+      int upnpPortMappingResult =
+          UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(),
+                              portString.str().c_str(), lanAddress, Xi::Config::Coin::name().c_str(), "TCP", 0, "0");
+      if (upnpPortMappingResult != UPNPCOMMAND_SUCCESS) {
+        logger(ERROR) << "UPNP_AddPortMapping failed: " << get_upnp_error_message(upnpPortMappingResult);
       } else {
         logger(INFO) << "Added IGD port mapping.";
       }
