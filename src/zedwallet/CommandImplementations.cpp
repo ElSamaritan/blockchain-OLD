@@ -388,12 +388,12 @@ void listTransfers(bool incoming, bool outgoing, CryptoNote::WalletGreen &wallet
   }
 
   if (incoming) {
-    assert(totalReceived > 0);
+    assert(totalReceived >= 0);
     std::cout << SuccessMsg("Total received: " + formatAmount(static_cast<uint64_t>(totalReceived))) << std::endl;
   }
 
   if (outgoing) {
-    assert(totalSpent > 0);
+    assert(totalSpent >= 0);
     std::cout << WarningMsg("Total spent: " + formatAmount(static_cast<uint64_t>(totalSpent))) << std::endl;
   }
 }
