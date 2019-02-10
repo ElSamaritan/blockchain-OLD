@@ -7,9 +7,12 @@
 #include "Common/SignalHandler.h"
 #include "CommonCLI.h"
 
+#include <Common/Util.h>
+
 #include "Logging/LoggerGroup.h"
 #include "Logging/ConsoleLogger.h"
 #include "Logging/LoggerRef.h"
+#include "Logging/FileLogger.h"
 
 #include "MinerManager.h"
 
@@ -30,6 +33,12 @@ int main(int argc, char** argv) {
     Logging::LoggerGroup loggerGroup;
     Logging::ConsoleLogger consoleLogger(static_cast<Logging::Level>(config.logLevel));
     loggerGroup.addLogger(consoleLogger);
+    std::unique_ptr<Logging::FileLogger> fileLogger;
+    if (!config.logFile.empty()) {
+      fileLogger = std::make_unique<Logging::FileLogger>(static_cast<Logging::Level>(config.logFileLevel));
+      fileLogger->init(config.logFile);
+      loggerGroup.addLogger(*fileLogger);
+    }
 
     System::Dispatcher dispatcher;
     Miner::MinerManager app(dispatcher, config, loggerGroup);
