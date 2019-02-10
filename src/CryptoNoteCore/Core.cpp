@@ -161,12 +161,21 @@ uint32_t findCommonRoot(IMainChainStorage& storage, IBlockchainCache& rootSegmen
   assert(rootSegment.getStartBlockIndex() == 0);
   assert(getBlockHash(storage.getBlockByIndex(0)) == rootSegment.getBlockHash(0));
 
+  const auto hash_equal = [&](uint32_t index) {
+    return getBlockHash(storage.getBlockByIndex(index)) == rootSegment.getBlockHash(index);
+  };
+
   uint32_t left = 0;
   uint32_t right = std::min(storage.getBlockCount() - 1, rootSegment.getBlockCount() - 1);
+
+  if (hash_equal(right)) {
+    return right;
+  }
+
   while (left != right) {
     assert(right >= left);
     uint32_t checkElement = left + (right - left) / 2 + 1;
-    if (getBlockHash(storage.getBlockByIndex(checkElement)) == rootSegment.getBlockHash(checkElement)) {
+    if (hash_equal(checkElement)) {
       left = checkElement;
     } else {
       right = checkElement - 1;
@@ -641,6 +650,11 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   std::string blockStr = os.str();
 
   logger(Logging::DEBUGGING) << "Request to add block " << blockStr;
+  if (cachedBlock.getBlockIndex() == 0) {
+    logger(Logging::DEBUGGING) << "Block index=" << cachedBlock.getBlockIndex() << " is genesis block index";
+    return error::AddBlockErrorCode::REJECTED_AS_ORPHANED;
+  }
+
   if (hasBlock(cachedBlock.getBlockHash())) {
     logger(Logging::DEBUGGING) << "Block " << blockStr << " already exists";
     return error::AddBlockErrorCode::ALREADY_EXISTS;
@@ -824,10 +838,8 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
           auto splitIndex = findCommonRoot(*mainChainStorage, *chainsLeaves[0]);
           switchMainChainStorage(splitIndex, *chainsLeaves[0]);
           ret = error::AddBlockErrorCode::ADDED_TO_ALTERNATIVE_AND_SWITCHED;
-
-          uint32_t commonRoot = findCommonRoot(*mainChainStorage, *chainsLeaves[endpointIndex]);
           m_blockchainObservers.notify(&IBlockchainObserver::mainChainSwitched, std::cref(*chainsLeaves[endpointIndex]),
-                                       std::cref(*chainsLeaves[0]), commonRoot);
+                                       std::cref(*chainsLeaves[0]), splitIndex);
 
           logger(Logging::INFO, Logging::YELLOW)
               << "Resolved: " << blockStr << ", Previous: " << chainsLeaves[endpointIndex]->getTopBlockIndex() << " ("
