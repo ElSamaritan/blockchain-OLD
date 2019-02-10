@@ -1148,7 +1148,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   height = getTopBlockIndex() + 1;
   difficulty = getDifficultyForNextBlock();
   if (difficulty == 0) {
-    logger(Logging::ERROR, Logging::BRIGHT_RED) << "difficulty overhead.";
+    logger(Logging::ERROR) << "difficulty overhead.";
     return false;
   }
 
@@ -1163,8 +1163,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
 
     TransactionExtraMergeMiningTag mmTag = boost::value_initialized<decltype(mmTag)>();
     if (!appendMergeMiningTagToExtra(b.parentBlock.baseTransaction.extra, mmTag)) {
-      logger(Logging::ERROR, Logging::BRIGHT_RED)
-          << "Failed to append merge mining tag to extra of the parent block miner transaction";
+      logger(Logging::ERROR) << "Failed to append merge mining tag to extra of the parent block miner transaction";
       return false;
     }
   }
@@ -1230,7 +1229,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   bool r = m_currency.constructMinerTx(b.majorVersion, height, medianSize, alreadyGeneratedCoins, transactionsSize, fee,
                                        adr, b.baseTransaction, extraNonce, 11);
   if (!r) {
-    logger(Logging::ERROR, Logging::BRIGHT_RED) << "Failed to construct miner tx, first chance";
+    logger(Logging::ERROR) << "Failed to construct miner tx, first chance";
     return false;
   }
 
@@ -1240,7 +1239,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
     r = m_currency.constructMinerTx(b.majorVersion, height, medianSize, alreadyGeneratedCoins, cumulativeSize, fee, adr,
                                     b.baseTransaction, extraNonce, 11);
     if (!r) {
-      logger(Logging::ERROR, Logging::BRIGHT_RED) << "Failed to construct miner tx, second chance";
+      logger(Logging::ERROR) << "Failed to construct miner tx, second chance";
       return false;
     }
 
@@ -1257,10 +1256,10 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
       // to 2-bytes len.
       if (cumulativeSize != transactionsSize + getObjectBinarySize(b.baseTransaction)) {
         if (!(cumulativeSize + 1 == transactionsSize + getObjectBinarySize(b.baseTransaction))) {
-          logger(Logging::ERROR, Logging::BRIGHT_RED)
-              << "unexpected case: cumulative_size=" << cumulativeSize
-              << " + 1 is not equal txs_cumulative_size=" << transactionsSize
-              << " + get_object_blobsize(b.baseTransaction)=" << getObjectBinarySize(b.baseTransaction);
+          logger(Logging::ERROR) << "unexpected case: cumulative_size=" << cumulativeSize
+                                 << " + 1 is not equal txs_cumulative_size=" << transactionsSize
+                                 << " + get_object_blobsize(b.baseTransaction)="
+                                 << getObjectBinarySize(b.baseTransaction);
           return false;
         }
 
@@ -1279,17 +1278,16 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
       }
     }
     if (!(cumulativeSize == transactionsSize + getObjectBinarySize(b.baseTransaction))) {
-      logger(Logging::ERROR, Logging::BRIGHT_RED)
-          << "unexpected case: cumulative_size=" << cumulativeSize
-          << " is not equal txs_cumulative_size=" << transactionsSize
-          << " + get_object_blobsize(b.baseTransaction)=" << getObjectBinarySize(b.baseTransaction);
+      logger(Logging::ERROR) << "unexpected case: cumulative_size=" << cumulativeSize
+                             << " is not equal txs_cumulative_size=" << transactionsSize
+                             << " + get_object_blobsize(b.baseTransaction)=" << getObjectBinarySize(b.baseTransaction);
       return false;
     }
 
     return true;
   }
 
-  logger(Logging::ERROR, Logging::BRIGHT_RED) << "Failed to create_block_template with " << TRIES_COUNT << " tries";
+  logger(Logging::ERROR) << "Failed to create_block_template with " << TRIES_COUNT << " tries";
   return false;
 }
 
@@ -1557,11 +1555,10 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   if (block.majorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
     if (block.majorVersion == Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version() &&
         block.parentBlock.majorVersion > Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version()) {
-      logger(Logging::ERROR, Logging::BRIGHT_RED)
-          << "Parent block of block " << cachedBlock.getBlockHash()
-          << " has wrong major version: " << static_cast<int>(block.parentBlock.majorVersion) << ", at index "
-          << cachedBlock.getBlockIndex() << " expected version is "
-          << static_cast<int>(Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version());
+      logger(Logging::ERROR) << "Parent block of block " << cachedBlock.getBlockHash()
+                             << " has wrong major version: " << static_cast<int>(block.parentBlock.majorVersion)
+                             << ", at index " << cachedBlock.getBlockIndex() << " expected version is "
+                             << static_cast<int>(Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version());
       return error::BlockValidationError::PARENT_BLOCK_WRONG_VERSION;
     }
 

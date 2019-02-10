@@ -311,21 +311,21 @@ uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, uint32_t st
       }
     }
   } catch (const MarkTransactionConfirmedException& e) {
-    m_logger(ERROR, BRIGHT_RED) << "Failed to process block transactions: failed to confirm transaction "
+    m_logger(ERROR) << "Failed to process block transactions: failed to confirm transaction "
                                 << e.getTxHash()
                                 << ", remove this transaction from all containers and transaction pool";
     forEachSubscription([&e](TransfersSubscription& sub) { sub.deleteUnconfirmedTransaction(e.getTxHash()); });
 
     m_poolTxs.erase(e.getTxHash());
   } catch (std::exception& e) {
-    m_logger(ERROR, BRIGHT_RED) << "Failed to process block transactions, exception: " << e.what();
+    m_logger(ERROR) << "Failed to process block transactions, exception: " << e.what();
   } catch (...) {
-    m_logger(ERROR, BRIGHT_RED) << "Failed to process block transactions, unknown exception";
+    m_logger(ERROR) << "Failed to process block transactions, unknown exception";
   }
 
   if (processedBlockCount < count) {
     uint32_t detachIndex = startHeight + processedBlockCount;
-    m_logger(ERROR, BRIGHT_RED) << "Not all block transactions are processed, fully processed block count: "
+    m_logger(ERROR) << "Not all block transactions are processed, fully processed block count: "
                                 << processedBlockCount << " of " << count << ", last processed block hash "
                                 << (processedBlockCount > 0 ? blocks[processedBlockCount - 1].blockHash : NULL_HASH)
                                 << ", detach block index " << detachIndex << " to remove partially processed block";
@@ -556,7 +556,7 @@ void TransfersConsumer::processOutputs(const TransactionBlockInfo& blockInfo, Tr
         sub.markTransactionConfirmed(blockInfo, tx.getTransactionHash(), globalIdxs);
         updated = true;
       } catch (...) {
-        m_logger(ERROR, BRIGHT_RED) << "markTransactionConfirmed failed, throw MarkTransactionConfirmedException";
+        m_logger(ERROR) << "markTransactionConfirmed failed, throw MarkTransactionConfirmedException";
         throw MarkTransactionConfirmedException(tx.getTransactionHash());
       }
     } else {

@@ -182,7 +182,7 @@ void TransactionPool::blockAdded(uint32_t index, const Crypto::Hash&) {
   XI_CONCURRENT_RLOCK(m_access);
   auto mainChain = m_blockchain.mainChain();
   if (mainChain == nullptr) {
-    m_logger(Logging::ERROR, Logging::BRIGHT_RED) << "Unable to add block, main chain missing.";
+    m_logger(Logging::ERROR) << "Unable to add block, main chain missing.";
     return;
   }
   pushBlock(mainChain->getBlockByIndex(index));

@@ -30,14 +30,14 @@ bool Checkpoints::addCheckpoint(uint32_t index, const std::string &hash_str) {
   Crypto::Hash h = NULL_HASH;
 
   if (!Common::podFromHex(hash_str, h)) {
-    logger(ERROR, BRIGHT_RED) << "INVALID HASH IN CHECKPOINTS!";
+    logger(ERROR) << "INVALID HASH IN CHECKPOINTS!";
     return false;
   }
 
   /* The return value lets us check if it was inserted or not. If it wasn't,
      there is already a key (i.e., a height value) existing */
   if (!points.insert({index, h}).second) {
-    logger(ERROR, BRIGHT_RED) << "CHECKPOINT ALREADY EXISTS!";
+    logger(ERROR) << "CHECKPOINT ALREADY EXISTS!";
     return false;
   }
 
@@ -48,7 +48,7 @@ bool Checkpoints::loadCheckpointsFromFile(const std::string &filename) {
   std::ifstream file(filename);
 
   if (!file) {
-    logger(ERROR, BRIGHT_RED) << "Could not load checkpoints file: " << filename;
+    logger(ERROR) << "Could not load checkpoints file: " << filename;
 
     return false;
   }
@@ -75,8 +75,8 @@ bool Checkpoints::loadCheckpointsFromFile(const std::string &filename) {
     try {
       index = std::stoi(indexString);
     } catch (const std::invalid_argument &) {
-      logger(ERROR, BRIGHT_RED) << "Invalid checkpoint file format - "
-                                << "could not parse height as a number";
+      logger(ERROR) << "Invalid checkpoint file format - "
+                    << "could not parse height as a number";
 
       return false;
     }
@@ -104,12 +104,12 @@ bool Checkpoints::checkBlock(uint32_t index, const Crypto::Hash &h, bool &isChec
 
   if (it->second == h) {
     if (index % 100 == 0) {
-      logger(Logging::INFO, BRIGHT_BLUE) << "CHECKPOINT PASSED FOR INDEX " << index << " " << h;
+      logger(Logging::INFO, CYAN) << "CHECKPOINT PASSED FOR INDEX " << index << " " << h;
     }
     return true;
   } else {
-    logger(Logging::WARNING, BRIGHT_YELLOW)
-        << "CHECKPOINT FAILED FOR HEIGHT " << index << ". EXPECTED HASH: " << it->second << ", FETCHED HASH: " << h;
+    logger(Logging::WARNING) << "CHECKPOINT FAILED FOR HEIGHT " << index << ". EXPECTED HASH: " << it->second
+                             << ", FETCHED HASH: " << h;
     return false;
   }
 }

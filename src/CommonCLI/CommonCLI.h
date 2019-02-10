@@ -34,9 +34,10 @@ namespace CommonCLI {
 /*!
  * \brief header returns an appropiate header to display including a message telling you you are
  * on a testing version, if so
+ * \param colored If true emplaces color encoding used by the logging library
  * \return a header to display at startup
  */
-std::string header();
+std::string header(bool colored = false);
 
 /*!
  * \brief checks wheter this version was built from non master branch source code

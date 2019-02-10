@@ -61,14 +61,14 @@ const std::vector<uint64_t> Currency::PRETTY_AMOUNTS = {
 
 bool Currency::init() {
   if (!generateGenesisBlock()) {
-    logger(ERROR, BRIGHT_RED) << "Failed to generate genesis block";
+    logger(ERROR) << "Failed to generate genesis block";
     return false;
   }
 
   try {
     cachedGenesisBlock->getBlockHash();
   } catch (std::exception& e) {
-    logger(ERROR, BRIGHT_RED) << "Failed to get genesis block hash: " << e.what();
+    logger(ERROR) << "Failed to get genesis block hash: " << e.what();
     return false;
   }
 
@@ -85,7 +85,7 @@ bool Currency::generateGenesisBlock() {
       fromHex(genesisCoinbaseTxHex, minerTxBlob) && fromBinaryArray(genesisBlockTemplate.baseTransaction, minerTxBlob);
 
   if (!r) {
-    logger(ERROR, BRIGHT_RED) << "failed to parse coinbase tx from hard coded blob";
+    logger(ERROR) << "failed to parse coinbase tx from hard coded blob";
     return false;
   }
 
@@ -229,7 +229,7 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
                                [&outAmounts](uint64_t a_dust) { outAmounts.push_back(a_dust); });
 
   if (!(1 <= maxOuts)) {
-    logger(ERROR, BRIGHT_RED) << "max_out must be non-zero";
+    logger(ERROR) << "max_out must be non-zero";
     return false;
   }
   while (maxOuts < outAmounts.size()) {
@@ -245,7 +245,7 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
     bool r = Crypto::generate_key_derivation(minerAddress.viewPublicKey, txkey.secretKey, derivation);
 
     if (!(r)) {
-      logger(ERROR, BRIGHT_RED) << "while creating outs: failed to generate_key_derivation("
+      logger(ERROR) << "while creating outs: failed to generate_key_derivation("
                                 << minerAddress.viewPublicKey << ", " << txkey.secretKey << ")";
       return false;
     }
@@ -253,7 +253,7 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
     r = Crypto::derive_public_key(derivation, no, minerAddress.spendPublicKey, outEphemeralPubKey);
 
     if (!(r)) {
-      logger(ERROR, BRIGHT_RED) << "while creating outs: failed to derive_public_key(" << derivation << ", " << no
+      logger(ERROR) << "while creating outs: failed to derive_public_key(" << derivation << ", " << no
                                 << ", " << minerAddress.spendPublicKey << ")";
       return false;
     }
@@ -268,7 +268,7 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
   }
 
   if (!(summaryAmounts == blockReward)) {
-    logger(ERROR, BRIGHT_RED) << "Failed to construct miner tx, summaryAmounts = " << summaryAmounts
+    logger(ERROR) << "Failed to construct miner tx, summaryAmounts = " << summaryAmounts
                               << " not equal blockReward = " << blockReward;
     return false;
   }
