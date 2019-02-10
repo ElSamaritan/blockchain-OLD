@@ -278,8 +278,9 @@ bool Core::notifyObservers(BlockchainMessage&& msg) /* noexcept */ {
 uint32_t Core::getTopBlockIndex() const {
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
-  throwIfNotInitialized();
 
+  throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
   return chainsLeaves[0]->getTopBlockIndex();
 }
 
@@ -288,7 +289,7 @@ Crypto::Hash Core::getTopBlockHash() const {
   assert(!chainsLeaves.empty());
 
   throwIfNotInitialized();
-
+  XI_CONCURRENT_RLOCK(m_access);
   return chainsLeaves[0]->getTopBlockHash();
 }
 
@@ -298,7 +299,7 @@ Crypto::Hash Core::getBlockHashByIndex(uint32_t blockIndex) const {
   assert(blockIndex <= getTopBlockIndex());
 
   throwIfNotInitialized();
-
+  XI_CONCURRENT_RLOCK(m_access);
   return chainsLeaves[0]->getBlockHash(blockIndex);
 }
 
@@ -308,7 +309,7 @@ uint64_t Core::getBlockTimestampByIndex(uint32_t blockIndex) const {
   assert(blockIndex <= getTopBlockIndex());
 
   throwIfNotInitialized();
-
+  XI_CONCURRENT_RLOCK(m_access);
   auto timestamps = chainsLeaves[0]->getLastTimestamps(1, blockIndex, addGenesisBlock);
   assert(timestamps.size() == 1);
 
@@ -317,6 +318,7 @@ uint64_t Core::getBlockTimestampByIndex(uint32_t blockIndex) const {
 
 bool Core::hasBlock(const Crypto::Hash& blockHash) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
   return findSegmentContainingBlock(blockHash) != nullptr;
 }
 
@@ -326,6 +328,7 @@ BlockTemplate Core::getBlockByIndex(uint32_t index) const {
   assert(index <= getTopBlockIndex());
 
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
   IBlockchainCache* segment = findMainChainSegmentContainingBlock(index);
   assert(segment != nullptr);
 
@@ -337,6 +340,7 @@ BlockTemplate Core::getBlockByHash(const Crypto::Hash& blockHash) const {
   assert(!chainsLeaves.empty());
 
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
   IBlockchainCache* segment =
       findMainChainSegmentContainingBlock(blockHash);  // TODO should it be requested from the main chain?
   if (segment == nullptr) {
@@ -359,7 +363,7 @@ std::vector<RawBlock> Core::getBlocks(uint32_t minIndex, uint32_t count) const {
   assert(!chainsLeaves.empty());
 
   throwIfNotInitialized();
-
+  XI_CONCURRENT_RLOCK(m_access);
   std::vector<RawBlock> blocks;
   if (count > 0) {
     auto cache = chainsLeaves[0];
@@ -391,7 +395,7 @@ std::vector<RawBlock> Core::getBlocks(uint32_t minIndex, uint32_t count) const {
 void Core::getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<RawBlock>& blocks,
                      std::vector<Crypto::Hash>& missedHashes) const {
   throwIfNotInitialized();
-
+  XI_CONCURRENT_RLOCK(m_access);
   blocks.reserve(blockHashes.size());
   for (const auto& hash : blockHashes) {
     IBlockchainCache* blockchainSegment = findSegmentContainingBlock(hash);
@@ -413,7 +417,7 @@ bool Core::queryBlocks(const std::vector<Crypto::Hash>& blockHashes, uint64_t ti
   assert(!chainsLeaves.empty());
   assert(!chainsStorage.empty());
   throwIfNotInitialized();
-
+  XI_CONCURRENT_RLOCK(m_access);
   try {
     IBlockchainCache* mainChain = chainsLeaves[0];
     currentIndex = mainChain->getTopBlockIndex();
@@ -450,6 +454,7 @@ bool Core::queryBlocksLite(const std::vector<Crypto::Hash>& knownBlockHashes, ui
   assert(!chainsStorage.empty());
 
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   try {
     IBlockchainCache* mainChain = chainsLeaves[0];
@@ -501,6 +506,7 @@ bool Core::queryBlocksDetailed(const std::vector<Crypto::Hash>& knownBlockHashes
   assert(!chainsStorage.empty());
 
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   try {
     IBlockchainCache* mainChain = chainsLeaves[0];
@@ -593,6 +599,7 @@ void Core::getTransactions(const std::vector<Crypto::Hash>& transactionHashes, s
 
 uint64_t Core::getBlockDifficulty(uint32_t blockIndex) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
   IBlockchainCache* mainChain = chainsLeaves[0];
   auto difficulties = mainChain->getLastCumulativeDifficulties(2, blockIndex, addGenesisBlock);
   if (difficulties.size() == 2) {
@@ -603,9 +610,9 @@ uint64_t Core::getBlockDifficulty(uint32_t blockIndex) const {
   return difficulties[0];
 }
 
-// TODO: just use mainChain->getDifficultyForNextBlock() ?
 uint64_t Core::getDifficultyForNextBlock() const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
   IBlockchainCache* mainChain = chainsLeaves[0];
 
   uint32_t topBlockIndex = mainChain->getTopBlockIndex();
@@ -627,6 +634,7 @@ Xi::Result<std::vector<Crypto::Hash>> Core::findBlockchainSupplement(const std::
   assert(!remoteBlockIds.empty());
   assert(remoteBlockIds.back() == getBlockHashByIndex(0));
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   totalBlockCount = getTopBlockIndex() + 1;
   startBlockIndex = (uint32_t)-1;
@@ -1048,6 +1056,7 @@ std::error_code Core::submitBlock(BinaryArray&& rawBlockTemplate) {
 bool Core::getTransactionGlobalIndexes(const Crypto::Hash& transactionHash,
                                        std::vector<uint32_t>& globalIndexes) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
   IBlockchainCache* segment = chainsLeaves[0];
 
   bool found = false;
@@ -1074,6 +1083,7 @@ bool Core::getTransactionGlobalIndexes(const Crypto::Hash& transactionHash,
 bool Core::getRandomOutputs(uint64_t amount, uint16_t count, std::vector<uint32_t>& globalIndexes,
                             std::vector<Crypto::PublicKey>& publicKeys) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   if (count == 0) {
     return true;
@@ -1120,6 +1130,7 @@ bool Core::getPoolChanges(const Crypto::Hash& lastBlockHash, const std::vector<C
                           std::vector<BinaryArray>& addedTransactions,
                           std::vector<Crypto::Hash>& deletedTransactions) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   std::vector<Crypto::Hash> newTransactions;
   getTransactionPoolDifference(knownHashes, newTransactions, deletedTransactions);
@@ -1136,6 +1147,7 @@ bool Core::getPoolChangesLite(const Crypto::Hash& lastBlockHash, const std::vect
                               std::vector<TransactionPrefixInfo>& addedTransactions,
                               std::vector<Crypto::Hash>& deletedTransactions) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   std::vector<Crypto::Hash> newTransactions;
   getTransactionPoolDifference(knownHashes, newTransactions, deletedTransactions);
@@ -1155,8 +1167,9 @@ bool Core::getPoolChangesLite(const Crypto::Hash& lastBlockHash, const std::vect
 bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, const BinaryArray& extraNonce,
                             uint64_t& difficulty, uint32_t& height) const {
   throwIfNotInitialized();
-
   XI_CONCURRENT_RLOCK(m_access);
+  XI_UNUSED_REVAL(transactionPool().acquireExclusiveAccess());
+
   height = getTopBlockIndex() + 1;
   difficulty = getDifficultyForNextBlock();
   if (difficulty == 0) {
@@ -1304,6 +1317,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
 }
 
 CoreStatistics Core::getCoreStatistics() const {
+  XI_CONCURRENT_RLOCK(m_access);
   CoreStatistics result;
   result.transactionPoolSize = transactionPool().size();
   auto txHash = transactionPool().stateHash();
@@ -1317,12 +1331,14 @@ CoreStatistics Core::getCoreStatistics() const {
 
 size_t Core::getBlockchainTransactionCount() const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
   IBlockchainCache* mainChain = chainsLeaves[0];
   return mainChain->getTransactionCount();
 }
 
 size_t Core::getAlternativeBlockCount() const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   using Ptr = decltype(chainsStorage)::value_type;
   return std::accumulate(chainsStorage.begin(), chainsStorage.end(), size_t(0), [&](size_t sum, const Ptr& ptr) {
@@ -1333,12 +1349,14 @@ size_t Core::getAlternativeBlockCount() const {
 uint64_t Core::getTotalGeneratedAmount() const {
   assert(!chainsLeaves.empty());
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   return chainsLeaves[0]->getAlreadyGeneratedCoins();
 }
 
 std::vector<BlockTemplate> Core::getAlternativeBlocks() const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   std::vector<BlockTemplate> alternativeBlocks;
   for (auto& cache : chainsStorage) {
@@ -1638,6 +1656,7 @@ const Currency& Core::getCurrency() const { return m_currency; }
 
 void Core::save() {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   deleteAlternativeChains();
   mergeMainChainSegments();
@@ -1645,9 +1664,10 @@ void Core::save() {
 }
 
 void Core::load() {
-  if (isInitialized()) {
+  if (initialized) {
     throw std::runtime_error{"core is already initialized"};
   }
+  XI_CONCURRENT_RLOCK(m_access);
 
   initRootSegment();
 
@@ -2192,6 +2212,7 @@ void Core::mergeSegments(IBlockchainCache* acceptingSegment, IBlockchainCache* s
 
 BlockDetails Core::getBlockDetails(const uint32_t blockHeight) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   IBlockchainCache* segment = findSegmentContainingBlock(blockHeight);
   if (segment == nullptr) {
@@ -2203,6 +2224,7 @@ BlockDetails Core::getBlockDetails(const uint32_t blockHeight) const {
 
 BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   IBlockchainCache* segment = findSegmentContainingBlock(blockHash);
   if (segment == nullptr) {
@@ -2287,6 +2309,7 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
 
 TransactionDetails Core::getTransactionDetails(const Crypto::Hash& transactionHash) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   IBlockchainCache* segment = findSegmentContainingTransaction(transactionHash);
   bool foundInPool = m_transactionPool->checkIfTransactionPresent(transactionHash);
@@ -2427,6 +2450,7 @@ TransactionDetails Core::getTransactionDetails(const Crypto::Hash& transactionHa
 
 std::vector<Crypto::Hash> Core::getAlternativeBlockHashesByIndex(uint32_t blockIndex) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   std::vector<Crypto::Hash> alternativeBlockHashes;
   for (size_t chain = 1; chain < chainsLeaves.size(); ++chain) {
@@ -2450,6 +2474,7 @@ std::vector<Crypto::Hash> Core::getAlternativeBlockHashesByIndex(uint32_t blockI
 
 std::vector<Crypto::Hash> Core::getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   logger(Logging::DEBUGGING) << "getBlockHashesByTimestamps request with timestamp " << timestampBegin
                              << " and seconds count " << secondsCount;
@@ -2468,6 +2493,7 @@ std::vector<Crypto::Hash> Core::getBlockHashesByTimestamps(uint64_t timestampBeg
 
 std::vector<Crypto::Hash> Core::getTransactionHashesByPaymentId(const Hash& paymentId) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
 
   logger(Logging::DEBUGGING) << "getTransactionHashesByPaymentId request with paymentId " << paymentId;
 
@@ -2522,6 +2548,7 @@ IBlockchainCache* Core::findSegmentContainingTransaction(const Crypto::Hash& tra
 
 bool Core::hasTransaction(const Crypto::Hash& transactionHash) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
   return findSegmentContainingTransaction(transactionHash) != nullptr ||
          m_transactionPool->checkIfTransactionPresent(transactionHash);
 }
@@ -2561,6 +2588,7 @@ void Core::updateBlockMedianSize() {
 
 uint64_t Core::get_current_blockchain_height() const {
   // TODO: remove when GetCoreStatistics is implemented
+  XI_CONCURRENT_RLOCK(m_access);
   return mainChainStorage->getBlockCount();
 }
 
