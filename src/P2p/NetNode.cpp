@@ -36,9 +36,10 @@
 #include "Common/Util.h"
 #include "crypto/crypto.h"
 
-#include "ConnectionContext.h"
-#include "LevinProtocol.h"
-#include "P2pProtocolDefinitions.h"
+#include "P2p/ConnectionContext.h"
+#include "P2p/LevinProtocol.h"
+#include "P2p/P2pProtocolDefinitions.h"
+#include "P2p/UPNPErrorMessage.h"
 
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
@@ -71,10 +72,11 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
     if (result == 1) {
       std::ostringstream portString;
       portString << port;
-      if (UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(),
-                              portString.str().c_str(), lanAddress, Xi::Config::Coin::name().c_str(), "TCP", 0,
-                              "0") != 0) {
-        logger(ERROR) << "UPNP_AddPortMapping failed.";
+      int upnpPortMappingResult =
+          UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(),
+                              portString.str().c_str(), lanAddress, Xi::Config::Coin::name().c_str(), "TCP", 0, "0");
+      if (upnpPortMappingResult != UPNPCOMMAND_SUCCESS) {
+        logger(ERROR) << "UPNP_AddPortMapping failed: " << get_upnp_error_message(upnpPortMappingResult);
       } else {
         logger(INFO) << "Added IGD port mapping.";
       }
@@ -304,7 +306,7 @@ bool NodeServer::init_config() {
         loaded = true;
       }
     } catch (const std::exception& e) {
-      logger(ERROR, BRIGHT_RED) << "Failed to load config from file '" << state_file_path << "': " << e.what();
+      logger(ERROR) << "Failed to load config from file '" << state_file_path << "': " << e.what();
     }
 
     if (!loaded) {
@@ -325,7 +327,7 @@ bool NodeServer::init_config() {
 
     m_first_connection_maker_call = true;
   } catch (const std::exception& e) {
-    logger(ERROR, BRIGHT_RED) << "init_config failed: " << e.what();
+    logger(ERROR) << "init_config failed: " << e.what();
     return false;
   }
   return true;
@@ -348,7 +350,7 @@ void NodeServer::externalRelayNotifyToAll(int command, const BinaryArray& data_b
 //-----------------------------------------------------------------------------------
 bool NodeServer::make_default_config() {
   m_config.m_peer_id = Crypto::rand<uint64_t>();
-  logger(INFO, BRIGHT_WHITE) << "Generated new peer ID: " << m_config.m_peer_id;
+  logger(INFO) << "Generated new peer ID: " << m_config.m_peer_id;
   return true;
 }
 
@@ -367,7 +369,7 @@ bool NodeServer::handle_command_line(const boost::program_options::variables_map
       pe.id = Crypto::rand<uint64_t>();
       bool r = parse_peer_from_string(pe.adr, pr_str);
       if (!(r)) {
-        logger(ERROR, BRIGHT_RED) << "Failed to parse address from string: " << pr_str;
+        logger(ERROR) << "Failed to parse address from string: " << pr_str;
         return false;
       }
       m_command_line_peers.push_back(pe);
@@ -416,7 +418,7 @@ bool NodeServer::handleConfig(const NetNodeConfig& config) {
 bool NodeServer::append_net_address(std::vector<NetworkAddress>& nodes, const std::string& addr) {
   size_t pos = addr.find_last_of(':');
   if (!(std::string::npos != pos && addr.length() - 1 != pos && 0 != pos)) {
-    logger(ERROR, BRIGHT_RED) << "Failed to parse seed address from string: '" << addr << '\'';
+    logger(ERROR) << "Failed to parse seed address from string: '" << addr << '\'';
     return false;
   }
 
@@ -448,19 +450,19 @@ bool NodeServer::init(const NetNodeConfig& config) {
   }
 
   if (!handleConfig(config)) {
-    logger(ERROR, BRIGHT_RED) << "Failed to handle command line";
+    logger(ERROR) << "Failed to handle command line";
     return false;
   }
   m_config_folder = config.getConfigFolder();
   m_p2p_state_filename = config.getP2pStateFilename();
 
   if (!init_config()) {
-    logger(ERROR, BRIGHT_RED) << "Failed to init config.";
+    logger(ERROR) << "Failed to init config.";
     return false;
   }
 
   if (!m_peerlist.init(m_allow_local_ip)) {
-    logger(ERROR, BRIGHT_RED) << "Failed to init peerlist.";
+    logger(ERROR) << "Failed to init peerlist.";
     return false;
   }
 
@@ -767,7 +769,7 @@ bool NodeServer::try_to_connect_and_handshake_with_new_peer(const NetworkAddress
     }
 
     if (just_take_peerlist) {
-      logger(Logging::DEBUGGING, Logging::BRIGHT_BLUE) << ctx << "CONNECTION HANDSHAKED OK AND CLOSED.";
+      logger(Logging::DEBUGGING) << ctx << "CONNECTION HANDSHAKED OK AND CLOSED.";
       return true;
     }
 
@@ -814,7 +816,7 @@ bool NodeServer::make_new_connection_from_peerlist(bool use_white_list) {
     ++rand_count;
     size_t random_index = get_random_index_with_fixed_probability(max_random_index);
     if (!(random_index < local_peers_count)) {
-      logger(ERROR, BRIGHT_RED) << "random_starter_index < peers_local.size() failed!!";
+      logger(ERROR) << "random_starter_index < peers_local.size() failed!!";
       return false;
     }
 
@@ -825,7 +827,7 @@ bool NodeServer::make_new_connection_from_peerlist(bool use_white_list) {
     bool r = use_white_list ? m_peerlist.get_white_peer_by_index(pe, random_index)
                             : m_peerlist.get_gray_peer_by_index(pe, random_index);
     if (!(r)) {
-      logger(ERROR, BRIGHT_RED) << "Failed to get random peer from peerlist(white:" << use_white_list << ")";
+      logger(ERROR) << "Failed to get random peer from peerlist(white:" << use_white_list << ")";
       return false;
     }
 
@@ -1220,7 +1222,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   get_local_node_data(rsp.node_data);
   m_payload_handler.get_payload_sync_data(rsp.payload_data);
 
-  logger(Logging::DEBUGGING, Logging::BRIGHT_BLUE) << "COMMAND_HANDSHAKE";
+  logger(Logging::DEBUGGING) << "COMMAND_HANDSHAKE";
   return 1;
 }
 //-----------------------------------------------------------------------------------
@@ -1298,7 +1300,7 @@ bool NodeServer::parse_peers_and_add_to_container(const boost::program_options::
   for (const std::string& pr_str : perrs) {
     NetworkAddress na;
     if (!parse_peer_from_string(na, pr_str)) {
-      logger(ERROR, BRIGHT_RED) << "Failed to parse address from string: " << pr_str;
+      logger(ERROR) << "Failed to parse address from string: " << pr_str;
       return false;
     }
     container.push_back(na);

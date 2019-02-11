@@ -60,10 +60,10 @@ Xi::CrashHandlerConfig BreakpadConfig;
 }
 #endif  // XI_USE_BREAKPAD
 
-std::string CommonCLI::header() {
+std::string CommonCLI::header(bool colored) {
   std::stringstream programHeader;
   programHeader << std::endl
-                << Xi::Config::asciiArt(false) << std::endl
+                << Xi::Config::asciiArt(colored) << std::endl
                 << " " << Xi::Config::Coin::name() << " v" << APP_VERSION << " (" << BUILD_COMMIT_ID << ")" << std::endl
                 << " This software is distributed under the General Public License v3.0" << std::endl
                 << std::endl

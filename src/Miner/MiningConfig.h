@@ -23,11 +23,15 @@ struct MiningConfig {
   uint16_t daemonPort;
   size_t threadCount;
   size_t scanPeriod;
-  uint8_t logLevel;
   size_t blocksLimit;
   uint64_t firstBlockTimestamp;
   int64_t blockTimestampInterval;
   ::Xi::Http::SSLConfiguration ssl;
+
+  // Logging
+  uint8_t logLevel;
+  std::string logFile;
+  uint8_t logFileLevel;
 };
 
 }  // namespace CryptoNote

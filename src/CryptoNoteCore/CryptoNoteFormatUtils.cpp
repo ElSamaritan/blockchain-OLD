@@ -185,7 +185,7 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
   size_t output_index = 0;
   for (const TransactionDestinationEntry& dst_entr : shuffled_dsts) {
     if (!(dst_entr.amount > 0)) {
-      logger(ERROR, BRIGHT_RED) << "Destination with wrong amount: " << dst_entr.amount;
+      logger(ERROR) << "Destination with wrong amount: " << dst_entr.amount;
       return false;
     }
     KeyDerivation derivation;
@@ -193,14 +193,14 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
     bool r = generate_key_derivation(dst_entr.addr.viewPublicKey, txkey.secretKey, derivation);
 
     if (!(r)) {
-      logger(ERROR, BRIGHT_RED) << "at creation outs: failed to generate_key_derivation(" << dst_entr.addr.viewPublicKey
+      logger(ERROR) << "at creation outs: failed to generate_key_derivation(" << dst_entr.addr.viewPublicKey
                                 << ", " << txkey.secretKey << ")";
       return false;
     }
 
     r = derive_public_key(derivation, output_index, dst_entr.addr.spendPublicKey, out_eph_public_key);
     if (!(r)) {
-      logger(ERROR, BRIGHT_RED) << "at creation outs: failed to derive_public_key(" << derivation << ", "
+      logger(ERROR) << "at creation outs: failed to derive_public_key(" << derivation << ", "
                                 << output_index << ", " << dst_entr.addr.spendPublicKey << ")";
       return false;
     }

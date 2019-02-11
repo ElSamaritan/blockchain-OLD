@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,58 +21,13 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
-
-#include <Xi/Utils/ExternalIncludePush.h>
-#include <cxxopts.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
-
 #include <string>
 
-namespace CommonCLI {
-
+namespace CryptoNote {
 /*!
- * \brief header returns an appropiate header to display including a message telling you you are
- * on a testing version, if so
- * \param colored If true emplaces color encoding used by the logging library
- * \return a header to display at startup
+ * \brief get_upnp_error_message translates a upnp error code into a readable message
+ * \param codec the upnp encoded error value
+ * \return a readable error message of the encoding
  */
-std::string header(bool colored = false);
-
-/*!
- * \brief checks wheter this version was built from non master branch source code
- * \return true if this version is not built from master branch, otherwise false
- */
-bool isDevVersion();
-
-/*!
- * \brief insecureClientWarning returns a message to be printed for insecure client setups
- */
-std::string insecureClientWarning();
-
-/*!
- * \brief insecureClientWarning returns a message to be printed for insecure server setups
- */
-std::string insecureServerWarning();
-
-/*!
- * \brief emplaceCLIOptions will add common options for CLI applications to the option parser interface
- * \param options The parser that will handle the options
- */
-void emplaceCLIOptions(cxxopts::Options& options);
-
-/*!
- * \brief handleCLIOptions handles common options given by the CLI
- * \param option The options that have been parsed
- * \param result The parsed options result
- * \return true if the application should exit, otherwise false
- */
-bool handleCLIOptions(cxxopts::Options& options, const cxxopts::ParseResult& result);
-
-/*!
- * \brief make_crash_dumper creates a crash dumper if breakpad was linked and enabled.
- * \param the application running the crash dumper, used to determine in which application the bug occured
- * \return a null pointer the actual crash dumper implementation.
- */
-void* make_crash_dumper(const std::string& applicationId);
-}  // namespace CommonCLI
+std::string get_upnp_error_message(int codec);
+}  // namespace CryptoNote

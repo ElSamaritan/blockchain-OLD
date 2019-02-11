@@ -325,21 +325,21 @@ void printOutgoingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
   assert(t.fee <= absTotalAmount);
 
   std::cout << WarningMsg("Outgoing transfer:") << std::endl
-            << WarningMsg("Hash: " + Common::podToHex(t.hash)) << std::endl;
+            << WarningMsg("    Hash          " + Common::podToHex(t.hash)) << std::endl;
 
   if (t.timestamp != 0) {
-    std::cout << WarningMsg("Block height: ") << WarningMsg(std::to_string(t.blockHeight)) << std::endl
-              << WarningMsg("Timestamp: ") << WarningMsg(unixTimeToDate(t.timestamp)) << std::endl;
+    std::cout << WarningMsg("    Block height  ") << WarningMsg(std::to_string(t.blockHeight)) << std::endl
+              << WarningMsg("    Timestamp     ") << WarningMsg(unixTimeToDate(t.timestamp)) << std::endl;
   }
 
-  std::cout << WarningMsg("Spent: " + formatAmount(absTotalAmount - t.fee)) << std::endl
-            << WarningMsg("Fee: " + formatAmount(t.fee)) << std::endl
-            << WarningMsg("Total Spent: " + formatAmount(absTotalAmount)) << std::endl;
+  std::cout << WarningMsg("    Spent         " + formatAmount(absTotalAmount - t.fee)) << std::endl
+            << WarningMsg("    Fee           " + formatAmount(t.fee)) << std::endl
+            << WarningMsg("    Total Spent   " + formatAmount(absTotalAmount)) << std::endl;
 
   const std::string paymentID = getPaymentIDFromExtra(t.extra);
 
   if (paymentID != "") {
-    std::cout << WarningMsg("Payment ID: " + paymentID) << std::endl;
+    std::cout << WarningMsg("    Payment ID    " + paymentID) << std::endl;
   }
 
   std::cout << std::endl;
@@ -351,19 +351,19 @@ void printIncomingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
   const uint64_t absTotalAmount = static_cast<uint64_t>(std::abs(t.totalAmount));
 
   std::cout << SuccessMsg("Incoming transfer:") << std::endl
-            << SuccessMsg("Hash: " + Common::podToHex(t.hash)) << std::endl;
+            << SuccessMsg("    Hash          " + Common::podToHex(t.hash)) << std::endl;
 
   if (t.timestamp != 0) {
-    std::cout << SuccessMsg("Block height: ") << SuccessMsg(std::to_string(t.blockHeight)) << std::endl
-              << SuccessMsg("Timestamp: ") << SuccessMsg(unixTimeToDate(t.timestamp)) << std::endl;
+    std::cout << SuccessMsg("    Block height  ") << SuccessMsg(std::to_string(t.blockHeight)) << std::endl
+              << SuccessMsg("    Timestamp     ") << SuccessMsg(unixTimeToDate(t.timestamp)) << std::endl;
   }
 
-  std::cout << SuccessMsg("Amount: " + formatAmount(absTotalAmount)) << std::endl;
+  std::cout << SuccessMsg("    Amount        " + formatAmount(absTotalAmount)) << std::endl;
 
   const std::string paymentID = getPaymentIDFromExtra(t.extra);
 
   if (paymentID != "") {
-    std::cout << SuccessMsg("Payment ID: " + paymentID) << std::endl;
+    std::cout << SuccessMsg("    Payment ID    " + paymentID) << std::endl;
   }
 
   std::cout << std::endl;
@@ -388,12 +388,12 @@ void listTransfers(bool incoming, bool outgoing, CryptoNote::WalletGreen &wallet
   }
 
   if (incoming) {
-    assert(totalReceived > 0);
+    assert(totalReceived >= 0);
     std::cout << SuccessMsg("Total received: " + formatAmount(static_cast<uint64_t>(totalReceived))) << std::endl;
   }
 
   if (outgoing) {
-    assert(totalSpent > 0);
+    assert(totalSpent >= 0);
     std::cout << WarningMsg("Total spent: " + formatAmount(static_cast<uint64_t>(totalSpent))) << std::endl;
   }
 }

@@ -120,7 +120,7 @@ void PaymentGateService::run() {
 void PaymentGateService::stop() {
   Logging::LoggerRef log(logger, "stop");
 
-  log(Logging::INFO, Logging::BRIGHT_WHITE) << "Stop signal caught";
+  log(Logging::INFO) << "Stop signal caught";
 
   if (dispatcher != nullptr) {
     dispatcher->remoteSpawn([&]() {
@@ -153,8 +153,7 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
   try {
     service->init();
   } catch (std::exception& e) {
-    Logging::LoggerRef(logger, "run")(Logging::ERROR, Logging::BRIGHT_RED)
-        << "Failed to init walletService reason: " << e.what();
+    Logging::LoggerRef(logger, "run")(Logging::ERROR) << "Failed to init walletService reason: " << e.what();
     return;
   }
 
@@ -172,14 +171,13 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
     rpcServer->setSSLConfiguration(config.serviceConfig.ssl);
     rpcServer->start(config.serviceConfig.bindAddress, config.serviceConfig.bindPort);
 
-    Logging::LoggerRef(logger, "PaymentGateService")(Logging::INFO, Logging::BRIGHT_WHITE)
+    Logging::LoggerRef(logger, "PaymentGateService")(Logging::INFO)
         << "JSON-RPC server stopped, stopping wallet service...";
 
     try {
       service->saveWallet();
     } catch (std::exception& ex) {
-      Logging::LoggerRef(logger, "saveWallet")(Logging::WARNING, Logging::YELLOW)
-          << "Couldn't save container: " << ex.what();
+      Logging::LoggerRef(logger, "saveWallet")(Logging::WARNING) << "Couldn't save container: " << ex.what();
     }
   }
 }

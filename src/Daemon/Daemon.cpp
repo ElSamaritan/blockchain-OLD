@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
 
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-    logger(INFO, BRIGHT_BLUE) << CommonCLI::header() << std::endl;
+    logger(INFO) << CommonCLI::header(true) << std::endl;
     if (config.ssl.isInsecure(::Xi::Http::SSLConfiguration::Usage::Server)) {
       logger(WARNING) << "\n" << CommonCLI::insecureServerWarning() << std::endl;
     }
@@ -292,7 +292,7 @@ int main(int argc, char* argv[]) {
     DaemonCommandsHandler dch(ccore, p2psrv, logManager, rpcServer.get());
     logger(INFO) << "Initializing p2p server...";
     if (!p2psrv.init(netNodeConfig)) {
-      logger(ERROR, BRIGHT_RED) << "Failed to initialize p2p server.";
+      logger(ERROR) << "Failed to initialize p2p server.";
       return 1;
     }
 
@@ -348,7 +348,7 @@ int main(int argc, char* argv[]) {
     ccore.save();
 
   } catch (const std::exception& e) {
-    logger(ERROR, BRIGHT_RED) << "Exception: " << e.what();
+    logger(ERROR) << "Exception: " << e.what();
     throw e;
   }
 
