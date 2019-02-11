@@ -30,7 +30,7 @@
 // clang-format off
 //                  (_Index, _Version, _Window,    _Zone)
 MakeRewardCheckpoint(     0,        1,      50,    20_kB)
-MakeRewardCheckpoint(     1,        5,      50,   128_kB)
+MakeRewardCheckpoint(     1,        5,       2,    64_kB)
 // clang-format on
 
 #define CURRENT_REWARD_CHECKPOINT_INDEX 1
