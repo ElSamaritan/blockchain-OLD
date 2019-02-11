@@ -34,7 +34,7 @@ class Currency {
   uint64_t publicAddressBase58Prefix() const { return m_publicAddressBase58Prefix; }
   uint32_t minedMoneyUnlockWindow() const { return m_minedMoneyUnlockWindow; }
 
-  size_t timestampCheckWindow(uint32_t blockHeight, uint8_t majorVersion) const;
+  uint32_t timestampCheckWindow(uint32_t blockHeight, uint8_t majorVersion) const;
   uint64_t blockFutureTimeLimit(uint32_t blockHeight, uint8_t majorVersion) const;
 
   uint64_t moneySupply() const { return m_moneySupply; }

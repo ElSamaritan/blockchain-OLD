@@ -32,7 +32,8 @@ Xi::Result<CryptoNote::TransactionValidationResult::EligibleIndex> CryptoNote::P
     const CryptoNote::CachedTransaction &transaction) const {
   if (m_pool.containsTransaction(transaction.getTransactionHash())) {
     return Xi::make_error(error::TransactionValidationError::EXISTS_IN_POOL);
-  } else if (transaction.getBlobSize() > transactionWeightLimit()) {
+  } else if (!currency().isFusionTransaction(transaction.getTransaction(), chain().getTopBlockIndex() + 1) &&
+             transaction.getBlobSize() > transactionWeightLimit()) {
     return Xi::make_error(error::TransactionValidationError::TOO_LARGE_FOR_REWARD_ZONE);
   } else {
     return this->TransactionValidator::doValidate(transaction);
