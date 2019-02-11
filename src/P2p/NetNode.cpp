@@ -1379,6 +1379,51 @@ void NodeServer::timeoutLoop() {
     logger(WARNING) << "Unknown exception in timeoutLoop";
   }
 }
+bool NodeServer::block_host(const uint32_t address_ip, std::chrono::seconds seconds) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  m_blocked_hosts[address_ip] = time(nullptr) + seconds.count();
+
+  // drop any connection to that IP
+  std::list<boost::uuids::uuid> conns;
+  forEachConnection([&](P2pConnectionContext& cntxt) {
+    if (cntxt.m_remote_ip == address_ip) {
+      conns.push_back(cntxt.m_connection_id);
+    }
+    return true;
+  });
+  for (const auto& c_id : conns) {
+    auto c = m_connections.find(c_id);
+    if (c != m_connections.end()) c->second.m_state = CryptoNoteConnectionContext::state_shutdown;
+  }
+
+  logger(INFO) << "Host " << Common::ipAddressToString(address_ip) << " blocked.";
+  return true;
+}
+
+bool NodeServer::unblock_host(const uint32_t address_ip) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  auto i = m_blocked_hosts.find(address_ip);
+  if (i == m_blocked_hosts.end()) return false;
+  m_blocked_hosts.erase(i);
+  logger(INFO) << "Host " << Common::ipAddressToString(address_ip) << " unblocked.";
+  return true;
+}
+
+bool NodeServer::add_host_fail(const uint32_t address_ip) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  uint64_t fails = ++m_host_fails_score[address_ip];
+  logger(DEBUGGING) << "Host " << Common::ipAddressToString(address_ip) << " fail score=" << fails;
+  if (fails > m_fails_before_block) {
+    auto it = m_host_fails_score.find(address_ip);
+    if (it == m_host_fails_score.end()) {
+      logger(DEBUGGING) << "Internal error (add_host_fail)" << fails;
+      return false;
+    }
+    it->second = m_fails_before_block / 2;
+    block_host(address_ip, m_block_time);
+  }
+  return true;
+}
 
 void NodeServer::timedSyncLoop() {
   try {

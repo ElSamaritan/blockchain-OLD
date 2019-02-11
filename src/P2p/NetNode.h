@@ -21,6 +21,7 @@
 #include <System/TcpConnection.h>
 #include <System/TcpListener.h>
 
+#include <Xi/Concurrent/RecursiveLock.h>
 #include <Xi/Config/NetworkType.h>
 
 #include "CryptoNoteCore/OnceInInterval.h"
@@ -264,5 +265,18 @@ class NodeServer : public IP2pEndpoint {
   std::list<PeerlistEntry> m_command_line_peers;
   uint64_t m_peer_livetime;
   boost::uuids::uuid m_network_id;
+
+  /* ----------------------------------------------- Node Blocking ------------------------------------------------- */
+ public:
+  bool block_host(const uint32_t address_ip, std::chrono::seconds seconds);
+  bool unblock_host(const uint32_t address_ip);
+  bool add_host_fail(const uint32_t address_ip);
+
+ private:
+  Xi::Concurrent::RecursiveLock m_block_access;
+  std::map<uint32_t, time_t> m_blocked_hosts;
+  std::map<uint32_t, uint64_t> m_host_fails_score;
+  uint64_t m_fails_before_block;
+  std::chrono::seconds m_block_time;
 };
 }  // namespace CryptoNote
