@@ -56,3 +56,15 @@ static_assert(minerRewardUnlockBlocksCount() > 0,
 }  // namespace Time
 }  // namespace Config
 }  // namespace Xi
+
+#include "Xi/Config/_Impl/BeginTime.h"
+
+// clang-format off
+//                (_Index, _Version, _PastWindow, _FutureLimit)
+MakeTimeCheckpoint(     0,        1,          50,         10_m)
+MakeTimeCheckpoint(     1,        5,          16,         10_m)
+// clang-format on
+
+#define CURRENT_TIME_CHECKPOINT_INDEX 1
+
+#include "Xi/Config/_Impl/EndTime.h"
