@@ -740,25 +740,12 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     }
   }
 
-  // This allows us to accept blocks with transaction mixins for the mined money unlock window
-  // that may be using older mixin rules on the network. This helps to clear out the transaction
-  // pool during a network soft fork that requires a mixin lower or upper bound change
-  uint32_t mixinChangeWindow = blockIndex;
-  if (mixinChangeWindow > Xi::Config::Time::minerRewardUnlockBlocksCount()) {
-    mixinChangeWindow = mixinChangeWindow - Xi::Config::Time::minerRewardUnlockBlocksCount();
-  }
-
   bool success;
   std::string error;
   std::tie(success, error) = Mixins::validate(transactions, blockIndex);
-
   if (!success) {
-    std::tie(success, error) = Mixins::validate(transactions, mixinChangeWindow);
-
-    if (!success) {
-      logger(Logging::DEBUGGING) << error;
-      return error::TransactionValidationError::INVALID_MIXIN;
-    }
+    logger(Logging::DEBUGGING) << error;
+    return error::TransactionValidationError::INVALID_MIXIN;
   }
 
   TransactionValidatorState validatorState;
@@ -1215,7 +1202,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
      https://github.com/loki-project/loki/pull/26 */
 
   /* How many blocks we look in the past to calculate the median timestamp */
-  uint32_t blockchain_timestamp_check_window = 11;
+  uint32_t blockchain_timestamp_check_window = m_currency.timestampCheckWindow(height, b.majorVersion);
 
   /* Skip the first N blocks, we don't have enough blocks to calculate a
      proper median yet */

@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -23,28 +23,62 @@
 
 #pragma once
 
-#include <Xi/Utils/Conversion.h>
+#ifndef CURRENT_TIME_CHECKPOINT_INDEX
+#pragma error "CURRENT_TIME_CHECKPOINT_INDEX must be defined."
+#endif
 
-#include "Xi/Config/_Impl/BeginReward.h"
+#include <cinttypes>
 
-/*!
- * \section Reward
- *
- * Index  : Chronological order of introduced checkpoints
- * Version: The block major version introducing the checkpoint
- * Window : Number of previous blocks for median size calculation, blocks with used to calculate penalities for larger
- *            blocks.
- * Zone   : Size in bytes until block penalties will be introduced. If a block is mined larger than the zone
- * size the base reward will be adjusted. Further the transaction pool won't accept transactions larger than the zone,
- *           except for fusion transactions.
- */
+#include "Xi/Config/Time.h"
 
-// clang-format off
-//                  (_Index, _Version, _Window,    _Zone)
-MakeRewardCheckpoint(     0,        1,      50,    20_kB)
-MakeRewardCheckpoint(     1,        5,     128,    64_kB)
-// clang-format on
+#undef MakeDifficultyCheckpoint
 
-#define CURRENT_REWARD_CHECKPOINT_INDEX 1
+namespace Xi {
+namespace Config {
+namespace Time {
 
-#include "Xi/Config/_Impl/EndReward.h"
+struct TimeCheckpointResolver {
+  template <uint8_t _Index>
+  static inline uint32_t pastWindowSize(uint8_t version);
+
+  template <uint8_t _Index>
+  static inline std::chrono::seconds futureTimeLimit(uint8_t version);
+};
+
+template <>
+inline uint32_t TimeCheckpointResolver::pastWindowSize<0>(uint8_t) {
+  return TimeCheckpoint<0>::pastWindowSize();
+}
+template <uint8_t _Index>
+inline uint32_t TimeCheckpointResolver::pastWindowSize(uint8_t version) {
+  if (version >= TimeCheckpoint<_Index>::version())
+    return TimeCheckpoint<_Index>::pastWindowSize();
+  else
+    return pastWindowSize<_Index - 1>(version);
+}
+
+template <>
+inline std::chrono::seconds TimeCheckpointResolver::futureTimeLimit<0>(uint8_t) {
+  return TimeCheckpoint<0>::futureTimeLimit();
+}
+template <uint8_t _Index>
+inline std::chrono::seconds TimeCheckpointResolver::futureTimeLimit(uint8_t version) {
+  if (version >= TimeCheckpoint<_Index>::version())
+    return TimeCheckpoint<_Index>::futureTimeLimit();
+  else
+    return futureTimeLimit<_Index - 1>(version);
+}
+
+inline uint32_t pastWindowSize(uint8_t version) {
+  return TimeCheckpointResolver::pastWindowSize<CURRENT_TIME_CHECKPOINT_INDEX>(version);
+}
+
+inline std::chrono::seconds futureTimeLimit(uint8_t version) {
+  return TimeCheckpointResolver::futureTimeLimit<CURRENT_TIME_CHECKPOINT_INDEX>(version);
+}
+
+}  // namespace Time
+}  // namespace Config
+}  // namespace Xi
+
+#undef CURRENT_TIME_CHECKPOINT_INDEX

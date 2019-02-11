@@ -45,12 +45,6 @@ struct DifficultyCheckpointResolver {
   static inline uint64_t initialValue(uint8_t version);
 
   template <uint8_t _Index>
-  static inline std::chrono::seconds timeLimit(uint8_t version);
-
-  template <uint8_t _Index>
-  static inline std::chrono::seconds maximumTimeLimit();
-
-  template <uint8_t _Index>
   static inline uint64_t nextDifficulty(uint8_t version, const std::vector<uint64_t> &timestamps,
                                         const std::vector<uint64_t> &cumulativeDifficulties);
 };
@@ -77,28 +71,6 @@ inline uint64_t DifficultyCheckpointResolver::initialValue(uint8_t version) {
     return DifficultyCheckpoint<_Index>::initialValue();
   else
     return initialValue<_Index - 1>(version);
-}
-
-template <>
-inline std::chrono::seconds DifficultyCheckpointResolver::timeLimit<0>(uint8_t) {
-  return DifficultyCheckpoint<0>::timeLimit();
-}
-template <uint8_t _Index>
-inline std::chrono::seconds DifficultyCheckpointResolver::timeLimit(uint8_t version) {
-  if (version >= DifficultyCheckpoint<_Index>::version())
-    return DifficultyCheckpoint<_Index>::timeLimit();
-  else
-    return timeLimit<_Index - 1>(version);
-}
-
-template <>
-inline std::chrono::seconds DifficultyCheckpointResolver::maximumTimeLimit<0>() {
-  return DifficultyCheckpoint<0>::timeLimit();
-}
-template <uint8_t _Index>
-inline std::chrono::seconds DifficultyCheckpointResolver::maximumTimeLimit() {
-  return std::chrono::seconds{DifficultyCheckpoint<_Index>::timeLimit().count(),
-                              maximumTimeLimit<_Index - 1>().count()};
 }
 
 template <>
@@ -133,14 +105,6 @@ inline uint32_t windowSize(uint8_t version) {
 
 inline uint64_t initialValue(uint8_t version) {
   return DifficultyCheckpointResolver::windowSize<CURRENT_DIFFICULTY_CHECKPOINT_INDEX>(version);
-}
-
-inline std::chrono::seconds timeLimit(uint8_t version) {
-  return DifficultyCheckpointResolver::timeLimit<CURRENT_DIFFICULTY_CHECKPOINT_INDEX>(version);
-}
-
-inline std::chrono::seconds maximumTimeLimit() {
-  return DifficultyCheckpointResolver::maximumTimeLimit<CURRENT_DIFFICULTY_CHECKPOINT_INDEX>();
 }
 
 inline uint64_t nextDifficulty(uint8_t version, const std::vector<uint64_t> &timestamps,

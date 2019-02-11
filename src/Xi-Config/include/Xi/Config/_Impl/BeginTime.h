@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -23,28 +23,33 @@
 
 #pragma once
 
-#include <Xi/Utils/Conversion.h>
+#include <vector>
+#include <cinttypes>
+#include <chrono>
 
-#include "Xi/Config/_Impl/BeginReward.h"
+#include "CryptoNoteCore/Difficulty.h"
+#include "Xi/Config/BlockVersion.h"
 
-/*!
- * \section Reward
- *
- * Index  : Chronological order of introduced checkpoints
- * Version: The block major version introducing the checkpoint
- * Window : Number of previous blocks for median size calculation, blocks with used to calculate penalities for larger
- *            blocks.
- * Zone   : Size in bytes until block penalties will be introduced. If a block is mined larger than the zone
- * size the base reward will be adjusted. Further the transaction pool won't accept transactions larger than the zone,
- *           except for fusion transactions.
- */
+namespace Xi {
+namespace Config {
+namespace Time {
+template <uint8_t _Index>
+struct TimeCheckpoint;
+}
+}  // namespace Config
+}  // namespace Xi
 
-// clang-format off
-//                  (_Index, _Version, _Window,    _Zone)
-MakeRewardCheckpoint(     0,        1,      50,    20_kB)
-MakeRewardCheckpoint(     1,        5,     128,    64_kB)
-// clang-format on
-
-#define CURRENT_REWARD_CHECKPOINT_INDEX 1
-
-#include "Xi/Config/_Impl/EndReward.h"
+#define MakeTimeCheckpoint(_Index, _Version, _PastWindow, _FutureLimit)                     \
+  namespace Xi {                                                                            \
+  namespace Config {                                                                        \
+  namespace Time {                                                                          \
+  template <>                                                                               \
+  struct TimeCheckpoint<_Index> {                                                           \
+    static inline constexpr uint8_t index() { return _Index; }                              \
+    static inline constexpr uint8_t version() { return _Version; }                          \
+    static inline constexpr uint32_t pastWindowSize() { return _PastWindow; }               \
+    static inline constexpr std::chrono::seconds futureTimeLimit() { return _FutureLimit; } \
+  };                                                                                        \
+  }                                                                                         \
+  }                                                                                         \
+  }

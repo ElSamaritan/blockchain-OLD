@@ -39,7 +39,7 @@ struct DifficultyCheckpoint;
 }  // namespace Config
 }  // namespace Xi
 
-#define MakeDifficultyCheckpoint(_Index, _Version, _Window, _Initial, _TimeLimit, _Algorithm)                    \
+#define MakeDifficultyCheckpoint(_Index, _Version, _Window, _Initial, _Algorithm)                                \
   namespace Xi {                                                                                                 \
   namespace Config {                                                                                             \
   namespace Difficulty {                                                                                         \
@@ -49,7 +49,6 @@ struct DifficultyCheckpoint;
     static inline constexpr uint8_t version() { return _Version; }                                               \
     static inline constexpr uint32_t windowSize() { return _Window; }                                            \
     static inline constexpr uint64_t initialValue() { return _Initial; }                                         \
-    static inline constexpr std::chrono::seconds timeLimit() { return _TimeLimit; }                              \
     using algorithm = _Algorithm;                                                                                \
     static_assert(::Xi::Config::BlockVersion::exists(_Version), "Non existing major block version referenced."); \
   };                                                                                                             \

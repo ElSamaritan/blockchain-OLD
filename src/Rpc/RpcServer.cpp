@@ -596,8 +596,9 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
   Crypto::Hash transactionHash = Crypto::cn_fast_hash(transactions.back().data(), transactions.back().size());
   logger(DEBUGGING) << "transaction " << transactionHash << " came in on_send_raw_tx";
 
-  if (m_core.transactionPool().pushTransaction(transactions.back()).isError()) {
-    logger(DEBUGGING) << "[on_send_raw_tx]: tx verification failed";
+  auto txPushResult = m_core.transactionPool().pushTransaction(transactions.back());
+  if (txPushResult.isError()) {
+    logger(DEBUGGING) << "[on_send_raw_tx]: tx verification failed (" << txPushResult.error().message() << ")";
     res.status = "Failed";
     return true;
   }

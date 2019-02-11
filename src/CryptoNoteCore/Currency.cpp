@@ -108,14 +108,14 @@ uint8_t Currency::maxTxVersion() const { return Xi::Config::Transaction::maximum
 
 uint8_t Currency::minTxVersion() const { return Xi::Config::Transaction::minimumVersion(); }
 
-size_t Currency::timestampCheckWindow(uint32_t blockHeight, uint8_t majorVersion) const {
+uint32_t Currency::timestampCheckWindow(uint32_t blockHeight, uint8_t majorVersion) const {
   XI_UNUSED(blockHeight);
-  return Xi::Config::Difficulty::windowSize(majorVersion);
+  return static_cast<uint32_t>(std::chrono::seconds{Xi::Config::Time::pastWindowSize(majorVersion)}.count());
 }
 
 uint64_t Currency::blockFutureTimeLimit(uint32_t blockHeight, uint8_t majorVersion) const {
   XI_UNUSED(blockHeight);
-  return static_cast<uint64_t>(std::chrono::seconds{Xi::Config::Difficulty::timeLimit(majorVersion)}.count());
+  return static_cast<uint64_t>(std::chrono::seconds{Xi::Config::Time::futureTimeLimit(majorVersion)}.count());
 }
 
 size_t Currency::rewardBlocksWindowByBlockVersion(uint8_t blockMajorVersion) const {
@@ -245,16 +245,16 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
     bool r = Crypto::generate_key_derivation(minerAddress.viewPublicKey, txkey.secretKey, derivation);
 
     if (!(r)) {
-      logger(ERROR) << "while creating outs: failed to generate_key_derivation("
-                                << minerAddress.viewPublicKey << ", " << txkey.secretKey << ")";
+      logger(ERROR) << "while creating outs: failed to generate_key_derivation(" << minerAddress.viewPublicKey << ", "
+                    << txkey.secretKey << ")";
       return false;
     }
 
     r = Crypto::derive_public_key(derivation, no, minerAddress.spendPublicKey, outEphemeralPubKey);
 
     if (!(r)) {
-      logger(ERROR) << "while creating outs: failed to derive_public_key(" << derivation << ", " << no
-                                << ", " << minerAddress.spendPublicKey << ")";
+      logger(ERROR) << "while creating outs: failed to derive_public_key(" << derivation << ", " << no << ", "
+                    << minerAddress.spendPublicKey << ")";
       return false;
     }
 
@@ -269,7 +269,7 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
 
   if (!(summaryAmounts == blockReward)) {
     logger(ERROR) << "Failed to construct miner tx, summaryAmounts = " << summaryAmounts
-                              << " not equal blockReward = " << blockReward;
+                  << " not equal blockReward = " << blockReward;
     return false;
   }
 
@@ -552,13 +552,13 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
   maxBlockBlobSize(Xi::Config::Limits::maximumBlockBlobSize());
   maxTxSize(Xi::Config::Limits::maximumTransactionSize());
   publicAddressBase58Prefix(Xi::Config::Coin::addressBas58Prefix());
-  minedMoneyUnlockWindow(Xi::Config::Time::minerRewardUnlockBlocksCount());
 
   moneySupply(Xi::Config::Coin::totalSupply());
   emissionSpeedFactor(Xi::Config::Coin::emissionSpeed());
   genesisBlockReward(Xi::Config::Coin::amountOfPremine());
 
   minerTxBlobReservedSize(Xi::Config::Limits::blockBlobCoinbaseReservedSize());
+  minedMoneyUnlockWindow(Xi::Config::Time::minerRewardUnlockBlocksCount());
 
   numberOfDecimalPlaces(Xi::Config::Coin::numberOfDecimalPoints());
 

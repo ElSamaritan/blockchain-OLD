@@ -1238,7 +1238,10 @@ uint64_t WalletGreen::getCurrentTimestampAdjusted() {
 
   /* Take the amount of time a block can potentially be in the past/future
    * Get the largest adjustment possible */
-  uint64_t adjust = std::chrono::seconds{Xi::Config::Difficulty::maximumTimeLimit()}.count();
+  int64_t adjust = std::chrono::seconds{Xi::Config::Time::futureTimeLimit(Xi::Config::BlockVersion::version(
+                                            static_cast<uint32_t>(m_node.getLastKnownBlockHeight())))}
+                       .count();
+  assert(adjust >= 0);
 
   /* Take the earliest timestamp that will include all possible blocks */
   return time - adjust;
