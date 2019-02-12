@@ -1543,6 +1543,7 @@ void NodeServer::connectionHandler(const boost::uuids::uuid& connectionId, P2pCo
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << ctx << "connectionHandler() inner context is interrupted";
     } catch (std::exception& e) {
+      report_failure(ctx.m_remote_ip, P2pPenalty::Exceptional);
       logger(DEBUGGING) << ctx << "Exception in connectionHandler: " << e.what();
     }
 
