@@ -288,7 +288,7 @@ class NodeServer : public IP2pEndpoint {
 
  private:
   mutable Xi::Concurrent::RecursiveLock m_block_access;
-  std::map<uint32_t, time_t> m_blocked_hosts;
+  std::map<uint32_t, int64_t> m_blocked_hosts;
   std::map<uint32_t, uint64_t> m_host_fails_score;
   uint64_t m_fails_before_block;
   std::chrono::seconds m_block_time;
