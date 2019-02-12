@@ -1433,7 +1433,7 @@ bool NodeServer::unblock_host(const uint32_t address_ip) {
 }
 
 bool NodeServer::add_host_fail(const uint32_t address_ip, P2pPenalty penalty) {
-  const auto penalityWeight = p2pPenalityWeight(penalty);
+  const auto penalityWeight = p2pPenaltyWeight(penalty);
   if (penalityWeight < 1) {
     return false;
   }

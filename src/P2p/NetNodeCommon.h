@@ -29,12 +29,19 @@ struct IP2pEndpoint {
                                         const net_connection_id* excludeConnection) = 0;
 
   /*!
-   * \brief report_failure
-   * \param ip
-   * \param penality
-   * \return
+   * \brief report_failure reports a failure, in a p2p command handling, for a given ip address
+   * \param ip The sender ip address causing the failure.
+   * \param penality The type of failure to compute the weighting of the failure.
+   * \return True if the peers ip was added to the ban list, oterwise false.
    */
   virtual bool report_failure(const uint32_t ip, P2pPenalty penalty) = 0;
+
+  /*!
+   * \brief report_success reports a success of a p2p command from a given ip address.
+   * \param ip The sender ip address.
+   *
+   * This command slowly decreases the penalty score.
+   */
   virtual void report_success(const uint32_t ip) = 0;
 };
 

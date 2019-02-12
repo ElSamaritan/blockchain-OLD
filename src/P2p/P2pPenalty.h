@@ -24,24 +24,33 @@
 #pragma once
 
 #include <cinttypes>
+#include <string>
 
 namespace CryptoNote {
+/*!
+ * \brief The P2pPenalty enum encodes a reason to apply penalties, the weighting is give by p2pPenaltyWeight.
+ */
 enum struct P2pPenalty {
-  None,
-  WrongNetworkId,
-  IncomeViolation,
-  DeprecatedP2pVersion,
-  HandshakeFailure,
-  InvalidResponse,
-  InvalidRequest,
-  BlockValidationFailure,
-  TransactionValidationFailure,
-  NoResponse,
-  Exceptional
+  None,                          ///< No panalty should be applied.
+  WrongNetworkId,                ///< The peer connected with a wrong network id.
+  IncomeViolation,               ///< The peer sent payload while receiving.
+  DeprecatedP2pVersion,          ///< The peers has an incompatible version.
+  HandshakeFailure,              ///< The handshake failed for various reasons.
+  InvalidResponse,               ///< The peer returned an invalid response. For more information view the log.
+  InvalidRequest,                ///< The peer sent an invalid request. For more information view the log.
+  BlockValidationFailure,        ///< The peer sent an invalid block.
+  TransactionValidationFailure,  ///< The peer sent an invalid transaction.
+  NoResponse,                    ///< The peer was expected to respond to a request but did not.
+  Exceptional,                   ///< The request of a peer lead to an exception.
 };
 
-inline uint64_t p2pPenalityWeight(P2pPenalty penality) {
-  switch (penality) {
+/*!
+ * \brief p2pPenaltyWeight applies the amount of penality to apply for a given failure.
+ * \param penality The failure the peer caused.
+ * \return An amount of penalty to apply to the penalty score.
+ */
+inline uint64_t p2pPenaltyWeight(P2pPenalty penalty) {
+  switch (penalty) {
     case P2pPenalty::WrongNetworkId:
       return 10;
     case P2pPenalty::IncomeViolation:
@@ -67,5 +76,39 @@ inline uint64_t p2pPenalityWeight(P2pPenalty penality) {
       return 0;
   }
   return 0;
+}
+
+/*!
+ * \brief p2pPeanaltyMessage turns a penalty encoding into a readable string
+ * \param penalty the penalty encoding to translate
+ * \return a readable representation of the penalty
+ */
+std::string p2pPeanaltyMessage(P2pPenalty penalty) {
+  switch (penalty) {
+    case P2pPenalty::WrongNetworkId:
+      return "wrong network identifier";
+    case P2pPenalty::IncomeViolation:
+      return "incoming payload violation";
+    case P2pPenalty::DeprecatedP2pVersion:
+      return "incompatible p2p protocol version";
+    case P2pPenalty::HandshakeFailure:
+      return "handshake failed";
+    case P2pPenalty::InvalidResponse:
+      return "returned invalid response";
+    case P2pPenalty::InvalidRequest:
+      return "sent invalid request";
+    case P2pPenalty::BlockValidationFailure:
+      return "sent invalid block";
+    case P2pPenalty::TransactionValidationFailure:
+      return "sent invalid transaction";
+    case P2pPenalty::NoResponse:
+      return "did not respond";
+    case P2pPenalty::Exceptional:
+      return "sent a command leading to an exception";
+
+    case P2pPenalty::None:
+      return "none";
+  }
+  return "unknwon";
 }
 }  // namespace CryptoNote
