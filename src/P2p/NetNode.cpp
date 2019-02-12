@@ -1424,6 +1424,10 @@ bool NodeServer::unblock_host(const uint32_t address_ip) {
   auto i = m_blocked_hosts.find(address_ip);
   if (i == m_blocked_hosts.end()) return false;
   m_blocked_hosts.erase(i);
+  auto penaltySearch = m_host_fails_score.find(address_ip);
+  if (penaltySearch != m_host_fails_score.end()) {
+    m_host_fails_score.erase(penaltySearch);
+  }
   logger(INFO) << "Host " << Common::ipAddressToString(address_ip) << " unblocked.";
   return true;
 }
@@ -1479,6 +1483,51 @@ bool NodeServer::evaluate_blocked_connection(const uint32_t address_ip) {
     unblock_host(address_ip);
     return false;
   }
+}
+
+std::map<uint32_t, time_t> NodeServer::blockedPeers() const {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  return m_blocked_hosts;
+}
+
+std::map<uint32_t, uint64_t> NodeServer::peerPenalties() const {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  return m_host_fails_score;
+}
+
+size_t NodeServer::banIps(const std::vector<uint32_t>& ips) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  size_t count = 0;
+  for (const auto& ip : ips) {
+    auto search = m_blocked_hosts.find(ip);
+    if (search == m_blocked_hosts.end()) {
+      count += 1;
+    }
+    block_host(ip, m_block_time);
+  }
+  return count;
+}
+
+size_t NodeServer::unbanIps(const std::vector<uint32_t>& ips) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  size_t count = 0;
+  for (const auto& ip : ips) {
+    auto search = m_blocked_hosts.find(ip);
+    if (search != m_blocked_hosts.end()) {
+      unblock_host(ip);
+      count += 1;
+    }
+  }
+  return count;
+}
+
+size_t NodeServer::unbanAllIps() {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  size_t count = m_blocked_hosts.size();
+  while (!m_blocked_hosts.empty()) {
+    unblock_host(m_blocked_hosts.begin()->first);
+  }
+  return count;
 }
 
 void NodeServer::timedSyncLoop() {

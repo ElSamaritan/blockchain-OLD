@@ -62,4 +62,14 @@ class DaemonCommandsHandler {
   bool start_mining(const std::vector<std::string>& args);
   bool stop_mining(const std::vector<std::string>& args);
   bool status(const std::vector<std::string>& args);
+
+  /* -------------------------------------------------- P2P Commands ----------------------------------------------- */
+  bool p2p_ban_list(const std::vector<std::string>& args);
+  bool p2p_penality_list(const std::vector<std::string>& args);
+  bool p2p_ban_ip(const std::vector<std::string>& args);
+  bool p2p_unban_ip(const std::vector<std::string>& args);
+  bool p2p_unban_all(const std::vector<std::string>& args);
+  /* -------------------------------------------------- P2P Commands ----------------------------------------------- */
+
+  std::vector<uint32_t> parseIps(const std::vector<std::string>& args);
 };

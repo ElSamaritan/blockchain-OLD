@@ -278,8 +278,16 @@ class NodeServer : public IP2pEndpoint {
   void add_host_success(const uint32_t address_ip);
   bool evaluate_blocked_connection(const uint32_t address_ip);
 
+ public:
+  std::map<uint32_t, time_t> blockedPeers() const;
+  std::map<uint32_t, uint64_t> peerPenalties() const;
+
+  size_t banIps(const std::vector<uint32_t>& ips);
+  size_t unbanIps(const std::vector<uint32_t>& ips);
+  size_t unbanAllIps();
+
  private:
-  Xi::Concurrent::RecursiveLock m_block_access;
+  mutable Xi::Concurrent::RecursiveLock m_block_access;
   std::map<uint32_t, time_t> m_blocked_hosts;
   std::map<uint32_t, uint64_t> m_host_fails_score;
   uint64_t m_fails_before_block;

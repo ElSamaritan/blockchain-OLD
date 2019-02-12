@@ -335,9 +335,26 @@ std::string ipAddressToString(uint32_t ip) {
   bytes[3] = (ip >> 24) & 0xFF;
 
   char buf[16];
-  sprintf(buf, "%d.%d.%d.%d", bytes[0], bytes[1], bytes[2], bytes[3]);
+  sprintf(buf, "%03d.%03d.%03d.%03d", bytes[0], bytes[1], bytes[2], bytes[3]);
 
   return std::string(buf);
+}
+
+bool parseIpAddress(uint32_t& ip, const std::string& addr) {
+  uint32_t v[4];
+
+  if (sscanf(addr.c_str(), "%d.%d.%d.%d", &v[0], &v[1], &v[2], &v[3]) != 4) {
+    return false;
+  }
+
+  for (int i = 0; i < 4; ++i) {
+    if (v[i] > 0xff) {
+      return false;
+    }
+  }
+
+  ip = (v[3] << 24) | (v[2] << 16) | (v[1] << 8) | v[0];
+  return true;
 }
 
 bool parseIpAddressAndPort(uint32_t& ip, uint32_t& port, const std::string& addr) {
