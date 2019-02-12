@@ -35,7 +35,7 @@
 #include "NetNodeConfig.h"
 #include "P2pProtocolDefinitions.h"
 #include "PeerListManager.h"
-#include "P2p/P2pPenality.h"
+#include "P2p/P2pPenalty.h"
 
 namespace System {
 class TcpConnection;
@@ -170,7 +170,7 @@ class NodeServer : public IP2pEndpoint {
   virtual void externalRelayNotifyToAll(int command, const BinaryArray& data_buff,
                                         const net_connection_id* excludeConnection) override;
 
-  virtual void report_failure(const uint32_t ip, P2pPenality penality) override;
+  virtual bool report_failure(const uint32_t ip, P2pPenalty penality) override;
   virtual void report_success(const uint32_t ip) override;
 
   //-----------------------------------------------------------------------------------------------
@@ -274,7 +274,7 @@ class NodeServer : public IP2pEndpoint {
  private:
   bool block_host(const uint32_t address_ip, std::chrono::seconds seconds);
   bool unblock_host(const uint32_t address_ip);
-  bool add_host_fail(const uint32_t address_ip, P2pPenality penality);
+  bool add_host_fail(const uint32_t address_ip, P2pPenalty penalty);
   void add_host_success(const uint32_t address_ip);
   bool evaluate_blocked_connection(const uint32_t address_ip);
 

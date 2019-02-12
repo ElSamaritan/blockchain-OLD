@@ -26,7 +26,7 @@
 #include <cinttypes>
 
 namespace CryptoNote {
-enum struct P2pPenality {
+enum struct P2pPenalty {
   None,
   WrongNetworkId,
   IncomeViolation,
@@ -34,27 +34,36 @@ enum struct P2pPenality {
   HandshakeFailure,
   InvalidResponse,
   InvalidRequest,
-  BlockValidationFailure
+  BlockValidationFailure,
+  TransactionValidationFailure,
+  NoResponse,
+  Exceptional
 };
 
-inline uint64_t p2pPenalityWeight(P2pPenality penality) {
+inline uint64_t p2pPenalityWeight(P2pPenalty penality) {
   switch (penality) {
-    case P2pPenality::WrongNetworkId:
+    case P2pPenalty::WrongNetworkId:
       return 10;
-    case P2pPenality::IncomeViolation:
+    case P2pPenalty::IncomeViolation:
       return 5;
-    case P2pPenality::DeprecatedP2pVersion:
+    case P2pPenalty::DeprecatedP2pVersion:
       return 2;
-    case P2pPenality::HandshakeFailure:
+    case P2pPenalty::HandshakeFailure:
       return 2;
-    case P2pPenality::InvalidResponse:
+    case P2pPenalty::InvalidResponse:
       return 4;
-    case P2pPenality::InvalidRequest:
+    case P2pPenalty::InvalidRequest:
       return 4;
-    case P2pPenality::BlockValidationFailure:
+    case P2pPenalty::BlockValidationFailure:
       return 5;
+    case P2pPenalty::TransactionValidationFailure:
+      return 5;
+    case P2pPenalty::NoResponse:
+      return 2;
+    case P2pPenalty::Exceptional:
+      return 4;
 
-    case P2pPenality::None:
+    case P2pPenalty::None:
       return 0;
   }
   return 0;

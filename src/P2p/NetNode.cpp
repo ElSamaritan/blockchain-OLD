@@ -347,8 +347,8 @@ void NodeServer::externalRelayNotifyToAll(int command, const BinaryArray& data_b
       [this, command, data_buff, excludeConnection] { relay_notify_to_all(command, data_buff, excludeConnection); });
 }
 
-void CryptoNote::NodeServer::report_failure(const uint32_t ip, CryptoNote::P2pPenality penality) {
-  add_host_fail(ip, penality);
+bool CryptoNote::NodeServer::report_failure(const uint32_t ip, CryptoNote::P2pPenalty penality) {
+  return add_host_fail(ip, penality);
 }
 void NodeServer::report_success(const uint32_t ip) { add_host_success(ip); }
 
@@ -591,7 +591,7 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
   context.version = rsp.node_data.version;
 
   if (rsp.node_data.network_id != m_network_id) {
-    add_host_fail(context.m_remote_ip, P2pPenality::WrongNetworkId);
+    add_host_fail(context.m_remote_ip, P2pPenalty::WrongNetworkId);
     logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, wrong network! (" << rsp.node_data.network_id
                                << "), closing connection.";
     return false;
@@ -1166,7 +1166,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   context.version = arg.node_data.version;
 
   if (arg.node_data.network_id != m_network_id) {
-    add_host_fail(context.m_remote_ip, P2pPenality::WrongNetworkId);
+    add_host_fail(context.m_remote_ip, P2pPenalty::WrongNetworkId);
     logger(Logging::DEBUGGING) << context << "WRONG NETWORK AGENT CONNECTED! id=" << arg.node_data.network_id;
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
@@ -1175,7 +1175,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   if (arg.node_data.version < Xi::Config::P2P::minimumVersion()) {
     logger(Logging::DEBUGGING) << context << "UNSUPPORTED NETWORK AGENT VERSION CONNECTED! version="
                                << std::to_string(arg.node_data.version);
-    add_host_fail(context.m_remote_ip, P2pPenality::DeprecatedP2pVersion);
+    add_host_fail(context.m_remote_ip, P2pPenalty::DeprecatedP2pVersion);
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
   } else if (arg.node_data.version > Xi::Config::P2P::currentVersion()) {
@@ -1185,7 +1185,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   }
 
   if (!context.m_is_income) {
-    add_host_fail(context.m_remote_ip, P2pPenality::IncomeViolation);
+    add_host_fail(context.m_remote_ip, P2pPenalty::IncomeViolation);
     logger(Logging::ERROR) << context << "COMMAND_HANDSHAKE came not from incoming connection";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
@@ -1200,7 +1200,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   }
 
   if (!m_payload_handler.process_payload_sync_data(arg.payload_data, context, true)) {
-    add_host_fail(context.m_remote_ip, P2pPenality::HandshakeFailure);
+    add_host_fail(context.m_remote_ip, P2pPenalty::HandshakeFailure);
     logger(Logging::ERROR)
         << context << "COMMAND_HANDSHAKE came, but process_payload_sync_data returned false, dropping connection.";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
@@ -1428,8 +1428,8 @@ bool NodeServer::unblock_host(const uint32_t address_ip) {
   return true;
 }
 
-bool NodeServer::add_host_fail(const uint32_t address_ip, P2pPenality penality) {
-  const auto penalityWeight = p2pPenalityWeight(penality);
+bool NodeServer::add_host_fail(const uint32_t address_ip, P2pPenalty penalty) {
+  const auto penalityWeight = p2pPenalityWeight(penalty);
   if (penalityWeight < 1) {
     return false;
   }
@@ -1450,8 +1450,9 @@ bool NodeServer::add_host_fail(const uint32_t address_ip, P2pPenality penality) 
     }
     it->second = m_fails_before_block / 2;
     block_host(address_ip, m_block_time);
+    return true;
   }
-  return true;
+  return false;
 }
 
 void NodeServer::add_host_success(const uint32_t address_ip) {
