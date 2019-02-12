@@ -83,7 +83,7 @@ inline uint64_t p2pPenaltyWeight(P2pPenalty penalty) {
  * \param penalty the penalty encoding to translate
  * \return a readable representation of the penalty
  */
-std::string p2pPeanaltyMessage(P2pPenalty penalty) {
+inline std::string p2pPeanaltyMessage(P2pPenalty penalty) {
   switch (penalty) {
     case P2pPenalty::WrongNetworkId:
       return "wrong network identifier";

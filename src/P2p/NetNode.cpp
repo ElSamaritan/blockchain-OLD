@@ -225,7 +225,7 @@ NodeServer::NodeServer(System::Dispatcher& dispatcher, Xi::Config::Network::Type
       m_peerlist_store_interval(60 * 30, false) {}
 
 void NodeServer::serialize(ISerializer& s) {
-  uint8_t version = 1;
+  uint8_t version = 2;
   s(version, "version");
 
   if (version != 1) {
@@ -234,6 +234,11 @@ void NodeServer::serialize(ISerializer& s) {
 
   s(m_peerlist, "peerlist");
   s(m_config.m_peer_id, "peer_id");
+
+  if (version > 1) {
+    ::CryptoNote::serialize(m_blocked_hosts, "blocked_hosts", s);
+    ::CryptoNote::serialize(m_host_fails_score, "host_fails_score", s);
+  }
 }
 
 #define INVOKE_HANDLER(CMD, Handler)                                                         \
@@ -1467,8 +1472,11 @@ void NodeServer::add_host_success(const uint32_t address_ip) {
   }
   if (search_block->second <= 1) {
     m_host_fails_score.erase(search_block);
+    logger(DEBUGGING) << "Host " << Common::ipAddressToString(address_ip) << " has no fail score anymore.";
   } else {
     m_host_fails_score[address_ip] -= 1;
+    logger(DEBUGGING) << "Host " << Common::ipAddressToString(address_ip)
+                      << " fail score=" << m_host_fails_score[address_ip];
   }
 }
 
