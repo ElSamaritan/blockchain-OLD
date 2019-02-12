@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <chrono>
 
 #include <Xi/Config/NetworkType.h>
 
@@ -36,6 +37,7 @@ class NetNodeConfig {
   std::vector<NetworkAddress> getSeedNodes() const;
   bool getHideMyPort() const;
   std::string getConfigFolder() const;
+  std::chrono::seconds getBlockDuration() const;
 
   void setP2pStateFilename(const std::string& filename);
   void setNetwork(Xi::Config::Network::Type network);
@@ -49,6 +51,7 @@ class NetNodeConfig {
   void setSeedNodes(const std::vector<NetworkAddress>& addresses);
   void setHideMyPort(bool hide);
   void setConfigFolder(const std::string& folder);
+  void setBlockDuration(std::chrono::seconds duration);
 
  private:
   std::string bindIp;
@@ -63,6 +66,7 @@ class NetNodeConfig {
   std::string configFolder;
   std::string p2pStateFilename;
   Xi::Config::Network::Type m_network;
+  std::chrono::seconds m_blockDuration;
 };
 
 }  // namespace CryptoNote

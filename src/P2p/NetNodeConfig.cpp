@@ -58,6 +58,7 @@ NetNodeConfig::NetNodeConfig() {
   hideMyPort = false;
   configFolder = Tools::getDefaultDataDirectory();
   m_network = Xi::Config::Network::defaultNetworkType();
+  m_blockDuration = std::chrono::hours{24};
 }
 
 bool NetNodeConfig::init(const std::string interface, const int port, const int external, const bool localIp,
@@ -133,6 +134,8 @@ bool NetNodeConfig::getHideMyPort() const { return hideMyPort; }
 
 std::string NetNodeConfig::getConfigFolder() const { return configFolder; }
 
+std::chrono::seconds NetNodeConfig::getBlockDuration() const { return m_blockDuration; }
+
 void NetNodeConfig::setP2pStateFilename(const std::string& filename) { p2pStateFilename = filename; }
 
 void NetNodeConfig::setBindIp(const std::string& ip) { bindIp = ip; }
@@ -154,5 +157,7 @@ void NetNodeConfig::setSeedNodes(const std::vector<NetworkAddress>& addresses) {
 void NetNodeConfig::setHideMyPort(bool hide) { hideMyPort = hide; }
 
 void NetNodeConfig::setConfigFolder(const std::string& folder) { configFolder = folder; }
+
+void NetNodeConfig::setBlockDuration(std::chrono::seconds duration) { m_blockDuration = duration; }
 
 }  // namespace CryptoNote

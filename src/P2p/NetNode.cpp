@@ -408,6 +408,7 @@ bool NodeServer::handleConfig(const NetNodeConfig& config) {
   m_port = std::to_string(config.getBindPort());
   m_external_port = config.getExternalPort();
   m_allow_local_ip = config.getAllowLocalIp();
+  m_block_time = config.getBlockDuration();
 
   auto peers = config.getPeers();
   std::copy(peers.begin(), peers.end(), std::back_inserter(m_command_line_peers));
