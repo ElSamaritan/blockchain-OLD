@@ -47,6 +47,7 @@ class DaemonCommandsHandler {
 
   bool exit(const std::vector<std::string>& args);
   bool help(const std::vector<std::string>& args);
+  bool version(const std::vector<std::string>& args);
   bool print_pl(const std::vector<std::string>& args);
   bool show_hr(const std::vector<std::string>& args);
   bool hide_hr(const std::vector<std::string>& args);

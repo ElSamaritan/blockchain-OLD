@@ -8,8 +8,9 @@
 
 #include <ctime>
 
-#include <Xi/Version/Version.h>
 #include <Xi/Global.h>
+#include <Xi/Version/Version.h>
+#include <CommonCLI/CommonCLI.h>
 
 #include "P2p/NetNode.h"
 #include "CryptoNoteCore/Core.h"
@@ -54,6 +55,8 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
     : m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log), m_prpc_server(prpc_server) {
   m_consoleHandler.setHandler("exit", boost::bind(&DaemonCommandsHandler::exit, this, _1), "Shutdown the daemon");
   m_consoleHandler.setHandler("help", boost::bind(&DaemonCommandsHandler::help, this, _1), "Show this help");
+  m_consoleHandler.setHandler("version", boost::bind(&DaemonCommandsHandler::version, this, _1),
+                              "Shows version information about the running daemon");
   m_consoleHandler.setHandler("print_pl", boost::bind(&DaemonCommandsHandler::print_pl, this, _1), "Print peer list");
   m_consoleHandler.setHandler("print_cn", boost::bind(&DaemonCommandsHandler::print_cn, this, _1), "Print connections");
   m_consoleHandler.setHandler("print_bc", boost::bind(&DaemonCommandsHandler::print_bc, this, _1),
@@ -95,6 +98,12 @@ bool DaemonCommandsHandler::exit(const std::vector<std::string>& args) {
 bool DaemonCommandsHandler::help(const std::vector<std::string>& args) {
   XI_UNUSED(args);
   std::cout << get_commands_str() << ENDL;
+  return true;
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::version(const std::vector<std::string>& args) {
+  XI_UNUSED(args);
+  std::cout << CommonCLI::verboseVersionInformation() << ENDL;
   return true;
 }
 //--------------------------------------------------------------------------------
