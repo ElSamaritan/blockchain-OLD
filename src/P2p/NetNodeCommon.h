@@ -9,6 +9,7 @@
 
 #include "CryptoNoteCore/CryptoNote.h"
 #include "P2pProtocolTypes.h"
+#include "P2p/P2pPenality.h"
 
 namespace CryptoNote {
 
@@ -26,6 +27,9 @@ struct IP2pEndpoint {
   // can be called from external threads
   virtual void externalRelayNotifyToAll(int command, const BinaryArray& data_buff,
                                         const net_connection_id* excludeConnection) = 0;
+
+  virtual void report_failure(const uint32_t ip, P2pPenality penality) = 0;
+  virtual void report_success(const uint32_t ip) = 0;
 };
 
 struct p2p_endpoint_stub : public IP2pEndpoint {
@@ -47,5 +51,8 @@ struct p2p_endpoint_stub : public IP2pEndpoint {
                                         const net_connection_id* excludeConnection) override {
     XI_UNUSED(command, data_buff, excludeConnection);
   }
+
+  virtual void report_failure(const uint32_t ip, P2pPenality penality) override { XI_UNUSED(ip, penality); }
+  virtual void report_success(const uint32_t ip) override { XI_UNUSED(ip); }
 };
 }  // namespace CryptoNote

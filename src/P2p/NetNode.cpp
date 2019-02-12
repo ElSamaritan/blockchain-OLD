@@ -347,6 +347,11 @@ void NodeServer::externalRelayNotifyToAll(int command, const BinaryArray& data_b
       [this, command, data_buff, excludeConnection] { relay_notify_to_all(command, data_buff, excludeConnection); });
 }
 
+void CryptoNote::NodeServer::report_failure(const uint32_t ip, CryptoNote::P2pPenality penality) {
+  add_host_fail(ip, penality);
+}
+void NodeServer::report_success(const uint32_t ip) { add_host_success(ip); }
+
 //-----------------------------------------------------------------------------------
 bool NodeServer::make_default_config() {
   m_config.m_peer_id = Crypto::rand<uint64_t>();
@@ -586,6 +591,7 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
   context.version = rsp.node_data.version;
 
   if (rsp.node_data.network_id != m_network_id) {
+    add_host_fail(context.m_remote_ip, P2pPenality::WrongNetworkId);
     logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, wrong network! (" << rsp.node_data.network_id
                                << "), closing connection.";
     return false;
@@ -1160,6 +1166,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   context.version = arg.node_data.version;
 
   if (arg.node_data.network_id != m_network_id) {
+    add_host_fail(context.m_remote_ip, P2pPenality::WrongNetworkId);
     logger(Logging::DEBUGGING) << context << "WRONG NETWORK AGENT CONNECTED! id=" << arg.node_data.network_id;
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
@@ -1168,6 +1175,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   if (arg.node_data.version < Xi::Config::P2P::minimumVersion()) {
     logger(Logging::DEBUGGING) << context << "UNSUPPORTED NETWORK AGENT VERSION CONNECTED! version="
                                << std::to_string(arg.node_data.version);
+    add_host_fail(context.m_remote_ip, P2pPenality::DeprecatedP2pVersion);
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
   } else if (arg.node_data.version > Xi::Config::P2P::currentVersion()) {
@@ -1177,6 +1185,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   }
 
   if (!context.m_is_income) {
+    add_host_fail(context.m_remote_ip, P2pPenality::IncomeViolation);
     logger(Logging::ERROR) << context << "COMMAND_HANDSHAKE came not from incoming connection";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
@@ -1191,6 +1200,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   }
 
   if (!m_payload_handler.process_payload_sync_data(arg.payload_data, context, true)) {
+    add_host_fail(context.m_remote_ip, P2pPenality::HandshakeFailure);
     logger(Logging::ERROR)
         << context << "COMMAND_HANDSHAKE came, but process_payload_sync_data returned false, dropping connection.";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
@@ -1268,6 +1278,15 @@ std::string NodeServer::print_connections_container() {
 
 void NodeServer::on_connection_new(P2pConnectionContext& context) {
   logger(TRACE) << context << "NEW CONNECTION";
+  {
+    XI_CONCURRENT_RLOCK(m_block_access);
+
+    if (evaluate_blocked_connection(context.m_remote_ip)) {
+      logger(TRACE) << context << "BLOCKED";
+      context.m_state = CryptoNoteConnectionContext::state_shutdown;
+      return;
+    }
+  }
   m_payload_handler.onConnectionOpened(context);
 }
 //-----------------------------------------------------------------------------------
@@ -1409,20 +1428,56 @@ bool NodeServer::unblock_host(const uint32_t address_ip) {
   return true;
 }
 
-bool NodeServer::add_host_fail(const uint32_t address_ip) {
+bool NodeServer::add_host_fail(const uint32_t address_ip, P2pPenality penality) {
+  const auto penalityWeight = p2pPenalityWeight(penality);
+  if (penalityWeight < 1) {
+    return false;
+  }
+
   XI_CONCURRENT_RLOCK(m_block_access);
-  uint64_t fails = ++m_host_fails_score[address_ip];
-  logger(DEBUGGING) << "Host " << Common::ipAddressToString(address_ip) << " fail score=" << fails;
-  if (fails > m_fails_before_block) {
+  if (m_host_fails_score.find(address_ip) == m_host_fails_score.end()) {
+    m_host_fails_score[address_ip] = penalityWeight;
+  } else {
+    m_host_fails_score[address_ip] += penalityWeight;
+  }
+  uint64_t failScore = m_host_fails_score[address_ip];
+  logger(DEBUGGING) << "Host " << Common::ipAddressToString(address_ip) << " fail score=" << failScore;
+  if (failScore > m_fails_before_block) {
     auto it = m_host_fails_score.find(address_ip);
     if (it == m_host_fails_score.end()) {
-      logger(DEBUGGING) << "Internal error (add_host_fail)" << fails;
+      logger(DEBUGGING) << "Internal error (add_host_fail)" << failScore;
       return false;
     }
     it->second = m_fails_before_block / 2;
     block_host(address_ip, m_block_time);
   }
   return true;
+}
+
+void NodeServer::add_host_success(const uint32_t address_ip) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  auto search_block = m_host_fails_score.find(address_ip);
+  if (search_block == m_host_fails_score.end()) {
+    return;
+  }
+  if (search_block->second <= 1) {
+    m_host_fails_score.erase(search_block);
+  } else {
+    m_host_fails_score[address_ip] -= 1;
+  }
+}
+
+bool NodeServer::evaluate_blocked_connection(const uint32_t address_ip) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  auto search = m_blocked_hosts.find(address_ip);
+  if (search == m_blocked_hosts.end()) {
+    return false;
+  } else if (search->second > time(nullptr)) {
+    return true;
+  } else {
+    unblock_host(address_ip);
+    return false;
+  }
 }
 
 void NodeServer::timedSyncLoop() {
@@ -1452,7 +1507,9 @@ void NodeServer::connectionHandler(const boost::uuids::uuid& connectionId, P2pCo
       LevinProtocol::Command cmd;
 
       for (;;) {
-        if (ctx.m_state == CryptoNoteConnectionContext::state_sync_required) {
+        if (ctx.m_state == CryptoNoteConnectionContext::state_shutdown) {
+          break;
+        } else if (ctx.m_state == CryptoNoteConnectionContext::state_sync_required) {
           ctx.m_state = CryptoNoteConnectionContext::state_synchronizing;
           m_payload_handler.start_sync(ctx);
         } else if (ctx.m_state == CryptoNoteConnectionContext::state_pool_sync_required) {
