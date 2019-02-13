@@ -43,6 +43,13 @@ struct IP2pEndpoint {
    * This command slowly decreases the penalty score.
    */
   virtual void report_success(const uint32_t ip) = 0;
+
+  /*!
+   * \brief is_ip_address_blocked Returns true if the given ip address is blocked.
+   * \param ip The ip address to check.
+   * \return True if the address is blocked, otherwise false.
+   */
+  virtual bool is_ip_address_blocked(const uint32_t ip) = 0;
 };
 
 struct p2p_endpoint_stub : public IP2pEndpoint {
@@ -70,5 +77,10 @@ struct p2p_endpoint_stub : public IP2pEndpoint {
     return false;
   }
   virtual void report_success(const uint32_t ip) override { XI_UNUSED(ip); }
+
+  virtual bool is_ip_address_blocked(const uint32_t ip) override {
+    XI_UNUSED(ip);
+    return false;
+  }
 };
 }  // namespace CryptoNote

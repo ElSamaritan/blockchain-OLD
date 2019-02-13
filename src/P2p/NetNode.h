@@ -172,6 +172,7 @@ class NodeServer : public IP2pEndpoint {
 
   virtual bool report_failure(const uint32_t ip, P2pPenalty penality) override;
   virtual void report_success(const uint32_t ip) override;
+  virtual bool is_ip_address_blocked(const uint32_t ip) override;
 
   //-----------------------------------------------------------------------------------------------
   bool handle_command_line(const boost::program_options::variables_map& vm);

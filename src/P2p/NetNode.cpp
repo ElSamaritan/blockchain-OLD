@@ -407,6 +407,8 @@ bool CryptoNote::NodeServer::report_failure(const uint32_t ip, CryptoNote::P2pPe
 }
 void NodeServer::report_success(const uint32_t ip) { add_host_success(ip); }
 
+bool NodeServer::is_ip_address_blocked(const uint32_t ip) { return evaluate_blocked_connection(ip); }
+
 //-----------------------------------------------------------------------------------
 bool NodeServer::make_default_config() {
   m_config.m_peer_id = Crypto::rand<uint64_t>();
@@ -781,6 +783,11 @@ bool NodeServer::is_addr_connected(const NetworkAddress& peer) {
 
 bool NodeServer::try_to_connect_and_handshake_with_new_peer(const NetworkAddress& na, bool just_take_peerlist,
                                                             uint64_t last_seen_stamp, bool white) {
+  if (is_ip_address_blocked(na.ip)) {
+    logger(DEBUGGING) << "Peer is blocked: " << na;
+    return false;
+  }
+
   logger(DEBUGGING) << "Connecting to " << na << " (white=" << white << ", last_seen: "
                     << (last_seen_stamp ? Common::timeIntervalToString(time(NULL) - last_seen_stamp) : "never")
                     << ")...";
@@ -1344,19 +1351,7 @@ std::string NodeServer::print_connections_container() {
 }
 //-----------------------------------------------------------------------------------
 
-void NodeServer::on_connection_new(P2pConnectionContext& context) {
-  logger(TRACE) << context << "NEW CONNECTION";
-  {
-    XI_CONCURRENT_RLOCK(m_block_access);
-
-    if (evaluate_blocked_connection(context.m_remote_ip)) {
-      logger(TRACE) << context << "BLOCKED";
-      context.m_state = CryptoNoteConnectionContext::state_shutdown;
-      return;
-    }
-  }
-  m_payload_handler.onConnectionOpened(context);
-}
+void NodeServer::on_connection_new(P2pConnectionContext& context) { m_payload_handler.onConnectionOpened(context); }
 //-----------------------------------------------------------------------------------
 
 void NodeServer::on_connection_close(P2pConnectionContext& context) {
@@ -1628,10 +1623,13 @@ void NodeServer::connectionHandler(const boost::uuids::uuid& connectionId, P2pCo
       LevinProtocol proto(ctx.connection);
       LevinProtocol::Command cmd;
 
-      for (;;) {
-        if (ctx.m_state == CryptoNoteConnectionContext::state_shutdown) {
-          break;
-        } else if (ctx.m_state == CryptoNoteConnectionContext::state_sync_required) {
+      if (is_ip_address_blocked(ctx.m_remote_ip)) {
+        ctx.m_state = CryptoNoteConnectionContext::state_shutdown;
+        logger(DEBUGGING) << ctx << " tried to connect but is still blocked.";
+      }
+
+      while (ctx.m_state != CryptoNoteConnectionContext::state_shutdown) {
+        if (ctx.m_state == CryptoNoteConnectionContext::state_sync_required) {
           ctx.m_state = CryptoNoteConnectionContext::state_synchronizing;
           m_payload_handler.start_sync(ctx);
         } else if (ctx.m_state == CryptoNoteConnectionContext::state_pool_sync_required) {
@@ -1657,8 +1655,9 @@ void NodeServer::connectionHandler(const boost::uuids::uuid& connectionId, P2pCo
           ctx.pushMessage(P2pMessage(P2pMessage::REPLY, cmd.command, std::move(response), retcode));
         }
 
-        if (ctx.m_state == CryptoNoteConnectionContext::state_shutdown) {
-          break;
+        if (is_ip_address_blocked(ctx.m_remote_ip)) {
+          ctx.m_state = CryptoNoteConnectionContext::state_shutdown;
+          logger(DEBUGGING) << ctx << " was blocked while handling the connection, dropping connection.";
         }
       }
     } catch (System::InterruptedException&) {
