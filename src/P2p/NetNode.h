@@ -21,6 +21,7 @@
 #include <System/TcpConnection.h>
 #include <System/TcpListener.h>
 
+#include <Xi/Concurrent/RecursiveLock.h>
 #include <Xi/Config/NetworkType.h>
 
 #include "CryptoNoteCore/OnceInInterval.h"
@@ -34,6 +35,7 @@
 #include "NetNodeConfig.h"
 #include "P2pProtocolDefinitions.h"
 #include "PeerListManager.h"
+#include "P2p/P2pPenalty.h"
 
 namespace System {
 class TcpConnection;
@@ -168,6 +170,10 @@ class NodeServer : public IP2pEndpoint {
   virtual void externalRelayNotifyToAll(int command, const BinaryArray& data_buff,
                                         const net_connection_id* excludeConnection) override;
 
+  virtual bool report_failure(const uint32_t ip, P2pPenalty penality) override;
+  virtual void report_success(const uint32_t ip) override;
+  virtual bool is_ip_address_blocked(const uint32_t ip) override;
+
   //-----------------------------------------------------------------------------------------------
   bool handle_command_line(const boost::program_options::variables_map& vm);
   bool handleConfig(const NetNodeConfig& config);
@@ -264,5 +270,95 @@ class NodeServer : public IP2pEndpoint {
   std::list<PeerlistEntry> m_command_line_peers;
   uint64_t m_peer_livetime;
   boost::uuids::uuid m_network_id;
+
+  /* ----------------------------------------------- Node Blocking ------------------------------------------------- */
+ private:
+  /*!
+   * \brief block_host Blocks an ip address for a given timespan
+   * \param address_ip The address to block
+   * \param seconds The timespan to reject any connection from now
+   * \return True if succeeded, otherwise false.
+   *
+   * The ip gets added to the blocked hosts list and can only connect after the timespan, from now, has passed. Further
+   * all connection to peers from the same ip get closed.
+   */
+  bool block_host(const uint32_t address_ip, std::chrono::seconds seconds);
+
+  /*!
+   * \brief unblock_host Removes an ip from the blocked list and resets the penalty score.
+   * \param address_ip The address to unblock.
+   * \return True if the host was successfully unblocked.
+   */
+  bool unblock_host(const uint32_t address_ip);
+
+  /*!
+   * \brief add_host_fail Adds a host failure and updates its penalty score, conditionally bans it.
+   * \param address_ip The address causing the failure.
+   * \param penalty The type of failure caused.
+   * \return True if the penalty was applied successfully.
+   */
+  bool add_host_fail(const uint32_t address_ip, P2pPenalty penalty);
+
+  /*!
+   * \brief add_host_success Reduces the penalty score for an ip address by one.
+   * \param address_ip The peers ip addres.
+   */
+  void add_host_success(const uint32_t address_ip);
+
+  /*!
+   * \brief evaluate_blocked_connection Reevalutes the block status of a given ip address.
+   * \param address_ip The connecting peers ip address
+   * \return True if the connection should be blocked otherwise false
+   */
+  bool evaluate_blocked_connection(const uint32_t address_ip);
+
+ public:
+  /*!
+   * \brief blockedPeers Returns a summary of all currently blocked peers.
+   *
+   * \note blocked peers are only reevaluated if they connect again. This list may contain peers which could connect
+   * because their block timespan already passed.
+   */
+  std::map<uint32_t, int64_t> blockedPeers() const;
+
+  /*!
+   * \brief peerPenalties Returns a summary of the penalties score for each peer that has at least a score of one.
+   */
+  std::map<uint32_t, uint64_t> peerPenalties() const;
+
+  /*!
+   * \brief banIps Adds ip addresses to the block list or renew them if already present.
+   * \param ips Ip addresses to block.
+   * \return The count of newly blocked ip addresses, others are renewed.
+   */
+  size_t banIps(const std::vector<uint32_t>& ips);
+
+  /*!
+   * \brief unbanIps Removes all ip addresses from the block list and resets their penalty score.
+   * \param ips Ip addresses to unban.
+   * \return The count of successfully removed ip addresses.
+   */
+  size_t unbanIps(const std::vector<uint32_t>& ips);
+
+  /*!
+   * \brief unbanAllIps Removes all blocked peers and resets their penalty score.
+   * \return The count of successfully removed peers.
+   */
+  size_t unbanAllIps();
+
+  /*!
+   * \brief resetPenalties Deletes all penalties assigned to peers.
+   * \return The count of removed peer penalties.
+   *
+   * \attention This will not unban any peer.
+   */
+  size_t resetPenalties();
+
+ private:
+  mutable Xi::Concurrent::RecursiveLock m_block_access;
+  std::map<uint32_t, int64_t> m_blocked_hosts;
+  std::map<uint32_t, uint64_t> m_host_fails_score;
+  uint64_t m_fails_before_block;
+  std::chrono::seconds m_block_time;
 };
 }  // namespace CryptoNote

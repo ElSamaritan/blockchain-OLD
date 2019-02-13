@@ -646,6 +646,29 @@ struct F_COMMAND_RPC_GET_POOL {
     }
   };
 };
+
+struct F_P2P_BAN_INFO {
+  std::string ip_address;
+  uint64_t penalty_score;
+  int64_t ban_timestamp;
+
+  void serialize(ISerializer &s) {
+    KV_MEMBER(ip_address);
+    KV_MEMBER(penalty_score);
+    KV_MEMBER(ban_timestamp);
+  }
+};
+
+struct F_COMMAND_RPC_GET_P2P_BAN_INFO {
+  typedef EMPTY_STRUCT request;
+
+  struct response {
+    std::vector<F_P2P_BAN_INFO> peers_ban_info;
+
+    void serialize(ISerializer &s) { KV_MEMBER(peers_ban_info); }
+  };
+};
+
 struct COMMAND_RPC_QUERY_BLOCKS {
   struct request {
     std::vector<Crypto::Hash> block_ids;  //*first 10 blocks id goes sequential, next goes in pow(2,n) offset, like 2,

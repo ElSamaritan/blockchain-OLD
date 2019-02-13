@@ -26,6 +26,7 @@
 #include <string>
 #include <utility>
 #include <cinttypes>
+#include <ctime>
 #include <type_traits>
 #include <sstream>
 
@@ -110,5 +111,7 @@ FOWARD_TO_STRING_TO_STD(double)
 FOWARD_TO_STRING_TO_STD(long double)
 
 #undef FOWARD_TO_STRING_TO_STD
+
+std::string to_string(time_t timestamp);
 
 }  // namespace Xi

@@ -562,6 +562,10 @@ void Core::getTransactions(const std::vector<Crypto::Hash>& transactionHashes, s
   IBlockchainCache* segment = chainsLeaves[0];
   assert(segment != nullptr);
 
+  if (transactions.size() < transactionHashes.size()) {
+    transactions.reserve(transactionHashes.size());
+  }
+
   std::vector<Crypto::Hash> leftTransactions = transactionHashes;
 
   // find in main chain
@@ -594,7 +598,14 @@ void Core::getTransactions(const std::vector<Crypto::Hash>& transactionHashes, s
     return;
   }
 
-  missedHashes.insert(missedHashes.end(), leftTransactions.begin(), leftTransactions.end());
+  for (const auto& hash : leftTransactions) {
+    auto poolQuery = transactionPool().queryTransaction(hash);
+    if (poolQuery.get() != nullptr) {
+      transactions.emplace_back(poolQuery->transaction().getTransactionBinaryArray());
+    } else {
+      missedHashes.emplace_back(hash);
+    }
+  }
 }
 
 uint64_t Core::getBlockDifficulty(uint32_t blockIndex) const {

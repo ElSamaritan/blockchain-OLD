@@ -222,18 +222,73 @@ NodeServer::NodeServer(System::Dispatcher& dispatcher, Xi::Config::Network::Type
       // intervals
       // m_peer_handshake_idle_maker_interval(CryptoNote::P2P_DEFAULT_HANDSHAKE_INTERVAL),
       m_connections_maker_interval(1),
-      m_peerlist_store_interval(60 * 30, false) {}
+      m_peerlist_store_interval(60 * 30, false),
+      m_fails_before_block{20} {}
 
 void NodeServer::serialize(ISerializer& s) {
-  uint8_t version = 1;
+  uint8_t version = 2;
   s(version, "version");
 
-  if (version != 1) {
+  if (version < 1 || version > 2) {
     throw std::runtime_error("Unsupported version");
   }
 
   s(m_peerlist, "peerlist");
   s(m_config.m_peer_id, "peer_id");
+
+  if (version > 1) {
+    const auto currentTimestamp = time(nullptr);
+
+    uint64_t blockedCount = m_blocked_hosts.size();
+    s(blockedCount, "blocked_hosts_count");
+    if (s.type() == ISerializer::INPUT) {
+      for (uint64_t i = 0; i < blockedCount; ++i) {
+        uint32_t ip;
+        int64_t timestamp;
+
+        s(ip, "");
+        s(timestamp, "");
+
+        if (timestamp > currentTimestamp) {
+          m_blocked_hosts[ip] = timestamp;
+          logger(Logging::TRACE) << "Imported blocked host: " << Common::ipAddressToString(ip);
+        }
+      }
+    } else {
+      for (const auto& blocked_host : m_blocked_hosts) {
+        uint32_t ip = blocked_host.first;
+        int64_t timestamp = blocked_host.second;
+        s(ip, "");
+        s(timestamp, "");
+      }
+    }
+
+    uint64_t failsScoreCount = m_host_fails_score.size();
+    s(failsScoreCount, "host_fails_score_count");
+    if (s.type() == ISerializer::INPUT) {
+      for (uint64_t i = 0; i < failsScoreCount; ++i) {
+        uint32_t ip;
+        uint64_t score;
+
+        s(ip, "");
+        s(score, "");
+
+        if (score > 2) {
+          m_host_fails_score[ip] = score - 2;
+          logger(Logging::TRACE) << "Imported host fails score: " << Common::ipAddressToString(ip)
+                                 << ", score=" << score - 2;
+        }
+      }
+    } else {
+      for (auto& host_fails_score : m_host_fails_score) {
+        uint32_t ip = host_fails_score.first;
+        uint64_t score = host_fails_score.second;
+
+        s(ip, "");
+        s(score, "");
+      }
+    }
+  }
 }
 
 #define INVOKE_HANDLER(CMD, Handler)                                                         \
@@ -347,6 +402,13 @@ void NodeServer::externalRelayNotifyToAll(int command, const BinaryArray& data_b
       [this, command, data_buff, excludeConnection] { relay_notify_to_all(command, data_buff, excludeConnection); });
 }
 
+bool CryptoNote::NodeServer::report_failure(const uint32_t ip, CryptoNote::P2pPenalty penality) {
+  return add_host_fail(ip, penality);
+}
+void NodeServer::report_success(const uint32_t ip) { add_host_success(ip); }
+
+bool NodeServer::is_ip_address_blocked(const uint32_t ip) { return evaluate_blocked_connection(ip); }
+
 //-----------------------------------------------------------------------------------
 bool NodeServer::make_default_config() {
   m_config.m_peer_id = Crypto::rand<uint64_t>();
@@ -398,6 +460,7 @@ bool NodeServer::handleConfig(const NetNodeConfig& config) {
   m_port = std::to_string(config.getBindPort());
   m_external_port = config.getExternalPort();
   m_allow_local_ip = config.getAllowLocalIp();
+  m_block_time = config.getBlockDuration();
 
   auto peers = config.getPeers();
   std::copy(peers.begin(), peers.end(), std::back_inserter(m_command_line_peers));
@@ -530,7 +593,7 @@ bool NodeServer::deinit() { return store_config(); }
 bool NodeServer::store_config() {
   try {
     if (!Tools::create_directories_if_necessary(m_config_folder)) {
-      logger(INFO) << "Failed to create data directory: " << m_config_folder;
+      logger(FATAL) << "Failed to create data directory: " << m_config_folder;
       return false;
     }
 
@@ -538,7 +601,7 @@ bool NodeServer::store_config() {
     std::ofstream p2p_data;
     p2p_data.open(state_file_path, std::ios_base::binary | std::ios_base::out | std::ios::trunc);
     if (p2p_data.fail()) {
-      logger(INFO) << "Failed to save config to file " << state_file_path;
+      logger(FATAL) << "Failed to save config to file " << state_file_path;
       return false;
     };
 
@@ -547,7 +610,7 @@ bool NodeServer::store_config() {
     CryptoNote::serialize(*this, a);
     return true;
   } catch (const std::exception& e) {
-    logger(WARNING) << "store_config failed: " << e.what();
+    logger(FATAL) << "store_config failed: " << e.what();
   }
 
   return false;
@@ -580,12 +643,14 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
         << context
         << "A daemon on the network has departed. MSG: Failed to invoke COMMAND_HANDSHAKE, closing connection. ERR: "
         << handshakeResult.error().message();
+    report_failure(context.m_remote_ip, P2pPenalty::ConnectionRefuse);
     return false;
   }
 
   context.version = rsp.node_data.version;
 
   if (rsp.node_data.network_id != m_network_id) {
+    report_failure(context.m_remote_ip, P2pPenalty::WrongNetworkId);
     logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, wrong network! (" << rsp.node_data.network_id
                                << "), closing connection.";
     return false;
@@ -594,6 +659,7 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
   if (rsp.node_data.version < Xi::Config::P2P::minimumVersion()) {
     logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! ("
                                << std::to_string(rsp.node_data.version) << "), closing connection.";
+    report_failure(context.m_remote_ip, P2pPenalty::DeprecatedVersion);
     return false;
   } else if ((rsp.node_data.version - Xi::Config::P2P::currentVersion()) >=
              Xi::Config::P2P::upgradeNotificationWindow()) {
@@ -604,6 +670,7 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
   if (!handle_remote_peerlist(rsp.local_peerlist, rsp.node_data.local_time, context)) {
     logger(Logging::ERROR) << context
                            << "COMMAND_HANDSHAKE: failed to handle_remote_peerlist(...), closing connection.";
+    report_failure(context.m_remote_ip, P2pPenalty::HandshakeFailure);
     return false;
   }
 
@@ -614,6 +681,7 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
   if (!m_payload_handler.process_payload_sync_data(rsp.payload_data, context, true)) {
     logger(Logging::ERROR)
         << context << "COMMAND_HANDSHAKE invoked, but process_payload_sync_data returned false, dropping connection.";
+    report_failure(context.m_remote_ip, P2pPenalty::HandshakeFailure);
     return false;
   }
 
@@ -651,12 +719,14 @@ bool NodeServer::handleTimedSyncResponse(const BinaryArray& in, P2pConnectionCon
   if (decodeResult.isError()) {
     logger(Logging::ERROR) << context
                            << "COMMAND_TIMED_SYNC: failed to decode blob, error: " << decodeResult.error().message();
+    report_failure(context.m_remote_ip, P2pPenalty::HandshakeFailure);
     return false;
   }
 
   if (!handle_remote_peerlist(rsp.local_peerlist, rsp.local_time, context)) {
     logger(Logging::ERROR) << context
                            << "COMMAND_TIMED_SYNC: failed to handle_remote_peerlist(...), closing connection.";
+    report_failure(context.m_remote_ip, P2pPenalty::HandshakeFailure);
     return false;
   }
 
@@ -713,6 +783,11 @@ bool NodeServer::is_addr_connected(const NetworkAddress& peer) {
 
 bool NodeServer::try_to_connect_and_handshake_with_new_peer(const NetworkAddress& na, bool just_take_peerlist,
                                                             uint64_t last_seen_stamp, bool white) {
+  if (is_ip_address_blocked(na.ip)) {
+    logger(DEBUGGING) << "Peer is blocked: " << na;
+    return false;
+  }
+
   logger(DEBUGGING) << "Connecting to " << na << " (white=" << white << ", last_seen: "
                     << (last_seen_stamp ? Common::timeIntervalToString(time(NULL) - last_seen_stamp) : "never")
                     << ")...";
@@ -729,13 +804,19 @@ bool NodeServer::try_to_connect_and_handshake_with_new_peer(const NetworkAddress
       System::Context<> timeoutContext(m_dispatcher, [&] {
         System::Timer(m_dispatcher).sleep(std::chrono::milliseconds(m_config.m_net_config.connection_timeout));
         logger(DEBUGGING) << "Connection to " << na << " timed out, interrupt it";
+        report_failure(na.ip, P2pPenalty::Timeout);
         safeInterrupt(connectionContext);
       });
 
       connection = std::move(connectionContext.get());
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << "Connection timed out";
+      report_failure(na.ip, P2pPenalty::Timeout);
       return false;
+    } catch (std::exception& e) {
+      report_failure(na.ip, P2pPenalty::Exceptional);
+      logger(DEBUGGING) << "Connection to " << Common::ipAddressToString(na.ip) << " failed: " << e.what();
+      throw e;
     }
 
     P2pConnectionContext ctx(m_dispatcher, logger.getLogger(), std::move(connection));
@@ -1160,6 +1241,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   context.version = arg.node_data.version;
 
   if (arg.node_data.network_id != m_network_id) {
+    add_host_fail(context.m_remote_ip, P2pPenalty::WrongNetworkId);
     logger(Logging::DEBUGGING) << context << "WRONG NETWORK AGENT CONNECTED! id=" << arg.node_data.network_id;
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
@@ -1168,6 +1250,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   if (arg.node_data.version < Xi::Config::P2P::minimumVersion()) {
     logger(Logging::DEBUGGING) << context << "UNSUPPORTED NETWORK AGENT VERSION CONNECTED! version="
                                << std::to_string(arg.node_data.version);
+    add_host_fail(context.m_remote_ip, P2pPenalty::DeprecatedVersion);
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
   } else if (arg.node_data.version > Xi::Config::P2P::currentVersion()) {
@@ -1177,6 +1260,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   }
 
   if (!context.m_is_income) {
+    add_host_fail(context.m_remote_ip, P2pPenalty::IncomeViolation);
     logger(Logging::ERROR) << context << "COMMAND_HANDSHAKE came not from incoming connection";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
@@ -1191,6 +1275,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   }
 
   if (!m_payload_handler.process_payload_sync_data(arg.payload_data, context, true)) {
+    add_host_fail(context.m_remote_ip, P2pPenalty::HandshakeFailure);
     logger(Logging::ERROR)
         << context << "COMMAND_HANDSHAKE came, but process_payload_sync_data returned false, dropping connection.";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
@@ -1266,10 +1351,7 @@ std::string NodeServer::print_connections_container() {
 }
 //-----------------------------------------------------------------------------------
 
-void NodeServer::on_connection_new(P2pConnectionContext& context) {
-  logger(TRACE) << context << "NEW CONNECTION";
-  m_payload_handler.onConnectionOpened(context);
-}
+void NodeServer::on_connection_new(P2pConnectionContext& context) { m_payload_handler.onConnectionOpened(context); }
 //-----------------------------------------------------------------------------------
 
 void NodeServer::on_connection_close(P2pConnectionContext& context) {
@@ -1379,6 +1461,148 @@ void NodeServer::timeoutLoop() {
     logger(WARNING) << "Unknown exception in timeoutLoop";
   }
 }
+bool NodeServer::block_host(const uint32_t address_ip, std::chrono::seconds seconds) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  m_blocked_hosts[address_ip] = time(nullptr) + seconds.count();
+
+  // drop any connection to that IP
+  std::list<boost::uuids::uuid> conns;
+  forEachConnection([&](P2pConnectionContext& cntxt) {
+    if (cntxt.m_remote_ip == address_ip) {
+      conns.push_back(cntxt.m_connection_id);
+    }
+    return true;
+  });
+  for (const auto& c_id : conns) {
+    auto c = m_connections.find(c_id);
+    if (c != m_connections.end()) c->second.m_state = CryptoNoteConnectionContext::state_shutdown;
+  }
+
+  logger(INFO) << "Host " << Common::ipAddressToString(address_ip) << " blocked.";
+  return true;
+}
+
+bool NodeServer::unblock_host(const uint32_t address_ip) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  auto i = m_blocked_hosts.find(address_ip);
+  if (i == m_blocked_hosts.end()) return false;
+  m_blocked_hosts.erase(i);
+  auto penaltySearch = m_host_fails_score.find(address_ip);
+  if (penaltySearch != m_host_fails_score.end()) {
+    m_host_fails_score.erase(penaltySearch);
+  }
+  logger(INFO) << "Host " << Common::ipAddressToString(address_ip) << " unblocked.";
+  return true;
+}
+
+bool NodeServer::add_host_fail(const uint32_t address_ip, P2pPenalty penalty) {
+  const auto penalityWeight = p2pPenaltyWeight(penalty);
+  if (penalityWeight < 1) {
+    return false;
+  }
+
+  XI_CONCURRENT_RLOCK(m_block_access);
+  if (m_host_fails_score.find(address_ip) == m_host_fails_score.end()) {
+    m_host_fails_score[address_ip] = penalityWeight;
+  } else {
+    m_host_fails_score[address_ip] += penalityWeight;
+  }
+  uint64_t failScore = m_host_fails_score[address_ip];
+  logger(DEBUGGING) << "Host " << Common::ipAddressToString(address_ip) << ", fail score=" << failScore
+                    << ", penalty: " << p2pPeanaltyMessage(penalty);
+  if (failScore > m_fails_before_block) {
+    auto it = m_host_fails_score.find(address_ip);
+    if (it == m_host_fails_score.end()) {
+      logger(DEBUGGING) << "Internal error (add_host_fail)" << failScore;
+      return false;
+    }
+    it->second = m_fails_before_block / 2;
+    block_host(address_ip, m_block_time);
+    return true;
+  }
+  return false;
+}
+
+void NodeServer::add_host_success(const uint32_t address_ip) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  auto search_block = m_host_fails_score.find(address_ip);
+  if (search_block == m_host_fails_score.end()) {
+    return;
+  }
+  if (search_block->second <= 1) {
+    m_host_fails_score.erase(search_block);
+    logger(DEBUGGING) << "Host " << Common::ipAddressToString(address_ip) << " has no fail score anymore.";
+  } else {
+    m_host_fails_score[address_ip] -= 1;
+    logger(DEBUGGING) << "Host " << Common::ipAddressToString(address_ip)
+                      << " fail score=" << m_host_fails_score[address_ip];
+  }
+}
+
+bool NodeServer::evaluate_blocked_connection(const uint32_t address_ip) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  auto search = m_blocked_hosts.find(address_ip);
+  if (search == m_blocked_hosts.end()) {
+    return false;
+  } else if (search->second > time(nullptr)) {
+    return true;
+  } else {
+    unblock_host(address_ip);
+    return false;
+  }
+}
+
+std::map<uint32_t, int64_t> NodeServer::blockedPeers() const {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  return m_blocked_hosts;
+}
+
+std::map<uint32_t, uint64_t> NodeServer::peerPenalties() const {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  return m_host_fails_score;
+}
+
+size_t NodeServer::banIps(const std::vector<uint32_t>& ips) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  size_t count = 0;
+  for (const auto& ip : ips) {
+    auto search = m_blocked_hosts.find(ip);
+    if (search == m_blocked_hosts.end()) {
+      count += 1;
+    }
+    block_host(ip, m_block_time);
+  }
+  return count;
+}
+
+size_t NodeServer::unbanIps(const std::vector<uint32_t>& ips) {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  size_t count = 0;
+  for (const auto& ip : ips) {
+    auto search = m_blocked_hosts.find(ip);
+    if (search != m_blocked_hosts.end()) {
+      unblock_host(ip);
+      count += 1;
+    }
+  }
+  return count;
+}
+
+size_t NodeServer::unbanAllIps() {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  size_t count = m_blocked_hosts.size();
+  while (!m_blocked_hosts.empty()) {
+    unblock_host(m_blocked_hosts.begin()->first);
+  }
+  return count;
+}
+
+size_t NodeServer::resetPenalties() {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  size_t count = m_host_fails_score.size();
+  m_host_fails_score.clear();
+  return count;
+}
 
 void NodeServer::timedSyncLoop() {
   try {
@@ -1406,7 +1630,12 @@ void NodeServer::connectionHandler(const boost::uuids::uuid& connectionId, P2pCo
       LevinProtocol proto(ctx.connection);
       LevinProtocol::Command cmd;
 
-      for (;;) {
+      if (is_ip_address_blocked(ctx.m_remote_ip)) {
+        ctx.m_state = CryptoNoteConnectionContext::state_shutdown;
+        logger(DEBUGGING) << ctx << " tried to connect but is still blocked.";
+      }
+
+      while (ctx.m_state != CryptoNoteConnectionContext::state_shutdown) {
         if (ctx.m_state == CryptoNoteConnectionContext::state_sync_required) {
           ctx.m_state = CryptoNoteConnectionContext::state_synchronizing;
           m_payload_handler.start_sync(ctx);
@@ -1433,13 +1662,15 @@ void NodeServer::connectionHandler(const boost::uuids::uuid& connectionId, P2pCo
           ctx.pushMessage(P2pMessage(P2pMessage::REPLY, cmd.command, std::move(response), retcode));
         }
 
-        if (ctx.m_state == CryptoNoteConnectionContext::state_shutdown) {
-          break;
+        if (is_ip_address_blocked(ctx.m_remote_ip)) {
+          ctx.m_state = CryptoNoteConnectionContext::state_shutdown;
+          logger(DEBUGGING) << ctx << " was blocked while handling the connection, dropping connection.";
         }
       }
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << ctx << "connectionHandler() inner context is interrupted";
     } catch (std::exception& e) {
+      report_failure(ctx.m_remote_ip, P2pPenalty::Exceptional);
       logger(DEBUGGING) << ctx << "Exception in connectionHandler: " << e.what();
     }
 

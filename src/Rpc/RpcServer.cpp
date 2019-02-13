@@ -10,6 +10,8 @@
 #include <future>
 #include <unordered_map>
 #include <cmath>
+#include <algorithm>
+#include <ctime>
 
 #include <Xi/Version/Version.h>
 #include <Xi/Global.h>
@@ -171,6 +173,7 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
         {"f_block_json", {makeMemberMethod(&RpcServer::f_on_block_json), false}},
         {"f_transaction_json", {makeMemberMethod(&RpcServer::f_on_transaction_json), false}},
         {"f_on_transactions_pool_json", {makeMemberMethod(&RpcServer::f_on_transactions_pool_json), false}},
+        {"f_p2p_ban_info", {makeMemberMethod(&RpcServer::f_on_p2p_ban_info), false}},
         {"getblockcount", {makeMemberMethod(&RpcServer::on_getblockcount), true}},
         {"on_getblockhash", {makeMemberMethod(&RpcServer::on_getblockhash), false}},
         {"getblocktemplate", {makeMemberMethod(&RpcServer::on_getblocktemplate), false}},
@@ -903,6 +906,55 @@ bool RpcServer::f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::reques
   }
 
   res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
+
+bool RpcServer::f_on_p2p_ban_info(const F_COMMAND_RPC_GET_P2P_BAN_INFO::request& req,
+                                  F_COMMAND_RPC_GET_P2P_BAN_INFO::response& res) {
+  XI_UNUSED(req);
+  if (m_core.getCurrency().isBlockexplorer() == false) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_BLOCK_EXPLORER_DISABLED,
+                                "Block explorer must be enabled for this request."};
+  }
+
+  auto peerBans = m_p2p.blockedPeers();
+  auto peerPanalites = m_p2p.peerPenalties();
+
+  time_t currentTime = time(nullptr);
+  for (auto iPeerBan = peerBans.begin(); iPeerBan != peerBans.end(); /* */) {
+    if (iPeerBan->second < currentTime) {
+      peerBans.erase(iPeerBan++);
+    } else {
+      ++iPeerBan;
+    }
+  }
+
+  if (peerBans.empty() && peerBans.empty()) {
+    return true;
+  }
+
+  for (const auto& iPeerBan : peerBans) {
+    F_P2P_BAN_INFO iBanInfo{/* */};
+    iBanInfo.ip_address = Common::ipAddressToString(iPeerBan.first);
+    iBanInfo.ban_timestamp = iPeerBan.second;
+    auto penaltySearch = peerPanalites.find(iPeerBan.first);
+    if (penaltySearch != peerPanalites.end()) {
+      iBanInfo.penalty_score = penaltySearch->second;
+      peerPanalites.erase(penaltySearch);
+    } else {
+      iBanInfo.penalty_score = 0;
+    }
+    res.peers_ban_info.emplace_back(std::move(iBanInfo));
+  }
+
+  for (const auto& iPeerPenalty : peerPanalites) {
+    F_P2P_BAN_INFO iBanInfo{/* */};
+    iBanInfo.ip_address = Common::ipAddressToString(iPeerPenalty.first);
+    iBanInfo.penalty_score = iPeerPenalty.second;
+    iBanInfo.ban_timestamp = 0;
+    res.peers_ban_info.emplace_back(std::move(iBanInfo));
+  }
+
   return true;
 }
 

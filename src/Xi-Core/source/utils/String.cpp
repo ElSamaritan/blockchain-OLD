@@ -65,4 +65,11 @@ std::string to_upper(const std::string &str) {
   std::transform(str.begin(), str.end(), reval.begin(), [&](auto c) { return std::toupper(c, loc); });
   return reval;
 }
+
+std::string to_string(time_t timestamp) {
+  char buff[20];
+  strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&timestamp));
+  return buff;
+}
+
 }  // namespace Xi

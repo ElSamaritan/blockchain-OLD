@@ -7,9 +7,12 @@
 #include "DaemonCommandsHandler.h"
 
 #include <ctime>
+#include <chrono>
 
-#include <Xi/Version/Version.h>
 #include <Xi/Global.h>
+#include <Xi/Utils/String.h>
+#include <Xi/Version/Version.h>
+#include <CommonCLI/CommonCLI.h>
 
 #include "P2p/NetNode.h"
 #include "CryptoNoteCore/Core.h"
@@ -21,6 +24,7 @@
 #include "CryptoNoteCore/Currency.h"
 #include <boost/format.hpp>
 #include "Common/FormatTools.h"
+#include "Common/StringTools.h"
 
 namespace {
 template <typename T>
@@ -49,27 +53,35 @@ std::string printTransactionFullInfo(const CryptoNote::CachedTransaction& transa
 
 }  // namespace
 
+#define DAEMON_COMMAND_DEFINE(NAME, HELP) \
+  m_consoleHandler.setHandler(#NAME, boost::bind(&DaemonCommandsHandler::NAME, this, _1), HELP)
+
 DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote::NodeServer& srv,
                                              Logging::LoggerManager& log, CryptoNote::RpcServer* prpc_server)
     : m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log), m_prpc_server(prpc_server) {
-  m_consoleHandler.setHandler("exit", boost::bind(&DaemonCommandsHandler::exit, this, _1), "Shutdown the daemon");
-  m_consoleHandler.setHandler("help", boost::bind(&DaemonCommandsHandler::help, this, _1), "Show this help");
-  m_consoleHandler.setHandler("print_pl", boost::bind(&DaemonCommandsHandler::print_pl, this, _1), "Print peer list");
-  m_consoleHandler.setHandler("print_cn", boost::bind(&DaemonCommandsHandler::print_cn, this, _1), "Print connections");
-  m_consoleHandler.setHandler("print_bc", boost::bind(&DaemonCommandsHandler::print_bc, this, _1),
-                              "Print blockchain info in a given blocks range, print_bc <begin_height> [<end_height>]");
-  m_consoleHandler.setHandler("print_block", boost::bind(&DaemonCommandsHandler::print_block, this, _1),
-                              "Print block, print_block <block_hash> | <block_height>");
-  m_consoleHandler.setHandler("print_tx", boost::bind(&DaemonCommandsHandler::print_tx, this, _1),
-                              "Print transaction, print_tx <transaction_hash>");
-  m_consoleHandler.setHandler("print_pool", boost::bind(&DaemonCommandsHandler::print_pool, this, _1),
-                              "Print transaction pool (long format)");
-  m_consoleHandler.setHandler("print_pool_sh", boost::bind(&DaemonCommandsHandler::print_pool_sh, this, _1),
-                              "Print transaction pool (short format)");
-  m_consoleHandler.setHandler("set_log", boost::bind(&DaemonCommandsHandler::set_log, this, _1),
-                              "set_log <level> - Change current log level, <level> is a number 0-4");
-  m_consoleHandler.setHandler("status", boost::bind(&DaemonCommandsHandler::status, this, _1), "Show daemon status");
+  DAEMON_COMMAND_DEFINE(exit, "Shutdown the daemon");
+  DAEMON_COMMAND_DEFINE(help, "Show this help");
+  DAEMON_COMMAND_DEFINE(version, "Shows version information about the running daemon");
+  DAEMON_COMMAND_DEFINE(print_pl, "Print peer list");
+  DAEMON_COMMAND_DEFINE(print_cn, "Print connections");
+  DAEMON_COMMAND_DEFINE(print_bc,
+                        "Print blockchain info in a given blocks range, print_bc <begin_height> [<end_height>]");
+  DAEMON_COMMAND_DEFINE(print_block, "Print block, print_block <block_hash> | <block_height>");
+  DAEMON_COMMAND_DEFINE(print_tx, "Print transaction, print_tx <transaction_hash>");
+  DAEMON_COMMAND_DEFINE(print_pool, "Print transaction pool (long format)");
+  DAEMON_COMMAND_DEFINE(print_pool_sh, "Print transaction pool (short format)");
+  DAEMON_COMMAND_DEFINE(set_log, "set_log <level> - Change current log level, <level> is a number 0-4");
+  DAEMON_COMMAND_DEFINE(status, "Show daemon status");
+
+  /* -------------------------------------------------- P2P Commands ----------------------------------------------- */
+  DAEMON_COMMAND_DEFINE(p2p_ban_list, "Lists all currently banned peers.");
+  DAEMON_COMMAND_DEFINE(p2p_penalty_list, "Lists all peers with penalities.");
+  DAEMON_COMMAND_DEFINE(p2p_ban_ip, "Adds given ips to the ban list.  '<ip> [<ip> ]*'");
+  DAEMON_COMMAND_DEFINE(p2p_unban_ip, "Removes given ips from the ban list. '<ip> [<ip> ]*'");
+  DAEMON_COMMAND_DEFINE(p2p_unban_all, "Removes all banned peers from the ban list.");
 }
+
+#undef DAEMON_COMMAND_DEFINE
 
 //--------------------------------------------------------------------------------
 std::string DaemonCommandsHandler::get_commands_str() {
@@ -95,6 +107,12 @@ bool DaemonCommandsHandler::exit(const std::vector<std::string>& args) {
 bool DaemonCommandsHandler::help(const std::vector<std::string>& args) {
   XI_UNUSED(args);
   std::cout << get_commands_str() << ENDL;
+  return true;
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::version(const std::vector<std::string>& args) {
+  XI_UNUSED(args);
+  std::cout << CommonCLI::verboseVersionInformation() << ENDL;
   return true;
 }
 //--------------------------------------------------------------------------------
@@ -318,4 +336,112 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
   std::cout << Common::get_status_string(iresp) << std::endl;
 
   return true;
+}
+
+#define DAEMON_COMMAND_EXPECTED_ARGS(NUM, HELP)             \
+  do {                                                      \
+    if (args.size() != NUM) {                               \
+      std::cout << "Command failed: " << HELP << std::endl; \
+      return false;                                         \
+    }                                                       \
+  } while (false)
+
+bool DaemonCommandsHandler::p2p_ban_list(const std::vector<std::string>& args) {
+  DAEMON_COMMAND_EXPECTED_ARGS(0, "No argument expected.");
+  const auto banList = m_srv.blockedPeers();
+  if (banList.empty()) {
+    std::cout << "No banned peers." << std::endl;
+  } else {
+    std::cout << "Banned Peers";
+    for (const auto& bannedPeer : banList) {
+      time_t banTimestamp = bannedPeer.second;
+      std::cout << "\n\t" << Common::ipAddressToString(bannedPeer.first) << "\t" << Xi::to_string(banTimestamp);
+    }
+    std::cout << std::endl;
+  }
+  return true;
+}
+
+bool DaemonCommandsHandler::p2p_penalty_list(const std::vector<std::string>& args) {
+  DAEMON_COMMAND_EXPECTED_ARGS(0, "No argument expected.");
+  const auto penaltyList = m_srv.peerPenalties();
+  if (penaltyList.empty()) {
+    std::cout << "No penalties on peers." << std::endl;
+  } else {
+    std::cout << "Peer Penalties";
+    for (const auto& peerPanilty : penaltyList) {
+      std::cout << "\n\t" << Common::ipAddressToString(peerPanilty.first) << "\t" << std::to_string(peerPanilty.second);
+    }
+    std::cout << std::endl;
+  }
+  return true;
+}
+
+bool DaemonCommandsHandler::p2p_penalty_reset(const std::vector<std::string>& args) {
+  DAEMON_COMMAND_EXPECTED_ARGS(0, "No argument expected.");
+
+  const size_t removedPenalties = m_srv.resetPenalties();
+  std::cout << removedPenalties << " penalties removed." << std::endl;
+
+  return true;
+}
+
+bool DaemonCommandsHandler::p2p_ban_ip(const std::vector<std::string>& args) {
+  if (args.empty()) {
+    std::cout << "Expected at least one argument." << std::endl;
+    return false;
+  }
+
+  const auto ips = parseIps(args);
+  if (ips.size() < args.size()) {
+    std::cout << "Command aborted." << std::endl;
+    return false;
+  }
+
+  const auto newBansCount = m_srv.banIps(ips);
+  std::cout << newBansCount << " IP(s) added to ban list and " << (ips.size() - newBansCount) << " is/are renewed."
+            << std::endl;
+
+  return true;
+}
+
+bool DaemonCommandsHandler::p2p_unban_ip(const std::vector<std::string>& args) {
+  if (args.empty()) {
+    std::cout << "Expected at least one argument." << std::endl;
+    return false;
+  }
+
+  const auto ips = parseIps(args);
+  if (ips.size() < args.size()) {
+    std::cout << "Command aborted." << std::endl;
+    return false;
+  }
+
+  const auto unbannedCount = m_srv.unbanIps(ips);
+  std::cout << unbannedCount << " IP(s) successfully unbanned." << std::endl;
+
+  return true;
+}
+
+bool DaemonCommandsHandler::p2p_unban_all(const std::vector<std::string>& args) {
+  DAEMON_COMMAND_EXPECTED_ARGS(0, "No argument expected.");
+
+  const auto unbannedCount = m_srv.unbanAllIps();
+  std::cout << unbannedCount << " IP(s) successfully unbanned." << std::endl;
+
+  return true;
+}
+
+std::vector<uint32_t> DaemonCommandsHandler::parseIps(const std::vector<std::string>& args) {
+  std::vector<uint32_t> ips;
+  ips.reserve(args.size());
+  for (const auto& ipArg : args) {
+    uint32_t ip;
+    if (!Common::parseIpAddress(ip, ipArg)) {
+      std::cout << "Invalid IP: " << ipArg << std::endl;
+    } else {
+      ips.push_back(ip);
+    }
+  }
+  return ips;
 }
