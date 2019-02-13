@@ -973,7 +973,13 @@ Xi::Result<std::vector<Crypto::Hash>> Core::addBlock(LiteBlock block, std::vecto
     return Xi::make_error(error::AddBlockErrorCode::DESERIALIZATION_FAILED);
   }
 
-  // Quick check, we can skip everything if this fails
+  // Quick checks, we can skip everything if this fails
+  {
+    CachedBlock cachedBlock{blockTemplate};
+    if (hasBlock(cachedBlock.getBlockHash())) {
+      return Xi::make_error(error::AddBlockErrorCode::ALREADY_EXISTS);
+    }
+  }
   if (findSegmentContainingBlock(blockTemplate.previousBlockHash) == nullptr) {
     logger(Logging::TRACE) << "Lite block rejected as orphaned";
     return Xi::make_error(error::AddBlockErrorCode::REJECTED_AS_ORPHANED);
