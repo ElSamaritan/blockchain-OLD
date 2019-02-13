@@ -362,7 +362,7 @@ bool DaemonCommandsHandler::p2p_ban_list(const std::vector<std::string>& args) {
   return true;
 }
 
-bool DaemonCommandsHandler::p2p_penality_list(const std::vector<std::string>& args) {
+bool DaemonCommandsHandler::p2p_penalty_list(const std::vector<std::string>& args) {
   DAEMON_COMMAND_EXPECTED_ARGS(0, "No argument expected.");
   const auto penaltyList = m_srv.peerPenalties();
   if (penaltyList.empty()) {
@@ -379,7 +379,7 @@ bool DaemonCommandsHandler::p2p_penality_list(const std::vector<std::string>& ar
 
 bool DaemonCommandsHandler::p2p_ban_ip(const std::vector<std::string>& args) {
   if (args.empty()) {
-    std::cout << "Expected at least one argument.";
+    std::cout << "Expected at least one argument." << std::endl;
     return false;
   }
 
@@ -390,14 +390,15 @@ bool DaemonCommandsHandler::p2p_ban_ip(const std::vector<std::string>& args) {
   }
 
   const auto newBansCount = m_srv.banIps(ips);
-  std::cout << newBansCount << "IPs added to ban list and " << (ips.size() - newBansCount) << " are renewed.";
+  std::cout << newBansCount << " IP(s) added to ban list and " << (ips.size() - newBansCount) << " is/are renewed."
+            << std::endl;
 
   return true;
 }
 
 bool DaemonCommandsHandler::p2p_unban_ip(const std::vector<std::string>& args) {
   if (args.empty()) {
-    std::cout << "Expected at least one argument.";
+    std::cout << "Expected at least one argument." << std::endl;
     return false;
   }
 
@@ -408,7 +409,7 @@ bool DaemonCommandsHandler::p2p_unban_ip(const std::vector<std::string>& args) {
   }
 
   const auto unbannedCount = m_srv.unbanIps(ips);
-  std::cout << unbannedCount << "IPs successfully unbanned.";
+  std::cout << unbannedCount << " IP(s) successfully unbanned." << std::endl;
 
   return true;
 }
@@ -417,7 +418,7 @@ bool DaemonCommandsHandler::p2p_unban_all(const std::vector<std::string>& args) 
   DAEMON_COMMAND_EXPECTED_ARGS(0, "No argument expected.");
 
   const auto unbannedCount = m_srv.unbanAllIps();
-  std::cout << unbannedCount << "IPs successfully unbanned.";
+  std::cout << unbannedCount << " IP(s) successfully unbanned." << std::endl;
 
   return true;
 }

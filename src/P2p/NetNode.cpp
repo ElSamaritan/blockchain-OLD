@@ -222,13 +222,14 @@ NodeServer::NodeServer(System::Dispatcher& dispatcher, Xi::Config::Network::Type
       // intervals
       // m_peer_handshake_idle_maker_interval(CryptoNote::P2P_DEFAULT_HANDSHAKE_INTERVAL),
       m_connections_maker_interval(1),
-      m_peerlist_store_interval(60 * 30, false) {}
+      m_peerlist_store_interval(60 * 30, false),
+      m_fails_before_block{20} {}
 
 void NodeServer::serialize(ISerializer& s) {
   uint8_t version = 2;
   s(version, "version");
 
-  if (version != 1) {
+  if (version < 1 || version > 2) {
     throw std::runtime_error("Unsupported version");
   }
 
@@ -236,8 +237,57 @@ void NodeServer::serialize(ISerializer& s) {
   s(m_config.m_peer_id, "peer_id");
 
   if (version > 1) {
-    ::CryptoNote::serialize(m_blocked_hosts, "blocked_hosts", s);
-    ::CryptoNote::serialize(m_host_fails_score, "host_fails_score", s);
+    const auto currentTimestamp = time(nullptr);
+
+    uint64_t blockedCount = m_blocked_hosts.size();
+    s(blockedCount, "blocked_hosts_count");
+    if (s.type() == ISerializer::INPUT) {
+      for (uint64_t i = 0; i < blockedCount; ++i) {
+        uint32_t ip;
+        int64_t timestamp;
+
+        s(ip, "");
+        s(timestamp, "");
+
+        if (timestamp > currentTimestamp) {
+          m_blocked_hosts[ip] = timestamp;
+          logger(Logging::TRACE) << "Imported blocked host: " << Common::ipAddressToString(ip);
+        }
+      }
+    } else {
+      for (const auto& blocked_host : m_blocked_hosts) {
+        uint32_t ip = blocked_host.first;
+        int64_t timestamp = blocked_host.second;
+        s(ip, "");
+        s(timestamp, "");
+      }
+    }
+
+    uint64_t failsScoreCount = m_host_fails_score.size();
+    s(failsScoreCount, "host_fails_score_count");
+    if (s.type() == ISerializer::INPUT) {
+      for (uint64_t i = 0; i < failsScoreCount; ++i) {
+        uint32_t ip;
+        uint64_t score;
+
+        s(ip, "");
+        s(score, "");
+
+        if (score > 2) {
+          m_host_fails_score[ip] = score - 2;
+          logger(Logging::TRACE) << "Imported host fails score: " << Common::ipAddressToString(ip)
+                                 << ", score=" << score - 2;
+        }
+      }
+    } else {
+      for (auto& host_fails_score : m_host_fails_score) {
+        uint32_t ip = host_fails_score.first;
+        uint64_t score = host_fails_score.second;
+
+        s(ip, "");
+        s(score, "");
+      }
+    }
   }
 }
 
@@ -541,7 +591,7 @@ bool NodeServer::deinit() { return store_config(); }
 bool NodeServer::store_config() {
   try {
     if (!Tools::create_directories_if_necessary(m_config_folder)) {
-      logger(INFO) << "Failed to create data directory: " << m_config_folder;
+      logger(FATAL) << "Failed to create data directory: " << m_config_folder;
       return false;
     }
 
@@ -549,7 +599,7 @@ bool NodeServer::store_config() {
     std::ofstream p2p_data;
     p2p_data.open(state_file_path, std::ios_base::binary | std::ios_base::out | std::ios::trunc);
     if (p2p_data.fail()) {
-      logger(INFO) << "Failed to save config to file " << state_file_path;
+      logger(FATAL) << "Failed to save config to file " << state_file_path;
       return false;
     };
 
@@ -558,7 +608,7 @@ bool NodeServer::store_config() {
     CryptoNote::serialize(*this, a);
     return true;
   } catch (const std::exception& e) {
-    logger(WARNING) << "store_config failed: " << e.what();
+    logger(FATAL) << "store_config failed: " << e.what();
   }
 
   return false;

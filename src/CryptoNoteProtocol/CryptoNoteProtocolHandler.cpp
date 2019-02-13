@@ -183,9 +183,7 @@ void CryptoNoteProtocolHandler::set_p2p_endpoint(IP2pEndpoint* p2p) {
     m_p2p = &m_p2p_stub;
 }
 
-void CryptoNoteProtocolHandler::onConnectionOpened(CryptoNoteConnectionContext& context) {
-  m_logger(TRACE) << context << " connection opened.";
-}
+void CryptoNoteProtocolHandler::onConnectionOpened(CryptoNoteConnectionContext& context) { XI_UNUSED(context); }
 
 void CryptoNoteProtocolHandler::onConnectionClosed(CryptoNoteConnectionContext& context) {
   bool updated = false;
