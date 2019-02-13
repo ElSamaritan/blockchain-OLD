@@ -59,6 +59,19 @@ class ITransactionPool {
   virtual Crypto::Hash stateHash() const = 0;
 
   /*!
+   * \brief forceFlush Deletes all transactions in the pool.
+   * \return Number of transactions removed.
+   */
+  virtual size_t forceFlush() = 0;
+
+  /*!
+   * \brief forceErasure Deletes a transaction from the pool
+   * \param hash The transactions hash to delete
+   * \return True if the transaction was deleted successfully
+   */
+  virtual bool forceErasure(const Crypto::Hash& hash) = 0;
+
+  /*!
    * \brief pushTransaction parses the binary representation of a transaction and pushs it
    * \param transaction the binary representation of a transaction
    * \return nothing if successfull, otherwise an error

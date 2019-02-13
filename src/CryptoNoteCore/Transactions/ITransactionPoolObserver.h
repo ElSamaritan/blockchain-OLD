@@ -45,6 +45,7 @@ class ITransactionPoolObserver {
     BlockMajorVersionUpgrade,  ///< The major version in the blockchain upgraded introducing new constraints the
                                ///< transaction does not satisfy anymore
     PoolCleanupProcedure,      ///< Legacy Reason for pool cleaner wrapper
+    Forced,                    ///< The user forced the deletion of the transaction
   };
 
  public:

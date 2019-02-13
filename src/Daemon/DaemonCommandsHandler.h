@@ -57,11 +57,16 @@ class DaemonCommandsHandler {
   bool set_log(const std::vector<std::string>& args);
   bool print_block(const std::vector<std::string>& args);
   bool print_tx(const std::vector<std::string>& args);
-  bool print_pool(const std::vector<std::string>& args);
-  bool print_pool_sh(const std::vector<std::string>& args);
   bool start_mining(const std::vector<std::string>& args);
   bool stop_mining(const std::vector<std::string>& args);
   bool status(const std::vector<std::string>& args);
+
+  /* ------------------------------------------------- Pool Commands ----------------------------------------------- */
+  bool print_pool(const std::vector<std::string>& args);
+  bool print_pool_sh(const std::vector<std::string>& args);
+  bool pool_flush(const std::vector<std::string>& args);
+  bool pool_remove(const std::vector<std::string>& args);
+  /* ------------------------------------------------- Pool Commands ----------------------------------------------- */
 
   /* -------------------------------------------------- P2P Commands ----------------------------------------------- */
   bool p2p_ban_list(const std::vector<std::string>& args);

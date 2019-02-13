@@ -68,10 +68,14 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
                         "Print blockchain info in a given blocks range, print_bc <begin_height> [<end_height>]");
   DAEMON_COMMAND_DEFINE(print_block, "Print block, print_block <block_hash> | <block_height>");
   DAEMON_COMMAND_DEFINE(print_tx, "Print transaction, print_tx <transaction_hash>");
-  DAEMON_COMMAND_DEFINE(print_pool, "Print transaction pool (long format)");
-  DAEMON_COMMAND_DEFINE(print_pool_sh, "Print transaction pool (short format)");
   DAEMON_COMMAND_DEFINE(set_log, "set_log <level> - Change current log level, <level> is a number 0-4");
   DAEMON_COMMAND_DEFINE(status, "Show daemon status");
+
+  /* ------------------------------------------------- Pool Commands ----------------------------------------------- */
+  DAEMON_COMMAND_DEFINE(print_pool, "Print transaction pool (long format)");
+  DAEMON_COMMAND_DEFINE(print_pool_sh, "Print transaction pool (short format)");
+  DAEMON_COMMAND_DEFINE(pool_flush, "Removes all pool transactions");
+  DAEMON_COMMAND_DEFINE(pool_remove, "Removes a transaction with given hash from the pool <transaction_hash>");
 
   /* -------------------------------------------------- P2P Commands ----------------------------------------------- */
   DAEMON_COMMAND_DEFINE(p2p_ban_list, "Lists all currently banned peers.");
@@ -82,6 +86,14 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
 }
 
 #undef DAEMON_COMMAND_DEFINE
+
+#define DAEMON_COMMAND_EXPECTED_ARGS(NUM, HELP)             \
+  do {                                                      \
+    if (args.size() != NUM) {                               \
+      std::cout << "Command failed: " << HELP << std::endl; \
+      return false;                                         \
+    }                                                       \
+  } while (false)
 
 //--------------------------------------------------------------------------------
 std::string DaemonCommandsHandler::get_commands_str() {
@@ -322,6 +334,29 @@ bool DaemonCommandsHandler::print_pool_sh(const std::vector<std::string>& args) 
 
   return true;
 }
+
+bool DaemonCommandsHandler::pool_flush(const std::vector<std::string>& args) {
+  DAEMON_COMMAND_EXPECTED_ARGS(0, "No argument expected.");
+
+  const auto count = m_core.transactionPool().forceFlush();
+  std::cout << count << " transactions deleted" << std::endl;
+  return true;
+}
+
+bool DaemonCommandsHandler::pool_remove(const std::vector<std::string>& args) {
+  DAEMON_COMMAND_EXPECTED_ARGS(1, "No argument expected.");
+
+  Crypto::Hash txHash;
+  if (!parse_hash256(args[0], txHash)) {
+    std::cout << "Failed to parse transaction hash: " << args[0] << std::endl;
+    return false;
+  }
+
+  auto isRemoved = m_core.transactionPool().forceErasure(txHash);
+  std::cout << "Transaction removal " << (isRemoved ? "succeeded" : "failed") << "." << std::endl;
+
+  return true;
+}
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
   XI_UNUSED(args);
@@ -337,14 +372,6 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
 
   return true;
 }
-
-#define DAEMON_COMMAND_EXPECTED_ARGS(NUM, HELP)             \
-  do {                                                      \
-    if (args.size() != NUM) {                               \
-      std::cout << "Command failed: " << HELP << std::endl; \
-      return false;                                         \
-    }                                                       \
-  } while (false)
 
 bool DaemonCommandsHandler::p2p_ban_list(const std::vector<std::string>& args) {
   DAEMON_COMMAND_EXPECTED_ARGS(0, "No argument expected.");

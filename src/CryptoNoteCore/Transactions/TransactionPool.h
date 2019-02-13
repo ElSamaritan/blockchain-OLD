@@ -66,6 +66,9 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   std::size_t size() const override;
   Crypto::Hash stateHash() const override;
 
+  size_t forceFlush() override;
+  bool forceErasure(const Crypto::Hash& hash) override;
+
   Xi::Result<void> pushTransaction(BinaryArray transaction) override;
   Xi::Result<void> pushTransaction(Transaction transaction) override;
   bool containsTransaction(const Crypto::Hash& hash) const override;

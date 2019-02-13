@@ -73,6 +73,23 @@ Crypto::Hash TransactionPool::stateHash() const {
   return m_stateHash.get();
 }
 
+size_t TransactionPool::forceFlush() {
+  XI_CONCURRENT_RLOCK(m_access);
+  size_t count = 0;
+  const auto hashes = getTransactionHashes();
+  for (const auto& iTxHash : hashes) {
+    if (removeTransaction(iTxHash, Deletion::Forced)) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+bool TransactionPool::forceErasure(const Crypto::Hash& hash) {
+  XI_CONCURRENT_RLOCK(m_access);
+  return removeTransaction(hash, Deletion::Forced);
+}
+
 Xi::Result<void> TransactionPool::pushTransaction(BinaryArray transactionBlob) {
   Transaction transaction;
   if (!fromBinaryArray<Transaction>(transaction, transactionBlob)) {

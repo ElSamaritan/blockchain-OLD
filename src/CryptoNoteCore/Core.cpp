@@ -242,6 +242,7 @@ void Core::transactionDeletedFromPool(const Hash& hash, ITransactionPoolObserver
     case Reason::KeyImageUsedInMainChain:
     case Reason::PoolCleanupProcedure:
     case Reason::BlockMajorVersionUpgrade:
+    case Reason::Forced:
       notifyObservers(makeDelTransactionMessage({hash}, Messages::DeleteTransaction::Reason::NotActual));
       break;
     case Reason::AddedToMainChain:

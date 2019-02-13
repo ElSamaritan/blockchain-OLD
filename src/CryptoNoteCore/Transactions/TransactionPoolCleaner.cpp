@@ -38,6 +38,10 @@ std::size_t TransactionPoolCleanWrapper::size() const { return transactionPool->
 
 Crypto::Hash TransactionPoolCleanWrapper::stateHash() const { return transactionPool->stateHash(); }
 
+size_t TransactionPoolCleanWrapper::forceFlush() { return transactionPool->forceFlush(); }
+
+bool TransactionPoolCleanWrapper::forceErasure(const Crypto::Hash& hash) { return transactionPool->forceErasure(hash); }
+
 Xi::Result<void> TransactionPoolCleanWrapper::pushTransaction(BinaryArray transactionBlob) {
   return transactionPool->pushTransaction(std::move(transactionBlob));
 }
