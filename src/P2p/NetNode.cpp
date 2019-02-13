@@ -1552,7 +1552,7 @@ bool NodeServer::evaluate_blocked_connection(const uint32_t address_ip) {
   }
 }
 
-std::map<uint32_t, time_t> NodeServer::blockedPeers() const {
+std::map<uint32_t, int64_t> NodeServer::blockedPeers() const {
   XI_CONCURRENT_RLOCK(m_block_access);
   return m_blocked_hosts;
 }

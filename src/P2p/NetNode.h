@@ -319,7 +319,7 @@ class NodeServer : public IP2pEndpoint {
    * \note blocked peers are only reevaluated if they connect again. This list may contain peers which could connect
    * because their block timespan already passed.
    */
-  std::map<uint32_t, time_t> blockedPeers() const;
+  std::map<uint32_t, int64_t> blockedPeers() const;
 
   /*!
    * \brief peerPenalties Returns a summary of the penalties score for each peer that has at least a score of one.
