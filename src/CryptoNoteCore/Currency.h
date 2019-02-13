@@ -81,7 +81,6 @@ class Currency {
   std::string blockIndexesFileName() const;
   std::string txPoolFileName() const;
 
-  bool isBlockexplorer() const { return m_isBlockexplorer; }
   ::Xi::Config::Network::Type network() const { return m_network; }
   bool isMainNet() const { return m_network == ::Xi::Config::Network::Type::MainNet; }
   bool isTestNet() const { return !isMainNet() && m_network != ::Xi::Config::Network::MainNet; }
@@ -176,7 +175,6 @@ class Currency {
   static const std::vector<uint64_t> PRETTY_AMOUNTS;
 
   Xi::Config::Network::Type m_network;
-  bool m_isBlockexplorer;
 
   BlockTemplate genesisBlockTemplate;
   std::unique_ptr<CachedBlock> cachedGenesisBlock;
@@ -317,10 +315,6 @@ class CurrencyBuilder : boost::noncopyable {
     return *this;
   }
 
-  CurrencyBuilder& isBlockexplorer(const bool val) {
-    m_currency.m_isBlockexplorer = val;
-    return *this;
-  }
   CurrencyBuilder& network(Xi::Config::Network::Type network) {
     m_currency.m_network = network;
     return *this;

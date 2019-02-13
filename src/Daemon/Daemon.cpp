@@ -48,11 +48,9 @@ using namespace CryptoNote;
 using namespace Logging;
 using namespace boost::filesystem;
 
-void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const bool blockExplorerMode,
-                          LoggerManager& logManager) {
+void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, LoggerManager& logManager) {
   std::vector<CryptoNote::AccountPublicAddress> rewardTargets;
   CryptoNote::CurrencyBuilder currencyBuilder(logManager);
-  currencyBuilder.isBlockexplorer(blockExplorerMode);
 
   CryptoNote::Currency currency = currencyBuilder.currency();
 
@@ -133,7 +131,7 @@ int main(int argc, char* argv[]) {
   handleSettings(argc, argv, config);
   if (config.printGenesisTx)  // Do we weant to generate the Genesis Tx?
   {
-    print_genesis_tx_hex(config.genesisAwardAddresses, false, logManager);
+    print_genesis_tx_hex(config.genesisAwardAddresses, logManager);
     exit(0);
   }
 
@@ -195,7 +193,6 @@ int main(int argc, char* argv[]) {
     CryptoNote::CurrencyBuilder currencyBuilder(logManager);
     // clang-format off
     currencyBuilder
-      .isBlockexplorer(config.enableBlockExplorer)
       .network(config.network);
     // clang-format on
     try {
@@ -307,11 +304,18 @@ int main(int argc, char* argv[]) {
     logger(INFO) << "Starting core rpc server on address " << config.rpcInterface << ":" << config.rpcPort;
     rpcServer->setHandler(rpcServer);
     rpcServer->setSSLConfiguration(config.ssl);
-    rpcServer->start(config.rpcInterface, config.rpcPort);
     rpcServer->setFeeAddress(config.feeAddress);
     rpcServer->setFeeAmount(config.feeAmount);
     rpcServer->enableCors(config.enableCors);
-    logger(INFO) << "Core rpc server started ok";
+    rpcServer->setBlockexplorer(config.enableBlockExplorer | config.onlyBlockExplorer);
+    rpcServer->setBlockexplorerOnly(config.onlyBlockExplorer);
+
+    if (!config.disableRpc) {
+      rpcServer->start(config.rpcInterface, config.rpcPort);
+      logger(INFO) << "Core rpc server started ok";
+    } else {
+      logger(INFO) << "Core rpc server disabled";
+    }
 
     Tools::SignalHandler::install([&dch, &p2psrv] {
       dch.stop_handling();
@@ -325,8 +329,10 @@ int main(int argc, char* argv[]) {
     dch.stop_handling();
 
     // stop components
-    logger(INFO) << "Stopping core rpc server...";
-    rpcServer->stop();
+    if (!config.disableRpc) {
+      logger(INFO) << "Stopping core rpc server...";
+      rpcServer->stop();
+    }
     rpcServer->setHandler(nullptr);
 
     // deinitialize components

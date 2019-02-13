@@ -42,6 +42,12 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   bool setFeeAmount(const uint32_t fee_amount);
   const std::string& getCorsDomain();
 
+  bool isBlockexplorer() const;
+  void setBlockexplorer(bool enabled);
+
+  bool isBlockexplorerOnly() const;
+  void setBlockexplorerOnly(bool enabled);
+
   bool on_get_block_headers_range(const COMMAND_RPC_GET_BLOCK_HEADERS_RANGE::request& req,
                                   COMMAND_RPC_GET_BLOCK_HEADERS_RANGE::response& res,
                                   JsonRpc::JsonRpcError& error_resp);
@@ -52,6 +58,7 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   struct RpcHandler {
     const Handler handler;
     const bool allowBusyCore;
+    const bool isBlockexplorerRequest;
   };
 
   typedef void (RpcServer::*HandlerPtr)(const HttpRequest& request, HttpResponse& response);
@@ -138,6 +145,8 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   std::string m_cors;
   std::string m_fee_address;
   uint32_t m_fee_amount;
+  bool m_isBlockexplorer;
+  bool m_isBlockexplorerOnly;
   Xi::Concurrent::RecursiveLock m_submissionAccess;
 };
 

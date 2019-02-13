@@ -534,7 +534,6 @@ Currency::Currency(Currency&& currency)
       m_blockFutureTimeLimit(currency.m_blockFutureTimeLimit),
       m_moneySupply(currency.m_moneySupply),
       m_emissionSpeedFactor(currency.m_emissionSpeedFactor),
-      m_isBlockexplorer(currency.m_isBlockexplorer),
       m_minerTxBlobReservedSize(currency.m_minerTxBlobReservedSize),
       m_numberOfDecimalPlaces(currency.m_numberOfDecimalPlaces),
       m_coin(currency.m_coin),
@@ -599,7 +598,6 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
   blockIndexesFileName(Xi::Config::Database::blockIndicesFilename());
   txPoolFileName(Xi::Config::Database::pooldataFilename());
 
-  isBlockexplorer(false);
   network(::Xi::Config::Network::defaultNetworkType());
 }
 

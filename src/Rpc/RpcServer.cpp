@@ -94,47 +94,59 @@ RpcServer::HandlerFunction jsonMethod(bool (RpcServer::*handler)(typename Comman
 
 std::unordered_map<std::string, RpcServer::RpcHandler<RpcServer::HandlerFunction>> RpcServer::s_handlers = {
     // json handlers
-    {"/getinfo", {jsonMethod<COMMAND_RPC_GET_INFO>(&RpcServer::on_get_info), true}},
-    {"/getheight", {jsonMethod<COMMAND_RPC_GET_HEIGHT>(&RpcServer::on_get_height), true}},
-    {"/gettransactions", {jsonMethod<COMMAND_RPC_GET_TRANSACTIONS>(&RpcServer::on_get_transactions), false}},
-    {"/sendrawtransaction", {jsonMethod<COMMAND_RPC_SEND_RAW_TX>(&RpcServer::on_send_raw_tx), false}},
-    // remove me in 2019
-    {"/feeinfo", {jsonMethod<COMMAND_RPC_GET_FEE_ADDRESS>(&RpcServer::on_get_fee_info), true}},
-    {"/getNodeFeeInfo", {jsonMethod<COMMAND_RPC_GET_FEE_ADDRESS>(&RpcServer::on_get_fee_info), true}},
-    {"/getpeers", {jsonMethod<COMMAND_RPC_GET_PEERS>(&RpcServer::on_get_peers), true}},
-    {"/getblocks", {jsonMethod<COMMAND_RPC_GET_BLOCKS_FAST>(&RpcServer::on_get_blocks), false}},
-    {"/queryblocks", {jsonMethod<COMMAND_RPC_QUERY_BLOCKS>(&RpcServer::on_query_blocks), false}},
-    {"/queryblockslite", {jsonMethod<COMMAND_RPC_QUERY_BLOCKS_LITE>(&RpcServer::on_query_blocks_lite), false}},
+    // Enabled on block explorer
+    {"/getinfo", {jsonMethod<COMMAND_RPC_GET_INFO>(&RpcServer::on_get_info), true, true}},
+    {"/getheight", {jsonMethod<COMMAND_RPC_GET_HEIGHT>(&RpcServer::on_get_height), true, true}},
+    {"/gettransactions", {jsonMethod<COMMAND_RPC_GET_TRANSACTIONS>(&RpcServer::on_get_transactions), false, true}},
+    {"/getpeers", {jsonMethod<COMMAND_RPC_GET_PEERS>(&RpcServer::on_get_peers), true, true}},
+    {"/getblocks", {jsonMethod<COMMAND_RPC_GET_BLOCKS_FAST>(&RpcServer::on_get_blocks), false, true}},
+    {"/queryblocks", {jsonMethod<COMMAND_RPC_QUERY_BLOCKS>(&RpcServer::on_query_blocks), false, true}},
+    {"/queryblockslite", {jsonMethod<COMMAND_RPC_QUERY_BLOCKS_LITE>(&RpcServer::on_query_blocks_lite), false, true}},
     {"/queryblocksdetailed",
-     {jsonMethod<COMMAND_RPC_QUERY_BLOCKS_DETAILED>(&RpcServer::on_query_blocks_detailed), false}},
-    {"/get_o_indexes", {jsonMethod<COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES>(&RpcServer::on_get_indexes), false}},
-    {"/getrandom_outs",
-     {jsonMethod<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS>(&RpcServer::on_get_random_outs), false}},
-    {"/get_pool_changes", {jsonMethod<COMMAND_RPC_GET_POOL_CHANGES>(&RpcServer::onGetPoolChanges), false}},
+     {jsonMethod<COMMAND_RPC_QUERY_BLOCKS_DETAILED>(&RpcServer::on_query_blocks_detailed), false, true}},
+    {"/get_pool_changes", {jsonMethod<COMMAND_RPC_GET_POOL_CHANGES>(&RpcServer::onGetPoolChanges), false, true}},
     {"/get_pool_changes_lite",
-     {jsonMethod<COMMAND_RPC_GET_POOL_CHANGES_LITE>(&RpcServer::onGetPoolChangesLite), false}},
+     {jsonMethod<COMMAND_RPC_GET_POOL_CHANGES_LITE>(&RpcServer::onGetPoolChangesLite), false, true}},
     {"/get_block_details_by_height",
-     {jsonMethod<COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT>(&RpcServer::onGetBlockDetailsByHeight), false}},
+     {jsonMethod<COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT>(&RpcServer::onGetBlockDetailsByHeight), false, true}},
     {"/get_blocks_details_by_heights",
-     {jsonMethod<COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HEIGHTS>(&RpcServer::onGetBlocksDetailsByHeights), false}},
+     {jsonMethod<COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HEIGHTS>(&RpcServer::onGetBlocksDetailsByHeights), false, true}},
     {"/get_blocks_details_by_hashes",
-     {jsonMethod<COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HASHES>(&RpcServer::onGetBlocksDetailsByHashes), false}},
+     {jsonMethod<COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HASHES>(&RpcServer::onGetBlocksDetailsByHashes), false, true}},
     {"/get_blocks_hashes_by_timestamps",
-     {jsonMethod<COMMAND_RPC_GET_BLOCKS_HASHES_BY_TIMESTAMPS>(&RpcServer::onGetBlocksHashesByTimestamps), false}},
+     {jsonMethod<COMMAND_RPC_GET_BLOCKS_HASHES_BY_TIMESTAMPS>(&RpcServer::onGetBlocksHashesByTimestamps), false, true}},
     {"/get_transaction_details_by_hashes",
-     {jsonMethod<COMMAND_RPC_GET_TRANSACTION_DETAILS_BY_HASHES>(&RpcServer::onGetTransactionDetailsByHashes), false}},
+     {jsonMethod<COMMAND_RPC_GET_TRANSACTION_DETAILS_BY_HASHES>(&RpcServer::onGetTransactionDetailsByHashes), false,
+      true}},
     {"/get_transaction_hashes_by_payment_id",
      {jsonMethod<COMMAND_RPC_GET_TRANSACTION_HASHES_BY_PAYMENT_ID>(&RpcServer::onGetTransactionHashesByPaymentId),
-      false}},
+      false, true}},
+
+    // remove me in 2019
+    // Not enabled on block explorer
+    {"/sendrawtransaction", {jsonMethod<COMMAND_RPC_SEND_RAW_TX>(&RpcServer::on_send_raw_tx), false, false}},
+    {"/feeinfo", {jsonMethod<COMMAND_RPC_GET_FEE_ADDRESS>(&RpcServer::on_get_fee_info), true, false}},
+    {"/getNodeFeeInfo", {jsonMethod<COMMAND_RPC_GET_FEE_ADDRESS>(&RpcServer::on_get_fee_info), true, false}},
+    {"/get_o_indexes",
+     {jsonMethod<COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES>(&RpcServer::on_get_indexes), false, false}},
+    {"/getrandom_outs",
+     {jsonMethod<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS>(&RpcServer::on_get_random_outs), false, false}},
 
     // json rpc
     {"/json_rpc",
      {std::bind(&RpcServer::processJsonRpcRequest, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-      true}}};
+      true, true}}};
 
 RpcServer::RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, Core& c, NodeServer& p2p,
                      ICryptoNoteProtocolHandler& protocol)
-    : Xi::Http::Server(), logger(log, "RpcServer"), m_core(c), m_p2p(p2p), m_protocol(protocol), m_submissionAccess{} {
+    : Xi::Http::Server(),
+      logger(log, "RpcServer"),
+      m_core(c),
+      m_p2p(p2p),
+      m_protocol(protocol),
+      m_isBlockexplorer{false},
+      m_isBlockexplorerOnly{false},
+      m_submissionAccess{} {
   setDispatcher(std::make_shared<Xi::Concurrent::SystemDispatcher>(dispatcher));
 }
 
@@ -144,7 +156,9 @@ Xi::Http::Response RpcServer::doHandleRequest(const Xi::Http::Request& request) 
     return makeNotFound();
   else if (!it->second.allowBusyCore && !isCoreReady())
     return makeInternalServerError("core is busy");
-  else {
+  else if (isBlockexplorerOnly() && !it->second.isBlockexplorerRequest) {
+    return makeBadRequest("only block explorer requests are allowed");
+  } else {
     Xi::Http::Response response;
     if (!on_options_request(request, response)) {
       if (request.method() != Xi::Http::Method::Post && request.method() != Xi::Http::Method::Get)
@@ -169,19 +183,22 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
     jsonResponse.setId(jsonRequest.getId());  // copy id
 
     static std::unordered_map<std::string, RpcServer::RpcHandler<JsonMemberMethod>> jsonRpcHandlers = {
-        {"f_blocks_list_json", {makeMemberMethod(&RpcServer::f_on_blocks_list_json), false}},
-        {"f_block_json", {makeMemberMethod(&RpcServer::f_on_block_json), false}},
-        {"f_transaction_json", {makeMemberMethod(&RpcServer::f_on_transaction_json), false}},
-        {"f_on_transactions_pool_json", {makeMemberMethod(&RpcServer::f_on_transactions_pool_json), false}},
-        {"f_p2p_ban_info", {makeMemberMethod(&RpcServer::f_on_p2p_ban_info), false}},
-        {"getblockcount", {makeMemberMethod(&RpcServer::on_getblockcount), true}},
-        {"on_getblockhash", {makeMemberMethod(&RpcServer::on_getblockhash), false}},
-        {"getblocktemplate", {makeMemberMethod(&RpcServer::on_getblocktemplate), false}},
-        {"getcurrencyid", {makeMemberMethod(&RpcServer::on_get_currency_id), true}},
-        {"submitblock", {makeMemberMethod(&RpcServer::on_submitblock), false}},
-        {"getlastblockheader", {makeMemberMethod(&RpcServer::on_get_last_block_header), false}},
-        {"getblockheaderbyhash", {makeMemberMethod(&RpcServer::on_get_block_header_by_hash), false}},
-        {"getblockheaderbyheight", {makeMemberMethod(&RpcServer::on_get_block_header_by_height), false}}};
+        // Enabled on block explorer
+        {"f_blocks_list_json", {makeMemberMethod(&RpcServer::f_on_blocks_list_json), false, true}},
+        {"f_block_json", {makeMemberMethod(&RpcServer::f_on_block_json), false, true}},
+        {"f_transaction_json", {makeMemberMethod(&RpcServer::f_on_transaction_json), false, true}},
+        {"f_on_transactions_pool_json", {makeMemberMethod(&RpcServer::f_on_transactions_pool_json), false, true}},
+        {"f_p2p_ban_info", {makeMemberMethod(&RpcServer::f_on_p2p_ban_info), false, true}},
+        {"getblockcount", {makeMemberMethod(&RpcServer::on_getblockcount), true, true}},
+        {"on_getblockhash", {makeMemberMethod(&RpcServer::on_getblockhash), false, true}},
+        {"getcurrencyid", {makeMemberMethod(&RpcServer::on_get_currency_id), true, true}},
+        {"getlastblockheader", {makeMemberMethod(&RpcServer::on_get_last_block_header), false, true}},
+        {"getblockheaderbyhash", {makeMemberMethod(&RpcServer::on_get_block_header_by_hash), false, true}},
+        {"getblockheaderbyheight", {makeMemberMethod(&RpcServer::on_get_block_header_by_height), false, true}},
+
+        // Not enabled on block explorer
+        {"getblocktemplate", {makeMemberMethod(&RpcServer::on_getblocktemplate), false, false}},
+        {"submitblock", {makeMemberMethod(&RpcServer::on_submitblock), false, false}}};
 
     auto it = jsonRpcHandlers.find(jsonRequest.getMethod());
     if (it == jsonRpcHandlers.end()) {
@@ -190,6 +207,10 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
 
     if (!it->second.allowBusyCore && !isCoreReady()) {
       throw JsonRpcError(CORE_RPC_ERROR_CODE_CORE_BUSY, "Core is busy");
+    }
+
+    if (isBlockexplorerOnly() && !it->second.isBlockexplorerRequest) {
+      throw JsonRpcError(CORE_RPC_ERROR_CODE_BLOCK_EXPLORER_ONLY, "only block explorer requests are allowed");
     }
 
     it->second.handler(this, jsonRequest, jsonResponse);
@@ -221,6 +242,15 @@ bool RpcServer::enableCors(const std::string& domain) {
 }
 
 const std::string& RpcServer::getCorsDomain() { return m_cors; }
+
+bool RpcServer::isBlockexplorer() const { return m_isBlockexplorer; }
+void RpcServer::setBlockexplorer(bool enabled) {
+  m_isBlockexplorer = enabled;
+  logger(INFO) << "Blockexplorer " << (enabled ? "enabled" : "disabled");
+}
+
+bool RpcServer::isBlockexplorerOnly() const { return m_isBlockexplorerOnly; }
+void RpcServer::setBlockexplorerOnly(bool enabled) { m_isBlockexplorerOnly = enabled; }
 
 bool RpcServer::isCoreReady() {
   return m_core.getCurrency().isTestNet() || m_p2p.get_payload_object().isSynchronized();
@@ -648,7 +678,7 @@ bool RpcServer::on_get_peers(const COMMAND_RPC_GET_PEERS::request& req, COMMAND_
 bool RpcServer::f_on_blocks_list_json(const F_COMMAND_RPC_GET_BLOCKS_LIST::request& req,
                                       F_COMMAND_RPC_GET_BLOCKS_LIST::response& res) {
   // check if blockchain explorer RPC is enabled
-  if (m_core.getCurrency().isBlockexplorer() == false) {
+  if (!isBlockexplorer()) {
     return false;
   }
 
@@ -693,7 +723,7 @@ bool RpcServer::f_on_blocks_list_json(const F_COMMAND_RPC_GET_BLOCKS_LIST::reque
 
 bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& req,
                                 F_COMMAND_RPC_GET_BLOCK_DETAILS::response& res) {
-  if (m_core.getCurrency().isBlockexplorer() == false) {
+  if (!isBlockexplorer()) {
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
                                 "The blockexplorer is not enabled on this endpoint but required by this operation."};
   }
@@ -806,7 +836,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
 bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAILS::request& req,
                                       F_COMMAND_RPC_GET_TRANSACTION_DETAILS::response& res) {
   // check if blockchain explorer RPC is enabled
-  if (m_core.getCurrency().isBlockexplorer() == false) {
+  if (!isBlockexplorer()) {
     return false;
   }
 
@@ -888,7 +918,7 @@ bool RpcServer::f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::reques
                                             F_COMMAND_RPC_GET_POOL::response& res) {
   XI_UNUSED(req);
   // check if blockchain explorer RPC is enabled
-  if (m_core.getCurrency().isBlockexplorer() == false) {
+  if (!isBlockexplorer()) {
     return false;
   }
 
@@ -912,7 +942,7 @@ bool RpcServer::f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::reques
 bool RpcServer::f_on_p2p_ban_info(const F_COMMAND_RPC_GET_P2P_BAN_INFO::request& req,
                                   F_COMMAND_RPC_GET_P2P_BAN_INFO::response& res) {
   XI_UNUSED(req);
-  if (m_core.getCurrency().isBlockexplorer() == false) {
+  if (!isBlockexplorer()) {
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_BLOCK_EXPLORER_DISABLED,
                                 "Block explorer must be enabled for this request."};
   }

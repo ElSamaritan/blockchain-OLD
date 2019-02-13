@@ -35,8 +35,6 @@ namespace {
 struct DaemonConfiguration {
   std::string dataDirectory;
   std::string logFile;
-  std::string feeAddress;
-  std::string rpcInterface;
   std::string p2pInterface;
   std::string checkPoints;
 
@@ -45,12 +43,10 @@ struct DaemonConfiguration {
   std::vector<std::string> exclusiveNodes;
   std::vector<std::string> seedNodes;
   int32_t p2pBanDurationMinutes;
-  std::string enableCors;
 
   int logLevel;
   int feeAmount;
   ::Xi::Config::Network::Type network;
-  uint16_t rpcPort;
   uint16_t p2pPort;
   uint16_t p2pExternalPort;
   uint16_t dbThreads;
@@ -61,7 +57,16 @@ struct DaemonConfiguration {
   ::Xi::Http::SSLConfiguration ssl;
 
   bool noConsole;
-  bool enableBlockExplorer;
+
+  // ------ RPC
+  std::string enableCors;
+  bool enableBlockExplorer = false;
+  bool onlyBlockExplorer = false;
+  bool disableRpc = false;
+  uint16_t rpcPort;
+  std::string rpcInterface;
+  std::string feeAddress;
+
   bool localIp;
   bool hideMyPort;
 
@@ -134,7 +139,9 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     ("save-config", "Save the configuration to the specified <file>", cxxopts::value<std::string>(), "<file>");
 
   options.add_options("RPC")
-    ("enable-blockexplorer", "Enable the Blockchain Explorer RPC", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+    ("enable-blockexplorer", "Enable the Blockchain Explorer RPC", cxxopts::value<bool>(config.enableBlockExplorer)->default_value("false")->implicit_value("true"))
+    ("only-blockexplorer", "Enables only Blockchain Explorer RPC calls", cxxopts::value<bool>(config.onlyBlockExplorer)->default_value("false")->implicit_value("true"))
+    ("no-rpc", "Disables the RPC endpoint.", cxxopts::value<bool>(config.disableRpc)->default_value("false")->implicit_value("true"))
     ("enable-cors", "Adds header 'Access-Control-Allow-Origin' to the RPC responses using the <domain>. Uses the value specified as the domain. Use * for all.",
       cxxopts::value<std::string>()->implicit_value("*"), "<domain>")
     ("fee-address", "Sets the convenience charge <address> for light wallets that use the daemon", cxxopts::value<std::string>(), "<address>")
@@ -400,6 +407,10 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
     config.rpcPort = j["rpc-bind-port"].get<uint16_t>();
   }
 
+  if (j.find("no-rpc") != j.end()) {
+    config.disableRpc = j["no-rpc"].get<bool>();
+  }
+
   if (j.find("add-exclusive-node") != j.end()) {
     config.exclusiveNodes = j["add-exclusive-node"].get<std::vector<std::string>>();
   }
@@ -418,6 +429,10 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
 
   if (j.find("enable-blockexplorer") != j.end()) {
     config.enableBlockExplorer = j["enable-blockexplorer"].get<bool>();
+  }
+
+  if (j.find("only-blockexplorer") != j.end()) {
+    config.onlyBlockExplorer = j["only-blockexplorer"].get<bool>();
   }
 
   if (j.find("enable-cors") != j.end()) {
@@ -462,11 +477,13 @@ json asJSON(const DaemonConfiguration& config) {
                 {"p2p-ban-duration", config.p2pBanDurationMinutes},
                 {"rpc-bind-ip", config.rpcInterface},
                 {"rpc-bind-port", config.rpcPort},
+                {"no-rpc", config.disableRpc},
                 {"add-exclusive-node", config.exclusiveNodes},
                 {"add-peer", config.peers},
                 {"add-priority-node", config.priorityNodes},
                 {"seed-node", config.seedNodes},
                 {"enable-blockexplorer", config.enableBlockExplorer},
+                {"only-blockexplorer", config.onlyBlockExplorer},
                 {"enable-cors", config.enableCors},
                 {"fee-address", config.feeAddress},
                 {"fee-amount", config.feeAmount},
