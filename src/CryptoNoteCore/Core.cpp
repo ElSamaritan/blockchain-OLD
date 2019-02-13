@@ -2070,7 +2070,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, uint32_t height, size_t media
     const CachedTransaction& transaction = *it;
 
     auto transactionBlobSize = transaction.getTransactionBinaryArray().size();
-    if (m_currency.fusionTxMaxSize() < transactionsSize + transactionBlobSize) {
+    if (m_currency.fusionTxMaxSize(block.majorVersion) < transactionsSize + transactionBlobSize) {
       continue;
     }
     if (transactionsSize + transactionBlobSize > maxTotalSize) {

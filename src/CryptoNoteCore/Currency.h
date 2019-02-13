@@ -34,6 +34,8 @@ class Currency {
   uint64_t publicAddressBase58Prefix() const { return m_publicAddressBase58Prefix; }
   uint32_t minedMoneyUnlockWindow() const { return m_minedMoneyUnlockWindow; }
 
+  uint8_t majorBlockVersionForHeight(uint32_t blockHeight) const;
+
   uint32_t timestampCheckWindow(uint32_t blockHeight, uint8_t majorVersion) const;
   uint64_t blockFutureTimeLimit(uint32_t blockHeight, uint8_t majorVersion) const;
 
@@ -71,7 +73,7 @@ class Currency {
   uint64_t mempoolTxFromAltBlockLiveTime() const { return m_mempoolTxFromAltBlockLiveTime; }
   uint64_t numberOfPeriodsToForgetTxDeletedFromPool() const { return m_numberOfPeriodsToForgetTxDeletedFromPool; }
 
-  size_t fusionTxMaxSize() const { return m_fusionTxMaxSize; }
+  size_t fusionTxMaxSize(uint8_t blockMajorVersion) const;
   size_t fusionTxMinInputCount() const { return m_fusionTxMinInputCount; }
   size_t fusionTxMinInOutCountRatio() const { return m_fusionTxMinInOutCountRatio; }
 

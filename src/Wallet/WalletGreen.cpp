@@ -3222,7 +3222,8 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint16_t mixin,
 
   const size_t MAX_FUSION_OUTPUT_COUNT = 4;
 
-  uint32_t height = m_node.getLastKnownBlockHeight();
+  const uint32_t height = m_node.getLastKnownBlockHeight();
+  const uint8_t blockVersion = m_currency.majorBlockVersionForHeight(height + 1);
 
   if (threshold <= m_currency.defaultFusionDustThreshold(height)) {
     m_logger(ERROR) << "Fusion transaction threshold is too small. Threshold " << m_currency.formatAmount(threshold)
@@ -3237,8 +3238,8 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint16_t mixin,
     throw std::runtime_error("You must have at least one address");
   }
 
-  size_t estimatedFusionInputsCount =
-      m_currency.getApproximateMaximumInputCount(m_currency.fusionTxMaxSize(), MAX_FUSION_OUTPUT_COUNT, mixin);
+  size_t estimatedFusionInputsCount = m_currency.getApproximateMaximumInputCount(
+      m_currency.fusionTxMaxSize(blockVersion), MAX_FUSION_OUTPUT_COUNT, mixin);
   if (estimatedFusionInputsCount < m_currency.fusionTxMinInputCount()) {
     m_logger(ERROR) << "Fusion transaction mixin is too big " << mixin;
     throw std::system_error(make_error_code(error::MIXIN_COUNT_TOO_BIG));
@@ -3291,7 +3292,8 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint16_t mixin,
     transactionSize = getTransactionSize(*fusionTransaction);
 
     ++round;
-  } while (transactionSize > m_currency.fusionTxMaxSize() && fusionInputs.size() >= m_currency.fusionTxMinInputCount());
+  } while (transactionSize > m_currency.fusionTxMaxSize(blockVersion) &&
+           fusionInputs.size() >= m_currency.fusionTxMinInputCount());
 
   if (fusionInputs.size() < m_currency.fusionTxMinInputCount()) {
     m_logger(ERROR) << "Unable to create fusion transaction";
@@ -3376,9 +3378,11 @@ bool WalletGreen::isFusionTransaction(const WalletTransaction& walletTx) const {
   if (outputsSum != inputsSum || outputsSum != txInfo.totalAmountOut || inputsSum != txInfo.totalAmountIn) {
     return false;
   } else {
-    return m_currency.isFusionTransaction(
-        inputsAmounts, outputsAmounts, 0,
-        m_node.getLastKnownBlockHeight());  // size = 0 here because can't get real size of tx in wallet.
+    const auto blockHeight = txInfo.blockHeight == WALLET_UNCONFIRMED_TRANSACTION_HEIGHT
+                                 ? m_node.getLastKnownBlockHeight()
+                                 : txInfo.blockHeight;
+    return m_currency.isFusionTransaction(inputsAmounts, outputsAmounts, 0,
+                                          blockHeight);  // size = 0 here because can't get real size of tx in wallet.
   }
 }
 

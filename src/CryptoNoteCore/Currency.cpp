@@ -104,9 +104,21 @@ size_t Currency::difficultyBlocksCountByVersion(uint8_t version) const {
   return Xi::Config::Difficulty::windowSize(version) + 1;
 }
 
+size_t Currency::fusionTxMaxSize(uint8_t blockMajorVersion) const {
+  const auto rewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
+  const auto maxSize = std::min(rewardZone, m_fusionTxMaxSize);
+  const auto reservedSize = minerTxBlobReservedSize();
+  assert(maxSize > reservedSize);
+  return maxSize - reservedSize;
+}
+
 uint8_t Currency::maxTxVersion() const { return Xi::Config::Transaction::maximumVersion(); }
 
 uint8_t Currency::minTxVersion() const { return Xi::Config::Transaction::minimumVersion(); }
+
+uint8_t Currency::majorBlockVersionForHeight(uint32_t blockHeight) const {
+  return Xi::Config::BlockVersion::version(blockHeight);
+}
 
 uint32_t Currency::timestampCheckWindow(uint32_t blockHeight, uint8_t majorVersion) const {
   XI_UNUSED(blockHeight);
@@ -282,7 +294,7 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
 
 bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts,
                                    const std::vector<uint64_t>& outputsAmounts, size_t size, uint32_t height) const {
-  if (size > fusionTxMaxSize()) {
+  if (size > fusionTxMaxSize(majorBlockVersionForHeight(height))) {
     return false;
   }
 
