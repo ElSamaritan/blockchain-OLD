@@ -25,16 +25,24 @@ class Transaction:
             _str += ("\n\t\t%s" % transfer)
         return _str
 
+class FusionTransaction:
+    DustThreshold = 0
+    Anonymity = 0
+
+    def __str__(self):
+        return "\n\tDustThreshold: %.6f\n\tAnonymity: %d\n" % (prettyAmount(self.DustThreshold), self.Anonymity)
+
 class Balance:
     Available = 0
     Locked = 0
+    Total = 0
 
     def __init__(self, available, locked):
         self.Available = available
         self.Locked = locked
 
     def __str__(self):
-     return "Availabe '%.6f', Locked '%.6f'" % (prettyAmount(self.Available), prettyAmount(self.Locked))
+     return "Availabe '%.6f', Locked '%.6f', Total '%.6f'" % (prettyAmount(self.Available), prettyAmount(self.Locked), prettyAmount(self.Total))
 
 
 class PGService:
@@ -69,6 +77,12 @@ class PGService:
             'fee': transaction.Fee,
             'unlockTime': transaction.UnlockTime
             })
+
+    def sendFusionTransaction(self, transaction: FusionTransaction):
+        return self.makeCall("sendFusionTransaction", {
+            'threshold': transaction.DustThreshold,
+            'anonymity': transaction.Anonymity
+        })
 
     def makeCall(self, method, params = {}):
         payload = {
@@ -121,9 +135,15 @@ class Wallet:
         jsonResult = self.Api.sendTransaction(transaction)
         print("Transaction sent: %s" % jsonResult['result']['transactionHash'])
 
-    def initialize(self):
+    def sendFusionTransaction(self, transaction: FusionTransaction):
+        print("\nSending fusion transaction from %s...%s" % (self.Address, transaction))
+        jsonResult = self.Api.sendFusionTransaction(transaction)
+        print("Fusion Transaction sent: %s" % jsonResult['result']['transactionHash'])
+
+    def initialize(self, reset: bool):
         self.Address = self.Api.getAddress()['result']['addresses'][0]
-        self.Api.reset()
+        if reset:
+            self.Api.reset()
         self.updateBalance()
         print(self)
 
@@ -131,20 +151,24 @@ class Wallet:
 with open("MakeTransactions.yml", 'r') as ymlfile:
     config = yaml.load(ymlfile)
 
+MinFee            = config['MinimumFee']
+MaxFee            = config['MaximumFee']
+MinAmount         = config['MinimumAmount']
+MaxAmount         = config['MaximumAmount']
+MinMixin          = config['MinAnonymity']
+MaxMixin          = config['MaxAnonymity']
+MinFusionDust     = config['MinFusionDust']
+MaxFusionDust     = config['MaxFusionDust']
+FusionPropability = config['FusionPropability']
+ResetOnStart      = config['ResetOnStart']
+TPM               = config['TransactionsPerMinute']
+
 wallets = []
 for wallet in config['Wallets']:
     wallets.append(Wallet(wallet))
 
 for wallet in wallets:
-    wallet.initialize()
-
-MinFee    = config['MinimumFee']
-MaxFee    = config['MaximumFee']
-MinAmount = config['MinimumAmount']
-MaxAmount = config['MaximumAmount']
-MinMixin  = config['MinAnonymity']
-MaxMixin  = config['MaxAnonymity']
-TPM       = config['TransactionsPerMinute']
+    wallet.initialize(ResetOnStart)
 
 if len(wallets) < 2:
     raise ValueError('The script expects at least 2 wallets.')
@@ -152,13 +176,12 @@ if len(wallets) < 2:
 def makeRandomTransaction():
     transaction = Transaction()
     transaction.Transfers = []
-    senderIndex = randint(0, len(wallets) - 1)
-    recieverIndex = randint(0, len(wallets) - 1)
-    while senderIndex == recieverIndex:
-        recieverIndex = randint(0, len(wallets) - 1)
-    senderWallet = wallets[senderIndex]
+    sortedWallets = sorted(wallets, key=lambda x: x.Balance.Available, reverse=True)
+    senderIndex = 0
+    recieverIndex = len(sortedWallets) - 1
+    senderWallet = sortedWallets[senderIndex]
     recievers = []
-    recievers.append(wallets[recieverIndex].Address)
+    recievers.append(sortedWallets[recieverIndex].Address)
 
     transaction.Fee = randint(MinFee, MaxFee)
     transaction.Anonymity = randint(MinMixin, MaxMixin)
@@ -179,8 +202,21 @@ def makeRandomTransaction():
         except ValueError as error:
             print("Error sending transaction: '%s'" % error)
 
+def makeRandomFusionTransaction():
+    transaction = FusionTransaction()
+    wallet = wallets[randint(0, len(wallets) - 1)]
+    transaction.DustThreshold = randint(MinFusionDust, MaxFusionDust)
+    transaction.Anonymity = randint(MinMixin, MaxMixin)
+    try:
+        wallet.sendFusionTransaction(transaction)
+    except ValueError as error:
+        print("Error sending fusion transaction: '%s'" % error)
+
 while True:
-    makeRandomTransaction()
+    if randint(0, 99) < FusionPropability:
+        makeRandomFusionTransaction()
+    else:
+        makeRandomTransaction()
     sleep(60.0 / float(TPM))
     for wallet in wallets:
         wallet.updateBalance()
