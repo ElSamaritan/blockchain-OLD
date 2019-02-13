@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <cinttypes>
+#include <limits>
 
 #include <Xi/Utils/ExternalIncludePush.h>
 #include <cxxopts.hpp>
@@ -43,6 +44,7 @@ struct DaemonConfiguration {
   std::vector<std::string> priorityNodes;
   std::vector<std::string> exclusiveNodes;
   std::vector<std::string> seedNodes;
+  int32_t p2pBanDurationMinutes;
   std::string enableCors;
 
   int logLevel;
@@ -147,6 +149,7 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     ("hide-my-port", "Do not announce yourself as a peerlist candidate", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
     ("p2p-bind-ip", "Interface IP address for the P2P service", cxxopts::value<std::string>()->default_value(config.p2pInterface), "<ip>")
     ("p2p-bind-port", "TCP port for the P2P service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.p2pPort)), "#")
+    ("p2p-ban-duration", "Duration, in minutes, peers get banned. Choose less than zero to disable.", cxxopts::value<int32_t>(config.p2pBanDurationMinutes)->default_value("1440"))
     ("p2p-external-port", "External TCP port for the P2P service (NAT port forward)", cxxopts::value<uint16_t>()->default_value(std::to_string(config.p2pExternalPort)), "#")
     ("rpc-bind-ip", "Interface IP address for the RPC service", cxxopts::value<std::string>()->default_value(config.rpcInterface), "<ip>")
     ("rpc-bind-port", "TCP port for the RPC service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.rpcPort)), "#");
@@ -385,6 +388,10 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
     config.p2pExternalPort = j["p2p-external-port"].get<uint16_t>();
   }
 
+  if (j.find("p2p-ban-duration") != j.end()) {
+    config.p2pBanDurationMinutes = j["p2p-ban-duration"].get<int32_t>();
+  }
+
   if (j.find("rpc-bind-ip") != j.end()) {
     config.rpcInterface = j["rpc-bind-ip"].get<std::string>();
   }
@@ -452,6 +459,7 @@ json asJSON(const DaemonConfiguration& config) {
                 {"p2p-bind-ip", config.p2pInterface},
                 {"p2p-bind-port", config.p2pPort},
                 {"p2p-external-port", config.p2pExternalPort},
+                {"p2p-ban-duration", config.p2pBanDurationMinutes},
                 {"rpc-bind-ip", config.rpcInterface},
                 {"rpc-bind-port", config.rpcPort},
                 {"add-exclusive-node", config.exclusiveNodes},

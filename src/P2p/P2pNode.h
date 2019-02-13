@@ -47,7 +47,7 @@ class P2pNode : public IP2pNode, public IStreamSerializable, IP2pNodeInternal {
   P2pNode(int, const P2pNodeConfig& cfg, System::Dispatcher& dispatcher, Logging::ILogger& log,
           const Crypto::Hash& genesisHash, PeerIdType peerId);
 
-  ~P2pNode();
+  ~P2pNode() override;
 
   // IP2pNode
   virtual std::unique_ptr<IP2pConnection> receiveConnection() override;

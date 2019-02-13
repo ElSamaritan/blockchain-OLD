@@ -127,6 +127,8 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   bool f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAILS::request& req,
                              F_COMMAND_RPC_GET_TRANSACTION_DETAILS::response& res);
   bool f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::request& req, F_COMMAND_RPC_GET_POOL::response& res);
+  bool f_on_p2p_ban_info(const F_COMMAND_RPC_GET_P2P_BAN_INFO::request& req,
+                         F_COMMAND_RPC_GET_P2P_BAN_INFO::response& res);
   bool f_getMixin(const Transaction& transaction, uint64_t& mixin);
 
   Logging::LoggerRef logger;

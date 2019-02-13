@@ -163,22 +163,7 @@ bool CommonCLI::handleCLIOptions(cxxopts::Options& options, const cxxopts::Parse
     std::cout << "v" << APP_VERSION << " (" << BUILD_COMMIT_ID << ")" << std::endl;
     return true;
   } else if (result.count("vversion")) {
-    // clang-format off
-    std::cout
-        << "Version\t\t: v" << APP_VERSION
-        << "\nChannel\t\t: " << BUILD_CHANNEL
-        << "\nBuild Type\t: " << BUILD_TYPE
-        << "\nBuild Timestamp\t: " << BUILD_TIMESTAMP
-        << "\nGit Commit\t: " << BUILD_COMMIT_ID
-        << "\nGit Branch\t: " << BUILD_BRANCH
-        << "\nC Compiler\t: " << BUILD_C_COMPILER_INFO
-        << "\nCXX Compiler\t: " << BUILD_CXX_COMPILER_INFO
-        << "\nBoost Version\t: " << BUILD_BOOST_VERSION
-        << "\nOpenSSL Version\t: " << BUILD_OPENSSL_VERSION
-        << "\n\n"
-        << PROJECT_COPYRIGHT
-    << std::endl;
-    // clang-format on
+    std::cout << verboseVersionInformation() << std::endl;
     return true;
   } else if (result.count("license")) {
     std::cout << Xi::Version::license() << std::endl;
@@ -213,4 +198,24 @@ void* CommonCLI::make_crash_dumper(const std::string& applicationId) {
   (void)applicationId;
 #endif  // XI_USE_BREAKPAD
   return nullptr;
+}
+
+std::string CommonCLI::verboseVersionInformation() {
+  std::stringstream str{};
+  // clang-format off
+  str
+      << "Version\t\t: v" << APP_VERSION
+      << "\nChannel\t\t: " << BUILD_CHANNEL
+      << "\nBuild Type\t: " << BUILD_TYPE
+      << "\nBuild Timestamp\t: " << BUILD_TIMESTAMP
+      << "\nGit Commit\t: " << BUILD_COMMIT_ID
+      << "\nGit Branch\t: " << BUILD_BRANCH
+      << "\nC Compiler\t: " << BUILD_C_COMPILER_INFO
+      << "\nCXX Compiler\t: " << BUILD_CXX_COMPILER_INFO
+      << "\nBoost Version\t: " << BUILD_BOOST_VERSION
+      << "\nOpenSSL Version\t: " << BUILD_OPENSSL_VERSION
+      << "\n\n"
+      << PROJECT_COPYRIGHT;
+  // clang-format on
+  return str.str();
 }

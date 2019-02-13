@@ -69,7 +69,7 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
   virtual size_t getPeerCount() const override;
   virtual uint32_t getObservedHeight() const override;
   virtual uint32_t getBlockchainHeight() const override;
-  void requestMissingPoolTransactions(const CryptoNoteConnectionContext& context);
+  void requestMissingPoolTransactions(CryptoNoteConnectionContext& context);
 
  private:
   //----------------- commands handlers ----------------------------------------------

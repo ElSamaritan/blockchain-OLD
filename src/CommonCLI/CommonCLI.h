@@ -56,6 +56,11 @@ std::string insecureClientWarning();
 std::string insecureServerWarning();
 
 /*!
+ * \brief verboseVersionInformation returns a verbose version information string about this build.
+ */
+std::string verboseVersionInformation();
+
+/*!
  * \brief emplaceCLIOptions will add common options for CLI applications to the option parser interface
  * \param options The parser that will handle the options
  */

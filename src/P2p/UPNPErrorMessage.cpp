@@ -61,8 +61,6 @@ std::string CryptoNote::get_upnp_error_message(int codec) {
       return "Attempted port mapping is not allowed due to conflict with other mechanisms.";
     case 732:
       return "The internal port cannot be wild-carded";
-    default:
-      return "unknown";
   }
   return "unknown";
 }
