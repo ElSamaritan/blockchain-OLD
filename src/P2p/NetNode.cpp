@@ -641,13 +641,14 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
         << context
         << "A daemon on the network has departed. MSG: Failed to invoke COMMAND_HANDSHAKE, closing connection. ERR: "
         << handshakeResult.error().message();
+    report_failure(context.m_remote_ip, P2pPenalty::ConnectionRefuse);
     return false;
   }
 
   context.version = rsp.node_data.version;
 
   if (rsp.node_data.network_id != m_network_id) {
-    add_host_fail(context.m_remote_ip, P2pPenalty::WrongNetworkId);
+    report_failure(context.m_remote_ip, P2pPenalty::WrongNetworkId);
     logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, wrong network! (" << rsp.node_data.network_id
                                << "), closing connection.";
     return false;
@@ -656,6 +657,7 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
   if (rsp.node_data.version < Xi::Config::P2P::minimumVersion()) {
     logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! ("
                                << std::to_string(rsp.node_data.version) << "), closing connection.";
+    report_failure(context.m_remote_ip, P2pPenalty::DeprecatedVersion);
     return false;
   } else if ((rsp.node_data.version - Xi::Config::P2P::currentVersion()) >=
              Xi::Config::P2P::upgradeNotificationWindow()) {
@@ -666,6 +668,7 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
   if (!handle_remote_peerlist(rsp.local_peerlist, rsp.node_data.local_time, context)) {
     logger(Logging::ERROR) << context
                            << "COMMAND_HANDSHAKE: failed to handle_remote_peerlist(...), closing connection.";
+    report_failure(context.m_remote_ip, P2pPenalty::HandshakeFailure);
     return false;
   }
 
@@ -676,6 +679,7 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
   if (!m_payload_handler.process_payload_sync_data(rsp.payload_data, context, true)) {
     logger(Logging::ERROR)
         << context << "COMMAND_HANDSHAKE invoked, but process_payload_sync_data returned false, dropping connection.";
+    report_failure(context.m_remote_ip, P2pPenalty::HandshakeFailure);
     return false;
   }
 
@@ -713,12 +717,14 @@ bool NodeServer::handleTimedSyncResponse(const BinaryArray& in, P2pConnectionCon
   if (decodeResult.isError()) {
     logger(Logging::ERROR) << context
                            << "COMMAND_TIMED_SYNC: failed to decode blob, error: " << decodeResult.error().message();
+    report_failure(context.m_remote_ip, P2pPenalty::HandshakeFailure);
     return false;
   }
 
   if (!handle_remote_peerlist(rsp.local_peerlist, rsp.local_time, context)) {
     logger(Logging::ERROR) << context
                            << "COMMAND_TIMED_SYNC: failed to handle_remote_peerlist(...), closing connection.";
+    report_failure(context.m_remote_ip, P2pPenalty::HandshakeFailure);
     return false;
   }
 
@@ -791,13 +797,19 @@ bool NodeServer::try_to_connect_and_handshake_with_new_peer(const NetworkAddress
       System::Context<> timeoutContext(m_dispatcher, [&] {
         System::Timer(m_dispatcher).sleep(std::chrono::milliseconds(m_config.m_net_config.connection_timeout));
         logger(DEBUGGING) << "Connection to " << na << " timed out, interrupt it";
+        report_failure(na.ip, P2pPenalty::Timeout);
         safeInterrupt(connectionContext);
       });
 
       connection = std::move(connectionContext.get());
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << "Connection timed out";
+      report_failure(na.ip, P2pPenalty::Timeout);
       return false;
+    } catch (std::exception& e) {
+      report_failure(na.ip, P2pPenalty::Exceptional);
+      logger(DEBUGGING) << "Connection to " << Common::ipAddressToString(na.ip) << " failed: " << e.what();
+      throw e;
     }
 
     P2pConnectionContext ctx(m_dispatcher, logger.getLogger(), std::move(connection));
@@ -1231,7 +1243,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   if (arg.node_data.version < Xi::Config::P2P::minimumVersion()) {
     logger(Logging::DEBUGGING) << context << "UNSUPPORTED NETWORK AGENT VERSION CONNECTED! version="
                                << std::to_string(arg.node_data.version);
-    add_host_fail(context.m_remote_ip, P2pPenalty::DeprecatedP2pVersion);
+    add_host_fail(context.m_remote_ip, P2pPenalty::DeprecatedVersion);
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
   } else if (arg.node_data.version > Xi::Config::P2P::currentVersion()) {
@@ -1501,7 +1513,8 @@ bool NodeServer::add_host_fail(const uint32_t address_ip, P2pPenalty penalty) {
     m_host_fails_score[address_ip] += penalityWeight;
   }
   uint64_t failScore = m_host_fails_score[address_ip];
-  logger(DEBUGGING) << "Host " << Common::ipAddressToString(address_ip) << " fail score=" << failScore;
+  logger(DEBUGGING) << "Host " << Common::ipAddressToString(address_ip) << ", fail score=" << failScore
+                    << ", penalty: " << p2pPeanaltyMessage(penalty);
   if (failScore > m_fails_before_block) {
     auto it = m_host_fails_score.find(address_ip);
     if (it == m_host_fails_score.end()) {

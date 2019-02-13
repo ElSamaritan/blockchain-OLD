@@ -34,7 +34,7 @@ enum struct P2pPenalty {
   None,                          ///< No panalty should be applied.
   WrongNetworkId,                ///< The peer connected with a wrong network id.
   IncomeViolation,               ///< The peer sent payload while receiving.
-  DeprecatedP2pVersion,          ///< The peers has an incompatible version.
+  DeprecatedVersion,             ///< The peers has an incompatible version.
   HandshakeFailure,              ///< The handshake failed for various reasons.
   InvalidResponse,               ///< The peer returned an invalid response. For more information view the log.
   InvalidRequest,                ///< The peer sent an invalid request. For more information view the log.
@@ -42,6 +42,8 @@ enum struct P2pPenalty {
   TransactionValidationFailure,  ///< The peer sent an invalid transaction.
   NoResponse,                    ///< The peer was expected to respond to a request but did not.
   Exceptional,                   ///< The request of a peer lead to an exception.
+  Timeout,                       ///< The connection to the peer timed out.
+  ConnectionRefuse,              ///< The peer actively refused the connection.
 };
 
 /*!
@@ -55,7 +57,7 @@ inline uint64_t p2pPenaltyWeight(P2pPenalty penalty) {
       return 10;
     case P2pPenalty::IncomeViolation:
       return 5;
-    case P2pPenalty::DeprecatedP2pVersion:
+    case P2pPenalty::DeprecatedVersion:
       return 2;
     case P2pPenalty::HandshakeFailure:
       return 2;
@@ -71,6 +73,10 @@ inline uint64_t p2pPenaltyWeight(P2pPenalty penalty) {
       return 2;
     case P2pPenalty::Exceptional:
       return 4;
+    case P2pPenalty::Timeout:
+      return 1;
+    case P2pPenalty::ConnectionRefuse:
+      return 1;
 
     case P2pPenalty::None:
       return 0;
@@ -89,7 +95,7 @@ inline std::string p2pPeanaltyMessage(P2pPenalty penalty) {
       return "wrong network identifier";
     case P2pPenalty::IncomeViolation:
       return "incoming payload violation";
-    case P2pPenalty::DeprecatedP2pVersion:
+    case P2pPenalty::DeprecatedVersion:
       return "incompatible p2p protocol version";
     case P2pPenalty::HandshakeFailure:
       return "handshake failed";
@@ -105,6 +111,10 @@ inline std::string p2pPeanaltyMessage(P2pPenalty penalty) {
       return "did not respond";
     case P2pPenalty::Exceptional:
       return "sent a command leading to an exception";
+    case P2pPenalty::Timeout:
+      return "connection timed out";
+    case P2pPenalty::ConnectionRefuse:
+      return "peer actively refused the connection";
 
     case P2pPenalty::None:
       return "none";
