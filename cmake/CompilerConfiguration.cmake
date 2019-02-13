@@ -63,7 +63,7 @@ if(MSVC)
     if(XI_BUILD_BREAKPAD)
       set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /Zi")
       set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
-      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MAP /debug /opt:ref")
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MAP /DEBUG:FULL /opt:ref")
     endif() # XI_BUILD_BREAKPAD
 else() # NOT MSVC
   if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
@@ -142,10 +142,10 @@ else() # NOT MSVC
 
   if(XI_BUILD_BREAKPAD)
     if(XI_C_COMPILER_GNU)
-      set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g -fno-omit-frame-pointer")
+      set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g")
     endif()
     if(XI_CXX_COMPILER_GNU)
-      set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g -fno-omit-frame-pointer")
+      set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
     endif()
   endif() # XI_BUILD_BREAKPAD
 
