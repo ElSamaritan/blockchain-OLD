@@ -1597,6 +1597,13 @@ size_t NodeServer::unbanAllIps() {
   return count;
 }
 
+size_t NodeServer::resetPenalties() {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  size_t count = m_host_fails_score.size();
+  m_host_fails_score.clear();
+  return count;
+}
+
 void NodeServer::timedSyncLoop() {
   try {
     for (;;) {

@@ -65,7 +65,8 @@ class DaemonCommandsHandler {
 
   /* -------------------------------------------------- P2P Commands ----------------------------------------------- */
   bool p2p_ban_list(const std::vector<std::string>& args);
-  bool p2p_penality_list(const std::vector<std::string>& args);
+  bool p2p_penalty_list(const std::vector<std::string>& args);
+  bool p2p_penalty_reset(const std::vector<std::string>& args);
   bool p2p_ban_ip(const std::vector<std::string>& args);
   bool p2p_unban_ip(const std::vector<std::string>& args);
   bool p2p_unban_all(const std::vector<std::string>& args);

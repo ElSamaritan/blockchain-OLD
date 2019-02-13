@@ -346,6 +346,14 @@ class NodeServer : public IP2pEndpoint {
    */
   size_t unbanAllIps();
 
+  /*!
+   * \brief resetPenalties Deletes all penalties assigned to peers.
+   * \return The count of removed peer penalties.
+   *
+   * \attention This will not unban any peer.
+   */
+  size_t resetPenalties();
+
  private:
   mutable Xi::Concurrent::RecursiveLock m_block_access;
   std::map<uint32_t, int64_t> m_blocked_hosts;

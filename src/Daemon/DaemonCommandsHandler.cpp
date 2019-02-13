@@ -75,7 +75,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
 
   /* -------------------------------------------------- P2P Commands ----------------------------------------------- */
   DAEMON_COMMAND_DEFINE(p2p_ban_list, "Lists all currently banned peers.");
-  DAEMON_COMMAND_DEFINE(p2p_penality_list, "Lists all peers with penalities.");
+  DAEMON_COMMAND_DEFINE(p2p_penalty_list, "Lists all peers with penalities.");
   DAEMON_COMMAND_DEFINE(p2p_ban_ip, "Adds given ips to the ban list.  '<ip> [<ip> ]*'");
   DAEMON_COMMAND_DEFINE(p2p_unban_ip, "Removes given ips from the ban list. '<ip> [<ip> ]*'");
   DAEMON_COMMAND_DEFINE(p2p_unban_all, "Removes all banned peers from the ban list.");
@@ -374,6 +374,15 @@ bool DaemonCommandsHandler::p2p_penalty_list(const std::vector<std::string>& arg
     }
     std::cout << std::endl;
   }
+  return true;
+}
+
+bool DaemonCommandsHandler::p2p_penalty_reset(const std::vector<std::string>& args) {
+  DAEMON_COMMAND_EXPECTED_ARGS(0, "No argument expected.");
+
+  const size_t removedPenalties = m_srv.resetPenalties();
+  std::cout << removedPenalties << " penalties removed." << std::endl;
+
   return true;
 }
 
