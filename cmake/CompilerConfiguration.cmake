@@ -142,10 +142,10 @@ else() # NOT MSVC
 
   if(XI_BUILD_BREAKPAD)
     if(XI_C_COMPILER_GNU)
-      set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g -DNDEBUG")
+      set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g -fno-omit-frame-pointer")
     endif()
     if(XI_CXX_COMPILER_GNU)
-      set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g -DNDEBUG")
+      set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g -fno-omit-frame-pointer")
     endif()
   endif() # XI_BUILD_BREAKPAD
 

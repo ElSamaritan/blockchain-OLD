@@ -44,7 +44,6 @@ try
     $CMakeInstallPrefix = Get-Configuration CMAKE_INSTALL_PATH -DefaultValue ".install" -ProvidedValue $InstallPrefix
     $CMakeInstallPath = "$CMakeInstallPrefix\bin"
     $CMakeGenerator = Get-Configuration CMAKE_GENERATOR -DefaultValue $(Get-Generator)
-    $CMakeBuildType = Get-Configuration CMAKE_BUILD_TYPE -DefaultValue Release
 
     $CMakeSourcePath = Get-Resolve-Path $CMakeSourcePath
     $CMakeBuildPath = Get-Resolve-Path $CMakeBuildPath
@@ -68,7 +67,6 @@ Build Configuration
 `t Build Path          : $CMakeBuildPath
 `t Install Path        : $CMakeInstallPath
 `t Generator           : $CMakeGenerator
-`t Build Type          : $CMakeBuildType
 
 Build Environment
 $(ConvertTo-Json $BuildEnvironment)
@@ -85,7 +83,7 @@ $(ConvertTo-Json $BuildEnvironment)
         Invoke-Command { 
             cmake `
                 -G $CMakeGenerator `
-                -DCMAKE_BUILD_TYPE=$CMakeBuildType `
+                -DCMAKE_BUILD_TYPE=Release `
                 -DCMAKE_INSTALL_PREFIX:PATH=$CMakeInstallPath `
                 -DXI_BUILD_CHANNEL="$($BuildEnvironment.Channel)" `
                 -DXI_BUILD_BREAKPAD=ON `
@@ -95,7 +93,7 @@ $(ConvertTo-Json $BuildEnvironment)
                 $CMakeSourcePath 
         }
         Invoke-Command {
-            cmake --build . --target install --config $CMakeBuildType
+            cmake --build . --target install --config Release
         }
     }
     finally 
