@@ -643,7 +643,6 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
         << context
         << "A daemon on the network has departed. MSG: Failed to invoke COMMAND_HANDSHAKE, closing connection. ERR: "
         << handshakeResult.error().message();
-    report_failure(context.m_remote_ip, P2pPenalty::ConnectionRefuse);
     return false;
   }
 
