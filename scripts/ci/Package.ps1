@@ -26,6 +26,7 @@ param(
 )
 
 Import-Module -Name "$PSScriptRoot\modules\WriteLog.psm1" -Force
+Import-Module -Name "$PSScriptRoot\modules\InvokeCommand.psm1" -Force
 Import-Module -Name "$PSScriptRoot\modules\GetResolvePath.psm1" -Force
 Import-Module -Name "$PSScriptRoot\modules\GetConfiguration.psm1" -Force
 Import-Module -Name "$PSScriptRoot\modules\GetBuildEnvironment.psm1" -Force
@@ -34,7 +35,6 @@ Import-Module -Name "$PSScriptRoot\modules\GetPackageInfo.psm1" -Force
 
 $CMakeInstallPrefix = Get-Configuration CMAKE_INSTALL_PATH -DefaultValue ".install" -ProvidedValue $InstallPrefix
 $CMakeInstallBinaries = Get-Resolve-Path "$CMakeInstallPrefix\bin"
-$CMakeInstallSymbols = Get-Resolve-Path "$CMakeInstallPrefix\symbols"
 
 $PackageInfo = Get-PackageInfo
 
@@ -66,6 +66,21 @@ New-Item -ItemType Directory -Path $LatestPath | Out-Null
 
 $CMakeBinariesPath = $(Get-Resolve-Path "$CMakeInstallPrefix\Xi")
 $CMakeSymbolsPath = $(Get-Resolve-Path "$CMakeInstallPrefix\symbols")
+
+if(-not $IsWindows)
+{
+    Write-Log "Fixing permissions..."
+    try 
+    {
+        Invoke-Command { chmod -R 755  $CMakeBinariesPath }
+        Invoke-Command { chmod -R 755  $CMakeSymbolsPath }
+    }
+    catch 
+    {
+        $Host.SetShouldExit(-1)
+        throw
+    }
+}
 
 Write-Log "Packaging binaries..."
 Compress-Archive -Path $CMakeBinariesPath -DestinationPath "$ArchivePath\binaries.zip"

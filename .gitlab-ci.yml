@@ -154,7 +154,9 @@ Packages:
     - "openSuse Leap - Build"
     - "Windows 10 - Build"
     - "macOS - Build"
-  script: pwsh -File ./scripts/ci/DeployPackages.ps1
+  script: 
+    - pwsh -File ./scripts/ci/DeployPackages.ps1
+    - pwsh -File ./scripts/ci/NotifyRelease.ps1
   only:
     - develop
     - release-candidate
