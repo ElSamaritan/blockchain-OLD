@@ -28,7 +28,7 @@ Import-Module -Name "$PSScriptRoot\modules\GetBuildEnvironment.psm1" -Force
 
 $BuildEnvironment = Get-BuildEnvironment
 
-if((-not ($BuildEnvironment -like "stable")) -and (-not ($BuildEnvironment -like "beta")))
+if((-not ($BuildEnvironment.Channel -like "stable")) -and (-not ($BuildEnvironment.Channel -like "beta")))
 {
     Write-Log "Notifications are only sent on stable and beta releases, skipping..."
     return
