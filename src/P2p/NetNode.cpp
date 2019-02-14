@@ -803,14 +803,12 @@ bool NodeServer::try_to_connect_and_handshake_with_new_peer(const NetworkAddress
       System::Context<> timeoutContext(m_dispatcher, [&] {
         System::Timer(m_dispatcher).sleep(std::chrono::milliseconds(m_config.m_net_config.connection_timeout));
         logger(DEBUGGING) << "Connection to " << na << " timed out, interrupt it";
-        report_failure(na.ip, P2pPenalty::Timeout);
         safeInterrupt(connectionContext);
       });
 
       connection = std::move(connectionContext.get());
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << "Connection timed out";
-      report_failure(na.ip, P2pPenalty::Timeout);
       return false;
     } catch (std::exception& e) {
       report_failure(na.ip, P2pPenalty::Exceptional);
