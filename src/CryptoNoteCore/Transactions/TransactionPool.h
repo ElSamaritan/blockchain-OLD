@@ -93,7 +93,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   void blockAdded(uint32_t index, const Crypto::Hash& hash) override;
 
   void mainChainSwitched(const IBlockchainCache& previous, const IBlockchainCache& current,
-                         uint32_t commonRootIndex) override;
+                         uint32_t splitIndex) override;
   // ------------------------------------ IBlockchainObserver End ------------------------------------------------------
 
  private:

@@ -837,12 +837,15 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
         if (cache->getCurrentCumulativeDifficulty() > mainChainCache->getCurrentCumulativeDifficulty()) {
           size_t endpointIndex =
               std::distance(chainsLeaves.begin(), std::find(chainsLeaves.begin(), chainsLeaves.end(), cache));
+
           assert(endpointIndex != chainsStorage.size());
           assert(endpointIndex != 0);
+
           std::swap(chainsLeaves[0], chainsLeaves[endpointIndex]);
           updateMainChainSet();
           updateBlockMedianSize();
-          auto splitIndex = findCommonRoot(*mainChainStorage, *chainsLeaves[0]);
+
+          const auto splitIndex = chainsLeaves[0]->getStartBlockIndex();
           switchMainChainStorage(splitIndex, *chainsLeaves[0]);
           ret = error::AddBlockErrorCode::ADDED_TO_ALTERNATIVE_AND_SWITCHED;
           m_blockchainObservers.notify(&IBlockchainObserver::mainChainSwitched, std::cref(*chainsLeaves[endpointIndex]),
@@ -973,13 +976,7 @@ Xi::Result<std::vector<Crypto::Hash>> Core::addBlock(LiteBlock block, std::vecto
     return Xi::make_error(error::AddBlockErrorCode::DESERIALIZATION_FAILED);
   }
 
-  // Quick checks, we can skip everything if this fails
-  {
-    CachedBlock cachedBlock{blockTemplate};
-    if (hasBlock(cachedBlock.getBlockHash())) {
-      return Xi::make_error(error::AddBlockErrorCode::ALREADY_EXISTS);
-    }
-  }
+  // Quick check, we can skip everything if this fails
   if (findSegmentContainingBlock(blockTemplate.previousBlockHash) == nullptr) {
     logger(Logging::TRACE) << "Lite block rejected as orphaned";
     return Xi::make_error(error::AddBlockErrorCode::REJECTED_AS_ORPHANED);

@@ -207,13 +207,16 @@ void TransactionPool::blockAdded(uint32_t index, const Crypto::Hash&) {
 }
 
 void TransactionPool::mainChainSwitched(const IBlockchainCache& previous, const IBlockchainCache& current,
-                                        uint32_t commonRootIndex) {
+                                        uint32_t splitIndex) {
   XI_CONCURRENT_RLOCK(m_access);
   m_logger(Logging::TRACE) << "Starting main chain switch";
-  for (uint32_t i = previous.getTopBlockIndex(); i > commonRootIndex; --i) {
+  for (uint32_t i = previous.getTopBlockIndex(); i >= splitIndex; --i) {
     popBlock(previous.getBlockByIndex(i));
+    if (splitIndex == 0) {
+      break;
+    }
   }
-  for (uint32_t i = commonRootIndex + 1; i <= current.getTopBlockIndex(); ++i) {
+  for (uint32_t i = splitIndex; i <= current.getTopBlockIndex(); ++i) {
     pushBlock(current.getBlockByIndex(i));
   }
   evaluateBlockVersionUpgradeConstraints();

@@ -41,10 +41,10 @@ class IBlockchainObserver {
    * \brief mainChainSwitched A leaf of the blockchain reached higher cumulative difficulty than the current main chain
    * \param previous The previous leaf considered as main chain
    * \param current The new leaf considered as main chain
-   * \param commonRootIndex The block index commonly shared by both blockchains, both chains contain the same blocks for
+   * \param splitIndex The first block index not shared by both blockchains, both chains contain the same blocks for
    * every block with a lower index
    */
   virtual void mainChainSwitched(const IBlockchainCache& previous, const IBlockchainCache& current,
-                                 uint32_t commonRootIndex) = 0;
+                                 uint32_t splitIndex) = 0;
 };
 }  // namespace CryptoNote
