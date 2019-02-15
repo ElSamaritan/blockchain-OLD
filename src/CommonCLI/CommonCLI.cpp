@@ -41,8 +41,8 @@ const std::string DevelpmentVersionHeader = R"(
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ATTENTION   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !                                                                                       !
    ! You are running a development version! The program may contain bugs or is not         !
-   ! compatible with the mainnet. In case you accidentally ran into this version and do    !
-   ! not want to use it to for testing purposes you should visit our github page           !
+   ! compatible with the main network. In case you accidentally ran into this version and  !
+   ! do not want to use it to for testing purposes you should visit our GitLab page        !
    !     https://gitlab.com/galaxia-project/blockchain/xi                                  !
    ! . Or if you want to build xi yourself make sure you are building from the master      !
    ! branch.                                                                               !
@@ -98,8 +98,8 @@ std::string CommonCLI::insecureClientWarning() {
   return R"(
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !                                                                                       !
-   ! Your client is not setup to be most secure. To increase you secuirity please read our !
-   ! tutorial on setting up ssl correctly.                                                 !
+   ! Your client is not set up to be the most secure. To increase your security please     !
+   ! read our tutorial on setting up SSL correctly.                                        !
    !     https://doc.xiproject.io/ssl/                                                     !
    !                                                                                       !
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -110,8 +110,8 @@ std::string CommonCLI::insecureServerWarning() {
   return R"(
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !                                                                                       !
-   ! Your sever is not setup to be most secure. To increase you secuirity please read our  !
-   ! tutorial on setting up ssl correctly.                                                 !
+   ! Your server is not set up to be the most secure. To increase your security please     !
+   ! read our tutorial on setting up SSL correctly.                                        !
    !     https://doc.xiproject.io/ssl/                                                     !
    !                                                                                       !
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
