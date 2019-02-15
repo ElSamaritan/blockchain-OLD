@@ -67,7 +67,8 @@ try
         "xi-daemon",
         "xi-wallet",
         "xi-miner",
-        "xi-pgservice"
+        "xi-pgservice",
+        "xi-benchmark"
     )
     
     try 
