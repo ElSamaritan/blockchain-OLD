@@ -95,6 +95,7 @@ class TransactionValidator : public ITransactionValidator {
   bool hasInputOverflow(const Transaction& transaction) const;
   bool hasOutputOverflow(const Transaction& transaction) const;
   bool containsKeyImageDuplicates(const std::vector<Crypto::KeyImage>& keyImages) const;
+  bool isExtraTooLarge(const Transaction& transaction) const;
 
   static bool isInvalidDomainKeyImage(const Crypto::KeyImage& keyImage);
   bool containsInvalidDomainKeyImage(const std::vector<Crypto::KeyImage>& keyImages) const;

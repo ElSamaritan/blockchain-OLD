@@ -1472,6 +1472,9 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
   if (transaction.inputs.empty()) {
     return error::TransactionValidationError::EMPTY_INPUTS;
   }
+  if (transaction.extra.size() > TX_EXTRA_NONCE_MAX_COUNT) {
+    return error::TransactionValidationError::EXTRA_NONCE_TOO_LARGE;
+  }
 
   uint64_t summaryOutputAmount = 0;
   for (const auto& output : transaction.outputs) {
@@ -1611,6 +1614,10 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     if (block.timestamp < median_ts) {
       return error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_PAST;
     }
+  }
+
+  if (block.baseTransaction.extra.size() > TX_EXTRA_NONCE_MAX_COUNT) {
+    return error::TransactionValidationError::EXTRA_NONCE_TOO_LARGE;
   }
 
   if (block.baseTransaction.inputs.size() != 1) {
