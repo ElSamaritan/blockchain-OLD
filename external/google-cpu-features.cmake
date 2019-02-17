@@ -1,4 +1,4 @@
-﻿# ============================================================================================== #
+# ============================================================================================== #
 #                                                                                                #
 #                                       Xi Blockchain                                            #
 #                                                                                                #
@@ -21,32 +21,10 @@
 #                                                                                                #
 # ============================================================================================== #
 
-include(ExternalProject)
+add_subdirectory(google-cpu-features EXCLUDE_FROM_ALL)
 
-# Not contained in build system
-## Required On Linux
-include(madler-zlib.cmake)
-
-## Required
-include(boostorg-boost.cmake)
-include(openssl-openssl.cmake)
-
-# Contained in buildsystem using submodules
-include(lz4-lz4.cmake)
-include(facebook-rocksdb.cmake)
-include(google-sparsehash-c11.cmake)
-include(miniupnp-miniupnpc.cmake)
-include(nlohmann-json.cmake)
-include(yhirose-cpp-linenoise.cmake)
-include(jarro2783-cxxopts.cmake)
-include(ruslo-leathers.cmake)
-include(google-cpu-features.cmake)
-
-if(XI_BUILD_BREAKPAD)
-  include(google-breakpad.cmake)
-endif()
-
-if(XI_BUILD_TESTSUITE)
-  include(google-test.cmake)
-  include(google-benchmark.cmake)
-endif()
+mark_as_advanced(
+  BUILD_TESTING
+  BUILD_SHARED_LIBS
+  BUILD_PIC
+)
