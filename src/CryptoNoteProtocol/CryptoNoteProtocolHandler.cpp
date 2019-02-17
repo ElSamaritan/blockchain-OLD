@@ -394,9 +394,6 @@ int CryptoNoteProtocolHandler::handle_notify_new_transactions(int command, NOTIF
       auto pushTxResult = m_core.transactionPool().pushTransaction(*tx_blob_it);
       if (pushTxResult.isError()) {
         m_logger(Logging::DEBUGGING) << context << "Tx verification failed: " << pushTxResult.error().message();
-        if (m_p2p->report_failure(context.m_remote_ip, P2pPenalty::TransactionValidationFailure)) {
-          return 1;
-        }
         tx_blob_it = arg.txs.erase(tx_blob_it);
       } else {
         ++tx_blob_it;

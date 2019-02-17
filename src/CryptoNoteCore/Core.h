@@ -235,7 +235,21 @@ class Core : public ICore,
 
   uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
   size_t calculateCumulativeBlocksizeLimit(uint32_t height) const;
-  void fillBlockTemplate(BlockTemplate& block, uint32_t height, size_t medianSize, size_t maxCumulativeSize,
+
+  /*!
+   * \brief fillBlockTemplate Fills a block template with transactions, trying to achieve the maximum reward
+   * \param block The block currently generated, copy transaction hashes in here
+   * \param height The index this block is mined for
+   * \param fullRewardZone The maximum block before penalties are applied
+   * \param maxCumulativeSize The maximum size of a block, exceeding this limit yields invalid blocks
+   * \param transactionsSize Is set to the cumulative size of transactions added
+   * \param fee Is set to the cumulative fees of transaction blobs included
+   *
+   * The implementation uses a greedy maximum knapsack approximation,
+   *    see https://pubsonline.informs.org/doi/abs/10.1287/opre.5.2.266
+   * .
+   */
+  void fillBlockTemplate(BlockTemplate& block, uint32_t height, size_t fullRewardZone, size_t maxCumulativeSize,
                          size_t& transactionsSize, uint64_t& fee) const;
   void deleteAlternativeChains();
   void deleteLeaf(size_t leafIndex);

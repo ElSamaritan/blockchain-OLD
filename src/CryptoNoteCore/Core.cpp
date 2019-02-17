@@ -49,25 +49,6 @@ std::vector<T> preallocateVector(size_t elements) {
 }
 UseGenesis addGenesisBlock = UseGenesis(true);
 
-class TransactionSpentInputsChecker {
- public:
-  bool haveSpentInputs(const Transaction& transaction) {
-    for (const auto& input : transaction.inputs) {
-      if (input.type() == typeid(KeyInput)) {
-        auto inserted = alreadSpentKeyImages.insert(boost::get<KeyInput>(input).keyImage);
-        if (!inserted.second) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
- private:
-  std::unordered_set<Crypto::KeyImage> alreadSpentKeyImages;
-};
-
 inline IBlockchainCache* findIndexInChain(IBlockchainCache* blockSegment, const Crypto::Hash& blockHash) {
   assert(blockSegment != nullptr);
   while (blockSegment != nullptr) {
@@ -1196,7 +1177,11 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   }
 
   b.previousBlockHash = getTopBlockHash();
-  b.timestamp = time(nullptr);
+  auto timestamp = timeProvider().posixNow();
+  if (timestamp.isError()) {
+    logger(Logging::ERROR) << "Failed to receive timestamp: " << timestamp.error().message();
+  }
+  b.timestamp = timestamp.value();
 
   /* Ok, so if an attacker is fiddling around with timestamps on the network,
      they can make it so all the valid pools / miners don't produce valid
@@ -1237,6 +1222,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   }
 
   size_t medianSize = calculateCumulativeBlocksizeLimit(height) / 2;
+  const size_t maxBlockSize = std::max(2 * medianSize, m_currency.maxBlockCumulativeSize(height));
 
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
@@ -1244,7 +1230,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
 
   size_t transactionsSize;
   uint64_t fee;
-  fillBlockTemplate(b, height, medianSize, m_currency.maxBlockCumulativeSize(height), transactionsSize, fee);
+  fillBlockTemplate(b, height, medianSize, maxBlockSize, transactionsSize, fee);
 
   /*
      two-phase miner transaction generation: we don't know exact block size until we prepare block, but we don't know
@@ -1472,6 +1458,9 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
   if (transaction.inputs.empty()) {
     return error::TransactionValidationError::EMPTY_INPUTS;
   }
+  if (transaction.extra.size() > TX_EXTRA_NONCE_MAX_COUNT) {
+    return error::TransactionValidationError::EXTRA_NONCE_TOO_LARGE;
+  }
 
   uint64_t summaryOutputAmount = 0;
   for (const auto& output : transaction.outputs) {
@@ -1611,6 +1600,10 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     if (block.timestamp < median_ts) {
       return error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_PAST;
     }
+  }
+
+  if (block.baseTransaction.extra.size() > TX_EXTRA_NONCE_MAX_COUNT) {
+    return error::TransactionValidationError::EXTRA_NONCE_TOO_LARGE;
   }
 
   if (block.baseTransaction.inputs.size() != 1) {
@@ -2057,60 +2050,52 @@ size_t Core::calculateCumulativeBlocksizeLimit(uint32_t height) const {
   return median * 2;
 }
 
-void Core::fillBlockTemplate(BlockTemplate& block, uint32_t height, size_t medianSize, size_t maxCumulativeSize,
+void Core::fillBlockTemplate(BlockTemplate& block, uint32_t height, size_t fullRewardZone, size_t maxCumulativeSize,
                              size_t& transactionsSize, uint64_t& fee) const {
   throwIfNotInitialized();
   transactionsSize = 0;
   fee = 0;
 
-  size_t maxTotalSize = (125 * medianSize) / 100;
-  maxTotalSize = std::min(maxTotalSize, maxCumulativeSize) - m_currency.minerTxBlobReservedSize();
+  // What would be our reward without any transaction used
+  const auto generatedCoins = chainsLeaves[0]->getAlreadyGeneratedCoins(height - 1);
+  int64_t emissionChange = 0;
+  uint64_t currentReward = 0;
+  m_currency.getBlockReward(block.majorVersion, fullRewardZone, 0, generatedCoins, fee, currentReward, emissionChange);
 
-  TransactionSpentInputsChecker spentInputsChecker;
+  size_t cumulativeSize = m_currency.minerTxBlobReservedSize();
 
   const TransactionValidationResult::EligibleIndex blockIndex{height, block.timestamp};
+  // We assume eligible transactions are ordered, such that the first transactions are most profitible. Using this
+  // we now implement a greedy search algorithm to fill the transaction.
   std::vector<CachedTransaction> poolTransactions = m_transactionPool->eligiblePoolTransactions(blockIndex);
-  for (auto it = poolTransactions.rbegin(); it != poolTransactions.rend() && it->getTransactionFee() == 0; ++it) {
-    const CachedTransaction& transaction = *it;
 
-    auto transactionBlobSize = transaction.getTransactionBinaryArray().size();
-    if (m_currency.fusionTxMaxSize(block.majorVersion) < transactionsSize + transactionBlobSize) {
-      continue;
+  // Assumption Reward(iter) >= Reward(iter++), TransactionPriorityComperator
+  for (auto iter = poolTransactions.begin(); iter != poolTransactions.end(); ++iter) {
+    // The transation binary array is included in the body and the hash in the header, both are part of the block size
+    const size_t iSize = iter->getTransactionBinaryArray().size();
+    if (cumulativeSize + iSize > maxCumulativeSize) {
+      break;
     }
-    if (transactionsSize + transactionBlobSize > maxTotalSize) {
-      continue;
-    }
+    const uint64_t iFee = iter->getTransactionFee();
+    if (cumulativeSize + iSize > fullRewardZone) {
+      // Lets reevaluate if its still plausible to add transactions.
+      if (iFee == 0) {
+        break;
+      }
 
-    if (!spentInputsChecker.haveSpentInputs(transaction.getTransaction())) {
-      block.transactionHashes.emplace_back(transaction.getTransactionHash());
-      transactionsSize += transactionBlobSize;
-      logger(Logging::TRACE) << "Fusion transaction " << transaction.getTransactionHash()
-                             << " included to block template";
-    }
-  }
-
-  for (const auto& cachedTransaction : poolTransactions) {
-    size_t blockSizeLimit = maxTotalSize;
-
-    if (blockSizeLimit < transactionsSize + cachedTransaction.getTransactionBinaryArray().size()) {
-      continue;
+      uint64_t newReward = 0;
+      m_currency.getBlockReward(block.majorVersion, fullRewardZone, cumulativeSize + iSize, generatedCoins, fee + iFee,
+                                newReward, emissionChange);
+      if (newReward < currentReward) {
+        break;
+      }
     }
 
-    if (std::find(block.transactionHashes.begin(), block.transactionHashes.end(),
-                  cachedTransaction.getTransactionHash()) != block.transactionHashes.end()) {
-      continue;
-    }
-
-    if (!spentInputsChecker.haveSpentInputs(cachedTransaction.getTransaction())) {
-      transactionsSize += cachedTransaction.getTransactionBinaryArray().size();
-      fee += cachedTransaction.getTransactionFee();
-      block.transactionHashes.emplace_back(cachedTransaction.getTransactionHash());
-      logger(Logging::TRACE) << "Transaction " << cachedTransaction.getTransactionHash()
-                             << " included to block template";
-    } else {
-      logger(Logging::TRACE) << "Transaction " << cachedTransaction.getTransactionHash()
-                             << " is failed to include to block template";
-    }
+    // If we land here all checks have passed and we can add the transaction
+    fee += iFee;
+    cumulativeSize += iSize;
+    block.transactionHashes.emplace_back(iter->getTransactionHash());
+    transactionsSize += iter->getTransactionBinaryArray().size();
   }
 }
 

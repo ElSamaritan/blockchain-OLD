@@ -54,11 +54,13 @@ enum class TransactionValidationError {
   INPUT_INVALID_SIGNATURES = 14,  ///< The signing signature of the input is invalid. Its likely that a user tried to
                                   ///< use coins he does not own.
   INPUT_WRONG_SIGNATURES_COUNT = 15,
-  INPUTS_AMOUNT_OVERFLOW = 16,          ///< The sum of all amounts of the transaction input caused a memory overflow
-  BASE_INPUT_WRONG_COUNT = 17,          ///< The miner reward transaction has an invalid amount of inputs
-  BASE_INPUT_WRONG_BLOCK_INDEX = 18,    ///< The encoded block index of the miner reward input is wrong.
-  BASE_INPUT_UNEXPECTED_TYPE = 19,      ///< The type of the miner reward input transaction has an unexpected type that
-                                        ///< cannot be processes.
+  INPUTS_AMOUNT_OVERFLOW = 16,        ///< The sum of all amounts of the transaction input caused a memory overflow
+  BASE_INPUT_WRONG_COUNT = 17,        ///< The miner reward transaction has an invalid amount of inputs
+  BASE_INPUT_WRONG_BLOCK_INDEX = 18,  ///< The encoded block index of the miner reward input is wrong.
+  BASE_INPUT_UNEXPECTED_TYPE = 19,    ///< The type of the miner reward input transaction has an unexpected type that
+                                      ///< cannot be processes.
+  EXTRA_NONCE_TOO_LARGE =
+      36,  ///< The extra nonce of the transaction is larger than allowed (TX_EXTRA_NONCE_MAX_COUNT).
   INPUT_AMOUNT_INSUFFICIENT = 20,       ///< The sum of inputs to the transaction is lower than the sum of outputs.
   INPUT_INVALID_SIGNATURES_COUNT = 21,  ///< The number of signatures to sign each input/output pair is not equal to the
                                         ///< number of outputs.
@@ -79,7 +81,7 @@ enum class TransactionValidationError {
   INPUT_MIXIN_TOO_HIGH = 33,
   INPUT_MIXIN_TOO_LOW = 34,
 
-  __NUM = 36  ///< The count of different enum values, if you add a new one use this as its value and increase this by
+  __NUM = 37  ///< The count of different enum values, if you add a new one use this as its value and increase this by
               ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation and
               ///< tickets aso.
 };

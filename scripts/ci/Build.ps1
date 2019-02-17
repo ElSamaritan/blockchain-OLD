@@ -92,8 +92,17 @@ $(ConvertTo-Json $BuildEnvironment)
                 -DXI_BUILD_TOOLS=ON `
                 $CMakeSourcePath 
         }
-        Invoke-Command {
-            cmake --build . --target install --config Release
+        if($IsWindows)
+        {
+            Invoke-Command {
+                cmake --build . --target install --config Release
+            }
+        }
+        else 
+        {
+            Invoke-Command {
+                cmake --build . --target install --config Release -- -j 4
+            }
         }
     }
     finally 

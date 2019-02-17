@@ -51,7 +51,7 @@ variables:
 
 .linux_build_template: &linux_build_definition
   <<: *generic_build_definition
-  tags: ["docker"]
+  tags: ["docker", "four-cores"]
 
 Ubuntu Bionic - Build:
   <<: *linux_build_definition
@@ -98,7 +98,7 @@ Windows 10 - Build:
 
 macOS - Build:
   <<: *generic_build_definition
-  tags: ["macOS"]
+  tags: ["macOS", "four-cores"]
   variables:
     CI_TARGET_OS: "macOS"
 
