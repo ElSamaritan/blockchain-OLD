@@ -238,7 +238,7 @@ if(XI_BUILD_EXECUTABLES)
 
   add_executable(CLIDaemon ${XI_CLI_DAEMON_SOURCES} ${XI_CLI_DAEMON_SOURCES_OS})
   add_executable(CLIMiner ${XI_CLI_MINER_SOURCES} ${XI_CLI_MINER_SOURCES_OS})
-  add_executable(CLIMinerBenchmark ${XI_CLI_MINER_BENCHMARK_SOURCES} ${XI_CLI_WALLET_SOURCES_OS})
+  add_executable(CLIMinerBenchmark ${XI_CLI_MINER_BENCHMARK_SOURCES} ${XI_CLI_MINER_BENCHMARK_SOURCES_OS})
   add_executable(CLIWallet ${XI_CLI_WALLET_SOURCES} ${XI_CLI_WALLET_SOURCES_OS})
   add_executable(PGService ${service} ${XI_PG_SOURCES_OS})
 
