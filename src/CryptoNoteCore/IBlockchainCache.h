@@ -87,8 +87,47 @@ class IBlockchainCache {
   virtual bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) const = 0;
   virtual bool checkIfSpent(const Crypto::KeyImage& keyImage) const = 0;
 
+  /*!
+   * \brief isTransactionSpendTimeUnlocked Validates if the output of a transaction is unlocked, eligible to
+   * be used for a new transaction.
+   * \param unlockTime The transaction unlock index/timestamp
+   * \param blockIndex The block index this transaction is mined in
+   *
+   * This overload assumes the transaction belongs not to any block and is validated to be mined in
+   * the future. For timestamp encoded unlocks, the current timestamp will be taken otherwise the index
+   * of the next block that will be mined.
+   *
+   * \return True if the output can be used, otherwise false
+   */
   virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime) const = 0;
+
+  /*!
+   * \brief isTransactionSpendTimeUnlocked Validates if the output of a transaction is unlocked, eligible to
+   * be used for a new transaction.
+   * \param unlockTime The transaction unlock index/timestamp
+   * \param blockIndex The block index to validate against
+   *
+   * In this case the transaction output must haven been unlocked at the state of the blockchain the
+   * block with the given index was mined. In case of a timestamp encoded unlock, the timestamp of the
+   * indexed block is taken.
+   *
+   * \return True if the output can be used, otherwise false
+   */
   virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const = 0;
+
+  /*!
+   * \brief isTransactionSpendTimeUnlocked Validates if the output of a transaction is unlocked, eligible to
+   * be used for a new transaction.
+   * \param unlockTime The transaction unlock index/timestamp
+   * \param blockIndex The block index to validate against
+   * \param timestamp A specific timestamp to test against.
+   *
+   * This overload assuems you gatehered all information correctly already and simply test the unlock
+   * against the block index or the timestamp, based on the unlock encoding. This is useful for pool
+   * transaction validations as you are not able to know with which timestamp the next block will be mined.
+   *
+   * \return True if the output can be used, otherwise false
+   */
   virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex, uint64_t timestamp) const = 0;
 
   virtual ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
