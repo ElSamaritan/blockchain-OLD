@@ -12,7 +12,6 @@
 
 #include <Xi/Global.h>
 
-#include "CryptoNoteProtocol/CryptoNoteProtocolDefinitions.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/Difficulty.h"
 #include "crypto/hash.h"
@@ -21,7 +20,10 @@
 
 #include "Serialization/SerializationOverloads.h"
 #include "Serialization/BlockchainExplorerDataSerialization.h"
+#include <Serialization/ISerializer.h>
+#include <Serialization/SerializationOverloads.h>
 #include <CryptoNoteCore/ICoreDefinitions.h>
+#include <CryptoNoteCore/CryptoNoteSerialization.h>
 
 namespace CryptoNote {
 //-----------------------------------------------
