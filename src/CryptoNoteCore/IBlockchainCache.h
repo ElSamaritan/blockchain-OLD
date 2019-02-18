@@ -53,6 +53,7 @@ struct PushedBlockInfo {
   size_t blockSize;
   uint64_t generatedCoins;
   uint64_t blockDifficulty;
+  uint64_t timestamp;
 };
 
 class UseGenesis {

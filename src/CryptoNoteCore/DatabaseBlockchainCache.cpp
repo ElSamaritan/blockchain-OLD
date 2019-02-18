@@ -439,7 +439,8 @@ struct DatabaseBlockchainCache::ExtendedPushedBlockInfo {
 DatabaseBlockchainCache::DatabaseBlockchainCache(const Currency& curr, IDataBase& dataBase,
                                                  IBlockchainCacheFactory& blockchainCacheFactory,
                                                  Logging::ILogger& _logger)
-    : currency(curr),
+    : CommonBlockchainCache(_logger, curr),
+      currency(curr),
       database(dataBase),
       blockchainCacheFactory(blockchainCacheFactory),
       logger(_logger, "DatabaseBlockchainCache") {
@@ -987,30 +988,6 @@ bool DatabaseBlockchainCache::checkIfSpent(const Crypto::KeyImage& keyImage, uin
 
 bool DatabaseBlockchainCache::checkIfSpent(const Crypto::KeyImage& keyImage) const {
   return checkIfSpent(keyImage, getTopBlockIndex());
-}
-
-bool DatabaseBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime) const {
-  return isTransactionSpendTimeUnlocked(unlockTime, getTopBlockIndex());
-}
-
-bool DatabaseBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const {
-  const auto timestamp = time(nullptr);
-  if (timestamp < 0) {
-    return false;
-  } else {
-    return isTransactionSpendTimeUnlocked(unlockTime, blockIndex, static_cast<uint64_t>(timestamp));
-  }
-}
-
-bool DatabaseBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex,
-                                                             uint64_t timestamp) const {
-  if (unlockTime < currency.maxBlockHeight()) {
-    // interpret as block index
-    return blockIndex + currency.lockedTxAllowedDeltaBlocks() >= unlockTime;
-  } else {
-    // interpret as time
-    return static_cast<uint64_t>(timestamp) + currency.lockedTxAllowedDeltaSeconds() >= unlockTime;
-  }
 }
 
 ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputKeys(
@@ -1698,6 +1675,7 @@ DatabaseBlockchainCache::ExtendedPushedBlockInfo DatabaseBlockchainCache::getExt
       blockInfo.cumulativeDifficulty - previousBlockInfo.cumulativeDifficulty;
   extendedInfo.pushedBlockInfo.generatedCoins =
       blockInfo.alreadyGeneratedCoins - previousBlockInfo.alreadyGeneratedCoins;
+  extendedInfo.pushedBlockInfo.timestamp = blockInfo.timestamp;
 
   const auto& spentKeyImages = dbResult.getSpentKeyImagesByBlock().at(blockIndex);
 

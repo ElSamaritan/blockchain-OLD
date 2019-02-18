@@ -37,6 +37,7 @@
 #include "Currency.h"
 #include "IBlockchainCache.h"
 #include "CryptoNoteCore/UpgradeManager.h"
+#include "CryptoNoteCore/Blockchain/CommonBlockchainCache.h"
 
 namespace CryptoNote {
 
@@ -93,7 +94,7 @@ bool serialize(PackedOutIndex& value, Common::StringView name, CryptoNote::ISeri
 
 class DatabaseBlockchainCache;
 
-class BlockchainCache : public IBlockchainCache {
+class BlockchainCache : public CommonBlockchainCache {
  public:
   BlockchainCache(const std::string& filename, const Currency& currency, Logging::ILogger& logger,
                   IBlockchainCache* parent, uint32_t startIndex = 0);
@@ -109,10 +110,6 @@ class BlockchainCache : public IBlockchainCache {
   virtual PushedBlockInfo getPushedBlockInfo(uint32_t index) const override;
   bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) const override;
   bool checkIfSpent(const Crypto::KeyImage& keyImage) const override;
-
-  bool isTransactionSpendTimeUnlocked(uint64_t unlockTime) const override;
-  bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const override;
-  bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex, uint64_t timestamp) const override;
 
   ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
                                                std::vector<Crypto::PublicKey>& publicKeys) const override;

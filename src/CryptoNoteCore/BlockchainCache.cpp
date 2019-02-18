@@ -103,7 +103,8 @@ bool serialize(PackedOutIndex& value, Common::StringView name, CryptoNote::ISeri
 
 BlockchainCache::BlockchainCache(const std::string& filename, const Currency& currency, Logging::ILogger& logger_,
                                  IBlockchainCache* parent, uint32_t splitBlockIndex)
-    : filename(filename),
+    : CommonBlockchainCache(logger_, currency),
+      filename(filename),
       currency(currency),
       logger(logger_, "BlockchainCache"),
       parent(parent),
@@ -227,16 +228,19 @@ PushedBlockInfo BlockchainCache::getPushedBlockInfo(uint32_t blockIndex) const {
     const auto& previousBlock = blockInfos.get<BlockIndexTag>()[localIndex - 1];
     pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - previousBlock.cumulativeDifficulty;
     pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
+    pushedBlockInfo.timestamp = cachedBlock.timestamp;
   } else {
     if (parent == nullptr) {
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty;
       pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins;
+      pushedBlockInfo.timestamp = cachedBlock.timestamp;
     } else {
       uint64_t cumulativeDifficulty = parent->getLastCumulativeDifficulties(1, startIndex - 1, addGenesisBlock)[0];
       uint64_t alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(startIndex - 1);
 
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - cumulativeDifficulty;
       pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - alreadyGeneratedCoins;
+      pushedBlockInfo.timestamp = cachedBlock.timestamp;
     }
   }
 
@@ -685,30 +689,6 @@ void BlockchainCache::load() {
   CryptoNote::BinaryInputStreamSerializer s(stream);
 
   serialize(s);
-}
-
-bool BlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime) const {
-  return isTransactionSpendTimeUnlocked(unlockTime, getTopBlockIndex());
-}
-
-bool BlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const {
-  const auto timestamp = time(nullptr);
-  if (timestamp < 0) {
-    return false;
-  } else {
-    return isTransactionSpendTimeUnlocked(unlockTime, blockIndex, static_cast<uint64_t>(timestamp));
-  }
-}
-
-bool BlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex,
-                                                     uint64_t timestamp) const {
-  if (unlockTime < currency.maxBlockHeight()) {
-    // interpret as block index
-    return blockIndex + currency.lockedTxAllowedDeltaBlocks() >= unlockTime;
-  } else {
-    // interpret as time
-    return static_cast<uint64_t>(timestamp) + currency.lockedTxAllowedDeltaSeconds() >= unlockTime;
-  }
 }
 
 ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount,
