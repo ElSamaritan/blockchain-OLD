@@ -199,14 +199,24 @@ rocksdb::Options RocksDBWrapper::getDBOptions(const DataBaseConfig& config) {
   fOptions.target_file_size_base = config.getWriteBufferSize() / 10;
   // make Level1 size equal to Level0 size, so that L0->L1 compactions are fast
   fOptions.max_bytes_for_level_base = config.getWriteBufferSize();
-  fOptions.num_levels = 10;
   fOptions.target_file_size_multiplier = 2;
   // level style compaction
   fOptions.compaction_style = rocksdb::kCompactionStyleLevel;
 
-  fOptions.compression_per_level.resize(fOptions.num_levels);
-  for (int i = 0; i < fOptions.num_levels; ++i) {
+  fOptions.num_levels = 10;
+  fOptions.compression_per_level.resize(static_cast<uint32_t>(fOptions.num_levels));
+  for (uint32_t i = 0; i < static_cast<uint32_t>(fOptions.num_levels); ++i) {
     fOptions.compression_per_level[i] = rocksdb::kNoCompression;
+    switch (config.getCompression()) {
+      case DataBaseConfig::Compression::None:
+        break;
+      case DataBaseConfig::Compression::LZ4:
+        fOptions.compression_per_level[i] = rocksdb::kLZ4Compression;
+        break;
+      case DataBaseConfig::Compression::LZ4HC:
+        fOptions.compression_per_level[i] = rocksdb::kLZ4HCCompression;
+        break;
+    }
   }
 
   rocksdb::BlockBasedTableOptions tableOptions;
