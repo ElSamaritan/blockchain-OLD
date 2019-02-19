@@ -73,7 +73,7 @@ class TransactionValidator : public ITransactionValidator {
   const Currency& currency() const;
 
  protected:
-  Xi::Result<TransactionValidationResult::EligibleIndex> doValidate(
+  Xi::Result<EligibleIndex> doValidate(
       const CachedTransaction& transaction) const override;
 
   virtual bool checkIfKeyImageIsAlreadySpent(const Crypto::KeyImage& keyImage) const = 0;
@@ -109,12 +109,12 @@ class TransactionValidator : public ITransactionValidator {
    * \return An error or the public keys of the referenced inputs together with a minimum height/timestamp required for
    * the referenced outputs to be unlocked.
    */
-  Xi::Result<std::tuple<std::vector<Crypto::PublicKey>, TransactionValidationResult::EligibleIndex>> extractOutputKeys(
+  Xi::Result<std::tuple<std::vector<Crypto::PublicKey>, EligibleIndex>> extractOutputKeys(
       uint64_t amount, const std::vector<uint32_t>& indices) const;
 
-  Xi::Result<TransactionValidationResult::EligibleIndex> validateKeyInput(const KeyInput& keyInput, size_t inputIndex,
+  Xi::Result<EligibleIndex> validateKeyInput(const KeyInput& keyInput, size_t inputIndex,
                                                                           const CachedTransaction& transaction) const;
-  Xi::Result<TransactionValidationResult::EligibleIndex> validateInputs(const CachedTransaction& transaction) const;
+  Xi::Result<EligibleIndex> validateInputs(const CachedTransaction& transaction) const;
 
   error::TransactionValidationError validateMixin(const CachedTransaction& transaction) const;
 

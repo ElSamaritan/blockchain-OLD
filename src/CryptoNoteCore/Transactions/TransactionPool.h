@@ -84,7 +84,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
 
   TransactionQueryResult queryTransaction(const Crypto::Hash& hash) const override;
   std::vector<CachedTransaction> eligiblePoolTransactions(
-      TransactionValidationResult::EligibleIndex index) const override;
+      EligibleIndex index) const override;
   Xi::Concurrent::RecursiveLock::lock_t acquireExclusiveAccess() const override;
   // -------------------------------------- ITransactionPool End -------------------------------------------------------
 
@@ -148,7 +148,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
    * \brief currentEligibleIndex computes the minimum mainChain index in order to accept incoming transactions
    * \return A blockchain index that must be satisfied in order to accept incoming transactions
    */
-  Xi::Result<TransactionValidationResult::EligibleIndex> currentEligibleIndex() const;
+  Xi::Result<EligibleIndex> currentEligibleIndex() const;
 
   /*!
    * \brief insertTransaction tries to enqueue a new transaction

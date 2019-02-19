@@ -41,7 +41,7 @@ class ITransactionValidator {
   Xi::Result<TransactionValidationResult> updateValidation(const CachedTransaction& transaction) const;
 
  protected:
-  virtual Xi::Result<TransactionValidationResult::EligibleIndex> doValidate(
+  virtual Xi::Result<EligibleIndex> doValidate(
       const CachedTransaction& transaction) const = 0;
 };
 

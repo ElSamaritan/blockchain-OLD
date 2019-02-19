@@ -41,7 +41,7 @@ namespace CryptoNote {
  */
 class PendingTransactionInfo {
  public:
-  PendingTransactionInfo(CachedTransaction tx, TransactionValidationResult::EligibleIndex index, PosixTimestamp time);
+  PendingTransactionInfo(CachedTransaction tx, EligibleIndex index, PosixTimestamp time);
   XI_DEFAULT_COPY(PendingTransactionInfo);
   XI_DEFAULT_MOVE(PendingTransactionInfo);
   ~PendingTransactionInfo() = default;
@@ -54,7 +54,7 @@ class PendingTransactionInfo {
   /*!
    * \brief eligibleIndex The minimum blockchain index for the transaction to be eligibale to be mined.
    */
-  TransactionValidationResult::EligibleIndex eligibleIndex() const;
+  EligibleIndex eligibleIndex() const;
 
   /*!
    * \brief receiveTime UTC time the transaction has been recieved.
@@ -64,7 +64,7 @@ class PendingTransactionInfo {
 
  private:
   std::shared_ptr<CachedTransaction> m_transaction;
-  TransactionValidationResult::EligibleIndex m_eligibleIndex;
+  EligibleIndex m_eligibleIndex;
   PosixTimestamp m_receiveTime;
 };
 

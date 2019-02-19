@@ -34,7 +34,7 @@ class PoolTransactionValidator : public TransactionValidator {
                            const Currency& currency);
 
  protected:
-  Xi::Result<TransactionValidationResult::EligibleIndex> doValidate(
+  Xi::Result<EligibleIndex> doValidate(
       const CachedTransaction& transaction) const override;
 
   bool checkIfKeyImageIsAlreadySpent(const Crypto::KeyImage& keyImage) const override;

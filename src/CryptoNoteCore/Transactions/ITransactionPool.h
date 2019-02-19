@@ -96,7 +96,7 @@ class ITransactionPool {
    * \return all transactions contained in the pool satisfying the index requirement
    */
   virtual std::vector<CachedTransaction> eligiblePoolTransactions(
-      TransactionValidationResult::EligibleIndex index) const = 0;
+      EligibleIndex index) const = 0;
 
   /*!
    * \brief acquireExclusiveAccess locks the transaction pool for exclusive access

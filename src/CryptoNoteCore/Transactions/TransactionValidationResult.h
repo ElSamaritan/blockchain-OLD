@@ -36,6 +36,7 @@
 
 #include <crypto/CryptoTypes.h>
 
+#include "CryptoNoteCore/EligibleIndex.h"
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"
 #include "CryptoNoteCore/Transactions/TransactionValidationErrors.h"
 
@@ -55,52 +56,6 @@ namespace CryptoNote {
  * in order to create a valid block.
  */
 class TransactionValidationResult {
- public:
-  /*!
-   * \brief The EligibleIndex struct contains the minimum height and timestamp of a block required for the transactions
-   * to be valid.
-   */
-  struct EligibleIndex {
-    static const EligibleIndex Always;  ///< Has no constraints and will always be valid.
-    static const EligibleIndex Never;   ///< Has maximum constraints and will never be valid.
-
-    /*!
-     * \brief lowerBound computes the least restrictive index satisfying both indices.
-     * \param lhs The first index to satisfy
-     * \param rhs The second index to satisfy
-     * \return An index if satisfied also satisfies both indices provided
-     */
-    static EligibleIndex lowerBound(const EligibleIndex& lhs, const EligibleIndex& rhs);
-
-    uint32_t Height;     ///< The minimum blockchain height for all transaction inputs to be valid.
-    uint64_t Timestamp;  ///< The minimum timestamp for all all transaciton inputs to be valid.
-
-    /*!
-     * \brief EligibleIndex constructs a default index with no requirements (Height = 0, Teimstamp = 0)).
-     */
-    EligibleIndex();
-
-    /*!
-     * \brief EligibleIndex construct an index emplacing the given values.
-     * \param height Minimum height for transaction inputs to be unlocked.
-     * \param timestamp Minimum timestamp for transaction inputs to be unlocked.
-     */
-    EligibleIndex(uint32_t height, uint64_t timestamp);
-    XI_DEFAULT_COPY(EligibleIndex);
-    XI_DEFAULT_MOVE(EligibleIndex);
-    ~EligibleIndex() = default;
-
-    /*!
-     * \brief isSatisfiedByIndex checks if a given index is far enough in the blockchain such that all inputs are
-     * unlocked.
-     * \param index The current eligible index to check against.
-     * \return True if the index is eligible lower than the given index otherwise false.
-     *
-     * Eligible lower means height and timestamp are not greater than in the given index.
-     */
-    bool isSatisfiedByIndex(const EligibleIndex& index) const;
-  };
-
  public:
   /*!
    * \brief TransactionValidationResult constructs a validation result without associated transaction

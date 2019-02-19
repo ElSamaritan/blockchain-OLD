@@ -28,7 +28,7 @@ CryptoNote::PoolTransactionValidator::PoolTransactionValidator(const CryptoNote:
                                                                const Currency &currency)
     : TransactionValidator(blockVersion, chain, currency), m_pool{pool} {}
 
-Xi::Result<CryptoNote::TransactionValidationResult::EligibleIndex> CryptoNote::PoolTransactionValidator::doValidate(
+Xi::Result<CryptoNote::EligibleIndex> CryptoNote::PoolTransactionValidator::doValidate(
     const CryptoNote::CachedTransaction &transaction) const {
   if (m_pool.containsTransaction(transaction.getTransactionHash())) {
     return Xi::make_error(error::TransactionValidationError::EXISTS_IN_POOL);

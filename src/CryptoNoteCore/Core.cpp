@@ -2064,7 +2064,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, uint32_t height, size_t fullR
 
   size_t cumulativeSize = m_currency.minerTxBlobReservedSize();
 
-  const TransactionValidationResult::EligibleIndex blockIndex{height, block.timestamp};
+  const EligibleIndex blockIndex{height, block.timestamp};
   // We assume eligible transactions are ordered, such that the first transactions are most profitible. Using this
   // we now implement a greedy search algorithm to fill the transaction.
   std::vector<CachedTransaction> poolTransactions = m_transactionPool->eligiblePoolTransactions(blockIndex);
