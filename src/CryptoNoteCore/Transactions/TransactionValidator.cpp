@@ -87,7 +87,7 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValida
     if (containsInvalidDomainKeyImage(transaction.getKeyImages()))
       return Xi::make_error(Error::INPUT_INVALID_DOMAIN_KEYIMAGES);
   }
-  return Xi::make_result<EligibleIndex>(eligibleIndex);
+  return eligibleIndex;
 }
 
 CryptoNote::error::TransactionValidationError CryptoNote::TransactionValidator::getErrorCode(
@@ -236,7 +236,7 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validate
                                     transaction.getTransaction().signatures[inputIndex].data(), true)) {
     return Xi::make_error(Error::INPUT_INVALID_SIGNATURES);
   }
-  return Xi::make_result<EligibleIndex>(index);
+  return index;
 }
 
 Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validateInputs(
