@@ -28,9 +28,10 @@
 #include <System/TcpConnector.h>
 
 #include <Xi/Global.h>
-
 #include <Xi/Version/Version.h>
+#include <Xi/Utils/FileSystem.h>
 #include <Xi/Config.h>
+
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
 #include "Common/Util.h"
@@ -592,10 +593,7 @@ bool NodeServer::deinit() { return store_config(); }
 
 bool NodeServer::store_config() {
   try {
-    if (!Tools::create_directories_if_necessary(m_config_folder)) {
-      logger(FATAL) << "Failed to create data directory: " << m_config_folder;
-      return false;
-    }
+    Xi::FileSystem::ensureDirectoryExists(m_config_folder).throwOnError();
 
     std::string state_file_path = m_config_folder + "/" + m_p2p_state_filename;
     std::ofstream p2p_data;

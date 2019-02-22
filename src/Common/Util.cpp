@@ -317,17 +317,6 @@ std::string getDefaultCacheFile(const std::string& dataDir) {
   return boost::filesystem::path(dir / name).string();
 }
 
-bool create_directories_if_necessary(const std::string& path) {
-  namespace fs = boost::filesystem;
-  boost::system::error_code ec;
-  fs::path fs_path(path);
-  if (fs::is_directory(fs_path, ec)) {
-    return true;
-  }
-
-  return fs::create_directories(fs_path, ec);
-}
-
 std::error_code replace_file(const std::string& replacement_name, const std::string& replaced_name) {
   int code;
 #if defined(WIN32)

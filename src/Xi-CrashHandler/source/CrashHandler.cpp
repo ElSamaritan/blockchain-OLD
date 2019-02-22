@@ -41,6 +41,7 @@
 #include <Xi/Version/BuildInfo.h>
 #include <Xi/Config/Network.h>
 #include <Xi/Utils/String.h>
+#include <Xi/Utils/FileSystem.h>
 #include <Xi/Http/MultipartFormDataBuilder.h>
 #include <Xi/Http/Client.h>
 #include <Common/Util.h>
@@ -121,9 +122,7 @@ static bool dumpCallback(const google_breakpad::MinidumpDescriptor& descriptor, 
 #endif  // BOOST_OS_LINUX
 
 #if BOOST_OS_MACOS
-static bool dumpCallback(const char *dump_dir,
-                         const char *minidump_id,
-                         void *context, bool succeeded) {
+static bool dumpCallback(const char* dump_dir, const char* minidump_id, void* context, bool succeeded) {
   const std::string file = std::string{dump_dir} + std::string{minidump_id} + std::string{".dmp"};
   if (succeeded) {
     std::cout << "Dump file created: " << file << std::endl;
@@ -134,14 +133,13 @@ static bool dumpCallback(const char *dump_dir,
   }
   return succeeded;
 }
-#endif // BOOST_OS_MACOS
+#endif  // BOOST_OS_MACOS
 }  // namespace
 
 Xi::CrashHandler::CrashHandler(const Xi::CrashHandlerConfig& config) {
   using namespace std::placeholders;
 
-  if (!Tools::create_directories_if_necessary(config.OutputPath))
-    throw std::runtime_error{"Unable to create directory for crash dumps."};
+  FileSystem::ensureDirectoryExists(config.OutputPath).throwOnError();
   m_impl = std::make_shared<_CrashHandler_Impl>();
   m_impl->config = config;
 
@@ -160,7 +158,7 @@ Xi::CrashHandler::CrashHandler(const Xi::CrashHandlerConfig& config) {
 #endif  // BOOST_OS_LINUX
 
 #if BOOST_OS_MACOS
-  m_impl->handle = std::make_unique<google_breakpad::ExceptionHandler>(
-      config.OutputPath, nullptr, dumpCallback, m_impl.get(), true, "");
-#endif // BOOST_OS_MACOS
+  m_impl->handle = std::make_unique<google_breakpad::ExceptionHandler>(config.OutputPath, nullptr, dumpCallback,
+                                                                       m_impl.get(), true, "");
+#endif  // BOOST_OS_MACOS
 }
