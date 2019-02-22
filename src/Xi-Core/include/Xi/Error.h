@@ -43,7 +43,7 @@ namespace Xi {
  * returning immedietly. This often results into boolean returns or exceptions. The Error class provides an alternative
  * such that errors can be propagated backwards without loosing information about the error that actually occured.
  */
-class Error {
+class [[nodiscard]] Error {
  public:
   /*!
    * \brief Error creates an error from an catched exception.

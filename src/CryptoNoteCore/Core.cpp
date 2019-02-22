@@ -1811,10 +1811,13 @@ IBlockchainCache* Core::findSegmentContainingBlock(uint32_t blockHeight) const {
 }
 
 IBlockchainCache* Core::findAlternativeSegmentContainingBlock(const Crypto::Hash& blockHash) const {
-  IBlockchainCache* cache = nullptr;
-  std::find_if(++chainsLeaves.begin(), chainsLeaves.end(),
-               [&](IBlockchainCache* chain) { return cache = findIndexInChain(chain, blockHash); });
-  return cache;
+  for (auto it = ++chainsLeaves.begin(); it != chainsLeaves.end(); ++it) {
+    auto cache = findIndexInChain(*it, blockHash);
+    if (cache != nullptr) {
+      return cache;
+    }
+  }
+  return nullptr;
 }
 
 IBlockchainCache* Core::findMainChainSegmentContainingBlock(const Crypto::Hash& blockHash) const {
@@ -1826,10 +1829,13 @@ IBlockchainCache* Core::findMainChainSegmentContainingBlock(uint32_t blockIndex)
 }
 
 IBlockchainCache* Core::findAlternativeSegmentContainingBlock(uint32_t blockIndex) const {
-  IBlockchainCache* cache = nullptr;
-  std::find_if(++chainsLeaves.begin(), chainsLeaves.end(),
-               [&](IBlockchainCache* chain) { return cache = findIndexInChain(chain, blockIndex); });
-  return cache;
+  for (auto it = ++chainsLeaves.begin(); it != chainsLeaves.end(); ++it) {
+    auto cache = findIndexInChain(*it, blockIndex);
+    if (cache != nullptr) {
+      return cache;
+    }
+  }
+  return nullptr;
 }
 
 BlockTemplate Core::restoreBlockTemplate(IBlockchainCache* blockchainCache, uint32_t blockIndex) const {

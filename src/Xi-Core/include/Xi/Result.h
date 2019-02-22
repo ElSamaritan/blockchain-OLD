@@ -36,7 +36,7 @@
 
 namespace Xi {
 template <typename _ValueT>
-class Result {
+class [[nodiscard]] Result {
  public:
   using value_t = typename std::decay<_ValueT>::type;
 
@@ -48,7 +48,7 @@ class Result {
 
  public:
   /* implicit */ Result(const Error& err) : m_result{err} {}
-  /* implicit */ Result(value_t&& value) : m_result{std::forward<value_t>(value)} {}
+  /* implicit */ Result(value_t && value) : m_result{std::forward<value_t>(value)} {}
 
   XI_DEFAULT_COPY(Result);
   XI_DEFAULT_MOVE(Result);
@@ -85,7 +85,7 @@ class Result {
 };
 
 template <>
-class Result<void> {
+class [[nodiscard]] Result<void> {
  private:
   boost::optional<Error> m_error;
 

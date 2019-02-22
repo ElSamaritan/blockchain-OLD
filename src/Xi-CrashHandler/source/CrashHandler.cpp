@@ -46,6 +46,10 @@
 #include <Xi/Http/Client.h>
 #include <Common/Util.h>
 
+#if BOOST_OS_WINDOWS
+#include <stringapiset.h>
+#endif  // BOOST_OS_WINDOWS
+
 #include "Xi/CrashUploader.h"
 
 struct Xi::_CrashHandler_Impl : std::enable_shared_from_this<_CrashHandler_Impl> {
@@ -82,9 +86,12 @@ static std::wstring to_wstring(const std::string str) {
 }
 
 static std::string to_string(const std::wstring wstr) {
-  using convert_type = std::codecvt_utf8<wchar_t>;
-  std::wstring_convert<convert_type, wchar_t> converter;
-  return converter.to_bytes(wstr);
+  if (wstr.empty()) return std::string();
+  int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+  if (size_needed < 0) return std::string{};
+  std::string strTo(static_cast<size_t>(size_needed), 0);
+  WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
+  return strTo;
 }
 
 static bool dumpCallback(const wchar_t* dump_path, const wchar_t* minidump_id, void* context, EXCEPTION_POINTERS*,

@@ -67,5 +67,9 @@ add_library(boost INTERFACE IMPORTED GLOBAL)
 target_include_directories(boost INTERFACE ${Boost_INCLUDE_DIRS})
 target_link_libraries(boost INTERFACE ${Boost_LIBRARIES} ${Boost_SYSTEM_LIBRARY})
 
+if(MSVC)
+  target_compile_definitions(boost INTERFACE _SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING)
+endif()
+
 set(Boost_VERSION ${Boost_VERSION} CACHE STRING "Boost Version" FORCE)
 mark_as_advanced(Boost_VERSION)
