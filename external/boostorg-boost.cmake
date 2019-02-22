@@ -39,7 +39,7 @@ if(MSVC)
 endif()
 
 find_package(
-    Boost 1.68.0
+    Boost 1.69.0
 
     REQUIRED COMPONENTS
         system
