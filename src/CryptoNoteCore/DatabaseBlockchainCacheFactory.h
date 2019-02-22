@@ -28,6 +28,7 @@ class DatabaseBlockchainCacheFactory : public IBlockchainCacheFactory {
  public:
   explicit DatabaseBlockchainCacheFactory(IDataBase& database, Logging::ILogger& logger);
   virtual ~DatabaseBlockchainCacheFactory();
+  virtual ~DatabaseBlockchainCacheFactory() override;
 
   virtual std::unique_ptr<IBlockchainCache> createRootBlockchainCache(const Currency& currency) override;
   virtual std::unique_ptr<IBlockchainCache> createBlockchainCache(const Currency& currency, IBlockchainCache* parent,

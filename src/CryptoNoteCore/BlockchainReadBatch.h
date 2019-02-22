@@ -121,7 +121,7 @@ class BlockchainReadResult {
 class BlockchainReadBatch : public IReadBatch {
  public:
   BlockchainReadBatch();
-  ~BlockchainReadBatch();
+  ~BlockchainReadBatch() override;
 
   BlockchainReadBatch& requestSpentKeyImagesByBlock(uint32_t blockIndex);
   BlockchainReadBatch& requestBlockIndexBySpentKeyImage(const Crypto::KeyImage& keyImage);

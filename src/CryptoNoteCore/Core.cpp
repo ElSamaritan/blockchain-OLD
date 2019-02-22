@@ -1548,7 +1548,7 @@ Xi::Result<uint32_t> Core::findBlockchainSupplement(const std::vector<Crypto::Ha
       if (findIndexInChain(blockchainSegment, m_currency.genesisBlockHash()) == nullptr) {
         return Xi::make_error(error::CoreErrorCode::GENESIS_BLOCK_NOT_FOUND);
       } else {
-        return Xi::make_result<uint32_t>(blockchainSegment->getBlockIndex(hash));
+        return blockchainSegment->getBlockIndex(hash);
       }
     }
   }
