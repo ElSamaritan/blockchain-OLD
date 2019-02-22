@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,39 +21,45 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Error.h"
+#pragma once
 
 #include <stdexcept>
+#include <utility>
+#include <type_traits>
 
-Xi::Error::Error(std::exception_ptr e) : m_error{e} {}
-Xi::Error::Error(std::error_code ec) : m_error{ec} {}
-
-std::string Xi::Error::message() const {
-  if (isException()) {
-    try {
-      std::rethrow_exception(exception());
-    } catch (const std::exception& e) {
-      return e.what();
-    } catch (...) {
-      return "Unknown type has been thrown.";
-    }
-  } else if (isErrorCode()) {
-    return errorCode().message();
-  } else {
-    return "Error wrapper contains unknown error type.";
-  }
+namespace Xi {
+template <typename _ExceptionT>
+inline void exceptional() {
+  static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
+  throw _ExceptionT{};
 }
 
-bool Xi::Error::isException() const { return m_error.type() == typeid(std::exception_ptr); }
-std::exception_ptr Xi::Error::exception() const { return boost::get<std::exception_ptr>(m_error); }
-
-bool Xi::Error::isErrorCode() const { return m_error.type() == typeid(std::error_code); }
-std::error_code Xi::Error::errorCode() const { return boost::get<std::error_code>(m_error); }
-
-void Xi::Error::throwException() const {
-  if (isException()) {
-    std::rethrow_exception(exception());
-  } else {
-    throw std::runtime_error{message()};
-  }
+template <typename _ExceptionT>
+inline void exceptional(const char* s) {
+  static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
+  throw _ExceptionT{s};
 }
+}  // namespace Xi
+
+#define XI_DECLARE_EXCEPTIONAL_CATEGORY(CAT)                \
+  class CAT##Exception : public std::exception {            \
+   private:                                                 \
+    std::string m;                                          \
+                                                            \
+   protected:                                               \
+    CAT##Exception(const char* s) : m{s} {}                 \
+                                                            \
+   public:                                                  \
+    virtual ~CAT##Exception() = default;                    \
+                                                            \
+    const char* what() const noexcept { return m.c_str(); } \
+  };
+
+#define XI_DECLARE_EXCEPTIONAL_INSTANCE(X, MSG, CAT)      \
+  class X##Error : public CAT##Exception {                \
+    X##Error() : CAT##Exception(MSG) {}                   \
+    X##Error(const char* s) : CAT##Exception(s) {}        \
+                                                          \
+    friend void ::Xi::exceptional<X##Error>();            \
+    friend void ::Xi::exceptional<X##Error>(const char*); \
+  };
