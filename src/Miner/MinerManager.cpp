@@ -42,20 +42,6 @@ MinerEvent BlockchainUpdatedEvent() {
   return event;
 }
 
-void adjustMergeMiningTag(BlockTemplate& blockTemplate) {
-  CachedBlock cachedBlock(blockTemplate);
-  if (blockTemplate.majorVersion >= ::Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
-    CryptoNote::TransactionExtraMergeMiningTag mmTag;
-    mmTag.depth = 0;
-    mmTag.merkleRoot = cachedBlock.getAuxiliaryBlockHeaderHash();
-
-    blockTemplate.parentBlock.baseTransaction.extra.clear();
-    if (!CryptoNote::appendMergeMiningTagToExtra(blockTemplate.parentBlock.baseTransaction.extra, mmTag)) {
-      throw std::runtime_error("Couldn't append merge mining tag");
-    }
-  }
-}
-
 }  // namespace
 
 MinerManager::MinerManager(System::Dispatcher& dispatcher, const CryptoNote::MiningConfig& config,
@@ -275,8 +261,6 @@ BlockMiningParameters MinerManager::requestMiningParameters(System::Dispatcher& 
 }
 
 void MinerManager::adjustBlockTemplate(CryptoNote::BlockTemplate& blockTemplate) const {
-  adjustMergeMiningTag(blockTemplate);
-
   if (m_config.firstBlockTimestamp == 0) {
     // no need to fix timestamp
     return;

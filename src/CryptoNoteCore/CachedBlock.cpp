@@ -33,11 +33,6 @@ const Crypto::Hash& CachedBlock::getTransactionTreeHash() const {
 const Crypto::Hash& CachedBlock::getBlockHash() const {
   if (!blockHash.is_initialized()) {
     BinaryArray blockBinaryArray = getBlockHashingBinaryArray();
-    if (Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version() <= block.majorVersion) {
-      const auto& parentBlock = getParentBlockHashingBinaryArray(false);
-      blockBinaryArray.insert(blockBinaryArray.end(), parentBlock.begin(), parentBlock.end());
-    }
-
     blockHash = getObjectHash(blockBinaryArray);
   }
 
@@ -51,14 +46,6 @@ const Crypto::Hash& CachedBlock::getBlockLongHash() const {
   }
 
   return blockLongHash.get();
-}
-
-const Crypto::Hash& CachedBlock::getAuxiliaryBlockHeaderHash() const {
-  if (!auxiliaryBlockHeaderHash.is_initialized()) {
-    auxiliaryBlockHeaderHash = getObjectHash(getBlockHashingBinaryArray());
-  }
-
-  return auxiliaryBlockHeaderHash.get();
 }
 
 const BinaryArray& CachedBlock::getBlockHashingBinaryArray() const {
@@ -77,58 +64,6 @@ const BinaryArray& CachedBlock::getBlockHashingBinaryArray() const {
   }
 
   return blockHashingBinaryArray.get();
-}
-
-const BinaryArray& CachedBlock::getParentBlockBinaryArray(bool headerOnly) const {
-  if (headerOnly) {
-    if (!parentBlockBinaryArrayHeaderOnly.is_initialized()) {
-      auto serializer = makeParentBlockSerializer(block, false, true);
-      parentBlockBinaryArrayHeaderOnly = BinaryArray();
-      if (!toBinaryArray(serializer, parentBlockBinaryArrayHeaderOnly.get())) {
-        parentBlockBinaryArrayHeaderOnly.reset();
-        throw std::runtime_error("Can't serialize parent block header.");
-      }
-    }
-
-    return parentBlockBinaryArrayHeaderOnly.get();
-  } else {
-    if (!parentBlockBinaryArray.is_initialized()) {
-      auto serializer = makeParentBlockSerializer(block, false, false);
-      parentBlockBinaryArray = BinaryArray();
-      if (!toBinaryArray(serializer, parentBlockBinaryArray.get())) {
-        parentBlockBinaryArray.reset();
-        throw std::runtime_error("Can't serialize parent block.");
-      }
-    }
-
-    return parentBlockBinaryArray.get();
-  }
-}
-
-const BinaryArray& CachedBlock::getParentBlockHashingBinaryArray(bool headerOnly) const {
-  if (headerOnly) {
-    if (!parentBlockHashingBinaryArrayHeaderOnly.is_initialized()) {
-      auto serializer = makeParentBlockSerializer(block, true, true);
-      parentBlockHashingBinaryArrayHeaderOnly = BinaryArray();
-      if (!toBinaryArray(serializer, parentBlockHashingBinaryArrayHeaderOnly.get())) {
-        parentBlockHashingBinaryArrayHeaderOnly.reset();
-        throw std::runtime_error("Can't serialize parent block header for hashing.");
-      }
-    }
-
-    return parentBlockHashingBinaryArrayHeaderOnly.get();
-  } else {
-    if (!parentBlockHashingBinaryArray.is_initialized()) {
-      auto serializer = makeParentBlockSerializer(block, true, false);
-      parentBlockHashingBinaryArray = BinaryArray();
-      if (!toBinaryArray(serializer, parentBlockHashingBinaryArray.get())) {
-        parentBlockHashingBinaryArray.reset();
-        throw std::runtime_error("Can't serialize parent block for hashing.");
-      }
-    }
-
-    return parentBlockHashingBinaryArray.get();
-  }
 }
 
 uint32_t CachedBlock::getBlockIndex() const {

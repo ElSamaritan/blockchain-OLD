@@ -29,10 +29,9 @@
 
 // clang-format off
 //                (_Index, _Version,                    _Algorithm)
-MakeHashCheckpoint(     0,        1,::CryptoNote::Hashes::CNX_Init)
-MakeHashCheckpoint(     1,        2,  ::CryptoNote::Hashes::CNX_v0)
+MakeHashCheckpoint(     0,        1,  ::CryptoNote::Hashes::CNX_v0)
 // clang-format on
 
-#define CURRENT_HASH_CHECKPOINT_INDEX 1
+#define CURRENT_HASH_CHECKPOINT_INDEX 0
 
 #include "Xi/Config/_Impl/EndHashes.h"

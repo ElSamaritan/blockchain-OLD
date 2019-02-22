@@ -445,57 +445,8 @@ uint64_t Currency::nextDifficulty(uint8_t version, uint32_t blockIndex, std::vec
   return Xi::Config::Difficulty::nextDifficulty(version, timestamps, cumulativeDifficulties);
 }
 
-bool Currency::checkProofOfWorkV1(const CachedBlock& block, uint64_t currentDifficulty) const {
-  if (Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version() != block.getBlock().majorVersion) {
-    return false;
-  }
-
-  return check_hash(block.getBlockLongHash(), currentDifficulty);
-}
-
-bool Currency::checkProofOfWorkV2(const CachedBlock& cachedBlock, uint64_t currentDifficulty) const {
-  const auto& block = cachedBlock.getBlock();
-  if (block.majorVersion < Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
-    return false;
-  }
-
-  if (!check_hash(cachedBlock.getBlockLongHash(), currentDifficulty)) {
-    logger(ERROR) << "blocks hash does not satisfy the difficulty requirements";
-    return false;
-  }
-
-  TransactionExtraMergeMiningTag mmTag;
-  if (!getMergeMiningTagFromExtra(block.parentBlock.baseTransaction.extra, mmTag)) {
-    logger(ERROR) << "merge mining tag wasn't found in extra of the parent block miner transaction";
-    return false;
-  }
-
-  if (8 * sizeof(cachedGenesisBlock->getBlockHash()) < block.parentBlock.blockchainBranch.size()) {
-    logger(ERROR) << "cached genesis block not contained in parent block blockchain branch";
-    return false;
-  }
-
-  Crypto::Hash auxBlocksMerkleRoot;
-  Crypto::tree_hash_from_branch(block.parentBlock.blockchainBranch.data(), block.parentBlock.blockchainBranch.size(),
-                                cachedBlock.getAuxiliaryBlockHeaderHash(), &cachedGenesisBlock->getBlockHash(),
-                                auxBlocksMerkleRoot);
-
-  if (auxBlocksMerkleRoot != mmTag.merkleRoot) {
-    logger(ERROR, BRIGHT_YELLOW) << "Aux block hash wasn't found in merkle tree";
-    return false;
-  }
-
-  return true;
-}
-
 bool Currency::checkProofOfWork(const CachedBlock& block, uint64_t currentDiffic) const {
-  switch (block.getBlock().majorVersion) {
-    case Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version():
-      return checkProofOfWorkV1(block, currentDiffic);
-
-    default:
-      return checkProofOfWorkV2(block, currentDiffic);
-  }
+  return check_hash(block.getBlockLongHash(), currentDiffic);
 }
 
 size_t Currency::getApproximateMaximumInputCount(size_t transactionSize, size_t outputCount, size_t mixinCount) const {

@@ -1163,20 +1163,8 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   b = boost::value_initialized<BlockTemplate>();
   b.majorVersion = getBlockMajorVersionForHeight(height);
   b.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
-  if (b.majorVersion == Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version()) {
-  } else if (b.majorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
-    b.parentBlock.majorVersion = Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version();
-    b.parentBlock.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
-    b.parentBlock.transactionCount = 1;
-
-    TransactionExtraMergeMiningTag mmTag = boost::value_initialized<decltype(mmTag)>();
-    if (!appendMergeMiningTagToExtra(b.parentBlock.baseTransaction.extra, mmTag)) {
-      logger(Logging::ERROR) << "Failed to append merge mining tag to extra of the parent block miner transaction";
-      return false;
-    }
-  }
-
   b.previousBlockHash = getTopBlockHash();
+
   auto timestamp = timeProvider().posixNow();
   if (timestamp.isError()) {
     logger(Logging::ERROR) << "Failed to receive timestamp: " << timestamp.error().message();
@@ -1571,21 +1559,6 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   }
   if (!Xi::Config::BlockVersion::validateMinorVersion(block.minorVersion)) {
     return error::BlockValidationError::WRONG_MINOR_VERSION;
-  }
-
-  if (block.majorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
-    if (block.majorVersion == Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version() &&
-        block.parentBlock.majorVersion > Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version()) {
-      logger(Logging::ERROR) << "Parent block of block " << cachedBlock.getBlockHash()
-                             << " has wrong major version: " << static_cast<int>(block.parentBlock.majorVersion)
-                             << ", at index " << cachedBlock.getBlockIndex() << " expected version is "
-                             << static_cast<int>(Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version());
-      return error::BlockValidationError::PARENT_BLOCK_WRONG_VERSION;
-    }
-
-    if (cachedBlock.getParentBlockBinaryArray(false).size() > 2048) {
-      return error::BlockValidationError::PARENT_BLOCK_SIZE_TOO_BIG;
-    }
   }
 
   if (block.timestamp >
