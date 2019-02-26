@@ -51,7 +51,7 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValida
   EligibleIndex eligibleIndex{};
 
   if (chain().hasTransaction(transaction.getTransactionHash())) return Xi::make_error(Error::EXISTS_IN_BLOCKCHAIN);
-  if (transaction.getBlobSize() > currency().maxTxSize()) return Xi::make_error(Error::TOO_LARGE);
+  if (transaction.getBlobSize() > currency().maxTxSize(blockVersion())) return Xi::make_error(Error::TOO_LARGE);
   if (isExtraTooLarge(tx)) return Xi::make_error(Error::EXTRA_NONCE_TOO_LARGE);
   if (hasUnsupportedVersion(tx.version)) return Xi::make_error(Error::INVALID_VERSION);
   if (tx.inputs.empty()) return Xi::make_error(Error::EMPTY_INPUTS);
@@ -219,10 +219,6 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validate
   std::vector<Crypto::PublicKey> outputKeys{};
   EligibleIndex index;
   std::tie(outputKeys, index) = extractionResult.take();
-
-  //  if (outputKeys.size() != transaction.getTransaction().outputs.size()) {
-  //    return Xi::make_error(Error::INPUT_INVALID_SIGNATURES_COUNT);
-  //  }
   if (outputKeys.size() != transaction.getTransaction().signatures[inputIndex].size()) {
     return Xi::make_error(Error::INPUT_INVALID_SIGNATURES_COUNT);
   }

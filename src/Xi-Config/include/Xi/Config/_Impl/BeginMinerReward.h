@@ -23,18 +23,31 @@
 
 #pragma once
 
-#include "Xi/Config/_Impl/BeginDust.h"
+#include <cinttypes>
 
-// clang-format off
-//                (_Index, _Version,   _Dust)
-MakeDustCheckpoint(     0,        1,     0)
+#include "Xi/Config/BlockVersion.h"
 
-#define CURRENT_DUST_CHECKPOINT_INDEX 0
+namespace Xi {
+namespace Config {
+namespace MinerReward {
+template <uint8_t _Index>
+struct RewardCheckpoint;
+}
+}  // namespace Config
+}  // namespace Xi
 
-//                      (_Index, _Version,   _Dust)
-MakeFusionDustCheckpoint(     0,        1,      0)
-// clang-format on
-
-#define CURRENT_FUSION_DUST_CHECKPOINT_INDEX 0
-
-#include "Xi/Config/_Impl/EndDust.h"
+#define MakeRewardCheckpoint(_Index, _Version, _Window, _Zone)                                                   \
+  namespace Xi {                                                                                                 \
+  namespace Config {                                                                                             \
+  namespace MinerReward {                                                                                        \
+  template <>                                                                                                    \
+  struct RewardCheckpoint<_Index> {                                                                              \
+    static inline constexpr uint8_t index() { return _Index; }                                                   \
+    static inline constexpr uint8_t version() { return _Version; }                                               \
+    static inline constexpr uint32_t window() { return _Window; }                                                \
+    static inline constexpr uint64_t fullRewardZone() { return _Zone; }                                          \
+    static_assert(::Xi::Config::BlockVersion::exists(_Version), "Non existing major block version referenced."); \
+  };                                                                                                             \
+  }                                                                                                              \
+  }                                                                                                              \
+  }

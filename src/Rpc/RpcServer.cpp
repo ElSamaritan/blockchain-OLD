@@ -754,9 +754,19 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   BlockTemplate blk = m_core.getBlockByHash(hash);
   BlockDetails blkDetails = m_core.getBlockDetails(hash);
 
-  if (blk.baseTransaction.inputs.front().type() != typeid(BaseInput)) {
-    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
-                                "Internal error: coinbase transaction in the block has the wrong type"};
+  const auto validateCoinbaseTransaction = [](const auto& tx) {
+    if (tx.inputs.size() != 1) {
+      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
+                                  "Internal error: coinbase transaction has invalid input size."};
+    } else if (tx.inputs.front().type() != typeid(BaseInput)) {
+      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
+                                  "Internal error: coinbase transaction in the block has the wrong type"};
+    }
+  };
+
+  validateCoinbaseTransaction(blk.baseTransaction);
+  if (!blk.staticReward.isNull()) {
+    validateCoinbaseTransaction(blk.staticReward);
   }
 
   block_header_response block_header;
@@ -775,6 +785,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   res.block.alreadyGeneratedCoins = std::to_string(blkDetails.alreadyGeneratedCoins);
   res.block.alreadyGeneratedTransactions = blkDetails.alreadyGeneratedTransactions;
   res.block.reward = block_header.reward;
+  res.block.staticReward = block_header.static_reward;
   res.block.sizeMedian = blkDetails.sizeMedian;
   res.block.blockSize = blkDetails.blockSize;
   res.block.orphan_status = blkDetails.isAlternative;
@@ -804,6 +815,17 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   transaction_short.amount_out = getOutputAmount(blk.baseTransaction);
   transaction_short.size = getObjectBinarySize(blk.baseTransaction);
   res.block.transactions.push_back(transaction_short);
+
+  if (!blk.staticReward.isNull()) {
+    // Static reward adding
+    const auto& static_reward_tx = blk.staticReward;
+    f_transaction_short_response short_static_reward_info;
+    short_static_reward_info.hash = Common::podToHex(getObjectHash(static_reward_tx));
+    short_static_reward_info.fee = 0;
+    short_static_reward_info.amount_out = getOutputAmount(static_reward_tx);
+    short_static_reward_info.size = getObjectBinarySize(static_reward_tx);
+    res.block.transactions.push_back(short_static_reward_info);
+  }
 
   std::vector<Crypto::Hash> missed_txs;
   std::vector<BinaryArray> txs;
@@ -1073,6 +1095,15 @@ bool RpcServer::on_getblocktemplate(const COMMAND_RPC_GETBLOCKTEMPLATE::request&
                                 "Internal error: failed to find tx pub key in coinbase extra"};
   }
 
+  if (!blockTemplate.staticReward.isNull()) {
+    PublicKey static_reward_pub_key = CryptoNote::getTransactionPublicKeyFromExtra(blockTemplate.staticReward.extra);
+    if (static_reward_pub_key == NULL_PUBLIC_KEY) {
+      logger(ERROR) << "Failed to find tx pub key in static reward extra";
+      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
+                                  "Internal error: failed to find tx pub key in static reward extra"};
+    }
+  }
+
   if (0 < req.reserve_size) {
     res.reserved_offset = slow_memmem((void*)block_blob.data(), block_blob.size(), &tx_pub_key, sizeof(tx_pub_key));
     if (!res.reserved_offset) {
@@ -1161,7 +1192,16 @@ uint64_t get_block_reward(const BlockTemplate& blk) {
   for (const TransactionOutput& out : blk.baseTransaction.outputs) {
     reward += out.amount;
   }
+  return reward;
+}
 
+uint64_t get_block_static_reward(const BlockTemplate& blk) {
+  uint64_t reward = 0;
+  if (!blk.staticReward.isNull()) {
+    for (const TransactionOutput& out : blk.staticReward.outputs) {
+      reward += out.amount;
+    }
+  }
   return reward;
 }
 
@@ -1180,6 +1220,7 @@ void RpcServer::fill_block_header_response(const BlockTemplate& blk, bool orphan
   response.hash = Common::podToHex(hash);
   response.difficulty = m_core.getBlockDifficulty(index);
   response.reward = get_block_reward(blk);
+  response.static_reward = get_block_static_reward(blk);
   BlockDetails blkDetails = m_core.getBlockDetails(hash);
   response.num_txes = static_cast<uint32_t>(blkDetails.transactions.size());
   response.block_size = blkDetails.blockSize;

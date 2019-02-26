@@ -38,7 +38,7 @@ inline constexpr uint32_t addressBas58Prefix() { return 22583; }
 constexpr uint8_t numberOfDecimalPoints() { return 6; }
 constexpr uint64_t toAtomicUnits(uint64_t coins) { return coins * Xi::pow(10, numberOfDecimalPoints()); }
 constexpr uint64_t totalSupply() { return toAtomicUnits(55_M); }
-constexpr uint64_t amountOfPremine() { return toAtomicUnits(3300_k); }
+constexpr uint64_t amountOfPremine() { return toAtomicUnits(400_k); }
 constexpr uint64_t minimumFee() { return 100; }
 constexpr uint32_t emissionSpeed() { return 21; }
 
@@ -58,7 +58,7 @@ uint64_t genesisTimestamp(Xi::Config::Network::Type network);
  * - Recompile, setup your seed nodes, and start mining
  * - You should see your premine appear in the previously generated wallet.
  */
-std::string genesisTransactionHash(Network::Type network);
+std::string genesisTransactionBlob(Network::Type network);
 
 static_assert(emissionSpeed() <= 8 * sizeof(uint64_t), "Bad emission speed.");
 }  // namespace Coin

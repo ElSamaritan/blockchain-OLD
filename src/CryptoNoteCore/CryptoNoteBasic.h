@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <cinttypes>
+
 #include <boost/utility/value_init.hpp>
 #include <CryptoNoteCore/CryptoNote.h>
 
@@ -25,6 +27,19 @@ const Crypto::Hash NULL_HASH = boost::value_initialized<Crypto::Hash>();
 const Crypto::PublicKey NULL_PUBLIC_KEY = boost::value_initialized<Crypto::PublicKey>();
 const Crypto::SecretKey NULL_SECRET_KEY = boost::value_initialized<Crypto::SecretKey>();
 
+/*!
+ * \brief generateKeyPair Generates a non-pseudo random key pair
+ * \return The generated key pair
+ */
 KeyPair generateKeyPair();
+
+/*!
+ * \brief generateKeyPair Generates a pseudo random determinstic key pair
+ * \param seed The seed to use for generation.
+ * \return The generated key pair
+ *
+ * This implementation will always return the same key pair for a fixed seed accross platforms.
+ */
+KeyPair generateKeyPair(uint32_t seed);
 
 }  // namespace CryptoNote

@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,20 +21,29 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include <gmock/gmock.h>
 
-#include "Xi/Config/_Impl/BeginDust.h"
+#include <random>
+#include <unordered_set>
 
-// clang-format off
-//                (_Index, _Version,   _Dust)
-MakeDustCheckpoint(     0,        1,     0)
+#include <crypto/CryptoTypes.h>
+#include <crypto/crypto.h>
+#include <CryptoNoteCore/CryptoNoteBasic.h>
 
-#define CURRENT_DUST_CHECKPOINT_INDEX 0
+#define XI_TESTSUITE UT_Xi_Crypto_Seed_Key_Generation
 
-//                      (_Index, _Version,   _Dust)
-MakeFusionDustCheckpoint(     0,        1,      0)
-// clang-format on
+/// This test takes long, you may want to run this though depending on the heights static rewards are enabled to
+/// ensure you do not get duplicate keys.
+TEST(DISABLED_UT_Xi_Crypto_Seed_Key_Generation, NoDuplicates) {
+  using namespace ::testing;
 
-#define CURRENT_FUSION_DUST_CHECKPOINT_INDEX 0
+  const uint32_t continiousTests = 2000000;
 
-#include "Xi/Config/_Impl/EndDust.h"
+  std::unordered_set<Crypto::PublicKey> pubKeys;
+  std::unordered_set<Crypto::SecretKey> secKeys;
+  for (uint32_t i = 0; i < continiousTests; ++i) {
+    auto keyPair = CryptoNote::generateKeyPair(i);
+    EXPECT_TRUE(pubKeys.insert(keyPair.publicKey).second);
+    EXPECT_TRUE(secKeys.insert(keyPair.secretKey).second);
+  }
+}

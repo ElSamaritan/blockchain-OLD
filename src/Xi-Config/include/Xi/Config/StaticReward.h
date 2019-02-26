@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -23,62 +23,38 @@
 
 #pragma once
 
-#include <cinttypes>
+#include <string>
 
-#include "Xi/Config/Reward.h"
+#include "Xi/Config/Coin.h"
+#include "Xi/Config/NetworkType.h"
 
-#undef MakeRewardCheckpoint
-
-#ifndef CURRENT_REWARD_CHECKPOINT_INDEX
-#pragma error "CURRENT_REWARD_CHECKPOINT_INDEX must be defines"
-#endif
+#include "Xi/Config/_Impl/BeginStaticReward.h"
 
 namespace Xi {
 namespace Config {
-namespace Reward {
 
-struct RewardCheckpointResolver {
-  template <uint8_t>
-  static inline uint32_t window(uint8_t version);
+/*!
+ * \brief Configurates a static reward for each block, for a built in address.
+ *
+ * As an alternative to a genesis block reward you can use this config to enable a built in reward system that generates
+ * rewards over the lifetime of the blockchain for a fixed address. The benefit of this approach is an increased level
+ * of trust for your community. First your address will not have access to all generated coins from the beginning
+ * which prevents an so called 'exit scam', second if the community is not satisfied by the development and/or the
+ * usage of the reward they are able to fork the reward out and continue the development of the blockchain without
+ * paying out the initial address any longer.
+ *
+ */
+namespace StaticReward {}
 
-  template <uint8_t>
-  static inline uint64_t fullRewardZone(uint8_t version);
-};
-
-template <>
-inline uint32_t RewardCheckpointResolver::window<0>(uint8_t) {
-  return RewardCheckpoint<0>::window();
-}
-template <uint8_t _Index>
-inline uint32_t RewardCheckpointResolver::window(uint8_t version) {
-  if (version >= RewardCheckpoint<_Index>::version())
-    return RewardCheckpoint<_Index>::window();
-  else
-    return window<_Index - 1>(version);
-}
-
-template <>
-inline uint64_t RewardCheckpointResolver::fullRewardZone<0>(uint8_t) {
-  return RewardCheckpoint<0>::fullRewardZone();
-}
-template <uint8_t _Index>
-inline uint64_t RewardCheckpointResolver::fullRewardZone(uint8_t version) {
-  if (version >= RewardCheckpoint<_Index>::version())
-    return RewardCheckpoint<_Index>::fullRewardZone();
-  else
-    return fullRewardZone<_Index - 1>(version);
-}
-
-inline uint32_t window(uint8_t version) {
-  return RewardCheckpointResolver::window<CURRENT_REWARD_CHECKPOINT_INDEX>(version);
-}
-
-inline uint64_t fullRewardZone(uint8_t version) {
-  return RewardCheckpointResolver::fullRewardZone<CURRENT_REWARD_CHECKPOINT_INDEX>(version);
-}
-
-}  // namespace Reward
 }  // namespace Config
 }  // namespace Xi
 
-#undef CURRENT_REWARD_CHECKPOINT_INDEX
+// clang-format off
+//                        (_Index, _Version,                _Amount,  _Address...
+MakeStaticRewardCheckpoint(     0,        1, Coin::toAtomicUnits(2),  "XizwvuJp4FrfLw3k9sLKASVpdVUEC7eRHA8Azp7ZjeWfGsYs2sEyNwv5i5aYpTa8mDJfEmp4pmJJj5DRQ6cKwpHp5sLQghy98s")
+MakeStaticRewardCheckpoint(     1,        5,                      0,  "")
+// clang-format on
+
+#define CURRENT_STATIC_REWARD_CHECKPOINT_INDEX 1
+
+#include "Xi/Config/_Impl/EndStaticReward.h"

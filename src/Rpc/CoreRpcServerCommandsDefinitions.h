@@ -392,6 +392,7 @@ struct block_header_response {
   std::string hash;
   uint64_t difficulty;
   uint64_t reward;
+  uint64_t static_reward;
   uint32_t num_txes;
   uint64_t block_size;
 
@@ -407,6 +408,7 @@ struct block_header_response {
     KV_MEMBER(hash)
     KV_MEMBER(difficulty)
     KV_MEMBER(reward)
+    KV_MEMBER(static_reward)
     KV_MEMBER(num_txes)
     KV_MEMBER(block_size)
   }
@@ -517,6 +519,7 @@ struct f_block_details_response {
   std::string hash;
   uint64_t difficulty;
   uint64_t reward;
+  uint64_t staticReward;
   uint64_t blockSize;
   size_t sizeMedian;
   uint64_t effectiveSizeMedian;
@@ -540,6 +543,7 @@ struct f_block_details_response {
     KV_MEMBER(hash)
     KV_MEMBER(difficulty)
     KV_MEMBER(reward)
+    KV_MEMBER(staticReward)
     KV_MEMBER(blockSize)
     KV_MEMBER(sizeMedian)
     KV_MEMBER(effectiveSizeMedian)

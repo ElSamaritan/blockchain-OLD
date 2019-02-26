@@ -676,7 +676,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
 
   std::vector<CachedTransaction> transactions;
   uint64_t cumulativeSize = 0;
-  if (!extractTransactions(rawBlock.transactions, transactions, cumulativeSize)) {
+  if (!extractTransactions(rawBlock.transactions, transactions, cumulativeSize, blockTemplate.majorVersion)) {
     logger(Logging::DEBUGGING) << "Couldn't deserialize raw block transactions in block " << blockStr;
     return error::AddBlockErrorCode::DESERIALIZATION_FAILED;
   }
@@ -745,7 +745,8 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   uint64_t cumulativeFee = 0;
   for (const auto& transaction : transactions) {
     uint64_t fee = 0;
-    auto transactionValidationResult = validateTransaction(transaction, validatorState, cache, fee, previousBlockIndex);
+    auto transactionValidationResult = validateTransaction(transaction, validatorState, cache, fee, previousBlockIndex,
+                                                           cachedBlock.getBlock().majorVersion);
     if (transactionValidationResult) {
       logger(Logging::DEBUGGING) << "Failed to validate transaction " << transaction.getTransactionHash() << ": "
                                  << transactionValidationResult.message();
@@ -1168,6 +1169,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   auto timestamp = timeProvider().posixNow();
   if (timestamp.isError()) {
     logger(Logging::ERROR) << "Failed to receive timestamp: " << timestamp.error().message();
+    return false;
   }
   b.timestamp = timestamp.value();
 
@@ -1219,6 +1221,19 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   size_t transactionsSize;
   uint64_t fee;
   fillBlockTemplate(b, height, medianSize, maxBlockSize, transactionsSize, fee);
+
+  if (currency().isStaticRewardEnabledForBlockVersion(b.majorVersion)) {
+    b.staticReward = boost::value_initialized<Transaction>{};
+    auto staticRewardTxConstructionResult = m_currency.constructStaticRewardTx(b.majorVersion, height, b.staticReward);
+    if (staticRewardTxConstructionResult.isError()) {
+      logger(Logging::ERROR) << "Failed to construct static reward transaction: "
+                             << staticRewardTxConstructionResult.error().message();
+      return false;
+    } else if (!staticRewardTxConstructionResult.value()) {
+      logger(Logging::ERROR) << "Expected static reward, but none given by construction.";
+      return false;
+    }
+  }
 
   /*
      two-phase miner transaction generation: we don't know exact block size until we prepare block, but we don't know
@@ -1357,10 +1372,11 @@ std::vector<Transaction> Core::getPoolTransactions() const {
 }
 
 bool Core::extractTransactions(const std::vector<BinaryArray>& rawTransactions,
-                               std::vector<CachedTransaction>& transactions, uint64_t& cumulativeSize) {
+                               std::vector<CachedTransaction>& transactions, uint64_t& cumulativeSize,
+                               uint8_t blockMajorVersion) {
   try {
     for (const auto& rawTransaction : rawTransactions) {
-      if (rawTransaction.size() > m_currency.maxTxSize()) {
+      if (rawTransaction.size() > m_currency.maxTxSize(blockMajorVersion)) {
         logger(Logging::INFO) << "Raw transaction size " << rawTransaction.size() << " is too big.";
         return false;
       }
@@ -1376,9 +1392,114 @@ bool Core::extractTransactions(const std::vector<BinaryArray>& rawTransactions,
   return true;
 }
 
+std::error_code Core::validateStaticReward(const Transaction& transaction, uint32_t blockIndex,
+                                           uint8_t blockMajorVersion) const {
+  const bool shouldHaveStaticReward = currency().isStaticRewardEnabledForBlockVersion(blockMajorVersion);
+  if (shouldHaveStaticReward && transaction.isNull()) {
+    return error::BlockValidationError::UNEXPECTED_STATIC_REWARD;
+  } else if (!shouldHaveStaticReward && !transaction.isNull()) {
+    return error::BlockValidationError::UNEXPECTED_STATIC_REWARD;
+  }
+
+  if (transaction.version < m_currency.minTxVersion() || transaction.version > m_currency.maxTxVersion()) {
+    return error::TransactionValidationError::INVALID_VERSION;
+  }
+
+  if (transaction.extra.size() != sizeof(PublicKey) + 1) {
+    return error::TransactionValidationError::BASE_INPUT_INVALID_NONCE;
+  }
+  if (transaction.extra[0] != TX_EXTRA_TAG_PUBKEY) {
+    return error::TransactionValidationError::BASE_INPUT_INVALID_NONCE;
+  }
+
+  if (transaction.inputs.size() != 1) {
+    return error::TransactionValidationError::BASE_INPUT_WRONG_COUNT;
+  }
+
+  if (transaction.inputs[0].type() != typeid(BaseInput)) {
+    return error::TransactionValidationError::BASE_INPUT_UNEXPECTED_TYPE;
+  }
+
+  if (boost::get<BaseInput>(transaction.inputs[0]).blockIndex != blockIndex) {
+    return error::TransactionValidationError::BASE_INPUT_WRONG_BLOCK_INDEX;
+  }
+
+  if (!(transaction.unlockTime == blockIndex + m_currency.minedMoneyUnlockWindow())) {
+    return error::TransactionValidationError::BASE_TRANSACTION_WRONG_UNLOCK_TIME;
+  }
+
+  if (!transaction.signatures.empty()) {
+    return error::TransactionValidationError::BASE_INVALID_SIGNATURES_COUNT;
+  }
+
+  uint64_t staticReward = 0;
+  for (const auto& output : transaction.outputs) {
+    if (output.amount == 0) {
+      return error::TransactionValidationError::OUTPUT_ZERO_AMOUNT;
+    }
+
+    if (output.target.type() == typeid(KeyOutput)) {
+      if (!check_key(boost::get<KeyOutput>(output.target).key)) {
+        return error::TransactionValidationError::OUTPUT_INVALID_KEY;
+      }
+    } else {
+      return error::TransactionValidationError::OUTPUT_UNKNOWN_TYPE;
+    }
+
+    if (std::numeric_limits<uint64_t>::max() - output.amount < staticReward) {
+      return error::TransactionValidationError::OUTPUTS_AMOUNT_OVERFLOW;
+    }
+
+    staticReward += output.amount;
+  }
+
+  const auto expectedStaticReward = currency().staticRewardAmountForBlockVersion(blockMajorVersion);
+  if (staticReward != expectedStaticReward) {
+    return error::BlockValidationError::BLOCK_REWARD_MISMATCH;
+  }
+
+  const KeyPair txkey = generateKeyPair(blockIndex);
+  if (std::memcmp(&transaction.extra[1], txkey.publicKey.data, sizeof(PublicKey)) != 0) {
+    return error::TransactionValidationError::STATIC_REWARD_INVALID_ADDRESS;
+  }
+
+  const auto expectedStaticRewardAddress = m_currency.staticRewardAddressForBlockVersion(blockMajorVersion);
+  AccountPublicAddress parsedRewardAddress = boost::value_initialized<AccountPublicAddress>();
+  if (!m_currency.parseAccountAddressString(expectedStaticRewardAddress, parsedRewardAddress)) {
+    logger(Logging::FATAL) << "Unable to parse built in static reward address: " << expectedStaticRewardAddress;
+    return error::TransactionValidationError::STATIC_REWARD_INVALID_ADDRESS;
+  }
+
+  for (size_t no = 0; no < transaction.outputs.size(); no++) {
+    Crypto::KeyDerivation derivation = boost::value_initialized<Crypto::KeyDerivation>();
+    Crypto::PublicKey outEphemeralPubKey = boost::value_initialized<Crypto::PublicKey>();
+
+    if (!Crypto::generate_key_derivation(parsedRewardAddress.viewPublicKey, txkey.secretKey, derivation)) {
+      logger(Logging::FATAL) << "unable to generate static reward key derivation.";
+      return error::TransactionValidationError::STATIC_REWARD_INVALID_OUT;
+    }
+    if (!Crypto::derive_public_key(derivation, no, parsedRewardAddress.spendPublicKey, outEphemeralPubKey)) {
+      logger(Logging::FATAL) << "unable to derive static reward public key.";
+      return error::TransactionValidationError::STATIC_REWARD_INVALID_OUT;
+    }
+
+    KeyOutput iOutput = boost::get<KeyOutput>(transaction.outputs[no].target);  // note, checked previously
+    if (std::memcmp(iOutput.key.data, outEphemeralPubKey.data, sizeof(Crypto::PublicKey)) != 0) {
+      return error::TransactionValidationError::STATIC_REWARD_INVALID_OUT;
+    }
+  }
+
+  return error::BlockValidationError::VALIDATION_SUCCESS;
+}
+
 std::error_code Core::validateTransaction(const CachedTransaction& cachedTransaction, TransactionValidatorState& state,
-                                          IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex) {
+                                          IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex,
+                                          uint8_t blockMajorVersion) {
   // TransactionValidatorState currentState;
+  if (cachedTransaction.getTransactionBinaryArray().size() > currency().maxTxSize(blockMajorVersion)) {
+    return error::TransactionValidationError::TOO_LARGE;
+  }
+
   const auto& transaction = cachedTransaction.getTransaction();
   if (transaction.version > m_currency.maxTxVersion() || transaction.version < m_currency.minTxVersion()) {
     return error::TransactionValidationError::INVALID_VERSION;
@@ -1418,6 +1539,10 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
 
         if (result == ExtractOutputKeysResult::OUTPUT_LOCKED) {
           return error::TransactionValidationError::INPUT_SPEND_LOCKED_OUT;
+        }
+
+        if (outputKeys.size() != cachedTransaction.getTransaction().signatures[inputIndex].size()) {
+          return error::TransactionValidationError::INPUT_INVALID_SIGNATURES_COUNT;
         }
 
         std::vector<const Crypto::PublicKey*> outputKeyPointers;
@@ -1575,8 +1700,16 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     }
   }
 
-  if (block.baseTransaction.extra.size() > TX_EXTRA_NONCE_MAX_COUNT) {
-    return error::TransactionValidationError::EXTRA_NONCE_TOO_LARGE;
+  if ((block.baseTransaction.version < m_currency.minTxVersion()) ||
+      (block.baseTransaction.version > m_currency.maxTxVersion())) {
+    return error::TransactionValidationError::INVALID_VERSION;
+  }
+
+  if (block.baseTransaction.extra.size() != sizeof(PublicKey) + 1) {
+    return error::TransactionValidationError::BASE_INPUT_INVALID_NONCE;
+  }
+  if (block.baseTransaction.extra[0] != TX_EXTRA_TAG_PUBKEY) {
+    return error::TransactionValidationError::BASE_INPUT_INVALID_NONCE;
   }
 
   if (block.baseTransaction.inputs.size() != 1) {
@@ -1593,6 +1726,10 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
 
   if (!(block.baseTransaction.unlockTime == previousBlockIndex + 1 + m_currency.minedMoneyUnlockWindow())) {
     return error::TransactionValidationError::BASE_TRANSACTION_WRONG_UNLOCK_TIME;
+  }
+
+  if (!block.baseTransaction.signatures.empty()) {
+    return error::TransactionValidationError::BASE_INVALID_SIGNATURES_COUNT;
   }
 
   for (const auto& output : block.baseTransaction.outputs) {
@@ -1615,7 +1752,7 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     minerReward += output.amount;
   }
 
-  return error::BlockValidationError::VALIDATION_SUCCESS;
+  return validateStaticReward(block.staticReward, previousBlockIndex + 1, block.majorVersion);
 }
 
 uint64_t CryptoNote::Core::getAdjustedTime() const { return time(NULL); }
@@ -1712,12 +1849,15 @@ void Core::importBlocksFromStorage() {
 
     std::vector<CachedTransaction> transactions;
     uint64_t cumulativeSize = 0;
-    if (!extractTransactions(rawBlock.transactions, transactions, cumulativeSize)) {
+    if (!extractTransactions(rawBlock.transactions, transactions, cumulativeSize, blockTemplate.majorVersion)) {
       logger(Logging::ERROR) << "Couldn't deserialize raw block transactions in block " << cachedBlock.getBlockHash();
       throw std::system_error(make_error_code(error::AddBlockErrorCode::DESERIALIZATION_FAILED));
     }
 
     cumulativeSize += getObjectBinarySize(blockTemplate.baseTransaction);
+    if (!blockTemplate.staticReward.isNull()) {
+      cumulativeSize += getObjectBinarySize(blockTemplate.staticReward);
+    }
     TransactionValidatorState spentOutputs = extractSpentOutputs(transactions);
     auto currentDifficulty = chainsLeaves[0]->getDifficultyForNextBlock(i - 1);
 
@@ -2212,6 +2352,12 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
   for (const TransactionOutput& out : blockTemplate.baseTransaction.outputs) {
     blockDetails.reward += out.amount;
   }
+  blockDetails.staticReward = 0;
+  if (!blockTemplate.staticReward.isNull()) {
+    for (const TransactionOutput& out : blockTemplate.staticReward.outputs) {
+      blockDetails.staticReward += out.amount;
+    }
+  }
 
   blockDetails.index = blockIndex;
   blockDetails.isAlternative = mainChainSet.count(segment) == 0;
@@ -2224,7 +2370,12 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
 
   uint64_t blockBlobSize = getObjectBinarySize(blockTemplate);
   uint64_t coinbaseTransactionSize = getObjectBinarySize(blockTemplate.baseTransaction);
-  blockDetails.blockSize = blockBlobSize + blockDetails.transactionsCumulativeSize - coinbaseTransactionSize;
+  uint64_t staticRewardTransactionSize = 0;
+  if (!blockTemplate.staticReward.isNull()) {
+    staticRewardTransactionSize = getObjectBinarySize(blockTemplate.staticReward);
+  }
+  blockDetails.blockSize =
+      blockBlobSize + blockDetails.transactionsCumulativeSize - coinbaseTransactionSize - staticRewardTransactionSize;
 
   blockDetails.alreadyGeneratedCoins = segment->getAlreadyGeneratedCoins(blockDetails.index);
   blockDetails.alreadyGeneratedTransactions = segment->getAlreadyGeneratedTransactions(blockDetails.index);
@@ -2260,9 +2411,14 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
         static_cast<double>(blockDetails.baseReward - currentReward) / static_cast<double>(blockDetails.baseReward);
   }
 
-  blockDetails.transactions.reserve(blockTemplate.transactionHashes.size() + 1);
+  blockDetails.transactions.reserve(blockTemplate.transactionHashes.size() + 2);
   CachedTransaction cachedBaseTx(std::move(blockTemplate.baseTransaction));
   blockDetails.transactions.push_back(getTransactionDetails(cachedBaseTx.getTransactionHash(), segment, false));
+  if (!blockTemplate.staticReward.isNull()) {
+    CachedTransaction cachedStaticRewardTx(std::move(blockTemplate.staticReward));
+    blockDetails.transactions.push_back(
+        getTransactionDetails(cachedStaticRewardTx.getTransactionHash(), segment, false));
+  }
 
   blockDetails.totalFeeAmount = 0;
   for (const Crypto::Hash& transactionHash : blockTemplate.transactionHashes) {

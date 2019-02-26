@@ -54,11 +54,16 @@ enum class TransactionValidationError {
   INPUT_INVALID_SIGNATURES = 14,  ///< The signing signature of the input is invalid. Its likely that a user tried to
                                   ///< use coins he does not own.
   INPUT_WRONG_SIGNATURES_COUNT = 15,
-  INPUTS_AMOUNT_OVERFLOW = 16,        ///< The sum of all amounts of the transaction input caused a memory overflow
-  BASE_INPUT_WRONG_COUNT = 17,        ///< The miner reward transaction has an invalid amount of inputs
-  BASE_INPUT_WRONG_BLOCK_INDEX = 18,  ///< The encoded block index of the miner reward input is wrong.
-  BASE_INPUT_UNEXPECTED_TYPE = 19,    ///< The type of the miner reward input transaction has an unexpected type that
-                                      ///< cannot be processes.
+  INPUTS_AMOUNT_OVERFLOW = 16,         ///< The sum of all amounts of the transaction input caused a memory overflow
+  BASE_INPUT_WRONG_COUNT = 17,         ///< The miner reward transaction has an invalid amount of inputs
+  BASE_INPUT_WRONG_BLOCK_INDEX = 18,   ///< The encoded block index of the miner reward input is wrong.
+  BASE_INPUT_UNEXPECTED_TYPE = 19,     ///< The type of the miner reward input transaction has an unexpected type that
+                                       ///< cannot be processes.
+  BASE_INPUT_INVALID_NONCE = 37,       ///< Base transactions can only store public keys in their nonce.
+  BASE_INVALID_SIGNATURES_COUNT = 38,  ///< Base transaction may not contain any signatures.
+  STATIC_REWARD_INVALID_ADDRESS = 39,  ///< The static reward address is invalid, not the expected one.
+  STATIC_REWARD_INVALID_OUT = 40,      ///< The static reward contains an invalid out, either wrong encoded or not
+                                       ///< designated to the built in static reward address.
   EXTRA_NONCE_TOO_LARGE =
       36,  ///< The extra nonce of the transaction is larger than allowed (TX_EXTRA_NONCE_MAX_COUNT).
   INPUT_AMOUNT_INSUFFICIENT = 20,       ///< The sum of inputs to the transaction is lower than the sum of outputs.
@@ -81,9 +86,9 @@ enum class TransactionValidationError {
   INPUT_MIXIN_TOO_HIGH = 33,
   INPUT_MIXIN_TOO_LOW = 34,
 
-  __NUM = 37  ///< The count of different enum values, if you add a new one use this as its value and increase this by
-              ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation and
-              ///< tickets aso.
+  __NUM = 41  ///< The count of different enum values, if you add a new one use this as its value and increase this by
+              ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation
+              ///< and tickets aso.
 };
 
 // custom category:
@@ -91,9 +96,11 @@ class TransactionValidationErrorCategory : public std::error_category {
  public:
   static TransactionValidationErrorCategory INSTANCE;
 
-  virtual const char* name() const throw() { return "TransactionValidationErrorCategory"; }
+  virtual const char* name() const noexcept { return "TransactionValidationErrorCategory"; }
 
-  virtual std::error_condition default_error_condition(int ev) const throw() { return std::error_condition(ev, *this); }
+  virtual std::error_condition default_error_condition(int ev) const noexcept {
+    return std::error_condition(ev, *this);
+  }
 
   virtual std::string message(int ev) const {
     TransactionValidationError code = static_cast<TransactionValidationError>(ev);
@@ -131,6 +138,14 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Wrong input count";
       case TransactionValidationError::BASE_INPUT_UNEXPECTED_TYPE:
         return "Wrong input type";
+      case TransactionValidationError::BASE_INPUT_INVALID_NONCE:
+        return "The base input transaction has an invalid encoded nonce";
+      case TransactionValidationError::BASE_INVALID_SIGNATURES_COUNT:
+        return "Base transaction contains signature, which is prohibited.";
+      case TransactionValidationError::STATIC_REWARD_INVALID_ADDRESS:
+        return "Static reward contains an unexpected public key.";
+      case TransactionValidationError::STATIC_REWARD_INVALID_OUT:
+        return "Static reward contains an invalid output.";
       case TransactionValidationError::INPUT_AMOUNT_INSUFFICIENT:
         return "Transaction contains more output than input";
       case TransactionValidationError::INPUT_INVALID_SIGNATURES_COUNT:

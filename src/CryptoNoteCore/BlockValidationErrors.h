@@ -25,20 +25,24 @@ namespace error {
 
 enum class BlockValidationError {
   VALIDATION_SUCCESS = 0,
-  WRONG_MAJOR_VERSION,
-  WRONG_MINOR_VERSION,
-  PARENT_BLOCK_SIZE_TOO_BIG,
-  PARENT_BLOCK_WRONG_VERSION,
-  TIMESTAMP_TOO_FAR_IN_FUTURE,
-  TIMESTAMP_TOO_FAR_IN_PAST,
-  CUMULATIVE_BLOCK_SIZE_TOO_BIG,
-  DIFFICULTY_OVERHEAD,
-  BLOCK_REWARD_MISMATCH,
-  CHECKPOINT_BLOCK_HASH_MISMATCH,
-  PROOF_OF_WORK_TOO_WEAK,
-  TRANSACTION_ABSENT_IN_POOL,
-  TRANSACTION_DUPLICATES,
-  TRANSACTION_INCONSISTENCY
+  WRONG_MAJOR_VERSION = 1,
+  WRONG_MINOR_VERSION = 2,
+  PARENT_BLOCK_SIZE_TOO_BIG = 3,
+  PARENT_BLOCK_WRONG_VERSION = 4,
+  TIMESTAMP_TOO_FAR_IN_FUTURE = 5,
+  TIMESTAMP_TOO_FAR_IN_PAST = 6,
+  CUMULATIVE_BLOCK_SIZE_TOO_BIG = 7,
+  DIFFICULTY_OVERHEAD = 8,
+  BLOCK_REWARD_MISMATCH = 9,
+  STATIC_REWARD_MISMATCH = 16,
+  CHECKPOINT_BLOCK_HASH_MISMATCH = 10,
+  PROOF_OF_WORK_TOO_WEAK = 11,
+  TRANSACTION_ABSENT_IN_POOL = 12,
+  TRANSACTION_DUPLICATES = 13,
+  TRANSACTION_INCONSISTENCY = 14,
+  UNEXPECTED_STATIC_REWARD = 15,
+
+  __NUM = 17
 };
 
 // custom category:
@@ -46,9 +50,11 @@ class BlockValidationErrorCategory : public std::error_category {
  public:
   static BlockValidationErrorCategory INSTANCE;
 
-  virtual const char* name() const throw() { return "BlockValidationErrorCategory"; }
+  virtual const char* name() const noexcept { return "BlockValidationErrorCategory"; }
 
-  virtual std::error_condition default_error_condition(int ev) const throw() { return std::error_condition(ev, *this); }
+  virtual std::error_condition default_error_condition(int ev) const noexcept {
+    return std::error_condition(ev, *this);
+  }
 
   virtual std::string message(int ev) const {
     BlockValidationError code = static_cast<BlockValidationError>(ev);
@@ -74,6 +80,8 @@ class BlockValidationErrorCategory : public std::error_category {
         return "Block difficulty overhead occurred";
       case BlockValidationError::BLOCK_REWARD_MISMATCH:
         return "Block reward doesn't match expected reward";
+      case BlockValidationError::STATIC_REWARD_MISMATCH:
+        return "Block static reward doesn't match expected reward";
       case BlockValidationError::CHECKPOINT_BLOCK_HASH_MISMATCH:
         return "Checkpoint block hash mismatch";
       case BlockValidationError::PROOF_OF_WORK_TOO_WEAK:
@@ -84,6 +92,8 @@ class BlockValidationErrorCategory : public std::error_category {
         return "Block contains duplicated transactions";
       case BlockValidationError::TRANSACTION_INCONSISTENCY:
         return "Block template and raw block have inconsistent transactions";
+      case BlockValidationError::UNEXPECTED_STATIC_REWARD:
+        return "Block template contains a static reward but static rewards are disabled for the current block version";
       default:
         return "Unknown error";
     }

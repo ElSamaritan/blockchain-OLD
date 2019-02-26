@@ -14,6 +14,8 @@
 #include <memory>
 #include <mutex>
 
+#include <Xi/Crypto/MersenneTwister.h>
+
 #include "Common/Varint.h"
 #include "crypto.h"
 #include "hash.h"
@@ -39,6 +41,15 @@ static inline void random_scalar(EllipticCurveScalar &res) {
   memcpy(&res, tmp, 32);
 }
 
+static inline void random_scalar(EllipticCurveScalar &res, uint32_t seed) {
+  static thread_local Xi::Crypto::MersenneTwister __RandomEngine{0};
+  __RandomEngine.setSeed(seed);
+  unsigned char tmp[64];
+  __RandomEngine.nextBytes(tmp, 64);
+  sc_reduce(tmp);
+  memcpy(&res, tmp, 32);
+}
+
 static inline void hash_to_scalar(const void *data, size_t length, EllipticCurveScalar &res) {
   cn_fast_hash(data, length, reinterpret_cast<Hash &>(res));
   sc_reduce32(reinterpret_cast<unsigned char *>(&res));
@@ -48,6 +59,14 @@ void crypto_ops::generate_keys(PublicKey &pub, SecretKey &sec) {
   lock_guard<mutex> lock(random_lock);
   ge_p3 point;
   random_scalar(reinterpret_cast<EllipticCurveScalar &>(sec));
+  ge_scalarmult_base(&point, reinterpret_cast<unsigned char *>(&sec));
+  ge_p3_tobytes(reinterpret_cast<unsigned char *>(&pub), &point);
+}
+
+void crypto_ops::generate_keys(PublicKey &pub, SecretKey &sec, uint32_t seed) {
+  lock_guard<mutex> lock(random_lock);
+  ge_p3 point;
+  random_scalar(reinterpret_cast<EllipticCurveScalar &>(sec), seed);
   ge_scalarmult_base(&point, reinterpret_cast<unsigned char *>(&sec));
   ge_p3_tobytes(reinterpret_cast<unsigned char *>(&pub), &point);
 }

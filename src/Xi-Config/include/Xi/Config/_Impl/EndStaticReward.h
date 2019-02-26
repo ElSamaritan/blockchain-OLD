@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -23,18 +23,64 @@
 
 #pragma once
 
-#include "Xi/Config/_Impl/BeginDust.h"
+#include <cinttypes>
 
-// clang-format off
-//                (_Index, _Version,   _Dust)
-MakeDustCheckpoint(     0,        1,     0)
+#include "Xi/Config/StaticReward.h"
 
-#define CURRENT_DUST_CHECKPOINT_INDEX 0
+#undef MakeStaticRewardCheckpoint
 
-//                      (_Index, _Version,   _Dust)
-MakeFusionDustCheckpoint(     0,        1,      0)
-// clang-format on
+#ifndef CURRENT_STATIC_REWARD_CHECKPOINT_INDEX
+#pragma error "CURRENT_STATIC_REWARD_CHECKPOINT_INDEX must be defines"
+#endif
 
-#define CURRENT_FUSION_DUST_CHECKPOINT_INDEX 0
+namespace Xi {
+namespace Config {
+namespace StaticReward {
 
-#include "Xi/Config/_Impl/EndDust.h"
+struct StaticRewardCheckpointResolver {
+  template <uint8_t>
+  static inline uint64_t amount(uint8_t version);
+
+  template <uint8_t>
+  static inline std::string address(uint8_t version);
+};
+
+template <>
+inline uint64_t StaticRewardCheckpointResolver::amount<0>(uint8_t) {
+  return StaticRewardCheckpoint<0>::amount();
+}
+template <uint8_t _Index>
+inline uint64_t StaticRewardCheckpointResolver::amount(uint8_t version) {
+  if (version >= StaticRewardCheckpoint<_Index>::version())
+    return StaticRewardCheckpoint<_Index>::amount();
+  else
+    return amount<_Index - 1>(version);
+}
+
+template <>
+inline std::string StaticRewardCheckpointResolver::address<0>(uint8_t) {
+  return StaticRewardCheckpoint<0>::address();
+}
+template <uint8_t _Index>
+inline std::string StaticRewardCheckpointResolver::address(uint8_t version) {
+  if (version >= StaticRewardCheckpoint<_Index>::version())
+    return StaticRewardCheckpoint<_Index>::address();
+  else
+    return address<_Index - 1>(version);
+}
+
+inline uint64_t amount(uint8_t version) {
+  return StaticRewardCheckpointResolver::amount<CURRENT_STATIC_REWARD_CHECKPOINT_INDEX>(version);
+}
+
+inline std::string address(uint8_t version) {
+  return StaticRewardCheckpointResolver::address<CURRENT_STATIC_REWARD_CHECKPOINT_INDEX>(version);
+}
+
+inline bool isEnabled(uint8_t version) { return !address(version).empty() && amount(version) > 0; }
+
+}  // namespace StaticReward
+}  // namespace Config
+}  // namespace Xi
+
+#undef CURRENT_STATIC_REWARD_CHECKPOINT_INDEX

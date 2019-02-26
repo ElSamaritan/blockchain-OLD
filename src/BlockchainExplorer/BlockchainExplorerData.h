@@ -91,6 +91,7 @@ struct BlockDetails {
   uint64_t difficulty = 0;
   uint64_t reward = 0;
   uint64_t baseReward = 0;
+  uint64_t staticReward = 0;
   uint64_t blockSize = 0;
   uint64_t transactionsCumulativeSize = 0;
   uint64_t alreadyGeneratedCoins = 0;

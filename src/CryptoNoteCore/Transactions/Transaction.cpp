@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,20 +21,8 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "CryptoNoteCore/Transactions/Transaction.h"
 
-#include "Xi/Config/_Impl/BeginDust.h"
+const CryptoNote::Transaction CryptoNote::Transaction::Null{{0, 0, {}, {}, {}}, {}};
 
-// clang-format off
-//                (_Index, _Version,   _Dust)
-MakeDustCheckpoint(     0,        1,     0)
-
-#define CURRENT_DUST_CHECKPOINT_INDEX 0
-
-//                      (_Index, _Version,   _Dust)
-MakeFusionDustCheckpoint(     0,        1,      0)
-// clang-format on
-
-#define CURRENT_FUSION_DUST_CHECKPOINT_INDEX 0
-
-#include "Xi/Config/_Impl/EndDust.h"
+bool CryptoNote::Transaction::isNull() const { return version == 0; }

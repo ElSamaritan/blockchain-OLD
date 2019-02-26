@@ -178,7 +178,9 @@ namespace CryptoNote {
 void serialize(TransactionPrefix& txP, ISerializer& serializer) {
   serializer(txP.version, "version");
 
-  if (Xi::Config::Transaction::version() < txP.version && serializer.type() == ISerializer::INPUT) {
+  if ((Xi::Config::Transaction::maximumVersion() < txP.version ||
+       Xi::Config::Transaction::minimumVersion() > txP.version) &&
+      serializer.type() == ISerializer::INPUT) {
     throw std::runtime_error("Wrong transaction version");
   }
 
@@ -298,22 +300,36 @@ void serializeBlockHeader(BlockHeader& header, ISerializer& serializer) {
   }
 
   serializer(header.minorVersion, "minor_version");
-  if (header.majorVersion == Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version()) {
-    serializer(header.timestamp, "timestamp");
-    serializer(header.previousBlockHash, "prev_id");
-    serializer.binary(&header.nonce, sizeof(header.nonce), "nonce");
-  } else if (header.majorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
-    serializer(header.previousBlockHash, "prev_id");
-  } else {
-    throw std::runtime_error("Wrong major version");
+  if (header.minorVersion != Xi::Config::BlockVersion::expectedMinorVersion()) {
+    throw std::runtime_error{"Wrong minor version"};
   }
+  serializer(header.timestamp, "timestamp");
+  serializer(header.previousBlockHash, "prev_id");
+  serializer.binary(&header.nonce, sizeof(header.nonce), "nonce");
 }
 
 void serialize(BlockHeader& header, ISerializer& serializer) { serializeBlockHeader(header, serializer); }
 
+void serializeStaticReward(Transaction& tx, const uint8_t blockMajorVersion, ISerializer& serializer) {
+  if (serializer.type() == ISerializer::INPUT) {
+    if (Xi::Config::StaticReward::isEnabled(blockMajorVersion)) {
+      serializer(tx, "static_reward");
+    } else {
+      tx = Transaction::Null;
+    }
+  } else {
+    if (Xi::Config::StaticReward::isEnabled(blockMajorVersion)) {
+      serializer(tx, "static_reward");
+    } else {
+      assert(tx.isNull());
+    }
+  }
+}
+
 void serialize(BlockTemplate& block, ISerializer& serializer) {
   serializeBlockHeader(block, serializer);
   serializer(block.baseTransaction, "miner_tx");
+  serializeStaticReward(block.staticReward, block.majorVersion, serializer);
   serializer(block.transactionHashes, "tx_hashes");
 }
 

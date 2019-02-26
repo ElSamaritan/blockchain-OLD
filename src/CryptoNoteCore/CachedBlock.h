@@ -21,6 +21,8 @@ class CachedBlock {
   const BinaryArray& getBlockHashingBinaryArray() const;
   uint32_t getBlockIndex() const;
 
+  bool hasStaticReward() const;
+
  private:
   const BlockTemplate& block;
   mutable boost::optional<BinaryArray> blockHashingBinaryArray;

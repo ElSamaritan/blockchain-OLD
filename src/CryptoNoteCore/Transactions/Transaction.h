@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -23,28 +23,54 @@
 
 #pragma once
 
-#include <Xi/Utils/Conversion.h>
+#include <cinttypes>
+#include <vector>
 
-#include "Xi/Config/_Impl/BeginReward.h"
+#include <Xi/Utils/ExternalIncludePush.h>
+#include <boost/variant.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
 
-/*!
- * \section Reward
- *
- * Index  : Chronological order of introduced checkpoints
- * Version: The block major version introducing the checkpoint
- * Window : Number of previous blocks for median size calculation, blocks with used to calculate penalities for larger
- *            blocks.
- * Zone   : Size in bytes until block penalties will be introduced. If a block is mined larger than the zone
- * size the base reward will be adjusted. Further the transaction pool won't accept transactions larger than the zone,
- *           except for fusion transactions.
- */
+#include <crypto/CryptoTypes.h>
 
-// clang-format off
-//                  (_Index, _Version, _Window,    _Zone)
-MakeRewardCheckpoint(     0,        1,      50,    20_kB)
-MakeRewardCheckpoint(     1,        5,     128,    64_kB)
-// clang-format on
+namespace CryptoNote {
+struct BaseInput {
+  uint32_t blockIndex;
+};
 
-#define CURRENT_REWARD_CHECKPOINT_INDEX 1
+struct KeyInput {
+  uint64_t amount;
+  std::vector<uint32_t> outputIndexes;
+  Crypto::KeyImage keyImage;
+};
 
-#include "Xi/Config/_Impl/EndReward.h"
+struct KeyOutput {
+  Crypto::PublicKey key;
+};
+
+typedef boost::variant<BaseInput, KeyInput> TransactionInput;
+
+typedef boost::variant<KeyOutput> TransactionOutputTarget;
+
+struct TransactionOutput {
+  uint64_t amount;
+  TransactionOutputTarget target;
+};
+
+struct TransactionPrefix {
+  uint8_t version;
+  uint64_t unlockTime;
+  std::vector<TransactionInput> inputs;
+  std::vector<TransactionOutput> outputs;
+  std::vector<uint8_t> extra;
+};
+
+struct Transaction : public TransactionPrefix {
+  static const Transaction Null;
+
+  std::vector<std::vector<Crypto::Signature>> signatures;
+
+  bool isNull() const;
+};
+
+struct BaseTransaction : public TransactionPrefix {};
+}  // namespace CryptoNote
