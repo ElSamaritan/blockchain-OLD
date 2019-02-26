@@ -28,7 +28,7 @@ Xi::Result<CryptoNote::PosixTimestamp> CryptoNote::LocalRealTimeProvider::posixN
   if (timestamp < 0) {
     return Xi::make_error(error::TimeError::NEGATIVE_POSIX_TIMESTAMP);
   } else {
-    return Xi::make_result<uint64_t>(static_cast<uint64_t>(timestamp));
+    return static_cast<uint64_t>(timestamp);
   }
 }
 

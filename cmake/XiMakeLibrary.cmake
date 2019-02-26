@@ -37,24 +37,30 @@ macro(xi_make_library name source_dir)
     source_group("" FILES ${source_file})
   endforeach()
 
-  add_library(
-    ${lib_name}
+  if(source_files)
+    add_library(
+      ${lib_name}
 
-    STATIC
-      ${public_header_files}
-      ${private_header_files}
-      ${source_files}
-  )
+      STATIC
+        ${public_header_files}
+        ${private_header_files}
+        ${source_files}
+    )
 
-  target_include_directories(
-    ${lib_name}
+    target_include_directories(
+      ${lib_name}
 
-    PUBLIC
-      ${lib_include_dir}
+      PUBLIC
+        ${lib_include_dir}
 
-    PRIVATE
-      ${lib_source_dir}
-   )
+      PRIVATE
+        ${lib_source_dir}
+    )
+  else()
+    add_library(${lib_name} INTERFACE)
+    target_sources(${lib_name} INTERFACE ${public_header_files})
+    target_include_directories(${lib_name} INTERFACE ${lib_include_dir})
+  endif()
 
   if(XI_BUILD_TESTSUITE)
     file(GLOB_RECURSE lib_test_files "${source_dir}/tests/**.cpp")

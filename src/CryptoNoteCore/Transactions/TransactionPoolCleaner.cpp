@@ -65,7 +65,7 @@ ITransactionPool::TransactionQueryResult TransactionPoolCleanWrapper::queryTrans
 }
 
 std::vector<CachedTransaction> TransactionPoolCleanWrapper::eligiblePoolTransactions(
-    TransactionValidationResult::EligibleIndex index) const {
+    EligibleIndex index) const {
   return transactionPool->eligiblePoolTransactions(index);
 }
 

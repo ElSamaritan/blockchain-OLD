@@ -38,7 +38,6 @@ bool serialize(EllipticCurvePoint& ecPoint, Common::StringView name, CryptoNote:
 namespace CryptoNote {
 
 struct AccountKeys;
-struct TransactionExtraMergeMiningTag;
 
 enum class SerializationTag : uint8_t { Base = 0xff, Key = 0x2, Transaction = 0xcc, Block = 0xbb };
 
@@ -57,8 +56,6 @@ void serialize(KeyOutput& key, ISerializer& serializer);
 
 void serialize(BlockHeader& header, ISerializer& serializer);
 void serialize(BlockTemplate& block, ISerializer& serializer);
-void serialize(ParentBlockSerializer& pbs, ISerializer& serializer);
-void serialize(TransactionExtraMergeMiningTag& tag, ISerializer& serializer);
 
 void serialize(AccountPublicAddress& address, ISerializer& serializer);
 void serialize(AccountKeys& keys, ISerializer& s);

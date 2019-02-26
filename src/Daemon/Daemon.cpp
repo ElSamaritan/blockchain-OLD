@@ -32,6 +32,8 @@
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
 
+#include <Xi/Utils/String.h>
+#include <Xi/Utils/FileSystem.h>
 #include <Xi/Config/Checkpoints.h>
 
 #include <Logging/LoggerManager.h>
@@ -234,13 +236,7 @@ int main(int argc, char* argv[]) {
                   config.dbReadCacheSize);
     dbConfig.setNetwork(config.network);
     dbConfig.setCompression(config.dbCompression);
-
-    if (!Tools::create_directories_if_necessary(dbConfig.getDataDir())) {
-      throw std::runtime_error("Can't create directory: " + dbConfig.getDataDir());
-    }
-    if (!Tools::directoryExists(dbConfig.getDataDir())) {
-      throw std::runtime_error("Directory does not exist: " + dbConfig.getDataDir());
-    }
+    Xi::FileSystem::ensureDirectoryExists(dbConfig.getDataDir()).throwOnError();
 
     RocksDBWrapper database(logManager);
     database.init(dbConfig);
@@ -266,7 +262,7 @@ int main(int argc, char* argv[]) {
     ccore.load();
     logger(INFO) << "Core initialized OK";
 
-    // BEGIN ----------------- IMPORT TRANSACTION POOL
+    // ------------------------------------------ Transaction Pool ----------------------------------------------------
     logger(INFO) << "Initializing transaction pool...";
     const auto transactionPoolFile = path(config.dataDirectory) / currency.txPoolFileName();
     if (!exists(transactionPoolFile)) {
@@ -279,7 +275,7 @@ int main(int argc, char* argv[]) {
       logger(INFO) << "Imported " << ccore.transactionPool().size() << " pending pool transactions.";
     }
     logger(INFO) << "Transaction Pool initialized OK";
-    // END ----------------- IMPORT TRANSACTION POOL
+    // ------------------------------------------ Transaction Pool ----------------------------------------------------
 
     CryptoNote::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
     CryptoNote::NodeServer p2psrv(dispatcher, config.network, cprotocol, logManager);
@@ -339,7 +335,7 @@ int main(int argc, char* argv[]) {
     logger(INFO) << "Deinitializing p2p...";
     p2psrv.deinit();
 
-    // BEGIN ----------------- EXPORT TRANSACTION POOL
+    // ------------------------------------------ Transaction Pool ----------------------------------------------------
     logger(INFO) << "Exporting transaction pool...";
     {
       std::ofstream poolFileStream{transactionPoolFile.string(), std::ios::out | std::ios::binary | std::ios::trunc};
@@ -349,7 +345,7 @@ int main(int argc, char* argv[]) {
       logger(INFO) << "Exported " << ccore.transactionPool().size() << " pending pool transactions.";
     }
     logger(INFO) << "Transaction Pool epxported OK";
-    // END ----------------- EXPORT TRANSACTION POOL
+    // ------------------------------------------ Transaction Pool ----------------------------------------------------
 
     cprotocol.set_p2p_endpoint(nullptr);
     ccore.save();

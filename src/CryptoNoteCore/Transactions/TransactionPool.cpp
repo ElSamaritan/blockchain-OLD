@@ -172,7 +172,7 @@ ITransactionPool::TransactionQueryResult TransactionPool::queryTransaction(const
 }
 
 std::vector<CachedTransaction> TransactionPool::eligiblePoolTransactions(
-    TransactionValidationResult::EligibleIndex index) const {
+    EligibleIndex index) const {
   std::vector<PendingTransactionInfo> pending;
   {
     XI_CONCURRENT_RLOCK(m_access);
@@ -301,7 +301,7 @@ bool TransactionPool::removeTransaction(const Crypto::Hash& hash, ITransactionPo
   }
 }
 
-Xi::Result<TransactionValidationResult::EligibleIndex> TransactionPool::currentEligibleIndex() const {
+Xi::Result<EligibleIndex> TransactionPool::currentEligibleIndex() const {
   const auto mainChain = m_blockchain.mainChain();
   if (mainChain == nullptr) {
     return Xi::make_error(Error::MAIN_CHAIN_MISSING);
@@ -310,7 +310,7 @@ Xi::Result<TransactionValidationResult::EligibleIndex> TransactionPool::currentE
   if (timestamp.isError()) {
     return timestamp.error();
   }
-  return Xi::make_result<TransactionValidationResult::EligibleIndex>(mainChain->getTopBlockIndex() + 1,
+  return Xi::make_result<EligibleIndex>(mainChain->getTopBlockIndex() + 1,
                                                                      timestamp.value());
 }
 

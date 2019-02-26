@@ -175,7 +175,7 @@ std::error_code BlockchainSynchronizer::doAddUnconfirmedTransaction(const ITrans
     ec = addIt->first->addUnconfirmedTransaction(transaction);
     if (ec) {
       m_logger(ERROR) << "Failed to add unconfirmed transaction to consumer: " << ec << ", " << ec.message()
-                                  << ", consumer " << addIt->first << ", hash " << transaction.getTransactionHash();
+                      << ", consumer " << addIt->first << ", hash " << transaction.getTransactionHash();
       break;
     }
   }
@@ -503,6 +503,9 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
     if (block.hasBlock) {
       completeBlock.block = std::move(block.block);
       completeBlock.transactions.push_back(createTransactionPrefix(completeBlock.block->baseTransaction));
+      if (!completeBlock.block->staticReward.isNull()) {
+        completeBlock.transactions.push_back(createTransactionPrefix(completeBlock.block->staticReward));
+      }
 
       try {
         for (const auto& txShortInfo : block.txsShortInfo) {
@@ -595,7 +598,7 @@ BlockchainSynchronizer::UpdateConsumersResult BlockchainSynchronizer::updateCons
       if (addedCount > 0) {
         if (addedCount < blockCount) {
           m_logger(ERROR) << "Failed to add " << (blockCount - addedCount) << " blocks of " << blockCount
-                                      << " to consumer, consumer " << kv.first;
+                          << " to consumer, consumer " << kv.first;
           hasErrors = true;
         }
 
@@ -656,7 +659,7 @@ void BlockchainSynchronizer::removeOutdatedTransactions() {
       ec = consumer.first->onPoolUpdated({}, response.deletedTxIds);
       if (ec) {
         m_logger(ERROR) << "Failed to process outdated pool transactions: " << ec << ", " << ec.message()
-                                    << ", consumer " << consumer.first;
+                        << ", consumer " << consumer.first;
         break;
       }
     }
@@ -722,8 +725,7 @@ void BlockchainSynchronizer::startPoolSync() {
         std::error_code ec2 = getPoolSymmetricDifferenceSync(std::move(intersectionRequest), intersectionResponse);
 
         if (ec2) {
-          m_logger(ERROR) << "Failed to query transaction pool changes, stage 2: " << ec << ", "
-                                      << ec.message();
+          m_logger(ERROR) << "Failed to query transaction pool changes, stage 2: " << ec << ", " << ec.message();
           setFutureStateIf(State::idle, [this] { return m_futureState != State::stopped; });
           m_observerManager.notify(&IBlockchainSynchronizerObserver::synchronizationCompleted, ec2);
         } else {                                               // get intersection ok
@@ -778,8 +780,8 @@ std::error_code BlockchainSynchronizer::processPoolTxs(GetPoolResponse& response
 
       error = consumer.first->onPoolUpdated(response.newTxs, response.deletedTxIds);
       if (error) {
-        m_logger(ERROR) << "Failed to process pool transactions: " << error << ", " << error.message()
-                                    << ", consumer " << consumer.first;
+        m_logger(ERROR) << "Failed to process pool transactions: " << error << ", " << error.message() << ", consumer "
+                        << consumer.first;
         break;
       }
     }

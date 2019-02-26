@@ -26,4 +26,10 @@ KeyPair generateKeyPair() {
   return k;
 }
 
+KeyPair generateKeyPair(uint32_t seed) {
+  KeyPair k;
+  Crypto::generate_keys(k.publicKey, k.secretKey, seed);
+  return k;
+}
+
 }  // namespace CryptoNote

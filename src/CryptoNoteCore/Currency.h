@@ -11,6 +11,8 @@
 #include <vector>
 #include <boost/utility.hpp>
 #include <Xi/Global.h>
+#include <Xi/Exceptional.h>
+#include <Xi/Result.h>
 #include <Xi/Config.h>
 #include "crypto/hash.h"
 #include "Logging/LoggerRef.h"
@@ -18,6 +20,13 @@
 #include "CryptoNoteBasic.h"
 
 namespace CryptoNote {
+
+XI_DECLARE_EXCEPTIONAL_CATEGORY(Parse)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(AccountPublicAddressParse, "Unable to parse account public address", Parse)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(TransactionParse, "Unable to parse a given transaction blob", Parse)
+
+XI_DECLARE_EXCEPTIONAL_CATEGORY(Reward)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(RewardMissmatch, "actual and expected reward missmatch", Reward)
 
 class AccountBase;
 
@@ -28,7 +37,7 @@ class Currency {
   uint32_t maxBlockHeight() const { return m_maxBlockHeight; }
 
   size_t maxBlockBlobSize() const { return m_maxBlockBlobSize; }
-  size_t maxTxSize() const { return m_maxTxSize; }
+  size_t maxTxSize(uint8_t blockMajorVersion) const;
   uint8_t maxTxVersion() const;
   uint8_t minTxVersion() const;
   uint64_t publicAddressBase58Prefix() const { return m_publicAddressBase58Prefix; }
@@ -54,6 +63,7 @@ class Currency {
   uint8_t maximumMixin(uint8_t blockMajorVersion) const;
 
   uint64_t minimumFee() const { return m_mininumFee; }
+  uint64_t defaultDustThresholdForMajorVersion(uint8_t blockMajorVersion) const;
   uint64_t defaultDustThreshold(uint32_t height) const;
   uint64_t defaultFusionDustThreshold(uint32_t height) const;
 
@@ -85,8 +95,8 @@ class Currency {
   bool isMainNet() const { return m_network == ::Xi::Config::Network::Type::MainNet; }
   bool isTestNet() const { return !isMainNet() && m_network != ::Xi::Config::Network::MainNet; }
 
-  const BlockTemplate& genesisBlock() const { return cachedGenesisBlock->getBlock(); }
-  const Crypto::Hash& genesisBlockHash() const { return cachedGenesisBlock->getBlockHash(); }
+  const BlockTemplate& genesisBlock() const;
+  const Crypto::Hash& genesisBlockHash() const;
   uint64_t genesisTimestamp() const;
 
   bool getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize,
@@ -96,6 +106,13 @@ class Currency {
   bool constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size_t medianSize, uint64_t alreadyGeneratedCoins,
                         size_t currentBlockSize, uint64_t fee, const AccountPublicAddress& minerAddress,
                         Transaction& tx, const BinaryArray& extraNonce = BinaryArray(), size_t maxOuts = 1) const;
+
+  // -------------------------------------------- Static Reward -------------------------------------------------------
+  bool isStaticRewardEnabledForBlockVersion(uint8_t blockMajorVersion) const;
+  uint64_t staticRewardAmountForBlockVersion(uint8_t blockMajorVersion) const;
+  std::string staticRewardAddressForBlockVersion(uint8_t blockMajorVersion) const;
+  Xi::Result<bool> constructStaticRewardTx(uint8_t blockMajorVersion, uint32_t blockIndex, Transaction& tx) const;
+  // -------------------------------------------- Static Reward -------------------------------------------------------
 
   bool isFusionTransaction(const Transaction& transaction, uint32_t height) const;
   bool isFusionTransaction(const Transaction& transaction, size_t size, uint32_t height) const;
@@ -107,17 +124,15 @@ class Currency {
 
   std::string accountAddressAsString(const AccountBase& account) const;
   std::string accountAddressAsString(const AccountPublicAddress& accountPublicAddress) const;
-  bool parseAccountAddressString(const std::string& str, AccountPublicAddress& addr) const;
+  [[nodiscard]] bool parseAccountAddressString(const std::string& str, AccountPublicAddress& addr) const;
 
   std::string formatAmount(uint64_t amount) const;
   std::string formatAmount(int64_t amount) const;
-  bool parseAmount(const std::string& str, uint64_t& amount) const;
+  [[nodiscard]] bool parseAmount(const std::string& str, uint64_t& amount) const;
 
   uint64_t nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
                           std::vector<uint64_t> cumulativeDifficulties) const;
 
-  bool checkProofOfWorkV1(const CachedBlock& block, uint64_t currentDifficulty) const;
-  bool checkProofOfWorkV2(const CachedBlock& block, uint64_t currentDifficulty) const;
   bool checkProofOfWork(const CachedBlock& block, uint64_t currentDifficulty) const;
 
   Currency(Currency&& currency);
@@ -176,8 +191,8 @@ class Currency {
 
   Xi::Config::Network::Type m_network;
 
-  BlockTemplate genesisBlockTemplate;
-  std::unique_ptr<CachedBlock> cachedGenesisBlock;
+  BlockTemplate m_genesisBlockTemplate;
+  std::unique_ptr<CachedBlock> m_cachedGenesisBlock;
 
   Logging::LoggerRef logger;
 

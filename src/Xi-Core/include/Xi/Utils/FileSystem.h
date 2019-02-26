@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -24,61 +24,28 @@
 #pragma once
 
 #include <cinttypes>
+#include <string>
 
-#include "Xi/Config/Reward.h"
+#include <Xi/Utils/ExternalIncludePush.h>
+#include <boost/optional.hpp>
+#include <boost/logic/tribool.hpp>
+#include <boost/filesystem.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
 
-#undef MakeRewardCheckpoint
-
-#ifndef CURRENT_REWARD_CHECKPOINT_INDEX
-#pragma error "CURRENT_REWARD_CHECKPOINT_INDEX must be defines"
-#endif
+#include <Xi/Result.h>
+#include <Xi/Exceptional.h>
 
 namespace Xi {
-namespace Config {
-namespace Reward {
+namespace FileSystem {
 
-struct RewardCheckpointResolver {
-  template <uint8_t>
-  static inline uint32_t window(uint8_t version);
+XI_DECLARE_EXCEPTIONAL_CATEGORY(FileSystem)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InsufficientSpace, "your hard drive has insufficient space for the operation",
+                                FileSystem)
 
-  template <uint8_t>
-  static inline uint64_t fullRewardZone(uint8_t version);
-};
+Xi::Result<boost::filesystem::space_info> availableSpace(const std::string& directory);
+Xi::Result<boost::tribool> isRotationalDrive(const std::string& path);
+Xi::Result<void> ensureDirectoryExists(const std::string& directory);
+Xi::Result<void> removeDircetoryIfExists(const std::string& directory);
 
-template <>
-inline uint32_t RewardCheckpointResolver::window<0>(uint8_t) {
-  return RewardCheckpoint<0>::window();
-}
-template <uint8_t _Index>
-inline uint32_t RewardCheckpointResolver::window(uint8_t version) {
-  if (version >= RewardCheckpoint<_Index>::version())
-    return RewardCheckpoint<_Index>::window();
-  else
-    return window<_Index - 1>(version);
-}
-
-template <>
-inline uint64_t RewardCheckpointResolver::fullRewardZone<0>(uint8_t) {
-  return RewardCheckpoint<0>::fullRewardZone();
-}
-template <uint8_t _Index>
-inline uint64_t RewardCheckpointResolver::fullRewardZone(uint8_t version) {
-  if (version >= RewardCheckpoint<_Index>::version())
-    return RewardCheckpoint<_Index>::fullRewardZone();
-  else
-    return fullRewardZone<_Index - 1>(version);
-}
-
-inline uint32_t window(uint8_t version) {
-  return RewardCheckpointResolver::window<CURRENT_REWARD_CHECKPOINT_INDEX>(version);
-}
-
-inline uint64_t fullRewardZone(uint8_t version) {
-  return RewardCheckpointResolver::fullRewardZone<CURRENT_REWARD_CHECKPOINT_INDEX>(version);
-}
-
-}  // namespace Reward
-}  // namespace Config
+}  // namespace FileSystem
 }  // namespace Xi
-
-#undef CURRENT_REWARD_CHECKPOINT_INDEX

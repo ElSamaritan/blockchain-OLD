@@ -43,7 +43,7 @@ namespace Xi {
  * returning immedietly. This often results into boolean returns or exceptions. The Error class provides an alternative
  * such that errors can be propagated backwards without loosing information about the error that actually occured.
  */
-class Error {
+class [[nodiscard]] Error {
  public:
   /*!
    * \brief Error creates an error from an catched exception.
@@ -58,8 +58,8 @@ class Error {
    * }
    * \endcode
    */
-  explicit Error(std::exception_ptr e);
-  explicit Error(std::error_code ec);
+  /* implicit */ Error(std::exception_ptr e);
+  /* implicit */ Error(std::error_code ec);
   XI_DEFAULT_MOVE(Error);
   XI_DEFAULT_COPY(Error);
   ~Error() = default;
@@ -94,6 +94,11 @@ class Error {
    */
   std::error_code errorCode() const;
 
+  /*!
+   * \brief throwException Throws a runtime exception containing the error message.
+   */
+  [[noreturn]] void throwException() const;
+
  private:
   boost::variant<std::exception_ptr, std::error_code> m_error;
 };
@@ -103,7 +108,7 @@ inline Error make_error(std::error_code ec) { return Error{ec}; }
 
 #define XI_ERROR_TRY() \
   try {                \
-    do { /* */         \
+    do {               \
   } while (0)
 
 #define XI_ERROR_CATCH()                               \
@@ -111,6 +116,6 @@ inline Error make_error(std::error_code ec) { return Error{ec}; }
   catch (...) {                                        \
     return ::Xi::make_error(std::current_exception()); \
   }                                                    \
-  do { /* */                                           \
+  do {                                                 \
   } while (0)
 }  // namespace Xi

@@ -187,11 +187,15 @@ class Core : public ICore,
   void throwIfNotInitialized() const;
 
   bool extractTransactions(const std::vector<BinaryArray>& rawTransactions,
-                           std::vector<CachedTransaction>& transactions, uint64_t& cumulativeSize);
+                           std::vector<CachedTransaction>& transactions, uint64_t& cumulativeSize,
+                           uint8_t blockMajorVersion);
 
+  std::error_code validateStaticReward(const Transaction& transaction, uint32_t blockIndex,
+                                       uint8_t blockMajorVersion) const;
   std::error_code validateSemantic(const Transaction& transaction, uint64_t& fee, uint32_t blockIndex);
   std::error_code validateTransaction(const CachedTransaction& transaction, TransactionValidatorState& state,
-                                      IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex);
+                                      IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex,
+                                      uint8_t blockMajorVersion);
 
   Xi::Result<uint32_t> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds) const;
   std::vector<Crypto::Hash> getBlockHashes(uint32_t startBlockIndex, uint32_t maxCount) const;

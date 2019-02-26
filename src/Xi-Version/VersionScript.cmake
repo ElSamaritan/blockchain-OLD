@@ -24,6 +24,10 @@
 # This file is attended to be invoked by a custom target ${CMAKE_COMMAND}
 # conditionally updating the version definition.
 
+if(XI_SKIP_VERSION_UPDATE)
+  return()
+endif()
+
 set(version_file "${PROJECT_SOURCE_DIR}/VERSION")
 set(license_file "${PROJECT_SOURCE_DIR}/LICENSE")
 set(third_party_file "${PROJECT_SOURCE_DIR}/THIRD_PARTY")

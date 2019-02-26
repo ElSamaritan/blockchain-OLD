@@ -45,13 +45,13 @@ uint8_t CryptoNote::TransactionValidator::blockVersion() const { return m_blockV
 const CryptoNote::IBlockchainCache &CryptoNote::TransactionValidator::chain() const { return m_chain; }
 const CryptoNote::Currency &CryptoNote::TransactionValidator::currency() const { return m_currency; }
 
-Xi::Result<CryptoNote::TransactionValidationResult::EligibleIndex> CryptoNote::TransactionValidator::doValidate(
+Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValidate(
     const CachedTransaction &transaction) const {
   const auto &tx = transaction.getTransaction();
-  TransactionValidationResult::EligibleIndex eligibleIndex{};
+  EligibleIndex eligibleIndex{};
 
   if (chain().hasTransaction(transaction.getTransactionHash())) return Xi::make_error(Error::EXISTS_IN_BLOCKCHAIN);
-  if (transaction.getBlobSize() > currency().maxTxSize()) return Xi::make_error(Error::TOO_LARGE);
+  if (transaction.getBlobSize() > currency().maxTxSize(blockVersion())) return Xi::make_error(Error::TOO_LARGE);
   if (isExtraTooLarge(tx)) return Xi::make_error(Error::EXTRA_NONCE_TOO_LARGE);
   if (hasUnsupportedVersion(tx.version)) return Xi::make_error(Error::INVALID_VERSION);
   if (tx.inputs.empty()) return Xi::make_error(Error::EMPTY_INPUTS);
@@ -87,7 +87,7 @@ Xi::Result<CryptoNote::TransactionValidationResult::EligibleIndex> CryptoNote::T
     if (containsInvalidDomainKeyImage(transaction.getKeyImages()))
       return Xi::make_error(Error::INPUT_INVALID_DOMAIN_KEYIMAGES);
   }
-  return Xi::make_result<TransactionValidationResult::EligibleIndex>(eligibleIndex);
+  return eligibleIndex;
 }
 
 CryptoNote::error::TransactionValidationError CryptoNote::TransactionValidator::getErrorCode(
@@ -183,7 +183,7 @@ bool CryptoNote::TransactionValidator::containsSpendedKey(const Crypto::KeyImage
   }
 }
 
-Xi::Result<std::tuple<std::vector<Crypto::PublicKey>, CryptoNote::TransactionValidationResult::EligibleIndex>>
+Xi::Result<std::tuple<std::vector<Crypto::PublicKey>, CryptoNote::EligibleIndex>>
 CryptoNote::TransactionValidator::extractOutputKeys(uint64_t amount, const std::vector<uint32_t> &indices) const {
   uint32_t minHeight = 0;
   uint64_t minTimestamp = 0;
@@ -204,12 +204,12 @@ CryptoNote::TransactionValidator::extractOutputKeys(uint64_t amount, const std::
   if (queryResult != ExtractOutputKeysResult::SUCCESS) {
     return Xi::make_error(getErrorCode(queryResult));
   } else {
-    return Xi::make_result<std::tuple<std::vector<Crypto::PublicKey>, TransactionValidationResult::EligibleIndex>>(
-        std::move(outputKeys), TransactionValidationResult::EligibleIndex{minHeight, minTimestamp});
+    return Xi::make_result<std::tuple<std::vector<Crypto::PublicKey>, EligibleIndex>>(
+        std::move(outputKeys), EligibleIndex{minHeight, minTimestamp});
   }
 }
 
-Xi::Result<CryptoNote::TransactionValidationResult::EligibleIndex> CryptoNote::TransactionValidator::validateKeyInput(
+Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validateKeyInput(
     const CryptoNote::KeyInput &keyInput, size_t inputIndex, const CryptoNote::CachedTransaction &transaction) const {
   if (keyInput.outputIndexes.empty()) return Xi::make_error(Error::INPUT_EMPTY_OUTPUT_USAGE);
 
@@ -217,12 +217,8 @@ Xi::Result<CryptoNote::TransactionValidationResult::EligibleIndex> CryptoNote::T
   auto extractionResult = extractOutputKeys(keyInput.amount, globalIndexes);
   if (extractionResult.isError()) return extractionResult.error();
   std::vector<Crypto::PublicKey> outputKeys{};
-  TransactionValidationResult::EligibleIndex index;
+  EligibleIndex index;
   std::tie(outputKeys, index) = extractionResult.take();
-
-  //  if (outputKeys.size() != transaction.getTransaction().outputs.size()) {
-  //    return Xi::make_error(Error::INPUT_INVALID_SIGNATURES_COUNT);
-  //  }
   if (outputKeys.size() != transaction.getTransaction().signatures[inputIndex].size()) {
     return Xi::make_error(Error::INPUT_INVALID_SIGNATURES_COUNT);
   }
@@ -236,10 +232,10 @@ Xi::Result<CryptoNote::TransactionValidationResult::EligibleIndex> CryptoNote::T
                                     transaction.getTransaction().signatures[inputIndex].data(), true)) {
     return Xi::make_error(Error::INPUT_INVALID_SIGNATURES);
   }
-  return Xi::make_result<TransactionValidationResult::EligibleIndex>(index);
+  return index;
 }
 
-Xi::Result<CryptoNote::TransactionValidationResult::EligibleIndex> CryptoNote::TransactionValidator::validateInputs(
+Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validateInputs(
     const CryptoNote::CachedTransaction &transaction) const {
   size_t inputIndex = 0;
   uint32_t minHeight = 0;
@@ -261,7 +257,7 @@ Xi::Result<CryptoNote::TransactionValidationResult::EligibleIndex> CryptoNote::T
     inputIndex += 1;
   }
 
-  return Xi::make_result<TransactionValidationResult::EligibleIndex>(minHeight, minTimestamp);
+  return Xi::make_result<EligibleIndex>(minHeight, minTimestamp);
 }
 
 CryptoNote::error::TransactionValidationError CryptoNote::TransactionValidator::validateMixin(

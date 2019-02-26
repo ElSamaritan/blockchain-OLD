@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -23,28 +23,38 @@
 
 #pragma once
 
-#include <Xi/Utils/Conversion.h>
+#include <string>
 
-#include "Xi/Config/_Impl/BeginReward.h"
+#include "Xi/Config/Coin.h"
+#include "Xi/Config/NetworkType.h"
+
+#include "Xi/Config/_Impl/BeginStaticReward.h"
+
+namespace Xi {
+namespace Config {
 
 /*!
- * \section Reward
+ * \brief Configurates a static reward for each block, for a built in address.
  *
- * Index  : Chronological order of introduced checkpoints
- * Version: The block major version introducing the checkpoint
- * Window : Number of previous blocks for median size calculation, blocks with used to calculate penalities for larger
- *            blocks.
- * Zone   : Size in bytes until block penalties will be introduced. If a block is mined larger than the zone
- * size the base reward will be adjusted. Further the transaction pool won't accept transactions larger than the zone,
- *           except for fusion transactions.
+ * As an alternative to a genesis block reward you can use this config to enable a built in reward system that generates
+ * rewards over the lifetime of the blockchain for a fixed address. The benefit of this approach is an increased level
+ * of trust for your community. First your address will not have access to all generated coins from the beginning
+ * which prevents an so called 'exit scam', second if the community is not satisfied by the development and/or the
+ * usage of the reward they are able to fork the reward out and continue the development of the blockchain without
+ * paying out the initial address any longer.
+ *
  */
+namespace StaticReward {}
+
+}  // namespace Config
+}  // namespace Xi
 
 // clang-format off
-//                  (_Index, _Version, _Window,    _Zone)
-MakeRewardCheckpoint(     0,        1,      50,    20_kB)
-MakeRewardCheckpoint(     1,        5,     128,    64_kB)
+//                        (_Index, _Version,                _Amount,  _Address...
+MakeStaticRewardCheckpoint(     0,        1, Coin::toAtomicUnits(2),  "XizwvuJp4FrfLw3k9sLKASVpdVUEC7eRHA8Azp7ZjeWfGsYs2sEyNwv5i5aYpTa8mDJfEmp4pmJJj5DRQ6cKwpHp5sLQghy98s")
+MakeStaticRewardCheckpoint(     1,        5,                      0,  "")
 // clang-format on
 
-#define CURRENT_REWARD_CHECKPOINT_INDEX 1
+#define CURRENT_STATIC_REWARD_CHECKPOINT_INDEX 1
 
-#include "Xi/Config/_Impl/EndReward.h"
+#include "Xi/Config/_Impl/EndStaticReward.h"

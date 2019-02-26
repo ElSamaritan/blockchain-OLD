@@ -18,57 +18,17 @@
 #pragma once
 
 #include <vector>
+
+#include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
+
 #include <crypto/CryptoTypes.h>
 
+#include "CryptoNoteCore/Transactions/Transaction.h"
+
 namespace CryptoNote {
-
-struct BaseInput {
-  uint32_t blockIndex;
-};
-
-struct KeyInput {
-  uint64_t amount;
-  std::vector<uint32_t> outputIndexes;
-  Crypto::KeyImage keyImage;
-};
-
-struct KeyOutput {
-  Crypto::PublicKey key;
-};
-
-typedef boost::variant<BaseInput, KeyInput> TransactionInput;
-
-typedef boost::variant<KeyOutput> TransactionOutputTarget;
-
-struct TransactionOutput {
-  uint64_t amount;
-  TransactionOutputTarget target;
-};
-
-struct TransactionPrefix {
-  uint8_t version;
-  uint64_t unlockTime;
-  std::vector<TransactionInput> inputs;
-  std::vector<TransactionOutput> outputs;
-  std::vector<uint8_t> extra;
-};
-
-struct Transaction : public TransactionPrefix {
-  std::vector<std::vector<Crypto::Signature>> signatures;
-};
-
-struct BaseTransaction : public TransactionPrefix {};
-
-struct ParentBlock {
-  uint8_t majorVersion;
-  uint8_t minorVersion;
-  Crypto::Hash previousBlockHash;
-  uint16_t transactionCount;
-  std::vector<Crypto::Hash> baseTransactionBranch;
-  BaseTransaction baseTransaction;
-  std::vector<Crypto::Hash> blockchainBranch;
-};
 
 struct BlockHeader {
   uint8_t majorVersion;
@@ -79,8 +39,8 @@ struct BlockHeader {
 };
 
 struct BlockTemplate : public BlockHeader {
-  ParentBlock parentBlock;
   Transaction baseTransaction;
+  Transaction staticReward;  ///< Gets only serialized if a static reward is expected and set (!isNull).
   std::vector<Crypto::Hash> transactionHashes;
 };
 

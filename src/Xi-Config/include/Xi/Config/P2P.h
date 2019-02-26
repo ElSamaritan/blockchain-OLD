@@ -55,7 +55,7 @@ static inline constexpr std::chrono::seconds handshakeTimeout() { return std::ch
 static inline std::string stateBackupFilename() { return "xi-p2p"; }
 
 /*!
- * \brief handshakePeersCount is the amount of known peers exchanged during a handshake.
+ * \brief handshakePeersCount is the number of known peers exchanged during a handshake.
  */
 static inline constexpr uint32_t handshakePeersCount() { return 250; }
 
@@ -63,10 +63,10 @@ static inline constexpr std::chrono::seconds connectionTimeout() { return std::c
 static inline constexpr std::chrono::seconds pingTimeout() { return std::chrono::seconds{2}; }
 static inline constexpr std::chrono::minutes invokeTimeout() { return std::chrono::minutes{2}; }
 
-static_assert(handshakeTimeout().count() > 0, "Timeouts must be non-zer and non-negative.");
-static_assert(connectionTimeout().count() > 0, "Timeouts must be non-zer and non-negative.");
-static_assert(pingTimeout().count() > 0, "Timeouts must be non-zer and non-negative.");
-static_assert(invokeTimeout().count() > 0, "Timeouts must be non-zer and non-negative.");
+static_assert(handshakeTimeout().count() > 0, "Timeouts must be non-zero and non-negative.");
+static_assert(connectionTimeout().count() > 0, "Timeouts must be non-zero and non-negative.");
+static_assert(pingTimeout().count() > 0, "Timeouts must be non-zero and non-negative.");
+static_assert(invokeTimeout().count() > 0, "Timeouts must be non-zero and non-negative.");
 }  // namespace P2P
 }  // namespace Config
 }  // namespace Xi

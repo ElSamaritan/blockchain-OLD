@@ -2869,8 +2869,7 @@ void WalletGreen::onTransactionUpdated(const Crypto::PublicKey&, const Crypto::H
     // Don't move this code to the following remote spawn, because it guarantees that the container has the transaction
     uint64_t outputsAmount;
     bool found = container->getTransactionInformation(transactionHash, info, &inputsAmount, &outputsAmount);
-    if (found) {
-    }
+    XI_UNUSED(found);
     assert(found);
 
     ContainerAmounts containerAmounts;
@@ -3741,13 +3740,8 @@ void WalletGreen::deleteFromUncommitedTransactions(const std::vector<size_t>& de
 
 */
 size_t WalletGreen::getMaxTxSize() {
-  uint32_t currentHeight = m_node.getLastKnownBlockHeight();
-
-  size_t growth = (currentHeight * Xi::Config ::Limits::blockBlobSizeGrowthNumerator()) /
-                  Xi::Config::Limits::blockBlobSizeGrowthDenominator();
-  size_t x = Xi::Config::Limits::initialBlockBlobSizeLimit() + growth;
-  size_t y = Xi::Config::Limits::maximumBlockBlobSize();
-  return std::min(x, y) - Xi::Config ::Limits::blockBlobCoinbaseReservedSize();
+  const uint32_t currentHeight = m_node.getLastKnownBlockHeight();
+  return m_currency.maxTxSize(Xi::Config::BlockVersion::version(currentHeight));
 }
 
 }  // namespace CryptoNote

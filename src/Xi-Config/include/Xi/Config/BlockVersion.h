@@ -43,8 +43,9 @@ MakeBlockVersionCheckpoint(     1,       1,         2,    false)
 MakeBlockVersionCheckpoint(     2,       2,         3,    false)
 MakeBlockVersionCheckpoint(     3,       3,         4,    false)
 MakeBlockVersionCheckpoint(     4,    5000,         5,     true)
+MakeBlockVersionCheckpoint(     5,   20000,         6,     true)
 // clang-format on
 
-#define CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX 4
+#define CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX 5
 
 #include "Xi/Config/_Impl/EndBlockVersion.h"

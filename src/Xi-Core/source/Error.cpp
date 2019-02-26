@@ -23,6 +23,8 @@
 
 #include "Xi/Error.h"
 
+#include <stdexcept>
+
 Xi::Error::Error(std::exception_ptr e) : m_error{e} {}
 Xi::Error::Error(std::error_code ec) : m_error{ec} {}
 
@@ -47,3 +49,11 @@ std::exception_ptr Xi::Error::exception() const { return boost::get<std::excepti
 
 bool Xi::Error::isErrorCode() const { return m_error.type() == typeid(std::error_code); }
 std::error_code Xi::Error::errorCode() const { return boost::get<std::error_code>(m_error); }
+
+void Xi::Error::throwException() const {
+  if (isException()) {
+    std::rethrow_exception(exception());
+  } else {
+    throw std::runtime_error{message()};
+  }
+}

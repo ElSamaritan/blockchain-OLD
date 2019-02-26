@@ -36,7 +36,7 @@ endif() # GCC
 file(GLOB_RECURSE XI_UNITTESTS_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.cpp")
 source_group("" FILES ${XI_UNITTESTS_SOURCE_FILES})
 add_executable(TestSuite.UnitTests ${XI_UNITTESTS_SOURCE_FILES})
-target_link_libraries(TestSuite.UnitTests PRIVATE gtest_main Common Crypto CryptoNoteCore Serialization Logging rocksdb)
+target_link_libraries(TestSuite.UnitTests PRIVATE gmock_main Common Crypto CryptoNoteCore Serialization Logging rocksdb)
 add_test(Unit-Tests TestSuite.UnitTests WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # benchmarks

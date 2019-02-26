@@ -103,7 +103,8 @@ bool serialize(PackedOutIndex& value, Common::StringView name, CryptoNote::ISeri
 
 BlockchainCache::BlockchainCache(const std::string& filename, const Currency& currency, Logging::ILogger& logger_,
                                  IBlockchainCache* parent, uint32_t splitBlockIndex)
-    : filename(filename),
+    : CommonBlockchainCache(logger_, currency),
+      filename(filename),
       currency(currency),
       logger(logger_, "BlockchainCache"),
       parent(parent),
@@ -113,20 +114,28 @@ BlockchainCache::BlockchainCache(const std::string& filename, const Currency& cu
 
     const CachedBlock genesisBlock(currency.genesisBlock());
 
-    uint64_t minerReward = 0;
+    uint64_t genesisGeneratedCoins = 0;
     for (const TransactionOutput& output : genesisBlock.getBlock().baseTransaction.outputs) {
-      minerReward += output.amount;
+      genesisGeneratedCoins += output.amount;
+    }
+    if (genesisBlock.hasStaticReward()) {
+      for (const TransactionOutput& output : genesisBlock.getBlock().staticReward.outputs) {
+        genesisGeneratedCoins += output.amount;
+      }
     }
 
-    assert(minerReward > 0);
+    assert(genesisGeneratedCoins > 0);
 
-    uint64_t coinbaseTransactionSize = getObjectBinarySize(genesisBlock.getBlock().baseTransaction);
-    assert(coinbaseTransactionSize < std::numeric_limits<uint64_t>::max());
+    uint64_t genesisBlockSize = getObjectBinarySize(genesisBlock.getBlock().baseTransaction);
+    if (genesisBlock.hasStaticReward()) {
+      genesisBlockSize += getObjectBinarySize(genesisBlock.getBlock().staticReward);
+    }
+    assert(genesisBlockSize < std::numeric_limits<uint64_t>::max());
 
     std::vector<CachedTransaction> cachedTransactions;
     TransactionValidatorState validatorState;
-    doPushBlock(genesisBlock, cachedTransactions, validatorState, coinbaseTransactionSize, minerReward, 1,
-                {toBinaryArray(genesisBlock.getBlock())});
+    doPushBlock(genesisBlock, cachedTransactions, validatorState, genesisBlockSize, genesisGeneratedCoins, 1,
+                {toBinaryArray(genesisBlock.getBlock()), {}});
   } else {
     startIndex = splitBlockIndex;
   }
@@ -167,12 +176,18 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
     cumulativeDifficulty += blockDifficulty;
     alreadyGeneratedCoins += generatedCoins;
     alreadyGeneratedTransactions += cachedTransactions.size() + 1;
+    if (cachedBlock.hasStaticReward()) {
+      alreadyGeneratedTransactions += 1;
+    }
   } else {
     auto& lastBlockInfo = blockInfos.get<BlockIndexTag>().back();
 
     cumulativeDifficulty = lastBlockInfo.cumulativeDifficulty + blockDifficulty;
     alreadyGeneratedCoins = lastBlockInfo.alreadyGeneratedCoins + generatedCoins;
     alreadyGeneratedTransactions = lastBlockInfo.alreadyGeneratedTransactions + cachedTransactions.size() + 1;
+    if (cachedBlock.hasStaticReward()) {
+      alreadyGeneratedTransactions += 1;
+    }
   }
 
   CachedBlockInfo blockInfo;
@@ -200,8 +215,11 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
 
   uint16_t transactionBlockIndex = 0;
   auto baseTransaction = cachedBlock.getBlock().baseTransaction;
-
   pushTransaction(CachedTransaction(std::move(baseTransaction)), blockIndex, transactionBlockIndex++);
+  if (cachedBlock.hasStaticReward()) {
+    auto staticReward = cachedBlock.getBlock().staticReward;
+    pushTransaction(CachedTransaction(std::move(staticReward)), blockIndex, transactionBlockIndex++);
+  }
 
   for (const auto& transaction : cachedTransactions) {
     pushTransaction(transaction, blockIndex, transactionBlockIndex++);
@@ -227,16 +245,19 @@ PushedBlockInfo BlockchainCache::getPushedBlockInfo(uint32_t blockIndex) const {
     const auto& previousBlock = blockInfos.get<BlockIndexTag>()[localIndex - 1];
     pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - previousBlock.cumulativeDifficulty;
     pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
+    pushedBlockInfo.timestamp = cachedBlock.timestamp;
   } else {
     if (parent == nullptr) {
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty;
       pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins;
+      pushedBlockInfo.timestamp = cachedBlock.timestamp;
     } else {
       uint64_t cumulativeDifficulty = parent->getLastCumulativeDifficulties(1, startIndex - 1, addGenesisBlock)[0];
       uint64_t alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(startIndex - 1);
 
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - cumulativeDifficulty;
       pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - alreadyGeneratedCoins;
+      pushedBlockInfo.timestamp = cachedBlock.timestamp;
     }
   }
 
@@ -575,13 +596,16 @@ BinaryArray BlockchainCache::getRawTransaction(uint32_t index, uint32_t transact
     return parent->getRawTransaction(index, transactionIndex);
   } else {
     auto rawBlock = storage->getBlockByIndex(index - startIndex);
+    auto block = fromBinaryArray<BlockTemplate>(rawBlock.block);
     if (transactionIndex == 0) {
-      auto block = fromBinaryArray<BlockTemplate>(rawBlock.block);
       return toBinaryArray(block.baseTransaction);
+    } else if (transactionIndex == 1 && !block.staticReward.isNull()) {
+      return toBinaryArray(block.staticReward);
+    } else {
+      const size_t staticTransactionsOffset = block.staticReward.isNull() ? 1 : 2;
+      assert(rawBlock.transactions.size() >= transactionIndex - staticTransactionsOffset);
+      return rawBlock.transactions[transactionIndex - staticTransactionsOffset];
     }
-
-    assert(rawBlock.transactions.size() >= transactionIndex - 1);
-    return rawBlock.transactions[transactionIndex - 1];
   }
 }
 
@@ -685,30 +709,6 @@ void BlockchainCache::load() {
   CryptoNote::BinaryInputStreamSerializer s(stream);
 
   serialize(s);
-}
-
-bool BlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime) const {
-  return isTransactionSpendTimeUnlocked(unlockTime, getTopBlockIndex());
-}
-
-bool BlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const {
-  const auto timestamp = time(nullptr);
-  if (timestamp < 0) {
-    return false;
-  } else {
-    return isTransactionSpendTimeUnlocked(unlockTime, blockIndex, static_cast<uint64_t>(timestamp));
-  }
-}
-
-bool BlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex,
-                                                     uint64_t timestamp) const {
-  if (unlockTime < currency.maxBlockHeight()) {
-    // interpret as block index
-    return blockIndex + currency.lockedTxAllowedDeltaBlocks() >= unlockTime;
-  } else {
-    // interpret as time
-    return static_cast<uint64_t>(timestamp) + currency.lockedTxAllowedDeltaSeconds() >= unlockTime;
-  }
 }
 
 ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount,

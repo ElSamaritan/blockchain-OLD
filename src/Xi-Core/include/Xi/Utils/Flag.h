@@ -45,3 +45,25 @@
   inline _FlagT &operator^=(_FlagT &a, _FlagT b) noexcept {                                                         \
     return (_FlagT &)(((std::underlying_type<_FlagT>::type &)a) ^= ((std::underlying_type<_FlagT>::type)b));        \
   }
+
+namespace Xi {
+template <typename _FlagT>
+inline constexpr bool flags_are_set(_FlagT value, _FlagT flags) {
+  return (value & flags) == flags;
+}
+
+template <typename _FlagT>
+inline constexpr bool flags_are_not_set(_FlagT value, _FlagT flags) {
+  return (value & flags) == 0;
+}
+
+template <typename _FlagT>
+inline constexpr _FlagT flags_set(_FlagT value, _FlagT flags) {
+  return value | flags;
+}
+
+template <typename _FlagT>
+inline constexpr _FlagT flags_unset(_FlagT value, _FlagT flags) {
+  return value & (~flags);
+}
+}  // namespace Xi

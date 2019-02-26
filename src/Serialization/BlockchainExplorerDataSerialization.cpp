@@ -177,6 +177,7 @@ void serialize(BlockDetails& block, ISerializer& serializer) {
   serializer(block.difficulty, "difficulty");
   serializer(block.reward, "reward");
   serializer(block.baseReward, "baseReward");
+  serializer(block.staticReward, "staticReward");
   serializer(block.blockSize, "blockSize");
   serializer(block.transactionsCumulativeSize, "transactionsCumulativeSize");
   serializer(block.alreadyGeneratedCoins, "alreadyGeneratedCoins");

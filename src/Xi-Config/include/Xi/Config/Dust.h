@@ -27,12 +27,12 @@
 
 // clang-format off
 //                (_Index, _Version,   _Dust)
-MakeDustCheckpoint(     0,        1,     100)
+MakeDustCheckpoint(     0,        1,     0)
 
 #define CURRENT_DUST_CHECKPOINT_INDEX 0
 
 //                      (_Index, _Version,   _Dust)
-MakeFusionDustCheckpoint(     0,        1,      10)
+MakeFusionDustCheckpoint(     0,        1,      0)
 // clang-format on
 
 #define CURRENT_FUSION_DUST_CHECKPOINT_INDEX 0

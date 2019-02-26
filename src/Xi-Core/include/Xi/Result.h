@@ -36,7 +36,7 @@
 
 namespace Xi {
 template <typename _ValueT>
-class Result {
+class [[nodiscard]] Result {
  public:
   using value_t = typename std::decay<_ValueT>::type;
 
@@ -48,9 +48,11 @@ class Result {
 
  public:
   /* implicit */ Result(const Error& err) : m_result{err} {}
-  /* implicit */ Result(value_t value) : m_result{value} {}
+  /* implicit */ Result(value_t && value) : m_result{std::forward<value_t>(value)} {}
+
   XI_DEFAULT_COPY(Result);
   XI_DEFAULT_MOVE(Result);
+
   ~Result() = default;
 
   bool isValue() const { return m_result.type() == typeid(value_t); }
@@ -64,10 +66,26 @@ class Result {
     static_assert(std::is_move_constructible<value_t>::value, "You can only take move constructible types.");
     return std::move(boost::get<value_t>(m_result));
   }
+
+  void throwOnError() {
+    if (isError()) {
+      error().throwException();
+    }
+  }
+
+  value_t valueOrThrow() {
+    throwOnError();
+    return value();
+  }
+
+  value_t takeOrThrow() {
+    throwOnError();
+    return take();
+  }
 };
 
 template <>
-class Result<void> {
+class [[nodiscard]] Result<void> {
  private:
   boost::optional<Error> m_error;
 
@@ -81,6 +99,12 @@ class Result<void> {
   bool isError() const { return m_error.is_initialized(); }
 
   const Error& error() const { return m_error.get(); }
+
+  void throwOnError() {
+    if (isError()) {
+      error().throwException();
+    }
+  }
 };
 
 template <typename _ValueT, typename... _ArgsT>

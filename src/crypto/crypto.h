@@ -13,6 +13,8 @@
 #include <type_traits>
 #include <vector>
 
+#include <Xi/Exceptional.h>
+
 #include "crypto/CryptoTypes.h"
 #include "crypto/hash.h"
 
@@ -21,6 +23,10 @@ namespace Crypto {
 extern "C" {
 #include "random.h"
 }
+
+XI_DECLARE_EXCEPTIONAL_CATEGORY(CryptoOperation)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(KeyDerivation, "cannot derivate key image", CryptoOperation)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(PublicKeyDerivation, "cannot derivate public key", CryptoOperation)
 
 extern std::mutex random_lock;
 
@@ -40,6 +46,10 @@ class crypto_ops {
 
   static void generate_keys(PublicKey &, SecretKey &);
   friend void generate_keys(PublicKey &, SecretKey &);
+
+  static void generate_keys(PublicKey &, SecretKey &, uint32_t);
+  friend void generate_keys(PublicKey &, SecretKey &, uint32_t);
+
   static void generate_deterministic_keys(PublicKey &pub, SecretKey &sec, SecretKey &second);
   friend void generate_deterministic_keys(PublicKey &pub, SecretKey &sec, SecretKey &second);
   static SecretKey generate_m_keys(PublicKey &pub, SecretKey &sec, const SecretKey &recovery_key = SecretKey(),
@@ -125,6 +135,7 @@ class random_engine {
 /* Generate a new key pair
  */
 inline void generate_keys(PublicKey &pub, SecretKey &sec) { crypto_ops::generate_keys(pub, sec); }
+inline void generate_keys(PublicKey &pub, SecretKey &sec, uint32_t seed) { crypto_ops::generate_keys(pub, sec, seed); }
 
 inline void generate_deterministic_keys(PublicKey &pub, SecretKey &sec, SecretKey &second) {
   crypto_ops::generate_deterministic_keys(pub, sec, second);

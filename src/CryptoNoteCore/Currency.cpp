@@ -66,7 +66,7 @@ bool Currency::init() {
   }
 
   try {
-    cachedGenesisBlock->getBlockHash();
+    m_cachedGenesisBlock->getBlockHash();
   } catch (std::exception& e) {
     logger(ERROR) << "Failed to get genesis block hash: " << e.what();
     return false;
@@ -76,27 +76,54 @@ bool Currency::init() {
 }
 
 bool Currency::generateGenesisBlock() {
-  genesisBlockTemplate = boost::value_initialized<BlockTemplate>();
+  if (m_cachedGenesisBlock.get() != nullptr) {
+    return true;
+  }
+  m_genesisBlockTemplate = boost::value_initialized<BlockTemplate>();
 
-  std::string genesisCoinbaseTxHex = Xi::Config::Coin::genesisTransactionHash(network());
+  std::string genesisCoinbaseTxHex = Xi::Config::Coin::genesisTransactionBlob(network());
   BinaryArray minerTxBlob;
 
-  bool r =
-      fromHex(genesisCoinbaseTxHex, minerTxBlob) && fromBinaryArray(genesisBlockTemplate.baseTransaction, minerTxBlob);
+  bool r = fromHex(genesisCoinbaseTxHex, minerTxBlob) &&
+           fromBinaryArray(m_genesisBlockTemplate.baseTransaction, minerTxBlob);
 
   if (!r) {
     logger(ERROR) << "failed to parse coinbase tx from hard coded blob";
     return false;
   }
 
-  genesisBlockTemplate.majorVersion = Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version();
-  genesisBlockTemplate.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
-  genesisBlockTemplate.timestamp = Xi::Config::Coin::genesisTimestamp(network());
-  genesisBlockTemplate.nonce = 70;
-  if (!isMainNet()) genesisBlockTemplate.nonce += static_cast<uint8_t>(network());
+  m_genesisBlockTemplate.majorVersion = Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version();
+  m_genesisBlockTemplate.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
+  m_genesisBlockTemplate.timestamp = Xi::Config::Coin::genesisTimestamp(network());
+  m_genesisBlockTemplate.nonce = 0;
+  m_genesisBlockTemplate.previousBlockHash = {0};
+  if (!isMainNet()) {
+    m_genesisBlockTemplate.nonce += static_cast<uint8_t>(network()) * 0xFFFF;
+  }
 
-  // miner::find_nonce_for_given_block(bl, 1, 0);
-  cachedGenesisBlock.reset(new CachedBlock(genesisBlockTemplate));
+  if (!fromBinaryArray(m_genesisBlockTemplate.baseTransaction, minerTxBlob)) {
+    Xi::exceptional<TransactionParseError>("Unable to parse hex encoded genesis coinbase transaction.");
+  }
+
+  Transaction staticRewardTx{};
+  auto staticRewardConstructionResult = constructStaticRewardTx(m_genesisBlockTemplate.majorVersion, 0, staticRewardTx);
+  if (staticRewardConstructionResult.isError()) {
+    logger(ERROR) << "failed to generate static reward for genesis block: "
+                  << staticRewardConstructionResult.error().message();
+  } else if (staticRewardConstructionResult.value()) {
+    m_genesisBlockTemplate.staticReward = std::move(staticRewardTx);
+  } else {
+    m_genesisBlockTemplate.staticReward = Transaction::Null;
+  }
+
+  m_genesisBlockTemplate.transactionHashes = {};
+
+  do {
+    m_cachedGenesisBlock.reset(new CachedBlock(m_genesisBlockTemplate));
+    m_genesisBlockTemplate.nonce++;
+  } while (!checkProofOfWork(*m_cachedGenesisBlock, 1));
+  m_genesisBlockTemplate.nonce--;
+
   return true;
 }
 
@@ -107,6 +134,14 @@ size_t Currency::difficultyBlocksCountByVersion(uint8_t version) const {
 size_t Currency::fusionTxMaxSize(uint8_t blockMajorVersion) const {
   const auto rewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
   const auto maxSize = std::min(rewardZone, m_fusionTxMaxSize);
+  const auto reservedSize = minerTxBlobReservedSize();
+  assert(maxSize > reservedSize);
+  return maxSize - reservedSize;
+}
+
+size_t Currency::maxTxSize(uint8_t blockMajorVersion) const {
+  const auto rewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
+  const auto maxSize = std::min(rewardZone, m_maxTxSize);
   const auto reservedSize = minerTxBlobReservedSize();
   assert(maxSize > reservedSize);
   return maxSize - reservedSize;
@@ -131,7 +166,7 @@ uint64_t Currency::blockFutureTimeLimit(uint32_t blockHeight, uint8_t majorVersi
 }
 
 size_t Currency::rewardBlocksWindowByBlockVersion(uint8_t blockMajorVersion) const {
-  return Xi::Config::Reward::window(blockMajorVersion);
+  return Xi::Config::MinerReward::window(blockMajorVersion);
 }
 
 uint8_t Currency::minimumMixin(uint8_t blockMajorVersion) const {
@@ -143,11 +178,15 @@ uint8_t Currency::maximumMixin(uint8_t blockMajorVersion) const {
 }
 
 size_t Currency::blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const {
-  return Xi::Config::Reward::fullRewardZone(blockMajorVersion);
+  return Xi::Config::MinerReward::fullRewardZone(blockMajorVersion);
+}
+
+uint64_t Currency::defaultDustThresholdForMajorVersion(uint8_t blockMajorVersion) const {
+  return Xi::Config::Dust::dust(blockMajorVersion);
 }
 
 uint64_t Currency::defaultDustThreshold(uint32_t height) const {
-  return Xi::Config::Dust::dust(Xi::Config::BlockVersion::version(height));
+  return defaultDustThresholdForMajorVersion(Xi::Config::BlockVersion::version(height));
 }
 
 uint64_t Currency::defaultFusionDustThreshold(uint32_t height) const {
@@ -162,10 +201,23 @@ std::string Currency::blocksFileName() const { return m_blocksFileName + "." + X
 
 std::string Currency::blockIndexesFileName() const {
   return m_blockIndexesFileName + "." + Xi::to_lower(Xi::to_string(network()));
-  ;
 }
 
 std::string Currency::txPoolFileName() const { return m_txPoolFileName + "." + Xi::to_lower(Xi::to_string(network())); }
+
+const BlockTemplate& Currency::genesisBlock() const {
+  if (m_cachedGenesisBlock.get() == nullptr) {
+    const_cast<Currency*>(this)->generateGenesisBlock();
+  }
+  return m_cachedGenesisBlock->getBlock();
+}
+
+const Crypto::Hash& Currency::genesisBlockHash() const {
+  if (m_cachedGenesisBlock.get() == nullptr) {
+    const_cast<Currency*>(this)->generateGenesisBlock();
+  }
+  return m_cachedGenesisBlock->getBlockHash();
+}
 
 uint64_t Currency::genesisTimestamp() const { return Xi::Config::Coin::genesisTimestamp(network()); }
 
@@ -290,6 +342,97 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
   tx.unlockTime = height + m_minedMoneyUnlockWindow;
   tx.inputs.push_back(in);
   return true;
+}
+
+bool Currency::isStaticRewardEnabledForBlockVersion(uint8_t blockMajorVersion) const {
+  return Xi::Config::StaticReward::isEnabled(blockMajorVersion);
+}
+
+uint64_t Currency::staticRewardAmountForBlockVersion(uint8_t blockMajorVersion) const {
+  return Xi::Config::StaticReward::amount(blockMajorVersion);
+}
+
+std::string Currency::staticRewardAddressForBlockVersion(uint8_t blockMajorVersion) const {
+  return Xi::Config::StaticReward::address(blockMajorVersion);
+}
+
+Xi::Result<bool> Currency::constructStaticRewardTx(uint8_t blockMajorVersion, uint32_t blockIndex,
+                                                   Transaction& tx) const {
+  XI_ERROR_TRY();
+  const auto rewardAmount = staticRewardAmountForBlockVersion(blockMajorVersion);
+  const auto rewardAddress = staticRewardAddressForBlockVersion(blockMajorVersion);
+  if (rewardAddress.empty() || rewardAmount == 0) {
+    if (!rewardAddress.empty()) {
+      logger(ERROR) << "Static reward address set but amount is zero, consider deleting the static reward address.";
+    } else if (rewardAmount > 0) {
+      logger(ERROR)
+          << "Static reward amount set but no address given, consider setting the static reward amount to zero.";
+    } else {
+      logger(TRACE) << "Skipping static reward.";
+    }
+    return false;
+  }
+  logger(TRACE) << "Generating static reward: (" << rewardAddress << ", " << rewardAmount << ")";
+
+  AccountPublicAddress parsedRewardAddress = boost::value_initialized<AccountPublicAddress>();
+  if (!parseAccountAddressString(rewardAddress, parsedRewardAddress)) {
+    Xi::exceptional<AccountPublicAddressParseError>();
+  }
+
+  tx.inputs.clear();
+  tx.outputs.clear();
+  tx.extra.clear();
+
+  const KeyPair txkey = generateKeyPair(blockIndex);
+  addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
+
+  BaseInput in;
+  in.blockIndex = blockIndex;
+
+  std::vector<uint64_t> outAmounts;
+  const auto dustThreshold = defaultDustThresholdForMajorVersion(blockMajorVersion);
+  decompose_amount_into_digits(rewardAmount, dustThreshold,
+                               [&outAmounts](uint64_t a_chunk) { outAmounts.push_back(a_chunk); },
+                               [&outAmounts](uint64_t a_dust) { outAmounts.push_back(a_dust); });
+
+  const size_t maxOuts = 10;
+  while (maxOuts < outAmounts.size()) {
+    outAmounts[outAmounts.size() - 2] += outAmounts.back();
+    outAmounts.resize(outAmounts.size() - 1);
+  }
+
+  uint64_t summaryAmounts = 0;
+  for (size_t no = 0; no < outAmounts.size(); no++) {
+    Crypto::KeyDerivation derivation = boost::value_initialized<Crypto::KeyDerivation>();
+    Crypto::PublicKey outEphemeralPubKey = boost::value_initialized<Crypto::PublicKey>();
+
+    if (!Crypto::generate_key_derivation(parsedRewardAddress.viewPublicKey, txkey.secretKey, derivation)) {
+      Xi::exceptional<Crypto::KeyDerivationError>();
+    }
+    if (!Crypto::derive_public_key(derivation, no, parsedRewardAddress.spendPublicKey, outEphemeralPubKey)) {
+      Xi::exceptional<Crypto::PublicKeyDerivationError>();
+    }
+
+    KeyOutput tk;
+    tk.key = outEphemeralPubKey;
+
+    TransactionOutput out;
+    summaryAmounts += out.amount = outAmounts[no];
+    out.target = tk;
+    tx.outputs.push_back(out);
+  }
+
+  if (!(summaryAmounts == rewardAmount)) {
+    Xi::exceptional<RewardMissmatchError>();
+  }
+
+  tx.version = Xi::Config::Transaction::version();
+  // lock
+  tx.unlockTime = blockIndex + m_minedMoneyUnlockWindow;
+  tx.inputs.push_back(in);
+
+  return true;
+  XI_ERROR_CATCH();
 }
 
 bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts,
@@ -445,57 +588,8 @@ uint64_t Currency::nextDifficulty(uint8_t version, uint32_t blockIndex, std::vec
   return Xi::Config::Difficulty::nextDifficulty(version, timestamps, cumulativeDifficulties);
 }
 
-bool Currency::checkProofOfWorkV1(const CachedBlock& block, uint64_t currentDifficulty) const {
-  if (Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version() != block.getBlock().majorVersion) {
-    return false;
-  }
-
-  return check_hash(block.getBlockLongHash(), currentDifficulty);
-}
-
-bool Currency::checkProofOfWorkV2(const CachedBlock& cachedBlock, uint64_t currentDifficulty) const {
-  const auto& block = cachedBlock.getBlock();
-  if (block.majorVersion < Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
-    return false;
-  }
-
-  if (!check_hash(cachedBlock.getBlockLongHash(), currentDifficulty)) {
-    logger(ERROR) << "blocks hash does not satisfy the difficulty requirements";
-    return false;
-  }
-
-  TransactionExtraMergeMiningTag mmTag;
-  if (!getMergeMiningTagFromExtra(block.parentBlock.baseTransaction.extra, mmTag)) {
-    logger(ERROR) << "merge mining tag wasn't found in extra of the parent block miner transaction";
-    return false;
-  }
-
-  if (8 * sizeof(cachedGenesisBlock->getBlockHash()) < block.parentBlock.blockchainBranch.size()) {
-    logger(ERROR) << "cached genesis block not contained in parent block blockchain branch";
-    return false;
-  }
-
-  Crypto::Hash auxBlocksMerkleRoot;
-  Crypto::tree_hash_from_branch(block.parentBlock.blockchainBranch.data(), block.parentBlock.blockchainBranch.size(),
-                                cachedBlock.getAuxiliaryBlockHeaderHash(), &cachedGenesisBlock->getBlockHash(),
-                                auxBlocksMerkleRoot);
-
-  if (auxBlocksMerkleRoot != mmTag.merkleRoot) {
-    logger(ERROR, BRIGHT_YELLOW) << "Aux block hash wasn't found in merkle tree";
-    return false;
-  }
-
-  return true;
-}
-
 bool Currency::checkProofOfWork(const CachedBlock& block, uint64_t currentDiffic) const {
-  switch (block.getBlock().majorVersion) {
-    case Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version():
-      return checkProofOfWorkV1(block, currentDiffic);
-
-    default:
-      return checkProofOfWorkV2(block, currentDiffic);
-  }
+  return check_hash(block.getBlockLongHash(), currentDiffic);
 }
 
 size_t Currency::getApproximateMaximumInputCount(size_t transactionSize, size_t outputCount, size_t mixinCount) const {
@@ -554,8 +648,8 @@ Currency::Currency(Currency&& currency)
       m_txPoolFileName(currency.m_txPoolFileName),
       m_genesisBlockReward(currency.m_genesisBlockReward),
       m_network(currency.m_network),
-      genesisBlockTemplate(std::move(currency.genesisBlockTemplate)),
-      cachedGenesisBlock(new CachedBlock(genesisBlockTemplate)),
+      m_genesisBlockTemplate(currency.m_genesisBlockTemplate),
+      m_cachedGenesisBlock(new CachedBlock(m_genesisBlockTemplate)),
       logger(currency.logger) {}
 
 CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
@@ -627,15 +721,12 @@ Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<Accoun
   for (size_t i = 0; i < targets.size(); ++i) {
     Crypto::KeyDerivation derivation = boost::value_initialized<Crypto::KeyDerivation>();
     Crypto::PublicKey outEphemeralPubKey = boost::value_initialized<Crypto::PublicKey>();
-    bool r = Crypto::generate_key_derivation(targets[i].viewPublicKey, txkey.secretKey, derivation);
-    assert(r == true);
-    //      CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to generate_key_derivation(" <<
-    //      targets[i].viewPublicKey << ", " << txkey.sec << ")");
-    r = Crypto::derive_public_key(derivation, i, targets[i].spendPublicKey, outEphemeralPubKey);
-    assert(r == true);
-    XI_UNUSED(r);
-    //     CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to derive_public_key(" << derivation << ", " << i
-    //     << ", " << targets[i].spendPublicKey << ")");
+    if (!Crypto::generate_key_derivation(targets[i].viewPublicKey, txkey.secretKey, derivation)) {
+      Xi::exceptional<Crypto::KeyDerivationError>();
+    }
+    if (!Crypto::derive_public_key(derivation, i, targets[i].spendPublicKey, outEphemeralPubKey)) {
+      Xi::exceptional<Crypto::PublicKeyDerivationError>();
+    }
     KeyOutput tk;
     tk.key = outEphemeralPubKey;
     TransactionOutput out;

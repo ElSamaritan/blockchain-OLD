@@ -23,31 +23,27 @@
 
 #pragma once
 
-#include <cinttypes>
+#include <Xi/Utils/Conversion.h>
 
-#include "Xi/Config/BlockVersion.h"
+#include "Xi/Config/_Impl/BeginMinerReward.h"
 
-namespace Xi {
-namespace Config {
-namespace Reward {
-template <uint8_t _Index>
-struct RewardCheckpoint;
-}
-}  // namespace Config
-}  // namespace Xi
+/*!
+ * \section Reward
+ *
+ * Index  : Chronological order of introduced checkpoints
+ * Version: The block major version introducing the checkpoint
+ * Window : Number of previous blocks for median size calculation, blocks with used to calculate penalities for larger
+ *            blocks.
+ * Zone   : Size in bytes until block penalties will be introduced. If a block is mined larger than the zone
+ * size the base reward will be adjusted. Further the transaction pool won't accept transactions larger than the zone,
+ *           except for fusion transactions.
+ */
 
-#define MakeRewardCheckpoint(_Index, _Version, _Window, _Zone)                                                   \
-  namespace Xi {                                                                                                 \
-  namespace Config {                                                                                             \
-  namespace Reward {                                                                                             \
-  template <>                                                                                                    \
-  struct RewardCheckpoint<_Index> {                                                                              \
-    static inline constexpr uint8_t index() { return _Index; }                                                   \
-    static inline constexpr uint8_t version() { return _Version; }                                               \
-    static inline constexpr uint32_t window() { return _Window; }                                                \
-    static inline constexpr uint64_t fullRewardZone() { return _Zone; }                                          \
-    static_assert(::Xi::Config::BlockVersion::exists(_Version), "Non existing major block version referenced."); \
-  };                                                                                                             \
-  }                                                                                                              \
-  }                                                                                                              \
-  }
+// clang-format off
+//                  (_Index, _Version, _Window,    _Zone)
+MakeRewardCheckpoint(     0,        1,     128,    64_kB)
+// clang-format on
+
+#define CURRENT_REWARD_CHECKPOINT_INDEX 0
+
+#include "Xi/Config/_Impl/EndMinerReward.h"

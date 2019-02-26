@@ -34,7 +34,7 @@ void UpgradeManager::addMajorBlockVersion(uint8_t targetVersion, uint32_t upgrad
 
 uint8_t UpgradeManager::getBlockMajorVersion(uint32_t blockIndex) const {
   for (auto it = m_upgradeDetectors.rbegin(); it != m_upgradeDetectors.rend(); ++it) {
-    if (it->get()->upgradeIndex() < blockIndex) {
+    if (it->get()->upgradeIndex() <= blockIndex) {
       return it->get()->targetVersion();
     }
   }
