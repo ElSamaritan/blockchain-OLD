@@ -61,10 +61,9 @@ static_assert(minerRewardUnlockBlocksCount() > 0,
 
 // clang-format off
 //                (_Index, _Version, _PastWindow, _FutureLimit)
-MakeTimeCheckpoint(     0,        1,          50,         10_m)
-MakeTimeCheckpoint(     1,        5,          16,         10_m)
+MakeTimeCheckpoint(     0,        1,           2,          5_m)
 // clang-format on
 
-#define CURRENT_TIME_CHECKPOINT_INDEX 1
+#define CURRENT_TIME_CHECKPOINT_INDEX 0
 
 #include "Xi/Config/_Impl/EndTime.h"

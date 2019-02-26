@@ -3,8 +3,8 @@
 std::string Xi::Config::Coin::genesisTransactionBlob(Network::Type network) {
   switch (network) {
     case Network::Type::TestNet:
-      return "010a01ff000180d0cfba856002137ac827c55c37f9c5efa93ea3971584e50e3189e4fbe8429fb0dba2422ee62b21012cee5c95535"
-             "fe90d92a80bf6b2c7c6f33491be5c8f311c9fd517debd87d79561";
+      return "010a01ff000180c0ee8ed20b02856e30dcd841fd09032710991b2ce1b7186178f62ba79ef143ccf2a6412c33aa210153052885881"
+             "3c70dc179ac412056c7fdddc758806343d5038a023f71e9b32b90";
     case Network::Type::LocalTestNet:
       return "010a01ff000180d0cfba85600238da436fd268a778fb6327d666ac21f109cd7769a1407893fa83823cc93eb9212101ebd59b2d595"
              "e95ce2753e6a4f9f3da4e1abf3d4a285b4996cbe343a9d47b3933";
@@ -23,7 +23,7 @@ uint64_t Xi::Config::Coin::genesisTimestamp(Xi::Config::Network::Type network) {
     case Network::Type::StageNet:
       return 1549720565;
     case Network::Type::TestNet:
-      return 1544396293;
+      return 1551206384;
     case Network::Type::LocalTestNet:
       return 1544396293;
     default:
