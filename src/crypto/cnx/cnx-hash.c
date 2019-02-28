@@ -290,6 +290,7 @@ STATIC INLINE void __cnx_cpu_tick(__cnx_cpu_state* cpu) {
 #if defined(__x86_64__)
 STATIC INLINE uint64_t _umul128(const uint64_t left, const uint64_t right, uint64_t* high)
 {
+  // cppcheck-suppress uninitvar
   uint64_t low;
   ASM("mulq %3\n\t" : "=d"(*high), "=a"(low) : "%a"(left), "rm"(right) : "cc");
   return low;

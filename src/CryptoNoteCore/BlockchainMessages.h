@@ -61,11 +61,11 @@ class BlockchainMessage {
   using AddTransaction = Messages::AddTransaction;
   using DeleteTransaction = Messages::DeleteTransaction;
 
-  BlockchainMessage(const NewBlock& message);
-  BlockchainMessage(const NewAlternativeBlock& message);
-  BlockchainMessage(const ChainSwitch& message);
-  BlockchainMessage(const AddTransaction& message);
-  BlockchainMessage(const DeleteTransaction& message);
+  explicit BlockchainMessage(const NewBlock& message);
+  explicit BlockchainMessage(const NewAlternativeBlock& message);
+  explicit BlockchainMessage(const ChainSwitch& message);
+  explicit BlockchainMessage(const AddTransaction& message);
+  explicit BlockchainMessage(const DeleteTransaction& message);
 
   BlockchainMessage(const BlockchainMessage& other);
 

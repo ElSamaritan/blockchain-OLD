@@ -50,11 +50,13 @@ class StringView {
   // The behavior is undefined unless 'stringData' != 'nullptr' || 'stringSize' == 0. Input state can be malformed using
   // poiner conversions.
   template <Size stringSize>
+  // cppcheck-suppress noExplicitConstructor
   StringView(const Object (&stringData)[stringSize]) : data(stringData), size(stringSize - 1) {
     assert(data != nullptr || size == 0);
   }
 
   // Constructor from std::string
+  // cppcheck-suppress noExplicitConstructor
   StringView(const std::string& string);
 
   // Copy constructor.

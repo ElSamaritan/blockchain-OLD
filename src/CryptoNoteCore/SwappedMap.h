@@ -264,13 +264,13 @@ void SwappedMap<Key, T>::erase(const_iterator iterator) {
     throw std::runtime_error("SwappedMap::erase");
   }
 
-  m_descriptors.erase(descriptorsIterator);
   auto cacheIteratorsIterator = m_cacheIterators.find(descriptorsIterator->first);
   if (cacheIteratorsIterator != m_cacheIterators.end()) {
     m_items.erase(descriptorsIterator->first);
     m_cache.erase(cacheIteratorsIterator->second);
     m_cacheIterators.erase(cacheIteratorsIterator);
   }
+  m_descriptors.erase(descriptorsIterator);
 }
 
 template <class Key, class T>

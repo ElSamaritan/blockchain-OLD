@@ -46,8 +46,8 @@ cppcheck                                        \
   --xml --xml-version=2                         \
   --inline-suppr                                \
   --project=compile_commands.json               \
-  -i$CI_PROJECT_DIR/src/crypto/cnx/operations/  \
   -i$CI_PROJECT_DIR/external/                   \
+  -i$CI_PROJECT_DIR/.build/                     \
   $CI_PROJECT_DIR/src                           \
 2> ../cppcheck.xml
 
