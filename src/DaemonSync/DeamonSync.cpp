@@ -23,6 +23,7 @@
 
 #include <cinttypes>
 #include <string>
+#include <fstream>
 
 #include <Xi/Utils/ExternalIncludePush.h>
 #include <cxxopts.hpp>
@@ -39,7 +40,13 @@
 #include <Logging/ConsoleLogger.h>
 #include <Logging/LoggerRef.h>
 #include <Common/Util.h>
+#include <Common/StdInputStream.h>
+#include <Common/StdOutputStream.h>
+#include <Serialization/BinaryInputStreamSerializer.h>
+#include <Serialization/BinaryOutputStreamSerializer.h>
 #include <CryptoNoteCore/Core.h>
+#include <CryptoNoteCore/CryptoNote.h>
+#include <CryptoNoteCore/CryptoNoteSerialization.h>
 #include <CryptoNoteCore/DataBaseConfig.h>
 #include <CryptoNoteCore/RocksDBWrapper.h>
 #include <CryptoNoteCore/MainChainStorage.h>
@@ -48,12 +55,19 @@
 
 namespace {
 // clang-format off
-XI_DECLARE_EXCEPTIONAL_CATEGORY(Configuration);
+XI_DECLARE_EXCEPTIONAL_CATEGORY(Configuration)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(NoMethod, "You must specifiy whether you like to import or export.", Configuration)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(AmbigiousMethod, "You can either import or export but not both.", Configuration)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidDatabaseCompression, "Unknown database compression method given.", Configuration)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(ExportFileExists, "The file to export to already exists, please delete it or specify another.", Configuration)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidBatchSize, "Batch size must be at least 1.", Configuration)
+
+XI_DECLARE_EXCEPTIONAL_CATEGORY(File)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(OpenFile, "Unable to open blockchain file.", File)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(UnsupportedVersion, "The file version is not supported.", File)
+
+XI_DECLARE_EXCEPTIONAL_CATEGORY(Import)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidBlock, "Import file contains invalid blocks.", Import)
 // clang-format on
 }  // namespace
 
@@ -68,7 +82,8 @@ int main(int argc, char** argv) {
     bool isImport = false;
     bool isExport = false;
     bool verbose = false;
-    size_t batchSize = 1000;
+    bool trunc = false;
+    uint32_t batchSize = 1000;
     std::string dataDir = Tools::getDefaultDataDirectory();
     std::string file = "./xi-blockchain.dump";
     std::string checkpointsFile = "";
@@ -76,11 +91,12 @@ int main(int argc, char** argv) {
     CryptoNote::DataBaseConfig::Compression dbCompression = CryptoNote::DataBaseConfig::Compression::LZ4;
 
     // clang-format off
-    cliOptions.add_options("benchmark")
+    cliOptions.add_options("sync")
         ("i,import", "import the blockchain", cxxopts::value<bool>(isImport)->implicit_value("true"))
         ("e,export", "export the blockchain", cxxopts::value<bool>(isExport)->implicit_value("true"))
         ("v,verbose", "enables verbose logging", cxxopts::value<bool>(verbose)->implicit_value("true"))
-        ("b,batch-size", "number of blocks to process at once", cxxopts::value<size_t>(batchSize)->default_value(std::to_string(batchSize)))
+        ("t,trunc", "forces to overwrite an exisitng file", cxxopts::value<bool>(trunc)->implicit_value("true"))
+        ("b,batch-size", "number of blocks to process at once", cxxopts::value<uint32_t>(batchSize)->default_value(std::to_string(batchSize)))
         ("d,data-dir", "directory used to store the blockchain", cxxopts::value<std::string>(dataDir)->default_value(dataDir))
         ("c,checkpoints", "checkpoint file to speed up validation", cxxopts::value<std::string>(checkpointsFile))
         ("f,file", "file to read/write blockchain state to sync.", cxxopts::value<std::string>(file)->default_value(file))
@@ -105,7 +121,7 @@ int main(int argc, char** argv) {
       exceptional<AmbigiousMethodError>();
     }
 
-    if (isExport && FileSystem::exists(file).valueOrThrow()) {
+    if (isExport && !trunc && FileSystem::exists(file).valueOrThrow()) {
       exceptional<ExportFileExistsError>();
     }
 
@@ -164,6 +180,70 @@ int main(int argc, char** argv) {
     ccore.load();
 
     logger(Level::INFO) << "local database height: " << (ccore.getTopBlockIndex() + 1);
+
+    const uint8_t supportedVersion = 1;
+    uint8_t fileVersion = supportedVersion;
+    if (isImport) {
+      std::ifstream input{file, std::ios::in | std::ios::binary};
+      if (!input.good()) {
+        exceptional<OpenFileError>();
+      }
+      Common::StdInputStream inputStream{input};
+      CryptoNote::BinaryInputStreamSerializer serializer{inputStream};
+      serializer(fileVersion, "version");
+
+      if (fileVersion != supportedVersion) {
+        exceptional<UnsupportedVersionError>();
+      }
+
+      uint32_t readBlocks = 0;
+      while (input.peek() != EOF) {
+        const uint32_t currentTopIndex = ccore.getTopBlockIndex();
+        std::vector<CryptoNote::RawBlock> blocks;
+        blocks.reserve(batchSize);
+        for (size_t i = 0; i < batchSize && input.peek() != EOF; ++i) {
+          CryptoNote::RawBlock iBlock{/* */};
+          CryptoNote::serialize(iBlock, serializer);
+          blocks.emplace_back(std::move(iBlock));
+        }
+
+        for (auto&& iBlock : blocks) {
+          if (readBlocks++ <= ccore.getTopBlockIndex()) {
+            continue;
+          }
+          auto pushResult = ccore.addBlock(std::move(iBlock));
+          if (pushResult != CryptoNote::error::AddBlockErrorCondition::BLOCK_ADDED) {
+            logger(Level::FATAL) << "Unable to add block: " << pushResult.message();
+            exceptional<InvalidBlockError>();
+          }
+        }
+
+        const uint32_t newTopBlockIndex = ccore.getTopBlockIndex();
+        if (currentTopIndex < newTopBlockIndex) {
+          logger(Level::INFO) << "updated height: " << (ccore.getTopBlockIndex() + 1);
+        }
+      }
+    } else {
+      std::ofstream output{file, std::ios::out | std::ios::trunc | std::ios::binary};
+      if (!output.good()) {
+        exceptional<OpenFileError>();
+      }
+      Common::StdOutputStream outputStream{output};
+      CryptoNote::BinaryOutputStreamSerializer serializer{outputStream};
+
+      serializer(fileVersion, "version");
+
+      uint32_t currentBlockIndex = 0;
+      while (currentBlockIndex <= ccore.getTopBlockIndex()) {
+        auto blocks = ccore.getBlocks(currentBlockIndex, batchSize);
+        for (auto& iBlock : blocks) {
+          CryptoNote::serialize(iBlock, serializer);
+        }
+        currentBlockIndex += blocks.size();
+
+        logger(Level::INFO) << "written blocks " << currentBlockIndex << " of " << (ccore.getTopBlockIndex() + 1);
+      }
+    }
 
     ccore.save();
     database.shutdown();

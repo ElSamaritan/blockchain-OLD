@@ -72,12 +72,4 @@ Xi::Result<void> Xi::FileSystem::removeDircetoryIfExists(const std::string &dire
   XI_ERROR_CATCH();
 }
 
-Xi::Result<bool> Xi::FileSystem::exists(const std::string &path) {
-  boost::system::error_code ec;
-  bool doesExist = boost::filesystem::exists(path, ec);
-  if (ec) {
-    return make_error(ec);
-  } else {
-    return doesExist;
-  }
-}
+Xi::Result<bool> Xi::FileSystem::exists(const std::string &path) { return boost::filesystem::exists(path); }

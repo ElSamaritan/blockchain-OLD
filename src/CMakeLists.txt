@@ -65,7 +65,7 @@ endif()
 foreach(source_file ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} ${XI_CLI_DAEMON_SOURCES} ${service}
                    ${JsonRpcServer} ${Logging} ${XI_CLI_MINER_SOURCES} ${Mnemonics} ${NodeRpcProxy} ${P2p}
                    ${Rpc} ${Serialization} ${System} ${Transfers} ${Wallet} ${WalletLegacy} ${XI_CLI_WALLET_SOURCES}
-                   ${BlockchainExplorer} ${XI_CLI_MINER_BENCHMARK_SOURCES})
+                   ${BlockchainExplorer} ${XI_CLI_MINER_BENCHMARK_SOURCES} ${XI_CLI_DAEMON_SYNC_SOURCES})
   if(XI_CXX_FLAGS)
     set_source_files_properties(${source_file} PROPERTIES COMPILE_FLAGS "${XI_CXX_FLAGS}")
   endif() # XI_CXX_FLAGS
@@ -278,6 +278,7 @@ if(XI_BUILD_EXECUTABLES)
   install(
     TARGETS
       CLIDaemon
+      CLIDaemonSync
       CLIWallet
       CLIMiner
       CLIMinerBenchmark
