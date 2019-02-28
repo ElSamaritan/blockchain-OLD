@@ -85,19 +85,19 @@ void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, Logger
 
 JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   JsonValue loggerConfiguration(JsonValue::OBJECT);
-  loggerConfiguration.insert("globalLevel", static_cast<int64_t>(level));
+  loggerConfiguration.insert("globalLevel", JsonValue{static_cast<int64_t>(level)});
 
-  JsonValue& cfgLoggers = loggerConfiguration.insert("loggers", JsonValue::ARRAY);
+  JsonValue& cfgLoggers = loggerConfiguration.insert("loggers", JsonValue{JsonValue::ARRAY});
 
-  JsonValue& fileLogger = cfgLoggers.pushBack(JsonValue::OBJECT);
-  fileLogger.insert("type", "file");
-  fileLogger.insert("filename", logfile);
-  fileLogger.insert("level", static_cast<int64_t>(TRACE));
+  JsonValue& fileLogger = cfgLoggers.pushBack(JsonValue{JsonValue::OBJECT});
+  fileLogger.insert("type", JsonValue{"file"});
+  fileLogger.insert("filename", JsonValue{logfile});
+  fileLogger.insert("level", JsonValue{static_cast<int64_t>(TRACE)});
 
-  JsonValue& consoleLogger = cfgLoggers.pushBack(JsonValue::OBJECT);
-  consoleLogger.insert("type", "console");
-  consoleLogger.insert("level", static_cast<int64_t>(TRACE));
-  consoleLogger.insert("pattern", "%D %T %L ");
+  JsonValue& consoleLogger = cfgLoggers.pushBack(JsonValue{JsonValue::OBJECT});
+  consoleLogger.insert("type", JsonValue{"console"});
+  consoleLogger.insert("level", JsonValue{static_cast<int64_t>(TRACE)});
+  consoleLogger.insert("pattern", JsonValue{"%D %T %L "});
 
   return loggerConfiguration;
 }
@@ -262,7 +262,8 @@ int main(int argc, char* argv[]) {
     ccore.load();
     logger(INFO) << "Core initialized OK";
 
-    // ------------------------------------------ Transaction Pool ----------------------------------------------------
+    // ------------------------------------------ Transaction Pool
+    // ----------------------------------------------------
     logger(INFO) << "Initializing transaction pool...";
     const auto transactionPoolFile = path(config.dataDirectory) / currency.txPoolFileName();
     if (!exists(transactionPoolFile)) {
@@ -275,7 +276,8 @@ int main(int argc, char* argv[]) {
       logger(INFO) << "Imported " << ccore.transactionPool().size() << " pending pool transactions.";
     }
     logger(INFO) << "Transaction Pool initialized OK";
-    // ------------------------------------------ Transaction Pool ----------------------------------------------------
+    // ------------------------------------------ Transaction Pool
+    // ----------------------------------------------------
 
     CryptoNote::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
     CryptoNote::NodeServer p2psrv(dispatcher, config.network, cprotocol, logManager);
@@ -335,7 +337,8 @@ int main(int argc, char* argv[]) {
     logger(INFO) << "Deinitializing p2p...";
     p2psrv.deinit();
 
-    // ------------------------------------------ Transaction Pool ----------------------------------------------------
+    // ------------------------------------------ Transaction Pool
+    // ----------------------------------------------------
     logger(INFO) << "Exporting transaction pool...";
     {
       std::ofstream poolFileStream{transactionPoolFile.string(), std::ios::out | std::ios::binary | std::ios::trunc};
@@ -345,7 +348,8 @@ int main(int argc, char* argv[]) {
       logger(INFO) << "Exported " << ccore.transactionPool().size() << " pending pool transactions.";
     }
     logger(INFO) << "Transaction Pool epxported OK";
-    // ------------------------------------------ Transaction Pool ----------------------------------------------------
+    // ------------------------------------------ Transaction Pool
+    // ----------------------------------------------------
 
     cprotocol.set_p2p_endpoint(nullptr);
     ccore.save();

@@ -62,7 +62,7 @@ template <typename T>
 Common::JsonValue storeContainerToJsonValue(const T& cont) {
   Common::JsonValue js(Common::JsonValue::ARRAY);
   for (const auto& item : cont) {
-    js.pushBack(item);
+    js.pushBack(Common::JsonValue{item});
   }
   return js;
 }

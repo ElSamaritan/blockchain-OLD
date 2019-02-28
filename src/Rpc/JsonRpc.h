@@ -71,6 +71,9 @@ typedef boost::optional<Common::JsonValue> OptionalPassword;
 
 class JsonRpcRequest {
  public:
+  using JsonValue = Common::JsonValue;
+
+ public:
   JsonRpcRequest() : psReq(Common::JsonValue::OBJECT) {}
 
   bool parseRequest(const std::string& requestBody) {
@@ -118,8 +121,8 @@ class JsonRpcRequest {
   const OptionalPassword& getPassword() const { return password; }
 
   std::string getBody() {
-    psReq.set("jsonrpc", std::string("2.0"));
-    psReq.set("method", method);
+    psReq.set("jsonrpc", JsonValue{std::string("2.0")});
+    psReq.set("method", JsonValue{method});
     return psReq.toString();
   }
 
@@ -131,6 +134,9 @@ class JsonRpcRequest {
 };
 
 class JsonRpcResponse {
+ public:
+  using JsonValue = Common::JsonValue;
+
  public:
   JsonRpcResponse() : psResp(Common::JsonValue::OBJECT) {}
 
@@ -160,7 +166,7 @@ class JsonRpcResponse {
   }
 
   std::string getBody() {
-    psResp.set("jsonrpc", std::string("2.0"));
+    psResp.set("jsonrpc", JsonValue{std::string("2.0")});
     return psResp.toString();
   }
 

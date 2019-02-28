@@ -23,7 +23,7 @@ namespace Tools {
 
 class ScopeExit {
  public:
-  ScopeExit(std::function<void()>&& handler);
+  explicit ScopeExit(std::function<void()>&& handler);
   ~ScopeExit();
 
   ScopeExit(const ScopeExit&) = delete;

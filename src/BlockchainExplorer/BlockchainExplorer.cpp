@@ -38,7 +38,7 @@ namespace CryptoNote {
 
 class ContextCounterHolder {
  public:
-  ContextCounterHolder(BlockchainExplorer::AsyncContextCounter& counter) : counter(counter) {}
+  explicit ContextCounterHolder(BlockchainExplorer::AsyncContextCounter& counter) : counter(counter) {}
   ~ContextCounterHolder() { counter.delAsyncContext(); }
 
  private:
@@ -47,7 +47,7 @@ class ContextCounterHolder {
 
 class NodeRequest {
  public:
-  NodeRequest(const std::function<void(const INode::Callback&)>& request) : requestFunc(request) {}
+  explicit NodeRequest(const std::function<void(const INode::Callback&)>& request) : requestFunc(request) {}
 
   std::error_code performBlocking() {
     std::promise<std::error_code> promise;
@@ -120,7 +120,7 @@ bool BlockchainExplorer::PoolUpdateGuard::endUpdate() {
 
 class ScopeExitHandler {
  public:
-  ScopeExitHandler(std::function<void()>&& handler) : m_handler(std::move(handler)), m_cancelled(false) {}
+  explicit ScopeExitHandler(std::function<void()>&& handler) : m_handler(std::move(handler)), m_cancelled(false) {}
 
   ~ScopeExitHandler() {
     if (!m_cancelled) {
@@ -165,7 +165,7 @@ bool BlockchainExplorer::removeObserver(IBlockchainObserver* observer) {
 }
 
 struct StateRollback {
-  StateRollback(std::atomic<State>& s) : state(s) { state.store(INITIALIZED); }
+  explicit StateRollback(std::atomic<State>& s) : state(s) { state.store(INITIALIZED); }
   void commit() { done = true; }
   ~StateRollback() {
     if (!done) {
@@ -313,7 +313,7 @@ bool BlockchainExplorer::getBlockchainTop(BlockDetails& topBlock, bool checkInit
   uint32_t lastIndex = node.getLastLocalBlockHeight();
 
   std::vector<uint32_t> indexes;
-  indexes.push_back(std::move(lastIndex));
+  indexes.push_back(lastIndex);
 
   std::vector<std::vector<BlockDetails>> blocks;
   if (!getBlocks(indexes, blocks, checkInitialization)) {

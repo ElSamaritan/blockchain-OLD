@@ -28,7 +28,7 @@ class BlockingQueue {
  public:
   typedef BlockingQueue<T, Container> ThisType;
 
-  BlockingQueue(size_t maxSize = 1) : m_maxSize(maxSize), m_closed(false) {}
+  explicit BlockingQueue(size_t maxSize = 1) : m_maxSize(maxSize), m_closed(false) {}
 
   template <typename TT>
   bool push(TT&& v) {

@@ -13,5 +13,5 @@ namespace Common {
 std::string get_mining_speed(uint32_t hr);
 std::string get_sync_percentage(uint32_t height, uint32_t target_height);
 std::string get_upgrade_time(uint32_t height, uint32_t upgrade_height);
-std::string get_status_string(CryptoNote::COMMAND_RPC_GET_INFO::response iresp);
+std::string get_status_string(const CryptoNote::COMMAND_RPC_GET_INFO::response& iresp);
 }  // namespace Common

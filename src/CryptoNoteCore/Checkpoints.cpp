@@ -145,4 +145,14 @@ std::vector<uint32_t> Checkpoints::getCheckpointHeights() const {
   return checkpointHeights;
 }
 
+std::size_t Checkpoints::size() const { return points.size(); }
+
+uint32_t Checkpoints::topCheckpointIndex() const {
+  if (points.empty()) {
+    return 0;
+  } else {
+    return points.rbegin()->first;
+  }
+}
+
 }  // namespace CryptoNote

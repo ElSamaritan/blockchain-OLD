@@ -335,7 +335,7 @@ std::string ipAddressToString(uint32_t ip) {
   bytes[3] = (ip >> 24) & 0xFF;
 
   char buf[16];
-  sprintf(buf, "%d.%d.%d.%d", bytes[0], bytes[1], bytes[2], bytes[3]);
+  sprintf(buf, "%u.%u.%u.%u", bytes[0], bytes[1], bytes[2], bytes[3]);
 
   return std::string(buf);
 }
@@ -343,7 +343,7 @@ std::string ipAddressToString(uint32_t ip) {
 bool parseIpAddress(uint32_t& ip, const std::string& addr) {
   uint32_t v[4];
 
-  if (sscanf(addr.c_str(), "%d.%d.%d.%d", &v[0], &v[1], &v[2], &v[3]) != 4) {
+  if (sscanf(addr.c_str(), "%u.%u.%u.%u", &v[0], &v[1], &v[2], &v[3]) != 4) {
     return false;
   }
 
@@ -361,7 +361,7 @@ bool parseIpAddressAndPort(uint32_t& ip, uint32_t& port, const std::string& addr
   uint32_t v[4];
   uint32_t localPort;
 
-  if (sscanf(addr.c_str(), "%d.%d.%d.%d:%d", &v[0], &v[1], &v[2], &v[3], &localPort) != 5) {
+  if (sscanf(addr.c_str(), "%u.%u.%u.%u:%u", &v[0], &v[1], &v[2], &v[3], &localPort) != 5) {
     return false;
   }
 

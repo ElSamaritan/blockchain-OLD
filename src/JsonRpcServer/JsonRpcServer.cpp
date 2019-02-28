@@ -102,7 +102,7 @@ void JsonRpcServer::prepareJsonResponse(const Common::JsonValue& req, Common::Js
     resp.insert("id", req("id"));
   }
 
-  resp.insert("jsonrpc", "2.0");
+  resp.insert("jsonrpc", JsonValue{"2.0"});
 }
 
 void JsonRpcServer::makeErrorResponse(const std::error_code& ec, Common::JsonValue& resp) {
@@ -193,15 +193,15 @@ void JsonRpcServer::makeJsonParsingErrorResponse(Common::JsonValue& resp) {
   using Common::JsonValue;
 
   resp = JsonValue(JsonValue::OBJECT);
-  resp.insert("jsonrpc", "2.0");
-  resp.insert("id", nullptr);
+  resp.insert("jsonrpc", JsonValue{"2.0"});
+  resp.insert("id", JsonValue{nullptr});
 
   JsonValue error(JsonValue::OBJECT);
   JsonValue code;
   code = static_cast<int64_t>(
       CryptoNote::JsonRpc::errParseError);  // ambigous declaration of JsonValue::operator= (between int and JsonValue)
 
-  JsonValue message = "Parse error";
+  JsonValue message{"Parse error"};
 
   error.insert("code", code);
   error.insert("message", message);

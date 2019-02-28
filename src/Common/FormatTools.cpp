@@ -86,7 +86,7 @@ ForkStatus get_fork_status(uint32_t height, std::vector<uint32_t> upgrade_height
   return ForkLater;
 }
 
-std::string get_fork_time(uint32_t height, std::vector<uint32_t> upgrade_heights) {
+std::string get_fork_time(uint32_t height, const std::vector<uint32_t>& upgrade_heights) {
   uint32_t next_fork = 0;
 
   for (auto upgrade : upgrade_heights) {
@@ -110,7 +110,7 @@ std::string get_fork_time(uint32_t height, std::vector<uint32_t> upgrade_heights
   }
 }
 
-std::string get_update_status(ForkStatus forkStatus, uint32_t height, std::vector<uint32_t> upgrade_heights) {
+std::string get_update_status(ForkStatus forkStatus, uint32_t height, const std::vector<uint32_t>& upgrade_heights) {
   switch (forkStatus) {
     case UpToDate:
     case ForkLater: {
@@ -143,7 +143,7 @@ std::string get_upgrade_info(uint32_t supported_height, std::vector<uint32_t> up
 }
 
 //--------------------------------------------------------------------------------
-std::string get_status_string(CryptoNote::COMMAND_RPC_GET_INFO::response iresp) {
+std::string get_status_string(const CryptoNote::COMMAND_RPC_GET_INFO::response& iresp) {
   std::stringstream ss;
   std::time_t uptime = std::time(nullptr) - iresp.start_time;
   auto forkStatus = get_fork_status(iresp.network_height, iresp.upgrade_heights, iresp.supported_height);
