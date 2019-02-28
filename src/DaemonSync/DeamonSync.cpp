@@ -239,7 +239,7 @@ int main(int argc, char** argv) {
         for (auto& iBlock : blocks) {
           CryptoNote::serialize(iBlock, serializer);
         }
-        currentBlockIndex += blocks.size();
+        currentBlockIndex += static_cast<uint32_t>(blocks.size());
 
         logger(Level::INFO) << "written blocks " << currentBlockIndex << " of " << (ccore.getTopBlockIndex() + 1);
       }
