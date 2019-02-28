@@ -42,19 +42,19 @@ class JsonValue {
   JsonValue();
   JsonValue(const JsonValue& other);
   JsonValue(JsonValue&& other);
-  JsonValue(Type valueType);
-  JsonValue(const Array& value);
-  JsonValue(Array&& value);
+  explicit JsonValue(Type valueType);
+  explicit JsonValue(const Array& value);
+  explicit JsonValue(Array&& value);
   explicit JsonValue(Bool value);
-  JsonValue(Integer value);
-  JsonValue(Nil value);
-  JsonValue(const Object& value);
-  JsonValue(Object&& value);
-  JsonValue(Real value);
-  JsonValue(const String& value);
-  JsonValue(String&& value);
+  explicit JsonValue(Integer value);
+  explicit JsonValue(Nil value);
+  explicit JsonValue(const Object& value);
+  explicit JsonValue(Object&& value);
+  explicit JsonValue(Real value);
+  explicit JsonValue(const String& value);
+  explicit JsonValue(String&& value);
   template <size_t size>
-  JsonValue(const char (&value)[size]) {
+  explicit JsonValue(const char (&value)[size]) {
     new (valueString) String(value, size - 1);
     type = STRING;
   }

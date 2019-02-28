@@ -27,7 +27,7 @@ namespace {
 Common::JsonValue getJsonValueFromStreamHelper(std::istream& stream) {
   Common::JsonValue value;
   stream >> value;
-  return value;
+  return Common::JsonValue{value};
 }
 
 }  // namespace

@@ -38,6 +38,9 @@ namespace CryptoNote {
 
 class JsonRpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
  public:
+  using JsonValue = Common::JsonValue;
+
+ public:
   JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup,
                 PaymentService::ConfigurationManager& config);
   JsonRpcServer(const JsonRpcServer&) = delete;
