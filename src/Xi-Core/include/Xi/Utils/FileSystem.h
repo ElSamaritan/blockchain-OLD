@@ -46,6 +46,7 @@ Xi::Result<boost::filesystem::space_info> availableSpace(const std::string& dire
 Xi::Result<boost::tribool> isRotationalDrive(const std::string& path);
 Xi::Result<void> ensureDirectoryExists(const std::string& directory);
 Xi::Result<void> removeDircetoryIfExists(const std::string& directory);
+Xi::Result<bool> exists(const std::string& path);
 
 }  // namespace FileSystem
 }  // namespace Xi

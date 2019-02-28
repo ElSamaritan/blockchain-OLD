@@ -65,6 +65,7 @@ try
 
     $FilesToDump = @(
         "xi-daemon",
+        "xi-sync",
         "xi-wallet",
         "xi-miner",
         "xi-pgservice",

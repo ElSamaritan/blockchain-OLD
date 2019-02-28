@@ -38,6 +38,8 @@ class Checkpoints {
   bool checkBlock(uint32_t index, const Crypto::Hash& h, bool& isCheckpoint) const;
   bool isAlternativeBlockAllowed(uint32_t blockchainSize, uint32_t blockIndex) const;
   std::vector<uint32_t> getCheckpointHeights() const;
+  std::size_t size() const;
+  uint32_t topCheckpointIndex() const;
 
  private:
   std::map<uint32_t, Crypto::Hash> points;
