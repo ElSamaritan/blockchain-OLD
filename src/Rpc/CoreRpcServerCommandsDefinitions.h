@@ -643,10 +643,12 @@ struct F_COMMAND_RPC_GET_POOL {
   typedef EMPTY_STRUCT request;
 
   struct response {
+    Crypto::Hash state;  ///< Tree hash of all transactions of the pool. Only query the pool if this has changed.
     std::vector<f_transaction_short_response> transactions;  // transactions blobs as hex
     std::string status;
 
     void serialize(ISerializer &s) {
+      KV_MEMBER(state);
       KV_MEMBER(transactions)
       KV_MEMBER(status)
     }
