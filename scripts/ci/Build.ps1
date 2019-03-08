@@ -98,10 +98,16 @@ $(ConvertTo-Json $BuildEnvironment)
                 cmake --build . --target install --config Release
             }
         }
-        else 
+        elseif($IsMacOS)
         {
             Invoke-Command {
                 cmake --build . --target install --config Release -- -j 4
+            }
+        }
+        else 
+        {
+            Invoke-Command {
+                cmake --build . --target install --config Release -- -j 1
             }
         }
     }
