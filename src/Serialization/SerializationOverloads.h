@@ -32,6 +32,11 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include <Xi/Utils/ExternalIncludePush.h>
+#include <boost/optional.hpp>
+#include <boost/utility/value_init.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
+
 namespace CryptoNote {
 
 template <typename T>
@@ -268,5 +273,19 @@ void serializeBlockHeight(ISerializer& s, uint32_t& blockHeight, Common::StringV
 
 // convinience function since we change global output index type
 void serializeGlobalOutputIndex(ISerializer& s, uint32_t& globalOutputIndex, Common::StringView name);
+
+template <typename Element>
+void serialize(boost::optional<Element>& value, ISerializer& s) {
+  bool has_value = value.has_value();
+  s(has_value, "");
+  if (has_value) {
+    if (s.type() == ISerializer::INPUT) {
+      value = boost::value_initialized<Element>();
+    }
+    serialize(value.get(), s);
+  } else if (s.type() == ISerializer::INPUT) {
+    value = boost::none;
+  }
+}
 
 }  // namespace CryptoNote

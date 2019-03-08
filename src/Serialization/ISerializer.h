@@ -84,6 +84,9 @@ inline bool ISerializer::operator()(size_t& value, Common::StringView name) {
 }
 #endif
 
+#define KV_BEGIN_SERIALIZATION void serialize(::CryptoNote::ISerializer& s) {
+#define KV_END_SERIALIZATION }
 #define KV_MEMBER(member) s(member, #member);
+#define KV_BASE(BASE_CLASS) this->BASE_CLASS::serialize(s);
 
 }  // namespace CryptoNote
