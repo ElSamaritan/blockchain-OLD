@@ -51,7 +51,7 @@ try
 
     if($IsWindows)
     {
-        Push-Location "$CMakeBuildPath\src\Release"
+        Push-Location "$CMakeBuildPath\bin\Release"
     }
     else 
     {

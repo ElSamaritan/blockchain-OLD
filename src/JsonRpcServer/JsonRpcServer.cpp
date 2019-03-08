@@ -27,11 +27,15 @@
 namespace CryptoNote {
 
 JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup,
-                             PaymentService::ConfigurationManager& config)
-    : Server(), config(config), system{sys}, stopEvent(stopEvent), logger(loggerGroup, "JsonRpcServer") {
+                             Xi::Http::SSLConfiguration sslConfig)
+    : Server(), system{sys}, stopEvent(stopEvent), logger(loggerGroup, "JsonRpcServer") {
   setDispatcher(std::make_shared<Xi::Concurrent::SystemDispatcher>(sys));
-  setSSLConfiguration(config.serviceConfig.ssl);
+  setSSLConfiguration(sslConfig);
 }
+
+void JsonRpcServer::setCorsHeader(std::string _cors) { cors = _cors; }
+
+const std::string& JsonRpcServer::corsHeader() { return cors; }
 
 void JsonRpcServer::start(const std::string& bindAddress, uint16_t bindPort) {
   Server::start(bindAddress, bindPort);
@@ -87,8 +91,8 @@ Xi::Http::Response JsonRpcServer::doHandleRequest(const Xi::Http::Request& reque
 }
 
 void JsonRpcServer::emplaceDefaultHeaders(Xi::Http::Response& response) const {
-  if (!config.serviceConfig.corsHeader.empty()) {
-    response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, config.serviceConfig.corsHeader);
+  if (!cors.empty()) {
+    response.headers().set(Xi::Http::HeaderContainer::AccessControlAllowOrigin, cors);
     response.headers().setAccessControlRequestMethods({Xi::Http::Method::Post, Xi::Http::Method::Options});
   }
   response.headers().setAllow({Xi::Http::Method::Post, Xi::Http::Method::Options});

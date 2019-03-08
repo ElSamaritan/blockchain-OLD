@@ -19,8 +19,6 @@
 #include "Logging/ILogger.h"
 #include "Logging/LoggerRef.h"
 
-#include "WalletService/ConfigurationManager.h"
-
 namespace CryptoNote {
 class HttpResponse;
 class HttpRequest;
@@ -34,6 +32,10 @@ namespace System {
 class TcpConnection;
 }
 
+namespace PaymentService {
+class ConfigurationManager;
+}
+
 namespace CryptoNote {
 
 class JsonRpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
@@ -42,8 +44,11 @@ class JsonRpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
 
  public:
   JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup,
-                PaymentService::ConfigurationManager& config);
+                Xi::Http::SSLConfiguration sslConfig);
   JsonRpcServer(const JsonRpcServer&) = delete;
+
+  void setCorsHeader(std::string cors);
+  const std::string& corsHeader();
 
   void start(const std::string& bindAddress, uint16_t bindPort);
 
@@ -57,7 +62,6 @@ class JsonRpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   static void makeJsonParsingErrorResponse(Common::JsonValue& resp);
 
   virtual void processJsonRpcRequest(const Common::JsonValue& req, Common::JsonValue& resp) = 0;
-  PaymentService::ConfigurationManager& config;
 
  private:
   // HttpServer
@@ -68,6 +72,7 @@ class JsonRpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   System::Dispatcher& system;
   System::Event& stopEvent;
   Logging::LoggerRef logger;
+  std::string cors;
 };
 
 }  // namespace CryptoNote

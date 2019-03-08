@@ -44,11 +44,6 @@ file(GLOB_RECURSE Transfers Transfers/*)
 file(GLOB_RECURSE Wallet Wallet/*)
 file(GLOB_RECURSE WalletLegacy WalletLegacy/*)
 file(GLOB_RECURSE JsonRpcServer JsonRpcServer/*)
-file(GLOB_RECURSE service WalletService/*)
-file(GLOB_RECURSE XI_CLI_DAEMON_SOURCES Daemon/*)
-file(GLOB_RECURSE XI_CLI_MINER_SOURCES Miner/*)
-file(GLOB_RECURSE XI_CLI_MINER_BENCHMARK_SOURCES MinerBenchmark/*)
-file(GLOB_RECURSE XI_CLI_WALLET_SOURCES zedwallet/*)
 
 if(MSVC)
   file(GLOB_RECURSE System System/* Platform/Windows/System/*)
@@ -61,10 +56,10 @@ else()
   list(APPEND SYSTEM_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/Platform/Linux" "${CMAKE_CURRENT_SOURCE_DIR}/Platform/Posix")
 endif()
 
-foreach(source_file ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} ${XI_CLI_DAEMON_SOURCES} ${service}
-                   ${JsonRpcServer} ${Logging} ${XI_CLI_MINER_SOURCES} ${Mnemonics} ${NodeRpcProxy} ${P2p}
-                   ${Rpc} ${Serialization} ${System} ${Transfers} ${Wallet} ${WalletLegacy} ${XI_CLI_WALLET_SOURCES}
-                   ${BlockchainExplorer} ${XI_CLI_MINER_BENCHMARK_SOURCES})
+foreach(source_file ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol}
+                   ${JsonRpcServer} ${Logging} ${Mnemonics} ${NodeRpcProxy} ${P2p}
+                   ${Rpc} ${Serialization} ${System} ${Transfers} ${Wallet} ${WalletLegacy}
+                   ${BlockchainExplorer})
   if(XI_CXX_FLAGS)
     set_source_files_properties(${source_file} PROPERTIES COMPILE_FLAGS "${XI_CXX_FLAGS}")
   endif() # XI_CXX_FLAGS
@@ -86,7 +81,6 @@ target_include_directories(System PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${SYSTEM_IN
 add_library(Transfers STATIC ${Transfers})
 add_library(Wallet STATIC ${Wallet} ${WalletLegacy})
 add_library(JsonRpcServer STATIC ${JsonRpcServer})
-add_library(WalletService STATIC ${service})
 
 include(Xi-Version/Version.cmake)
 
@@ -166,24 +160,23 @@ endif()
 
 set(
     XI_LIBRARIES
-
-    BlockchainExplorer
-    Common
-    CommonCLI
-    Crypto
-    CryptoNoteCore
-    Logging
-    Mnemonics
-    NodeRpcProxy
-    Rpc
-    P2P
-    Serialization
-    System
-    Transfers
-    Wallet
-    JsonRpcServer
-    WalletService
+      BlockchainExplorer
+      Common
+      CommonCLI
+      Crypto
+      CryptoNoteCore
+      Logging
+      Mnemonics
+      NodeRpcProxy
+      Rpc
+      P2P
+      Serialization
+      System
+      Transfers
+      Wallet
+      JsonRpcServer
 )
+set(XI_LIBRARIES ${XI_LIBRARIES} PARENT_SCOPE)
 
 foreach(xiLib ${XI_LIBRARIES})
   target_include_directories(${xiLib} PUBLIC ${XI_INCLUDE_DIRS})
@@ -214,7 +207,6 @@ target_link_libraries(
 target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Serialization CryptoNoteCore System Logging Common Crypto Xi.Core boost json linenoise Xi.Http Xi.Config Xi.Crypto)
-target_link_libraries(WalletService PUBLIC Mnemonics CommonCLI boost json linenoise cxxopts Xi.Http Xi.Config Xi.Crypto)
 target_link_libraries(BlockchainExplorer PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Common PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(CommonCLI PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
@@ -228,76 +220,6 @@ target_link_libraries(Transfers PUBLIC Xi.Core boost json linenoise Xi.Http Xi.C
 target_link_libraries(JsonRpcServer PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config Xi.Crypto)
 
 if(XI_BUILD_EXECUTABLES)
-  if(MSVC)
-    set(XI_CLI_DAEMON_SOURCES_OS
-      ${PROJECT_SOURCE_DIR}/src/BinaryInfo/daemon.ico
-      ${PROJECT_SOURCE_DIR}/src/BinaryInfo/daemon.rc
-    )
-    set(XI_CLI_WALLET_SOURCES_OS
-      ${PROJECT_SOURCE_DIR}/src/BinaryInfo/wallet.ico
-      ${PROJECT_SOURCE_DIR}/src/BinaryInfo/wallet.rc
-    )
-    set(XI_CLI_MINER_SOURCES_OS
-      ${PROJECT_SOURCE_DIR}/src/BinaryInfo/miner.ico
-      ${PROJECT_SOURCE_DIR}/src/BinaryInfo/miner.rc
-    )
-    set(XI_CLI_MINER_BENCHMARK_SOURCES_OS
-      ${PROJECT_SOURCE_DIR}/src/BinaryInfo/benchmark.ico
-      ${PROJECT_SOURCE_DIR}/src/BinaryInfo/benchmark.rc
-    )
-    set(XI_PG_SOURCES_OS
-      ${PROJECT_SOURCE_DIR}/src/BinaryInfo/pgservice.ico
-      ${PROJECT_SOURCE_DIR}/src/BinaryInfo/paymentgate.rc
-    )
-  endif()
-
-  add_executable(CLIDaemon ${XI_CLI_DAEMON_SOURCES} ${XI_CLI_DAEMON_SOURCES_OS})
-  add_executable(CLIMiner ${XI_CLI_MINER_SOURCES} ${XI_CLI_MINER_SOURCES_OS})
-  add_executable(CLIMinerBenchmark ${XI_CLI_MINER_BENCHMARK_SOURCES} ${XI_CLI_MINER_BENCHMARK_SOURCES_OS})
-  add_executable(CLIWallet ${XI_CLI_WALLET_SOURCES} ${XI_CLI_WALLET_SOURCES_OS})
-  add_executable(PGService ${service} ${XI_PG_SOURCES_OS})
-
-  if(MSVC)
-    set(XI_EXTRA_EXEC_LIBRARIES Rpcrt4)
-
-    target_include_directories(CLIDaemon PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
-    target_include_directories(CLIMiner PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
-    target_include_directories(CLIMinerBenchmark PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
-    target_include_directories(CLIWallet PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
-    target_include_directories(PGService PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
-  endif() # MSVC
-
-  target_link_libraries(CLIDaemon P2P Rpc Serialization System Xi.Http Logging CryptoNoteCore Crypto Common CommonCLI rocksdb boost cxxopts ${XI_EXTRA_EXEC_LIBRARIES})
-  target_link_libraries(CLIWallet CommonCLI Mnemonics Wallet NodeRpcProxy Transfers Rpc Xi.Http CryptoNoteCore System Logging Common CommonCLI boost cxxopts ${XI_EXTRA_EXEC_LIBRARIES})
-  target_link_libraries(CLIMiner CommonCLI CryptoNoteCore Rpc Serialization System Xi.Http Logging Common CommonCLI Crypto boost cxxopts ${XI_EXTRA_EXEC_LIBRARIES})
-  target_link_libraries(CLIMinerBenchmark CommonCLI CryptoNoteCore Serialization System Logging Common CommonCLI Crypto cxxopts cpu_features ${XI_EXTRA_EXEC_LIBRARIES})
-  target_link_libraries(PGService WalletService JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto Rpc Xi.Http System Logging Common rocksdb boost cxxopts ${XI_EXTRA_EXEC_LIBRARIES})
-
-  # Finally build the binaries
-  set_property(TARGET CLIDaemon PROPERTY OUTPUT_NAME "xi-daemon")
-  set_property(TARGET CLIWallet PROPERTY OUTPUT_NAME "xi-wallet")
-  set_property(TARGET CLIMiner PROPERTY OUTPUT_NAME "xi-miner")
-  set_property(TARGET CLIMinerBenchmark PROPERTY OUTPUT_NAME "xi-benchmark")
-  set_property(TARGET PGService PROPERTY OUTPUT_NAME "xi-pgservice")
-
-  # Install targets
-  install(
-    TARGETS
-      CLIDaemon
-      CLIWallet
-      CLIMiner
-      CLIMinerBenchmark
-      PGService
-
-    PERMISSIONS
-      OWNER_EXECUTE OWNER_WRITE OWNER_READ
-      GROUP_EXECUTE GROUP_WRITE GROUP_READ
-      WORLD_EXECUTE WORLD_WRITE WORLD_READ
-
-    RUNTIME DESTINATION
-      bin
-  )
-
   # Install license
   install(
     FILES

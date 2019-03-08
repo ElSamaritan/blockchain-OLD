@@ -33,17 +33,72 @@ xi_make_app(
     Logging
     Serialization
     cxxopts
-#    P2P
-#    Rpc
-#    System
-#    Xi.Http
-#    Logging
-#    CryptoNoteCore
-#    Crypto
-#    Common
-#    CommonCLI
-#    NodeRpcProxy
-#    rocksdb
-#    boost
-#    cxxopts
+    NodeRpcProxy
+)
+
+xi_make_app(
+  Xi-Benchmark
+
+  Xi.App.Benchmark
+
+  LEGACY_INCLUDE
+
+  LINK_LIBRARIES
+    Xi.App
+    Logging
+    Serialization
+    cxxopts
+    cpu_features
+)
+
+xi_make_app(
+  Xi-Daemon
+
+  Xi.App.Daemon
+
+  LEGACY_INCLUDE
+
+  LINK_LIBRARIES
+    Xi.App
+    cxxopts
+    ${XI_LIBRARIES}
+)
+
+xi_make_app(
+  Xi-Miner
+
+  Xi.App.Miner
+
+  LEGACY_INCLUDE
+
+  LINK_LIBRARIES
+    Xi.App
+    cxxopts
+    ${XI_LIBRARIES}
+)
+
+xi_make_app(
+  Xi-Wallet
+
+  Xi.App.Wallet
+
+  LEGACY_INCLUDE
+
+  LINK_LIBRARIES
+    Xi.App
+    cxxopts
+    ${XI_LIBRARIES}
+)
+
+xi_make_app(
+  Xi-PgService
+
+  Xi.App.PgService
+
+  LEGACY_INCLUDE
+
+  LINK_LIBRARIES
+    Xi.App
+    cxxopts
+    ${XI_LIBRARIES}
 )
