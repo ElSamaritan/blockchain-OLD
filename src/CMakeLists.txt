@@ -141,6 +141,21 @@ if(XI_BUILD_BREAKPAD)
   target_compile_definitions(Xi.CrashHandler INTERFACE XI_USE_BREAKPAD)
 endif()
 
+xi_make_library(App Xi-App)
+target_link_libraries(
+  Xi.App
+
+  PUBLIC
+    Xi.Core
+    boost
+    cxxopts
+    Serialization
+    Common
+    CommonCLI
+    CryptoNoteCore
+    NodeRpcProxy
+)
+
 file(GLOB_RECURSE CommonCLI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI/*")
 add_library(CommonCLI STATIC ${CommonCLI_SOURCES})
 target_include_directories(CommonCLI PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI")
