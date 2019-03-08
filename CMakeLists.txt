@@ -53,6 +53,7 @@ include(cmake/CompilerConfiguration.cmake)
 include(cmake/Platform.cmake)
 include(cmake/XiMakeLibrary.cmake)
 include(cmake/XiMakeApp.cmake)
+include(cmake/Licenses.cmake)
 
 ### Enable test integration
 if(XI_BUILD_TESTSUITE)

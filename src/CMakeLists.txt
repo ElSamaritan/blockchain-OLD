@@ -218,16 +218,3 @@ target_link_libraries(P2P PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Serialization PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Transfers PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(JsonRpcServer PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config Xi.Crypto)
-
-if(XI_BUILD_EXECUTABLES)
-  # Install license
-  install(
-    FILES
-      "${PROJECT_SOURCE_DIR}/LICENSE"
-      "${PROJECT_SOURCE_DIR}/THIRD_PARTY"
-      "${PROJECT_SOURCE_DIR}/THIRD_PARTY_LICENSE"
-
-    DESTINATION
-      licenses
-  )
-endif() # XI_BUILD_EXECUTABLES
