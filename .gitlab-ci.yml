@@ -51,7 +51,7 @@ variables:
 
 .linux_build_template: &linux_build_definition
   <<: *generic_build_definition
-  tags: ["docker", "four-cores"]
+  tags: ["docker"]
 
 Ubuntu Bionic - Build:
   <<: *linux_build_definition
