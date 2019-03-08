@@ -9,7 +9,10 @@
 #include <functional>
 #include <system_error>
 #include <vector>
+#include <future>
 #include <string>
+
+#include <Xi/Result.h>
 
 #include "crypto/crypto.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"
@@ -128,12 +131,19 @@ class INode {
                          const Callback& callback) = 0;
   virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks,
                          const Callback& callback) = 0;
+  virtual void getRawBlocksByRange(uint32_t height, uint32_t count, std::vector<RawBlock>& blocks,
+                                   const Callback& callback) = 0;
   virtual void getBlock(const uint32_t blockHeight, BlockDetails& block, const Callback& callback) = 0;
   virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes,
                                std::vector<TransactionDetails>& transactions, const Callback& callback) = 0;
   virtual void isSynchronized(bool& syncStatus, const Callback& callback) = 0;
   virtual std::string feeAddress() = 0;
   virtual uint32_t feeAmount() = 0;
+
+  // --------------------------------------- Convenient Boilerplate Code -------------------------------------------
+ public:
+  std::future<Xi::Result<void>> init();
+  std::future<Xi::Result<std::vector<RawBlock>>> getRawBlocksByRange(uint32_t height, uint32_t count);
 };
 
 }  // namespace CryptoNote

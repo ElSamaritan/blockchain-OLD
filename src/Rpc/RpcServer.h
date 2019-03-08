@@ -131,6 +131,8 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
                              F_COMMAND_RPC_GET_BLOCKS_LIST::response& res);
   bool f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& req,
                        F_COMMAND_RPC_GET_BLOCK_DETAILS::response& res);
+  bool f_on_blocks_list_raw(const F_COMMAND_RPC_GET_BLOCKS_RAW_BY_RANGE::request& req,
+                            F_COMMAND_RPC_GET_BLOCKS_RAW_BY_RANGE::response& res);
   bool f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAILS::request& req,
                              F_COMMAND_RPC_GET_TRANSACTION_DETAILS::response& res);
   bool f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::request& req, F_COMMAND_RPC_GET_POOL::response& res);

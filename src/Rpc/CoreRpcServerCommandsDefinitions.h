@@ -617,6 +617,28 @@ struct F_COMMAND_RPC_GET_BLOCK_DETAILS {
   };
 };
 
+struct F_COMMAND_RPC_GET_BLOCKS_RAW_BY_RANGE {
+  struct request {
+    uint32_t height;  ///< Index + 1
+    uint32_t count;   ///< Number of blocks to query, may not exceed 100.
+
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(height)
+    KV_MEMBER(count)
+    KV_END_SERIALIZATION
+  };
+
+  struct response {
+    std::string status;
+    std::vector<std::string> blobs;  ///< Raw blocks, binary serialized, as hex string.
+
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(status)
+    KV_MEMBER(blobs)
+    KV_END_SERIALIZATION
+  };
+};
+
 struct F_COMMAND_RPC_GET_TRANSACTION_DETAILS {
   struct request {
     std::string hash;

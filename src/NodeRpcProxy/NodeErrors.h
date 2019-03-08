@@ -26,12 +26,15 @@ namespace error {
 // custom error conditions enum type:
 enum NodeErrorCodes {
   NOT_INITIALIZED = 1,
-  ALREADY_INITIALIZED,
-  NETWORK_ERROR,
-  NODE_BUSY,
-  INTERNAL_NODE_ERROR,
-  REQUEST_ERROR,
-  CONNECT_ERROR
+  ALREADY_INITIALIZED = 2,
+  NETWORK_ERROR = 3,
+  NODE_BUSY = 4,
+  INTERNAL_NODE_ERROR = 5,
+  REQUEST_ERROR = 6,
+  RESPONSE_ERROR = 8,
+  CONNECT_ERROR = 7,
+
+  __Num = 9
 };
 
 // custom category:
@@ -59,6 +62,8 @@ class NodeErrorCategory : public std::error_category {
         return "Internal node error";
       case REQUEST_ERROR:
         return "Error in request parameters";
+      case RESPONSE_ERROR:
+        return "Error parsing a response";
       case CONNECT_ERROR:
         return "Can't connect to daemon";
       default:

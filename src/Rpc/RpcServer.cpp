@@ -186,6 +186,7 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
         // Enabled on block explorer
         {"f_blocks_list_json", {makeMemberMethod(&RpcServer::f_on_blocks_list_json), false, true}},
         {"f_block_json", {makeMemberMethod(&RpcServer::f_on_block_json), false, true}},
+        {"f_blocks_list_raw", {makeMemberMethod(&RpcServer::f_on_blocks_list_raw), false, true}},
         {"f_transaction_json", {makeMemberMethod(&RpcServer::f_on_transaction_json), false, true}},
         {"f_on_transactions_pool_json", {makeMemberMethod(&RpcServer::f_on_transactions_pool_json), false, true}},
         {"f_p2p_ban_info", {makeMemberMethod(&RpcServer::f_on_p2p_ban_info), false, true}},
@@ -839,6 +840,38 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
 
     res.block.totalFeeAmount += i_transaction_short.fee;
   }
+
+  res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
+
+bool RpcServer::f_on_blocks_list_raw(const F_COMMAND_RPC_GET_BLOCKS_RAW_BY_RANGE::request& req,
+                                     F_COMMAND_RPC_GET_BLOCKS_RAW_BY_RANGE::response& res) {
+  if (!isBlockexplorer()) {
+    return false;
+  }
+
+  if (req.height < 1) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_SMALL_HEIGHT, "height param must be at least 1."};
+  }
+
+  if (req.height > m_core.getTopBlockIndex() + 1) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_BIG_HEIGHT, "queried height exceeds local blockchain height."};
+  }
+
+  if (req.count < 1) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_WRONG_PARAM, "count must be at least 1"};
+  }
+
+  if (req.count > 100) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_WRONG_PARAM, "count may not exceed 100."};
+  }
+
+  auto rawBlocks = m_core.getBlocks(req.height - 1, req.count);
+  std::transform(rawBlocks.begin(), rawBlocks.end(), std::back_inserter(res.blobs), [](const auto& block) {
+    BinaryArray blob = toBinaryArray(block);
+    return Common::toHex(blob.data(), blob.size());
+  });
 
   res.status = CORE_RPC_STATUS_OK;
   return true;
