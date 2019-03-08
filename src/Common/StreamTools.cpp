@@ -20,6 +20,10 @@
 #include "IInputStream.h"
 #include "IOutputStream.h"
 
+#include <Xi/Utils/ExternalIncludePush.h>
+#include <boost/endian/conversion.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
+
 namespace Common {
 
 void read(IInputStream& in, void* data, size_t size) {
@@ -37,35 +41,35 @@ void read(IInputStream& in, void* data, size_t size) {
 void read(IInputStream& in, int8_t& value) { read(in, &value, sizeof(value)); }
 
 void read(IInputStream& in, int16_t& value) {
-  // TODO: Convert from little endian on big endian platforms
   read(in, &value, sizeof(value));
+  boost::endian::little_to_native_inplace(value);
 }
 
 void read(IInputStream& in, int32_t& value) {
-  // TODO: Convert from little endian on big endian platforms
   read(in, &value, sizeof(value));
+  boost::endian::little_to_native_inplace(value);
 }
 
 void read(IInputStream& in, int64_t& value) {
-  // TODO: Convert from little endian on big endian platforms
   read(in, &value, sizeof(value));
+  boost::endian::little_to_native_inplace(value);
 }
 
 void read(IInputStream& in, uint8_t& value) { read(in, &value, sizeof(value)); }
 
 void read(IInputStream& in, uint16_t& value) {
-  // TODO: Convert from little endian on big endian platforms
   read(in, &value, sizeof(value));
+  boost::endian::little_to_native_inplace(value);
 }
 
 void read(IInputStream& in, uint32_t& value) {
-  // TODO: Convert from little endian on big endian platforms
   read(in, &value, sizeof(value));
+  boost::endian::little_to_native_inplace(value);
 }
 
 void read(IInputStream& in, uint64_t& value) {
-  // TODO: Convert from little endian on big endian platforms
   read(in, &value, sizeof(value));
+  boost::endian::little_to_native_inplace(value);
 }
 
 void read(IInputStream& in, std::vector<uint8_t>& data, size_t size) {
@@ -182,34 +186,34 @@ void write(IOutputStream& out, const void* data, size_t size) {
 void write(IOutputStream& out, int8_t value) { write(out, &value, sizeof(value)); }
 
 void write(IOutputStream& out, int16_t value) {
-  // TODO: Convert to little endian on big endian platforms
+  boost::endian::native_to_little_inplace(value);
   write(out, &value, sizeof(value));
 }
 
 void write(IOutputStream& out, int32_t value) {
-  // TODO: Convert to little endian on big endian platforms
+  boost::endian::native_to_little_inplace(value);
   write(out, &value, sizeof(value));
 }
 
 void write(IOutputStream& out, int64_t value) {
-  // TODO: Convert to little endian on big endian platforms
+  boost::endian::native_to_little_inplace(value);
   write(out, &value, sizeof(value));
 }
 
 void write(IOutputStream& out, uint8_t value) { write(out, &value, sizeof(value)); }
 
 void write(IOutputStream& out, uint16_t value) {
-  // TODO: Convert to little endian on big endian platforms
+  boost::endian::native_to_little_inplace(value);
   write(out, &value, sizeof(value));
 }
 
 void write(IOutputStream& out, uint32_t value) {
-  // TODO: Convert to little endian on big endian platforms
+  boost::endian::native_to_little_inplace(value);
   write(out, &value, sizeof(value));
 }
 
 void write(IOutputStream& out, uint64_t value) {
-  // TODO: Convert to little endian on big endian platforms
+  boost::endian::native_to_little_inplace(value);
   write(out, &value, sizeof(value));
 }
 
