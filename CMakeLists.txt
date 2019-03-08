@@ -52,6 +52,7 @@ include(cmake/CompilerCheck.cmake)
 include(cmake/CompilerConfiguration.cmake)
 include(cmake/Platform.cmake)
 include(cmake/XiMakeLibrary.cmake)
+include(cmake/XiMakeApp.cmake)
 
 ### Enable test integration
 if(XI_BUILD_TESTSUITE)
@@ -60,6 +61,10 @@ endif() # XI_BUILD_TESTSUITE
 
 add_subdirectory(external)
 add_subdirectory(src)
+
+if(XI_BUILD_EXECUTABLES)
+  add_subdirectory(app)
+endif() # XI_BUILD_EXECUTABLES
 
 if(XI_BUILD_TOOLS)
   add_subdirectory(tools)

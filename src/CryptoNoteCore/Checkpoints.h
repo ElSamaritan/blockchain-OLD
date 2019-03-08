@@ -23,6 +23,7 @@
 #include <cinttypes>
 
 #include <Logging/LoggerRef.h>
+#include <crypto/CryptoTypes.h>
 
 #include "CryptoNoteBasicImpl.h"
 
@@ -31,7 +32,11 @@ class Checkpoints {
  public:
   Checkpoints(Logging::ILogger& log);
 
+  bool isEnabled() const;
+  void setEnabled(bool useCheckpoints);
+
   bool addCheckpoint(uint32_t index, const std::string& hash_str);
+  bool addCheckpoint(uint32_t index, const Crypto::Hash& hash);
   bool loadCheckpointsFromFile(const std::string& fileName);
   bool isInCheckpointZone(uint32_t index) const;
   bool checkBlock(uint32_t index, const Crypto::Hash& h) const;
@@ -42,6 +47,7 @@ class Checkpoints {
   uint32_t topCheckpointIndex() const;
 
  private:
+  bool m_enabled = false;
   std::map<uint32_t, Crypto::Hash> points;
   Logging::LoggerRef logger;
 };

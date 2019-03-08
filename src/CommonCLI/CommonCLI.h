@@ -72,7 +72,7 @@ void emplaceCLIOptions(cxxopts::Options& options);
  * \param result The parsed options result
  * \return true if the application should exit, otherwise false
  */
-bool handleCLIOptions(cxxopts::Options& options, const cxxopts::ParseResult& result);
+bool handleCLIOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result);
 
 /*!
  * \brief make_crash_dumper creates a crash dumper if breakpad was linked and enabled.

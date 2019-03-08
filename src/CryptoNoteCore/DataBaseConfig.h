@@ -7,11 +7,14 @@
 #pragma once
 
 #include <cstdint>
+#include <cassert>
+#include <stdexcept>
 #include <vector>
 #include <string>
 
 #include <Xi/Config/NetworkType.h>
 #include <Common/StringTools.h>
+#include <Serialization/ISerializer.h>
 
 namespace CryptoNote {
 
@@ -55,6 +58,8 @@ class DataBaseConfig {
   Xi::Config::Network::Type m_network;
   Compression compression;
 };
+
+void serialize(DataBaseConfig::Compression& compression, ISerializer& s);
 }  // namespace CryptoNote
 
 namespace Common {

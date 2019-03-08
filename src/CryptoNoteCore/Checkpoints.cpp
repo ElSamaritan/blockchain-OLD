@@ -25,6 +25,10 @@ using namespace Logging;
 namespace CryptoNote {
 //---------------------------------------------------------------------------
 Checkpoints::Checkpoints(Logging::ILogger &log) : logger(log, "checkpoints") {}
+
+bool Checkpoints::isEnabled() const { return m_enabled; }
+
+void Checkpoints::setEnabled(bool useCheckpoints) { m_enabled = useCheckpoints; }
 //---------------------------------------------------------------------------
 bool Checkpoints::addCheckpoint(uint32_t index, const std::string &hash_str) {
   Crypto::Hash h = NULL_HASH;
@@ -34,13 +38,16 @@ bool Checkpoints::addCheckpoint(uint32_t index, const std::string &hash_str) {
     return false;
   }
 
+  return addCheckpoint(index, h);
+}
+
+bool Checkpoints::addCheckpoint(uint32_t index, const Crypto::Hash &hash) {
   /* The return value lets us check if it was inserted or not. If it wasn't,
      there is already a key (i.e., a height value) existing */
-  if (!points.insert({index, h}).second) {
+  if (!points.insert({index, hash}).second) {
     logger(ERROR) << "CHECKPOINT ALREADY EXISTS!";
     return false;
   }
-
   return true;
 }
 
@@ -94,10 +101,13 @@ bool Checkpoints::loadCheckpointsFromFile(const std::string &filename) {
 
 //---------------------------------------------------------------------------
 bool Checkpoints::isInCheckpointZone(uint32_t index) const {
-  return !points.empty() && (index <= (--points.end())->first);
+  return m_enabled && !points.empty() && (index <= (--points.end())->first);
 }
 //---------------------------------------------------------------------------
 bool Checkpoints::checkBlock(uint32_t index, const Crypto::Hash &h, bool &isCheckpoint) const {
+  if (!m_enabled) {
+    return false;
+  }
   auto it = points.find(index);
   isCheckpoint = it != points.end();
   if (!isCheckpoint) return true;

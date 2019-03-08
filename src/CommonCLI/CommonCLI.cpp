@@ -120,14 +120,14 @@ std::string CommonCLI::insecureServerWarning() {
 
 void CommonCLI::emplaceCLIOptions(cxxopts::Options& options) {
   // clang-format off
-  options.add_options("Core")
+  options.add_options("general")
       ("help", "Display this help message")
       ("version", "Output software version information")
       ("vversion", "Output verbose software version information")
       ("os-version", "Output Operating System version information");
 
 #if defined(XI_USE_BREAKPAD)
-  options.add_options("Breakpad")
+  options.add_options("breakpad")
       ("breakpad-enable", "Enables creation of crash dumps to help developers reconstruct bugs occuring in release builds.",
        cxxopts::value<bool>(BreakpadConfig.IsEnabled)->implicit_value("true")->default_value("false"))
 
@@ -136,26 +136,26 @@ void CommonCLI::emplaceCLIOptions(cxxopts::Options& options) {
 
   if(isDevVersion())
   {
-    options.add_options("Breakpad")
+    options.add_options("breakpad")
       ("breakpad-upload", "Enables auto upload of crash dumps to the galaxia project breakpad server.",
        cxxopts::value<bool>(BreakpadConfig.IsUploadEnabled)->implicit_value("true")->default_value("false"));
   }
 
 #endif  // XI_USE_BREAKPAD
 
-  options.add_options("License")
+  options.add_options("license")
       ("license", "Print the project license and exits.")
       ("third-party","Prints a summary of all third party libraries used by this project.")
       ("third-party-licenses", "Prints every license included by third party libraries used by this project.");
 
   if(isDevVersion()) {
-    options.add_options("Development")("dev-mode", "Indicates you are aware of running a development version. "
+    options.add_options("development")("dev-mode", "Indicates you are aware of running a development version. "
                                                    "You must provide this flag in order to run the application.");
   }
   // clang-format on
 }
 
-bool CommonCLI::handleCLIOptions(cxxopts::Options& options, const cxxopts::ParseResult& result) {
+bool CommonCLI::handleCLIOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) {
   if (result.count("help")) {
     std::cout << options.help({}) << std::endl;
     return true;

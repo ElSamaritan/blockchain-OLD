@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,47 +21,38 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Error.h"
+#include "Exporter.h"
 
-#include <stdexcept>
-#include <cassert>
+#include <algorithm>
 
-Xi::Error::Error() : m_error{Error::not_initialized_tag{}} {}
-Xi::Error::Error(std::exception_ptr e) : m_error{e} {}
-Xi::Error::Error(std::error_code ec) : m_error{ec} {}
+#include <Xi/Exceptional.h>
 
-std::string Xi::Error::message() const {
-  if (isException()) {
-    try {
-      std::rethrow_exception(exception());
-    } catch (const std::exception& e) {
-      return e.what();
-    } catch (...) {
-      return "Unknown type has been thrown.";
-    }
-  } else if (isErrorCode()) {
-    return errorCode().message();
-  } else {
-    assert(isNotInitialized());
-    return "The underlying result was not initialized.";
+namespace {
+XI_DECLARE_EXCEPTIONAL_CATEGORY(XiSyncExporter)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidIndex, "start index is greater than available top block index", XiSyncExporter)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidBatchSize, "batch size must be at least 100", XiSyncExporter)
+}  // namespace
+
+XiSync::Exporter::Exporter(XiSync::DumpWriter &writer) : m_writer{writer} {}
+
+Xi::Result<void> XiSync::Exporter::exportBlocks(uint32_t startIndex, uint32_t count, uint32_t batchSize) {
+  XI_ERROR_TRY();
+  auto topIndex = topBlockIndex();
+  if (topIndex < startIndex) {
+    Xi::exceptional<InvalidIndexError>();
   }
-}
-
-bool Xi::Error::isException() const { return m_error.type() == typeid(std::exception_ptr); }
-std::exception_ptr Xi::Error::exception() const { return boost::get<std::exception_ptr>(m_error); }
-
-bool Xi::Error::isErrorCode() const { return m_error.type() == typeid(std::error_code); }
-std::error_code Xi::Error::errorCode() const { return boost::get<std::error_code>(m_error); }
-
-void Xi::Error::throwException() const {
-  if (isException()) {
-    std::rethrow_exception(exception());
-  } else if (isErrorCode()) {
-    throw std::runtime_error{message()};
-  } else {
-    assert(isNotInitialized());
-    throw std::runtime_error{message()};
+  if (batchSize < 100) {
+    Xi::exceptional<InvalidBatchSizeError>();
   }
-}
 
-bool Xi::Error::isNotInitialized() const { return m_error.type() == typeid(not_initialized_tag); }
+  uint32_t totalWritten = 0;
+  while (startIndex <= topIndex && totalWritten < count) {
+    uint32_t querySize = std::min(batchSize, count - totalWritten);
+    auto blocks = queryBlocks(startIndex, querySize);
+    m_writer.write(0, std::move(blocks)).throwOnError();
+    startIndex += querySize;
+    totalWritten += querySize;
+  }
+  return Xi::make_result<void>();
+  XI_ERROR_CATCH();
+}

@@ -19,13 +19,19 @@
 
 #include <string>
 #include <array>
+#include <memory>
+
+#include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
+
+#include <Xi/Result.h>
+
+#include "Logging/Level.h"
 
 #undef ERROR
 
 namespace Logging {
-
-enum Level { FATAL = 0, ERROR = 1, WARNING = 2, INFO = 3, DEBUGGING = 4, TRACE = 5 };
 
 extern const std::string BLUE;
 extern const std::string GREEN;
@@ -46,6 +52,9 @@ extern const std::string DEFAULT;
 const std::string& defaultColor(Level level);
 
 class ILogger {
+ public:
+  static Xi::Result<std::unique_ptr<ILogger>> fromConfiguration(const struct LoggerConfiguration& config);
+
  public:
   const static char COLOR_DELIMETER;
   const static std::array<std::string, 6> LEVEL_NAMES;

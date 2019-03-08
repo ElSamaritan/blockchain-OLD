@@ -114,6 +114,11 @@ class NodeRpcStub : public CryptoNote::INode {
     XI_UNUSED(blockHeight, block, callback);
   }
 
+  virtual void getRawBlocksByRange(uint32_t height, uint32_t count, std::vector<CryptoNote::RawBlock>& blocks,
+                                   const Callback& callback) override {
+    XI_UNUSED(height, count, blocks, callback);
+  }
+
   virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes,
                                std::vector<CryptoNote::TransactionDetails>& transactions,
                                const Callback& callback) override {

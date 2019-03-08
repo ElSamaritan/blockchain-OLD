@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,47 +21,27 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Error.h"
+#pragma once
 
-#include <stdexcept>
-#include <cassert>
+#include <Logging/ILogger.h>
+#include <Logging/LoggerRef.h>
+#include <CryptoNoteCore/ICore.h>
+#include <CryptoNoteCore/Checkpoints.h>
 
-Xi::Error::Error() : m_error{Error::not_initialized_tag{}} {}
-Xi::Error::Error(std::exception_ptr e) : m_error{e} {}
-Xi::Error::Error(std::error_code ec) : m_error{ec} {}
+#include "DumpReader.h"
 
-std::string Xi::Error::message() const {
-  if (isException()) {
-    try {
-      std::rethrow_exception(exception());
-    } catch (const std::exception& e) {
-      return e.what();
-    } catch (...) {
-      return "Unknown type has been thrown.";
-    }
-  } else if (isErrorCode()) {
-    return errorCode().message();
-  } else {
-    assert(isNotInitialized());
-    return "The underlying result was not initialized.";
-  }
-}
+namespace XiSync {
+class Importer : public DumpReader::Visitor {
+ public:
+  Importer(CryptoNote::ICore& core, CryptoNote::Checkpoints& checkpoints, Logging::ILogger& logger);
+  ~Importer() override = default;
 
-bool Xi::Error::isException() const { return m_error.type() == typeid(std::exception_ptr); }
-std::exception_ptr Xi::Error::exception() const { return boost::get<std::exception_ptr>(m_error); }
+  BatchCommand onInfo(const BatchInfo& info) override;
+  void onBatch(Batch batch) override;
 
-bool Xi::Error::isErrorCode() const { return m_error.type() == typeid(std::error_code); }
-std::error_code Xi::Error::errorCode() const { return boost::get<std::error_code>(m_error); }
-
-void Xi::Error::throwException() const {
-  if (isException()) {
-    std::rethrow_exception(exception());
-  } else if (isErrorCode()) {
-    throw std::runtime_error{message()};
-  } else {
-    assert(isNotInitialized());
-    throw std::runtime_error{message()};
-  }
-}
-
-bool Xi::Error::isNotInitialized() const { return m_error.type() == typeid(not_initialized_tag); }
+ private:
+  CryptoNote::ICore& m_core;
+  CryptoNote::Checkpoints& m_checkpoints;
+  Logging::LoggerRef m_logger;
+};
+}  // namespace XiSync

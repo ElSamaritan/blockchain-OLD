@@ -45,6 +45,17 @@ namespace Xi {
  */
 class [[nodiscard]] Error {
  public:
+  struct not_initialized_tag {};
+
+ public:
+  /*!
+   * \brief Error creates an not initialiezd error.
+   *
+   * Even if an error is not initialized properly it is considered as an error. This constructor is necessary to use
+   * errors in many STL parts as they assume/require types to be default constructible.
+   */
+  explicit Error();
+
   /*!
    * \brief Error creates an error from an catched exception.
    * \param e The exception_ptr catched
@@ -95,12 +106,17 @@ class [[nodiscard]] Error {
   std::error_code errorCode() const;
 
   /*!
+   * \brief isNotInitialized the underlying erro was caused my a missing initialization.
+   */
+  bool isNotInitialized() const;
+
+  /*!
    * \brief throwException Throws a runtime exception containing the error message.
    */
   [[noreturn]] void throwException() const;
 
  private:
-  boost::variant<std::exception_ptr, std::error_code> m_error;
+  boost::variant<not_initialized_tag, std::exception_ptr, std::error_code> m_error;
 };
 
 inline Error make_error(std::exception_ptr e) { return Error{e}; }

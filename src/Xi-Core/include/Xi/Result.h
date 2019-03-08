@@ -35,6 +35,24 @@
 #include <Xi/Error.h>
 
 namespace Xi {
+/*!
+ * \brief The Result class wraps an expected return value to be either the value or an error.
+ *
+ * This class enables methods to fail and propagate errors if one of their dependencies fail.
+ *
+ * \attention Whenever you return a result you may never throw an exception \see XI_ERROR_TRY and XI_ERROR CATCH
+ *
+ * \code{.cpp}
+ * Xi::Result<Transaction> Proxy::queryTransaction(const Crypto::Hash& id) {
+ *  XI_ERROR_TRY();
+ *  // Assume we have a load balance that may return a result encoding an error or a valid remote serving the
+ *  // transaction.
+ *  auto remote = m_loadBalancer.queryTransactionRemote(id).takeOrThrow();
+ *  return remote->queryTransaction(id);
+ *  XI_ERROR_CATCH();
+ * }
+ * \endcode
+ */
 template <typename _ValueT>
 class [[nodiscard]] Result {
  public:
@@ -47,6 +65,7 @@ class [[nodiscard]] Result {
   value_t value(std::false_type) const { return boost::get<value_t>(m_result); }
 
  public:
+  explicit Result() : m_result{Error{}} {}
   /* implicit */ Result(const Error& err) : m_result{err} {}
   /* implicit */ Result(value_t && value) : m_result{std::forward<value_t>(value)} {}
 
@@ -84,13 +103,16 @@ class [[nodiscard]] Result {
   }
 };
 
+struct result_success {};
+
 template <>
 class [[nodiscard]] Result<void> {
  private:
   boost::optional<Error> m_error;
 
  public:
-  explicit Result() = default;
+  explicit Result() : m_error{Error{}} {}
+  /* implicit */ Result(result_success) : m_error{boost::none} {}
   /* implicit */ Result(const Error& err) : m_error{err} {}
   XI_DEFAULT_COPY(Result);
   XI_DEFAULT_MOVE(Result);
@@ -114,7 +136,7 @@ inline Result<_ValueT> make_result(_ArgsT&&... args) {
 
 template <>
 inline Result<void> make_result<void>() {
-  return Result<void>{};
+  return Result<void>{result_success{}};
 }
 
 }  // namespace Xi

@@ -170,14 +170,14 @@ const std::chrono::seconds OUTDATED_TRANSACTION_POLLING_INTERVAL = std::chrono::
 
 }  // namespace
 
-Core::Core(const Currency& currency, Logging::ILogger& logger, Checkpoints&& checkpoints,
-           System::Dispatcher& dispatcher, std::unique_ptr<IBlockchainCacheFactory>&& blockchainCacheFactory,
+Core::Core(const Currency& currency, Logging::ILogger& logger, Checkpoints& checkpoints, System::Dispatcher& dispatcher,
+           std::unique_ptr<IBlockchainCacheFactory>&& blockchainCacheFactory,
            std::unique_ptr<IMainChainStorage>&& mainchainStorage)
     : m_currency(currency),
       dispatcher(dispatcher),
       contextGroup(dispatcher),
       logger(logger, "Core"),
-      checkpoints(std::move(checkpoints)),
+      checkpoints(checkpoints),
       m_upgradeManager(new UpgradeManager()),
       blockchainCacheFactory(std::move(blockchainCacheFactory)),
       mainChainStorage(std::move(mainchainStorage)),
@@ -745,8 +745,9 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   uint64_t cumulativeFee = 0;
   for (const auto& transaction : transactions) {
     uint64_t fee = 0;
-    auto transactionValidationResult = validateTransaction(transaction, validatorState, cache, fee, previousBlockIndex,
-                                                           cachedBlock.getBlock().majorVersion);
+    auto transactionValidationResult =
+        validateTransaction(transaction, validatorState, cache, fee, previousBlockIndex,
+                            cachedBlock.getBlock().majorVersion, cachedBlock.getBlock().timestamp);
     if (transactionValidationResult) {
       logger(Logging::DEBUGGING) << "Failed to validate transaction " << transaction.getTransactionHash() << ": "
                                  << transactionValidationResult.message();
@@ -1494,7 +1495,7 @@ std::error_code Core::validateStaticReward(const Transaction& transaction, uint3
 
 std::error_code Core::validateTransaction(const CachedTransaction& cachedTransaction, TransactionValidatorState& state,
                                           IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex,
-                                          uint8_t blockMajorVersion) {
+                                          uint8_t blockMajorVersion, uint64_t blockTimestamp) {
   // TransactionValidatorState currentState;
   if (cachedTransaction.getTransactionBinaryArray().size() > currency().maxTxSize(blockMajorVersion)) {
     return error::TransactionValidationError::TOO_LARGE;
@@ -1532,7 +1533,7 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
         }
 
         auto result = cache->extractKeyOutputKeys(in.amount, blockIndex, {globalIndexes.data(), globalIndexes.size()},
-                                                  outputKeys);
+                                                  outputKeys, blockTimestamp);
         if (result == ExtractOutputKeysResult::INVALID_GLOBAL_INDEX) {
           return error::TransactionValidationError::INPUT_INVALID_GLOBAL_INDEX;
         }

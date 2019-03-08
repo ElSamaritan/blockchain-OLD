@@ -539,6 +539,18 @@ void NodeRpcProxy::getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::
                   callback);
 }
 
+void NodeRpcProxy::getRawBlocksByRange(uint32_t height, uint32_t count, std::vector<RawBlock>& blocks,
+                                       const INode::Callback& callback) {
+  std::lock_guard<std::mutex> lock{m_mutex};
+
+  if (m_state != STATE_INITIALIZED) {
+    callback(make_error_code(error::NOT_INITIALIZED));
+    return;
+  }
+
+  scheduleRequest(std::bind(&NodeRpcProxy::doGetRawBlocksByRange, this, height, count, std::ref(blocks)), callback);
+}
+
 void NodeRpcProxy::getBlock(const uint32_t blockHeight, BlockDetails& block, const Callback& callback) {
   std::lock_guard<std::mutex> lock(m_mutex);
   if (m_state != STATE_INITIALIZED) {
@@ -752,6 +764,35 @@ std::error_code NodeRpcProxy::doGetBlocksByHash(const std::vector<Crypto::Hash>&
   }
 
   blocks = std::move(resp.blocks);
+  return ec;
+}
+
+std::error_code NodeRpcProxy::doGetRawBlocksByRange(uint32_t height, uint32_t count, std::vector<RawBlock>& blocks) {
+  F_COMMAND_RPC_GET_BLOCKS_RAW_BY_RANGE::request req = AUTO_VAL_INIT(req);
+  F_COMMAND_RPC_GET_BLOCKS_RAW_BY_RANGE::response resp = AUTO_VAL_INIT(resp);
+
+  req.height = height;
+  req.count = count;
+
+  std::error_code ec = jsonRpcCommand("f_blocks_list_raw", req, resp);
+  if (ec) {
+    return ec;
+  }
+
+  size_t blocksOffset = blocks.size();
+  blocks.reserve(blocksOffset + resp.blobs.size());
+  for (const auto& hexBlob : resp.blobs) {
+    BinaryArray binaryParsed;
+    if (!Common::fromHex(hexBlob, binaryParsed)) {
+      return make_error_code(error::RESPONSE_ERROR);
+    }
+    RawBlock blockParsed;
+    if (!fromBinaryArray(blockParsed, binaryParsed)) {
+      return make_error_code(error::RESPONSE_ERROR);
+    }
+    blocks.emplace_back(std::move(blockParsed));
+  }
+
   return ec;
 }
 

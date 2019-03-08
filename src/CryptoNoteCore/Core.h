@@ -45,7 +45,7 @@ class Core : public ICore,
              public IBlockchain, /* TODO move to Blockchain class */
              ITransactionPoolObserver {
  public:
-  Core(const Currency& currency, Logging::ILogger& logger, Checkpoints&& checkpoints, System::Dispatcher& dispatcher,
+  Core(const Currency& currency, Logging::ILogger& logger, Checkpoints& checkpoints, System::Dispatcher& dispatcher,
        std::unique_ptr<IBlockchainCacheFactory>&& blockchainCacheFactory,
        std::unique_ptr<IMainChainStorage>&& mainChainStorage);
   virtual ~Core() override;
@@ -164,7 +164,7 @@ class Core : public ICore,
   System::Dispatcher& dispatcher;
   System::ContextGroup contextGroup;
   Logging::LoggerRef logger;
-  Checkpoints checkpoints;
+  Checkpoints& checkpoints;
   std::unique_ptr<IUpgradeManager> m_upgradeManager;
   std::vector<std::unique_ptr<IBlockchainCache>> chainsStorage;
   std::vector<IBlockchainCache*> chainsLeaves;
@@ -195,7 +195,7 @@ class Core : public ICore,
   std::error_code validateSemantic(const Transaction& transaction, uint64_t& fee, uint32_t blockIndex);
   std::error_code validateTransaction(const CachedTransaction& transaction, TransactionValidatorState& state,
                                       IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex,
-                                      uint8_t blockMajorVersion);
+                                      uint8_t blockMajorVersion, uint64_t blockTimestamp);
 
   Xi::Result<uint32_t> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds) const;
   std::vector<Crypto::Hash> getBlockHashes(uint32_t startBlockIndex, uint32_t maxCount) const;

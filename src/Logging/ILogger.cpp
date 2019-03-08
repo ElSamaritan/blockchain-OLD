@@ -71,6 +71,8 @@ const std::array<std::string, 6> ILogger::LEVEL_NAMES = {{"FATAL", "ERROR", "WAR
 
 const std::string &defaultColor(Level level) {
   switch (level) {
+    case NONE:
+      return DEFAULT;
     case FATAL:
       return MAGENTA;
     case ERROR:
@@ -85,6 +87,11 @@ const std::string &defaultColor(Level level) {
       return CYAN;
   }
   return DEFAULT;
+}
+
+Xi::Result<std::unique_ptr<ILogger>> ILogger::fromConfiguration(const LoggerConfiguration &config) {
+  XI_UNUSED(config);
+  return Xi::make_result<std::unique_ptr<ILogger>>(nullptr);
 }
 
 }  // namespace Logging

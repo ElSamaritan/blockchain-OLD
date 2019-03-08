@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,47 +21,50 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Error.h"
+#pragma once
 
-#include <stdexcept>
-#include <cassert>
+#include <fstream>
+#include <memory>
 
-Xi::Error::Error() : m_error{Error::not_initialized_tag{}} {}
-Xi::Error::Error(std::exception_ptr e) : m_error{e} {}
-Xi::Error::Error(std::error_code ec) : m_error{ec} {}
+#include <Xi/Global.h>
+#include <Xi/Result.h>
+#include <Common/StdInputStream.h>
+#include <Serialization/BinaryInputStreamSerializer.h>
 
-std::string Xi::Error::message() const {
-  if (isException()) {
-    try {
-      std::rethrow_exception(exception());
-    } catch (const std::exception& e) {
-      return e.what();
-    } catch (...) {
-      return "Unknown type has been thrown.";
-    }
-  } else if (isErrorCode()) {
-    return errorCode().message();
-  } else {
-    assert(isNotInitialized());
-    return "The underlying result was not initialized.";
-  }
-}
+#include "Batch.h"
 
-bool Xi::Error::isException() const { return m_error.type() == typeid(std::exception_ptr); }
-std::exception_ptr Xi::Error::exception() const { return boost::get<std::exception_ptr>(m_error); }
+namespace XiSync {
+class DumpReader final {
+ public:
+  class Visitor {
+   public:
+    enum struct BatchCommand { Skip, Read };
 
-bool Xi::Error::isErrorCode() const { return m_error.type() == typeid(std::error_code); }
-std::error_code Xi::Error::errorCode() const { return boost::get<std::error_code>(m_error); }
+   public:
+    virtual ~Visitor() = default;
 
-void Xi::Error::throwException() const {
-  if (isException()) {
-    std::rethrow_exception(exception());
-  } else if (isErrorCode()) {
-    throw std::runtime_error{message()};
-  } else {
-    assert(isNotInitialized());
-    throw std::runtime_error{message()};
-  }
-}
+    virtual BatchCommand onInfo(const BatchInfo& info) = 0;
+    virtual void onBatch(Batch info) = 0;
+  };
 
-bool Xi::Error::isNotInitialized() const { return m_error.type() == typeid(not_initialized_tag); }
+ public:
+  static Xi::Result<std::unique_ptr<DumpReader>> open(const std::string& file, Visitor& visitor);
+
+ public:
+  XI_DELETE_COPY(DumpReader);
+  XI_DELETE_MOVE(DumpReader);
+  ~DumpReader() = default;
+
+  Xi::Result<bool> next();
+  Xi::Result<void> readAll();
+
+ private:
+  DumpReader(const std::string& file, Visitor& visitor);
+
+ private:
+  Visitor& m_visitor;
+  std::ifstream m_stdStream;
+  Common::StdInputStream m_streamWrapper;
+  CryptoNote::BinaryInputStreamSerializer m_serializer;
+};
+}  // namespace XiSync

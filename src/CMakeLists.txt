@@ -46,7 +46,6 @@ file(GLOB_RECURSE WalletLegacy WalletLegacy/*)
 file(GLOB_RECURSE JsonRpcServer JsonRpcServer/*)
 file(GLOB_RECURSE service WalletService/*)
 file(GLOB_RECURSE XI_CLI_DAEMON_SOURCES Daemon/*)
-file(GLOB_RECURSE XI_CLI_DAEMON_SYNC_SOURCES DaemonSync/*)
 file(GLOB_RECURSE XI_CLI_MINER_SOURCES Miner/*)
 file(GLOB_RECURSE XI_CLI_MINER_BENCHMARK_SOURCES MinerBenchmark/*)
 file(GLOB_RECURSE XI_CLI_WALLET_SOURCES zedwallet/*)
@@ -65,7 +64,7 @@ endif()
 foreach(source_file ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} ${XI_CLI_DAEMON_SOURCES} ${service}
                    ${JsonRpcServer} ${Logging} ${XI_CLI_MINER_SOURCES} ${Mnemonics} ${NodeRpcProxy} ${P2p}
                    ${Rpc} ${Serialization} ${System} ${Transfers} ${Wallet} ${WalletLegacy} ${XI_CLI_WALLET_SOURCES}
-                   ${BlockchainExplorer} ${XI_CLI_MINER_BENCHMARK_SOURCES} ${XI_CLI_DAEMON_SYNC_SOURCES})
+                   ${BlockchainExplorer} ${XI_CLI_MINER_BENCHMARK_SOURCES})
   if(XI_CXX_FLAGS)
     set_source_files_properties(${source_file} PROPERTIES COMPILE_FLAGS "${XI_CXX_FLAGS}")
   endif() # XI_CXX_FLAGS
@@ -234,10 +233,6 @@ if(XI_BUILD_EXECUTABLES)
       ${PROJECT_SOURCE_DIR}/src/BinaryInfo/daemon.ico
       ${PROJECT_SOURCE_DIR}/src/BinaryInfo/daemon.rc
     )
-    set(XI_CLI_DAEMON_SYNC_SOURCES_OS
-      ${PROJECT_SOURCE_DIR}/src/BinaryInfo/sync.ico
-      ${PROJECT_SOURCE_DIR}/src/BinaryInfo/sync.rc
-    )
     set(XI_CLI_WALLET_SOURCES_OS
       ${PROJECT_SOURCE_DIR}/src/BinaryInfo/wallet.ico
       ${PROJECT_SOURCE_DIR}/src/BinaryInfo/wallet.rc
@@ -257,7 +252,6 @@ if(XI_BUILD_EXECUTABLES)
   endif()
 
   add_executable(CLIDaemon ${XI_CLI_DAEMON_SOURCES} ${XI_CLI_DAEMON_SOURCES_OS})
-  add_executable(CLIDaemonSync ${XI_CLI_DAEMON_SYNC_SOURCES} ${XI_CLI_DAEMON_SYNC_SOURCES_OS})
   add_executable(CLIMiner ${XI_CLI_MINER_SOURCES} ${XI_CLI_MINER_SOURCES_OS})
   add_executable(CLIMinerBenchmark ${XI_CLI_MINER_BENCHMARK_SOURCES} ${XI_CLI_MINER_BENCHMARK_SOURCES_OS})
   add_executable(CLIWallet ${XI_CLI_WALLET_SOURCES} ${XI_CLI_WALLET_SOURCES_OS})
@@ -267,7 +261,6 @@ if(XI_BUILD_EXECUTABLES)
     set(XI_EXTRA_EXEC_LIBRARIES Rpcrt4)
 
     target_include_directories(CLIDaemon PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
-    target_include_directories(CLIDaemonSync PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
     target_include_directories(CLIMiner PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
     target_include_directories(CLIMinerBenchmark PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
     target_include_directories(CLIWallet PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/BinaryInfo")
@@ -275,7 +268,6 @@ if(XI_BUILD_EXECUTABLES)
   endif() # MSVC
 
   target_link_libraries(CLIDaemon P2P Rpc Serialization System Xi.Http Logging CryptoNoteCore Crypto Common CommonCLI rocksdb boost cxxopts ${XI_EXTRA_EXEC_LIBRARIES})
-  target_link_libraries(CLIDaemonSync P2P Rpc Serialization System Xi.Http Logging CryptoNoteCore Crypto Common CommonCLI rocksdb boost cxxopts ${XI_EXTRA_EXEC_LIBRARIES})
   target_link_libraries(CLIWallet CommonCLI Mnemonics Wallet NodeRpcProxy Transfers Rpc Xi.Http CryptoNoteCore System Logging Common CommonCLI boost cxxopts ${XI_EXTRA_EXEC_LIBRARIES})
   target_link_libraries(CLIMiner CommonCLI CryptoNoteCore Rpc Serialization System Xi.Http Logging Common CommonCLI Crypto boost cxxopts ${XI_EXTRA_EXEC_LIBRARIES})
   target_link_libraries(CLIMinerBenchmark CommonCLI CryptoNoteCore Serialization System Logging Common CommonCLI Crypto cxxopts cpu_features ${XI_EXTRA_EXEC_LIBRARIES})
@@ -283,7 +275,6 @@ if(XI_BUILD_EXECUTABLES)
 
   # Finally build the binaries
   set_property(TARGET CLIDaemon PROPERTY OUTPUT_NAME "xi-daemon")
-  set_property(TARGET CLIDaemonSync PROPERTY OUTPUT_NAME "xi-sync")
   set_property(TARGET CLIWallet PROPERTY OUTPUT_NAME "xi-wallet")
   set_property(TARGET CLIMiner PROPERTY OUTPUT_NAME "xi-miner")
   set_property(TARGET CLIMinerBenchmark PROPERTY OUTPUT_NAME "xi-benchmark")
@@ -293,7 +284,6 @@ if(XI_BUILD_EXECUTABLES)
   install(
     TARGETS
       CLIDaemon
-      CLIDaemonSync
       CLIWallet
       CLIMiner
       CLIMinerBenchmark

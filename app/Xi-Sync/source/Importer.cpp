@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,47 +21,41 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Error.h"
+#include "Importer.h"
 
-#include <stdexcept>
-#include <cassert>
+#include <Xi/Exceptional.h>
 
-Xi::Error::Error() : m_error{Error::not_initialized_tag{}} {}
-Xi::Error::Error(std::exception_ptr e) : m_error{e} {}
-Xi::Error::Error(std::error_code ec) : m_error{ec} {}
+namespace {
+XI_DECLARE_EXCEPTIONAL_CATEGORY(SyncImport)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidBlock, "a block in the dump file is invalid", SyncImport)
+}  // namespace
 
-std::string Xi::Error::message() const {
-  if (isException()) {
-    try {
-      std::rethrow_exception(exception());
-    } catch (const std::exception& e) {
-      return e.what();
-    } catch (...) {
-      return "Unknown type has been thrown.";
+XiSync::Importer::Importer(CryptoNote::ICore &core, CryptoNote::Checkpoints &checkpoints, Logging::ILogger &logger)
+    : m_core{core}, m_checkpoints{checkpoints}, m_logger{logger, "Sync-Importer"} {}
+
+XiSync::DumpReader::Visitor::BatchCommand XiSync::Importer::onInfo(const XiSync::BatchInfo &info) {
+  auto currentTopIndex = m_core.getTopBlockIndex();
+  if (currentTopIndex >= info.StartIndex + info.StartIndex + info.Count) {
+    return BatchCommand::Skip;
+  } else {
+    return BatchCommand::Read;
+  }
+}
+
+void XiSync::Importer::onBatch(XiSync::Batch batch) {
+  auto currentTopIndex = m_core.getTopBlockIndex();
+
+  for (const auto &checkpoint : batch.Info.Checkpoints) {
+    m_checkpoints.addCheckpoint(checkpoint.first, checkpoint.second);
+  }
+
+  for (uint32_t index = 0; index < batch.Blocks.size(); ++index) {
+    if (currentTopIndex >= batch.Info.StartIndex + index) {
+      continue;
     }
-  } else if (isErrorCode()) {
-    return errorCode().message();
-  } else {
-    assert(isNotInitialized());
-    return "The underlying result was not initialized.";
+    auto res = m_core.addBlock(std::move(batch.Blocks[index]));
+    if (res != CryptoNote::error::AddBlockErrorCondition::BLOCK_ADDED) {
+      Xi::exceptional<InvalidBlockError>();
+    }
   }
 }
-
-bool Xi::Error::isException() const { return m_error.type() == typeid(std::exception_ptr); }
-std::exception_ptr Xi::Error::exception() const { return boost::get<std::exception_ptr>(m_error); }
-
-bool Xi::Error::isErrorCode() const { return m_error.type() == typeid(std::error_code); }
-std::error_code Xi::Error::errorCode() const { return boost::get<std::error_code>(m_error); }
-
-void Xi::Error::throwException() const {
-  if (isException()) {
-    std::rethrow_exception(exception());
-  } else if (isErrorCode()) {
-    throw std::runtime_error{message()};
-  } else {
-    assert(isNotInitialized());
-    throw std::runtime_error{message()};
-  }
-}
-
-bool Xi::Error::isNotInitialized() const { return m_error.type() == typeid(not_initialized_tag); }

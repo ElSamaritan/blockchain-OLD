@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,47 +21,57 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Error.h"
+#include "DumpReader.h"
 
-#include <stdexcept>
 #include <cassert>
+#include <utility>
+#include <stdexcept>
 
-Xi::Error::Error() : m_error{Error::not_initialized_tag{}} {}
-Xi::Error::Error(std::exception_ptr e) : m_error{e} {}
-Xi::Error::Error(std::error_code ec) : m_error{ec} {}
+#include "DumpHeader.h"
 
-std::string Xi::Error::message() const {
-  if (isException()) {
-    try {
-      std::rethrow_exception(exception());
-    } catch (const std::exception& e) {
-      return e.what();
-    } catch (...) {
-      return "Unknown type has been thrown.";
-    }
-  } else if (isErrorCode()) {
-    return errorCode().message();
-  } else {
-    assert(isNotInitialized());
-    return "The underlying result was not initialized.";
-  }
+Xi::Result<std::unique_ptr<XiSync::DumpReader>> XiSync::DumpReader::open(const std::string &file,
+                                                                         XiSync::DumpReader::Visitor &visitor) {
+  XI_ERROR_TRY();
+  return Xi::make_result<std::unique_ptr<XiSync::DumpReader>>(new DumpReader{file, visitor});
+  XI_ERROR_CATCH();
 }
 
-bool Xi::Error::isException() const { return m_error.type() == typeid(std::exception_ptr); }
-std::exception_ptr Xi::Error::exception() const { return boost::get<std::exception_ptr>(m_error); }
-
-bool Xi::Error::isErrorCode() const { return m_error.type() == typeid(std::error_code); }
-std::error_code Xi::Error::errorCode() const { return boost::get<std::error_code>(m_error); }
-
-void Xi::Error::throwException() const {
-  if (isException()) {
-    std::rethrow_exception(exception());
-  } else if (isErrorCode()) {
-    throw std::runtime_error{message()};
+Xi::Result<bool> XiSync::DumpReader::next() {
+  XI_ERROR_TRY();
+  BatchInfo nfo;
+  m_serializer(nfo, "");
+  if (m_visitor.onInfo(nfo) == Visitor::BatchCommand::Skip) {
+    m_stdStream.ignore(static_cast<int64_t>(nfo.BinarySize));
   } else {
-    assert(isNotInitialized());
-    throw std::runtime_error{message()};
+    assert(m_visitor.onInfo(nfo) == Visitor::BatchCommand::Read);
+    Batch batch;
+    batch.Info = std::move(nfo);
+    m_serializer(batch.Blocks, "");
+    m_visitor.onBatch(std::move(batch));
   }
+  return m_stdStream.peek() != EOF && !m_stdStream.eof();
+  XI_ERROR_CATCH();
 }
 
-bool Xi::Error::isNotInitialized() const { return m_error.type() == typeid(not_initialized_tag); }
+Xi::Result<void> XiSync::DumpReader::readAll() {
+  XI_ERROR_TRY();
+  while (next().valueOrThrow())
+    ;
+  return Xi::make_result<void>();
+  XI_ERROR_CATCH();
+}
+
+XiSync::DumpReader::DumpReader(const std::string &file, XiSync::DumpReader::Visitor &visitor)
+    : m_visitor{visitor},
+      m_stdStream{file, std::ios::binary | std::ios::in},
+      m_streamWrapper{m_stdStream},
+      m_serializer{m_streamWrapper} {
+  if (!m_stdStream.good()) {
+    throw std::runtime_error{std::string{"unable to open dump file: "} + file};
+  }
+  DumpHeader header;
+  m_serializer(header, "");
+  if (header.Version != 1) {
+    throw std::runtime_error{std::string{"unsupported dump file version: "} + std::to_string(header.Version)};
+  }
+}

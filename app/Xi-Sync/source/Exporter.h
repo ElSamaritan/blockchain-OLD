@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,47 +21,30 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Error.h"
+#pragma once
 
-#include <stdexcept>
-#include <cassert>
+#include <vector>
 
-Xi::Error::Error() : m_error{Error::not_initialized_tag{}} {}
-Xi::Error::Error(std::exception_ptr e) : m_error{e} {}
-Xi::Error::Error(std::error_code ec) : m_error{ec} {}
+#include <Xi/Result.h>
+#include <CryptoNoteCore/CryptoNote.h>
 
-std::string Xi::Error::message() const {
-  if (isException()) {
-    try {
-      std::rethrow_exception(exception());
-    } catch (const std::exception& e) {
-      return e.what();
-    } catch (...) {
-      return "Unknown type has been thrown.";
-    }
-  } else if (isErrorCode()) {
-    return errorCode().message();
-  } else {
-    assert(isNotInitialized());
-    return "The underlying result was not initialized.";
-  }
-}
+#include "DumpWriter.h"
 
-bool Xi::Error::isException() const { return m_error.type() == typeid(std::exception_ptr); }
-std::exception_ptr Xi::Error::exception() const { return boost::get<std::exception_ptr>(m_error); }
+namespace XiSync {
+class Exporter {
+ protected:
+  Exporter(DumpWriter& writer);
 
-bool Xi::Error::isErrorCode() const { return m_error.type() == typeid(std::error_code); }
-std::error_code Xi::Error::errorCode() const { return boost::get<std::error_code>(m_error); }
+ public:
+  virtual ~Exporter() = default;
 
-void Xi::Error::throwException() const {
-  if (isException()) {
-    std::rethrow_exception(exception());
-  } else if (isErrorCode()) {
-    throw std::runtime_error{message()};
-  } else {
-    assert(isNotInitialized());
-    throw std::runtime_error{message()};
-  }
-}
+  virtual uint32_t topBlockIndex() const = 0;
+  virtual std::vector<CryptoNote::RawBlock> queryBlocks(uint32_t startIndex, uint32_t count) const = 0;
 
-bool Xi::Error::isNotInitialized() const { return m_error.type() == typeid(not_initialized_tag); }
+ public:
+  Xi::Result<void> exportBlocks(uint32_t startIndex, uint32_t count, uint32_t batchSize);
+
+ private:
+  DumpWriter& m_writer;
+};
+}  // namespace XiSync

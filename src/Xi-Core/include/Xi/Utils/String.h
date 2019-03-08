@@ -29,6 +29,7 @@
 #include <ctime>
 #include <type_traits>
 #include <sstream>
+#include <iostream>
 
 #include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/optional.hpp>

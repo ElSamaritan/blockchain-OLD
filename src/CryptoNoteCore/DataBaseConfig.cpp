@@ -107,3 +107,18 @@ void toString(const CryptoNote::DataBaseConfig::Compression &compression, std::s
   }
 }
 }  // namespace Common
+
+void serialize(DataBaseConfig::Compression &compression, ISerializer &s) {
+  if (s.type() == ISerializer::INPUT) {
+    std::string str;
+    s(str, "");
+    if (!DataBaseConfig::parseCompression(str, compression)) {
+      throw std::runtime_error{std::string{"invalid compression string: "} + str};
+    }
+  } else {
+    assert(s.type() == ISerializer::OUTPUT);
+    std::string str;
+    Common::toString(compression, str);
+    s(str, "");
+  }
+}
