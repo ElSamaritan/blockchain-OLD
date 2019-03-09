@@ -337,15 +337,29 @@ struct COMMAND_RPC_GETBLOCKHASH {
   typedef std::string response;
 };
 
+struct COMMAND_RPC_GETBLOCKTEMPLATE_STATE {
+  using request = EMPTY_STRUCT;
+  struct response {
+    std::string
+        template_state;  ///< Hash unique to a previous call, iff a new requested block template would not change.
+    std::string status;
+
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(template_state)
+    KV_MEMBER(status)
+    KV_END_SERIALIZATION
+  };
+};
+
 struct COMMAND_RPC_GETBLOCKTEMPLATE {
   struct request {
     uint64_t reserve_size;  // max 255 bytes
     std::string wallet_address;
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(reserve_size)
-      KV_MEMBER(wallet_address)
-    }
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(reserve_size)
+    KV_MEMBER(wallet_address)
+    KV_END_SERIALIZATION
   };
 
   struct response {
@@ -354,14 +368,17 @@ struct COMMAND_RPC_GETBLOCKTEMPLATE {
     uint64_t reserved_offset;
     std::string blocktemplate_blob;
     std::string status;
+    std::string
+        template_state;  ///< Hash unique to a previous call, iff a new requested block template would not change.
 
-    void serialize(ISerializer &s) {
-      KV_MEMBER(difficulty)
-      KV_MEMBER(height)
-      KV_MEMBER(reserved_offset)
-      KV_MEMBER(blocktemplate_blob)
-      KV_MEMBER(status)
-    }
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(difficulty)
+    KV_MEMBER(height)
+    KV_MEMBER(reserved_offset)
+    KV_MEMBER(blocktemplate_blob)
+    KV_MEMBER(status)
+    KV_MEMBER(template_state)
+    KV_END_SERIALIZATION
   };
 };
 

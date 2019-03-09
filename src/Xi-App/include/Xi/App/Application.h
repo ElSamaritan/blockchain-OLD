@@ -38,6 +38,7 @@
 #include <CryptoNoteCore/ICore.h>
 #include <CryptoNoteCore/Currency.h>
 #include <CryptoNoteCore/INode.h>
+#include <Rpc/RpcRemoteConfiguration.h>
 
 #include "Xi/App/LoggingOptions.h"
 #include "Xi/App/DatabaseOptions.h"
@@ -64,8 +65,10 @@ class Application {
 
   const std::string name() const;
   const std::string description() const;
-  Logging::ILogger& logger();
+  Logging::LoggerManager& logger();
   System::Dispatcher& dispatcher();
+
+  CryptoNote::RpcRemoteConfiguration remoteConfiguration() const;
 
   // --------------------------------------------- PreSetup ---------------------------------------------------
   CryptoNote::RocksDBWrapper* database();
@@ -87,7 +90,7 @@ class Application {
   // ---------------------------------------------- Helper ----------------------------------------------------
  protected:
   // TODO: Move to module interface and require modules definied by the library implementing the feature.
-  void useLogging();
+  void useLogging(Logging::Level defaultLevel = Logging::INFO);
   void useDatabase();
   void useRemoteRpc();
   void useNetwork();

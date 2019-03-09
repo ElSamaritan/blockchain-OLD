@@ -23,65 +23,51 @@
 
 #pragma once
 
-#include <atomic>
-#include <vector>
-#include <random>
-#include <thread>
-
-#include <Xi/Global.h>
-#include <Xi/Result.h>
-#include <Xi/Http/Client.h>
 #include <Logging/ILogger.h>
 #include <Logging/LoggerRef.h>
-#include <crypto/CryptoTypes.h>
-#include <Common/ObserverManager.h>
-#include <Rpc/RpcRemoteConfiguration.h>
+#include <Logging/ConsoleLogger.h>
+#include <Logging/LoggerManager.h>
+#include <Common/ConsoleHandler.h>
 
 #include "UpdateMonitor.h"
-#include "MinerWorker.h"
-#include "HashrateSummary.h"
+#include "MinerMonitor.h"
+#include "MinerManager.h"
 
 namespace XiMiner {
-class MinerManager : public UpdateMonitor::Observer, MinerWorker::Observer {
+class MinerCommandsHandler : public Common::ConsoleHandler {
  public:
-  class Observer {
-   public:
-    virtual ~Observer() = default;
+  MinerCommandsHandler(MinerManager& miner, UpdateMonitor& monitor, Logging::LoggerManager& logger);
 
-    virtual void onSuccessfulBlockSubmission(Crypto::Hash hash) = 0;
-    virtual void onBlockTemplateChanged() = 0;
-  };
-
- public:
-  MinerManager(const CryptoNote::RpcRemoteConfiguration remote, Logging::ILogger& logger);
-  XI_DELETE_COPY(MinerManager);
-  XI_DELETE_MOVE(MinerManager);
-  ~MinerManager() override = default;
-
-  void onTemplateChanged(MinerBlockTemplate newTemplate) override;
-  void onBlockFound(CryptoNote::BlockTemplate block) override;
-
-  void run();
-  void shutdown();
-
-  void addObserver(Observer* observer);
-  void removeObserver(Observer* observer);
-
-  void setThreads(uint32_t threadCount);
-  uint32_t threads() const;
-
-  CollectiveHashrateSummary resetHashrateSummary();
+  MinerMonitor& minerMonitor();
 
  private:
-  Xi::Http::Client m_http;
-  Logging::LoggerRef m_logger;
+  bool exit(const std::vector<std::string>& args);
+  bool help(const std::vector<std::string>& args);
+  bool version(const std::vector<std::string>& args);
 
-  Tools::ObserverManager<Observer> m_observer;
-  uint32_t m_threads = static_cast<uint32_t>(std::thread::hardware_concurrency());
-  std::atomic_bool m_running{false};
-  std::atomic_bool m_shutdownRequest{false};
-  std::vector<std::shared_ptr<MinerWorker>> m_worker;
-  std::default_random_engine m_randomEngine;
-  std::uniform_int_distribution<uint32_t> m_nonceDist;
+  bool set_poll_interval(const std::vector<std::string>& args);
+  bool set_threads(const std::vector<std::string>& args);
+
+  bool set_log(const std::vector<std::string>& args);
+  bool hide_log(const std::vector<std::string>& args);
+
+  bool hide_hashrate(const std::vector<std::string>& args);
+  bool show_hashrate(const std::vector<std::string>& args);
+
+  bool set_report_interval(const std::vector<std::string>& args);
+
+ protected:
+  void printError(std::string error) override;
+  void printWarning(std::string warn) override;
+  void printMessage(std::string msg) override;
+
+ private:
+  MinerManager& m_miner;
+  UpdateMonitor& m_monitor;
+  Logging::ConsoleLogger m_monitorlogger;
+  Logging::ConsoleLogger m_clogger;
+  Logging::LoggerRef m_logger;
+  Logging::LoggerManager& m_appLogger;
+  MinerMonitor m_minerMonitor;
 };
 }  // namespace XiMiner

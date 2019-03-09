@@ -57,7 +57,7 @@ class AsyncConsoleReader {
 
 class ConsoleHandler {
  public:
-  ~ConsoleHandler();
+  virtual ~ConsoleHandler();
 
   typedef std::function<bool(const std::vector<std::string>&)> ConsoleCommandHandler;
 
@@ -72,6 +72,11 @@ class ConsoleHandler {
   void wait();
   void pause();
   void unpause();
+
+ protected:
+  virtual void printError(std::string error);
+  virtual void printWarning(std::string warn);
+  virtual void printMessage(std::string msg);
 
  private:
   typedef std::map<std::string, std::pair<ConsoleCommandHandler, std::string>> CommandHandlersMap;

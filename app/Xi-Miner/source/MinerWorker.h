@@ -24,64 +24,68 @@
 #pragma once
 
 #include <atomic>
-#include <vector>
-#include <random>
 #include <thread>
+#include <mutex>
+#include <chrono>
+#include <future>
 
 #include <Xi/Global.h>
 #include <Xi/Result.h>
-#include <Xi/Http/Client.h>
-#include <Logging/ILogger.h>
-#include <Logging/LoggerRef.h>
-#include <crypto/CryptoTypes.h>
-#include <Common/ObserverManager.h>
-#include <Rpc/RpcRemoteConfiguration.h>
 
-#include "UpdateMonitor.h"
-#include "MinerWorker.h"
+#include <Common/ObserverManager.h>
+#include <CryptoNoteCore/CryptoNote.h>
+
+#include "MinerBlockTemplate.h"
 #include "HashrateSummary.h"
 
 namespace XiMiner {
-class MinerManager : public UpdateMonitor::Observer, MinerWorker::Observer {
+class MinerWorker {
  public:
   class Observer {
    public:
     virtual ~Observer() = default;
 
-    virtual void onSuccessfulBlockSubmission(Crypto::Hash hash) = 0;
-    virtual void onBlockTemplateChanged() = 0;
+    virtual void onBlockFound(CryptoNote::BlockTemplate block) = 0;
   };
 
  public:
-  MinerManager(const CryptoNote::RpcRemoteConfiguration remote, Logging::ILogger& logger);
-  XI_DELETE_COPY(MinerManager);
-  XI_DELETE_MOVE(MinerManager);
-  ~MinerManager() override = default;
-
-  void onTemplateChanged(MinerBlockTemplate newTemplate) override;
-  void onBlockFound(CryptoNote::BlockTemplate block) override;
-
-  void run();
-  void shutdown();
+  MinerWorker();
+  XI_DELETE_COPY(MinerWorker);
+  XI_DELETE_MOVE(MinerWorker);
+  ~MinerWorker();
 
   void addObserver(Observer* observer);
   void removeObserver(Observer* observer);
 
-  void setThreads(uint32_t threadCount);
-  uint32_t threads() const;
+  void setInitialNonce(uint32_t nonce);
+  void setNonceStep(uint32_t nonceStep);
+  void setTemplate(MinerBlockTemplate block);
 
-  CollectiveHashrateSummary resetHashrateSummary();
+  void run();
+  void pause();
+  void resume();
+  std::future<void> shutdown();
+
+  HashrateSummary resetHashrateSummary();
 
  private:
-  Xi::Http::Client m_http;
-  Logging::LoggerRef m_logger;
+  void mineLoop();
+  MinerBlockTemplate acquireTemplate();
 
+ private:
   Tools::ObserverManager<Observer> m_observer;
-  uint32_t m_threads = static_cast<uint32_t>(std::thread::hardware_concurrency());
+  std::thread m_thread;
   std::atomic_bool m_running{false};
   std::atomic_bool m_shutdownRequest{false};
-  std::vector<std::shared_ptr<MinerWorker>> m_worker;
-  std::default_random_engine m_randomEngine;
-  std::uniform_int_distribution<uint32_t> m_nonceDist;
+  std::atomic_bool m_paused{false};
+  std::chrono::high_resolution_clock::time_point m_lastHrSummary;
+  std::atomic<uint32_t> m_hashCount{0};
+  std::promise<void> m_shutdown;
+
+  uint32_t m_initialNonce = 0;
+  uint32_t m_nonceStep = 1;
+  std::atomic_bool m_swapTemplate{false};
+  std::mutex m_blockBufferAccess;
+  MinerBlockTemplate m_blockBuffer;
 };
 }  // namespace XiMiner

@@ -32,9 +32,11 @@
 #include <Xi/Utils/ExternalIncludePop.h>
 
 #include <Xi/Config/Network.h>
+#include <Xi/Http/SSLConfiguration.h>
 #include <Common/StringTools.h>
 #include <Serialization/ISerializer.h>
 #include <Serialization/SerializationOverloads.h>
+#include <Rpc/RpcRemoteConfiguration.h>
 
 #include "Xi/App/IOptions.h"
 
@@ -51,6 +53,8 @@ struct RemoteRpcOptions : public IOptions {
 
   void emplaceOptions(cxxopts::Options& options) override;
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
+
+  CryptoNote::RpcRemoteConfiguration getConfig(const Xi::Http::SSLConfiguration& sslConfig) const;
 };
 }  // namespace App
 }  // namespace Xi

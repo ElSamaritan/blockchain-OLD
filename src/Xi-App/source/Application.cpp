@@ -84,9 +84,13 @@ const std::string Xi::App::Application::name() const { return m_name; }
 
 const std::string Xi::App::Application::description() const { return m_description; }
 
-Logging::ILogger &Xi::App::Application::logger() { return *m_logger; }
+Logging::LoggerManager &Xi::App::Application::logger() { return *m_logger; }
 
 System::Dispatcher &Xi::App::Application::dispatcher() { return m_dispatcher; }
+
+CryptoNote::RpcRemoteConfiguration Xi::App::Application::remoteConfiguration() const {
+  return m_remoteRpcOptions->getConfig(m_sslConfig);
+}
 
 CryptoNote::RocksDBWrapper *Xi::App::Application::database() { return m_database.get(); }
 
@@ -174,10 +178,11 @@ void Xi::App::Application::tearDown() {
 
 #undef XI_APP_CONDITIONAL_OPTION_EVAL
 
-void Xi::App::Application::useLogging() {
+void Xi::App::Application::useLogging(Logging::Level defaultLevel) {
   if (m_logOptions.get() == nullptr) {
     m_logOptions = std::make_unique<LoggingOptions>();
     m_logOptions->LogFilePath = name() + ".log";
+    m_logOptions->DefaultLogLevel = defaultLevel;
   }
 }
 

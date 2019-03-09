@@ -87,4 +87,13 @@ uint32_t CachedBlock::getBlockIndex() const {
   return blockIndex.get();
 }
 
+uint32_t CachedBlock::getNonceOffset() const {
+  if (!nonceOffset.is_initialized()) {
+    BinaryArray result;
+    toBinaryArray(static_cast<const BlockHeader&>(block), result);
+    nonceOffset = result.size() - sizeof(block.nonce);
+  }
+  return nonceOffset.get();
+}
+
 bool CachedBlock::hasStaticReward() const { return !block.staticReward.isNull(); }

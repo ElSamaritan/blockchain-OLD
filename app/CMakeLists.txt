@@ -65,6 +65,19 @@ xi_make_app(
 )
 
 xi_make_app(
+  Xi-Miner-Legacy
+
+  Xi.App.Miner-Legacy
+
+  LEGACY_INCLUDE
+
+  LINK_LIBRARIES
+    Xi.App
+    cxxopts
+    ${XI_LIBRARIES}
+)
+
+xi_make_app(
   Xi-Miner
 
   Xi.App.Miner

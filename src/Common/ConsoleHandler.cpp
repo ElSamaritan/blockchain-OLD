@@ -159,13 +159,19 @@ void ConsoleHandler::pause() { m_consoleReader.pause(); }
 
 void ConsoleHandler::unpause() { m_consoleReader.unpause(); }
 
+void ConsoleHandler::printError(std::string error) { std::cerr << error << std::endl; }
+
+void ConsoleHandler::printWarning(std::string warn) { std::cout << warn << std::endl; }
+
+void ConsoleHandler::printMessage(std::string msg) { std::cout << msg << std::endl; }
+
 void ConsoleHandler::wait() {
   try {
     if (m_thread.joinable()) {
       m_thread.join();
     }
   } catch (std::exception& e) {
-    std::cerr << "Exception in ConsoleHandler::wait - " << e.what() << std::endl;
+    printError(std::string{"Exception in ConsoleHandler::wait - "} + e.what());
   }
 }
 
@@ -205,7 +211,7 @@ bool ConsoleHandler::runCommand(const std::vector<std::string>& cmdAndArgs) {
   auto hIter = m_handlers.find(cmd);
 
   if (hIter == m_handlers.end()) {
-    std::cout << "Unknown command: " << cmd << std::endl;
+    printWarning(std::string{"Unknown command: "} + cmd);
     return false;
   }
 
@@ -231,6 +237,12 @@ void ConsoleHandler::handlerThread() {
         }
 
         std::cout << m_prompt;
+
+        if (m_promptColor != Color::Default) {
+          Console::setTextColor(Color::Yellow);
+        }
+
+        std::cout << " > ";
         std::cout.flush();
 
         if (m_promptColor != Color::Default) {
@@ -247,8 +259,8 @@ void ConsoleHandler::handlerThread() {
         handleCommand(line);
       }
 
-    } catch (std::exception&) {
-      // ignore errors
+    } catch (std::exception& e) {
+      printError(e.what());
     }
   }
 }

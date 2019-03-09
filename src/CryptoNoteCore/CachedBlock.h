@@ -20,6 +20,7 @@ class CachedBlock {
   const Crypto::Hash& getBlockLongHash() const;
   const BinaryArray& getBlockHashingBinaryArray() const;
   uint32_t getBlockIndex() const;
+  uint32_t getNonceOffset() const;
 
   bool hasStaticReward() const;
 
@@ -27,6 +28,7 @@ class CachedBlock {
   const BlockTemplate& block;
   mutable boost::optional<BinaryArray> blockHashingBinaryArray;
   mutable boost::optional<uint32_t> blockIndex;
+  mutable boost::optional<uint32_t> nonceOffset;
   mutable boost::optional<Crypto::Hash> transactionTreeHash;
   mutable boost::optional<Crypto::Hash> blockHash;
   mutable boost::optional<Crypto::Hash> blockLongHash;

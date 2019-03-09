@@ -24,6 +24,8 @@
 #include <boost/optional.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
+#include <Xi/Algorithm/GenericComparison.h>
+#include <Xi/Algorithm/GenericHash.h>
 #include <crypto/CryptoTypes.h>
 
 #include "CryptoNoteCore/Transactions/Transaction.h"
@@ -49,6 +51,9 @@ struct AccountPublicAddress {
   Crypto::PublicKey viewPublicKey;
 };
 
+XI_MAKE_GENERIC_COMPARISON(AccountPublicAddress)
+XI_MAKE_GENERIC_HASH_FUNC(CryptoNote::AccountPublicAddress)
+
 struct AccountKeys {
   AccountPublicAddress address;
   Crypto::SecretKey spendSecretKey;
@@ -72,3 +77,5 @@ struct LiteBlock {
 };
 
 }  // namespace CryptoNote
+
+XI_MAKE_GENERIC_HASH_OVERLOAD(CryptoNote, AccountPublicAddress)

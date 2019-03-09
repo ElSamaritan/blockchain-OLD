@@ -57,7 +57,7 @@ class ILogger {
 
  public:
   const static char COLOR_DELIMETER;
-  const static std::array<std::string, 6> LEVEL_NAMES;
+  const static std::array<std::string, 7> LEVEL_NAMES;
 
   virtual ~ILogger() = default;
 

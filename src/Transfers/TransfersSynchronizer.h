@@ -10,7 +10,6 @@
 #include "Common/ObserverManager.h"
 #include "ITransfersSynchronizer.h"
 #include "IBlockchainSynchronizer.h"
-#include "TypeHelpers.h"
 
 #include <unordered_map>
 #include <memory>

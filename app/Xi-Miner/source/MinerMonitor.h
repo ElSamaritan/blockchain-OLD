@@ -23,65 +23,55 @@
 
 #pragma once
 
+#include <cinttypes>
 #include <atomic>
-#include <vector>
-#include <random>
 #include <thread>
+#include <chrono>
+#include <string>
+#include <deque>
 
-#include <Xi/Global.h>
-#include <Xi/Result.h>
-#include <Xi/Http/Client.h>
 #include <Logging/ILogger.h>
 #include <Logging/LoggerRef.h>
-#include <crypto/CryptoTypes.h>
-#include <Common/ObserverManager.h>
-#include <Rpc/RpcRemoteConfiguration.h>
 
-#include "UpdateMonitor.h"
-#include "MinerWorker.h"
 #include "HashrateSummary.h"
+#include "MinerManager.h"
 
 namespace XiMiner {
-class MinerManager : public UpdateMonitor::Observer, MinerWorker::Observer {
+class MinerMonitor : public MinerManager::Observer {
  public:
-  class Observer {
-   public:
-    virtual ~Observer() = default;
+  MinerMonitor(MinerManager& miner, Logging::ILogger& logger);
 
-    virtual void onSuccessfulBlockSubmission(Crypto::Hash hash) = 0;
-    virtual void onBlockTemplateChanged() = 0;
-  };
-
- public:
-  MinerManager(const CryptoNote::RpcRemoteConfiguration remote, Logging::ILogger& logger);
-  XI_DELETE_COPY(MinerManager);
-  XI_DELETE_MOVE(MinerManager);
-  ~MinerManager() override = default;
-
-  void onTemplateChanged(MinerBlockTemplate newTemplate) override;
-  void onBlockFound(CryptoNote::BlockTemplate block) override;
+  void onSuccessfulBlockSubmission(Crypto::Hash hash) override;
+  void onBlockTemplateChanged() override;
 
   void run();
   void shutdown();
 
-  void addObserver(Observer* observer);
-  void removeObserver(Observer* observer);
+  void setReportInterval(std::chrono::seconds interval);
+  std::chrono::seconds reportInterval() const;
 
-  void setThreads(uint32_t threadCount);
-  uint32_t threads() const;
+  void setTelemetryIdentifier(const std::string& id);
+  const std::string& telemetryIdentifier() const;
 
-  CollectiveHashrateSummary resetHashrateSummary();
+  std::string status() const;
 
  private:
-  Xi::Http::Client m_http;
-  Logging::LoggerRef m_logger;
+  void monitorLoop();
+  void reportHashrate();
+  void pushHashrateCheckpoint();
+  void checkForStall();
 
-  Tools::ObserverManager<Observer> m_observer;
-  uint32_t m_threads = static_cast<uint32_t>(std::thread::hardware_concurrency());
-  std::atomic_bool m_running{false};
-  std::atomic_bool m_shutdownRequest{false};
-  std::vector<std::shared_ptr<MinerWorker>> m_worker;
-  std::default_random_engine m_randomEngine;
-  std::uniform_int_distribution<uint32_t> m_nonceDist;
+ private:
+  MinerManager& m_miner;
+  Logging::LoggerRef m_logger;
+  std::thread m_monitor;
+  std::atomic<uint64_t> m_reportSeconds{1};
+  std::atomic_bool m_shouldRun{false};
+
+  std::chrono::system_clock::time_point m_lastBlockUpdate;
+  std::chrono::system_clock::time_point m_lastStallNotification;
+
+  std::deque<CollectiveHashrateSummary> m_hrTimeline;
+  std::string m_minerId;  ///< Used to identify the instance on telemetry services.
 };
 }  // namespace XiMiner

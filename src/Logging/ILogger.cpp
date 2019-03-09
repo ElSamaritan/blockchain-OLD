@@ -67,7 +67,8 @@ const std::string DEFAULT =
 
 const char ILogger::COLOR_DELIMETER = '\x1F';
 
-const std::array<std::string, 6> ILogger::LEVEL_NAMES = {{"FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"}};
+const std::array<std::string, 7> ILogger::LEVEL_NAMES = {
+    {"NONE", "FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"}};
 
 const std::string &defaultColor(Level level) {
   switch (level) {

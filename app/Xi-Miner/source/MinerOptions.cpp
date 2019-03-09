@@ -21,67 +21,58 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "MinerOptions.h"
 
-#include <atomic>
-#include <vector>
-#include <random>
-#include <thread>
+#include <Xi/Exceptional.h>
+#include <Xi/Config/Coin.h>
+#include <crypto/crypto-ops.h>
+#include <Common/Base58.h>
+#include <Common/StringTools.h>
+#include <CryptoNoteCore/CryptoNoteTools.h>
+#include <CryptoNoteCore/Currency.h>
 
-#include <Xi/Global.h>
-#include <Xi/Result.h>
-#include <Xi/Http/Client.h>
-#include <Logging/ILogger.h>
-#include <Logging/LoggerRef.h>
-#include <crypto/CryptoTypes.h>
-#include <Common/ObserverManager.h>
-#include <Rpc/RpcRemoteConfiguration.h>
+namespace {
+// clang-format off
+XI_DECLARE_EXCEPTIONAL_CATEGORY(MinerOptions)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidAddress, "invalid public address provided", MinerOptions)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidThreadCount, "thread count may not be 0 or succeed local hardware currency", MinerOptions)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidUpateInterval, "update interval may not be less than 50ms", MinerOptions)
+// clang-format on
+}  // namespace
 
-#include "UpdateMonitor.h"
-#include "MinerWorker.h"
-#include "HashrateSummary.h"
+void XiMiner::MinerOptions::emplaceOptions(cxxopts::Options &options) {
+  // clang-format off
+  options.add_options("miner")
+    ("a,address", "public address receiving block rewards.", cxxopts::value<std::string>(Address))
+    ("t,threads", "number of threads to use.", cxxopts::value<uint32_t>(Threads)->default_value(std::to_string(Threads)), "# > 0")
+    ("u,update-interval", "number of milliseconds to wait before checking for an update",
+        cxxopts::value<uint16_t>(UpdateInterval)->default_value(std::to_string(UpdateInterval)), "ms >= 50")
+  ;
+  // clang-format on
+}
 
-namespace XiMiner {
-class MinerManager : public UpdateMonitor::Observer, MinerWorker::Observer {
- public:
-  class Observer {
-   public:
-    virtual ~Observer() = default;
+bool XiMiner::MinerOptions::evaluateParsedOptions(const cxxopts::Options &options, const cxxopts::ParseResult &result) {
+  XI_UNUSED(options, result);
+  uint64_t prefix = 0;
+  std::string data;
+  CryptoNote::AccountPublicAddress adr;
+  if (!Tools::Base58::decode_addr(Address, prefix, data)) {
+    Xi::exceptional<InvalidAddressError>();
+  }
+  if (!CryptoNote::fromBinaryArray(adr, Common::asBinaryArray(data))) {
+    Xi::exceptional<InvalidAddressError>();
+  }
+  if (!Crypto::check_key(adr.spendPublicKey) || !Crypto::check_key(adr.viewPublicKey)) {
+    Xi::exceptional<InvalidAddressError>();
+  }
 
-    virtual void onSuccessfulBlockSubmission(Crypto::Hash hash) = 0;
-    virtual void onBlockTemplateChanged() = 0;
-  };
+  if (Threads == 0 || Threads > std::thread::hardware_concurrency()) {
+    Xi::exceptional<InvalidThreadCountError>();
+  }
 
- public:
-  MinerManager(const CryptoNote::RpcRemoteConfiguration remote, Logging::ILogger& logger);
-  XI_DELETE_COPY(MinerManager);
-  XI_DELETE_MOVE(MinerManager);
-  ~MinerManager() override = default;
+  if (UpdateInterval < 50) {
+    Xi::exceptional<InvalidUpateIntervalError>();
+  }
 
-  void onTemplateChanged(MinerBlockTemplate newTemplate) override;
-  void onBlockFound(CryptoNote::BlockTemplate block) override;
-
-  void run();
-  void shutdown();
-
-  void addObserver(Observer* observer);
-  void removeObserver(Observer* observer);
-
-  void setThreads(uint32_t threadCount);
-  uint32_t threads() const;
-
-  CollectiveHashrateSummary resetHashrateSummary();
-
- private:
-  Xi::Http::Client m_http;
-  Logging::LoggerRef m_logger;
-
-  Tools::ObserverManager<Observer> m_observer;
-  uint32_t m_threads = static_cast<uint32_t>(std::thread::hardware_concurrency());
-  std::atomic_bool m_running{false};
-  std::atomic_bool m_shutdownRequest{false};
-  std::vector<std::shared_ptr<MinerWorker>> m_worker;
-  std::default_random_engine m_randomEngine;
-  std::uniform_int_distribution<uint32_t> m_nonceDist;
-};
-}  // namespace XiMiner
+  return false;
+}

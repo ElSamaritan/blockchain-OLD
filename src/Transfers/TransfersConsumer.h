@@ -10,7 +10,6 @@
 #include "IBlockchainSynchronizer.h"
 #include "ITransfersSynchronizer.h"
 #include "TransfersSubscription.h"
-#include "TypeHelpers.h"
 
 #include "crypto/crypto.h"
 #include "Logging/LoggerRef.h"

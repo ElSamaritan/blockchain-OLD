@@ -23,65 +23,31 @@
 
 #pragma once
 
-#include <atomic>
-#include <vector>
-#include <random>
+#include <cinttypes>
 #include <thread>
+
+#include <Xi/Utils/ExternalIncludePush.h>
+#include <cxxopts.hpp>
+#include <Xi/Utils/ExternalIncludePop.h>
 
 #include <Xi/Global.h>
 #include <Xi/Result.h>
-#include <Xi/Http/Client.h>
-#include <Logging/ILogger.h>
-#include <Logging/LoggerRef.h>
-#include <crypto/CryptoTypes.h>
-#include <Common/ObserverManager.h>
-#include <Rpc/RpcRemoteConfiguration.h>
-
-#include "UpdateMonitor.h"
-#include "MinerWorker.h"
-#include "HashrateSummary.h"
+#include <Serialization/ISerializer.h>
 
 namespace XiMiner {
-class MinerManager : public UpdateMonitor::Observer, MinerWorker::Observer {
+class MinerOptions {
  public:
-  class Observer {
-   public:
-    virtual ~Observer() = default;
+  std::string Address = "";
+  uint32_t Threads = static_cast<uint32_t>(std::thread::hardware_concurrency());
+  uint16_t UpdateInterval = 2000;
 
-    virtual void onSuccessfulBlockSubmission(Crypto::Hash hash) = 0;
-    virtual void onBlockTemplateChanged() = 0;
-  };
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(Address)
+  KV_MEMBER(Threads)
+  KV_MEMBER(UpdateInterval)
+  KV_END_SERIALIZATION
 
- public:
-  MinerManager(const CryptoNote::RpcRemoteConfiguration remote, Logging::ILogger& logger);
-  XI_DELETE_COPY(MinerManager);
-  XI_DELETE_MOVE(MinerManager);
-  ~MinerManager() override = default;
-
-  void onTemplateChanged(MinerBlockTemplate newTemplate) override;
-  void onBlockFound(CryptoNote::BlockTemplate block) override;
-
-  void run();
-  void shutdown();
-
-  void addObserver(Observer* observer);
-  void removeObserver(Observer* observer);
-
-  void setThreads(uint32_t threadCount);
-  uint32_t threads() const;
-
-  CollectiveHashrateSummary resetHashrateSummary();
-
- private:
-  Xi::Http::Client m_http;
-  Logging::LoggerRef m_logger;
-
-  Tools::ObserverManager<Observer> m_observer;
-  uint32_t m_threads = static_cast<uint32_t>(std::thread::hardware_concurrency());
-  std::atomic_bool m_running{false};
-  std::atomic_bool m_shutdownRequest{false};
-  std::vector<std::shared_ptr<MinerWorker>> m_worker;
-  std::default_random_engine m_randomEngine;
-  std::uniform_int_distribution<uint32_t> m_nonceDist;
+  void emplaceOptions(cxxopts::Options& options);
+  bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result);
 };
 }  // namespace XiMiner

@@ -20,6 +20,7 @@
 #include "Common/Math.h"
 #include "CoreRpcServerCommandsDefinitions.h"
 #include "JsonRpc.h"
+#include "Rpc/Commands/Commands.h"
 
 namespace CryptoNote {
 
@@ -112,8 +113,20 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   // json rpc
   bool on_getblockcount(const COMMAND_RPC_GETBLOCKCOUNT::request& req, COMMAND_RPC_GETBLOCKCOUNT::response& res);
   bool on_getblockhash(const COMMAND_RPC_GETBLOCKHASH::request& req, COMMAND_RPC_GETBLOCKHASH::response& res);
+
+  Crypto::Hash block_template_state_hash() const;
+  bool on_getblocktemplatestate(const COMMAND_RPC_GETBLOCKTEMPLATE_STATE::request& req,
+                                COMMAND_RPC_GETBLOCKTEMPLATE_STATE::response& res);
   bool on_getblocktemplate(const COMMAND_RPC_GETBLOCKTEMPLATE::request& req,
                            COMMAND_RPC_GETBLOCKTEMPLATE::response& res);
+
+  bool on_get_block_template_state(const RpcCommands::GetBlockTemplateState::request& req,
+                                   RpcCommands::GetBlockTemplateState::response& res);
+  bool on_get_block_template(const RpcCommands::GetBlockTemplate::request& req,
+                             RpcCommands::GetBlockTemplate::response& res);
+
+  bool on_submit_block(const RpcCommands::SubmitBlock::request& req, RpcCommands::SubmitBlock::response& res);
+
   bool on_get_currency_id(const COMMAND_RPC_GET_CURRENCY_ID::request& req, COMMAND_RPC_GET_CURRENCY_ID::response& res);
   bool on_submitblock(const COMMAND_RPC_SUBMITBLOCK::request& req, COMMAND_RPC_SUBMITBLOCK::response& res);
   bool on_get_last_block_header(const COMMAND_RPC_GET_LAST_BLOCK_HEADER::request& req,

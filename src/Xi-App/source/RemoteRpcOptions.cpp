@@ -71,3 +71,12 @@ bool Xi::App::RemoteRpcOptions::evaluateParsedOptions(const cxxopts::Options &op
   }
   return false;
 }
+
+CryptoNote::RpcRemoteConfiguration Xi::App::RemoteRpcOptions::getConfig(
+    const Xi::Http::SSLConfiguration &sslConfig) const {
+  CryptoNote::RpcRemoteConfiguration cfg{};
+  cfg.Host = Address;
+  cfg.Port = Port;
+  cfg.Ssl = sslConfig;
+  return cfg;
+}

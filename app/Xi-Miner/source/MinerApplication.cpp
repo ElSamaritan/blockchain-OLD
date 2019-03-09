@@ -21,67 +21,62 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include <numeric>
 
-#include <atomic>
-#include <vector>
-#include <random>
-#include <thread>
+#include <Xi/App/Application.h>
+#include <Common/SignalHandler.h>
 
-#include <Xi/Global.h>
-#include <Xi/Result.h>
-#include <Xi/Http/Client.h>
-#include <Logging/ILogger.h>
-#include <Logging/LoggerRef.h>
-#include <crypto/CryptoTypes.h>
-#include <Common/ObserverManager.h>
-#include <Rpc/RpcRemoteConfiguration.h>
-
+#include "MinerOptions.h"
 #include "UpdateMonitor.h"
-#include "MinerWorker.h"
-#include "HashrateSummary.h"
+#include "MinerManager.h"
+#include "MinerCommandsHandler.h"
+
+using namespace Xi::App;
 
 namespace XiMiner {
-class MinerManager : public UpdateMonitor::Observer, MinerWorker::Observer {
+class MinerApplication : public Application {
  public:
-  class Observer {
-   public:
-    virtual ~Observer() = default;
+  MinerApplication() : Application("xi-miner", "mines blocks to progress the blockchain") {
+    useLogging(Logging::ERROR);
+    useCurrency();
+    useRemoteRpc();
+  }
 
-    virtual void onSuccessfulBlockSubmission(Crypto::Hash hash) = 0;
-    virtual void onBlockTemplateChanged() = 0;
-  };
+  MinerOptions Options{};
 
- public:
-  MinerManager(const CryptoNote::RpcRemoteConfiguration remote, Logging::ILogger& logger);
-  XI_DELETE_COPY(MinerManager);
-  XI_DELETE_MOVE(MinerManager);
-  ~MinerManager() override = default;
-
-  void onTemplateChanged(MinerBlockTemplate newTemplate) override;
-  void onBlockFound(CryptoNote::BlockTemplate block) override;
-
-  void run();
-  void shutdown();
-
-  void addObserver(Observer* observer);
-  void removeObserver(Observer* observer);
-
-  void setThreads(uint32_t threadCount);
-  uint32_t threads() const;
-
-  CollectiveHashrateSummary resetHashrateSummary();
-
- private:
-  Xi::Http::Client m_http;
-  Logging::LoggerRef m_logger;
-
-  Tools::ObserverManager<Observer> m_observer;
-  uint32_t m_threads = static_cast<uint32_t>(std::thread::hardware_concurrency());
-  std::atomic_bool m_running{false};
-  std::atomic_bool m_shutdownRequest{false};
-  std::vector<std::shared_ptr<MinerWorker>> m_worker;
-  std::default_random_engine m_randomEngine;
-  std::uniform_int_distribution<uint32_t> m_nonceDist;
+  void makeOptions(cxxopts::Options& options) override;
+  bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
+  int run() override;
 };
+
 }  // namespace XiMiner
+
+XI_DECLARE_APP(XiMiner::MinerApplication)
+
+void XiMiner::MinerApplication::makeOptions(cxxopts::Options& options) {
+  this->Application::makeOptions(options);
+  Options.emplaceOptions(options);
+}
+
+bool XiMiner::MinerApplication::evaluateParsedOptions(const cxxopts::Options& options,
+                                                      const cxxopts::ParseResult& result) {
+  return this->Application::evaluateParsedOptions(options, result) || Options.evaluateParsedOptions(options, result);
+}
+
+int XiMiner::MinerApplication::run() {
+  auto monitor = UpdateMonitor::start(Options.Address, *currency(), remoteConfiguration(), logger()).takeOrThrow();
+  MinerManager miner{remoteConfiguration(), logger()};
+  MinerCommandsHandler cli{miner, *monitor, logger()};
+  cli.start(true, "xi-miner", Common::Console::Color::Cyan);
+  Tools::SignalHandler::install([&miner] { miner.shutdown(); });
+  monitor->addObserver(&miner);
+  miner.setThreads(Options.Threads);
+  cli.minerMonitor().run();
+  miner.run();
+  cli.minerMonitor().shutdown();
+  monitor->removeObserver(&miner);
+  cli.requestStop();
+  cli.stop();
+  monitor->shutdown();
+  return 0;
+}

@@ -23,65 +23,33 @@
 
 #pragma once
 
-#include <atomic>
+#include <cinttypes>
 #include <vector>
-#include <random>
-#include <thread>
 
-#include <Xi/Global.h>
-#include <Xi/Result.h>
-#include <Xi/Http/Client.h>
-#include <Logging/ILogger.h>
-#include <Logging/LoggerRef.h>
-#include <crypto/CryptoTypes.h>
-#include <Common/ObserverManager.h>
-#include <Rpc/RpcRemoteConfiguration.h>
-
-#include "UpdateMonitor.h"
-#include "MinerWorker.h"
-#include "HashrateSummary.h"
+#include <Serialization/ISerializer.h>
+#include <Serialization/SerializationOverloads.h>
 
 namespace XiMiner {
-class MinerManager : public UpdateMonitor::Observer, MinerWorker::Observer {
- public:
-  class Observer {
-   public:
-    virtual ~Observer() = default;
+struct HashrateSummary {
+  uint32_t HashCount;
+  uint64_t Milliseconds;
 
-    virtual void onSuccessfulBlockSubmission(Crypto::Hash hash) = 0;
-    virtual void onBlockTemplateChanged() = 0;
-  };
-
- public:
-  MinerManager(const CryptoNote::RpcRemoteConfiguration remote, Logging::ILogger& logger);
-  XI_DELETE_COPY(MinerManager);
-  XI_DELETE_MOVE(MinerManager);
-  ~MinerManager() override = default;
-
-  void onTemplateChanged(MinerBlockTemplate newTemplate) override;
-  void onBlockFound(CryptoNote::BlockTemplate block) override;
-
-  void run();
-  void shutdown();
-
-  void addObserver(Observer* observer);
-  void removeObserver(Observer* observer);
-
-  void setThreads(uint32_t threadCount);
-  uint32_t threads() const;
-
-  CollectiveHashrateSummary resetHashrateSummary();
-
- private:
-  Xi::Http::Client m_http;
-  Logging::LoggerRef m_logger;
-
-  Tools::ObserverManager<Observer> m_observer;
-  uint32_t m_threads = static_cast<uint32_t>(std::thread::hardware_concurrency());
-  std::atomic_bool m_running{false};
-  std::atomic_bool m_shutdownRequest{false};
-  std::vector<std::shared_ptr<MinerWorker>> m_worker;
-  std::default_random_engine m_randomEngine;
-  std::uniform_int_distribution<uint32_t> m_nonceDist;
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(HashCount)
+  KV_MEMBER(Milliseconds)
+  KV_END_SERIALIZATION
 };
+
+struct CollectiveHashrateSummary {
+  uint32_t Threads;
+  std::vector<HashrateSummary> ThreadsSummary;
+  double Hashrate;
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(Threads)
+  KV_MEMBER(ThreadsSummary)
+  KV_MEMBER(Hashrate)
+  KV_END_SERIALIZATION
+};
+
 }  // namespace XiMiner

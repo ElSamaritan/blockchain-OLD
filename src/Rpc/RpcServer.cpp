@@ -197,6 +197,12 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
         {"getblockheaderbyhash", {makeMemberMethod(&RpcServer::on_get_block_header_by_hash), false, true}},
         {"getblockheaderbyheight", {makeMemberMethod(&RpcServer::on_get_block_header_by_height), false, true}},
 
+        // clang-format off
+        {RpcCommands::GetBlockTemplate::identifier(), {makeMemberMethod(&RpcServer::on_get_block_template), false, false}},
+        {RpcCommands::GetBlockTemplateState::identifier(), {makeMemberMethod(&RpcServer::on_get_block_template_state), false, false}},
+        {RpcCommands::SubmitBlock::identifier(), {makeMemberMethod(&RpcServer::on_submit_block), false, false}},
+        // clang-format on
+
         // Not enabled on block explorer
         {"getblocktemplate", {makeMemberMethod(&RpcServer::on_getblocktemplate), false, false}},
         {"submitblock", {makeMemberMethod(&RpcServer::on_submitblock), false, false}}};
@@ -1075,6 +1081,25 @@ bool RpcServer::on_getblockhash(const COMMAND_RPC_GETBLOCKHASH::request& req, CO
   return true;
 }
 
+Hash RpcServer::block_template_state_hash() const {
+  const auto topBlock = m_core.getTopBlockHash();
+  const auto poolState = m_core.transactionPool().stateHash();
+  Hash reval{};
+  for (size_t i = 0; i < sizeof(reval); ++i) {
+    reval.data[i] = topBlock.data[i] ^ poolState.data[i];
+  }
+  return reval;
+}
+
+bool RpcServer::on_getblocktemplatestate(const COMMAND_RPC_GETBLOCKTEMPLATE_STATE::request& req,
+                                         COMMAND_RPC_GETBLOCKTEMPLATE_STATE::response& res) {
+  XI_UNUSED(req);
+  const auto stateHash = block_template_state_hash();
+  res.template_state = Common::podToHex(stateHash);
+  res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
+
 namespace {
 uint64_t slow_memmem(void* start_buff, size_t buflen, void* pat, size_t patlen) {
   void* buf = memchr(start_buff, ((char*)pat)[0], buflen);
@@ -1091,6 +1116,7 @@ uint64_t slow_memmem(void* start_buff, size_t buflen, void* pat, size_t patlen) 
 
 bool RpcServer::on_getblocktemplate(const COMMAND_RPC_GETBLOCKTEMPLATE::request& req,
                                     COMMAND_RPC_GETBLOCKTEMPLATE::response& res) {
+  // TODO REMOVE ME
   if (req.reserve_size > TX_EXTRA_NONCE_MAX_COUNT) {
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_BIG_RESERVE_SIZE, "To big reserved size, maximum 255"};
   }
@@ -1146,8 +1172,108 @@ bool RpcServer::on_getblocktemplate(const COMMAND_RPC_GETBLOCKTEMPLATE::request&
   }
 
   res.blocktemplate_blob = toHex(block_blob);
+  const auto btstate = block_template_state_hash();
+  res.template_state = Common::podToHex(btstate);
   res.status = CORE_RPC_STATUS_OK;
 
+  return true;
+}
+
+bool RpcServer::on_get_block_template_state(const RpcCommands::GetBlockTemplateState::request& req,
+                                            RpcCommands::GetBlockTemplateState::response& res) {
+  XI_UNUSED(req);
+  const auto stateHash = block_template_state_hash();
+  res.template_state = Common::podToHex(stateHash);
+  res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
+
+bool RpcServer::on_get_block_template(const RpcCommands::GetBlockTemplate::request& req,
+                                      RpcCommands::GetBlockTemplate::response& res) {
+  if (req.reserve_size > TX_EXTRA_NONCE_MAX_COUNT) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_BIG_RESERVE_SIZE, "To big reserved size, maximum 255"};
+  }
+
+  AccountPublicAddress acc = boost::value_initialized<AccountPublicAddress>();
+
+  if (!req.wallet_address.size() || !m_core.getCurrency().parseAccountAddressString(req.wallet_address, acc)) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_WRONG_WALLET_ADDRESS, "Failed to parse wallet address"};
+  }
+
+  BlockTemplate blockTemplate = boost::value_initialized<BlockTemplate>();
+  CryptoNote::BinaryArray blob_reserve;
+  if (!m_core.getBlockTemplate(blockTemplate, acc, blob_reserve, res.difficulty, res.height)) {
+    logger(ERROR) << "Failed to create block template";
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Internal error: failed to create block template"};
+  }
+
+  BinaryArray block_blob = toBinaryArray(blockTemplate);
+  PublicKey tx_pub_key = CryptoNote::getTransactionPublicKeyFromExtra(blockTemplate.baseTransaction.extra);
+  if (tx_pub_key == NULL_PUBLIC_KEY) {
+    logger(ERROR) << "Failed to find tx pub key in coinbase extra";
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
+                                "Internal error: failed to find tx pub key in coinbase extra"};
+  }
+
+  if (!blockTemplate.staticReward.isNull()) {
+    PublicKey static_reward_pub_key = CryptoNote::getTransactionPublicKeyFromExtra(blockTemplate.staticReward.extra);
+    if (static_reward_pub_key == NULL_PUBLIC_KEY) {
+      logger(ERROR) << "Failed to find tx pub key in static reward extra";
+      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
+                                  "Internal error: failed to find tx pub key in static reward extra"};
+    }
+  }
+
+  if (0 < req.reserve_size) {
+    res.reserved_offset = static_cast<uint32_t>(
+        slow_memmem((void*)block_blob.data(), block_blob.size(), &tx_pub_key, sizeof(tx_pub_key)));
+    if (!res.reserved_offset) {
+      logger(ERROR) << "Failed to find tx pub key in blockblob";
+      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
+                                  "Internal error: failed to create block template"};
+    }
+    res.reserved_offset += sizeof(tx_pub_key) + 3;  // 3 bytes: tag for TX_EXTRA_TAG_PUBKEY(1 byte), tag for
+                                                    // TX_EXTRA_NONCE(1 byte), counter in TX_EXTRA_NONCE(1 byte)
+    if (res.reserved_offset + req.reserve_size > block_blob.size()) {
+      logger(ERROR) << "Failed to calculate offset for reserved bytes";
+      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
+                                  "Internal error: failed to create block template"};
+    }
+  } else {
+    res.reserved_offset = 0;
+  }
+
+  res.blocktemplate_blob = toHex(block_blob);
+  const auto btstate = block_template_state_hash();
+  res.template_state = Common::podToHex(btstate);
+  res.status = CORE_RPC_STATUS_OK;
+
+  return true;
+}
+
+bool RpcServer::on_submit_block(const RpcCommands::SubmitBlock::request& req, RpcCommands::SubmitBlock::response& res) {
+  XI_CONCURRENT_RLOCK(m_submissionAccess);
+
+  BinaryArray blockblob;
+  if (!fromHex(req.hex_binary_template, blockblob)) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_WRONG_BLOCKBLOB, "Wrong block blob"};
+  }
+
+  auto submitResult = m_core.submitBlock(BinaryArray{blockblob});
+  if (submitResult != error::AddBlockErrorCondition::BLOCK_ADDED) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_BLOCK_NOT_ACCEPTED, "Block not accepted"};
+  }
+
+  res.result = submitResult.message();
+  if (submitResult == error::AddBlockErrorCode::ADDED_TO_MAIN ||
+      submitResult == error::AddBlockErrorCode::ADDED_TO_ALTERNATIVE_AND_SWITCHED) {
+    auto blockTemplate = fromBinaryArray<BlockTemplate>(blockblob);  // safe as long as core checked it for us.
+    LiteBlock blockToRelay;
+    blockToRelay.blockTemplate = std::move(blockblob);
+    m_protocol.relayBlock(std::move(blockToRelay));
+  }
+
+  res.status = CORE_RPC_STATUS_OK;
   return true;
 }
 

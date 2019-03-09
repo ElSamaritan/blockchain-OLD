@@ -23,65 +23,37 @@
 
 #pragma once
 
-#include <atomic>
-#include <vector>
-#include <random>
-#include <thread>
+#include <string>
 
-#include <Xi/Global.h>
-#include <Xi/Result.h>
-#include <Xi/Http/Client.h>
-#include <Logging/ILogger.h>
-#include <Logging/LoggerRef.h>
-#include <crypto/CryptoTypes.h>
-#include <Common/ObserverManager.h>
-#include <Rpc/RpcRemoteConfiguration.h>
+#include <Serialization/ISerializer.h>
 
-#include "UpdateMonitor.h"
-#include "MinerWorker.h"
-#include "HashrateSummary.h"
+#include "Rpc/Commands/EmptyRequest.h"
 
-namespace XiMiner {
-class MinerManager : public UpdateMonitor::Observer, MinerWorker::Observer {
- public:
-  class Observer {
-   public:
-    virtual ~Observer() = default;
+namespace CryptoNote {
+namespace RpcCommands {
 
-    virtual void onSuccessfulBlockSubmission(Crypto::Hash hash) = 0;
-    virtual void onBlockTemplateChanged() = 0;
+struct GetBlockTemplateState {
+  static inline std::string identifier() {
+    static const std::string __Identifier{"get_block_template_state"};
+    return __Identifier;
+  }
+
+  using request = EmptyRequest;
+
+  struct response {
+    std::string status;
+
+    /*!
+     * \brief template_state Hash unique to a previous call, iff a new requested block template would not change.
+     */
+    std::string template_state;
+
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(status)
+    KV_MEMBER(template_state)
+    KV_END_SERIALIZATION
   };
-
- public:
-  MinerManager(const CryptoNote::RpcRemoteConfiguration remote, Logging::ILogger& logger);
-  XI_DELETE_COPY(MinerManager);
-  XI_DELETE_MOVE(MinerManager);
-  ~MinerManager() override = default;
-
-  void onTemplateChanged(MinerBlockTemplate newTemplate) override;
-  void onBlockFound(CryptoNote::BlockTemplate block) override;
-
-  void run();
-  void shutdown();
-
-  void addObserver(Observer* observer);
-  void removeObserver(Observer* observer);
-
-  void setThreads(uint32_t threadCount);
-  uint32_t threads() const;
-
-  CollectiveHashrateSummary resetHashrateSummary();
-
- private:
-  Xi::Http::Client m_http;
-  Logging::LoggerRef m_logger;
-
-  Tools::ObserverManager<Observer> m_observer;
-  uint32_t m_threads = static_cast<uint32_t>(std::thread::hardware_concurrency());
-  std::atomic_bool m_running{false};
-  std::atomic_bool m_shutdownRequest{false};
-  std::vector<std::shared_ptr<MinerWorker>> m_worker;
-  std::default_random_engine m_randomEngine;
-  std::uniform_int_distribution<uint32_t> m_nonceDist;
 };
-}  // namespace XiMiner
+
+}  // namespace RpcCommands
+}  // namespace CryptoNote
