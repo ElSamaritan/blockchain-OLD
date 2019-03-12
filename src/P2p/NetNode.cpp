@@ -809,7 +809,6 @@ bool NodeServer::try_to_connect_and_handshake_with_new_peer(const NetworkAddress
       logger(DEBUGGING) << "Connection timed out";
       return false;
     } catch (std::exception& e) {
-      report_failure(na.ip, P2pPenalty::Exceptional);
       logger(DEBUGGING) << "Connection to " << Common::ipAddressToString(na.ip) << " failed: " << e.what();
       throw e;
     }
@@ -1665,7 +1664,6 @@ void NodeServer::connectionHandler(const boost::uuids::uuid& connectionId, P2pCo
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << ctx << "connectionHandler() inner context is interrupted";
     } catch (std::exception& e) {
-      report_failure(ctx.m_remote_ip, P2pPenalty::Exceptional);
       logger(DEBUGGING) << ctx << "Exception in connectionHandler: " << e.what();
     }
 
