@@ -71,6 +71,9 @@ int Xi::App::Application::exec(int argc, char **argv) {
     int returnCode = run();
     tearDown();
     return returnCode;
+  } catch (cxxopts::OptionParseException e) {
+    std::cerr << "error parsing command line options: " << e.what() << std::endl;
+    return -1;
   } catch (std::exception &e) {
     std::cerr << e.what() << std::endl;
     return -1;
@@ -92,13 +95,33 @@ CryptoNote::RpcRemoteConfiguration Xi::App::Application::remoteConfiguration() c
   return m_remoteRpcOptions->getConfig(m_sslConfig);
 }
 
-CryptoNote::RocksDBWrapper *Xi::App::Application::database() { return m_database.get(); }
+CryptoNote::RocksDBWrapper *Xi::App::Application::database() {
+  if (m_database.get() == nullptr) {
+    initializeDatabase();
+  }
+  return m_database.get();
+}
 
-CryptoNote::Checkpoints *Xi::App::Application::checkpoints() { return m_checkpoints.get(); }
+CryptoNote::Checkpoints *Xi::App::Application::checkpoints() {
+  if (m_checkpoints.get() == nullptr) {
+    initializeCheckpoints();
+  }
+  return m_checkpoints.get();
+}
 
-CryptoNote::Currency *Xi::App::Application::currency() { return m_currency.get(); }
+CryptoNote::Currency *Xi::App::Application::currency() {
+  if (m_currency.get() == nullptr) {
+    initializeCurrency();
+  }
+  return m_currency.get();
+}
 
-CryptoNote::ICore *Xi::App::Application::core() { return m_core.get(); }
+CryptoNote::ICore *Xi::App::Application::core() {
+  if (m_core.get() == nullptr) {
+    initializeCore();
+  }
+  return m_core.get();
+}
 
 CryptoNote::INode *Xi::App::Application::remoteNode(bool pollUpdates) {
   if (!m_remoteRpcOptions) {
@@ -165,13 +188,7 @@ bool Xi::App::Application::evaluateParsedOptions(const cxxopts::Options &options
   return false;
 }
 
-void Xi::App::Application::setUp() {
-  initializeLogger();
-  if (m_netOptions) initializeCurrency();
-  if (m_dbOptions) initializeDatabase();
-  if (m_checkpointOptions) initializeCheckpoints();
-  if (m_coreRequied) initializeCore();
-}
+void Xi::App::Application::setUp() { initializeLogger(); }
 
 void Xi::App::Application::tearDown() {
   if (m_remoteNode) m_remoteNode->shutdown();
@@ -265,8 +282,8 @@ void Xi::App::Application::initializeCurrency() {
 
 void Xi::App::Application::initializeCore() {
   m_core = std::make_unique<CryptoNote::Core>(
-      *currency(), logger(), *m_checkpoints, dispatcher(),
-      std::make_unique<CryptoNote::DatabaseBlockchainCacheFactory>(*m_database, logger()),
+      *currency(), logger(), *checkpoints(), dispatcher(),
+      std::make_unique<CryptoNote::DatabaseBlockchainCacheFactory>(*database(), logger()),
       CryptoNote::createSwappedMainChainStorage(m_dbOptions->DataDirectory, *currency()));
   m_core->load();
 }

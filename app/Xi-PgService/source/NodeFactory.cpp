@@ -41,6 +41,11 @@ class NodeRpcStub : public CryptoNote::INode {
   virtual void getFeeInfo() override {}
   virtual bool ping() override { return false; }
 
+  virtual void getLastBlockHeaderInfo(CryptoNote::BlockHeaderInfo& info, const Callback& callback) override {
+    XI_UNUSED(info);
+    callback(std::error_code());
+  }
+
   virtual void getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount,
                                           std::vector<Crypto::Hash>& blockHashes, const Callback& callback) override {
     XI_UNUSED(timestampBegin, secondsCount, blockHashes);
