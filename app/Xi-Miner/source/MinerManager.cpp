@@ -44,7 +44,7 @@ void XiMiner::MinerManager::onTemplateChanged(MinerBlockTemplate newTemplate) {
   for (uint32_t i = 0; i < m_worker.size(); ++i) {
     auto iWorker = m_worker[i];
     iWorker->setInitialNonce(nonce + i);
-    iWorker->setNonceStep(i);
+    iWorker->setNonceStep(m_threads);
     iWorker->setTemplate(newTemplate);
   }
   m_observer.notify(&MinerManager::Observer::onBlockTemplateChanged);
@@ -59,7 +59,7 @@ void XiMiner::MinerManager::onBlockFound(CryptoNote::BlockTemplate block) {
     CryptoNote::JsonRpc::invokeJsonRpcCommand(m_http, CryptoNote::RpcCommands::SubmitBlock::identifier(), request,
                                               response);
     CryptoNote::CachedBlock cblock{block};
-    m_observer.notify(&MinerManager::Observer::onSuccessfulBlockSubmission, cblock.getBlockLongHash());
+    m_observer.notify(&MinerManager::Observer::onSuccessfulBlockSubmission, cblock.getBlockHash());
     m_logger(Logging::INFO) << "block submission result: " << response.result;
   } catch (std::exception& e) {
     m_logger(Logging::ERROR) << "error on block submission: " << e.what();
@@ -79,7 +79,7 @@ void XiMiner::MinerManager::run() {
     auto iWorker = std::make_shared<MinerWorker>();
     iWorker->addObserver(this);
     iWorker->setInitialNonce(nonce + i);
-    iWorker->setNonceStep(i);
+    iWorker->setNonceStep(m_threads);
     if (i >= m_threads) {
       iWorker->pause();
     }
@@ -115,8 +115,11 @@ void XiMiner::MinerManager::addObserver(XiMiner::MinerManager::Observer* observe
 void XiMiner::MinerManager::removeObserver(XiMiner::MinerManager::Observer* observer) { m_observer.remove(observer); }
 
 void XiMiner::MinerManager::setThreads(uint32_t threadCount) {
+  const uint32_t nonce = m_nonceDist(m_randomEngine);
   m_threads = threadCount;
   for (uint32_t i = 0; i < std::thread::hardware_concurrency() && i < m_worker.size(); ++i) {
+    m_worker[i]->setInitialNonce(nonce + i);
+    m_worker[i]->setNonceStep(m_threads);
     if (i >= m_threads) {
       m_worker[i]->pause();
     } else {
