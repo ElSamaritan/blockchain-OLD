@@ -10,6 +10,8 @@
 #include <string>
 #include <cinttypes>
 #include <limits>
+#include <thread>
+#include <algorithm>
 
 #include <Xi/Utils/ExternalIncludePush.h>
 #include <cxxopts.hpp>
@@ -89,7 +91,8 @@ DaemonConfiguration initConfiguration() {
   config.logLevel = Logging::WARNING;
   config.dbMaxOpenFiles = Xi::Config::Database::maximumOpenFiles();
   config.dbReadCacheSize = Xi::Config::Database::readBufferSize();
-  config.dbThreads = Xi::Config::Database::backgroundThreads();
+  config.dbThreads = std::min<uint16_t>(Xi::Config::Database::backgroundThreads(),
+                                        static_cast<uint16_t>(std::thread::hardware_concurrency()));
   config.dbWriteBufferSize = Xi::Config::Database::writeBufferSize();
   config.network = ::Xi::Config::Network::defaultNetworkType();
   config.p2pInterface = "0.0.0.0";
