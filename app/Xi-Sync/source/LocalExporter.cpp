@@ -23,8 +23,8 @@
 
 #include "LocalExporter.h"
 
-XiSync::LocalExporter::LocalExporter(CryptoNote::ICore &core, XiSync::DumpWriter &writer)
-    : Exporter(writer), m_core{core} {}
+XiSync::LocalExporter::LocalExporter(CryptoNote::ICore &core, XiSync::DumpWriter &writer, Logging::ILogger &logger)
+    : Exporter(writer, logger), m_core{core} {}
 
 uint32_t XiSync::LocalExporter::topBlockIndex() const { return m_core.getTopBlockIndex(); }
 

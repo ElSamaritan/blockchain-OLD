@@ -33,11 +33,12 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidIndex, "start index is greater than avail
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidBatchSize, "batch size must be at least 100", XiSyncExporter)
 }  // namespace
 
-XiSync::Exporter::Exporter(XiSync::DumpWriter &writer) : m_writer{writer} {}
+XiSync::Exporter::Exporter(XiSync::DumpWriter &writer, Logging::ILogger &logger)
+    : m_writer{writer}, m_logger{logger, "Exporter"} {}
 
 Xi::Result<void> XiSync::Exporter::exportBlocks(uint32_t startIndex, uint32_t count, uint32_t batchSize) {
   XI_ERROR_TRY();
-  auto topIndex = topBlockIndex();
+  const auto topIndex = topBlockIndex();
   if (topIndex < startIndex) {
     Xi::exceptional<InvalidIndexError>();
   }
@@ -45,14 +46,19 @@ Xi::Result<void> XiSync::Exporter::exportBlocks(uint32_t startIndex, uint32_t co
     Xi::exceptional<InvalidBatchSizeError>();
   }
 
+  m_logger(Logging::INFO) << "exporting blockchain up to index " << topIndex;
+  count = std::min(topIndex + 1 - startIndex, count);
+
   uint32_t totalWritten = 0;
   while (startIndex <= topIndex && totalWritten < count) {
     uint32_t querySize = std::min(batchSize, count - totalWritten);
     auto blocks = queryBlocks(startIndex, querySize);
-    m_writer.write(0, std::move(blocks)).throwOnError();
+    m_writer.write(startIndex, std::move(blocks)).throwOnError();
     startIndex += querySize;
     totalWritten += querySize;
+    m_logger(Logging::INFO) << totalWritten << " of " << (topIndex + 1) << " written";
   }
+  m_logger(Logging::INFO) << "export finished";
   return Xi::make_result<void>();
   XI_ERROR_CATCH();
 }

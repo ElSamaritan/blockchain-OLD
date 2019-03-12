@@ -35,7 +35,7 @@ XiSync::Importer::Importer(CryptoNote::ICore &core, CryptoNote::Checkpoints &che
 
 XiSync::DumpReader::Visitor::BatchCommand XiSync::Importer::onInfo(const XiSync::BatchInfo &info) {
   auto currentTopIndex = m_core.getTopBlockIndex();
-  if (currentTopIndex >= info.StartIndex + info.StartIndex + info.Count) {
+  if (currentTopIndex >= info.StartIndex + info.Count) {
     return BatchCommand::Skip;
   } else {
     return BatchCommand::Read;

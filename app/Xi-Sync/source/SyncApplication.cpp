@@ -90,13 +90,13 @@ void SyncApplication::import() {
 void SyncApplication::localExport() {
   auto writer = DumpWriter::open(Options.DumpFile).takeOrThrow();
   writer->setCheckpointsDensity(Options.CheckpointsDensity);
-  LocalExporter exporter{*core(), *writer};
+  LocalExporter exporter{*core(), *writer, logger()};
   exporter.exportBlocks(0, std::numeric_limits<uint32_t>::max(), Options.BatchSize).throwOnError();
 }
 
 void SyncApplication::remoteExport() {
   auto writer = DumpWriter::open(Options.DumpFile).takeOrThrow();
   writer->setCheckpointsDensity(Options.CheckpointsDensity);
-  RemoteExporter exporter{*remoteNode(), *writer};
+  RemoteExporter exporter{*remoteNode(false), *writer, logger()};
   exporter.exportBlocks(0, std::numeric_limits<uint32_t>::max(), Options.BatchSize).throwOnError();
 }

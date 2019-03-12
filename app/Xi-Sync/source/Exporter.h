@@ -26,6 +26,8 @@
 #include <vector>
 
 #include <Xi/Result.h>
+#include <Logging/ILogger.h>
+#include <Logging/LoggerRef.h>
 #include <CryptoNoteCore/CryptoNote.h>
 
 #include "DumpWriter.h"
@@ -33,7 +35,7 @@
 namespace XiSync {
 class Exporter {
  protected:
-  Exporter(DumpWriter& writer);
+  Exporter(DumpWriter& writer, Logging::ILogger& logger);
 
  public:
   virtual ~Exporter() = default;
@@ -46,5 +48,6 @@ class Exporter {
 
  private:
   DumpWriter& m_writer;
+  Logging::LoggerRef m_logger;
 };
 }  // namespace XiSync

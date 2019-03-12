@@ -34,7 +34,7 @@
 namespace XiSync {
 class RemoteExporter : public Exporter {
  public:
-  RemoteExporter(CryptoNote::INode& remote, DumpWriter& writer);
+  RemoteExporter(CryptoNote::INode& remote, DumpWriter& writer, Logging::ILogger& logger);
   ~RemoteExporter() override = default;
 
   uint32_t topBlockIndex() const override;

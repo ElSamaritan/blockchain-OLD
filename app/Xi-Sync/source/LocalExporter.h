@@ -34,7 +34,7 @@
 namespace XiSync {
 class LocalExporter : public Exporter {
  public:
-  LocalExporter(CryptoNote::ICore& core, DumpWriter& writer);
+  LocalExporter(CryptoNote::ICore& core, DumpWriter& writer, Logging::ILogger& logger);
   ~LocalExporter() override = default;
 
   uint32_t topBlockIndex() const override;

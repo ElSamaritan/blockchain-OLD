@@ -23,11 +23,25 @@
 
 #include "RemoteExporter.h"
 
-XiSync::RemoteExporter::RemoteExporter(CryptoNote::INode &remote, XiSync::DumpWriter &writer)
-    : Exporter(writer), m_remote{remote} {}
+#include <algorithm>
+#include <iterator>
+#include <utility>
 
-uint32_t XiSync::RemoteExporter::topBlockIndex() const { return m_remote.getLastLocalBlockHeight() - 1; }
+XiSync::RemoteExporter::RemoteExporter(CryptoNote::INode &remote, XiSync::DumpWriter &writer, Logging::ILogger &logger)
+    : Exporter(writer, logger), m_remote{remote} {}
+
+uint32_t XiSync::RemoteExporter::topBlockIndex() const {
+  const auto remoteStatus = m_remote.getLastBlockHeaderInfo().get().takeOrThrow();
+  return remoteStatus.index;
+}
 
 std::vector<CryptoNote::RawBlock> XiSync::RemoteExporter::queryBlocks(uint32_t startIndex, uint32_t count) const {
-  return m_remote.getRawBlocksByRange(startIndex + 1, count).get().takeOrThrow();
+  std::vector<CryptoNote::RawBlock> reval;
+  reval.reserve(count);
+  for (uint32_t index = startIndex; index < startIndex + count; index += 100) {
+    const uint32_t left = (startIndex + count) - index;
+    auto blocks = m_remote.getRawBlocksByRange(index + 1, std::min<uint32_t>(left, 100)).get().takeOrThrow();
+    std::transform(blocks.begin(), blocks.end(), std::back_inserter(reval), [](auto &&b) { return std::move(b); });
+  }
+  return reval;
 }
