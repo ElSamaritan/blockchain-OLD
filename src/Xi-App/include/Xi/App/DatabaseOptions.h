@@ -33,6 +33,7 @@
 
 #include <Xi/Utils/Conversion.h>
 #include <Xi/Config/NetworkType.h>
+#include <Common/Util.h>
 #include <CryptoNoteCore/DataBaseConfig.h>
 #include <Serialization/ISerializer.h>
 #include <Serialization/SerializationOverloads.h>
@@ -42,7 +43,7 @@
 namespace Xi {
 namespace App {
 struct DatabaseOptions : public IOptions {
-  std::string DataDirectory;
+  std::string DataDirectory = Tools::getDefaultDataDirectory();
   uint16_t Threads = 1;
   uint16_t MaximumOpenFiles = 16;
   uint64_t WriteBufferSize = 32_MB;
