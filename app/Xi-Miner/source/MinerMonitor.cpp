@@ -101,7 +101,7 @@ void XiMiner::MinerMonitor::reportHashrate() {
 
 void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
   m_hrTimeline.push_back(m_miner.resetHashrateSummary());
-  if (m_hrTimeline.size() > 3600) {
+  if (m_hrTimeline.size() > 60) {
     m_hrTimeline.pop_front();
   }
 }
@@ -116,9 +116,11 @@ void XiMiner::MinerMonitor::checkForStall() {
     m_logger(Logging::ERROR) << "last block update is "
                              << std::chrono::duration_cast<std::chrono::minutes>(lastUpdateDuration).count()
                              << " minutes ago.";
+    m_lastStallNotification = now;
   } else if (lastUpdateDuration > std::chrono::minutes{3}) {
     m_logger(Logging::WARNING) << "last block update is "
                                << std::chrono::duration_cast<std::chrono::minutes>(lastUpdateDuration).count()
                                << " minutes ago.";
+    m_lastStallNotification = now;
   }
 }
