@@ -87,9 +87,9 @@ std::future<void> XiMiner::MinerWorker::shutdown() {
 
 XiMiner::HashrateSummary XiMiner::MinerWorker::resetHashrateSummary() {
   HashrateSummary reval;
-  reval.HashCount = 200;  // m_hashCount.load();
-  auto now = std::chrono::high_resolution_clock::now();
+  reval.HashCount = m_hashCount.load();
   m_hashCount.store(0);
+  auto now = std::chrono::high_resolution_clock::now();
   reval.Milliseconds =
       static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_lastHrSummary).count());
   m_lastHrSummary = now;
@@ -99,7 +99,6 @@ XiMiner::HashrateSummary XiMiner::MinerWorker::resetHashrateSummary() {
 void XiMiner::MinerWorker::mineLoop() {
   resetHashrateSummary();
   auto block = acquireTemplate();
-  uint32_t *noncePtr = reinterpret_cast<uint32_t *>(block.HashArray.data() + block.NonceOffset);
   uint32_t currentNonce = m_initialNonce;
   uint32_t nonceStep = m_nonceStep;
   while (!m_shutdownRequest.load()) {
@@ -110,7 +109,6 @@ void XiMiner::MinerWorker::mineLoop() {
 
     if (m_swapTemplate.load()) {
       block = acquireTemplate();
-      noncePtr = reinterpret_cast<uint32_t *>(block.HashArray.data() + block.NonceOffset);
       currentNonce = m_initialNonce;
       nonceStep = m_nonceStep;
     }
@@ -120,17 +118,16 @@ void XiMiner::MinerWorker::mineLoop() {
       continue;
     }
 
-    const uint32_t batchSize = 20;
+    const uint32_t batchSize = 10;
     for (uint32_t i = 0; i < batchSize; ++i) {
       currentNonce += nonceStep;
-      *noncePtr = currentNonce;
-      boost::endian::native_to_little_inplace(*noncePtr);
+      *reinterpret_cast<uint32_t *>(block.HashArray.data() + block.NonceOffset) =
+          boost::endian::native_to_little(currentNonce);
 
       Crypto::Hash h;
       Crypto::CNX::Hash_v0{}(block.HashArray.data(), block.HashArray.size(), h);
       if (CryptoNote::check_hash(h, block.Difficutly)) {
-        block.Template.nonce = *noncePtr;
-        boost::endian::little_to_native_inplace(block.Template.nonce);
+        block.Template.nonce = currentNonce;
         m_observer.notify(&Observer::onBlockFound, block.Template);
       }
     }
