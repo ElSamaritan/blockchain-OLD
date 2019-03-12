@@ -5,10 +5,13 @@
 // Please see the included LICENSE file for more information.
 
 #include "CachedBlock.h"
-#include <Common/Varint.h>
+
 #include <Xi/Config.h>
+#include <Common/Varint.h>
+
 #include "CryptoNoteTools.h"
 #include "crypto/cnx/cnx.h"
+#include "CryptoNoteCore/CryptoNoteSerialization.h"
 
 using namespace Crypto;
 using namespace CryptoNote;
@@ -89,9 +92,11 @@ uint32_t CachedBlock::getBlockIndex() const {
 
 uint32_t CachedBlock::getNonceOffset() const {
   if (!nonceOffset.is_initialized()) {
-    BinaryArray result;
-    toBinaryArray(static_cast<const BlockHeader&>(block), result);
-    nonceOffset = result.size() - sizeof(block.nonce);
+    size_t offset = Tools::get_varint_data(block.parentBlock.majorVersion).size();
+    offset += Tools::get_varint_data(block.parentBlock.minorVersion).size();
+    offset += Tools::get_varint_data(block.timestamp).size();
+    offset += sizeof(Crypto::Hash);
+    nonceOffset = offset;
   }
   return nonceOffset.get();
 }

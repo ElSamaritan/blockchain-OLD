@@ -31,6 +31,7 @@
 #include <Rpc/Commands/Commands.h>
 #include <Rpc/CoreRpcServerCommandsDefinitions.h>
 #include <CryptoNoteCore/CryptoNoteTools.h>
+#include <CryptoNoteCore/Transactions/TransactionApiExtra.h>
 
 Xi::Result<std::unique_ptr<XiMiner::UpdateMonitor>> XiMiner::UpdateMonitor::start(
     std::string address, CryptoNote::Currency &currency, const CryptoNote::RpcRemoteConfiguration &remote,
@@ -108,10 +109,22 @@ Xi::Result<XiMiner::MinerBlockTemplate> XiMiner::UpdateMonitor::getBlockTemplate
   if (!CryptoNote::fromBinaryArray(reval.Template, binaryTemplate)) {
     throw std::runtime_error{"invalid bock template"};
   }
+
+  CryptoNote::CachedBlock block{reval.Template};
+  if (reval.Template.majorVersion >= ::Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
+    CryptoNote::TransactionExtraMergeMiningTag mmTag;
+    mmTag.depth = 0;
+    mmTag.merkleRoot = block.getAuxiliaryBlockHeaderHash();
+
+    reval.Template.parentBlock.baseTransaction.extra.clear();
+    if (!CryptoNote::appendMergeMiningTagToExtra(reval.Template.parentBlock.baseTransaction.extra, mmTag)) {
+      throw std::runtime_error("Couldn't append merge mining tag");
+    }
+  }
+
   reval.Difficutly = response.difficulty;
   reval.TemplateState = response.template_state;
-  CryptoNote::CachedBlock block{reval.Template};
-  reval.HashArray = block.getBlockHashingBinaryArray();
+  reval.HashArray = block.getParentBlockHashingBinaryArray(true);
   reval.NonceOffset = block.getNonceOffset();
   return Xi::make_result<MinerBlockTemplate>(std::move(reval));
   XI_ERROR_CATCH();
