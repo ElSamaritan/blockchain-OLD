@@ -71,7 +71,7 @@ int Xi::App::Application::exec(int argc, char **argv) {
     int returnCode = run();
     tearDown();
     return returnCode;
-  } catch (cxxopts::OptionParseException e) {
+  } catch (cxxopts::OptionParseException &e) {
     std::cerr << "error parsing command line options: " << e.what() << std::endl;
     return -1;
   } catch (std::exception &e) {
