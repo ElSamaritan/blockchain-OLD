@@ -554,13 +554,13 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
         addResult == error::AddBlockErrorCondition::DESERIALIZATION_FAILED) {
       m_logger(Logging::DEBUGGING) << context
                                    << "Block verification failed, dropping connection: " << addResult.message();
-      m_p2p->report_failure(context.m_remote_ip, P2pPenalty::BlockValidationFailure);
+      reportFailureIfSynced(context, P2pPenalty::BlockValidationFailure);
       context.m_state = CryptoNoteConnectionContext::state_shutdown;
       return 1;
     } else if (addResult == error::AddBlockErrorCondition::BLOCK_REJECTED) {
       m_logger(Logging::INFO) << context << "Block received at sync phase was marked as orphaned, dropping connection: "
                               << addResult.message();
-      m_p2p->report_failure(context.m_remote_ip, P2pPenalty::BlockValidationFailure);
+      reportFailureIfSynced(context, P2pPenalty::BlockValidationFailure);
       context.m_state = CryptoNoteConnectionContext::state_shutdown;
       return 1;
     } else if (addResult == error::AddBlockErrorCode::ALREADY_EXISTS) {
@@ -615,7 +615,7 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(CryptoNoteConnectionContext& cont
       } else {
         m_logger(Logging::DEBUGGING) << context
                                      << "Block verification failed, dropping connection: " << error.message();
-        m_p2p->report_failure(context.m_remote_ip, P2pPenalty::BlockValidationFailure);
+        reportFailureIfSynced(context, P2pPenalty::BlockValidationFailure);
         context.m_state = CryptoNoteConnectionContext::state_shutdown;
       }
     }
@@ -632,11 +632,18 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(CryptoNoteConnectionContext& cont
     if (!post_notify<NOTIFY_MISSING_TXS_REQUEST_ENTRY>(*m_p2p, missingTxRequest, context)) {
       m_logger(Logging::ERROR)
           << context << "Lite block is missing transactions but the publisher is not reachable, dropping connection.";
+      reportFailureIfSynced(context, P2pPenalty::NoResponse);
       context.m_state = CryptoNoteConnectionContext::state_shutdown;
     }
   }
 
   return 1;
+}
+
+void CryptoNoteProtocolHandler::reportFailureIfSynced(CryptoNoteConnectionContext& context, P2pPenalty penalty) {
+  if (m_synchronized.load()) {
+    m_p2p->report_failure(context.m_remote_ip, penalty);
+  }
 }
 
 int CryptoNoteProtocolHandler::handle_request_chain(int command, NOTIFY_REQUEST_CHAIN::request& arg,

@@ -108,6 +108,8 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
   int doPushLiteBlock(CryptoNoteConnectionContext& context, uint32_t hops, uint32_t height, LiteBlock block,
                       std::vector<CachedTransaction> txs);
 
+  void reportFailureIfSynced(CryptoNoteConnectionContext& context, P2pPenalty penalty);
+
  private:
   System::Dispatcher& m_dispatcher;
   ICore& m_core;
