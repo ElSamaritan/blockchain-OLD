@@ -43,7 +43,7 @@ XiMiner::MinerCommandsHandler::MinerCommandsHandler(MinerManager &miner, UpdateM
     : ConsoleHandler(),
       m_miner{miner},
       m_monitor{monitor},
-      m_monitorlogger{Logging::NONE},
+      m_monitorlogger{Logging::INFO},
       m_clogger{Logging::INFO},
       m_logger{m_clogger, ""},
       m_appLogger{logger},
