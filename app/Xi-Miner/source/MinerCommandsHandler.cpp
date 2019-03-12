@@ -52,6 +52,8 @@ XiMiner::MinerCommandsHandler::MinerCommandsHandler(MinerManager &miner, UpdateM
   MINER_COMMAND_DEFINE(help, "prints a summary of all commands");
   MINER_COMMAND_DEFINE(version, "prints version information");
 
+  MINER_COMMAND_DEFINE(status, "prints the current miner status");
+
   MINER_COMMAND_DEFINE(set_poll_interval, "sets the block template polling interval in milliseconds");
   MINER_COMMAND_DEFINE(set_threads, "sets the number of threads to use for mining");
 
@@ -93,6 +95,18 @@ bool XiMiner::MinerCommandsHandler::help(const std::vector<std::string> &args) {
 bool XiMiner::MinerCommandsHandler::version(const std::vector<std::string> &args) {
   XI_UNUSED(args);
   m_logger(Logging::INFO) << CommonCLI::verboseVersionInformation();
+  return true;
+}
+
+bool XiMiner::MinerCommandsHandler::status(const std::vector<std::string> &args) {
+  XI_UNUSED(args);
+  std::stringstream builder{};
+  builder << std::fixed << std::setprecision(2);
+  auto minerStatus = m_minerMonitor.status();
+  builder << "Current Hashrate: " << minerStatus.CurrentHashrate << "H/s\n";
+  builder << "Average Hashrate: " << minerStatus.AverageHashrate << "H/s\n\n";
+  builder << "Blocks Mined    : " << minerStatus.BlocksMined;
+  m_logger(Logging::INFO, Logging::DEFAULT) << builder.str();
   return true;
 }
 

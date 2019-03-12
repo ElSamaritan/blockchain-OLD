@@ -45,6 +45,8 @@ class MinerCommandsHandler : public Common::ConsoleHandler {
   bool help(const std::vector<std::string>& args);
   bool version(const std::vector<std::string>& args);
 
+  bool status(const std::vector<std::string>& args);
+
   bool set_poll_interval(const std::vector<std::string>& args);
   bool set_threads(const std::vector<std::string>& args);
 

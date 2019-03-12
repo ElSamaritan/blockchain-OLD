@@ -47,6 +47,8 @@ void XiMiner::MinerOptions::emplaceOptions(cxxopts::Options &options) {
     ("t,threads", "number of threads to use.", cxxopts::value<uint32_t>(Threads)->default_value(std::to_string(Threads)), "# > 0")
     ("u,update-interval", "number of milliseconds to wait before checking for an update",
         cxxopts::value<uint16_t>(UpdateInterval)->default_value(std::to_string(UpdateInterval)), "ms >= 50")
+    ("l,block-limit", "maximum number of blocks to mine, after n blocks have been mined by this instance the aplication exits",
+        cxxopts::value<uint32_t>(BlockLimit)->default_value(std::to_string(BlockLimit)))
   ;
   // clang-format on
 }

@@ -67,6 +67,7 @@ int XiMiner::MinerApplication::run() {
   auto monitor = UpdateMonitor::start(Options.Address, *currency(), remoteConfiguration(), logger()).takeOrThrow();
   MinerManager miner{remoteConfiguration(), logger()};
   MinerCommandsHandler cli{miner, *monitor, logger()};
+  cli.minerMonitor().setBlocksLimit(Options.BlockLimit);
   cli.start(true, "xi-miner", Common::Console::Color::Cyan);
   Tools::SignalHandler::install([&miner] { miner.shutdown(); });
   monitor->addObserver(&miner);

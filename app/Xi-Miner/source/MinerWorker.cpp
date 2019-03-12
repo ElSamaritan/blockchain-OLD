@@ -120,7 +120,6 @@ void XiMiner::MinerWorker::mineLoop() {
 
     const uint32_t batchSize = 10;
     for (uint32_t i = 0; i < batchSize; ++i) {
-      currentNonce += nonceStep;
       *reinterpret_cast<uint32_t *>(block.HashArray.data() + block.NonceOffset) =
           boost::endian::native_to_little(currentNonce);
 
@@ -130,6 +129,7 @@ void XiMiner::MinerWorker::mineLoop() {
         block.Template.nonce = currentNonce;
         m_observer.notify(&Observer::onBlockFound, block.Template);
       }
+      currentNonce += nonceStep;
     }
 
     m_hashCount += batchSize;

@@ -29,12 +29,15 @@
 #include <chrono>
 #include <string>
 #include <deque>
+#include <functional>
+#include <mutex>
 
 #include <Logging/ILogger.h>
 #include <Logging/LoggerRef.h>
 
 #include "HashrateSummary.h"
 #include "MinerManager.h"
+#include "MinerStatus.h"
 
 namespace XiMiner {
 class MinerMonitor : public MinerManager::Observer {
@@ -53,7 +56,12 @@ class MinerMonitor : public MinerManager::Observer {
   void setTelemetryIdentifier(const std::string& id);
   const std::string& telemetryIdentifier() const;
 
-  std::string status() const;
+  void setBlocksLimit(uint32_t limit);
+  uint32_t blockLimit() const;
+
+  uint32_t blocksMined() const;
+
+  MinerStatus status() const;
 
  private:
   void monitorLoop();
@@ -73,5 +81,10 @@ class MinerMonitor : public MinerManager::Observer {
 
   std::deque<CollectiveHashrateSummary> m_hrTimeline;
   std::string m_minerId;  ///< Used to identify the instance on telemetry services.
+  std::atomic<uint32_t> m_blocksLimit{0};
+  std::atomic<uint32_t> m_blocksMined{0};
+
+  mutable std::mutex m_statusAccess;
+  MinerStatus m_status;
 };
 }  // namespace XiMiner

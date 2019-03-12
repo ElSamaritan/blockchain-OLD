@@ -40,11 +40,13 @@ class MinerOptions {
   std::string Address = "";
   uint32_t Threads = static_cast<uint32_t>(std::thread::hardware_concurrency());
   uint16_t UpdateInterval = 2000;
+  uint32_t BlockLimit = 0;
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(Address)
   KV_MEMBER(Threads)
   KV_MEMBER(UpdateInterval)
+  KV_MEMBER(BlockLimit)
   KV_END_SERIALIZATION
 
   void emplaceOptions(cxxopts::Options& options);

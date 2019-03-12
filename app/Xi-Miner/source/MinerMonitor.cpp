@@ -25,6 +25,8 @@
 
 #include <algorithm>
 #include <numeric>
+#include <sstream>
+#include <cstdlib>
 
 #include <Xi/Utils/ExternalIncludePush.h>
 #include <boost/asio/ip/host_name.hpp>
@@ -38,8 +40,13 @@ XiMiner::MinerMonitor::MinerMonitor(MinerManager& miner, Logging::ILogger& logge
 }
 
 void XiMiner::MinerMonitor::onSuccessfulBlockSubmission(Crypto::Hash hash) {
+  m_blocksMined += 1;
   m_logger(Logging::INFO, Logging::GREEN)
-      << "Block successfully submitted: " << Common::toHex(hash.data(), hash.size());
+      << "Block successfully submitted: " << Common::toHex(hash.data, sizeof(hash.data));
+  if (blockLimit() > 0 && blocksMined() >= blockLimit()) {
+    m_logger(Logging::INFO, Logging::RED) << "Blocks limit reached, shutting down.";
+    std::exit(EXIT_SUCCESS);  // sorry
+  }
 }
 
 void XiMiner::MinerMonitor::onBlockTemplateChanged() { m_lastBlockUpdate = std::chrono::system_clock::now(); }
@@ -76,7 +83,17 @@ void XiMiner::MinerMonitor::setTelemetryIdentifier(const std::string& id) { m_mi
 
 const std::string& XiMiner::MinerMonitor::telemetryIdentifier() const { return m_minerId; }
 
-std::string XiMiner::MinerMonitor::status() const { return ""; }
+void XiMiner::MinerMonitor::setBlocksLimit(uint32_t limit) { m_blocksLimit.store(limit); }
+
+uint32_t XiMiner::MinerMonitor::blockLimit() const { return m_blocksLimit.load(); }
+
+uint32_t XiMiner::MinerMonitor::blocksMined() const { return m_blocksMined.load(); }
+
+XiMiner::MinerStatus XiMiner::MinerMonitor::status() const {
+  std::lock_guard<std::mutex> lck{m_statusAccess};
+  XI_UNUSED(lck);
+  return m_status;
+}
 
 void XiMiner::MinerMonitor::monitorLoop() {
   auto lastUpdatePush = std::chrono::high_resolution_clock::now();
@@ -93,16 +110,25 @@ void XiMiner::MinerMonitor::monitorLoop() {
 }
 
 void XiMiner::MinerMonitor::reportHashrate() {
-  auto timelineAverage = std::accumulate(m_hrTimeline.rbegin(), m_hrTimeline.rend(), 0.0,
-                                         [](auto acc, const auto& iCheckpoint) { return acc + iCheckpoint.Hashrate; }) /
-                         (double)m_hrTimeline.size();
-  m_logger(Logging::TRACE, Logging::CYAN) << timelineAverage << " H/s";
+  m_logger(Logging::TRACE, Logging::CYAN) << status().AverageHashrate << " H/s";
 }
 
 void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
   m_hrTimeline.push_back(m_miner.resetHashrateSummary());
   if (m_hrTimeline.size() > 60) {
     m_hrTimeline.pop_front();
+  }
+  {
+    std::lock_guard<std::mutex> lck{m_statusAccess};
+    XI_UNUSED(lck);
+    m_status.AverageHashrate =
+        std::accumulate(m_hrTimeline.rbegin(), m_hrTimeline.rend(), 0.0,
+                        [](auto acc, const auto& iCheckpoint) { return acc + iCheckpoint.Hashrate; }) /
+        (double)m_hrTimeline.size();
+    if (m_hrTimeline.size() > 0) {
+      m_status.CurrentHashrate = m_hrTimeline.rbegin()->Hashrate;
+    }
+    m_status.BlocksMined = m_blocksMined;
   }
 }
 
