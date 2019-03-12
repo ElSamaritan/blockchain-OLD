@@ -42,6 +42,20 @@ std::future<Xi::Result<void>> CryptoNote::INode::init() {
   return future;
 }
 
+std::future<Xi::Result<CryptoNote::BlockHeaderInfo>> CryptoNote::INode::getLastBlockHeaderInfo() {
+  auto promise = std::make_shared<std::promise<Xi::Result<BlockHeaderInfo>>>();
+  auto reval = std::make_shared<BlockHeaderInfo>();
+  auto future = promise->get_future();
+  getLastBlockHeaderInfo(*reval, [promise, reval](std::error_code ec) mutable {
+    if (ec) {
+      promise->set_value(Xi::make_error(ec));
+    } else {
+      promise->set_value(Xi::make_result<BlockHeaderInfo>(std::move(*reval)));
+    }
+  });
+  return future;
+}
+
 std::future<Xi::Result<std::vector<CryptoNote::RawBlock>>> CryptoNote::INode::getRawBlocksByRange(uint32_t height,
                                                                                                   uint32_t count) {
   auto promise = std::make_shared<std::promise<Xi::Result<std::vector<RawBlock>>>>();

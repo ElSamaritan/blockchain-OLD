@@ -51,6 +51,7 @@ class NodeRpcProxy : public CryptoNote::INode {
   virtual bool removeObserver(CryptoNote::INodeRpcProxyObserver* observer);
 
   virtual void init(const Callback& callback) override;
+  virtual void getLastBlockHeaderInfo(BlockHeaderInfo& info, const Callback& callback) override;
   virtual bool shutdown() override;
 
   virtual size_t getPeerCount() const override;
@@ -105,6 +106,9 @@ class NodeRpcProxy : public CryptoNote::INode {
   unsigned int rpcTimeout() const { return m_rpcTimeout; }
   void rpcTimeout(unsigned int val) { m_rpcTimeout = val; }
 
+  void setPollUpdatesEnabled(bool enabled);
+  bool pollUpdatesEnabled() const;
+
  private:
   void resetInternalState();
   void workerThread(const Callback& initialized_callback);
@@ -118,6 +122,7 @@ class NodeRpcProxy : public CryptoNote::INode {
   void updatePoolState(const std::vector<std::unique_ptr<ITransactionReader>>& addedTxs,
                        const std::vector<Crypto::Hash>& deletedTxsIds);
 
+  std::error_code doGetLastBlockHeaderInfo(BlockHeaderInfo& info);
   std::error_code doGetBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount,
                                                std::vector<Crypto::Hash>& blockHashes);
   std::error_code doRelayTransaction(const CryptoNote::Transaction& transaction);
@@ -175,6 +180,7 @@ class NodeRpcProxy : public CryptoNote::INode {
 
   // Internal state
   bool m_stop = false;
+  std::atomic_bool m_pollUpdates{true};
   std::atomic<size_t> m_peerCount;
   std::atomic<uint32_t> m_networkHeight;
   std::atomic<uint64_t> m_nodeHeight;

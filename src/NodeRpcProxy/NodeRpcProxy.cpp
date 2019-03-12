@@ -104,6 +104,16 @@ void NodeRpcProxy::init(const INode::Callback& callback) {
   m_workerThread = std::thread([this, callback] { workerThread(callback); });
 }
 
+void NodeRpcProxy::getLastBlockHeaderInfo(BlockHeaderInfo& info, const INode::Callback& callback) {
+  std::lock_guard<std::mutex> lock(m_mutex);
+  if (m_state != STATE_INITIALIZED) {
+    callback(make_error_code(error::NOT_INITIALIZED));
+    return;
+  }
+
+  scheduleRequest(std::bind(&NodeRpcProxy::doGetLastBlockHeaderInfo, this, std::ref(info)), callback);
+}
+
 bool NodeRpcProxy::shutdown() {
   if (m_workerThread.joinable()) {
     m_workerThread.detach();
@@ -185,7 +195,7 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
 
 void NodeRpcProxy::updateNodeStatus() {
   bool updateBlockchain = true;
-  while (updateBlockchain && !m_stop) {
+  while (pollUpdatesEnabled() && updateBlockchain && !m_stop) {
     updateBlockchainStatus();
     updateBlockchain = !updatePoolStatus();
   }
@@ -298,6 +308,34 @@ void NodeRpcProxy::updatePoolState(const std::vector<std::unique_ptr<ITransactio
   }
 }
 
+std::error_code NodeRpcProxy::doGetLastBlockHeaderInfo(BlockHeaderInfo& info) {
+  CryptoNote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::request req = AUTO_VAL_INIT(req);
+  CryptoNote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::response rsp = AUTO_VAL_INIT(rsp);
+
+  std::error_code ec = jsonRpcCommand("getlastblockheader", req, rsp);
+
+  if (!ec) {
+    Crypto::Hash blockHash;
+    Crypto::Hash prevBlockHash;
+    if (!parse_hash256(rsp.block_header.hash, blockHash) || !parse_hash256(rsp.block_header.prev_hash, prevBlockHash)) {
+      return make_error_code(error::RESPONSE_ERROR);
+    }
+
+    info.index = rsp.block_header.height - 1;
+    info.majorVersion = rsp.block_header.major_version;
+    info.minorVersion = rsp.block_header.minor_version;
+    info.timestamp = rsp.block_header.timestamp;
+    info.hash = blockHash;
+    info.prevHash = prevBlockHash;
+    info.nonce = rsp.block_header.nonce;
+    info.isAlternative = rsp.block_header.orphan_status;
+    info.depth = rsp.block_header.depth;
+    info.difficulty = rsp.block_header.difficulty;
+    info.reward = rsp.block_header.reward;
+  }
+  return ec;
+}
+
 void NodeRpcProxy::getFeeInfo() {
   CryptoNote::COMMAND_RPC_GET_FEE_ADDRESS::request ireq = AUTO_VAL_INIT(ireq);
   CryptoNote::COMMAND_RPC_GET_FEE_ADDRESS::response iresp = AUTO_VAL_INIT(iresp);
@@ -332,6 +370,10 @@ bool NodeRpcProxy::ping() {
 std::string NodeRpcProxy::feeAddress() { return m_fee_address; }
 
 uint32_t NodeRpcProxy::feeAmount() { return m_fee_amount; }
+
+void NodeRpcProxy::setPollUpdatesEnabled(bool enabled) { m_pollUpdates.store(enabled); }
+
+bool NodeRpcProxy::pollUpdatesEnabled() const { return m_pollUpdates.load(); }
 
 std::string NodeRpcProxy::getInfo() {
   CryptoNote::COMMAND_RPC_GET_INFO::request ireq;

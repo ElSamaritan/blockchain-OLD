@@ -100,13 +100,16 @@ CryptoNote::Currency *Xi::App::Application::currency() { return m_currency.get()
 
 CryptoNote::ICore *Xi::App::Application::core() { return m_core.get(); }
 
-CryptoNote::INode *Xi::App::Application::remoteNode() {
+CryptoNote::INode *Xi::App::Application::remoteNode(bool pollUpdates) {
   if (!m_remoteRpcOptions) {
     return nullptr;
   }
   if (!m_remoteNode) {
     m_remoteNode = std::make_unique<CryptoNote::NodeRpcProxy>(m_remoteRpcOptions->Address, m_remoteRpcOptions->Port,
                                                               m_sslConfig, logger());
+    if (!pollUpdates) {
+      static_cast<CryptoNote::NodeRpcProxy *>(m_remoteNode.get())->setPollUpdatesEnabled(false);
+    }
     m_remoteNode->init().get().throwOnError();
   }
   return m_remoteNode.get();

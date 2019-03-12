@@ -75,7 +75,7 @@ class Application {
   CryptoNote::Checkpoints* checkpoints();
   CryptoNote::Currency* currency();
   CryptoNote::ICore* core();
-  CryptoNote::INode* remoteNode();
+  CryptoNote::INode* remoteNode(bool pollUpdates = false);
   // --------------------------------------------- PreSetup ---------------------------------------------------
 
   // --------------------------------------------- Overrides --------------------------------------------------

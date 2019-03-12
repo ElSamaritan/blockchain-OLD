@@ -110,6 +110,7 @@ class INode {
                                                const Callback& callback) = 0;
 
   virtual BlockHeaderInfo getLastLocalBlockHeaderInfo() const = 0;
+  virtual void getLastBlockHeaderInfo(BlockHeaderInfo& info, const Callback& callback) = 0;
 
   virtual void relayTransaction(const Transaction& transaction, const Callback& callback) = 0;
   virtual void getRandomOutsByAmounts(
@@ -143,6 +144,7 @@ class INode {
   // --------------------------------------- Convenient Boilerplate Code -------------------------------------------
  public:
   std::future<Xi::Result<void>> init();
+  std::future<Xi::Result<BlockHeaderInfo>> getLastBlockHeaderInfo();
   std::future<Xi::Result<std::vector<RawBlock>>> getRawBlocksByRange(uint32_t height, uint32_t count);
 };
 
