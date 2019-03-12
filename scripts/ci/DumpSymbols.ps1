@@ -68,7 +68,6 @@ try
         "xi-sync",
         "xi-wallet",
         "xi-miner",
-        "xi-miner-legacy",
         "xi-pgservice",
         "xi-benchmark"
     )
