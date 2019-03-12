@@ -68,7 +68,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
                         "Print blockchain info in a given blocks range, print_bc <begin_height> [<end_height>]");
   DAEMON_COMMAND_DEFINE(print_block, "Print block, print_block <block_hash> | <block_height>");
   DAEMON_COMMAND_DEFINE(print_tx, "Print transaction, print_tx <transaction_hash>");
-  DAEMON_COMMAND_DEFINE(set_log, "set_log <level> - Change current log level, <level> is a number 0-4");
+  DAEMON_COMMAND_DEFINE(set_log, "set_log <level> - Change current log level, <level> is a number 0-5");
   DAEMON_COMMAND_DEFINE(status, "Show daemon status");
 
   /* ------------------------------------------------- Pool Commands ----------------------------------------------- */
