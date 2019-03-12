@@ -37,6 +37,7 @@ XI_DECLARE_EXCEPTIONAL_CATEGORY(MinerOptions)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidAddress, "invalid public address provided", MinerOptions)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidThreadCount, "thread count may not be 0 or succeed local hardware currency", MinerOptions)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidUpateInterval, "update interval may not be less than 50ms", MinerOptions)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidReportInterval, "report interval may not be less than 1s", MinerOptions)
 // clang-format on
 }  // namespace
 
@@ -47,6 +48,10 @@ void XiMiner::MinerOptions::emplaceOptions(cxxopts::Options &options) {
     ("t,threads", "number of threads to use.", cxxopts::value<uint32_t>(Threads)->default_value(std::to_string(Threads)), "# > 0")
     ("u,update-interval", "number of milliseconds to wait before checking for an update",
         cxxopts::value<uint16_t>(UpdateInterval)->default_value(std::to_string(UpdateInterval)), "ms >= 50")
+    ("i,report-interval", "number of seconds between consecutive hashrate reports",
+        cxxopts::value<uint16_t>(ReportInterval)->default_value(std::to_string(ReportInterval)), "s >= 1")
+    ("r,show-hashrate", "enables console hashrate reporting by default",
+        cxxopts::value<bool>(ShowHashrate)->default_value(std::to_string(ShowHashrate))->implicit_value("true"))
     ("l,block-limit", "maximum number of blocks to mine, after n blocks have been mined by this instance the aplication exits",
         cxxopts::value<uint32_t>(BlockLimit)->default_value(std::to_string(BlockLimit)))
   ;
@@ -74,6 +79,10 @@ bool XiMiner::MinerOptions::evaluateParsedOptions(const cxxopts::Options &option
 
   if (UpdateInterval < 50) {
     Xi::exceptional<InvalidUpateIntervalError>();
+  }
+
+  if (ReportInterval < 1) {
+    Xi::exceptional<InvalidReportIntervalError>();
   }
 
   return false;

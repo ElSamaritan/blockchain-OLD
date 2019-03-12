@@ -22,6 +22,7 @@
  * ============================================================================================== */
 
 #include <numeric>
+#include <chrono>
 
 #include <Xi/App/Application.h>
 #include <Common/SignalHandler.h>
@@ -68,6 +69,13 @@ int XiMiner::MinerApplication::run() {
   MinerManager miner{remoteConfiguration(), logger()};
   MinerCommandsHandler cli{miner, *monitor, logger()};
   cli.minerMonitor().setBlocksLimit(Options.BlockLimit);
+  cli.minerMonitor().setReportInterval(std::chrono::seconds{Options.ReportInterval});
+  if (Options.ShowHashrate) {
+    cli.showHashrate();
+  } else {
+    cli.hideHashrate();
+  }
+
   cli.start(true, "xi-miner", Common::Console::Color::Cyan);
   Tools::SignalHandler::install([&miner] { miner.shutdown(); });
   monitor->addObserver(&miner);

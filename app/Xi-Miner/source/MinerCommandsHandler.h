@@ -40,6 +40,9 @@ class MinerCommandsHandler : public Common::ConsoleHandler {
 
   MinerMonitor& minerMonitor();
 
+  void showHashrate();
+  void hideHashrate();
+
  private:
   bool exit(const std::vector<std::string>& args);
   bool help(const std::vector<std::string>& args);
