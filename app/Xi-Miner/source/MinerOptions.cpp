@@ -51,7 +51,7 @@ void XiMiner::MinerOptions::emplaceOptions(cxxopts::Options &options) {
     ("i,report-interval", "number of seconds between consecutive hashrate reports",
         cxxopts::value<uint16_t>(ReportInterval)->default_value(std::to_string(ReportInterval)), "s >= 1")
     ("r,show-hashrate", "enables console hashrate reporting by default",
-        cxxopts::value<bool>(ShowHashrate)->default_value(std::to_string(ShowHashrate))->implicit_value("true"))
+        cxxopts::value<bool>(ShowHashrate)->implicit_value("true"))
     ("l,block-limit", "maximum number of blocks to mine, after n blocks have been mined by this instance the aplication exits",
         cxxopts::value<uint32_t>(BlockLimit)->default_value(std::to_string(BlockLimit)))
   ;
