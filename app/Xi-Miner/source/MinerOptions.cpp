@@ -54,6 +54,8 @@ void XiMiner::MinerOptions::emplaceOptions(cxxopts::Options &options) {
         cxxopts::value<bool>(ShowHashrate)->implicit_value("true"))
     ("l,block-limit", "maximum number of blocks to mine, after n blocks have been mined by this instance the aplication exits",
         cxxopts::value<uint32_t>(BlockLimit)->default_value(std::to_string(BlockLimit)))
+    ("p,panic", "forces the application to exit if a health check fails",
+        cxxopts::value<bool>(Panic)->implicit_value("true"))
   ;
   // clang-format on
 }
