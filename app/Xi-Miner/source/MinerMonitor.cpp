@@ -49,7 +49,14 @@ void XiMiner::MinerMonitor::onSuccessfulBlockSubmission(Crypto::Hash hash) {
   }
 }
 
-void XiMiner::MinerMonitor::onBlockTemplateChanged() { m_lastBlockUpdate = std::chrono::system_clock::now(); }
+void XiMiner::MinerMonitor::onBlockTemplateChanged(Crypto::Hash hash) {
+  m_lastBlockUpdate = std::chrono::system_clock::now();
+  {
+    std::lock_guard<std::mutex> lck{m_statusAccess};
+    XI_UNUSED(lck);
+    m_status.TopBlockHash = hash;
+  }
+}
 
 void XiMiner::MinerMonitor::run() {
   if (m_shouldRun.load()) {
@@ -99,6 +106,14 @@ XiMiner::MinerStatus XiMiner::MinerMonitor::status() const {
   return m_status;
 }
 
+void XiMiner::MinerMonitor::reset() {
+  {
+    std::lock_guard<std::mutex> lck{m_statusAccess};
+    XI_UNUSED(lck);
+    m_hrTimeline.clear();
+  }
+}
+
 void XiMiner::MinerMonitor::monitorLoop() {
   auto lastUpdatePush = std::chrono::high_resolution_clock::now();
   while (m_shouldRun.load()) {
@@ -114,17 +129,26 @@ void XiMiner::MinerMonitor::monitorLoop() {
 }
 
 void XiMiner::MinerMonitor::reportHashrate() {
-  m_logger(Logging::TRACE, Logging::CYAN) << status().AverageHashrate << " H/s";
+  std::string color = Logging::CYAN;
+  const auto stats = status();
+  const auto abs = (stats.CurrentHashrate - stats.AverageHashrate) / stats.AverageHashrate;
+  if (abs >= -0.01)
+    color = Logging::GREEN;
+  else if (abs < -0.2)
+    color = Logging::RED;
+  else if (abs < -0.08)
+    color = Logging::YELLOW;
+  m_logger(Logging::TRACE, color) << status().AverageHashrate << " H/s";
 }
 
 void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
-  m_hrTimeline.push_back(m_miner.resetHashrateSummary());
-  if (m_hrTimeline.size() > 60) {
-    m_hrTimeline.pop_front();
-  }
   {
     std::lock_guard<std::mutex> lck{m_statusAccess};
     XI_UNUSED(lck);
+    m_hrTimeline.push_back(m_miner.resetHashrateSummary());
+    if (m_hrTimeline.size() > 600) {
+      m_hrTimeline.pop_front();
+    }
     m_status.AverageHashrate =
         std::accumulate(m_hrTimeline.rbegin(), m_hrTimeline.rend(), 0.0,
                         [](auto acc, const auto& iCheckpoint) { return acc + iCheckpoint.Hashrate; }) /

@@ -70,6 +70,7 @@ int XiMiner::MinerApplication::run() {
   MinerCommandsHandler cli{miner, *monitor, logger()};
   cli.minerMonitor().setBlocksLimit(Options.BlockLimit);
   cli.minerMonitor().setReportInterval(std::chrono::seconds{Options.ReportInterval});
+  cli.minerMonitor().setPanicExitEnabled(Options.Panic);
   if (Options.ShowHashrate) {
     cli.showHashrate();
   } else {

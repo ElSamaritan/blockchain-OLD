@@ -45,13 +45,16 @@ class MinerMonitor : public MinerManager::Observer {
   MinerMonitor(MinerManager& miner, Logging::ILogger& logger);
 
   void onSuccessfulBlockSubmission(Crypto::Hash hash) override;
-  void onBlockTemplateChanged() override;
+  void onBlockTemplateChanged(Crypto::Hash hash) override;
 
   void run();
   void shutdown();
 
   void setReportInterval(std::chrono::seconds interval);
   std::chrono::seconds reportInterval() const;
+
+  void setPanicExitEnabled(bool enabled);
+  bool isPanicExitEnabled() const;
 
   void setTelemetryIdentifier(const std::string& id);
   const std::string& telemetryIdentifier() const;
@@ -62,6 +65,8 @@ class MinerMonitor : public MinerManager::Observer {
   uint32_t blocksMined() const;
 
   MinerStatus status() const;
+
+  void reset();
 
  private:
   void monitorLoop();
@@ -75,6 +80,7 @@ class MinerMonitor : public MinerManager::Observer {
   std::thread m_monitor;
   std::atomic<uint64_t> m_reportSeconds{1};
   std::atomic_bool m_shouldRun{false};
+  std::atomic_bool m_panicExit{false};
 
   std::chrono::system_clock::time_point m_lastBlockUpdate;
   std::chrono::system_clock::time_point m_lastStallNotification;

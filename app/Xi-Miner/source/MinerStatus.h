@@ -25,18 +25,24 @@
 
 #include <cinttypes>
 
+#include <crypto/CryptoTypes.h>
 #include <Serialization/ISerializer.h>
+#include <CryptoNoteCore/CryptoNoteSerialization.h>
 
 namespace XiMiner {
 struct MinerStatus {
   double CurrentHashrate;
   double AverageHashrate;
   uint32_t BlocksMined;
+  uint32_t Threads;
+  Crypto::Hash TopBlockHash;
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(CurrentHashrate)
   KV_MEMBER(AverageHashrate)
   KV_MEMBER(BlocksMined)
+  KV_MEMBER(Threads)
+  KV_MEMBER(TopBlockHash)
   KV_END_SERIALIZATION
 };
 }  // namespace XiMiner

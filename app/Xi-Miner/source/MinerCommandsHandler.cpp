@@ -34,6 +34,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <Xi/Utils/ExternalIncludePop.h>
 
+#include <Common/StringTools.h>
 #include <CommonCLI/CommonCLI.h>
 
 #define MINER_COMMAND_DEFINE(NAME, HELP) setHandler(#NAME, boost::bind(&MinerCommandsHandler::NAME, this, _1), HELP)
@@ -106,10 +107,27 @@ bool XiMiner::MinerCommandsHandler::status(const std::vector<std::string> &args)
   XI_UNUSED(args);
   std::stringstream builder{};
   builder << std::fixed << std::setprecision(2);
+
+  const auto colorForHrDiff = [](double first, double second) -> std::string {
+    if (second == 0.0) return Logging::GREEN;
+    auto procent = (first - second) / second;
+    if (procent >= -0.02)
+      return Logging::GREEN;
+    else if (procent < -0.1)
+      return Logging::RED;
+    else
+      return Logging::YELLOW;
+  };
+
   auto minerStatus = m_minerMonitor.status();
-  builder << "Current Hashrate: " << minerStatus.CurrentHashrate << "H/s\n";
-  builder << "Average Hashrate: " << minerStatus.AverageHashrate << "H/s\n\n";
-  builder << "Blocks Mined    : " << minerStatus.BlocksMined;
+  builder << Logging::DEFAULT << "Current Hashrate  "
+          << colorForHrDiff(minerStatus.CurrentHashrate, minerStatus.AverageHashrate) << minerStatus.CurrentHashrate
+          << "H/s\n";
+  builder << Logging::DEFAULT << "Average Hashrate  " << minerStatus.AverageHashrate << "H/s\n\n";
+  builder << Logging::DEFAULT << "Threads In Use    " << minerStatus.Threads << "\n";
+  builder << Logging::DEFAULT << "Latest Block Hash " << Common::toHex(minerStatus.TopBlockHash.data, 32) << "\n\n";
+  builder << Logging::YELLOW << "Blocks Mined      " << (minerStatus.BlocksMined > 0 ? Logging::GREEN : Logging::WHITE)
+          << minerStatus.BlocksMined;
   m_logger(Logging::INFO, Logging::DEFAULT) << builder.str();
   return true;
 }
@@ -159,6 +177,7 @@ bool XiMiner::MinerCommandsHandler::set_threads(const std::vector<std::string> &
   }
 
   m_miner.setThreads(threads);
+  m_minerMonitor.reset();
 
   m_logger(Logging::INFO) << "changed threads used to " << threads;
   return true;
