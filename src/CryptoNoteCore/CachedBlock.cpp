@@ -65,8 +65,7 @@ const BinaryArray& CachedBlock::getBlockHashingBinaryArray() const {
 
     const auto& treeHash = getTransactionTreeHash();
     result.insert(result.end(), treeHash.begin(), treeHash.end());
-    auto transactionCount = Common::asBinaryArray(
-        Tools::get_varint_data(block.transactionHashes.size() + (block.staticReward.isNull() ? 1 : 2)));
+    auto transactionCount = Common::asBinaryArray(Tools::get_varint_data(block.transactionHashes.size() + 1));
     result.insert(result.end(), transactionCount.begin(), transactionCount.end());
   }
 
@@ -90,15 +89,6 @@ uint32_t CachedBlock::getBlockIndex() const {
   return blockIndex.get();
 }
 
-uint32_t CachedBlock::getNonceOffset() const {
-  if (!nonceOffset.is_initialized()) {
-    size_t offset = Tools::get_varint_data(block.parentBlock.majorVersion).size();
-    offset += Tools::get_varint_data(block.parentBlock.minorVersion).size();
-    offset += Tools::get_varint_data(block.timestamp).size();
-    offset += sizeof(Crypto::Hash);
-    nonceOffset = offset;
-  }
-  return nonceOffset.get();
-}
+uint32_t CachedBlock::getNonceOffset() const { return 2; }
 
 bool CachedBlock::hasStaticReward() const { return !block.staticReward.isNull(); }

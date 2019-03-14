@@ -42,7 +42,7 @@ XiMiner::MinerMonitor::MinerMonitor(MinerManager& miner, Logging::ILogger& logge
 void XiMiner::MinerMonitor::onSuccessfulBlockSubmission(Crypto::Hash hash) {
   m_blocksMined += 1;
   m_logger(Logging::INFO, Logging::GREEN)
-      << "Block successfully submitted: " << Common::toHex(hash.data, sizeof(hash.data));
+      << "Block successfully submitted: " << Common::toHex(hash.data(), hash.size());
   if (blockLimit() > 0 && blocksMined() >= blockLimit()) {
     m_logger(Logging::INFO, Logging::RED) << "Blocks limit reached, shutting down.";
     std::exit(EXIT_SUCCESS);  // sorry

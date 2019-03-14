@@ -28,11 +28,9 @@ class CachedBlock {
   const BlockTemplate& block;
   mutable boost::optional<BinaryArray> blockHashingBinaryArray;
   mutable boost::optional<uint32_t> blockIndex;
-  mutable boost::optional<uint32_t> nonceOffset;
   mutable boost::optional<Crypto::Hash> transactionTreeHash;
   mutable boost::optional<Crypto::Hash> blockHash;
   mutable boost::optional<Crypto::Hash> blockLongHash;
-  mutable boost::optional<Crypto::Hash> auxiliaryBlockHeaderHash;
 };
 
 }  // namespace CryptoNote

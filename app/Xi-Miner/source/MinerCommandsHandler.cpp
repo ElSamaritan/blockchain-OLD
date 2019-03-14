@@ -125,7 +125,8 @@ bool XiMiner::MinerCommandsHandler::status(const std::vector<std::string> &args)
           << "H/s\n";
   builder << Logging::DEFAULT << "Average Hashrate  " << minerStatus.AverageHashrate << "H/s\n\n";
   builder << Logging::DEFAULT << "Threads In Use    " << minerStatus.Threads << "\n";
-  builder << Logging::DEFAULT << "Latest Block Hash " << Common::toHex(minerStatus.TopBlockHash.data, 32) << "\n\n";
+  builder << Logging::DEFAULT << "Latest Block Hash "
+          << Common::toHex(minerStatus.TopBlockHash.data(), minerStatus.TopBlockHash.size()) << "\n\n";
   builder << Logging::YELLOW << "Blocks Mined      " << (minerStatus.BlocksMined > 0 ? Logging::GREEN : Logging::WHITE)
           << minerStatus.BlocksMined;
   m_logger(Logging::INFO, Logging::DEFAULT) << builder.str();

@@ -111,20 +111,9 @@ Xi::Result<XiMiner::MinerBlockTemplate> XiMiner::UpdateMonitor::getBlockTemplate
   }
 
   CryptoNote::CachedBlock block{reval.Template};
-  if (reval.Template.majorVersion >= ::Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()) {
-    CryptoNote::TransactionExtraMergeMiningTag mmTag;
-    mmTag.depth = 0;
-    mmTag.merkleRoot = block.getAuxiliaryBlockHeaderHash();
-
-    reval.Template.parentBlock.baseTransaction.extra.clear();
-    if (!CryptoNote::appendMergeMiningTagToExtra(reval.Template.parentBlock.baseTransaction.extra, mmTag)) {
-      throw std::runtime_error("Couldn't append merge mining tag");
-    }
-  }
-
   reval.Difficutly = response.difficulty;
   reval.TemplateState = response.template_state;
-  reval.HashArray = block.getParentBlockHashingBinaryArray(true);
+  reval.HashArray = block.getBlockHashingBinaryArray();
   reval.NonceOffset = block.getNonceOffset();
   return Xi::make_result<MinerBlockTemplate>(std::move(reval));
   XI_ERROR_CATCH();
