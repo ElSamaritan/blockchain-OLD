@@ -51,7 +51,7 @@ TEST(CryptoNightX, HashConsistency) {
       HashFn{}(reinterpret_cast<uint8_t*>(data->data()) + i * BlockSize, BlockSize, hashes[j], (j % 2) > 0);
 
     for (size_t j = 0; j < hashes.size() - 1; ++j) {
-      for (uint8_t k = 0; k < 32; ++k) EXPECT_EQ(hashes[j].data[k], hashes[j + 1].data[k]);
+      for (uint8_t k = 0; k < 32; ++k) EXPECT_EQ(hashes[j][k], hashes[j + 1][k]);
     }
   }
 }

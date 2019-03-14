@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -23,10 +23,29 @@
 
 #pragma once
 
+#include <array>
+#include <unordered_set>
+
+#include <Xi/Global.h>
+#include <Xi/Algorithm/GenericHash.h>
+#include <Xi/Algorithm/GenericComparison.h>
+
 #include "crypto/Types/Byte.h"
-#include "crypto/Types/Hash.h"
-#include "crypto/Types/PublicKey.h"
-#include "crypto/Types/SecretKey.h"
-#include "crypto/Types/KeyDerivation.h"
-#include "crypto/Types/KeyImage.h"
-#include "crypto/Types/Signature.h"
+
+namespace Crypto {
+struct KeyImage : std::array<Byte, 32> {
+  static const KeyImage Null;
+
+  KeyImage() = default;
+  XI_DEFAULT_COPY(KeyImage);
+  XI_DEFAULT_MOVE(KeyImage);
+  ~KeyImage() = default;
+};
+
+using KeyImageSet = std::unordered_set<KeyImage>;
+
+XI_MAKE_GENERIC_HASH_FUNC(KeyImage)
+XI_MAKE_GENERIC_COMPARISON(KeyImage)
+}  // namespace Crypto
+
+XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, KeyImage)

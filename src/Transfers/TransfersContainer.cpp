@@ -127,8 +127,7 @@ bool SpentOutputDescriptor::operator==(const SpentOutputDescriptor& other) const
 
 size_t SpentOutputDescriptor::hash() const {
   if (m_type == TransactionTypes::OutputType::Key) {
-    static_assert(sizeof(size_t) < sizeof(*m_keyImage), "sizeof(size_t) < sizeof(*m_keyImage)");
-    return *reinterpret_cast<const size_t*>(m_keyImage->data);
+    return Crypto::hash_value(*m_keyImage);
   } else {
     assert(false);
     return 0;
@@ -174,7 +173,7 @@ bool TransfersContainer::addTransaction(const TransactionBlockInfo& block, const
   } catch (...) {
     if (m_transactions.count(tx.getTransactionHash()) == 0) {
       m_logger(ERROR) << "Failed to add transaction, remove transaction transfers, block " << block.height
-                                  << ", transaction hash " << tx.getTransactionHash();
+                      << ", transaction hash " << tx.getTransactionHash();
       deleteTransactionTransfers(tx.getTransactionHash());
     }
 
@@ -225,7 +224,7 @@ bool TransfersContainer::addTransactionOutputs(const TransactionBlockInfo& block
     if (transactionIsUnconfimed != transferIsUnconfirmed) {
       auto message = "Failed to add transaction output: globalOutputIndex is invalid";
       m_logger(ERROR) << message << ", globalOutputIndex " << transfer.globalOutputIndex
-                                  << ", transaction is confirmed " << transferIsUnconfirmed;
+                      << ", transaction is confirmed " << transferIsUnconfirmed;
       throw std::invalid_argument(message);
     }
 
@@ -263,7 +262,7 @@ bool TransfersContainer::addTransactionOutputs(const TransactionBlockInfo& block
         if (duplicate) {
           auto message = "Failed to add transaction output: key output already exists";
           m_logger(ERROR) << message << ", transaction hash " << info.transactionHash << ", output index "
-                                      << info.outputInTransaction << ", key image " << info.keyImage;
+                          << info.outputInTransaction << ", key image " << info.keyImage;
           throw std::runtime_error(message);
         }
       }
@@ -303,18 +302,17 @@ bool TransfersContainer::addTransactionInputs(const TransactionBlockInfo& block,
         const auto& spentOutput = *spentRange.first;
         auto message = "Failed add key input: key image already spent";
         m_logger(ERROR) << message << ", key image " << input.keyImage << '\n'
-                                    << "    rejected transaction"
-                                    << ": hash " << tx.getTransactionHash() << ", block " << block.height
-                                    << ", transaction index " << block.transactionIndex << ", input " << i << '\n'
-                                    << "    spending transaction"
-                                    << ": hash " << spentOutput.spendingTransactionHash << ", block "
-                                    << spentOutput.spendingBlock.height << ", input " << spentOutput.inputInTransaction
-                                    << '\n'
-                                    << "    spent output        "
-                                    << ": hash " << spentOutput.transactionHash << ", block " << spentOutput.blockHeight
-                                    << ", transaction index " << spentOutput.transactionIndex << ", output "
-                                    << spentOutput.outputInTransaction << ", amount "
-                                    << m_currency.formatAmount(spentOutput.amount);
+                        << "    rejected transaction"
+                        << ": hash " << tx.getTransactionHash() << ", block " << block.height << ", transaction index "
+                        << block.transactionIndex << ", input " << i << '\n'
+                        << "    spending transaction"
+                        << ": hash " << spentOutput.spendingTransactionHash << ", block "
+                        << spentOutput.spendingBlock.height << ", input " << spentOutput.inputInTransaction << '\n'
+                        << "    spent output        "
+                        << ": hash " << spentOutput.transactionHash << ", block " << spentOutput.blockHeight
+                        << ", transaction index " << spentOutput.transactionIndex << ", output "
+                        << spentOutput.outputInTransaction << ", amount "
+                        << m_currency.formatAmount(spentOutput.amount);
         throw std::runtime_error(message);
       }
 
@@ -344,7 +342,7 @@ bool TransfersContainer::addTransactionInputs(const TransactionBlockInfo& block,
       if (spendingTransferIt == availableOutputsRange.second) {
         auto message = "Failed to add key input: invalid amount";
         m_logger(ERROR) << message << ", key image " << input.keyImage << ", amount "
-                                    << m_currency.formatAmount(input.amount);
+                        << m_currency.formatAmount(input.amount);
         throw std::runtime_error(message);
       }
 
@@ -411,7 +409,7 @@ bool TransfersContainer::markTransactionConfirmed(const TransactionBlockInfo& bl
       if (transfer.outputInTransaction >= globalIndices.size()) {
         auto message = "Failed to confirm transaction: not enough elements in globalIndices";
         m_logger(ERROR) << message << ", globalIndices.size() " << globalIndices.size() << ", output index "
-                                    << transfer.outputInTransaction;
+                        << transfer.outputInTransaction;
         throw std::invalid_argument(message);
       }
 
@@ -441,7 +439,7 @@ bool TransfersContainer::markTransactionConfirmed(const TransactionBlockInfo& bl
     }
   } catch (std::exception& e) {
     m_logger(ERROR) << "markTransactionConfirmed failed: " << e.what() << ", rollback changes, block index "
-                                << block.height << ", tx " << transactionHash;
+                    << block.height << ", tx " << transactionHash;
 
     auto txInfo = *transactionIt;
     txInfo.blockHeight = WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT;
@@ -853,7 +851,7 @@ void TransfersContainer::load(std::istream& in) {
   if (version > TRANSFERS_CONTAINER_STORAGE_VERSION) {
     auto message = "Failed to load: unsupported version";
     m_logger(ERROR) << message << ", version " << version << ", supported version "
-                                << TRANSFERS_CONTAINER_STORAGE_VERSION;
+                    << TRANSFERS_CONTAINER_STORAGE_VERSION;
     throw std::runtime_error(message);
   }
 
@@ -890,17 +888,18 @@ void TransfersContainer::repair() {
 
     if (m_transactions.count(it->spendingTransactionHash) == 0) {
       bool isInputConfirmed = it->spendingBlock.height != WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT;
-      m_logger(WARNING)
-          << "Orphan input found, remove it and return output spent by them to available outputs:\n"
-          << "    input       "
-          << ": block " << std::setw(7) << (isInputConfirmed ? static_cast<int32_t>(it->spendingBlock.height) : -1)
-          << ", transaction index " << std::setw(2)
-          << (isInputConfirmed ? static_cast<int32_t>(it->spendingBlock.transactionIndex) : -1) << ", transaction hash "
-          << it->spendingTransactionHash << ", input " << std::setw(3) << it->inputInTransaction << '\n'
-          << "    spent output"
-          << ": block " << std::setw(7) << it->blockHeight << ", transaction index " << std::setw(2)
-          << it->transactionIndex << ", transaction hash " << it->transactionHash << ", output " << std::setw(2)
-          << it->outputInTransaction;
+      m_logger(WARNING) << "Orphan input found, remove it and return output spent by them to available outputs:\n"
+                        << "    input       "
+                        << ": block " << std::setw(7)
+                        << (isInputConfirmed ? static_cast<int32_t>(it->spendingBlock.height) : -1)
+                        << ", transaction index " << std::setw(2)
+                        << (isInputConfirmed ? static_cast<int32_t>(it->spendingBlock.transactionIndex) : -1)
+                        << ", transaction hash " << it->spendingTransactionHash << ", input " << std::setw(3)
+                        << it->inputInTransaction << '\n'
+                        << "    spent output"
+                        << ": block " << std::setw(7) << it->blockHeight << ", transaction index " << std::setw(2)
+                        << it->transactionIndex << ", transaction hash " << it->transactionHash << ", output "
+                        << std::setw(2) << it->outputInTransaction;
 
       auto result = m_availableTransfers.emplace(static_cast<const TransactionOutputInformationEx&>(*it));
       assert(result.second);
@@ -922,8 +921,8 @@ void TransfersContainer::repair() {
 
     if (m_transactions.count(it->transactionHash) == 0) {
       m_logger(WARNING) << "Orphan unconfirmed output found, remove it"
-                                       << ", transaction hash " << it->transactionHash << ", output " << std::setw(2)
-                                       << it->outputInTransaction << ", amount " << m_currency.formatAmount(it->amount);
+                        << ", transaction hash " << it->transactionHash << ", output " << std::setw(2)
+                        << it->outputInTransaction << ", amount " << m_currency.formatAmount(it->amount);
 
       if (it->type == TransactionTypes::OutputType::Key) {
         KeyImage keyImage = it->keyImage;
@@ -945,10 +944,10 @@ void TransfersContainer::repair() {
 
     if (m_transactions.count(it->transactionHash) == 0) {
       m_logger(WARNING) << "Orphan output found, remove it"
-                                       << ", block " << std::setw(7) << it->blockHeight << ", transaction index "
-                                       << std::setw(2) << it->transactionIndex << ", transaction hash "
-                                       << it->transactionHash << ", output " << std::setw(2) << it->outputInTransaction
-                                       << ", amount " << m_currency.formatAmount(it->amount);
+                        << ", block " << std::setw(7) << it->blockHeight << ", transaction index " << std::setw(2)
+                        << it->transactionIndex << ", transaction hash " << it->transactionHash << ", output "
+                        << std::setw(2) << it->outputInTransaction << ", amount "
+                        << m_currency.formatAmount(it->amount);
 
       if (it->type == TransactionTypes::OutputType::Key) {
         KeyImage keyImage = it->keyImage;
@@ -966,12 +965,12 @@ void TransfersContainer::repair() {
 
   if (deletedInputCount + deletedUnconfirmedOutputCount + deletedAvailableOutputCount > 0) {
     m_logger(WARNING) << "Repair finished:\n"
-                                     << "    Deleted inputs " << deletedInputCount << ", total inputs "
-                                     << m_spentTransfers.size() << '\n'
-                                     << "    Deleted unconfirmed outputs " << deletedUnconfirmedOutputCount
-                                     << ", total unconfirmed outputs " << m_unconfirmedTransfers.size() << '\n'
-                                     << "    Deleted available outputs " << deletedAvailableOutputCount
-                                     << ", total available outputs " << m_availableTransfers.size();
+                      << "    Deleted inputs " << deletedInputCount << ", total inputs " << m_spentTransfers.size()
+                      << '\n'
+                      << "    Deleted unconfirmed outputs " << deletedUnconfirmedOutputCount
+                      << ", total unconfirmed outputs " << m_unconfirmedTransfers.size() << '\n'
+                      << "    Deleted available outputs " << deletedAvailableOutputCount << ", total available outputs "
+                      << m_availableTransfers.size();
   } else {
     m_logger(DEBUGGING) << "Repair finished";
   }

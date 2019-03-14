@@ -1460,7 +1460,7 @@ std::error_code Core::validateStaticReward(const Transaction& transaction, uint3
   }
 
   const KeyPair txkey = generateKeyPair(blockIndex);
-  if (std::memcmp(&transaction.extra[1], txkey.publicKey.data, sizeof(PublicKey)) != 0) {
+  if (std::memcmp(&transaction.extra[1], txkey.publicKey.data(), sizeof(PublicKey)) != 0) {
     return error::TransactionValidationError::STATIC_REWARD_INVALID_ADDRESS;
   }
 
@@ -1485,7 +1485,7 @@ std::error_code Core::validateStaticReward(const Transaction& transaction, uint3
     }
 
     KeyOutput iOutput = boost::get<KeyOutput>(transaction.outputs[no].target);  // note, checked previously
-    if (std::memcmp(iOutput.key.data, outEphemeralPubKey.data, sizeof(Crypto::PublicKey)) != 0) {
+    if (iOutput.key != outEphemeralPubKey) {
       return error::TransactionValidationError::STATIC_REWARD_INVALID_OUT;
     }
   }

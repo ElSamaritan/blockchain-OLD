@@ -58,7 +58,7 @@ class CachedTransaction {
   const BinaryArray& getTransactionBinaryArray() const;
   size_t getBlobSize() const;
   const std::vector<Crypto::KeyImage>& getKeyImages() const;
-  const Crypto::KeyImagesSet& getKeyImagesSet() const;
+  const Crypto::KeyImageSet& getKeyImagesSet() const;
   const std::vector<Crypto::PublicKey>& getOutputKeys() const;
   const boost::optional<Crypto::Hash>& getPaymentId() const;
   uint64_t getInputAmount() const;
@@ -71,7 +71,7 @@ class CachedTransaction {
   mutable boost::optional<Crypto::Hash> transactionHash;
   mutable boost::optional<Crypto::Hash> transactionPrefixHash;
   mutable boost::optional<std::vector<Crypto::KeyImage>> keyImages;
-  mutable boost::optional<Crypto::KeyImagesSet> keyImagesSet;
+  mutable boost::optional<Crypto::KeyImageSet> keyImagesSet;
   mutable boost::optional<std::vector<Crypto::PublicKey>> outputKeys;
   mutable bool paymentIdEvaluated;  ///< using optional<optional<<>> seems not to be a good idea
   mutable boost::optional<Crypto::Hash> paymentId;

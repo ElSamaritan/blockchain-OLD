@@ -97,7 +97,8 @@ std::tuple<std::string, Crypto::SecretKey> MnemonicToPrivateKey(std::vector<std:
   }
 
   /* Copy the data to the secret key */
-  std::copy(data.begin(), data.end(), key.data);
+  assert(data.size() == key.size());
+  std::copy(data.begin(), data.end(), key.begin());
 
   return std::make_tuple(std::string(), key);
 }
@@ -107,7 +108,7 @@ std::string PrivateKeyToMnemonic(const Crypto::SecretKey privateKey) {
 
   for (int i = 0; i < 32 - 1; i += 4) {
     /* Read the array as a uint32_t array */
-    auto ptr = (uint32_t *)&privateKey.data[i];
+    auto ptr = (uint32_t *)&privateKey[i];
 
     /* Take the first element of the array (since we have already
        done the offset */

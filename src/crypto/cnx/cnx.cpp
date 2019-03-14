@@ -50,8 +50,8 @@ void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::H
     int8_t flags = 0;
     if (!forceSoftwareAES && check_aes_hardware_support() && !check_aes_hardware_disabled())
       flags |= CNX_FLAGS_HARDWARE_AES;
-    const cnx_hash_config config{scratchpadSize, scratchpadSize, hash.data, sizeof(Crypto::Hash), flags};
-    cnx_hash((const uint8_t *)data, length, &config, hash.data);
+    const cnx_hash_config config{scratchpadSize, scratchpadSize, hash.data(), sizeof(Crypto::Hash), flags};
+    cnx_hash((const uint8_t *)data, length, &config, hash.data());
 
     accumulatedScratchpad += scratchpadSize;
   }

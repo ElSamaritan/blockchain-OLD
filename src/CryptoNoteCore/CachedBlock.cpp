@@ -61,7 +61,7 @@ const BinaryArray& CachedBlock::getBlockHashingBinaryArray() const {
     }
 
     const auto& treeHash = getTransactionTreeHash();
-    result.insert(result.end(), treeHash.data, treeHash.data + 32);
+    result.insert(result.end(), treeHash.begin(), treeHash.end());
     auto transactionCount = Common::asBinaryArray(
         Tools::get_varint_data(block.transactionHashes.size() + (block.staticReward.isNull() ? 1 : 2)));
     result.insert(result.end(), transactionCount.begin(), transactionCount.end());

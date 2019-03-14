@@ -39,7 +39,7 @@ XiMiner::MinerMonitor::MinerMonitor(MinerManager& miner, Logging::ILogger& logge
 
 void XiMiner::MinerMonitor::onSuccessfulBlockSubmission(Crypto::Hash hash) {
   m_logger(Logging::INFO, Logging::GREEN)
-      << "Block successfully submitted: " << Common::toHex(hash.data, sizeof(hash.data));
+      << "Block successfully submitted: " << Common::toHex(hash.data(), hash.size());
 }
 
 void XiMiner::MinerMonitor::onBlockTemplateChanged() { m_lastBlockUpdate = std::chrono::system_clock::now(); }

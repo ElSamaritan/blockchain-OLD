@@ -148,7 +148,7 @@ bool CryptoNote::TransactionValidator::hasOutputOverflow(const CryptoNote::Trans
 
 bool CryptoNote::TransactionValidator::containsKeyImageDuplicates(
     const std::vector<Crypto::KeyImage> &keyImages) const {
-  Crypto::KeyImagesSet set;
+  Crypto::KeyImageSet set;
   for (const auto &keyImage : keyImages) {
     if (!set.insert(keyImage).second) return true;
   }
@@ -174,7 +174,7 @@ bool CryptoNote::TransactionValidator::containsInvalidDomainKeyImage(
   return std::any_of(keyImages.begin(), keyImages.end(), &TransactionValidator::isInvalidDomainKeyImage);
 }
 
-bool CryptoNote::TransactionValidator::containsSpendedKey(const Crypto::KeyImagesSet &keyImages) const {
+bool CryptoNote::TransactionValidator::containsSpendedKey(const Crypto::KeyImageSet &keyImages) const {
   if (isInCheckpointRange()) {
     return false;
   } else {

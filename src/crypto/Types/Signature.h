@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -23,10 +23,26 @@
 
 #pragma once
 
+#include <array>
+
+#include <Xi/Global.h>
+#include <Xi/Algorithm/GenericHash.h>
+#include <Xi/Algorithm/GenericComparison.h>
+
 #include "crypto/Types/Byte.h"
-#include "crypto/Types/Hash.h"
-#include "crypto/Types/PublicKey.h"
-#include "crypto/Types/SecretKey.h"
-#include "crypto/Types/KeyDerivation.h"
-#include "crypto/Types/KeyImage.h"
-#include "crypto/Types/Signature.h"
+
+namespace Crypto {
+struct Signature : std::array<Byte, 64> {
+  static const Signature Null;
+
+  Signature() = default;
+  XI_DEFAULT_COPY(Signature);
+  XI_DEFAULT_MOVE(Signature);
+  ~Signature() = default;
+};
+
+XI_MAKE_GENERIC_HASH_FUNC(Signature)
+XI_MAKE_GENERIC_COMPARISON(Signature)
+}  // namespace Crypto
+
+XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, Signature)

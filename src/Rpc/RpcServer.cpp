@@ -1086,7 +1086,7 @@ Hash RpcServer::block_template_state_hash() const {
   const auto poolState = m_core.transactionPool().stateHash();
   Hash reval{};
   for (size_t i = 0; i < sizeof(reval); ++i) {
-    reval.data[i] = topBlock.data[i] ^ poolState.data[i];
+    reval[i] = topBlock[i] ^ poolState[i];
   }
   return reval;
 }

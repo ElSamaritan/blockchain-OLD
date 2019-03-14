@@ -106,13 +106,13 @@ class Mixins {
     const auto& hash = transaction.getTransactionHash();
 
     if (mixin > maxMixin) {
-      str << "Transaction " << Common::toHex(hash.data, sizeof(hash))
+      str << "Transaction " << Common::toHex(hash.data(), hash.size())
           << " is not valid. Reason: transaction mixin is too large (" << mixin << "). Maximum mixin allowed is "
           << maxMixin;
 
       return std::make_tuple(false, str.str());
     } else if (mixin < minMixin) {
-      str << "Transaction " << Common::toHex(hash.data, sizeof(hash))
+      str << "Transaction " << Common::toHex(hash.data(), hash.size())
           << " is not valid. Reason: transaction mixin is too small (" << mixin << "). Minimum mixin allowed is "
           << minMixin;
 

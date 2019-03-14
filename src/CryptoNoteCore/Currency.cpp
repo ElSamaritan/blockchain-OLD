@@ -96,7 +96,7 @@ bool Currency::generateGenesisBlock() {
   m_genesisBlockTemplate.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
   m_genesisBlockTemplate.timestamp = Xi::Config::Coin::genesisTimestamp(network());
   m_genesisBlockTemplate.nonce = 0;
-  m_genesisBlockTemplate.previousBlockHash = {0};
+  m_genesisBlockTemplate.previousBlockHash.fill(0);
   if (!isMainNet()) {
     m_genesisBlockTemplate.nonce += static_cast<uint8_t>(network()) * 0xFFFF;
   }

@@ -307,7 +307,7 @@ bool DaemonCommandsHandler::print_tx(const std::vector<std::string>& args) {
 bool DaemonCommandsHandler::print_pool(const std::vector<std::string>& args) {
   XI_UNUSED(args);
   auto txpoolHash = m_core.transactionPool().stateHash();
-  std::cout << "Pool state (" << Common::toHex(txpoolHash.data, sizeof(decltype(txpoolHash))) << "): \n";
+  std::cout << "Pool state (" << Common::toHex(txpoolHash.data(), txpoolHash.size()) << "): \n";
   auto pool = m_core.getPoolTransactions();
 
   for (const auto& tx : pool) {

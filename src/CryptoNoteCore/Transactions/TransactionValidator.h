@@ -100,7 +100,7 @@ class TransactionValidator : public ITransactionValidator {
   static bool isInvalidDomainKeyImage(const Crypto::KeyImage& keyImage);
   bool containsInvalidDomainKeyImage(const std::vector<Crypto::KeyImage>& keyImages) const;
 
-  bool containsSpendedKey(const Crypto::KeyImagesSet& keyImages) const;
+  bool containsSpendedKey(const Crypto::KeyImageSet& keyImages) const;
 
   /*!
    * \brief extractOutputKeys extracts the used output keys used as input for the transaction

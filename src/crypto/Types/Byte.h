@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include "crypto/Types/Byte.h"
-#include "crypto/Types/Hash.h"
-#include "crypto/Types/PublicKey.h"
-#include "crypto/Types/SecretKey.h"
-#include "crypto/Types/KeyDerivation.h"
-#include "crypto/Types/KeyImage.h"
-#include "crypto/Types/Signature.h"
+#include <vector>
+#include <cinttypes>
+
+namespace Crypto {
+using Byte = uint8_t;
+using ByteVector = std::vector<Byte>;
+}  // namespace Crypto

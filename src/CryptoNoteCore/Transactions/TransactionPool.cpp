@@ -171,8 +171,7 @@ ITransactionPool::TransactionQueryResult TransactionPool::queryTransaction(const
   }
 }
 
-std::vector<CachedTransaction> TransactionPool::eligiblePoolTransactions(
-    EligibleIndex index) const {
+std::vector<CachedTransaction> TransactionPool::eligiblePoolTransactions(EligibleIndex index) const {
   std::vector<PendingTransactionInfo> pending;
   {
     XI_CONCURRENT_RLOCK(m_access);
@@ -245,7 +244,7 @@ void TransactionPool::pushBlockTransaction(BinaryArray transactionBlob) {
   const auto transactionHash = transaction.value().getTransactionHash();
   if (!removeTransaction(transactionHash, Deletion::AddedToMainChain)) {
     m_logger(Logging::DEBUGGING) << "Failed to remove pushed block transaction: "
-                                 << Common::toHex(transactionHash.data, sizeof(decltype(transactionHash)));
+                                 << Common::toHex(transactionHash.data(), transactionHash.size());
   }
   for (const auto& keyImage : transaction.value().getKeyImages()) {
     auto keyImageSearch = m_keyImageReferences.find(keyImage);
@@ -310,8 +309,7 @@ Xi::Result<EligibleIndex> TransactionPool::currentEligibleIndex() const {
   if (timestamp.isError()) {
     return timestamp.error();
   }
-  return Xi::make_result<EligibleIndex>(mainChain->getTopBlockIndex() + 1,
-                                                                     timestamp.value());
+  return Xi::make_result<EligibleIndex>(mainChain->getTopBlockIndex() + 1, timestamp.value());
 }
 
 Xi::Result<void> TransactionPool::insertTransaction(Transaction transaction,
@@ -370,13 +368,12 @@ Crypto::Hash TransactionPool::computeStateHash() const {
   std::transform(m_transactions.begin(), m_transactions.end(), std::back_inserter(transactionHashes),
                  [](const auto& transaction) { return transaction.second->transaction().getTransactionHash(); });
   std::sort(transactionHashes.begin(), transactionHashes.end());
-  Crypto::Hash hash{};
-  std::memset(hash.data, 0, sizeof(Crypto::Hash));
   if (transactionHashes.empty()) {
-    return hash;
+    return Crypto::Hash::Null;
   } else if (transactionHashes.size() < 2) {
     return transactionHashes[0];
   } else {
+    Crypto::Hash hash{};
     Crypto::tree_hash(transactionHashes.data(), transactionHashes.size(), hash);
     return hash;
   }

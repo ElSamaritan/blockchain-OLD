@@ -110,9 +110,9 @@ const std::vector<KeyImage>& CachedTransaction::getKeyImages() const {
   return keyImages.get();
 }
 
-const Crypto::KeyImagesSet& CachedTransaction::getKeyImagesSet() const {
+const Crypto::KeyImageSet& CachedTransaction::getKeyImagesSet() const {
   if (!keyImagesSet.is_initialized()) {
-    Crypto::KeyImagesSet set{};
+    Crypto::KeyImageSet set{};
     for (const auto& keyImage : getKeyImages()) {
       if (!set.insert(keyImage).second)
         throw std::runtime_error{
