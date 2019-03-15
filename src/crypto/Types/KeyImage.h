@@ -25,8 +25,10 @@
 
 #include <array>
 #include <unordered_set>
+#include <string>
 
 #include <Xi/Global.h>
+#include <Xi/Result.h>
 #include <Xi/Algorithm/GenericHash.h>
 #include <Xi/Algorithm/GenericComparison.h>
 
@@ -36,10 +38,14 @@ namespace Crypto {
 struct KeyImage : std::array<Byte, 32> {
   static const KeyImage Null;
 
+  static Xi::Result<KeyImage> fromString(const std::string& hex);
+
   KeyImage() = default;
   XI_DEFAULT_COPY(KeyImage);
   XI_DEFAULT_MOVE(KeyImage);
   ~KeyImage() = default;
+
+  std::string toString() const;
 };
 
 using KeyImageSet = std::unordered_set<KeyImage>;

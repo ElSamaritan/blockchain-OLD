@@ -21,6 +21,22 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#include <stdexcept>
+
+#include <Common/StringTools.h>
+
 #include "crypto/Types/Hash.h"
 
 const Crypto::Hash Crypto::Hash::Null{};
+
+Xi::Result<Crypto::Hash> Crypto::Hash::fromString(const std::string &hex) {
+  XI_ERROR_TRY();
+  Hash reval;
+  if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
+    throw std::runtime_error{"invalid hex string"};
+  }
+  return reval;
+  XI_ERROR_CATCH();
+}
+
+std::string Crypto::Hash::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }

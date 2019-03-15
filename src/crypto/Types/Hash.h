@@ -24,8 +24,10 @@
 #pragma once
 
 #include <array>
+#include <string>
 
 #include <Xi/Global.h>
+#include <Xi/Result.h>
 #include <Xi/Algorithm/GenericHash.h>
 #include <Xi/Algorithm/GenericComparison.h>
 
@@ -35,10 +37,14 @@ namespace Crypto {
 struct Hash : std::array<Byte, 32> {
   static const Hash Null;
 
+  static Xi::Result<Hash> fromString(const std::string& hex);
+
   Hash() = default;
   XI_DEFAULT_COPY(Hash);
   XI_DEFAULT_MOVE(Hash);
   ~Hash() = default;
+
+  std::string toString() const;
 };
 
 XI_MAKE_GENERIC_HASH_FUNC(Hash)

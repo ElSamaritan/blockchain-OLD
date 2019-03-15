@@ -1313,11 +1313,11 @@ CoreStatistics Core::getCoreStatistics() const {
   CoreStatistics result;
   result.transactionPoolSize = transactionPool().size();
   auto txHash = transactionPool().stateHash();
-  result.transactionPoolState = Common::toHex(&txHash, sizeof(Crypto::Hash));
+  result.transactionPoolState = txHash.toString();
   result.blockchainHeight = getTopBlockIndex();
   result.alternativeBlockCount = getAlternativeBlockCount();
   auto hash = getTopBlockHash();
-  result.topBlockHashString = Common::toHex(&hash, sizeof(Crypto::Hash));
+  result.topBlockHashString = hash.toString();
   return result;
 }
 

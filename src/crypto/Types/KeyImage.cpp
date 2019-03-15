@@ -21,6 +21,22 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#include <stdexcept>
+
+#include <Common/StringTools.h>
+
 #include "crypto/Types/KeyImage.h"
 
 const Crypto::KeyImage Crypto::KeyImage::Null{};
+
+Xi::Result<Crypto::KeyImage> Crypto::KeyImage::fromString(const std::string &hex) {
+  XI_ERROR_TRY();
+  KeyImage reval;
+  if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
+    throw std::runtime_error{"invalid hex string"};
+  }
+  return reval;
+  XI_ERROR_CATCH();
+}
+
+std::string Crypto::KeyImage::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }

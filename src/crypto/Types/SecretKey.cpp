@@ -21,6 +21,22 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#include <stdexcept>
+
+#include <Common/StringTools.h>
+
 #include "crypto/Types/SecretKey.h"
 
 const Crypto::SecretKey Crypto::SecretKey::Null{};
+
+Xi::Result<Crypto::SecretKey> Crypto::SecretKey::fromString(const std::string &hex) {
+  XI_ERROR_TRY();
+  SecretKey reval;
+  if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
+    throw std::runtime_error{"invalid hex string"};
+  }
+  return reval;
+  XI_ERROR_CATCH();
+}
+
+std::string Crypto::SecretKey::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }

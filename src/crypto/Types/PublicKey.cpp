@@ -21,6 +21,22 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#include <stdexcept>
+
+#include <Common/StringTools.h>
+
 #include "crypto/Types/PublicKey.h"
 
 const Crypto::PublicKey Crypto::PublicKey::Null{};
+
+Xi::Result<Crypto::PublicKey> Crypto::PublicKey::fromString(const std::string &hex) {
+  XI_ERROR_TRY();
+  PublicKey reval;
+  if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
+    throw std::runtime_error{"invalid hex string"};
+  }
+  return reval;
+  XI_ERROR_CATCH();
+}
+
+std::string Crypto::PublicKey::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }

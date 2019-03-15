@@ -21,6 +21,22 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#include <stdexcept>
+
+#include <Common/StringTools.h>
+
 #include "crypto/Types/Signature.h"
 
 const Crypto::Signature Crypto::Signature::Null{};
+
+Xi::Result<Crypto::Signature> Crypto::Signature::fromString(const std::string &hex) {
+  XI_ERROR_TRY();
+  Signature reval;
+  if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
+    throw std::runtime_error{"invalid hex string"};
+  }
+  return reval;
+  XI_ERROR_CATCH();
+}
+
+std::string Crypto::Signature::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }

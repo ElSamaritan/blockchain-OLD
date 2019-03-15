@@ -21,6 +21,22 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#include <stdexcept>
+
+#include <Common/StringTools.h>
+
 #include "crypto/Types/KeyDerivation.h"
 
 const Crypto::KeyDerivation Crypto::KeyDerivation::Null{};
+
+Xi::Result<Crypto::KeyDerivation> Crypto::KeyDerivation::fromString(const std::string &hex) {
+  XI_ERROR_TRY();
+  KeyDerivation reval;
+  if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
+    throw std::runtime_error{"invalid hex string"};
+  }
+  return reval;
+  XI_ERROR_CATCH();
+}
+
+std::string Crypto::KeyDerivation::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
