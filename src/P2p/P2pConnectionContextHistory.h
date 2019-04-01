@@ -46,7 +46,6 @@ class P2pConnectionContextHistory {
     IObservedOccurrence(time_point t) : timestamp{t} {}
   };
 
- public:
   template <typename _ObservedT>
   struct ObservedOccurrence : IObservedOccurrence {
     static inline const std::type_info& type() { return typeid(_ObservedT); }
@@ -58,31 +57,32 @@ class P2pConnectionContextHistory {
 
  private:
   std::map<std::type_index, std::deque<std::shared_ptr<IObservedOccurrence>>> m_timeline{};
-  size_t m_historySize{10};
 
  public:
   template <typename _ObservedT>
-  inline std::vector<std::shared_ptr<const _ObservedT>> getTimeline() const {
+  inline std::vector<std::shared_ptr<const ObservedOccurrence<_ObservedT>>> getTimeline() const {
     auto search = this->m_timeline.find(typeid(_ObservedT));
     if (search == this->m_timeline.end()) {
       return {};
     } else {
-      std::vector<std::shared_ptr<const _ObservedT>> reval;
+      std::vector<std::shared_ptr<const ObservedOccurrence<_ObservedT>>> reval;
       reval.reserve(search->second.size());
       for (const auto& iOcc : search->second) {
-        reval.emplace_back(std::static_pointer_cast<_ObservedT>(iOcc));
+        reval.emplace_back(std::static_pointer_cast<const ObservedOccurrence<_ObservedT>>(iOcc));
       }
       return reval;
     }
   }
 
   template <typename _ObservedT>
-  inline void pushOccurrence(_ObservedT occ) {
+  inline void pushOccurrence(_ObservedT occ, size_t maxSize) {
     auto& timeline = this->m_timeline[typeid(_ObservedT)];
     timeline.emplace_back(std::make_shared<ObservedOccurrence<_ObservedT>>(clock_t::now(), std::move(occ)));
-    if (timeline.size() > m_historySize) {
+    while (timeline.size() > maxSize) {
       timeline.pop_front();
     }
   }
+
+  inline void clear() { this->m_timeline.clear(); }
 };
 }  // namespace CryptoNote

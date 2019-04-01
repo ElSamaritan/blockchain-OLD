@@ -79,7 +79,7 @@ inline uint64_t p2pPenaltyWeight(P2pPenalty penalty) {
     case P2pPenalty::ConnectionRefuse:
       return 1;
     case P2pPenalty::SuspiciousRequestSequence:
-      return 2;
+      return 5;
 
     case P2pPenalty::None:
       return 0;

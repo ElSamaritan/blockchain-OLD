@@ -42,13 +42,15 @@ class CryptoNoteProtocolSuspiciousRequestsDetector final {
   CryptoNoteProtocolSuspiciousRequestsDetector(Logging::ILogger& logger);
 
   bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_NEW_TRANSACTIONS_request& request);
-  bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_REQUEST_GET_OBJECTS_request& request);
-  bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_REQUEST_CHAIN::request& request);
+  bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_REQUEST_GET_OBJECTS_request& request,
+                      const NOTIFY_RESPONSE_GET_OBJECTS_request& response);
+  bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_REQUEST_CHAIN::request& request,
+                      const NOTIFY_RESPONSE_CHAIN_ENTRY_request& response);
   bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_REQUEST_TX_POOL_request& request);
   bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_NEW_LITE_BLOCK_request& request);
-  bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_MISSING_TXS_REQUEST& request);
+  bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_MISSING_TXS_REQUEST& request,
+                      const NOTIFY_MISSING_TXS_RESPONSE& response);
 
- private:
  private:
   Logging::LoggerRef m_logger;
 };
