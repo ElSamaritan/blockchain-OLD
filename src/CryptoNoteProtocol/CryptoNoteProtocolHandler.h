@@ -28,6 +28,7 @@
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandlerCommon.h"
 #include "CryptoNoteProtocol/ICryptoNoteProtocolObserver.h"
 #include "CryptoNoteProtocol/ICryptoNoteProtocolQuery.h"
+#include "CryptoNoteProtocol/CryptoNoteProtocolSuspiciousRequestsDetector.h"
 
 #include "P2p/P2pProtocolDefinitions.h"
 #include "P2p/NetNodeCommon.h"
@@ -128,6 +129,8 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
 
   std::atomic<size_t> m_peersCount;
   Tools::ObserverManager<ICryptoNoteProtocolObserver> m_observerManager;
+
+  CryptoNoteProtocolSuspiciousRequestsDetector m_suspiciousGuard;
 
   Logging::LoggerRef m_logger;
 };

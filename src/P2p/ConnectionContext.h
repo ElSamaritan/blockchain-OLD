@@ -29,6 +29,7 @@
 #include <crypto/hash.h>
 
 #include "P2p/PendingLiteBlock.h"
+#include "P2p/P2pConnectionContextHistory.h"
 
 namespace CryptoNote {
 
@@ -56,6 +57,7 @@ struct CryptoNoteConnectionContext {
   boost::optional<PendingLiteBlock> m_pending_lite_block;
   uint32_t m_remote_blockchain_height = 0;
   uint32_t m_last_response_height = 0;
+  P2pConnectionContextHistory m_history;
 };
 
 inline std::string get_protocol_state_string(CryptoNoteConnectionContext::state s) {

@@ -168,6 +168,7 @@ CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency& currency, S
       m_observedHeight(0),
       m_blockchainHeight(0),
       m_peersCount(0),
+      m_suspiciousGuard{log},
       m_logger(log, "protocol") {
   if (!m_p2p) {
     m_p2p = &m_p2p_stub;
@@ -339,7 +340,6 @@ int notifyAdaptor(const BinaryArray& reqBuf, CryptoNoteConnectionContext& ctx, H
   return handler(command, req, ctx);
 }
 
-// Changed std::bind -> lambda, for better debugging, remove it ASAP
 #define HANDLE_NOTIFY(CMD, Handler)                                                                                  \
   case CMD::ID: {                                                                                                    \
     ret = notifyAdaptor<CMD>(                                                                                        \
@@ -373,12 +373,22 @@ int CryptoNoteProtocolHandler::handleCommand(bool is_notify, int command, const 
 
 #undef HANDLE_NOTIFY
 
+#define P2P_DROP_AND_LOG_RETURN(STR)                             \
+  m_logger(Logging::DEBUGGING) << context << STR;                \
+  context.m_state = CryptoNoteConnectionContext::state_shutdown; \
+  return false;
+
 int CryptoNoteProtocolHandler::handle_notify_new_transactions(int command, NOTIFY_NEW_TRANSACTIONS::request& arg,
                                                               CryptoNoteConnectionContext& context) {
   XI_UNUSED(command);
   m_logger(Logging::TRACE) << context << "NOTIFY_NEW_TRANSACTIONS";
 
   if (context.m_state != CryptoNoteConnectionContext::state_normal) return 1;
+
+  if (m_suspiciousGuard.pushAndInspect(context, arg)) {
+    m_p2p->report_failure(context.m_remote_ip, P2pPenalty::SuspiciousRequestSequence);
+    P2P_DROP_AND_LOG_RETURN("suspicious sequence of notify transactions requests");
+  }
 
   for (auto tx_blob_it = arg.txs.begin(); tx_blob_it != arg.txs.end();) {
     auto txParseResult = CachedTransaction::fromBinaryArray(*tx_blob_it);
@@ -414,6 +424,12 @@ int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_RE
                                                           CryptoNoteConnectionContext& context) {
   XI_UNUSED(command);
   m_logger(Logging::TRACE) << context << "NOTIFY_REQUEST_GET_OBJECTS";
+
+  if (m_suspiciousGuard.pushAndInspect(context, arg)) {
+    m_p2p->report_failure(context.m_remote_ip, P2pPenalty::SuspiciousRequestSequence);
+    P2P_DROP_AND_LOG_RETURN("suspicious sequence of objects requests");
+  }
+
   NOTIFY_RESPONSE_GET_OBJECTS::request rsp;
   if (!arg.txs.empty()) {
     m_logger(Logging::DEBUGGING) << context
@@ -649,6 +665,12 @@ void CryptoNoteProtocolHandler::reportFailureIfSynced(CryptoNoteConnectionContex
 int CryptoNoteProtocolHandler::handle_request_chain(int command, NOTIFY_REQUEST_CHAIN::request& arg,
                                                     CryptoNoteConnectionContext& context) {
   XI_UNUSED(command);
+
+  if (m_suspiciousGuard.pushAndInspect(context, arg)) {
+    m_p2p->report_failure(context.m_remote_ip, P2pPenalty::SuspiciousRequestSequence);
+    P2P_DROP_AND_LOG_RETURN("suspicious sequence of chain requests");
+  }
+
   m_logger(Logging::TRACE) << context << "NOTIFY_REQUEST_CHAIN: m_block_ids.size()=" << arg.block_ids.size();
 
   if (arg.block_ids.empty()) {
@@ -833,6 +855,11 @@ int CryptoNoteProtocolHandler::handle_notify_new_lite_block(int command, NOTIFY_
   assert(command == NOTIFY_NEW_LITE_BLOCK::ID);
   XI_UNUSED(command);
 
+  if (m_suspiciousGuard.pushAndInspect(context, arg)) {
+    m_p2p->report_failure(context.m_remote_ip, P2pPenalty::SuspiciousRequestSequence);
+    P2P_DROP_AND_LOG_RETURN("suspicious sequence of liteblock notifications");
+  }
+
   m_logger(Logging::TRACE) << context << "handle_notify_new_lite_block (hop " << arg.hop << ")";
   updateObservedHeight(arg.current_blockchain_height, context);
   context.m_remote_blockchain_height = arg.current_blockchain_height;
@@ -856,6 +883,11 @@ int CryptoNoteProtocolHandler::handle_notify_missing_txs_request(int command,
                                                                  CryptoNoteConnectionContext& context) {
   assert(command == NOTIFY_MISSING_TXS_REQUEST_ENTRY::ID);
   XI_UNUSED(command);
+
+  if (m_suspiciousGuard.pushAndInspect(context, arg)) {
+    m_p2p->report_failure(context.m_remote_ip, P2pPenalty::SuspiciousRequestSequence);
+    P2P_DROP_AND_LOG_RETURN("suspicious sequence of missing transactions notifications");
+  }
 
   m_logger(Logging::TRACE) << context << "NOTIFY_MISSING_TXS";
   updateObservedHeight(arg.current_blockchain_height, context);

@@ -44,6 +44,7 @@ enum struct P2pPenalty {
   Exceptional,                   ///< The request of a peer lead to an exception.
   Timeout,                       ///< The connection to the peer timed out.
   ConnectionRefuse,              ///< The peer actively refused the connection.
+  SuspiciousRequestSequence,     ///< The sequence of requests is suspicios, flooting/out of order aso.
 };
 
 /*!
@@ -77,6 +78,8 @@ inline uint64_t p2pPenaltyWeight(P2pPenalty penalty) {
       return 1;
     case P2pPenalty::ConnectionRefuse:
       return 1;
+    case P2pPenalty::SuspiciousRequestSequence:
+      return 2;
 
     case P2pPenalty::None:
       return 0;
@@ -115,6 +118,11 @@ inline std::string p2pPeanaltyMessage(P2pPenalty penalty) {
       return "connection timed out";
     case P2pPenalty::ConnectionRefuse:
       return "peer actively refused the connection";
+<<<<<<< HEAD
+=======
+    case P2pPenalty::SuspiciousRequestSequence:
+      return "peer requests sequence is supicious";
+>>>>>>> 199b525... [P2P] initial suspicious requests detector
 
     case P2pPenalty::None:
       return "none";
