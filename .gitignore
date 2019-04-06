@@ -3,6 +3,7 @@
 .install/
 .site/
 .packages/
+.vscode/
 .directory
 cpplint.xml
 cppcheck.xml
