@@ -26,10 +26,10 @@
 #include <string>
 #include <cinttypes>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <cxxopts.hpp>
 #include <boost/optional.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Config/Network.h>
 #include <Xi/Http/SSLConfiguration.h>

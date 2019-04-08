@@ -13,10 +13,10 @@
 #include <thread>
 #include <algorithm>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <cxxopts.hpp>
 #include <nlohmann/json.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Config/NetworkType.h>
 #include <Xi/Config/Network.h>

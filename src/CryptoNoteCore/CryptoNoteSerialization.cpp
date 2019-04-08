@@ -21,11 +21,11 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/endian/conversion.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Global.h>
 

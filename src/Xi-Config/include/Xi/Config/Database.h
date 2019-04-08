@@ -25,7 +25,7 @@
 
 #include <string>
 
-#include <Xi/Utils/Conversion.h>
+#include <Xi/Byte.h>
 
 namespace Xi {
 namespace Config {

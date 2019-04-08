@@ -25,9 +25,9 @@
 
 #include <chrono>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/endian/conversion.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <crypto/cnx/cnx.h>
 #include <CryptoNoteCore/CheckDifficulty.h>

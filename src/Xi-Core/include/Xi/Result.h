@@ -27,10 +27,10 @@
 #include <utility>
 #include <type_traits>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Error.h>
 

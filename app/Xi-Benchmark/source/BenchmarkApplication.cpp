@@ -36,10 +36,10 @@
 
 #include <Xi/Global.h>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <cxxopts.hpp>
 #include <cpuinfo_x86.h>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <CommonCLI/CommonCLI.h>
 #include <CommonCLI/Centered.h>

@@ -32,8 +32,8 @@
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
 
-#include <Xi/Utils/String.h>
-#include <Xi/Utils/FileSystem.h>
+#include <Xi/Algorithm/String.h>
+#include <Xi/FileSystem.h>
 #include <Xi/Config/Checkpoints.h>
 
 #include <Logging/LoggerManager.h>

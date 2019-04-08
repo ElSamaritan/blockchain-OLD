@@ -27,11 +27,9 @@
 #include <vector>
 #include <stdexcept>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/uuid/uuid.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
-
-#include <Xi/Utils/Conversion.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include "Xi/Config/NetworkType.h"
 

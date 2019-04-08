@@ -26,13 +26,13 @@
 #include <memory>
 #include <utility>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/logic/tribool.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <boost/beast/core.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include "IServerSessionBuilder.h"
 

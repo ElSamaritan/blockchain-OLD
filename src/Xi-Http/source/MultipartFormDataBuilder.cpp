@@ -26,15 +26,15 @@
 #include <fstream>
 #include <utility>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/filesystem.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
-#include <Xi/Utils/Base64.h>
+#include <Xi/Encoding/Base64.h>
 
 namespace {
 const std::string LF{"\r\n"};

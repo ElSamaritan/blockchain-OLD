@@ -25,10 +25,10 @@
 
 #include <stdexcept>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/beast/version.hpp>
 #include <boost/asio/bind_executor.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 Xi::Http::ServerSession::ServerSession(socket_t socket, buffer_t buffer, std::shared_ptr<RequestHandler> handler,
                                        Concurrent::IDispatcher& dispatcher)

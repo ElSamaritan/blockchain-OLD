@@ -27,7 +27,7 @@
 #include <stdexcept>
 
 #include <Xi/Global.h>
-#include <Xi/Utils/String.h>
+#include <Xi/Algorithm/String.h>
 
 namespace Xi {
 namespace Http {

@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -24,15 +24,21 @@
 #pragma once
 
 #include <cinttypes>
+#include <vector>
+#include <array>
+
+#include "Xi/Algorithm/Math.h"
 
 namespace Xi {
-/*!
- * \brief pow computes the to the power of function (base^exponent)
- * \param base the base of the formula
- * \param exponent the exponent of the formula
- * \return base^exponent, 1 if exponent is 0
- */
-static inline constexpr uint32_t pow(uint32_t base, uint32_t exponent) {
-  return exponent == 0 ? 1 : base * pow(base, exponent - 1);
-}
+using Byte = uint8_t;
+using ByteVector = std::vector<uint8_t>;
+
+template <size_t _Size>
+using ByteArray = std::array<Byte, _Size>;
 }  // namespace Xi
+
+static inline constexpr uint64_t operator"" _Bytes(uint64_t bytes) { return bytes; }
+
+static inline constexpr uint64_t operator"" _kB(uint64_t kiloBytes) { return kiloBytes * 1024; }
+
+static inline constexpr uint64_t operator"" _MB(uint64_t megaBytes) { return megaBytes * 1024 * 1024; }

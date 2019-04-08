@@ -26,12 +26,12 @@
 #include <string>
 #include <cinttypes>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <cxxopts.hpp>
 #include <boost/optional.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
-#include <Xi/Utils/Conversion.h>
+#include <Xi/Byte.h>
 #include <Xi/Config/NetworkType.h>
 #include <Common/Util.h>
 #include <CryptoNoteCore/DataBaseConfig.h>

@@ -26,7 +26,7 @@
 #include <chrono>
 #include <limits>
 
-#include <Xi/Utils/Conversion.h>
+#include <Xi/Time.h>
 
 #include "Xi/Config/Coin.h"
 

@@ -32,10 +32,10 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/optional.hpp>
 #include <boost/utility/value_init.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 namespace CryptoNote {
 

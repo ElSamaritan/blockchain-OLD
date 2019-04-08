@@ -6,7 +6,7 @@
  * appreciate his work and cleary state the altered the source code.
  */
 
-#include "Xi/Utils/Base64.h"
+#include "Xi/Encoding/Base64.h"
 
 namespace {
 static const std::string base64_chars =

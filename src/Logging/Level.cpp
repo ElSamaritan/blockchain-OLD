@@ -26,7 +26,7 @@
 #include <string>
 #include <cassert>
 
-#include <Xi/Utils/String.h>
+#include <Xi/Algorithm/String.h>
 
 #define LOG_LEVEL_STRING_CASE(LEVEL)                                                                         \
   if (string == std::to_string(static_cast<uint8_t>(Logging::LEVEL)) || string == put_value(Logging::LEVEL)) \

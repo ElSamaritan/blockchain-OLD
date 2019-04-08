@@ -26,14 +26,14 @@
 #include <string>
 #include <sstream>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
-#include <Xi/Utils/String.h>
+#include <Xi/Algorithm/String.h>
 
 #ifndef MAX_WBITS
 #define MAX_WBITS 15

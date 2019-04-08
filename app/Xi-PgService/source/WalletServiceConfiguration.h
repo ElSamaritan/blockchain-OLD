@@ -9,10 +9,10 @@
 #include <string>
 #include <cinttypes>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <cxxopts.hpp>
 #include <nlohmann/json.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Serialization/SerializationTools.h>
 

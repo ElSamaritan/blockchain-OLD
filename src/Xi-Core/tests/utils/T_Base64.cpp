@@ -22,11 +22,11 @@
  * ============================================================================================== */
 
 #include <gmock/gmock.h>
-#include <Xi/Utils/Base64.h>
+#include <Xi/Encoding/Base64.h>
 
 #include <string>
 
-#define XI_TESTSUITE T_Xi_Utils_Base64
+#define XI_TESTSUITE T_Xi_Encoding_Base64
 
 namespace {
 const std::string DecodedString{"This is a test string for Xi."};

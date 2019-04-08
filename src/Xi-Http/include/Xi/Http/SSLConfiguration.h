@@ -30,9 +30,9 @@
 
 #include <Serialization/ISerializer.h>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <cxxopts.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 namespace boost {
 namespace asio {

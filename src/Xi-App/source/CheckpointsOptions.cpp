@@ -25,7 +25,7 @@
 
 #include <Xi/Global.h>
 #include <Xi/Exceptional.h>
-#include <Xi/Utils/FileSystem.h>
+#include <Xi/FileSystem.h>
 #include <Xi/Config/Checkpoints.h>
 
 namespace {

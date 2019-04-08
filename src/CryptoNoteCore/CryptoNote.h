@@ -19,10 +19,10 @@
 
 #include <vector>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Algorithm/GenericComparison.h>
 #include <Xi/Algorithm/GenericHash.h>

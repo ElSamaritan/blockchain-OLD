@@ -25,9 +25,9 @@
 
 #include <limits>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <openssl/evp.h>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 void Xi::Crypto::Chacha8::generate_key(const std::string &password, uint8_t *data, size_t len) {
   PKCS5_PBKDF2_HMAC(password.data(), static_cast<int>(password.size()), NULL, 0, std::numeric_limits<uint16_t>::max(),

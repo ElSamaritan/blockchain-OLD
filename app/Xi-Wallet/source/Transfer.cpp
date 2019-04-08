@@ -10,7 +10,7 @@
 #include <utility>
 #include <string>
 
-#include <Xi/Utils/String.h>
+#include <Xi/Algorithm/String.h>
 
 #include <Common/Base58.h>
 #include <Common/StringTools.h>

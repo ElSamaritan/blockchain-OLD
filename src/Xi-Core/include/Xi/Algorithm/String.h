@@ -31,9 +31,9 @@
 #include <sstream>
 #include <iostream>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/optional.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 namespace Xi {
 /*!

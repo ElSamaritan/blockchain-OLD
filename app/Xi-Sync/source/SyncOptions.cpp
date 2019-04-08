@@ -26,7 +26,7 @@
 #include <cassert>
 
 #include <Xi/Exceptional.h>
-#include <Xi/Utils/FileSystem.h>
+#include <Xi/FileSystem.h>
 
 namespace {
 // clang-format off

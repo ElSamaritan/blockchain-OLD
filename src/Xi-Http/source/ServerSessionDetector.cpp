@@ -25,9 +25,9 @@
 
 #include <stdexcept>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include "DetectSSL.h"
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include "HttpServerSession.h"
 #include "HttpsServerSession.h"

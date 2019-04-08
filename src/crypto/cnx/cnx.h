@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <Xi/Utils/Conversion.h>
+#include <Xi/Byte.h>
 
 #include "crypto/hash.h"
 #include "crypto/cnx/configuration.h"

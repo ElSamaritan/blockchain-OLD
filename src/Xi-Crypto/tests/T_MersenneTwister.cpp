@@ -26,9 +26,9 @@
 #include <random>
 #include <array>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <gmock/gmock.h>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #define XI_TESTSUITE T_Xi_Crypto_MersenneTwister
 

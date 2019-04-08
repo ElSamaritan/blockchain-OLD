@@ -23,10 +23,10 @@
 
 #include "Xi/Http/SSLConfiguration.h"
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/filesystem.hpp>
 #include <boost/asio/ssl.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 Xi::Http::SSLConfiguration::SSLConfiguration()
     : m_enabled{false},

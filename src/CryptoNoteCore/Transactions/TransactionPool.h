@@ -28,9 +28,9 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/optional.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Global.h>
 #include <Xi/Concurrent/RecursiveLock.h>

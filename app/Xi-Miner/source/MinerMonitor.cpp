@@ -28,9 +28,9 @@
 #include <sstream>
 #include <cstdlib>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/asio/ip/host_name.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Common/StringTools.h>
 

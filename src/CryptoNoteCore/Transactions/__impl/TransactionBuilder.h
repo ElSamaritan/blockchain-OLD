@@ -25,9 +25,9 @@
 
 #include <vector>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/optional.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include "CryptoNoteCore/CryptoNote.h"
 #include "CryptoNoteCore/Transactions/TransactionApiExtra.h"

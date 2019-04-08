@@ -21,32 +21,55 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/FileSystem.h"
 
-#include <cinttypes>
-#include <string>
+Xi::Result<boost::filesystem::space_info> Xi::FileSystem::availableSpace(const std::string &directory) {
+  XI_ERROR_TRY();
+  boost::filesystem::path path(directory);
+  return boost::filesystem::space(path);
+  XI_ERROR_CATCH();
+}
 
-#include <Xi/Utils/ExternalIncludePush.h>
-#include <boost/optional.hpp>
-#include <boost/logic/tribool.hpp>
-#include <boost/filesystem.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+Xi::Result<boost::logic::tribool> Xi::FileSystem::isRotationalDrive(const std::string &path) {
+  XI_UNUSED(path);
+  XI_ERROR_TRY();
+  return make_result<boost::logic::tribool>(boost::logic::indeterminate);
+  XI_ERROR_CATCH();
+}
 
-#include <Xi/Result.h>
-#include <Xi/Exceptional.h>
+Xi::Result<void> Xi::FileSystem::ensureDirectoryExists(const std::string &directory) {
+  using namespace boost::filesystem;
+  boost::system::error_code ec;
+  boost::filesystem::path path{directory};
+  if (boost::filesystem::is_directory(path, ec)) {
+    return make_result<void>();
+  }
+  if (boost::filesystem::create_directories(path, ec)) {
+    return make_result<void>();
+  } else {
+    return make_error(ec);
+  }
+}
 
-namespace Xi {
-namespace FileSystem {
+Xi::Result<void> Xi::FileSystem::removeDircetoryIfExists(const std::string &directory) {
+  XI_ERROR_TRY();
+  using namespace boost::filesystem;
+  boost::filesystem::path path{directory};
+  if (!exists(path)) {
+    return make_result<void>();
+  }
+  boost::system::error_code ec;
+  if (boost::filesystem::is_directory(path, ec)) {
+    remove_all(path, ec);
+    if (ec) {
+      return make_error(ec);
+    } else {
+      return make_result<void>();
+    }
+  } else {
+    return make_error(ec);
+  }
+  XI_ERROR_CATCH();
+}
 
-XI_DECLARE_EXCEPTIONAL_CATEGORY(FileSystem)
-XI_DECLARE_EXCEPTIONAL_INSTANCE(InsufficientSpace, "your hard drive has insufficient space for the operation",
-                                FileSystem)
-
-Xi::Result<boost::filesystem::space_info> availableSpace(const std::string& directory);
-Xi::Result<boost::tribool> isRotationalDrive(const std::string& path);
-Xi::Result<void> ensureDirectoryExists(const std::string& directory);
-Xi::Result<void> removeDircetoryIfExists(const std::string& directory);
-Xi::Result<bool> exists(const std::string& path);
-
-}  // namespace FileSystem
-}  // namespace Xi
+Xi::Result<bool> Xi::FileSystem::exists(const std::string &path) { return boost::filesystem::exists(path); }

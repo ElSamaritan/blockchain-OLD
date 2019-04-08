@@ -23,9 +23,9 @@
 
 #include "HttpsServerSession.h"
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/asio/bind_executor.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 Xi::Http::HttpsServerSession::HttpsServerSession(Xi::Http::ServerSession::socket_t socket,
                                                  Xi::Http::ServerSession::buffer_t buffer,

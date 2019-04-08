@@ -30,7 +30,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/beast.hpp>
 
-#include <Xi/Utils/Base64.h>
+#include <Xi/Encoding/Base64.h>
 
 static_assert(
     static_cast<boost::beast::http::field>(Xi::Http::HeaderContainer::WWWAuthenticate) ==

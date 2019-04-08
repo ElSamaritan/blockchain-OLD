@@ -26,11 +26,11 @@
 #include <algorithm>
 #include <limits>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <openssl/evp.h>
 #include <boost/random/random_device.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 Xi::Crypto::PasswordContainer::PasswordContainer(const std::string &password) {
   generateConfig();

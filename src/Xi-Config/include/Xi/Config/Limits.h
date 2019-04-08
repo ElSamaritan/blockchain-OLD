@@ -26,7 +26,8 @@
 #include <cinttypes>
 #include <algorithm>
 
-#include <Xi/Utils/Conversion.h>
+#include <Xi/Byte.h>
+#include <Xi/Algorithm/Math.h>
 
 #include "Xi/Config/Time.h"
 
@@ -61,8 +62,8 @@ inline constexpr std::chrono::seconds maximumTimeWindowForLockedTransation() {
   return maximumBlockWindowForLockedTransation() * Xi::Config::Time::blockTime();
 }
 
-inline constexpr std::chrono::seconds maximumTransactionLivetimeSpan() { return 1_d; }
-inline constexpr std::chrono::seconds maximumTransactionLivetimeSpanFromAltBlocks() { return 7_d; }
+inline constexpr std::chrono::seconds maximumTransactionLivetimeSpan() { return 24_h; }
+inline constexpr std::chrono::seconds maximumTransactionLivetimeSpanFromAltBlocks() { return 7 * 24_h; }
 
 /*!
  * \brief minimumTransactionLivetimeSpansUntilDeletion is the amount of lifetime spans a transaction must be hold in

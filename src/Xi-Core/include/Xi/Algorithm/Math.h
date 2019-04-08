@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,55 +21,26 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Utils/FileSystem.h"
+#pragma once
 
-Xi::Result<boost::filesystem::space_info> Xi::FileSystem::availableSpace(const std::string &directory) {
-  XI_ERROR_TRY();
-  boost::filesystem::path path(directory);
-  return boost::filesystem::space(path);
-  XI_ERROR_CATCH();
+#include <cinttypes>
+
+namespace Xi {
+/*!
+ * \brief pow computes the to the power of function (base^exponent)
+ * \param base the base of the formula
+ * \param exponent the exponent of the formula
+ * \return base^exponent, 1 if exponent is 0
+ */
+static inline constexpr uint32_t pow(uint32_t base, uint32_t exponent) {
+  return exponent == 0 ? 1 : base * pow(base, exponent - 1);
 }
+}  // namespace Xi
 
-Xi::Result<boost::logic::tribool> Xi::FileSystem::isRotationalDrive(const std::string &path) {
-  XI_UNUSED(path);
-  XI_ERROR_TRY();
-  return make_result<boost::logic::tribool>(boost::logic::indeterminate);
-  XI_ERROR_CATCH();
-}
+static inline constexpr uint64_t operator"" _k(uint64_t kilo) { return kilo * Xi::pow(10, 3); }
 
-Xi::Result<void> Xi::FileSystem::ensureDirectoryExists(const std::string &directory) {
-  using namespace boost::filesystem;
-  boost::system::error_code ec;
-  boost::filesystem::path path{directory};
-  if (boost::filesystem::is_directory(path, ec)) {
-    return make_result<void>();
-  }
-  if (boost::filesystem::create_directories(path, ec)) {
-    return make_result<void>();
-  } else {
-    return make_error(ec);
-  }
-}
+static inline constexpr uint64_t operator"" _M(uint64_t mega) { return mega * Xi::pow(10, 6); }
 
-Xi::Result<void> Xi::FileSystem::removeDircetoryIfExists(const std::string &directory) {
-  XI_ERROR_TRY();
-  using namespace boost::filesystem;
-  boost::filesystem::path path{directory};
-  if (!exists(path)) {
-    return make_result<void>();
-  }
-  boost::system::error_code ec;
-  if (boost::filesystem::is_directory(path, ec)) {
-    remove_all(path, ec);
-    if (ec) {
-      return make_error(ec);
-    } else {
-      return make_result<void>();
-    }
-  } else {
-    return make_error(ec);
-  }
-  XI_ERROR_CATCH();
-}
+static inline constexpr uint64_t operator"" _G(uint64_t giga) { return giga * Xi::pow(10, 9); }
 
-Xi::Result<bool> Xi::FileSystem::exists(const std::string &path) { return boost::filesystem::exists(path); }
+static inline constexpr uint64_t operator"" _T(uint64_t tera) { return tera * Xi::pow(10, 12); }

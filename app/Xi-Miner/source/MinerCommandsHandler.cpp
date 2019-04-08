@@ -29,10 +29,10 @@
 #include <chrono>
 #include <thread>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/bind.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Common/StringTools.h>
 #include <CommonCLI/CommonCLI.h>

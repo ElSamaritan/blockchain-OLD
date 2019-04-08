@@ -6,9 +6,9 @@
 #include <GetInput.h>
 ///////////////////////////////
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include "linenoise.hpp"
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Sync.h>
 #include <Tools.h>

@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/optional/optional_io.hpp>
 #include <boost/beast.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include "Xi/Http/Request.h"
 #include "Xi/Http/Response.h"

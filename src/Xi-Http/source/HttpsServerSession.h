@@ -26,9 +26,9 @@
 #include <memory>
 #include <utility>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/asio/ssl.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include "HttpServerSession.h"
 

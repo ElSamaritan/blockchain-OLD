@@ -32,16 +32,16 @@
 #include <iostream>
 #include <codecvt>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/predef/os.h>
 #include <handler/exception_handler.h>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Version/Version.h>
 #include <Xi/Version/BuildInfo.h>
 #include <Xi/Config/Network.h>
-#include <Xi/Utils/String.h>
-#include <Xi/Utils/FileSystem.h>
+#include <Xi/Algorithm/String.h>
+#include <Xi/FileSystem.h>
 #include <Xi/Http/MultipartFormDataBuilder.h>
 #include <Xi/Http/Client.h>
 #include <Common/Util.h>

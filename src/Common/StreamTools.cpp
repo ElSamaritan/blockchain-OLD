@@ -20,9 +20,9 @@
 #include "IInputStream.h"
 #include "IOutputStream.h"
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/endian/conversion.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 namespace Common {
 

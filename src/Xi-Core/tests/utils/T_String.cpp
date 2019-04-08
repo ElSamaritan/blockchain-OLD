@@ -22,7 +22,7 @@
  * ============================================================================================== */
 
 #include <gmock/gmock.h>
-#include <Xi/Utils/String.h>
+#include <Xi/Algorithm/String.h>
 
 #include <string>
 

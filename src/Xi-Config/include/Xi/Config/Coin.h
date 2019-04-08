@@ -25,8 +25,7 @@
 
 #include <string>
 
-#include <Xi/Utils/ConstExprMath.h>
-#include <Xi/Utils/Conversion.h>
+#include <Xi/Algorithm/Math.h>
 
 #include "Xi/Config/NetworkType.h"
 

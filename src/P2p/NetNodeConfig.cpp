@@ -9,7 +9,7 @@
 #include <limits>
 
 #include <Xi/Config.h>
-#include <Xi/Utils/String.h>
+#include <Xi/Algorithm/String.h>
 
 #include <Common/Util.h>
 #include "Common/CommandLine.h"

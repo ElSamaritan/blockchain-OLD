@@ -25,9 +25,9 @@
 
 #include <memory>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <cxxopts.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Global.h>
 #include <Xi/Http/SSLConfiguration.h>

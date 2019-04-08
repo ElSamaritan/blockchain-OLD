@@ -33,7 +33,7 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl/stream.hpp>
 
-#include <Xi/Utils/String.h>
+#include <Xi/Algorithm/String.h>
 
 #include "Xi/Http/Uri.h"
 

@@ -27,9 +27,9 @@
 #include <chrono>
 #include <string>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <cpuinfo_x86.h>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 namespace XiBenchmark {
 double to_hashrate(std::chrono::nanoseconds duration, size_t hashes);

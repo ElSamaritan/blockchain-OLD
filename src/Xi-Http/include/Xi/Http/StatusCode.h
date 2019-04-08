@@ -25,7 +25,7 @@
 
 #include <string>
 
-#include <Xi/Utils/String.h>
+#include <Xi/Algorithm/String.h>
 
 namespace Xi {
 namespace Http {

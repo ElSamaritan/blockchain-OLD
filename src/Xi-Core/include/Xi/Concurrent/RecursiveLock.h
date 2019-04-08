@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/recursive_mutex.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 namespace Xi {
 namespace Concurrent {

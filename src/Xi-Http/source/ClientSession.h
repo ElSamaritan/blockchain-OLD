@@ -26,11 +26,11 @@
 #include <sstream>
 #include <memory>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <boost/predef.h>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include "Xi/Http/Request.h"
 #include "Xi/Http/Response.h"

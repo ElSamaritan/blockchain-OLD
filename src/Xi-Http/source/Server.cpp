@@ -29,10 +29,10 @@
 #include <stdexcept>
 #include <atomic>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include "Listener.h"
 #include "ServerSession.h"

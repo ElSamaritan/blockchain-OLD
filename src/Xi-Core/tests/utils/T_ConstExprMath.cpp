@@ -21,7 +21,7 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <Xi/Utils/ConstExprMath.h>
+#include <Xi/Algorithm/Math.h>
 #include <gmock/gmock.h>
 
 TEST(T_Xi_Utils_ConstExprMath, pow) {

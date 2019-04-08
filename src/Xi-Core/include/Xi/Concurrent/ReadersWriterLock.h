@@ -23,10 +23,10 @@
 
 #include <thread>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 namespace Xi {
 namespace Concurrent {

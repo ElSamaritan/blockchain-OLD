@@ -25,7 +25,7 @@
 
 #include <stdexcept>
 
-#include <Xi/Utils/String.h>
+#include <Xi/Algorithm/String.h>
 
 Xi::Http::BasicEndpoint::BasicEndpoint(const std::string &target, Xi::Http::Method method,
                                        std::shared_ptr<Xi::Http::RequestHandler> handler)

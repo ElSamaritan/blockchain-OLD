@@ -27,9 +27,9 @@
 #include <deque>
 #include <unordered_map>
 
-#include <Xi/Utils/ExternalIncludePush.h>
+#include <Xi/ExternalIncludePush.h>
 #include <boost/uuid/uuid.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Logging/LoggerRef.h>
 

@@ -4,7 +4,7 @@
 
 #include "Xi/Http/Uri.h"
 
-#include "Xi/Utils/String.h"
+#include "Xi/Algorithm/String.h"
 
 Xi::Http::Uri::Uri(const char *uri_text, Xi::Http::Uri::SchemeCategory category,
                    Xi::Http::Uri::QueryArgumentSeparator separator)
