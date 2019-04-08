@@ -24,34 +24,22 @@
 #pragma once
 
 #include <cinttypes>
-#include <deque>
-#include <unordered_map>
+#include <chrono>
+#include <string>
 
-#include <Xi/Utils/ExternalIncludePush.h>
-#include <boost/uuid/uuid.hpp>
-#include <Xi/Utils/ExternalIncludePop.h>
+#include "Xi/Result.h"
 
-#include <Logging/LoggerRef.h>
+namespace Xi {
+namespace Time {
 
-#include "CryptoNoteProtocol/Commands/Commands.h"
-#include "P2p/ConnectionContext.h"
+Xi::Result<std::chrono::microseconds> parseDuration(std::string str);
 
-namespace CryptoNote {
-class CryptoNoteProtocolSuspiciousRequestsDetector final {
- public:
-  CryptoNoteProtocolSuspiciousRequestsDetector(Logging::ILogger& logger);
+}
+}  // namespace Xi
 
-  bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_NEW_TRANSACTIONS_request& request);
-  bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_REQUEST_GET_OBJECTS_request& request,
-                      const NOTIFY_RESPONSE_GET_OBJECTS_request& response);
-  bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_REQUEST_CHAIN::request& request,
-                      const NOTIFY_RESPONSE_CHAIN_ENTRY_request& response);
-  bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_REQUEST_TX_POOL_request& request);
-  bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_NEW_LITE_BLOCK_request& request);
-  bool pushAndInspect(CryptoNoteConnectionContext& ctx, const NOTIFY_MISSING_TXS_REQUEST& request,
-                      const NOTIFY_MISSING_TXS_RESPONSE& response);
-
- private:
-  Logging::LoggerRef m_logger;
-};
-}  // namespace CryptoNote
+inline std::chrono::nanoseconds operator"" _ns(uint64_t arg) { return std::chrono::nanoseconds{arg}; }
+inline std::chrono::microseconds operator"" _us(uint64_t arg) { return std::chrono::microseconds{arg}; }
+inline std::chrono::milliseconds operator"" _ms(uint64_t arg) { return std::chrono::milliseconds{arg}; }
+inline std::chrono::seconds operator"" _s(uint64_t arg) { return std::chrono::seconds{arg}; }
+inline std::chrono::minutes operator"" _m(uint64_t arg) { return std::chrono::minutes{arg}; }
+inline std::chrono::hours operator"" _h(uint64_t arg) { return std::chrono::hours{arg}; }

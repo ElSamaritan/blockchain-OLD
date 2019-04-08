@@ -21,7 +21,7 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Utils/Time.h"
+#include "Xi/Time.h"
 
 #include <algorithm>
 #include <cctype>

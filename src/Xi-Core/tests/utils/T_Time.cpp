@@ -26,20 +26,19 @@
 #include <random>
 #include <unordered_set>
 
-#include <crypto/CryptoTypes.h>
-#include <crypto/crypto.h>
-#include <CryptoNoteCore/CryptoNoteBasic.h>
+#include <Xi/Time.h>
 
 #define XI_TESTSUITE UT_Xi_Core_Time
 
 TEST(XI_TESTSUITE, SingleDurations) {
   using namespace ::testing;
+  using namespace ::Xi::Time;
 
-  EXPECT_EQ(parseDuration("1ms").valueOrThrow(), std::chrono::milliseconds{1});
-  EXPECT_EQ(parseDuration("-12 hours").valueOrThrow(), std::chrono::hours{-12});
+  EXPECT_EQ(parseDuration("1ms").valueOrThrow(), 1_ms);
+  EXPECT_EQ(parseDuration("-12 hours").valueOrThrow(), -12_h);
   EXPECT_EQ(parseDuration(" -277 microseconds   ").valueOrThrow(), std::chrono::microseconds{-277});
-  EXPECT_EQ(parseDuration(" 33 days").valueOrThrow(), std::chrono::hours{33 * 24});
-  EXPECT_EQ(parseDuration("4W").valueOrThrow(), std::chrono::hours{4 * 7 * 24});
+  EXPECT_EQ(parseDuration(" 33 days").valueOrThrow(), 33 * 24_h);
+  EXPECT_EQ(parseDuration("4W").valueOrThrow(), 4 * 7 * 24_h);
 }
 
 TEST(XI_TESTSUITE, CompoundDurations) {

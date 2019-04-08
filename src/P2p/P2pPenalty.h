@@ -118,11 +118,8 @@ inline std::string p2pPeanaltyMessage(P2pPenalty penalty) {
       return "connection timed out";
     case P2pPenalty::ConnectionRefuse:
       return "peer actively refused the connection";
-<<<<<<< HEAD
-=======
     case P2pPenalty::SuspiciousRequestSequence:
       return "peer requests sequence is supicious";
->>>>>>> 199b525... [P2P] initial suspicious requests detector
 
     case P2pPenalty::None:
       return "none";
