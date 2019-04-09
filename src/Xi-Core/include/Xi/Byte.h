@@ -37,8 +37,8 @@ template <size_t _Size>
 using ByteArray = std::array<Byte, _Size>;
 }  // namespace Xi
 
-static inline constexpr uint64_t operator"" _Bytes(uint64_t bytes) { return bytes; }
+static inline constexpr uint64_t operator"" _Bytes(unsigned long long bytes) { return bytes; }
 
-static inline constexpr uint64_t operator"" _kB(uint64_t kiloBytes) { return kiloBytes * 1024; }
+static inline constexpr uint64_t operator"" _kB(unsigned long long kiloBytes) { return kiloBytes * 1024; }
 
-static inline constexpr uint64_t operator"" _MB(uint64_t megaBytes) { return megaBytes * 1024 * 1024; }
+static inline constexpr uint64_t operator"" _MB(unsigned long long megaBytes) { return megaBytes * 1024 * 1024; }

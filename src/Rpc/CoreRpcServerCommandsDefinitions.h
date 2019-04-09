@@ -17,9 +17,9 @@
 #include "crypto/hash.h"
 
 #include "BlockchainExplorer/BlockchainExplorerData.h"
+#include "BlockchainExplorer/BlockchainExplorerDataSerialization.h"
 
 #include "Serialization/SerializationOverloads.h"
-#include "Serialization/BlockchainExplorerDataSerialization.h"
 #include <Serialization/ISerializer.h>
 #include <Serialization/SerializationOverloads.h>
 #include <CryptoNoteCore/ICoreDefinitions.h>

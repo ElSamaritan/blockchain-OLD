@@ -84,11 +84,10 @@ add_library(JsonRpcServer STATIC ${JsonRpcServer})
 
 include(Xi-Version/Version.cmake)
 
-xi_make_library(Core Xi-Core)
-target_link_libraries(
-  Xi.Core
+xi_make_library(
+  Xi-Core
 
-  PUBLIC
+  PUBLIC_LIBRARIES
     Xi.Version
 
     boost
@@ -98,29 +97,33 @@ target_link_libraries(
     sparsehash
 )
 
-xi_make_library(Crypto Xi-Crypto)
-target_link_libraries(
-  Xi.Crypto
+xi_make_library(
+  Xi-Crypto
 
-  PUBLIC
+  PUBLIC_LIBRARIES
     Xi.Core
 
-  PRIVATE
+    Serialization
+
+  PRIVATE_LIBRARIES
     openssl
     boost
 )
 
-xi_make_library(Config Xi-Config)
-target_link_libraries(Xi.Config PUBLIC Xi.Core)
+xi_make_library(
+  Xi-Config
 
-xi_make_library(Http Xi-Http)
-target_link_libraries(
-  Xi.Http
+  PUBLIC_LIBRARIES
+    Xi.Core
+)
 
-  PRIVATE
+xi_make_library(
+  Xi-Http
+
+  PRIVATE_LIBRARIES
     openssl
 
-  PUBLIC
+  PUBLIC_LIBRARIES
     Xi.Core
     boost
     cxxopts
@@ -129,16 +132,24 @@ target_link_libraries(
 )
 
 if(XI_BUILD_BREAKPAD)
-  xi_make_library(CrashHandler Xi-CrashHandler)
-  target_link_libraries(Xi.CrashHandler PRIVATE Xi.Version Xi.Config Xi.Http Common gbreakpad boost)
+  xi_make_library(
+    Xi-CrashHandler
+
+    PRIVATE_LIBRARIES
+      Xi.Version
+      Xi.Config
+      Xi.Http
+      Common
+      gbreakpad
+      boost
+  )
   target_compile_definitions(Xi.CrashHandler INTERFACE XI_USE_BREAKPAD)
 endif()
 
-xi_make_library(App Xi-App)
-target_link_libraries(
-  Xi.App
+xi_make_library(
+  Xi-App
 
-  PUBLIC
+  PUBLIC_LIBRARIES
     Xi.Core
     boost
     cxxopts
@@ -205,15 +216,15 @@ target_link_libraries(
         boost
 )
 target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static Xi.Core boost json linenoise Xi.Http Xi.Config)
-target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core boost json linenoise Xi.Http Xi.Config)
+target_link_libraries(Rpc PUBLIC CryptoNoteCore Xi.Core boost json linenoise Xi.Http Xi.Config BlockchainExplorer)
 target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Serialization CryptoNoteCore System Logging Common Crypto Xi.Core boost json linenoise Xi.Http Xi.Config Xi.Crypto)
-target_link_libraries(BlockchainExplorer PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
+target_link_libraries(BlockchainExplorer PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config Crypto)
 target_link_libraries(Common PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(CommonCLI PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Crypto PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config Xi.Crypto)
 target_link_libraries(Logging PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Mnemonics PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
-target_link_libraries(NodeRpcProxy PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
+target_link_libraries(NodeRpcProxy PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config BlockchainExplorer)
 target_link_libraries(P2P PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Serialization PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)
 target_link_libraries(Transfers PUBLIC Xi.Core boost json linenoise Xi.Http Xi.Config)

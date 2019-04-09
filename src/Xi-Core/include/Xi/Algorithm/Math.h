@@ -37,10 +37,7 @@ static inline constexpr uint32_t pow(uint32_t base, uint32_t exponent) {
 }
 }  // namespace Xi
 
-static inline constexpr uint64_t operator"" _k(uint64_t kilo) { return kilo * Xi::pow(10, 3); }
-
-static inline constexpr uint64_t operator"" _M(uint64_t mega) { return mega * Xi::pow(10, 6); }
-
-static inline constexpr uint64_t operator"" _G(uint64_t giga) { return giga * Xi::pow(10, 9); }
-
-static inline constexpr uint64_t operator"" _T(uint64_t tera) { return tera * Xi::pow(10, 12); }
+static inline constexpr uint64_t operator"" _k(unsigned long long kilo) { return kilo * Xi::pow(10, 3); }
+static inline constexpr uint64_t operator"" _M(unsigned long long mega) { return mega * Xi::pow(10, 6); }
+static inline constexpr uint64_t operator"" _G(unsigned long long giga) { return giga * Xi::pow(10, 9); }
+static inline constexpr uint64_t operator"" _T(unsigned long long tera) { return tera * Xi::pow(10, 12); }

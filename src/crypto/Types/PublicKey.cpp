@@ -40,3 +40,9 @@ Xi::Result<Crypto::PublicKey> Crypto::PublicKey::fromString(const std::string &h
 }
 
 std::string Crypto::PublicKey::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+
+void Crypto::PublicKey::nullify() { fill(0); }
+
+void Crypto::PublicKey::serialize(CryptoNote::ISerializer &serializer) {
+  serializer.binary(data(), size() * sizeof(value_type), "blob");
+}

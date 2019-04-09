@@ -40,3 +40,9 @@ Xi::Result<Crypto::KeyImage> Crypto::KeyImage::fromString(const std::string &hex
 }
 
 std::string Crypto::KeyImage::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+
+void Crypto::KeyImage::nullify() { fill(0); }
+
+void Crypto::KeyImage::serialize(CryptoNote::ISerializer &serializer) {
+  serializer.binary(data(), size() * sizeof(value_type), "blob");
+}

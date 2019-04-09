@@ -29,13 +29,13 @@
 
 #include <Xi/Global.h>
 #include <Xi/Result.h>
+#include <Xi/Byte.h>
+#include <Serialization/ISerializer.h>
 #include <Xi/Algorithm/GenericHash.h>
 #include <Xi/Algorithm/GenericComparison.h>
 
-#include "crypto/Types/Byte.h"
-
 namespace Crypto {
-struct KeyImage : std::array<Byte, 32> {
+struct KeyImage : Xi::ByteArray<32> {
   static const KeyImage Null;
 
   static Xi::Result<KeyImage> fromString(const std::string& hex);
@@ -46,6 +46,9 @@ struct KeyImage : std::array<Byte, 32> {
   ~KeyImage() = default;
 
   std::string toString() const;
+
+  void nullify();
+  void serialize(CryptoNote::ISerializer& serializer);
 };
 
 using KeyImageSet = std::unordered_set<KeyImage>;

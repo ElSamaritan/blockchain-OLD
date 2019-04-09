@@ -30,10 +30,9 @@ xi_make_app(
 
   LINK_LIBRARIES
     Xi.App
-    Logging
-    Serialization
+    ${XI_LIBRARIES}
+
     cxxopts
-    NodeRpcProxy
 )
 
 xi_make_app(

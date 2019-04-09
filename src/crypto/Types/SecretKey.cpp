@@ -40,3 +40,9 @@ Xi::Result<Crypto::SecretKey> Crypto::SecretKey::fromString(const std::string &h
 }
 
 std::string Crypto::SecretKey::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+
+void Crypto::SecretKey::nullify() { fill(0); }
+
+void Crypto::SecretKey::serialize(CryptoNote::ISerializer &serializer) {
+  serializer.binary(data(), size() * sizeof(value_type), "blob");
+}

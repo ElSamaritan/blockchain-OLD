@@ -142,28 +142,8 @@ bool serializeVarintVector(std::vector<uint32_t>& vector, CryptoNote::ISerialize
 
 namespace Crypto {
 
-bool serialize(PublicKey& pubKey, Common::StringView name, CryptoNote::ISerializer& serializer) {
-  return serializePod(pubKey, name, serializer);
-}
-
-bool serialize(SecretKey& secKey, Common::StringView name, CryptoNote::ISerializer& serializer) {
-  return serializePod(secKey, name, serializer);
-}
-
-bool serialize(Hash& h, Common::StringView name, CryptoNote::ISerializer& serializer) {
-  return serializePod(h, name, serializer);
-}
-
-bool serialize(KeyImage& keyImage, Common::StringView name, CryptoNote::ISerializer& serializer) {
-  return serializePod(keyImage, name, serializer);
-}
-
 bool serialize(chacha8_iv& chacha, Common::StringView name, CryptoNote::ISerializer& serializer) {
   return serializePod(chacha, name, serializer);
-}
-
-bool serialize(Signature& sig, Common::StringView name, CryptoNote::ISerializer& serializer) {
-  return serializePod(sig, name, serializer);
 }
 
 bool serialize(EllipticCurveScalar& ecScalar, Common::StringView name, CryptoNote::ISerializer& serializer) {
@@ -306,11 +286,13 @@ void serializeBlockHeader(BlockHeader& header, ISerializer& serializer) {
   if (header.minorVersion != Xi::Config::BlockVersion::expectedMinorVersion()) {
     throw std::runtime_error{"Wrong minor version"};
   }
-  serializer(header.timestamp, "timestamp");
-  serializer(header.previousBlockHash, "prev_id");
+
   auto nonce = header.nonce;
   boost::endian::native_to_little_inplace(nonce);
   serializer.binary(&header.nonce, sizeof(header.nonce), "nonce");
+
+  serializer(header.timestamp, "timestamp");
+  serializer(header.previousBlockHash, "prev_id");
 }
 
 void serialize(BlockHeader& header, ISerializer& serializer) { serializeBlockHeader(header, serializer); }

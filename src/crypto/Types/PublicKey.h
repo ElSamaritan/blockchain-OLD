@@ -28,13 +28,13 @@
 
 #include <Xi/Global.h>
 #include <Xi/Result.h>
+#include <Xi/Byte.h>
+#include <Serialization/ISerializer.h>
 #include <Xi/Algorithm/GenericHash.h>
 #include <Xi/Algorithm/GenericComparison.h>
 
-#include "crypto/Types/Byte.h"
-
 namespace Crypto {
-struct PublicKey : std::array<Byte, 32> {
+struct PublicKey : Xi::ByteArray<32> {
   static const PublicKey Null;
 
   static Xi::Result<PublicKey> fromString(const std::string& hex);
@@ -45,6 +45,9 @@ struct PublicKey : std::array<Byte, 32> {
   ~PublicKey() = default;
 
   std::string toString() const;
+
+  void nullify();
+  void serialize(CryptoNote::ISerializer& serializer);
 };
 
 XI_MAKE_GENERIC_HASH_FUNC(PublicKey)

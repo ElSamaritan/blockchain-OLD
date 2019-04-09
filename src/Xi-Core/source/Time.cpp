@@ -33,10 +33,6 @@
 #include <Xi/Exceptional.h>
 
 namespace {
-bool isUnit(const std::vector<std::string>& names, const std::string& unit) {
-  return std::find(names.begin(), names.end(), unit) != names.end();
-}
-
 std::chrono::microseconds parseUnit(const std::string& amount, const std::string& unit) {
   const auto pamount = std::stoll(amount);
   if (unit == "microseconds" || unit == "microsecond") {

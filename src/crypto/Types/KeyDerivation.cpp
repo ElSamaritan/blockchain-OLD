@@ -40,3 +40,9 @@ Xi::Result<Crypto::KeyDerivation> Crypto::KeyDerivation::fromString(const std::s
 }
 
 std::string Crypto::KeyDerivation::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+
+void Crypto::KeyDerivation::nullify() { fill(0); }
+
+void Crypto::KeyDerivation::serialize(CryptoNote::ISerializer &serializer) {
+  serializer.binary(data(), size() * sizeof(value_type), "blob");
+}

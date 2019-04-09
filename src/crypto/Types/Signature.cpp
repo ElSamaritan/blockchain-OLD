@@ -40,3 +40,9 @@ Xi::Result<Crypto::Signature> Crypto::Signature::fromString(const std::string &h
 }
 
 std::string Crypto::Signature::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+
+void Crypto::Signature::nullify() { fill(0); }
+
+void Crypto::Signature::serialize(CryptoNote::ISerializer &serializer) {
+  serializer.binary(data(), size() * sizeof(value_type), "blob");
+}

@@ -23,14 +23,15 @@
 
 include(CMakeParseArguments)
 
-macro(xi_make_library name source_dir)
+macro(xi_make_library source_dir)
+  string(REPLACE "-" "." lib_name ${source_dir})
   set(lib_include_dir "${source_dir}/include")
   set(lib_source_dir "${source_dir}/source")
   file(GLOB_RECURSE public_header_files "${lib_include_dir}/**.h")
   file(GLOB_RECURSE private_header_files "${lib_source_dir}/**.h")
   file(GLOB_RECURSE source_files "${lib_source_dir}/**.cpp")
 
-  set(lib_name "Xi.${name}")
+  cmake_parse_arguments(XI_MAKE_LIBRARY "" "" "PUBLIC_LIBRARIES;PRIVATE_LIBRARIES;TEST_LIBRARIES" ${ARGN})
 
   foreach(source_file ${public_header_files} ${private_hader_files} ${source_files})
     set_source_files_properties(${source_file} PROPERTIES COMPILE_FLAGS "${XI_CXX_FLAGS}")
@@ -56,6 +57,15 @@ macro(xi_make_library name source_dir)
       PRIVATE
         ${lib_source_dir}
     )
+    target_link_libraries(
+      ${lib_name}
+
+      PUBLIC
+        ${XI_MAKE_LIBRARY_PUBLIC_LIBRARIES}
+
+      PRIVATE
+        ${XI_MAKE_LIBRARY_PRIVATE_LIBRARIES}
+    )
   else()
     add_library(${lib_name} INTERFACE)
     target_sources(${lib_name} INTERFACE ${public_header_files})
@@ -63,9 +73,9 @@ macro(xi_make_library name source_dir)
   endif()
 
   if(XI_BUILD_TESTSUITE)
-    file(GLOB_RECURSE lib_test_files "${source_dir}/tests/**.cpp")
+    file(GLOB_RECURSE lib_test_files "${source_dir}/tests/**.h" "${source_dir}/tests/**.cpp")
     if(lib_test_files)
-      set(lib_test_name "Xi.${name}.UnitTests")
+      set(lib_test_name "${lib_name}.UnitTests")
       add_executable(${lib_test_name} ${lib_test_files})
       foreach(source_file ${lib_test_files})
         set_source_files_properties(${source_file} PROPERTIES COMPILE_FLAGS "${XI_CXX_FLAGS}")
@@ -76,7 +86,14 @@ macro(xi_make_library name source_dir)
 
         PRIVATE
           ${lib_name}
+          ${XI_MAKE_LIBRARY_TEST_LIBRARIES}
           gmock_main
+      )
+      target_include_directories(
+        ${lib_test_name}
+
+        PRIVATE
+          "${source_dir}/tests"
       )
       add_test(${lib_test_name} ${lib_test_name})
     endif()

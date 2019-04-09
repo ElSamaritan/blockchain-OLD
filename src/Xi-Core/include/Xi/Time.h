@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <cinttypes>
 #include <chrono>
 #include <string>
 
@@ -37,9 +36,15 @@ Xi::Result<std::chrono::microseconds> parseDuration(std::string str);
 }
 }  // namespace Xi
 
-inline constexpr std::chrono::nanoseconds operator"" _ns(uint64_t arg) { return std::chrono::nanoseconds{arg}; }
-inline constexpr std::chrono::microseconds operator"" _us(uint64_t arg) { return std::chrono::microseconds{arg}; }
-inline constexpr std::chrono::milliseconds operator"" _ms(uint64_t arg) { return std::chrono::milliseconds{arg}; }
-inline constexpr std::chrono::seconds operator"" _s(uint64_t arg) { return std::chrono::seconds{arg}; }
-inline constexpr std::chrono::minutes operator"" _m(uint64_t arg) { return std::chrono::minutes{arg}; }
-inline constexpr std::chrono::hours operator"" _h(uint64_t arg) { return std::chrono::hours{arg}; }
+inline constexpr std::chrono::nanoseconds operator"" _ns(unsigned long long arg) {
+  return std::chrono::nanoseconds{arg};
+}
+inline constexpr std::chrono::microseconds operator"" _us(unsigned long long arg) {
+  return std::chrono::microseconds{arg};
+}
+inline constexpr std::chrono::milliseconds operator"" _ms(unsigned long long arg) {
+  return std::chrono::milliseconds{arg};
+}
+inline constexpr std::chrono::seconds operator"" _s(unsigned long long arg) { return std::chrono::seconds{arg}; }
+inline constexpr std::chrono::minutes operator"" _m(unsigned long long arg) { return std::chrono::minutes{arg}; }
+inline constexpr std::chrono::hours operator"" _h(unsigned long long arg) { return std::chrono::hours{arg}; }

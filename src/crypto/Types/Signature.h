@@ -28,13 +28,13 @@
 
 #include <Xi/Global.h>
 #include <Xi/Result.h>
+#include <Xi/Byte.h>
+#include <Serialization/ISerializer.h>
 #include <Xi/Algorithm/GenericHash.h>
 #include <Xi/Algorithm/GenericComparison.h>
 
-#include "crypto/Types/Byte.h"
-
 namespace Crypto {
-struct Signature : std::array<Byte, 64> {
+struct Signature : Xi::ByteArray<64> {
   static const Signature Null;
 
   static Xi::Result<Signature> fromString(const std::string& hex);
@@ -45,6 +45,9 @@ struct Signature : std::array<Byte, 64> {
   ~Signature() = default;
 
   std::string toString() const;
+
+  void nullify();
+  void serialize(CryptoNote::ISerializer& serializer);
 };
 
 XI_MAKE_GENERIC_HASH_FUNC(Signature)

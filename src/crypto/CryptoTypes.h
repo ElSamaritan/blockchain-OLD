@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include "crypto/Types/Byte.h"
 #include "crypto/Types/Hash.h"
 #include "crypto/Types/PublicKey.h"
 #include "crypto/Types/SecretKey.h"

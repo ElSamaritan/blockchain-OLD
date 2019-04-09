@@ -40,3 +40,16 @@ Xi::Result<Crypto::Hash> Crypto::Hash::fromString(const std::string &hex) {
 }
 
 std::string Crypto::Hash::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+
+std::string Crypto::Hash::toShortString() const {
+  std::string res = toString();
+  auto erased_pos = res.erase(8, 48);
+  res.insert(8, "....");
+  return res;
+}
+
+void Crypto::Hash::nullify() { fill(0); }
+
+void Crypto::Hash::serialize(CryptoNote::ISerializer &serializer) {
+  serializer.binary(data(), size() * sizeof(value_type), "blob");
+}
