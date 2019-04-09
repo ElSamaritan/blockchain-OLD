@@ -65,6 +65,8 @@ class ILogger {
                           const std::string& body) = 0;
 };
 
+ILogger& noLogging();
+
 #ifndef ENDL
 #define ENDL std::endl
 #endif

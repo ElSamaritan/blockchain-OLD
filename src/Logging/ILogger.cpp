@@ -16,6 +16,7 @@
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ILogger.h"
+#include "LoggerGroup.h"
 
 namespace Logging {
 
@@ -93,6 +94,11 @@ const std::string &defaultColor(Level level) {
 Xi::Result<std::unique_ptr<ILogger>> ILogger::fromConfiguration(const LoggerConfiguration &config) {
   XI_UNUSED(config);
   return Xi::make_result<std::unique_ptr<ILogger>>(nullptr);
+}
+
+ILogger &noLogging() {
+  static LoggerGroup __Logger{};
+  return __Logger;
 }
 
 }  // namespace Logging

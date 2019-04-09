@@ -27,6 +27,8 @@
 #include <chrono>
 #include <string>
 
+#include <Xi/Byte.h>
+
 #include "Xi/Config/Network.h"
 
 namespace Xi {
