@@ -129,7 +129,7 @@ WalletGreen::WalletGreen(System::Dispatcher& dispatcher, const Currency& currenc
       m_logger(logger, "WalletGreen/empty"),
       m_stopped(false),
       m_blockchainSynchronizerStarted(false),
-      m_blockchainSynchronizer(node, logger, currency.genesisBlockHash()),
+      m_blockchainSynchronizer(node, currency, logger),
       m_synchronizer(currency, logger, m_blockchainSynchronizer, node),
       m_eventOccurred(m_dispatcher),
       m_readyEvent(m_dispatcher),

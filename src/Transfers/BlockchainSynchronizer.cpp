@@ -68,10 +68,11 @@ class TransactionReaderListFormatter {
 
 namespace CryptoNote {
 
-BlockchainSynchronizer::BlockchainSynchronizer(INode& node, Logging::ILogger& logger, const Hash& genesisBlockHash)
+BlockchainSynchronizer::BlockchainSynchronizer(INode& node, const Currency& currency, Logging::ILogger& logger)
     : m_logger(logger, "BlockchainSynchronizer"),
       m_node(node),
-      m_genesisBlockHash(genesisBlockHash),
+      m_currency(currency),
+      m_genesisBlockHash(currency.genesisBlockHash()),
       m_currentState(State::stopped),
       m_futureState(State::stopped) {}
 
@@ -491,6 +492,7 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
 
   BlockchainInterval interval;
   interval.startHeight = response.startHeight;
+  uint32_t blockIndex = interval.startHeight - 1;  // WARNING: Height = Index + 1
   std::vector<CompleteBlock> blocks;
 
   for (auto& block : response.newBlocks) {
@@ -503,8 +505,17 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
     if (block.hasBlock) {
       completeBlock.block = std::move(block.block);
       completeBlock.transactions.push_back(createTransactionPrefix(completeBlock.block->baseTransaction));
-      if (!completeBlock.block->staticReward.isNull()) {
-        completeBlock.transactions.push_back(createTransactionPrefix(completeBlock.block->staticReward));
+      if (m_currency.isStaticRewardEnabledForBlockVersion(completeBlock.block->majorVersion)) {
+        auto staticReward = m_currency.constructStaticRewardTx(completeBlock.block->majorVersion, blockIndex++);
+        if (staticReward.isError()) {
+          m_logger(ERROR) << "Failed to construct static reward: " << staticReward.error().message();
+          return;
+        } else if (!staticReward.value().has_value()) {
+          m_logger(ERROR) << "Expected static reward but none given.";
+          return;
+        } else {
+          completeBlock.transactions.push_back(createTransactionPrefix(*staticReward.value()));
+        }
       }
 
       try {

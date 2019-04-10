@@ -297,26 +297,9 @@ void serializeBlockHeader(BlockHeader& header, ISerializer& serializer) {
 
 void serialize(BlockHeader& header, ISerializer& serializer) { serializeBlockHeader(header, serializer); }
 
-void serializeStaticReward(Transaction& tx, const uint8_t blockMajorVersion, ISerializer& serializer) {
-  if (serializer.type() == ISerializer::INPUT) {
-    if (Xi::Config::StaticReward::isEnabled(blockMajorVersion)) {
-      serializer(tx, "static_reward");
-    } else {
-      tx = Transaction::Null;
-    }
-  } else {
-    if (Xi::Config::StaticReward::isEnabled(blockMajorVersion)) {
-      serializer(tx, "static_reward");
-    } else {
-      assert(tx.isNull());
-    }
-  }
-}
-
 void serialize(BlockTemplate& block, ISerializer& serializer) {
   serializeBlockHeader(block, serializer);
   serializer(block.baseTransaction, "miner_tx");
-  serializeStaticReward(block.staticReward, block.majorVersion, serializer);
   serializer(block.transactionHashes, "tx_hashes");
 }
 

@@ -1223,19 +1223,6 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   uint64_t fee;
   fillBlockTemplate(b, height, medianSize, maxBlockSize, transactionsSize, fee);
 
-  if (currency().isStaticRewardEnabledForBlockVersion(b.majorVersion)) {
-    b.staticReward = boost::value_initialized<Transaction>{};
-    auto staticRewardTxConstructionResult = m_currency.constructStaticRewardTx(b.majorVersion, height, b.staticReward);
-    if (staticRewardTxConstructionResult.isError()) {
-      logger(Logging::ERROR) << "Failed to construct static reward transaction: "
-                             << staticRewardTxConstructionResult.error().message();
-      return false;
-    } else if (!staticRewardTxConstructionResult.value()) {
-      logger(Logging::ERROR) << "Expected static reward, but none given by construction.";
-      return false;
-    }
-  }
-
   /*
      two-phase miner transaction generation: we don't know exact block size until we prepare block, but we don't know
      reward until we know
@@ -1391,106 +1378,6 @@ bool Core::extractTransactions(const std::vector<BinaryArray>& rawTransactions,
   }
 
   return true;
-}
-
-std::error_code Core::validateStaticReward(const Transaction& transaction, uint32_t blockIndex,
-                                           uint8_t blockMajorVersion) const {
-  const bool shouldHaveStaticReward = currency().isStaticRewardEnabledForBlockVersion(blockMajorVersion);
-  if (shouldHaveStaticReward && transaction.isNull()) {
-    return error::BlockValidationError::UNEXPECTED_STATIC_REWARD;
-  } else if (!shouldHaveStaticReward && !transaction.isNull()) {
-    return error::BlockValidationError::UNEXPECTED_STATIC_REWARD;
-  }
-
-  if (transaction.version < m_currency.minTxVersion() || transaction.version > m_currency.maxTxVersion()) {
-    return error::TransactionValidationError::INVALID_VERSION;
-  }
-
-  if (transaction.extra.size() != sizeof(PublicKey) + 1) {
-    return error::TransactionValidationError::BASE_INPUT_INVALID_NONCE;
-  }
-  if (transaction.extra[0] != TX_EXTRA_TAG_PUBKEY) {
-    return error::TransactionValidationError::BASE_INPUT_INVALID_NONCE;
-  }
-
-  if (transaction.inputs.size() != 1) {
-    return error::TransactionValidationError::BASE_INPUT_WRONG_COUNT;
-  }
-
-  if (transaction.inputs[0].type() != typeid(BaseInput)) {
-    return error::TransactionValidationError::BASE_INPUT_UNEXPECTED_TYPE;
-  }
-
-  if (boost::get<BaseInput>(transaction.inputs[0]).blockIndex != blockIndex) {
-    return error::TransactionValidationError::BASE_INPUT_WRONG_BLOCK_INDEX;
-  }
-
-  if (!(transaction.unlockTime == blockIndex + m_currency.minedMoneyUnlockWindow())) {
-    return error::TransactionValidationError::BASE_TRANSACTION_WRONG_UNLOCK_TIME;
-  }
-
-  if (!transaction.signatures.empty()) {
-    return error::TransactionValidationError::BASE_INVALID_SIGNATURES_COUNT;
-  }
-
-  uint64_t staticReward = 0;
-  for (const auto& output : transaction.outputs) {
-    if (output.amount == 0) {
-      return error::TransactionValidationError::OUTPUT_ZERO_AMOUNT;
-    }
-
-    if (output.target.type() == typeid(KeyOutput)) {
-      if (!check_key(boost::get<KeyOutput>(output.target).key)) {
-        return error::TransactionValidationError::OUTPUT_INVALID_KEY;
-      }
-    } else {
-      return error::TransactionValidationError::OUTPUT_UNKNOWN_TYPE;
-    }
-
-    if (std::numeric_limits<uint64_t>::max() - output.amount < staticReward) {
-      return error::TransactionValidationError::OUTPUTS_AMOUNT_OVERFLOW;
-    }
-
-    staticReward += output.amount;
-  }
-
-  const auto expectedStaticReward = currency().staticRewardAmountForBlockVersion(blockMajorVersion);
-  if (staticReward != expectedStaticReward) {
-    return error::BlockValidationError::BLOCK_REWARD_MISMATCH;
-  }
-
-  const KeyPair txkey = generateKeyPair(blockIndex);
-  if (std::memcmp(&transaction.extra[1], txkey.publicKey.data(), sizeof(PublicKey)) != 0) {
-    return error::TransactionValidationError::STATIC_REWARD_INVALID_ADDRESS;
-  }
-
-  const auto expectedStaticRewardAddress = m_currency.staticRewardAddressForBlockVersion(blockMajorVersion);
-  AccountPublicAddress parsedRewardAddress = boost::value_initialized<AccountPublicAddress>();
-  if (!m_currency.parseAccountAddressString(expectedStaticRewardAddress, parsedRewardAddress)) {
-    logger(Logging::FATAL) << "Unable to parse built in static reward address: " << expectedStaticRewardAddress;
-    return error::TransactionValidationError::STATIC_REWARD_INVALID_ADDRESS;
-  }
-
-  for (size_t no = 0; no < transaction.outputs.size(); no++) {
-    Crypto::KeyDerivation derivation = boost::value_initialized<Crypto::KeyDerivation>();
-    Crypto::PublicKey outEphemeralPubKey = boost::value_initialized<Crypto::PublicKey>();
-
-    if (!Crypto::generate_key_derivation(parsedRewardAddress.viewPublicKey, txkey.secretKey, derivation)) {
-      logger(Logging::FATAL) << "unable to generate static reward key derivation.";
-      return error::TransactionValidationError::STATIC_REWARD_INVALID_OUT;
-    }
-    if (!Crypto::derive_public_key(derivation, no, parsedRewardAddress.spendPublicKey, outEphemeralPubKey)) {
-      logger(Logging::FATAL) << "unable to derive static reward public key.";
-      return error::TransactionValidationError::STATIC_REWARD_INVALID_OUT;
-    }
-
-    KeyOutput iOutput = boost::get<KeyOutput>(transaction.outputs[no].target);  // note, checked previously
-    if (iOutput.key != outEphemeralPubKey) {
-      return error::TransactionValidationError::STATIC_REWARD_INVALID_OUT;
-    }
-  }
-
-  return error::BlockValidationError::VALIDATION_SUCCESS;
 }
 
 std::error_code Core::validateTransaction(const CachedTransaction& cachedTransaction, TransactionValidatorState& state,
@@ -1753,7 +1640,7 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     minerReward += output.amount;
   }
 
-  return validateStaticReward(block.staticReward, previousBlockIndex + 1, block.majorVersion);
+  return error::TransactionValidationError::VALIDATION_SUCCESS;
 }
 
 uint64_t CryptoNote::Core::getAdjustedTime() const { return time(NULL); }
@@ -1856,9 +1743,6 @@ void Core::importBlocksFromStorage() {
     }
 
     cumulativeSize += getObjectBinarySize(blockTemplate.baseTransaction);
-    if (!blockTemplate.staticReward.isNull()) {
-      cumulativeSize += getObjectBinarySize(blockTemplate.staticReward);
-    }
     TransactionValidatorState spentOutputs = extractSpentOutputs(transactions);
     auto currentDifficulty = chainsLeaves[0]->getDifficultyForNextBlock(i - 1);
 
@@ -2353,12 +2237,7 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
   for (const TransactionOutput& out : blockTemplate.baseTransaction.outputs) {
     blockDetails.reward += out.amount;
   }
-  blockDetails.staticReward = 0;
-  if (!blockTemplate.staticReward.isNull()) {
-    for (const TransactionOutput& out : blockTemplate.staticReward.outputs) {
-      blockDetails.staticReward += out.amount;
-    }
-  }
+  blockDetails.staticReward = m_currency.staticRewardAmountForBlockVersion(blockDetails.majorVersion);
 
   blockDetails.index = blockIndex;
   blockDetails.isAlternative = mainChainSet.count(segment) == 0;
@@ -2371,12 +2250,7 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
 
   uint64_t blockBlobSize = getObjectBinarySize(blockTemplate);
   uint64_t coinbaseTransactionSize = getObjectBinarySize(blockTemplate.baseTransaction);
-  uint64_t staticRewardTransactionSize = 0;
-  if (!blockTemplate.staticReward.isNull()) {
-    staticRewardTransactionSize = getObjectBinarySize(blockTemplate.staticReward);
-  }
-  blockDetails.blockSize =
-      blockBlobSize + blockDetails.transactionsCumulativeSize - coinbaseTransactionSize - staticRewardTransactionSize;
+  blockDetails.blockSize = blockBlobSize + blockDetails.transactionsCumulativeSize - coinbaseTransactionSize;
 
   blockDetails.alreadyGeneratedCoins = segment->getAlreadyGeneratedCoins(blockDetails.index);
   blockDetails.alreadyGeneratedTransactions = segment->getAlreadyGeneratedTransactions(blockDetails.index);
@@ -2415,10 +2289,14 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
   blockDetails.transactions.reserve(blockTemplate.transactionHashes.size() + 2);
   CachedTransaction cachedBaseTx(std::move(blockTemplate.baseTransaction));
   blockDetails.transactions.push_back(getTransactionDetails(cachedBaseTx.getTransactionHash(), segment, false));
-  if (!blockTemplate.staticReward.isNull()) {
-    CachedTransaction cachedStaticRewardTx(std::move(blockTemplate.staticReward));
-    blockDetails.transactions.push_back(
-        getTransactionDetails(cachedStaticRewardTx.getTransactionHash(), segment, false));
+
+  {
+    auto staticReward = m_currency.constructStaticRewardTx(blockDetails.majorVersion, blockDetails.index).takeOrThrow();
+    if (staticReward.has_value()) {
+      CachedTransaction cachedStaticRewardTx(std::move(*staticReward));
+      blockDetails.transactions.push_back(
+          getTransactionDetails(cachedStaticRewardTx.getTransactionHash(), segment, false));
+    }
   }
 
   blockDetails.totalFeeAmount = 0;

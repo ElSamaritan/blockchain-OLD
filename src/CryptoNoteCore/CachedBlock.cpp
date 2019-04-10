@@ -25,9 +25,6 @@ const Crypto::Hash& CachedBlock::getTransactionTreeHash() const {
     std::vector<Crypto::Hash> transactionHashes;
     transactionHashes.reserve(block.transactionHashes.size() + 1);
     transactionHashes.push_back(getObjectHash(block.baseTransaction));
-    if (!block.staticReward.isNull()) {
-      transactionHashes.push_back(getObjectHash(block.staticReward));
-    }
     transactionHashes.insert(transactionHashes.end(), block.transactionHashes.begin(), block.transactionHashes.end());
     transactionTreeHash = Crypto::Hash();
     Crypto::tree_hash(transactionHashes.data(), transactionHashes.size(), transactionTreeHash.get());
@@ -90,5 +87,3 @@ uint32_t CachedBlock::getBlockIndex() const {
 }
 
 uint32_t CachedBlock::getNonceOffset() const { return 2; }
-
-bool CachedBlock::hasStaticReward() const { return !block.staticReward.isNull(); }

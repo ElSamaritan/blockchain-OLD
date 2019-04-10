@@ -23,6 +23,17 @@
 
 #include "CryptoNoteCore/Transactions/Transaction.h"
 
-const CryptoNote::Transaction CryptoNote::Transaction::Null{{0, 0, {}, {}, {}}, {}};
+const CryptoNote::Transaction CryptoNote::Transaction::Null{};
+
+CryptoNote::Transaction::Transaction() { nullify(); }
 
 bool CryptoNote::Transaction::isNull() const { return version == 0; }
+
+void CryptoNote::Transaction::nullify() {
+  version = 0;
+  unlockTime = 0;
+  inputs.clear();
+  outputs.clear();
+  extra.clear();
+  signatures.clear();
+}

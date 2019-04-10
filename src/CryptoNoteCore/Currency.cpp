@@ -96,24 +96,13 @@ bool Currency::generateGenesisBlock() {
   m_genesisBlockTemplate.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
   m_genesisBlockTemplate.timestamp = Xi::Config::Coin::genesisTimestamp(network());
   m_genesisBlockTemplate.nonce = 0;
-  m_genesisBlockTemplate.previousBlockHash.fill(0);
+  m_genesisBlockTemplate.previousBlockHash.nullify();
   if (!isMainNet()) {
     m_genesisBlockTemplate.nonce += static_cast<uint8_t>(network()) * 0xFFFF;
   }
 
   if (!fromBinaryArray(m_genesisBlockTemplate.baseTransaction, minerTxBlob)) {
     Xi::exceptional<TransactionParseError>("Unable to parse hex encoded genesis coinbase transaction.");
-  }
-
-  Transaction staticRewardTx{};
-  auto staticRewardConstructionResult = constructStaticRewardTx(m_genesisBlockTemplate.majorVersion, 0, staticRewardTx);
-  if (staticRewardConstructionResult.isError()) {
-    logger(ERROR) << "failed to generate static reward for genesis block: "
-                  << staticRewardConstructionResult.error().message();
-  } else if (staticRewardConstructionResult.value()) {
-    m_genesisBlockTemplate.staticReward = std::move(staticRewardTx);
-  } else {
-    m_genesisBlockTemplate.staticReward = Transaction::Null;
   }
 
   m_genesisBlockTemplate.transactionHashes = {};
@@ -241,12 +230,13 @@ bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size
     return false;
   }
 
-  uint64_t penalizedBaseReward = getPenalizedAmount(baseReward, medianSize, currentBlockSize);
-  uint64_t penalizedFee = blockMajorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()
-                              ? getPenalizedAmount(fee, medianSize, currentBlockSize)
-                              : fee;
+  const uint64_t penalizedBaseReward = getPenalizedAmount(baseReward, medianSize, currentBlockSize);
+  const uint64_t penalizedFee = blockMajorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()
+                                    ? getPenalizedAmount(fee, medianSize, currentBlockSize)
+                                    : fee;
+  const uint64_t staticReward = staticRewardAmountForBlockVersion(blockMajorVersion);
 
-  emissionChange = penalizedBaseReward - (fee - penalizedFee);
+  emissionChange = penalizedBaseReward + staticReward - (fee - penalizedFee);
   reward = penalizedBaseReward + penalizedFee;
 
   return true;
@@ -356,8 +346,8 @@ std::string Currency::staticRewardAddressForBlockVersion(uint8_t blockMajorVersi
   return Xi::Config::StaticReward::address(blockMajorVersion);
 }
 
-Xi::Result<bool> Currency::constructStaticRewardTx(uint8_t blockMajorVersion, uint32_t blockIndex,
-                                                   Transaction& tx) const {
+Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(uint8_t blockMajorVersion,
+                                                                           uint32_t blockIndex) const {
   XI_ERROR_TRY();
   const auto rewardAmount = staticRewardAmountForBlockVersion(blockMajorVersion);
   const auto rewardAddress = staticRewardAddressForBlockVersion(blockMajorVersion);
@@ -370,7 +360,7 @@ Xi::Result<bool> Currency::constructStaticRewardTx(uint8_t blockMajorVersion, ui
     } else {
       logger(TRACE) << "Skipping static reward.";
     }
-    return false;
+    return Xi::make_result<boost::optional<Transaction>>(boost::none);
   }
   logger(TRACE) << "Generating static reward: (" << rewardAddress << ", " << rewardAmount << ")";
 
@@ -379,9 +369,8 @@ Xi::Result<bool> Currency::constructStaticRewardTx(uint8_t blockMajorVersion, ui
     Xi::exceptional<AccountPublicAddressParseError>();
   }
 
-  tx.inputs.clear();
-  tx.outputs.clear();
-  tx.extra.clear();
+  Transaction tx{};
+  tx.nullify();
 
   const KeyPair txkey = generateKeyPair(blockIndex);
   addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
@@ -431,7 +420,7 @@ Xi::Result<bool> Currency::constructStaticRewardTx(uint8_t blockMajorVersion, ui
   tx.unlockTime = blockIndex + m_minedMoneyUnlockWindow;
   tx.inputs.push_back(in);
 
-  return true;
+  return Xi::make_result<boost::optional<Transaction>>(std::move(tx));
   XI_ERROR_CATCH();
 }
 

@@ -769,9 +769,6 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   };
 
   validateCoinbaseTransaction(blk.baseTransaction);
-  if (!blk.staticReward.isNull()) {
-    validateCoinbaseTransaction(blk.staticReward);
-  }
 
   block_header_response block_header;
   res.block.height = boost::get<BaseInput>(blk.baseTransaction.inputs.front()).blockIndex + 1;
@@ -809,9 +806,11 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   transaction_short.size = getObjectBinarySize(blk.baseTransaction);
   res.block.transactions.push_back(transaction_short);
 
-  if (!blk.staticReward.isNull()) {
+  auto staticReward =
+      m_core.currency().constructStaticRewardTx(res.block.major_version, res.block.height - 1).takeOrThrow();
+  if (staticReward.has_value()) {
     // Static reward adding
-    const auto& static_reward_tx = blk.staticReward;
+    const auto& static_reward_tx = *staticReward;
     f_transaction_short_response short_static_reward_info;
     short_static_reward_info.hash = Common::podToHex(getObjectHash(static_reward_tx));
     short_static_reward_info.fee = 0;
@@ -1141,15 +1140,6 @@ bool RpcServer::on_getblocktemplate(const COMMAND_RPC_GETBLOCKTEMPLATE::request&
                                 "Internal error: failed to find tx pub key in coinbase extra"};
   }
 
-  if (!blockTemplate.staticReward.isNull()) {
-    PublicKey static_reward_pub_key = CryptoNote::getTransactionPublicKeyFromExtra(blockTemplate.staticReward.extra);
-    if (static_reward_pub_key == NULL_PUBLIC_KEY) {
-      logger(ERROR) << "Failed to find tx pub key in static reward extra";
-      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
-                                  "Internal error: failed to find tx pub key in static reward extra"};
-    }
-  }
-
   if (0 < req.reserve_size) {
     res.reserved_offset = slow_memmem((void*)block_blob.data(), block_blob.size(), &tx_pub_key, sizeof(tx_pub_key));
     if (!res.reserved_offset) {
@@ -1210,15 +1200,6 @@ bool RpcServer::on_get_block_template(const RpcCommands::GetBlockTemplate::reque
     logger(ERROR) << "Failed to find tx pub key in coinbase extra";
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
                                 "Internal error: failed to find tx pub key in coinbase extra"};
-  }
-
-  if (!blockTemplate.staticReward.isNull()) {
-    PublicKey static_reward_pub_key = CryptoNote::getTransactionPublicKeyFromExtra(blockTemplate.staticReward.extra);
-    if (static_reward_pub_key == NULL_PUBLIC_KEY) {
-      logger(ERROR) << "Failed to find tx pub key in static reward extra";
-      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
-                                  "Internal error: failed to find tx pub key in static reward extra"};
-    }
   }
 
   if (0 < req.reserve_size) {
@@ -1341,16 +1322,6 @@ uint64_t get_block_reward(const BlockTemplate& blk) {
   return reward;
 }
 
-uint64_t get_block_static_reward(const BlockTemplate& blk) {
-  uint64_t reward = 0;
-  if (!blk.staticReward.isNull()) {
-    for (const TransactionOutput& out : blk.staticReward.outputs) {
-      reward += out.amount;
-    }
-  }
-  return reward;
-}
-
 }  // namespace
 
 void RpcServer::fill_block_header_response(const BlockTemplate& blk, bool orphan_status, uint32_t index,
@@ -1366,7 +1337,7 @@ void RpcServer::fill_block_header_response(const BlockTemplate& blk, bool orphan
   response.hash = Common::podToHex(hash);
   response.difficulty = m_core.getBlockDifficulty(index);
   response.reward = get_block_reward(blk);
-  response.static_reward = get_block_static_reward(blk);
+  response.static_reward = m_core.currency().staticRewardAmountForBlockVersion(blk.majorVersion);
   BlockDetails blkDetails = m_core.getBlockDetails(hash);
   response.num_txes = static_cast<uint32_t>(blkDetails.transactions.size());
   response.block_size = blkDetails.blockSize;

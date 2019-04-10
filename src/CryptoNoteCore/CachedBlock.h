@@ -22,8 +22,6 @@ class CachedBlock {
   uint32_t getBlockIndex() const;
   uint32_t getNonceOffset() const;
 
-  bool hasStaticReward() const;
-
  private:
   const BlockTemplate& block;
   mutable boost::optional<BinaryArray> blockHashingBinaryArray;

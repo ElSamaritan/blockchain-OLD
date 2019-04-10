@@ -42,7 +42,6 @@ struct BlockHeader {
 
 struct BlockTemplate : public BlockHeader {
   Transaction baseTransaction;
-  Transaction staticReward;  ///< Gets only serialized if a static reward is expected and set (!isNull).
   std::vector<Crypto::Hash> transactionHashes;
 };
 

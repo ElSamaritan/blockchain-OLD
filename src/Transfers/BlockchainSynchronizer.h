@@ -18,6 +18,7 @@
 #pragma once
 
 #include "CryptoNoteCore/INode.h"
+#include "CryptoNoteCore/Currency.h"
 #include "SynchronizationState.h"
 #include "IBlockchainSynchronizer.h"
 #include "IObservableImpl.h"
@@ -39,8 +40,8 @@ namespace CryptoNote {
 class BlockchainSynchronizer : public IObservableImpl<IBlockchainSynchronizerObserver, IBlockchainSynchronizer>,
                                public INodeObserver {
  public:
-  BlockchainSynchronizer(INode& node, Logging::ILogger& logger, const Crypto::Hash& genesisBlockHash);
-  ~BlockchainSynchronizer();
+  BlockchainSynchronizer(INode& node, const Currency& currency, Logging::ILogger& logger);
+  ~BlockchainSynchronizer() override;
 
   // IBlockchainSynchronizer
   virtual void addConsumer(IBlockchainConsumer* consumer) override;
@@ -132,6 +133,7 @@ class BlockchainSynchronizer : public IObservableImpl<IBlockchainSynchronizerObs
   mutable Logging::LoggerRef m_logger;
   ConsumersMap m_consumers;
   INode& m_node;
+  const Currency& m_currency;
   const Crypto::Hash m_genesisBlockHash;
 
   Crypto::Hash lastBlockId;

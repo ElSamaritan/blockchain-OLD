@@ -93,7 +93,7 @@ WalletLegacy::WalletLegacy(const CryptoNote::Currency& currency, INode& node)
       m_isStopping(false),
       m_lastNotifiedActualBalance(0),
       m_lastNotifiedPendingBalance(0),
-      m_blockchainSync(node, m_consoleLogger, currency.genesisBlockHash()),
+      m_blockchainSync(node, currency, m_consoleLogger),
       m_transfersSync(currency, m_consoleLogger, m_blockchainSync, node),
       m_transferDetails(nullptr),
       m_transactionsCache(m_currency.mempoolTxLiveTime()),
@@ -451,8 +451,8 @@ TransactionId WalletLegacy::sendTransaction(const std::vector<WalletLegacyTransf
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
     request = m_sender->makeSendRequest(txId, events, transfers, fee,
-                                        Xi::Config::BlockVersion::version(m_node.getLastKnownBlockHeight()),
-                                        extra, mixIn, unlockTimestamp);
+                                        Xi::Config::BlockVersion::version(m_node.getLastKnownBlockHeight()), extra,
+                                        mixIn, unlockTimestamp);
   }
 
   notifyClients(events);

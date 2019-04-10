@@ -221,7 +221,8 @@ bool requestRawBlock(IDataBase& database, uint32_t blockIndex, RawBlock& block) 
   return true;
 }
 
-Transaction extractTransaction(const RawBlock& block, uint32_t transactionIndex) {
+Transaction extractTransaction(const RawBlock& block, uint32_t blockIndex, uint32_t transactionIndex,
+                               const Currency& currency) {
   assert(transactionIndex < block.transactions.size() + 2);
 
   BlockTemplate blockTemplate;
@@ -229,12 +230,13 @@ Transaction extractTransaction(const RawBlock& block, uint32_t transactionIndex)
   assert(r);
   XI_UNUSED(r);
 
+  const bool hasStaticReward = currency.isStaticRewardEnabledForBlockVersion(blockTemplate.majorVersion);
   if (transactionIndex == 0) {
     return blockTemplate.baseTransaction;
-  } else if (!blockTemplate.staticReward.isNull() && transactionIndex == 1) {
-    return blockTemplate.staticReward;
+  } else if (hasStaticReward && transactionIndex == 1) {
+    return *currency.constructStaticRewardTx(blockTemplate.majorVersion, blockIndex).takeOrThrow();
   } else {
-    const size_t staticTransactionsOffset = blockTemplate.staticReward.isNull() ? 1 : 2;
+    const size_t staticTransactionsOffset = hasStaticReward ? 2 : 1;
     assert(transactionIndex < block.transactions.size() + staticTransactionsOffset);
     Transaction transaction;
     bool ir = fromBinaryArray(transaction, block.transactions[transactionIndex - staticTransactionsOffset]);
@@ -259,7 +261,8 @@ size_t requestPaymentIdTransactionsCount(IDataBase& database, const Crypto::Hash
   return result.getTransactionCountByPaymentIds().at(paymentId);
 }
 
-bool requestPaymentId(IDataBase& database, const Crypto::Hash& transactionHash, Crypto::Hash& paymentId) {
+bool requestPaymentId(IDataBase& database, const Crypto::Hash& transactionHash, Crypto::Hash& paymentId,
+                      const Currency& currency) {
   std::vector<CachedTransactionInfo> cachedTransactions;
 
   if (!requestCachedTransactionInfos({transactionHash}, database, cachedTransactions)) {
@@ -275,7 +278,8 @@ bool requestPaymentId(IDataBase& database, const Crypto::Hash& transactionHash, 
     return false;
   }
 
-  Transaction transaction = extractTransaction(block, cachedTransactions[0].transactionIndex);
+  Transaction transaction =
+      extractTransaction(block, cachedTransactions[0].blockIndex, cachedTransactions[0].transactionIndex, currency);
   return getPaymentIdFromTxExtra(transaction.extra, paymentId);
 }
 
@@ -672,7 +676,7 @@ void DatabaseBlockchainCache::requestDeletePaymentIds(BlockchainWriteBatch& writ
 
   for (const auto& hash : transactionHashes) {
     Crypto::Hash paymentId;
-    if (!requestPaymentId(database, hash, paymentId)) {
+    if (!requestPaymentId(database, hash, paymentId, currency)) {
       continue;
     }
 
@@ -910,7 +914,17 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   auto cumulativeDifficulty = lastBlockInfo.cumulativeDifficulty + blockDifficulty;
   auto alreadyGeneratedCoins = lastBlockInfo.alreadyGeneratedCoins + generatedCoins;
   auto alreadyGeneratedTransactions = lastBlockInfo.alreadyGeneratedTransactions + cachedTransactions.size() + 1;
-  if (cachedBlock.hasStaticReward()) {
+  boost::optional<CachedTransaction> staticRewardTransaction{boost::none};
+  {
+    auto staticRewardConstruct =
+        currency.constructStaticRewardTx(cachedBlock.getBlock().majorVersion, cachedBlock.getBlockIndex())
+            .takeOrThrow();
+    if (staticRewardConstruct.has_value()) {
+      staticRewardTransaction = CachedTransaction{std::move(*staticRewardConstruct)};
+    }
+  }
+
+  if (staticRewardTransaction.has_value()) {
     alreadyGeneratedTransactions += 1;
   }
 
@@ -927,10 +941,6 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   auto txHashes = cachedBlock.getBlock().transactionHashes;
   auto baseTransaction = cachedBlock.getBlock().baseTransaction;
   auto cachedBaseTransaction = CachedTransaction{std::move(baseTransaction)};
-  std::optional<CachedTransaction> staticRewardTransaction = std::nullopt;
-  if (cachedBlock.hasStaticReward()) {
-    staticRewardTransaction = CachedTransaction{cachedBlock.getBlock().staticReward};
-  }
 
   // static reward transaction's hash is always the second one in index for this block
   if (staticRewardTransaction.has_value()) {
@@ -1498,12 +1508,14 @@ void DatabaseBlockchainCache::getRawTransactions(const std::vector<Crypto::Hash>
     }
 
     auto block = fromBinaryArray<BlockTemplate>(blockIt->second.block);
+    const bool hasStaticReward = currency.isStaticRewardEnabledForBlockVersion(block.majorVersion);
     if (transactionIt->second.transactionIndex == 0) {
       foundTransactions.emplace_back(toBinaryArray(block.baseTransaction));
-    } else if (!block.staticReward.isNull() && transactionIt->second.transactionIndex == 1) {
-      foundTransactions.emplace_back(toBinaryArray(block.staticReward));
+    } else if (hasStaticReward && transactionIt->second.transactionIndex == 1) {
+      foundTransactions.emplace_back(toBinaryArray(
+          *currency.constructStaticRewardTx(block.majorVersion, transactionIt->second.blockIndex).takeOrThrow()));
     } else {
-      const size_t staticTransactionsOffset = block.staticReward.isNull() ? 1 : 2;
+      const size_t staticTransactionsOffset = hasStaticReward ? 2 : 1;
       assert(blockIt->second.transactions.size() >= transactionIt->second.transactionIndex - staticTransactionsOffset);
       foundTransactions.emplace_back(
           blockIt->second.transactions[transactionIt->second.transactionIndex - staticTransactionsOffset]);
@@ -1738,16 +1750,16 @@ void DatabaseBlockchainCache::addGenesisBlock(CachedBlock&& genesisBlock) {
   for (const TransactionOutput& output : genesisBlock.getBlock().baseTransaction.outputs) {
     genesisGeneratedCoins += output.amount;
   }
-  if (genesisBlock.hasStaticReward()) {
-    for (const TransactionOutput& output : genesisBlock.getBlock().staticReward.outputs) {
+  const auto staticReward =
+      currency.constructStaticRewardTx(genesisBlock.getBlock().majorVersion, genesisBlock.getBlockIndex())
+          .takeOrThrow();
+  if (staticReward.has_value()) {
+    for (const TransactionOutput& output : staticReward->outputs) {
       genesisGeneratedCoins += output.amount;
     }
   }
 
   uint64_t genesisTransactionsSize = getObjectBinarySize(genesisBlock.getBlock().baseTransaction);
-  if (genesisBlock.hasStaticReward()) {
-    genesisTransactionsSize += getObjectBinarySize(genesisBlock.getBlock().staticReward);
-  }
   assert(genesisTransactionsSize < std::numeric_limits<uint32_t>::max());
 
   BlockchainWriteBatch batch;
@@ -1761,10 +1773,10 @@ void DatabaseBlockchainCache::addGenesisBlock(CachedBlock&& genesisBlock) {
   std::vector<Crypto::Hash> transactionHashes{cachedBaseTransaction.getTransactionHash()};
 
   pushTransaction(cachedBaseTransaction, 0, 0, batch);
-  if (genesisBlock.hasStaticReward()) {
-    CachedTransaction staticReward{genesisBlock.getBlock().staticReward};
-    transactionHashes.push_back(staticReward.getTransactionHash());
-    pushTransaction(std::move(staticReward), 0, 1, batch);
+  if (staticReward.has_value()) {
+    CachedTransaction cachedStaticReward{*staticReward};
+    transactionHashes.push_back(cachedStaticReward.getTransactionHash());
+    pushTransaction(std::move(cachedStaticReward), 0, 1, batch);
   }
 
   batch.insertCachedBlock(blockInfo, 0, transactionHashes);

@@ -69,7 +69,10 @@ struct Transaction : public TransactionPrefix {
 
   std::vector<std::vector<Crypto::Signature>> signatures;
 
+  Transaction();
+
   bool isNull() const;
+  void nullify();
 };
 
 struct BaseTransaction : public TransactionPrefix {};

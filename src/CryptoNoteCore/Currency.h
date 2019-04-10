@@ -111,7 +111,7 @@ class Currency {
   bool isStaticRewardEnabledForBlockVersion(uint8_t blockMajorVersion) const;
   uint64_t staticRewardAmountForBlockVersion(uint8_t blockMajorVersion) const;
   std::string staticRewardAddressForBlockVersion(uint8_t blockMajorVersion) const;
-  Xi::Result<bool> constructStaticRewardTx(uint8_t blockMajorVersion, uint32_t blockIndex, Transaction& tx) const;
+  Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(uint8_t blockMajorVersion, uint32_t blockIndex) const;
   // -------------------------------------------- Static Reward -------------------------------------------------------
 
   bool isFusionTransaction(const Transaction& transaction, uint32_t height) const;
