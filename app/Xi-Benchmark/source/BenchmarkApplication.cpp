@@ -120,7 +120,7 @@ std::vector<uint16_t> generate_random_blocks(size_t count, size_t size) {
 }
 }  // namespace
 
-using HashAlgorithm = Crypto::CNX::Hash_v0;
+using HashAlgorithm = Crypto::CNX::Hash_v1;
 
 int main(int argc, char** argv) {
   try {

@@ -124,7 +124,7 @@ void XiMiner::MinerWorker::mineLoop() {
           boost::endian::native_to_little(currentNonce);
 
       Crypto::Hash h;
-      Crypto::CNX::Hash_v0{}(block.HashArray.data(), block.HashArray.size(), h);
+      Crypto::CNX::Hash_v1{}(block.HashArray.data(), block.HashArray.size(), h);
       if (CryptoNote::check_hash(h, block.Difficutly)) {
         block.Template.nonce = currentNonce;
         m_observer.notify(&Observer::onBlockFound, block.Template);

@@ -26,7 +26,7 @@
 #include "HashBasedBenchmark.h"
 #include "crypto/cnx/cnx.h"
 
-using HashAlgorithm = Crypto::CNX::Hash_v0;
+using HashAlgorithm = Crypto::CNX::Hash_v1;
 
 BENCHMARK_DEFINE_F(HashBasedBenchmark, BM_CryptoNightX)(benchmark::State& state) {
   unsigned char const* data = HashBasedBenchmark::data();

@@ -28,7 +28,7 @@
 #include <Common/StringTools.h>
 
 std::string makeHash(std::string data, bool forceSoftwareAES) {
-  Crypto::CNX::Hash_v0 hashFn;
+  Crypto::CNX::Hash_v1 hashFn;
   Crypto::Hash hash;
   hashFn(data.c_str(), data.length(), hash, forceSoftwareAES);
   std::string hashString;

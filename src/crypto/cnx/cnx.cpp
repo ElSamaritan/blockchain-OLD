@@ -37,13 +37,13 @@
 #include "crypto/cnx/cnx-hash.h"
 #include "crypto/hash-extra-ops.h"
 
-void Crypto::CNX::Hash_v0::operator()(const void *data, size_t length, Crypto::Hash &hash,
+void Crypto::CNX::Hash_v1::operator()(const void *data, size_t length, Crypto::Hash &hash,
                                       bool forceSoftwareAES) const {
   std::memset(&hash, 0, sizeof(hash));
   hash_extra_blake(data, length, reinterpret_cast<char *>(&hash));
 
   std::size_t accumulatedScratchpad = 0;
-  for (std::size_t i = 0; accumulatedScratchpad < 3 * 128_kB; ++i) {
+  for (std::size_t i = 0; accumulatedScratchpad < 78_kB; ++i) {
     uint32_t softShellIndex = get_soft_shell_index(*reinterpret_cast<uint32_t *>(&hash));
     const uint32_t offset = offsetForHeight(softShellIndex);
     const uint32_t scratchpadSize = scratchpadSizeForOffset(offset);

@@ -34,7 +34,7 @@
 namespace {
 using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, uint16_t>;
 
-using HashFn = Crypto::CNX::Hash_v0;
+using HashFn = Crypto::CNX::Hash_v1;
 }  // namespace
 
 TEST(CryptoNightX, HashConsistency) {

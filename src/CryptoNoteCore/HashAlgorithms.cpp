@@ -26,7 +26,7 @@
 #include "crypto/cnx/cnx.h"
 #include "crypto/hash-predef.h"
 
-void CryptoNote::Hashes::CNX_v0::operator()(const CryptoNote::CachedBlock &block, Crypto::Hash &hash) const {
+void CryptoNote::Hashes::CNX_v1::operator()(const CryptoNote::CachedBlock &block, Crypto::Hash &hash) const {
   const auto &rawHashingBlock = block.getBlockHashingBinaryArray();
-  Crypto::CNX::Hash_v0{}(rawHashingBlock.data(), rawHashingBlock.size(), hash);
+  Crypto::CNX::Hash_v1{}(rawHashingBlock.data(), rawHashingBlock.size(), hash);
 }

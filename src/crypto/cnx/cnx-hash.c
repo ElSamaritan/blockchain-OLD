@@ -248,8 +248,8 @@ STATIC INLINE void __cnx_cpu_register_instruction(__cnx_cpu_state* cpu, const ui
 }
 
 STATIC INLINE void __cnx_cpu_tick(__cnx_cpu_state* cpu) {
-  const uint16_t value = cpu->ram[cpu->program_counter];
   cpu->program_counter = (cpu->program_counter + 1) % cpu->ram_size;
+  const uint16_t value = cpu->ram[cpu->program_counter];
 
   const uint8_t instruction = __cnx_cpu_get_instruction(value);
   switch (instruction) {
