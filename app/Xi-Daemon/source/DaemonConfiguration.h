@@ -98,6 +98,7 @@ DaemonConfiguration initConfiguration() {
   config.p2pInterface = "0.0.0.0";
   config.p2pPort = Xi::Config::P2P::defaultPort();
   config.p2pExternalPort = 0;
+  config.p2pBanDurationMinutes = 0;
   config.rpcInterface = "127.0.0.1";
   config.rpcPort = Xi::Config::Network::rpcPort();
   config.noConsole = false;
@@ -159,7 +160,7 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     ("hide-my-port", "Do not announce yourself as a peerlist candidate", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
     ("p2p-bind-ip", "Interface IP address for the P2P service", cxxopts::value<std::string>()->default_value(config.p2pInterface), "<ip>")
     ("p2p-bind-port", "TCP port for the P2P service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.p2pPort)), "#")
-    ("p2p-ban-duration", "Duration, in minutes, peers get banned. Choose less than zero to disable.", cxxopts::value<int32_t>(config.p2pBanDurationMinutes)->default_value("1440"))
+    ("p2p-ban-duration", "Duration, in minutes, peers get banned. Choose less than zero to disable.", cxxopts::value<int32_t>(config.p2pBanDurationMinutes)->default_value("0"))
     ("p2p-external-port", "External TCP port for the P2P service (NAT port forward)", cxxopts::value<uint16_t>()->default_value(std::to_string(config.p2pExternalPort)), "#")
     ("rpc-bind-ip", "Interface IP address for the RPC service", cxxopts::value<std::string>()->default_value(config.rpcInterface), "<ip>")
     ("rpc-bind-port", "TCP port for the RPC service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.rpcPort)), "#");
