@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <atomic>
 
 #include <boost/functional/hash.hpp>
 
@@ -354,11 +355,24 @@ class NodeServer : public IP2pEndpoint {
    */
   size_t resetPenalties();
 
+  /*!
+   * \brief isAutoBlockEnabled Enables blocking ips autonomiously if they reach a certain penalty score.
+   * \return True if auto blocking should be applied, otherwise false.
+   */
+  bool isAutoBlockEnabled() const;
+
+  /*!
+   * \brief setAutoBlockEnabled Enables/Disables autonomiously blocking using the penalty score.
+   * \param isEnabled True if auto blocking should be applied, otherwise false.
+   */
+  void setAutoBlockEnabled(const bool isEnabled);
+
  private:
   mutable Xi::Concurrent::RecursiveLock m_block_access;
   std::map<uint32_t, int64_t> m_blocked_hosts;
   std::map<uint32_t, uint64_t> m_host_fails_score;
   uint64_t m_fails_before_block;
   std::chrono::seconds m_block_time;
+  std::atomic<bool> m_auto_block;
 };
 }  // namespace CryptoNote

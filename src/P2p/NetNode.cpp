@@ -1511,8 +1511,13 @@ bool NodeServer::add_host_fail(const uint32_t address_ip, P2pPenalty penalty) {
       return false;
     }
     it->second = m_fails_before_block / 2;
-    block_host(address_ip, m_block_time);
-    return true;
+    if (isAutoBlockEnabled()) {
+      block_host(address_ip, m_block_time);
+      return true;
+    } else {
+      logger(DEBUGGING) << "Auto blocking disabled, skipping host block.";
+      return false;
+    }
   }
   return false;
 }
@@ -1597,6 +1602,10 @@ size_t NodeServer::resetPenalties() {
   m_host_fails_score.clear();
   return count;
 }
+
+bool NodeServer::isAutoBlockEnabled() const { return m_auto_block.load(); }
+
+void NodeServer::setAutoBlockEnabled(const bool isEnabled) { m_auto_block.store(isEnabled); }
 
 void NodeServer::timedSyncLoop() {
   try {

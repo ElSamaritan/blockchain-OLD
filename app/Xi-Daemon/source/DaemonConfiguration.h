@@ -45,6 +45,7 @@ struct DaemonConfiguration {
   std::vector<std::string> exclusiveNodes;
   std::vector<std::string> seedNodes;
   int32_t p2pBanDurationMinutes;
+  bool p2pAutoBan = false;
 
   int logLevel;
   int feeAmount;
@@ -98,7 +99,8 @@ DaemonConfiguration initConfiguration() {
   config.p2pInterface = "0.0.0.0";
   config.p2pPort = Xi::Config::P2P::defaultPort();
   config.p2pExternalPort = 0;
-  config.p2pBanDurationMinutes = 0;
+  config.p2pBanDurationMinutes = 24 * 60;
+  config.p2pAutoBan = false;
   config.rpcInterface = "127.0.0.1";
   config.rpcPort = Xi::Config::Network::rpcPort();
   config.noConsole = false;
@@ -160,7 +162,8 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     ("hide-my-port", "Do not announce yourself as a peerlist candidate", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
     ("p2p-bind-ip", "Interface IP address for the P2P service", cxxopts::value<std::string>()->default_value(config.p2pInterface), "<ip>")
     ("p2p-bind-port", "TCP port for the P2P service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.p2pPort)), "#")
-    ("p2p-ban-duration", "Duration, in minutes, peers get banned. Choose less than zero to disable.", cxxopts::value<int32_t>(config.p2pBanDurationMinutes)->default_value("0"))
+    ("p2p-ban-duration", "Duration, in minutes, peers get banned. Choose less than zero to disable.", cxxopts::value<int32_t>(config.p2pBanDurationMinutes)->default_value("1440"))
+    ("p2p-ban-auto-mode", "Enables autonomous banning of peers, if they exceed a certain penalty score.", cxxopts::value<bool>(config.p2pAutoBan)->default_value("false"))
     ("p2p-external-port", "External TCP port for the P2P service (NAT port forward)", cxxopts::value<uint16_t>()->default_value(std::to_string(config.p2pExternalPort)), "#")
     ("rpc-bind-ip", "Interface IP address for the RPC service", cxxopts::value<std::string>()->default_value(config.rpcInterface), "<ip>")
     ("rpc-bind-port", "TCP port for the RPC service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.rpcPort)), "#");
@@ -403,6 +406,10 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
     config.p2pBanDurationMinutes = j["p2p-ban-duration"].get<int32_t>();
   }
 
+  if (j.find("p2p-ban-auto-mode") != j.end()) {
+    config.p2pAutoBan = j["p2p-ban-auto-mode"].get<bool>();
+  }
+
   if (j.find("rpc-bind-ip") != j.end()) {
     config.rpcInterface = j["rpc-bind-ip"].get<std::string>();
   }
@@ -479,6 +486,7 @@ json asJSON(const DaemonConfiguration& config) {
                 {"p2p-bind-port", config.p2pPort},
                 {"p2p-external-port", config.p2pExternalPort},
                 {"p2p-ban-duration", config.p2pBanDurationMinutes},
+                {"p2p-ban-auto-mode", config.p2pAutoBan},
                 {"rpc-bind-ip", config.rpcInterface},
                 {"rpc-bind-port", config.rpcPort},
                 {"no-rpc", config.disableRpc},

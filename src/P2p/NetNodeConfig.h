@@ -67,6 +67,7 @@ class NetNodeConfig {
   std::string p2pStateFilename;
   Xi::Config::Network::Type m_network;
   std::chrono::seconds m_blockDuration;
+  bool m_autoBlock;
 };
 
 }  // namespace CryptoNote
