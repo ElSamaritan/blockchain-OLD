@@ -37,11 +37,16 @@ std::vector<std::string> Xi::Config::Network::seedNodes(Type network) {
   if (network == LocalTestNet)
     return std::vector<std::string>({"127.0.0.1:22868"});
   else if (network == TestNet)
-    return std::vector<std::string>({"207.180.240.151:22868", "207.180.240.152:22868"});
+    return std::vector<std::string>({"207.180.228.241:22868", "207.180.224.162:22868"});
   else if (network == StageNet)
     return std::vector<std::string>({
         "51.75.88.135:22868", /* seed 001: frankfurt */
         "54.39.182.201:22868" /* seed 002: canada    */
+    });
+  else if (network == MainNet)
+    return std::vector<std::string>({
+        "207.180.228.241:22868", /* seed 001: frankfurt */
+        "207.180.224.162:22868"  /* seed 002: frankfurt */
     });
   else
     return {};
