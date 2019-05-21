@@ -39,7 +39,7 @@
 
 // clang-format off
 //                 (_Index, _Version, _Min, _Max, _Default)
-MakeMixinCheckpoint(     0,        1,    0,    3,        0)
+MakeMixinCheckpoint(     0,        1,    0,    0,        0)
 // clang-format on
 
 #define CURRENT_MIXIN_CHECKPOINT_INDEX 0

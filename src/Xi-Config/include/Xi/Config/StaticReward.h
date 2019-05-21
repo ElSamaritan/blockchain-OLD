@@ -52,9 +52,8 @@ namespace StaticReward {}
 // clang-format off
 //                        (_Index, _Version,                _Amount,  _Address...
 MakeStaticRewardCheckpoint(     0,        1, Coin::toAtomicUnits(2),  "XizwvuJp4FrfLw3k9sLKASVpdVUEC7eRHA8Azp7ZjeWfGsYs2sEyNwv5i5aYpTa8mDJfEmp4pmJJj5DRQ6cKwpHp5sLQghy98s")
-MakeStaticRewardCheckpoint(     1,        5,                      0,  "")
 // clang-format on
 
-#define CURRENT_STATIC_REWARD_CHECKPOINT_INDEX 1
+#define CURRENT_STATIC_REWARD_CHECKPOINT_INDEX 0
 
 #include "Xi/Config/_Impl/EndStaticReward.h"

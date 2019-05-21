@@ -58,7 +58,7 @@ NetNodeConfig::NetNodeConfig() {
   hideMyPort = false;
   configFolder = Tools::getDefaultDataDirectory();
   m_network = Xi::Config::Network::defaultNetworkType();
-  m_blockDuration = std::chrono::hours{24};
+  m_blockDuration = std::chrono::hours{0};
 }
 
 bool NetNodeConfig::init(const std::string interface, const int port, const int external, const bool localIp,
