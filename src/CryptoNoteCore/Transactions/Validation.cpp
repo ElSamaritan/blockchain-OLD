@@ -24,8 +24,11 @@
 #include "CryptoNoteCore/Transactions/Validation.h"
 
 #include <algorithm>
+#include <iterator>
 
 #include <Xi/Exceptional.h>
+
+#include "CryptoNoteCore/CryptoNoteTools.h"
 
 using Error = CryptoNote::error::TransactionValidationError;
 
@@ -34,7 +37,7 @@ Error CryptoNote::validateExtra(const CryptoNote::Transaction &tx) {
   std::vector<TransactionExtraField> fields;
   XI_RETURN_EC_IF_NOT(parseTransactionExtra(tx.extra, fields), Error::EXTRA_ILL_FORMED);
   XI_RETURN_EC_IF_NOT(validateExtraPublicKeys(fields), Error::EXTRA_INVALID_PUBLIC_KEY);
-  XI_RETURN_EC_IF_NOT(validateExtraNonce(fields), Error::EXTRA_INVALID_PUBLIC_KEY);
+  XI_RETURN_EC_IF_NOT(validateExtraNonce(fields), Error::EXTRA_INVALID_NONCE);
   return Error::VALIDATION_SUCCESS;
 }
 
@@ -46,7 +49,7 @@ bool CryptoNote::validateExtraPublicKeys(const std::vector<TransactionExtraField
   XI_RETURN_EC_IF(search == fields.end(), false);
   const auto &pkField = boost::get<TransactionExtraPublicKey>(*search);
   XI_RETURN_EC_IF_NOT(validateExtraPublicKeys(pkField), false);
-  auto another = std::find_if(search, fields.end(), isPublicKey);
+  auto another = std::find_if(std::next(search), fields.end(), isPublicKey);
   return another == fields.end();
 }
 
@@ -68,10 +71,10 @@ bool CryptoNote::validateExtraCumulativePadding(const std::vector<CryptoNote::Tr
 bool CryptoNote::validateExtraNonce(const std::vector<TransactionExtraField> &fields) {
   const auto isExtraNonce = [](const auto &field) { return field.type() == typeid(TransactionExtraNonce); };
   auto search = std::find_if(fields.begin(), fields.end(), isExtraNonce);
-  XI_RETURN_EC_IF(search == fields.end(), false);
+  XI_RETURN_EC_IF(search == fields.end(), true);
   const auto &nonceField = boost::get<TransactionExtraNonce>(*search);
   XI_RETURN_EC_IF_NOT(validateExtraNonce(nonceField), false);
-  auto another = std::find_if(search, fields.end(), isExtraNonce);
+  auto another = std::find_if(std::next(search), fields.end(), isExtraNonce);
   return another == fields.end();
 }
 
@@ -87,4 +90,9 @@ bool CryptoNote::validateExtraNonce(const CryptoNote::TransactionExtraNonce &non
   }
 
   return true;
+}
+
+bool CryptoNote::validateCanonicalDecomposition(const CryptoNote::Transaction &tx) {
+  return std::all_of(tx.outputs.begin(), tx.outputs.end(),
+                     [](const auto &iOutput) { return isCanonicalAmount(iOutput.amount); });
 }

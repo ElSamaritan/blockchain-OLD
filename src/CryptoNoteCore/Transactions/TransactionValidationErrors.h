@@ -53,6 +53,8 @@ enum class TransactionValidationError {
       13,  ///< An input used for the transaction is an output of a transaction that is still locked.
   EXTRA_MISSING_PUBLIC_KEY = 41,  ///< Every transaction must have at least one embedded public key.
   EXTRA_INVALID_PUBLIC_KEY = 42,  ///< A transaction extra encoded public key must be a valid ecc point.
+  EXTRA_INVALID_NONCE = 46,  ///< A transaction extra nonce, may encode a single playment id or custom data indicated by
+                             ///< the custom data start flag.
   INPUT_INVALID_SIGNATURES = 14,  ///< The signing signature of the input is invalid. Its likely that a user tried to
                                   ///< use coins he does not own.
   INPUT_WRONG_SIGNATURES_COUNT = 15,
@@ -63,6 +65,7 @@ enum class TransactionValidationError {
                                        ///< cannot be processes.
   BASE_INPUT_INVALID_NONCE = 37,       ///< Base transactions can only store public keys in their nonce.
   BASE_INVALID_SIGNATURES_COUNT = 38,  ///< Base transaction may not contain any signatures.
+  OUTPUTS_NOT_CANONCIAL = 45,          ///< Base transaction may always have the canonical form.
   STATIC_REWARD_INVALID_ADDRESS = 39,  ///< The static reward address is invalid, not the expected one.
   STATIC_REWARD_INVALID_OUT = 40,      ///< The static reward contains an invalid out, either wrong encoded or not
                                        ///< designated to the built in static reward address.
@@ -90,7 +93,7 @@ enum class TransactionValidationError {
   INPUT_MIXIN_TOO_HIGH = 33,
   INPUT_MIXIN_TOO_LOW = 34,
 
-  __NUM = 45  ///< The count of different enum values, if you add a new one use this as its value and increase this by
+  __NUM = 47  ///< The count of different enum values, if you add a new one use this as its value and increase this by
               ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation
               ///< and tickets aso.
 };
@@ -182,6 +185,28 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "The binary size of the transaction is too large.";
       case TransactionValidationError::TOO_LARGE_FOR_REWARD_ZONE:
         return "The pool denied the transaction being to large to get a sufficient reward for mining it.";
+      case TransactionValidationError::EXTRA_INVALID_PUBLIC_KEY:
+        return "Transaction public key is invalid.";
+      case TransactionValidationError::EXTRA_MISSING_PUBLIC_KEY:
+        return "No public key found in extra.";
+      case TransactionValidationError::EXISTS_IN_BLOCKCHAIN:
+        return "Transaction is already mined.";
+      case TransactionValidationError::EXISTS_IN_POOL:
+        return "Transaction is already in pool.";
+      case TransactionValidationError::INPUT_MIXIN_TOO_LOW:
+        return "Mixin is too low.";
+      case TransactionValidationError::INPUT_MIXIN_TOO_HIGH:
+        return "Mixin is too high.";
+      case TransactionValidationError::EXTRA_TOO_LARGE:
+        return "Extra excceds maximum size.";
+      case TransactionValidationError::EXTRA_NONCE_TOO_LARGE:
+        return "Extra nonce exceeds maximum size.";
+      case TransactionValidationError::EXTRA_ILL_FORMED:
+        return "Extra is ill formed.";
+      case TransactionValidationError::EXTRA_INVALID_NONCE:
+        return "Extra nonce is ill formed.";
+      case TransactionValidationError::OUTPUTS_NOT_CANONCIAL:
+        return "Outputs are not in canoncial form.";
       default:
         return "Unknown error";
     }

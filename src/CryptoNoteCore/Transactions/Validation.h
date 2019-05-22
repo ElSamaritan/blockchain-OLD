@@ -40,4 +40,6 @@ bool validateExtraPublicKeys(const TransactionExtraPublicKey& pk);
 bool validateExtraNonce(const std::vector<TransactionExtraField>& fields);
 bool validateExtraNonce(const TransactionExtraNonce& nonce);
 
+bool validateCanonicalDecomposition(const Transaction& tx);
+
 }  // namespace CryptoNote

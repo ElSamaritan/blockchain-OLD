@@ -105,13 +105,14 @@ class Currency {
 
   bool constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size_t medianSize, uint64_t alreadyGeneratedCoins,
                         size_t currentBlockSize, uint64_t fee, const AccountPublicAddress& minerAddress,
-                        Transaction& tx, const BinaryArray& extraNonce = BinaryArray(), size_t maxOuts = 1) const;
+                        Transaction& tx, const BinaryArray& extraNonce, size_t maxOuts) const;
 
   // -------------------------------------------- Static Reward -------------------------------------------------------
   bool isStaticRewardEnabledForBlockVersion(uint8_t blockMajorVersion) const;
   uint64_t staticRewardAmountForBlockVersion(uint8_t blockMajorVersion) const;
   std::string staticRewardAddressForBlockVersion(uint8_t blockMajorVersion) const;
-  Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(uint8_t blockMajorVersion, uint32_t blockIndex) const;
+  Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(uint8_t blockMajorVersion,
+                                                                    uint32_t blockIndex) const;
   // -------------------------------------------- Static Reward -------------------------------------------------------
 
   bool isFusionTransaction(const Transaction& transaction, uint32_t height) const;

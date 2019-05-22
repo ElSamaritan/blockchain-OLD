@@ -18,7 +18,46 @@
 #include "CryptoNoteTools.h"
 #include "CryptoNoteFormatUtils.h"
 
+#include <unordered_map>
+#include <utility>
+#include <limits>
+#include <algorithm>
+#include <iterator>
+
+#include <Xi/Algorithm/Math.h>
+
 using namespace CryptoNote;
+
+namespace {
+struct AmountDecompositionUnit {
+  const uint64_t Amount;
+  const uint8_t DecadeIndex;
+  const uint8_t Digit;
+
+  AmountDecompositionUnit(uint64_t amount, uint8_t decadeIndex, uint8_t digit)
+      : Amount{amount}, DecadeIndex{decadeIndex}, Digit{digit} {}
+};
+
+class AmountDecompositions {
+  std::unordered_map<uint64_t, AmountDecompositionUnit> m_units;
+  AmountDecompositions() {
+    for (uint8_t decade = 0; decade < std::numeric_limits<uint64_t>::digits10; ++decade) {
+      uint64_t iDecadeUnit = Xi::pow64(10, decade);
+      for (uint8_t digit = 1; digit < 10; ++digit) {
+        uint64_t iAmount = iDecadeUnit * digit;
+        m_units.emplace(std::piecewise_construct, std::forward_as_tuple(iAmount),
+                        std::forward_as_tuple(iAmount, decade, digit));
+      }
+    }
+  }
+
+ public:
+  static const std::unordered_map<uint64_t, AmountDecompositionUnit>& units() {
+    static const AmountDecompositions __Singleton{};
+    return __Singleton.m_units;
+  }
+};
+}  // namespace
 
 template <>
 bool CryptoNote::toBinaryArray(const BinaryArray& object, BinaryArray& binaryArray) {
@@ -78,6 +117,34 @@ uint64_t CryptoNote::getOutputAmount(const Transaction& transaction) {
 }
 
 void CryptoNote::decomposeAmount(uint64_t amount, uint64_t dustThreshold, std::vector<uint64_t>& decomposedAmounts) {
-  decompose_amount_into_digits(amount, dustThreshold, [&](uint64_t amount) { decomposedAmounts.push_back(amount); },
-                               [&](uint64_t dust) { decomposedAmounts.push_back(dust); });
+  decompose_amount_into_digits(
+      amount, dustThreshold, [&](uint64_t amount) { decomposedAmounts.push_back(amount); },
+      [&](uint64_t dust) { decomposedAmounts.push_back(dust); });
+}
+
+size_t CryptoNote::countCanonicalDecomposition(const std::vector<uint64_t>& amounts) {
+  size_t count = 0;
+  std::array<size_t, std::numeric_limits<uint64_t>::digits10> decadeCount{};
+  decadeCount.fill(0);
+  for (const auto amount : amounts) {
+    auto search = AmountDecompositions::units().find(amount);
+    if (search == AmountDecompositions::units().end()) {
+      return std::numeric_limits<uint32_t>::max();
+    }
+    const auto decadeIndex = search->second.DecadeIndex;
+    decadeCount[decadeIndex] += 1;
+    count = std::max(count, decadeCount[decadeIndex]);
+  }
+  return count;
+}
+
+bool CryptoNote::isCanonicalAmount(uint64_t amount) {
+  return AmountDecompositions::units().find(amount) != AmountDecompositions::units().end();
+}
+
+size_t CryptoNote::countCanonicalDecomposition(const Transaction& tx) {
+  std::vector<uint64_t> outs;
+  std::transform(tx.outputs.begin(), tx.outputs.end(), std::back_inserter(outs),
+                 [](const auto& iOutput) { return iOutput.amount; });
+  return countCanonicalDecomposition(outs);
 }

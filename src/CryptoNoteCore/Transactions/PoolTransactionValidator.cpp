@@ -23,6 +23,8 @@
 
 #include "CryptoNoteCore/Transactions/PoolTransactionValidator.h"
 
+#include "CryptoNoteCore/CryptoNoteTools.h"
+
 CryptoNote::PoolTransactionValidator::PoolTransactionValidator(const CryptoNote::ITransactionPool &pool,
                                                                uint8_t blockVersion, const IBlockchainCache &chain,
                                                                const Currency &currency)
@@ -48,8 +50,19 @@ bool CryptoNote::PoolTransactionValidator::isInCheckpointRange() const { return 
 bool CryptoNote::PoolTransactionValidator::isFeeInsufficient(const CachedTransaction &transaction) const {
   const uint64_t fee = transaction.getTransactionFee();
   const bool isFusionTransaction =
-      fee == 0 && currency().isFusionTransaction(transaction.getTransaction(), chain().getTopBlockIndex() + 1);
-  return !isFusionTransaction && fee < currency().minimumFee();
+      fee == 0 && currency().isFusionTransaction(transaction.getTransaction(), transaction.getBlobSize(),
+                                                 chain().getTopBlockIndex() + 1);
+  if (!isFusionTransaction) {
+    const size_t canonicalBuckets = countCanonicalDecomposition(transaction.getTransaction());
+    const auto minimumFee = currency().minimumFee() * (canonicalBuckets > 3 ? (canonicalBuckets - 3) : 1);
+    if (fee < minimumFee) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
 }
 
 uint64_t CryptoNote::PoolTransactionValidator::transactionWeightLimit() const {

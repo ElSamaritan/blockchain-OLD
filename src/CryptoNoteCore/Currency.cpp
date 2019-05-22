@@ -278,9 +278,9 @@ bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size
   }
 
   std::vector<uint64_t> outAmounts;
-  decompose_amount_into_digits(blockReward, defaultDustThreshold(height),
-                               [&outAmounts](uint64_t a_chunk) { outAmounts.push_back(a_chunk); },
-                               [&outAmounts](uint64_t a_dust) { outAmounts.push_back(a_dust); });
+  decompose_amount_into_digits(
+      blockReward, defaultDustThreshold(height), [&outAmounts](uint64_t a_chunk) { outAmounts.push_back(a_chunk); },
+      [&outAmounts](uint64_t a_dust) { outAmounts.push_back(a_dust); });
 
   if (!(1 <= maxOuts)) {
     logger(ERROR) << "max_out must be non-zero";
@@ -380,9 +380,9 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(uint8
 
   std::vector<uint64_t> outAmounts;
   const auto dustThreshold = defaultDustThresholdForMajorVersion(blockMajorVersion);
-  decompose_amount_into_digits(rewardAmount, dustThreshold,
-                               [&outAmounts](uint64_t a_chunk) { outAmounts.push_back(a_chunk); },
-                               [&outAmounts](uint64_t a_dust) { outAmounts.push_back(a_dust); });
+  decompose_amount_into_digits(
+      rewardAmount, dustThreshold, [&outAmounts](uint64_t a_chunk) { outAmounts.push_back(a_chunk); },
+      [&outAmounts](uint64_t a_dust) { outAmounts.push_back(a_dust); });
 
   const size_t maxOuts = 10;
   while (maxOuts < outAmounts.size()) {
@@ -687,7 +687,7 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
 Transaction CurrencyBuilder::generateGenesisTransaction() {
   CryptoNote::Transaction tx;
   CryptoNote::AccountPublicAddress ac = boost::value_initialized<CryptoNote::AccountPublicAddress>();
-  m_currency.constructMinerTx(1, 0, 0, 0, 0, 0, ac, tx);  // zero fee in genesis
+  m_currency.constructMinerTx(1, 0, 0, 0, 0, 0, ac, tx, BinaryArray{}, 20);  // zero fee in genesis
   return tx;
 }
 Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<AccountPublicAddress>& targets) {

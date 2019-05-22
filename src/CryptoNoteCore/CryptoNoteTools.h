@@ -140,4 +140,9 @@ uint64_t getInputAmount(const Transaction& transaction);
 std::vector<uint64_t> getInputsAmounts(const Transaction& transaction);
 uint64_t getOutputAmount(const Transaction& transaction);
 void decomposeAmount(uint64_t amount, uint64_t dustThreshold, std::vector<uint64_t>& decomposedAmounts);
+
+bool isCanonicalAmount(uint64_t amount);
+
+size_t countCanonicalDecomposition(const Transaction& tx);
+size_t countCanonicalDecomposition(const std::vector<uint64_t>& amounts);
 }  // namespace CryptoNote

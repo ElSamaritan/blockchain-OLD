@@ -3,8 +3,8 @@
 std::string Xi::Config::Coin::genesisTransactionBlob(Network::Type network) {
   switch (network) {
     case Network::Type::TestNet:
-      return "010a01ff000180c0ee8ed20b0223e9a390c61bacc2d3f9446209edc4435a4b78950bac0c00fed5693b098999b6210192fc7c22e5f"
-             "b0b95dc561229fa7ddff7ba8a92ea27066ed85ea64ea71557d5d8";
+      return "010a01ff00018090cad2c60e025f2a13a73e823492dd8e330c6b1abae00e9451c65d53bd01466f8947a51be05b2101d49c18673d6"
+             "d5be6987d34002c32f0aef3c051cf72a7ecf8bd84c9dca753c9a6";
     case Network::Type::LocalTestNet:
       return "010a01ff000180d0cfba85600238da436fd268a778fb6327d666ac21f109cd7769a1407893fa83823cc93eb9212101ebd59b2d595"
              "e95ce2753e6a4f9f3da4e1abf3d4a285b4996cbe343a9d47b3933";

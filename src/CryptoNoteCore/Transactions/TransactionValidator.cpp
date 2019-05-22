@@ -56,6 +56,7 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValida
   if (hasInvalidExtra(tx)) return Xi::make_error(Error::EXTRA_ILL_FORMED);
   if (hasUnsupportedVersion(tx.version)) return Xi::make_error(Error::INVALID_VERSION);
   if (tx.inputs.empty()) return Xi::make_error(Error::EMPTY_INPUTS);
+  if (!validateCanonicalDecomposition(tx)) return Xi::make_error(Error::OUTPUTS_NOT_CANONCIAL);
 
   if (containsUnsupportedInputTypes(tx)) return Xi::make_error(Error::BASE_INPUT_UNEXPECTED_TYPE);
   if (containsUnsupportedOutputTypes(tx)) return Xi::make_error(Error::OUTPUT_UNEXPECTED_TYPE);

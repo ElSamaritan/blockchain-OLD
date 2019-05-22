@@ -116,9 +116,9 @@ PublicKey getTransactionPublicKeyFromExtra(const std::vector<uint8_t>& tx_extra)
 }
 
 bool addTransactionPublicKeyToExtra(std::vector<uint8_t>& tx_extra, const PublicKey& tx_pub_key) {
-  tx_extra.resize(tx_extra.size() + 1 + sizeof(PublicKey));
-  tx_extra[tx_extra.size() - 1 - sizeof(PublicKey)] = TX_EXTRA_TAG_PUBKEY;
-  *reinterpret_cast<PublicKey*>(&tx_extra[tx_extra.size() - sizeof(PublicKey)]) = tx_pub_key;
+  tx_extra.resize(tx_extra.size() + 1 + tx_pub_key.size());
+  tx_extra[tx_extra.size() - 1 - tx_pub_key.size()] = TX_EXTRA_TAG_PUBKEY;
+  std::memcpy(&tx_extra[tx_extra.size() - sizeof(PublicKey)], tx_pub_key.data(), tx_pub_key.size());
   return true;
 }
 

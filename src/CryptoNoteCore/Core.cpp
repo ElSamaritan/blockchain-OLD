@@ -1232,7 +1232,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   */
   // make blocks coin-base tx looks close to real coinbase tx to get truthful blob size
   bool r = m_currency.constructMinerTx(b.majorVersion, height, medianSize, alreadyGeneratedCoins, transactionsSize, fee,
-                                       adr, b.baseTransaction, extraNonce, 11);
+                                       adr, b.baseTransaction, extraNonce, 20);
   if (!r) {
     logger(Logging::ERROR) << "Failed to construct miner tx, first chance";
     return false;
@@ -1242,7 +1242,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   const size_t TRIES_COUNT = 10;
   for (size_t tryCount = 0; tryCount < TRIES_COUNT; ++tryCount) {
     r = m_currency.constructMinerTx(b.majorVersion, height, medianSize, alreadyGeneratedCoins, cumulativeSize, fee, adr,
-                                    b.baseTransaction, extraNonce, 11);
+                                    b.baseTransaction, extraNonce, 20);
     if (!r) {
       logger(Logging::ERROR) << "Failed to construct miner tx, second chance";
       return false;
@@ -1397,6 +1397,18 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
   auto error = validateSemantic(transaction, fee, blockIndex);
   if (error != error::TransactionValidationError::VALIDATION_SUCCESS) {
     return error;
+  }
+
+  if (!validateCanonicalDecomposition(transaction)) {
+    return error::TransactionValidationError::OUTPUTS_NOT_CANONCIAL;
+  }
+
+  if (!(fee == 0 && currency().isFusionTransaction(transaction, cachedTransaction.getBlobSize(), blockIndex))) {
+    const size_t canonicalBuckets = countCanonicalDecomposition(transaction);
+    const auto minimumFee = currency().minimumFee() * (canonicalBuckets > 3 ? (canonicalBuckets - 3) : 1);
+    if (fee < minimumFee) {
+      return error::TransactionValidationError::FEE_INSUFFICIENT;
+    }
   }
 
   error = validateExtra(transaction);
@@ -1627,6 +1639,9 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     return error::TransactionValidationError::BASE_INVALID_SIGNATURES_COUNT;
   }
 
+  std::vector<uint64_t> embeddedAmounts{};
+  embeddedAmounts.reserve(block.baseTransaction.outputs.size());
+
   for (const auto& output : block.baseTransaction.outputs) {
     if (output.amount == 0) {
       return error::TransactionValidationError::OUTPUT_ZERO_AMOUNT;
@@ -1645,6 +1660,14 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     }
 
     minerReward += output.amount;
+    embeddedAmounts.push_back(output.amount);
+  }
+
+  std::vector<uint64_t> canoncialAmounts;
+  decomposeAmount(minerReward, currency().defaultDustThresholdForMajorVersion(block.majorVersion), canoncialAmounts);
+
+  if (embeddedAmounts != canoncialAmounts) {
+    return error::TransactionValidationError::OUTPUTS_NOT_CANONCIAL;
   }
 
   return error::TransactionValidationError::VALIDATION_SUCCESS;
