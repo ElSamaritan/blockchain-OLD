@@ -20,31 +20,34 @@
 #include <vector>
 #include <string>
 
+#include <boost/optional.hpp>
 #include <boost/variant.hpp>
 
 #include <CryptoNoteCore/CryptoNote.h>
 
-#define TX_EXTRA_PADDING_MAX_COUNT 255
-#define TX_EXTRA_NONCE_MAX_COUNT 255
+#define TX_EXTRA_PADDING_MAX_COUNT 64
+#define TX_EXTRA_NONCE_MAX_COUNT 126
+#define TX_EXTRA_MAX_SIZE 255
 
-#define TX_EXTRA_TAG_PADDING 0x00
+#define TX_EXTRA_TAG_PADDING 0xFF
 #define TX_EXTRA_TAG_PUBKEY 0x01
-#define TX_EXTRA_NONCE 0x02
+#define TX_EXTRA_TAG_NONCE 0x02
 
-#define TX_EXTRA_NONCE_PAYMENT_ID 0x00
+#define TX_EXTRA_NONCE_PAYMENT_ID 0x01
+#define TX_EXTRA_NONCE_CUSTOM_ID 0xFF
 
 namespace CryptoNote {
 
 struct TransactionExtraPadding {
-  size_t size;
+  uint32_t size = 0;
 };
 
 struct TransactionExtraPublicKey {
-  Crypto::PublicKey publicKey;
+  Crypto::PublicKey publicKey = Crypto::PublicKey::Null;
 };
 
 struct TransactionExtraNonce {
-  std::vector<uint8_t> nonce;
+  std::vector<uint8_t> nonce{};
 };
 
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
@@ -64,7 +67,8 @@ bool findTransactionExtraFieldByType(const std::vector<TransactionExtraField>& t
   return true;
 }
 
-bool parseTransactionExtra(const std::vector<uint8_t>& tx_extra, std::vector<TransactionExtraField>& tx_extra_fields);
+[[nodiscard]] bool parseTransactionExtra(const std::vector<uint8_t>& tx_extra,
+                                         std::vector<TransactionExtraField>& tx_extra_fields);
 bool writeTransactionExtra(std::vector<uint8_t>& tx_extra, const std::vector<TransactionExtraField>& tx_extra_fields);
 
 Crypto::PublicKey getTransactionPublicKeyFromExtra(const std::vector<uint8_t>& tx_extra);

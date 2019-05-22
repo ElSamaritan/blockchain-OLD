@@ -25,6 +25,7 @@
 #include "CryptoNoteCore/CoreErrors.h"
 #include "CryptoNoteCore/MemoryBlockchainStorage.h"
 #include "CryptoNoteCore/Time/LocalTimeProvider.h"
+#include "CryptoNoteCore/Transactions/Validation.h"
 #include "CryptoNoteCore/Transactions/TransactionExtra.h"
 #include "CryptoNoteCore/Transactions/TransactionPool.h"
 #include "CryptoNoteCore/Transactions/TransactionPoolCleaner.h"
@@ -1392,7 +1393,13 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
   if (transaction.version > m_currency.maxTxVersion() || transaction.version < m_currency.minTxVersion()) {
     return error::TransactionValidationError::INVALID_VERSION;
   }
+
   auto error = validateSemantic(transaction, fee, blockIndex);
+  if (error != error::TransactionValidationError::VALIDATION_SUCCESS) {
+    return error;
+  }
+
+  error = validateExtra(transaction);
   if (error != error::TransactionValidationError::VALIDATION_SUCCESS) {
     return error;
   }
@@ -1459,7 +1466,7 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
   if (transaction.inputs.empty()) {
     return error::TransactionValidationError::EMPTY_INPUTS;
   }
-  if (transaction.extra.size() > TX_EXTRA_NONCE_MAX_COUNT) {
+  if (transaction.extra.size() > TX_EXTRA_MAX_SIZE) {
     return error::TransactionValidationError::EXTRA_NONCE_TOO_LARGE;
   }
 
@@ -1593,11 +1600,11 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     return error::TransactionValidationError::INVALID_VERSION;
   }
 
-  if (block.baseTransaction.extra.size() != sizeof(PublicKey) + 1) {
-    return error::TransactionValidationError::BASE_INPUT_INVALID_NONCE;
-  }
-  if (block.baseTransaction.extra[0] != TX_EXTRA_TAG_PUBKEY) {
-    return error::TransactionValidationError::BASE_INPUT_INVALID_NONCE;
+  {
+    auto extraEc = validateExtra(block.baseTransaction);
+    if (extraEc != error::TransactionValidationError::VALIDATION_SUCCESS) {
+      return extraEc;
+    }
   }
 
   if (block.baseTransaction.inputs.size() != 1) {

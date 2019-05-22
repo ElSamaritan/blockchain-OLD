@@ -33,12 +33,7 @@ namespace CryptoNote {
 bool parseTransactionExtra(const std::vector<uint8_t>& transactionExtra,
                            std::vector<TransactionExtraField>& transactionExtraFields) {
   transactionExtraFields.clear();
-
   if (transactionExtra.empty()) return true;
-
-  bool seen_tx_extra_tag_padding = false;
-  bool seen_tx_extra_tag_pubkey = false;
-  bool seen_tx_extra_nonce = false;
 
   try {
     MemoryInputStream iss(transactionExtra.data(), transactionExtra.size());
@@ -48,59 +43,29 @@ bool parseTransactionExtra(const std::vector<uint8_t>& transactionExtra,
 
     while (!iss.endOfStream()) {
       c = read<uint8_t>(iss);
-      switch (c) {
-        case TX_EXTRA_TAG_PADDING: {
-          if (seen_tx_extra_tag_padding) {
-            return true;
-          }
 
-          seen_tx_extra_tag_padding = true;
-
-          size_t size = 1;
-          for (; !iss.endOfStream() && size <= TX_EXTRA_PADDING_MAX_COUNT; ++size) {
-            if (read<uint8_t>(iss) != 0) {
-              return false;  // all bytes should be zero
-            }
-          }
-
-          if (size > TX_EXTRA_PADDING_MAX_COUNT) {
-            return false;
-          }
-
-          transactionExtraFields.push_back(TransactionExtraPadding{size});
-          break;
+      if (c == TX_EXTRA_TAG_PADDING) {
+        TransactionExtraPadding pad{};
+        XI_RETURN_EC_IF_NOT(ar(pad.size, "padding_size"), false);
+        XI_RETURN_EC_IF(pad.size > TX_EXTRA_PADDING_MAX_COUNT, false);
+        std::vector<uint8_t> paddedBytes;
+        read(iss, paddedBytes, pad.size);
+        XI_RETURN_EC_IF_NOT(paddedBytes.size() == pad.size, false);
+        for (size_t i = 0; i < paddedBytes.size(); ++i) {
+          XI_RETURN_EC_IF_NOT(paddedBytes[i] == 0u, false);
         }
-
-        case TX_EXTRA_TAG_PUBKEY: {
-          if (seen_tx_extra_tag_pubkey) {
-            return true;
-          }
-
-          seen_tx_extra_tag_pubkey = true;
-
-          TransactionExtraPublicKey extraPk;
-          ar(extraPk.publicKey, "public_key");
-          transactionExtraFields.push_back(extraPk);
-          break;
-        }
-
-        case TX_EXTRA_NONCE: {
-          if (seen_tx_extra_nonce) {
-            return true;
-          }
-
-          seen_tx_extra_nonce = true;
-
-          TransactionExtraNonce extraNonce;
-          uint8_t size = read<uint8_t>(iss);
-          if (size > 0) {
-            extraNonce.nonce.resize(size);
-            read(iss, extraNonce.nonce.data(), extraNonce.nonce.size());
-          }
-
-          transactionExtraFields.push_back(extraNonce);
-          break;
-        }
+        transactionExtraFields.emplace_back(pad);
+      } else if (c == TX_EXTRA_TAG_PUBKEY) {
+        TransactionExtraPublicKey pub{};
+        XI_RETURN_EC_IF_NOT(ar(pub.publicKey, "public_key"), false);
+        transactionExtraFields.emplace_back(pub);
+      } else if (c == TX_EXTRA_TAG_NONCE) {
+        TransactionExtraNonce nonce{};
+        XI_RETURN_EC_IF_NOT(ar(nonce.nonce, "nonce"), false);
+        XI_RETURN_EC_IF(nonce.nonce.size() > TX_EXTRA_NONCE_MAX_COUNT, false);
+        transactionExtraFields.emplace_back(nonce);
+      } else {
+        return false;
       }
     }
   } catch (std::exception&) {
@@ -142,10 +107,10 @@ bool writeTransactionExtra(std::vector<uint8_t>& tx_extra, const std::vector<Tra
 
 PublicKey getTransactionPublicKeyFromExtra(const std::vector<uint8_t>& tx_extra) {
   std::vector<TransactionExtraField> tx_extra_fields;
-  parseTransactionExtra(tx_extra, tx_extra_fields);
+  if (!parseTransactionExtra(tx_extra, tx_extra_fields)) return PublicKey::Null;
 
   TransactionExtraPublicKey pub_key_field;
-  if (!findTransactionExtraFieldByType(tx_extra_fields, pub_key_field)) return boost::value_initialized<PublicKey>();
+  if (!findTransactionExtraFieldByType(tx_extra_fields, pub_key_field)) return PublicKey::Null;
 
   return pub_key_field.publicKey;
 }
@@ -165,7 +130,7 @@ bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const Binar
   size_t start_pos = tx_extra.size();
   tx_extra.resize(tx_extra.size() + 2 + extra_nonce.size());
   // write tag
-  tx_extra[start_pos] = TX_EXTRA_NONCE;
+  tx_extra[start_pos] = TX_EXTRA_TAG_NONCE;
   // write len
   ++start_pos;
   tx_extra[start_pos] = static_cast<uint8_t>(extra_nonce.size());
@@ -179,7 +144,7 @@ void setPaymentIdToTransactionExtraNonce(std::vector<uint8_t>& extra_nonce, cons
   extra_nonce.clear();
   extra_nonce.push_back(TX_EXTRA_NONCE_PAYMENT_ID);
   const uint8_t* payment_id_ptr = reinterpret_cast<const uint8_t*>(&payment_id);
-  std::copy(payment_id_ptr, payment_id_ptr + sizeof(payment_id), std::back_inserter(extra_nonce));
+  std::copy(payment_id_ptr, payment_id_ptr + payment_id.size(), std::back_inserter(extra_nonce));
 }
 
 bool getPaymentIdFromTransactionExtraNonce(const std::vector<uint8_t>& extra_nonce, Hash& payment_id) {

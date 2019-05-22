@@ -63,3 +63,17 @@ inline void exceptional(const char* s) {
     friend void ::Xi::exceptional<X##Error>();            \
     friend void ::Xi::exceptional<X##Error>(const char*); \
   };
+
+#define XI_RETURN_EC_IF(COND, EC) \
+  do {                            \
+    if (COND) {                   \
+      return EC;                  \
+    }                             \
+  } while (false)
+
+#define XI_RETURN_EC_IF_NOT(COND, EC) \
+  do {                                \
+    if (!(COND)) {                    \
+      return EC;                      \
+    }                                 \
+  } while (false)

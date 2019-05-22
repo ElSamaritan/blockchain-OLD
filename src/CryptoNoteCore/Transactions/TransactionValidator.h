@@ -73,8 +73,7 @@ class TransactionValidator : public ITransactionValidator {
   const Currency& currency() const;
 
  protected:
-  Xi::Result<EligibleIndex> doValidate(
-      const CachedTransaction& transaction) const override;
+  Xi::Result<EligibleIndex> doValidate(const CachedTransaction& transaction) const override;
 
   virtual bool checkIfKeyImageIsAlreadySpent(const Crypto::KeyImage& keyImage) const = 0;
   virtual bool isInCheckpointRange() const = 0;
@@ -95,7 +94,7 @@ class TransactionValidator : public ITransactionValidator {
   bool hasInputOverflow(const Transaction& transaction) const;
   bool hasOutputOverflow(const Transaction& transaction) const;
   bool containsKeyImageDuplicates(const std::vector<Crypto::KeyImage>& keyImages) const;
-  bool isExtraTooLarge(const Transaction& transaction) const;
+  bool hasInvalidExtra(const Transaction& transaction) const;
 
   static bool isInvalidDomainKeyImage(const Crypto::KeyImage& keyImage);
   bool containsInvalidDomainKeyImage(const std::vector<Crypto::KeyImage>& keyImages) const;
@@ -113,7 +112,7 @@ class TransactionValidator : public ITransactionValidator {
       uint64_t amount, const std::vector<uint32_t>& indices) const;
 
   Xi::Result<EligibleIndex> validateKeyInput(const KeyInput& keyInput, size_t inputIndex,
-                                                                          const CachedTransaction& transaction) const;
+                                             const CachedTransaction& transaction) const;
   Xi::Result<EligibleIndex> validateInputs(const CachedTransaction& transaction) const;
 
   error::TransactionValidationError validateMixin(const CachedTransaction& transaction) const;

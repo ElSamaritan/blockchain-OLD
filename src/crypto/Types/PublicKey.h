@@ -46,6 +46,11 @@ struct PublicKey : Xi::ByteArray<32> {
 
   std::string toString() const;
 
+  /*
+   * \brief checks that this is indeed a valid ecc point and has the right order.
+   */
+  bool isValid() const;
+
   void nullify();
   void serialize(CryptoNote::ISerializer& serializer);
 };

@@ -1,5 +1,9 @@
 ﻿#pragma once
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include <inttypes.h>
 
 /* From fe.h */
@@ -121,3 +125,7 @@ void sc_sub(unsigned char *, const unsigned char *, const unsigned char *);
 void sc_mulsub(unsigned char *, const unsigned char *, const unsigned char *, const unsigned char *);
 int sc_check(const unsigned char *);
 int sc_isnonzero(const unsigned char *); /* Doesn't normalize */
+
+#if defined(__cplusplus)
+}
+#endif

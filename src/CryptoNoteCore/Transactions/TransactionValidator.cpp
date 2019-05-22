@@ -33,6 +33,7 @@
 #include "CryptoNoteCore/Transactions/TransactionApi.h"
 #include "CryptoNoteCore/Transactions/TransactionUtils.h"
 #include "CryptoNoteCore/Transactions/TransactionExtra.h"
+#include "CryptoNoteCore/Transactions/Validation.h"
 #include "CryptoNoteCore/BlockchainCache.h"
 
 using Error = CryptoNote::error::TransactionValidationError;
@@ -52,7 +53,7 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValida
 
   if (chain().hasTransaction(transaction.getTransactionHash())) return Xi::make_error(Error::EXISTS_IN_BLOCKCHAIN);
   if (transaction.getBlobSize() > currency().maxTxSize(blockVersion())) return Xi::make_error(Error::TOO_LARGE);
-  if (isExtraTooLarge(tx)) return Xi::make_error(Error::EXTRA_NONCE_TOO_LARGE);
+  if (hasInvalidExtra(tx)) return Xi::make_error(Error::EXTRA_ILL_FORMED);
   if (hasUnsupportedVersion(tx.version)) return Xi::make_error(Error::INVALID_VERSION);
   if (tx.inputs.empty()) return Xi::make_error(Error::EMPTY_INPUTS);
 
@@ -155,8 +156,8 @@ bool CryptoNote::TransactionValidator::containsKeyImageDuplicates(
   return set.size() != keyImages.size();
 }
 
-bool CryptoNote::TransactionValidator::isExtraTooLarge(const CryptoNote::Transaction &transaction) const {
-  return transaction.extra.size() > TX_EXTRA_NONCE_MAX_COUNT;
+bool CryptoNote::TransactionValidator::hasInvalidExtra(const CryptoNote::Transaction &transaction) const {
+  return validateExtra(transaction) != Error::VALIDATION_SUCCESS;
 }
 
 bool CryptoNote::TransactionValidator::isInvalidDomainKeyImage(const Crypto::KeyImage &keyImage) {

@@ -1114,7 +1114,7 @@ bool RpcServer::on_getblocktemplate(const COMMAND_RPC_GETBLOCKTEMPLATE::request&
                                     COMMAND_RPC_GETBLOCKTEMPLATE::response& res) {
   // TODO REMOVE ME
   if (req.reserve_size > TX_EXTRA_NONCE_MAX_COUNT) {
-    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_BIG_RESERVE_SIZE, "To big reserved size, maximum 255"};
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_BIG_RESERVE_SIZE, "To big reserved size, maximum 126"};
   }
 
   AccountPublicAddress acc = boost::value_initialized<AccountPublicAddress>();
@@ -1178,7 +1178,7 @@ bool RpcServer::on_get_block_template_state(const RpcCommands::GetBlockTemplateS
 bool RpcServer::on_get_block_template(const RpcCommands::GetBlockTemplate::request& req,
                                       RpcCommands::GetBlockTemplate::response& res) {
   if (req.reserve_size > TX_EXTRA_NONCE_MAX_COUNT) {
-    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_BIG_RESERVE_SIZE, "To big reserved size, maximum 255"};
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_BIG_RESERVE_SIZE, "To big reserved size, maximum 126"};
   }
 
   AccountPublicAddress acc = boost::value_initialized<AccountPublicAddress>();

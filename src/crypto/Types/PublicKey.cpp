@@ -26,6 +26,7 @@
 #include <Common/StringTools.h>
 
 #include "crypto/Types/PublicKey.h"
+#include "crypto/crypto.h"
 
 const Crypto::PublicKey Crypto::PublicKey::Null{};
 
@@ -40,6 +41,8 @@ Xi::Result<Crypto::PublicKey> Crypto::PublicKey::fromString(const std::string &h
 }
 
 std::string Crypto::PublicKey::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+
+bool Crypto::PublicKey::isValid() const { return check_key(*this); }
 
 void Crypto::PublicKey::nullify() { fill(0); }
 

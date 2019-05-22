@@ -23,38 +23,21 @@
 
 #pragma once
 
-#include <array>
-#include <string>
+#include "CryptoNoteCore/Transactions/Transaction.h"
+#include "CryptoNoteCore/Transactions/TransactionValidationErrors.h"
+#include "CryptoNoteCore/Transactions/TransactionExtra.h"
 
-#include <Xi/Global.h>
-#include <Xi/Result.h>
-#include <Xi/Byte.h>
-#include <Serialization/ISerializer.h>
-#include <Xi/Algorithm/GenericHash.h>
-#include <Xi/Algorithm/GenericComparison.h>
+namespace CryptoNote {
 
-namespace Crypto {
-struct Hash : Xi::ByteArray<32> {
-  static const Hash Null;
+error::TransactionValidationError validateExtra(const Transaction& tx);
 
-  static inline constexpr size_t bytes() { return 32; }
+bool validateExtraSize(const Transaction& tx);
+bool validateExtraCumulativePadding(const std::vector<TransactionExtraField>& fields);
 
-  static Xi::Result<Hash> fromString(const std::string& hex);
+bool validateExtraPublicKeys(const std::vector<TransactionExtraField>& fields);
+bool validateExtraPublicKeys(const TransactionExtraPublicKey& pk);
 
-  Hash() = default;
-  XI_DEFAULT_COPY(Hash);
-  XI_DEFAULT_MOVE(Hash);
-  ~Hash() = default;
+bool validateExtraNonce(const std::vector<TransactionExtraField>& fields);
+bool validateExtraNonce(const TransactionExtraNonce& nonce);
 
-  std::string toString() const;
-  std::string toShortString() const;
-
-  void nullify();
-  void serialize(CryptoNote::ISerializer& serializer);
-};
-
-XI_MAKE_GENERIC_HASH_FUNC(Hash)
-XI_MAKE_GENERIC_COMPARISON(Hash)
-}  // namespace Crypto
-
-XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, Hash)
+}  // namespace CryptoNote
