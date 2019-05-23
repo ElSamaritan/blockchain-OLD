@@ -38,7 +38,7 @@ constexpr uint8_t numberOfDecimalPoints() { return 6; }
 constexpr uint64_t toAtomicUnits(uint64_t coins) { return coins * Xi::pow(10, numberOfDecimalPoints()); }
 constexpr uint64_t totalSupply() { return toAtomicUnits(55_M); }
 constexpr uint64_t amountOfPremine() { return toAtomicUnits(500_k); }
-constexpr uint64_t minimumFee() { return 100; }
+constexpr uint64_t minimumFee() { return 1000; }
 constexpr uint32_t emissionSpeed() { return 21; }
 
 inline std::string licenseUrl() { return "https://gitlab.com/galaxia-project/blockchain/xi/blob/develop/LICENSE"; }
