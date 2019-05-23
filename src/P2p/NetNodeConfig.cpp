@@ -137,6 +137,8 @@ std::string NetNodeConfig::getConfigFolder() const { return configFolder; }
 
 std::chrono::seconds NetNodeConfig::getBlockDuration() const { return m_blockDuration; }
 
+bool NetNodeConfig::getAutoBlock() const { return m_autoBlock; }
+
 void NetNodeConfig::setP2pStateFilename(const std::string& filename) { p2pStateFilename = filename; }
 
 void NetNodeConfig::setBindIp(const std::string& ip) { bindIp = ip; }
@@ -160,5 +162,7 @@ void NetNodeConfig::setHideMyPort(bool hide) { hideMyPort = hide; }
 void NetNodeConfig::setConfigFolder(const std::string& folder) { configFolder = folder; }
 
 void NetNodeConfig::setBlockDuration(std::chrono::seconds duration) { m_blockDuration = duration; }
+
+void NetNodeConfig::setAutoBlock(bool enabled) { m_autoBlock = enabled; }
 
 }  // namespace CryptoNote

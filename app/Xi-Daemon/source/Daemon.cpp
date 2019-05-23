@@ -227,6 +227,7 @@ int main(int argc, char* argv[]) {
     NetNodeConfig netNodeConfig;
     netNodeConfig.setNetwork(config.network);
     netNodeConfig.setBlockDuration(std::chrono::minutes{std::max<int64_t>(0, config.p2pBanDurationMinutes)});
+    netNodeConfig.setAutoBlock(config.p2pAutoBan);
     netNodeConfig.init(config.p2pInterface, config.p2pPort, config.p2pExternalPort, config.localIp, config.hideMyPort,
                        config.dataDirectory, config.peers, config.exclusiveNodes, config.priorityNodes,
                        config.seedNodes);

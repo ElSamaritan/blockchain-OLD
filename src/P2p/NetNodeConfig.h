@@ -38,6 +38,7 @@ class NetNodeConfig {
   bool getHideMyPort() const;
   std::string getConfigFolder() const;
   std::chrono::seconds getBlockDuration() const;
+  bool getAutoBlock() const;
 
   void setP2pStateFilename(const std::string& filename);
   void setNetwork(Xi::Config::Network::Type network);
@@ -52,6 +53,7 @@ class NetNodeConfig {
   void setHideMyPort(bool hide);
   void setConfigFolder(const std::string& folder);
   void setBlockDuration(std::chrono::seconds duration);
+  void setAutoBlock(bool enabled);
 
  private:
   std::string bindIp;
