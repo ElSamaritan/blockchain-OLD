@@ -26,11 +26,11 @@ class Transaction:
         return _str
 
 class FusionTransaction:
-    DustThreshold = 0
+    Threshold = 10000000000000000
     Anonymity = 0
 
     def __str__(self):
-        return "\n\tDustThreshold: %.6f\n\tAnonymity: %d\n" % (prettyAmount(self.DustThreshold), self.Anonymity)
+        return "\n\tDustThreshold: %.6f\n\tAnonymity: %d\n" % (prettyAmount(self.Threshold), self.Anonymity)
 
 class Balance:
     Available = 0
@@ -80,7 +80,7 @@ class PGService:
 
     def sendFusionTransaction(self, transaction: FusionTransaction):
         return self.makeCall("sendFusionTransaction", {
-            'threshold': transaction.DustThreshold,
+            'threshold': transaction.Threshold,
             'anonymity': transaction.Anonymity
         })
 
@@ -151,17 +151,17 @@ class Wallet:
 with open("MakeTransactions.yml", 'r') as ymlfile:
     config = yaml.load(ymlfile)
 
-MinFee            = config['MinimumFee']
-MaxFee            = config['MaximumFee']
-MinAmount         = config['MinimumAmount']
-MaxAmount         = config['MaximumAmount']
-MinMixin          = config['MinAnonymity']
-MaxMixin          = config['MaxAnonymity']
-MinFusionDust     = config['MinFusionDust']
-MaxFusionDust     = config['MaxFusionDust']
-FusionPropability = config['FusionPropability']
-ResetOnStart      = config['ResetOnStart']
-TPM               = config['TransactionsPerMinute']
+MinFee                  = config['MinimumFee']
+MaxFee                  = config['MaximumFee']
+MinAmount               = config['MinimumAmount']
+MaxAmount               = config['MaximumAmount']
+MinMixin                = config['MinAnonymity']
+MaxMixin                = config['MaxAnonymity']
+MinFusionThreshold      = config['MinFusionThreshold']
+MaxFusionThreshold      = config['MaxFusionThreshold']
+FusionPropability       = config['FusionPropability']
+ResetOnStart            = config['ResetOnStart']
+TPM                     = config['TransactionsPerMinute']
 
 wallets = []
 for wallet in config['Wallets']:
@@ -205,7 +205,7 @@ def makeRandomTransaction():
 def makeRandomFusionTransaction():
     transaction = FusionTransaction()
     wallet = wallets[randint(0, len(wallets) - 1)]
-    transaction.DustThreshold = randint(MinFusionDust, MaxFusionDust)
+    transaction.Threshold = randint(MinFusionThreshold, MaxFusionThreshold)
     transaction.Anonymity = randint(MinMixin, MaxMixin)
     try:
         wallet.sendFusionTransaction(transaction)

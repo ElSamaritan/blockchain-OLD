@@ -41,6 +41,7 @@
 #include "Wallet/WalletErrors.h"
 #include "Wallet/WalletUtils.h"
 #include "WalletServiceErrorCategory.h"
+#include "Wallet/IWallet.h"
 
 #include "Mnemonics/Mnemonics.h"
 
@@ -1322,6 +1323,9 @@ std::error_code WalletService::sendFusionTransaction(uint64_t threshold, uint16_
     }
 
     size_t transactionId = fusionManager.createFusionTransaction(threshold, anonymity, addresses, destinationAddress);
+    if (transactionId == CryptoNote::WALLET_INVALID_TRANSACTION_ID) {
+      throw std::runtime_error{"fusion transaction creation failed"};
+    }
     transactionHash = Common::podToHex(wallet.getTransaction(transactionId).hash);
 
     logger(Logging::DEBUGGING) << "Fusion transaction " << transactionHash << " has been sent";

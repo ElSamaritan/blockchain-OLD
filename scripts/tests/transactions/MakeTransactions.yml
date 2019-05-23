@@ -7,17 +7,17 @@ Wallets:
     Password: passwd
 
 MinimumFee: 100
-MaximumFee: 100
+MaximumFee: 200
 
-MinimumAmount:   100000
-MaximumAmount: 50000000
+MinimumAmount: 100000
+MaximumAmount: 1500000
 
 MinAnonymity: 0
-MaxAnonymity: 2
+MaxAnonymity: 0
 
-MinFusionDust:  100
-MaxFusionDust: 1000
-FusionPropability: 10
+MinFusionThreshold: 100000000
+MaxFusionThreshold: 100000000
+FusionPropability: 20
 
-TransactionsPerMinute: 10
+TransactionsPerMinute: 100
 ResetOnStart: false
