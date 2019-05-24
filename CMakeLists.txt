@@ -49,6 +49,7 @@ option(XI_BUILD_TESTSUITE "Builds the xi test suite, see ./tests" OFF)
 option(XI_BUILD_TOOLS "Builds tooling executables used in development" OFF)
 option(XI_SKIP_VERSION_UPDATE "Skips version update to reduce compile time while developing" OFF)
 
+include(cmake/Common/Common.cmake)
 include(cmake/CompilerCheck.cmake)
 include(cmake/CompilerConfiguration.cmake)
 include(cmake/Platform.cmake)

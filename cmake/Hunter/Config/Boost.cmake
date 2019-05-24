@@ -21,16 +21,43 @@
 #                                                                                                #
 # ============================================================================================== #
 
+# Remember to change Packages/Boost.cmake too
+set(
+  XI_BOOST_REQUIRED_COMPONENTS
+    system
+    filesystem
+    thread
+    date_time
+    chrono
+    regex
+    serialization
+    program_options
+    iostreams
+    random
+)
+
 set(boost_b2_args)
 macro(add_boost_b2_flag flag value)
  foreach(boost_component ${XI_BOOST_REQUIRED_COMPONENTS})
    string(TOUPPER ${boost_component} boost_component_toupper)
    list(APPEND boost_b2_args "${boost_component_toupper}_${flag}=${value}")
+   set(boost_b2_args "${boost_b2_args}" PARENT_SCOPE)
  endforeach()
 endmacro()
 
 add_boost_b2_flag(link static)
 add_boost_b2_flag(runtime-link static)
+
+if(XI_COMPILER_DEBUG)
+  add_boost_b2_flag(variant debug)
+  add_boost_b2_flag(inlining "off")
+  add_boost_b2_flag(debug-symbols "on")
+else()
+  add_boost_b2_flag(variant release)
+  if(XI_BUILD_BREAKPAD)
+    add_boost_b2_flag(debug-symbols "on")
+  endif()
+endif()
 
 if(MSVC)
  list(APPEND boost_b2_args "BOOST_BUILD_DYNAMIC_VSRUNTIME=NO")

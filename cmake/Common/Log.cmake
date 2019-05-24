@@ -21,6 +21,32 @@
 #                                                                                                #
 # ============================================================================================== #
 
-include(${CMAKE_SOURCE_DIR}/cmake/Hunter/Packages/ZLib.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/Hunter/Packages/OpenSSL.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/Hunter/Packages/Boost.cmake)
+set(XI_LOG_PREFIX "[--XI--] " CACHE INTERNAL "")
+set(XI_LOG_INDENT " -- " CACHE INTERNAL "")
+
+macro(xi_log_format out_var header)
+  set(${out_var} ${header})
+  foreach(line ${ARGN})
+    set(${out_var} "${${out_var}}\n${XI_LOG_INDENT}${line}")
+  endforeach()
+endmacro()
+
+function(xi_status)
+  xi_log_format(log_message ${ARGN})
+  message(STATUS ${XI_LOG_PREFIX} ${log_message})
+endfunction()
+
+function(xi_warning)
+  xi_log_format(log_message ${ARGN})
+  message(WARNING ${XI_LOG_PREFIX} ${log_message})
+endfunction()
+
+function(xi_error)
+  xi_log_format(log_message ${ARGN})
+  message(SEND_ERROR ${XI_LOG_PREFIX} ${log_message})
+endfunction()
+
+function(xi_fatal)
+  xi_log_format(log_message ${ARGN})
+  message(FATAL_ERROR ${XI_LOG_PREFIX} ${log_message})
+endfunction()

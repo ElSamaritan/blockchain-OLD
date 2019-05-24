@@ -21,7 +21,6 @@
 #                                                                                                #
 # ============================================================================================== #
 
-set(XI_HUNTER_CONFIG_DIR "${CMAKE_CURRENT_LIST_DIR}/Config")
-
-include(${XI_HUNTER_CONFIG_DIR}/OpenSSL.cmake)
-include(${XI_HUNTER_CONFIG_DIR}/Boost.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Hunter/Config/ZLib.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Hunter/Config/OpenSSL.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Hunter/Config/Boost.cmake)

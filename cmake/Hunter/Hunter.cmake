@@ -26,14 +26,7 @@ option(XI_CACHE_UPLOAD "Uploads newly built external hunter packages to the gith
 
 set(XI_CMAKE_HUNTER_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "")
 set(HUNTER_BUILD_SHARED_LIBS OFF CACHE INTERNAL "")
-
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(HUNTER_CONFIGURATION_TYPES "Debug" CACHE INTERNAL "")
-elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-  set(HUNTER_CONFIGURATION_TYPES "Debug" CACHE INTERNAL "")
-else()
-  set(HUNTER_CONFIGURATION_TYPES "Release" CACHE INTERNAL "")
-endif()
+set(HUNTER_CONFIGURATION_TYPES "Release;Debug" CACHE INTERNAL "")
 
 if(XI_CACHE_USE)
   set(HUNTER_USE_CACHE_SERVERS "YES" CACHE INTERNAL "")
@@ -57,14 +50,14 @@ set(
 
 set(
   HUNTER_PASSWORDS_PATH
-    "${XI_CMAKE_HUNTER_DIR}/Passwords.cmake"
+    "${CMAKE_SOURCE_DIR}/cmake/Hunter/Passwords.cmake"
   CACHE FILEPATH "Hunter Passwords"
 )
 
-include("${XI_CMAKE_HUNTER_DIR}/HunterGate.cmake")
+include("${CMAKE_SOURCE_DIR}/cmake/Hunter/HunterGate.cmake")
 
 HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.23.165.tar.gz"
-    SHA1 "5a73f91df5f6109c0bb1104d0c0ee423f7bece79"
-    FILEPATH "${XI_CMAKE_HUNTER_DIR}/Config.cmake"
+    URL "https://github.com/ruslo/hunter/archive/v0.23.174.tar.gz"
+    SHA1 "2f117aa814726fe39a0aeedf84df4c1b9912389f"
+    FILEPATH "${CMAKE_SOURCE_DIR}/cmake/Hunter/Config.cmake"
 )

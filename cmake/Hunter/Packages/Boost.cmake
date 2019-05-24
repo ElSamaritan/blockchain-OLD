@@ -23,6 +23,7 @@
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_STATIC_RUNTIME ON)
+set(Boost_USE_MULTITHREADED OFF)
 
 if(XI_COMPILER_DEBUG)
   set(Boost_USE_DEBUG_LIBS ON CACHE INTERNAL "")
@@ -34,6 +35,7 @@ else()
   set(Boost_USE_RELEASE_LIBS ON CACHE INTERNAL "")
 endif()
 
+# Remember to change Config/Boost.cmake too
 set(
   XI_BOOST_REQUIRED_COMPONENTS
     system
@@ -55,6 +57,7 @@ hunter_add_package(
     ${XI_BOOST_REQUIRED_COMPONENTS}
 )
 
+set(Boost_DEBUG ON)
 find_package(
   Boost
 

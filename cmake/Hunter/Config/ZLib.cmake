@@ -21,6 +21,4 @@
 #                                                                                                #
 # ============================================================================================== #
 
-include(${CMAKE_SOURCE_DIR}/cmake/Hunter/Packages/ZLib.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/Hunter/Packages/OpenSSL.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/Hunter/Packages/Boost.cmake)
+hunter_config(ZLIB VERSION "1.2.11-p0")
