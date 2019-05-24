@@ -1,4 +1,4 @@
-﻿# ============================================================================================== #
+# ============================================================================================== #
 #                                                                                                #
 #                                       Xi Blockchain                                            #
 #                                                                                                #
@@ -21,29 +21,8 @@
 #                                                                                                #
 # ============================================================================================== #
 
-include(ExternalProject)
+set(FMT_INSTALL OFF CACHE INTERNAL "")
+set(FMT_TEST OFF CACHE INTERNAL "")
+set(FMT_DOC OFF CACHE INTERNAL "")
 
-# Not contained in build system
-## Required On Linux
-include(madler-zlib.cmake)
-
-# Contained in buildsystem using submodules
-include(fmtlib-fmt.cmake)
-include(lz4-lz4.cmake)
-include(facebook-rocksdb.cmake)
-include(google-sparsehash-c11.cmake)
-include(miniupnp-miniupnpc.cmake)
-include(nlohmann-json.cmake)
-include(yhirose-cpp-linenoise.cmake)
-include(jarro2783-cxxopts.cmake)
-include(ruslo-leathers.cmake)
-include(google-cpu-features.cmake)
-
-if(XI_BUILD_BREAKPAD)
-  include(google-breakpad.cmake)
-endif()
-
-if(XI_BUILD_TESTSUITE)
-  include(google-test.cmake)
-  include(google-benchmark.cmake)
-endif()
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/fmtlib EXCLUDE_FROM_ALL)

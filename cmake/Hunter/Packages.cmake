@@ -1,4 +1,4 @@
-﻿# ============================================================================================== #
+# ============================================================================================== #
 #                                                                                                #
 #                                       Xi Blockchain                                            #
 #                                                                                                #
@@ -21,29 +21,7 @@
 #                                                                                                #
 # ============================================================================================== #
 
-include(ExternalProject)
+set(XI_HUNTER_PACKAGES_DIR "${CMAKE_CURRENT_LIST_DIR}/Packages" CACHE INTERNAL "")
 
-# Not contained in build system
-## Required On Linux
-include(madler-zlib.cmake)
-
-# Contained in buildsystem using submodules
-include(fmtlib-fmt.cmake)
-include(lz4-lz4.cmake)
-include(facebook-rocksdb.cmake)
-include(google-sparsehash-c11.cmake)
-include(miniupnp-miniupnpc.cmake)
-include(nlohmann-json.cmake)
-include(yhirose-cpp-linenoise.cmake)
-include(jarro2783-cxxopts.cmake)
-include(ruslo-leathers.cmake)
-include(google-cpu-features.cmake)
-
-if(XI_BUILD_BREAKPAD)
-  include(google-breakpad.cmake)
-endif()
-
-if(XI_BUILD_TESTSUITE)
-  include(google-test.cmake)
-  include(google-benchmark.cmake)
-endif()
+include(${XI_HUNTER_PACKAGES_DIR}/OpenSSL.cmake)
+include(${XI_HUNTER_PACKAGES_DIR}/Boost.cmake)

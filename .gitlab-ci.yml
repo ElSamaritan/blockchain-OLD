@@ -38,14 +38,16 @@ variables:
 .generic_build_template: &generic_build_definition
   stage: build
   dependencies: []
-  script: 
+  script:
     - pwsh -File ./scripts/ci/Build.ps1
     - pwsh -File ./scripts/ci/Test.ps1
     - pwsh -File ./scripts/ci/DumpSymbols.ps1
     - pwsh -File ./scripts/ci/Package.ps1
   cache:
     key: "$CI_JOB_NAME"
-    paths: [.build/]
+    paths:
+      - .build/
+      - .hunter/
   artifacts:
     paths: [".packages/"]
 
@@ -115,7 +117,7 @@ CppCheck:
   script: "/bin/bash ./scripts/ci/CppCheck.sh"
   dependencies: []
   artifacts:
-    paths: 
+    paths:
       - cppcheck.xml
       - .site/
   only:
@@ -129,7 +131,7 @@ CppLint:
   dependencies: []
   script: "/bin/bash ./scripts/ci/CppLint.sh"
   artifacts:
-    paths: 
+    paths:
       - cpplint.xml
       - .site/
   only:
@@ -145,7 +147,7 @@ CppLint:
 Packages:
   stage: deploy
   tags: ["windows"]
-  dependencies: 
+  dependencies:
     - "Ubuntu Bionic - Build"
     - "Ubuntu Xenial - Build"
     - "centOS 7 - Build"
@@ -154,7 +156,7 @@ Packages:
     - "openSuse Leap - Build"
     - "Windows 10 - Build"
     - "macOS - Build"
-  script: 
+  script:
     - pwsh -File ./scripts/ci/DeployPackages.ps1
     - pwsh -File ./scripts/ci/NotifyRelease.ps1
   only:

@@ -24,12 +24,13 @@
 cmake_minimum_required(VERSION 3.12.4)
 
 include(cmake/ApplyDefaultBuildType.cmake)
+include(CMake/Hunter/Hunter.cmake)
 
 project(
   Xi
   
   DESCRIPTION
-    "Xi brings you a truly private cryptocurrency you can trust"
+    "Xi an evolving framework for blockchain-based applications."
 
   LANGUAGES 
     C 
@@ -51,6 +52,7 @@ option(XI_SKIP_VERSION_UPDATE "Skips version update to reduce compile time while
 include(cmake/CompilerCheck.cmake)
 include(cmake/CompilerConfiguration.cmake)
 include(cmake/Platform.cmake)
+include(CMake/Hunter/Packages.cmake)
 include(cmake/XiMakeLibrary.cmake)
 include(cmake/XiMakeApp.cmake)
 include(cmake/Licenses.cmake)

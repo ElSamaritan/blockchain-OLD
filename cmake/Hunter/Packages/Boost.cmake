@@ -1,4 +1,4 @@
-﻿# ============================================================================================== #
+# ============================================================================================== #
 #                                                                                                #
 #                                       Xi Blockchain                                            #
 #                                                                                                #
@@ -21,29 +21,60 @@
 #                                                                                                #
 # ============================================================================================== #
 
-include(ExternalProject)
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_RUNTIME ON)
 
-# Not contained in build system
-## Required On Linux
-include(madler-zlib.cmake)
-
-# Contained in buildsystem using submodules
-include(fmtlib-fmt.cmake)
-include(lz4-lz4.cmake)
-include(facebook-rocksdb.cmake)
-include(google-sparsehash-c11.cmake)
-include(miniupnp-miniupnpc.cmake)
-include(nlohmann-json.cmake)
-include(yhirose-cpp-linenoise.cmake)
-include(jarro2783-cxxopts.cmake)
-include(ruslo-leathers.cmake)
-include(google-cpu-features.cmake)
-
-if(XI_BUILD_BREAKPAD)
-  include(google-breakpad.cmake)
+if(XI_COMPILER_DEBUG)
+  set(Boost_USE_DEBUG_LIBS ON CACHE INTERNAL "")
+  set(Boost_USE_DEBUG_RUNTIME ON CACHE INTERNAL "")
+  set(Boost_USE_RELEASE_LIBS OFF CACHE INTERNAL "")
+else()
+  set(Boost_USE_DEBUG_LIBS OFF CACHE INTERNAL "")
+  set(Boost_USE_DEBUG_RUNTIME OFF CACHE INTERNAL "")
+  set(Boost_USE_RELEASE_LIBS ON CACHE INTERNAL "")
 endif()
 
-if(XI_BUILD_TESTSUITE)
-  include(google-test.cmake)
-  include(google-benchmark.cmake)
+set(
+  XI_BOOST_REQUIRED_COMPONENTS
+    system
+    filesystem
+    thread
+    date_time
+    chrono
+    regex
+    serialization
+    program_options
+    iostreams
+    random
+)
+
+hunter_add_package(
+  Boost
+
+  COMPONENTS
+    ${XI_BOOST_REQUIRED_COMPONENTS}
+)
+
+find_package(
+  Boost
+
+  REQUIRED COMPONENTS
+    ${XI_BOOST_REQUIRED_COMPONENTS}
+)
+
+if(XI_CXX_COMPILER_GNU)
+  list(APPEND Boost_LIBRARIES rt zlib)
+elseif(APPLE)
+  list(APPEND Boost_LIBRARIES zlib)
 endif()
+
+add_library(boost INTERFACE IMPORTED GLOBAL)
+target_include_directories(boost INTERFACE ${Boost_INCLUDE_DIRS})
+target_link_libraries(boost INTERFACE ${Boost_LIBRARIES} ${Boost_SYSTEM_LIBRARY})
+
+if(MSVC)
+  target_compile_definitions(boost INTERFACE _SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING)
+endif()
+
+set(Boost_VERSION ${Boost_VERSION} CACHE STRING "Boost Version" FORCE)
+mark_as_advanced(Boost_VERSION)

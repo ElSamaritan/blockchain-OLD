@@ -1,4 +1,4 @@
-﻿# ============================================================================================== #
+# ============================================================================================== #
 #                                                                                                #
 #                                       Xi Blockchain                                            #
 #                                                                                                #
@@ -21,29 +21,16 @@
 #                                                                                                #
 # ============================================================================================== #
 
-include(ExternalProject)
+hunter_upload_password(
+  REPO_OWNER
+    "hunter-cache"
 
-# Not contained in build system
-## Required On Linux
-include(madler-zlib.cmake)
+  REPO
+    "hunter-cache"
 
-# Contained in buildsystem using submodules
-include(fmtlib-fmt.cmake)
-include(lz4-lz4.cmake)
-include(facebook-rocksdb.cmake)
-include(google-sparsehash-c11.cmake)
-include(miniupnp-miniupnpc.cmake)
-include(nlohmann-json.cmake)
-include(yhirose-cpp-linenoise.cmake)
-include(jarro2783-cxxopts.cmake)
-include(ruslo-leathers.cmake)
-include(google-cpu-features.cmake)
+  USERNAME
+    "hunter-cache"
 
-if(XI_BUILD_BREAKPAD)
-  include(google-breakpad.cmake)
-endif()
-
-if(XI_BUILD_TESTSUITE)
-  include(google-test.cmake)
-  include(google-benchmark.cmake)
-endif()
+  PASSWORD
+    "$ENV{HUNTER_ACCESS_TOKEN}"
+)
