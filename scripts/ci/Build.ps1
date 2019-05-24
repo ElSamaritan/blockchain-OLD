@@ -22,10 +22,10 @@
 # ============================================================================================== #
 
 param(
-    [Parameter(Mandatory=$false)][string]$SourcePath = $null,
-    [Parameter(Mandatory=$false)][string]$BuildPath = $null,
-    [Parameter(Mandatory=$false)][string]$InstallPrefix = $null,
-    [Parameter(Mandatory=$false)][string]$Generator = $null
+    [Parameter(Mandatory = $false)][string]$SourcePath = $null,
+    [Parameter(Mandatory = $false)][string]$BuildPath = $null,
+    [Parameter(Mandatory = $false)][string]$InstallPrefix = $null,
+    [Parameter(Mandatory = $false)][string]$Generator = $null
 )
 
 Import-Module -Name "$PSScriptRoot\modules\WriteLog.psm1" -Force
@@ -35,8 +35,7 @@ Import-Module -Name "$PSScriptRoot\modules\GetConfiguration.psm1" -Force
 Import-Module -Name "$PSScriptRoot\modules\GetGenerator.psm1" -Force
 Import-Module -Name "$PSScriptRoot\modules\GetBuildEnvironment.psm1" -Force
 
-try 
-{
+try {
     $BuildEnvironment = Get-BuildEnvironment
 
     $CMakeSourcePath = Get-Configuration CMAKE_SOURCE_PATH -DefaultValue $(Get-Location) -Required
@@ -44,20 +43,23 @@ try
     $CMakeInstallPrefix = Get-Configuration CMAKE_INSTALL_PATH -DefaultValue ".install" -ProvidedValue $InstallPrefix
     $CMakeInstallPath = "$CMakeInstallPrefix\bin"
     $CMakeGenerator = Get-Configuration CMAKE_GENERATOR -DefaultValue $(Get-Generator)
+    $CMakeHunterCachePath = "$CMakeSourcePath\.hunter"
 
     $CMakeSourcePath = Get-Resolve-Path $CMakeSourcePath
     $CMakeBuildPath = Get-Resolve-Path $CMakeBuildPath
     $CMakeInstallPath = Get-Resolve-Path $CMakeInstallPath
+    $CMakeHunterCachePath = Get-Resolve-Path $CMakeHunterCachePath
+
+    [System.Environment]::SetEnvironmentVariable("HUNTER_ROOT", "$CMakeHunterCachePath")
+    [System.Environment]::SetEnvironmentVariable("HUNTER_ROOT", "$CMakeHunterCachePath", "User")
 
     $CMakeCacheFile = "$CMakeBuildPath\CMakeCache.txt"
-    if(Test-Path -Path $CMakeCacheFile)
-    {
+    if (Test-Path -Path $CMakeCacheFile) {
         Write-Log "Cached build directory detected. Clearing cmake caches..."
         Get-ChildItem -Path $CMakeBuildPath -Recurse -Filter CMakeCache.txt | Remove-Item
     }
 
-    if(!(Test-Path -Path $CMakeBuildPath))
-    {
+    if (!(Test-Path -Path $CMakeBuildPath)) {
         New-Item -ItemType Directory -Path $CMakeBuildPath | Out-Null
     }
 
@@ -65,6 +67,7 @@ try
 Build Configuration
 `t Source Path         : $CMakeSourcePath   
 `t Build Path          : $CMakeBuildPath
+`t Hunter Cache Path   : $CMakeHunterCachePath
 `t Install Path        : $CMakeInstallPath
 `t Generator           : $CMakeGenerator
 
@@ -72,19 +75,19 @@ Build Environment
 $(ConvertTo-Json $BuildEnvironment)
 "@
 
-    if(-Not (Test-Path $CMakeInstallPath))
-    {
+    if (-Not (Test-Path $CMakeInstallPath)) {
         New-Item -ItemType Directory -Path $CMakeInstallPath | Out-Null
     }
 
     Push-Location $CMakeBuildPath
-    try 
-    {
+    try {
         Invoke-Command { 
             cmake `
                 -G $CMakeGenerator `
                 -DCMAKE_BUILD_TYPE=Release `
                 -DCMAKE_INSTALL_PREFIX:PATH=$CMakeInstallPath `
+                -DXI_CACHE_USE=ON `
+                -DXI_CACHE_UPLOAD=ON `
                 -DXI_BUILD_CHANNEL="$($BuildEnvironment.Channel)" `
                 -DXI_BUILD_BREAKPAD=ON `
                 -DXI_BUILD_EXECUTABLES=ON `
@@ -92,32 +95,27 @@ $(ConvertTo-Json $BuildEnvironment)
                 -DXI_BUILD_TOOLS=ON `
                 $CMakeSourcePath 
         }
-        if($IsWindows)
-        {
+        if ($IsWindows) {
             Invoke-Command {
                 cmake --build . --target install --config Release
             }
         }
-        elseif($IsMacOS)
-        {
+        elseif ($IsMacOS) {
             Invoke-Command {
                 cmake --build . --target install --config Release -- -j 4
             }
         }
-        else 
-        {
+        else {
             Invoke-Command {
                 cmake --build . --target install --config Release -- -j 1
             }
         }
     }
-    finally 
-    {
+    finally {
         Pop-Location    
     }
 }
-catch 
-{
+catch {
     $Host.SetShouldExit(-1)
     throw
 }
