@@ -24,7 +24,7 @@
 cmake_minimum_required(VERSION 3.12.4)
 
 include(cmake/ApplyDefaultBuildType.cmake)
-include(CMake/Hunter/Hunter.cmake)
+include(cmake/Hunter/Hunter.cmake)
 
 project(
   Xi
@@ -52,7 +52,7 @@ option(XI_SKIP_VERSION_UPDATE "Skips version update to reduce compile time while
 include(cmake/CompilerCheck.cmake)
 include(cmake/CompilerConfiguration.cmake)
 include(cmake/Platform.cmake)
-include(CMake/Hunter/Packages.cmake)
+include(cmake/Hunter/Packages.cmake)
 include(cmake/XiMakeLibrary.cmake)
 include(cmake/XiMakeApp.cmake)
 include(cmake/Licenses.cmake)

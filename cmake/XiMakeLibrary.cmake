@@ -27,9 +27,9 @@ macro(xi_make_library source_dir)
   string(REPLACE "-" "." lib_name ${source_dir})
   set(lib_include_dir "${source_dir}/include")
   set(lib_source_dir "${source_dir}/source")
-  file(GLOB_RECURSE public_header_files "${lib_include_dir}/**.h")
-  file(GLOB_RECURSE private_header_files "${lib_source_dir}/**.h")
-  file(GLOB_RECURSE source_files "${lib_source_dir}/**.cpp")
+  file(GLOB_RECURSE public_header_files "${lib_include_dir}/**.h" "${lib_include_dir}/**.hpp" "${lib_include_dir}/**.hh")
+  file(GLOB_RECURSE private_header_files "${lib_source_dir}/**.h" "${lib_source_dir}/**.hpp" "${lib_source_dir}/**.hh")
+  file(GLOB_RECURSE source_files "${lib_source_dir}/**.cpp" "${lib_source_dir}/**.c")
 
   cmake_parse_arguments(XI_MAKE_LIBRARY "" "" "PUBLIC_LIBRARIES;PRIVATE_LIBRARIES;TEST_LIBRARIES" ${ARGN})
 
@@ -73,7 +73,8 @@ macro(xi_make_library source_dir)
   endif()
 
   if(XI_BUILD_TESTSUITE)
-    file(GLOB_RECURSE lib_test_files "${source_dir}/tests/**.h" "${source_dir}/tests/**.cpp")
+    file(
+      GLOB_RECURSE lib_test_files "${source_dir}/tests/**.h" "${source_dir}/tests/**.cpp")
     if(lib_test_files)
       set(lib_test_name "${lib_name}.UnitTests")
       add_executable(${lib_test_name} ${lib_test_files})

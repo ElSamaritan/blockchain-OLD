@@ -21,7 +21,7 @@
 #                                                                                                #
 # ============================================================================================== #
 
-# Enable the c++14 standard support
+# Enable the c++17 standard support
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -45,12 +45,15 @@ set(CompilerFlags
 )
 
 if(MSVC)
+    option(XI_PARALLEL_BUILD ON "enables parallel compiler execution")
+    set(XI_PARALLEL_BUILD_THREADS "-1" CACHE STRING "maximum number of threads to use for parallel compilation (<=0 -> max)")
+
     add_definitions("/D_CRT_SECURE_NO_WARNINGS /D_WIN32_WINNT=0x0600 /DWIN32_LEAN_AND_MEAN /DGTEST_HAS_TR1_TUPLE=0 /D_VARIADIC_MAX=8 /D__SSE4_1__")
     foreach(flag ${CompilerFlags})
         string(REGEX REPLACE "/M[TD]d?" "" ${flag} ${${flag}})
         string(REGEX REPLACE "/W[1234X]" "" ${flag} ${${flag}})
     endforeach()
-    set(XI_CXX_FLAGS "/W4 /WX /MP /bigobj /GS-")
+    set(XI_CXX_FLAGS "/W4 /WX /bigobj /GS-")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
@@ -63,6 +66,18 @@ if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /NODEFAULTLIB:MSVCRT")
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /NODEFAULTLIB:MSVCRT")
     set(CMAKE_EXE_LINKER_FLAGS_MINSIZEREL "${CMAKE_EXE_LINKER_FLAGS_MINSIZEREL} /NODEFAULTLIB:MSVCRT")
+
+    if(XI_PARALLEL_BUILD)
+      if(XI_PARALLEL_BUILD_THREADS LESS_EQUAL "0")
+        message(STATUS "Enabling parallel compilation with maximum threads.")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+      else()
+        message(STATUS "Enabling parallel compilation with ${XI_PARALLEL_BUILD_THREADS} threads.")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP${XI_PARALLEL_BUILD_THREADS}")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP${XI_PARALLEL_BUILD_THREADS}")
+      endif()
+    endif()
 
     if(XI_BUILD_BREAKPAD)
       set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /Zi")
@@ -162,4 +177,15 @@ else() # NOT MSVC
   if(NOT APPLE)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
   endif()
+endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(XI_COMPILER_DEBUG ON CACHE INTERNAL "")
+  set(XI_COMPILER_RELEASE OFF CACHE INTERNAL "")
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+  set(XI_COMPILER_DEBUG ON CACHE INTERNAL "")
+  set(XI_COMPILER_RELEASE OFF CACHE INTERNAL "")
+else()
+  set(XI_COMPILER_DEBUG OFF CACHE INTERNAL "")
+  set(XI_COMPILER_RELEASE ON CACHE INTERNAL "")
 endif()
