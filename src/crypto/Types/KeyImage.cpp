@@ -22,10 +22,12 @@
  * ============================================================================================== */
 
 #include <stdexcept>
+#include <utility>
 
 #include <Common/StringTools.h>
 
 #include "crypto/Types/KeyImage.h"
+#include "crypto/crypto.h"
 
 const Crypto::KeyImage Crypto::KeyImage::Null{};
 
@@ -35,11 +37,31 @@ Xi::Result<Crypto::KeyImage> Crypto::KeyImage::fromString(const std::string &hex
   if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
     throw std::runtime_error{"invalid hex string"};
   }
-  return reval;
+  return std::move(reval);
   XI_ERROR_CATCH();
 }
 
+Crypto::KeyImage::KeyImage() { nullify(); }
+
+Crypto::KeyImage::KeyImage(Crypto::KeyImage::array_type raw) : array_type(std::move(raw)) {}
+
+Crypto::KeyImage::~KeyImage() {}
+
 std::string Crypto::KeyImage::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+
+Xi::ConstByteSpan Crypto::KeyImage::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
+
+Xi::ByteSpan Crypto::KeyImage::span() { return Xi::ByteSpan{data(), bytes()}; }
+
+bool Crypto::KeyImage::isValid() const {
+  static const Crypto::KeyImage I{{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+  static const Crypto::KeyImage L{{0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7,
+                                   0xa2, 0xde, 0xf9, 0xde, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10}};
+  return scalarmultKey(*this, L) == I;
+}
 
 void Crypto::KeyImage::nullify() { fill(0); }
 

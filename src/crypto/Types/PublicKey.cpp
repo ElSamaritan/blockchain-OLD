@@ -22,6 +22,7 @@
  * ============================================================================================== */
 
 #include <stdexcept>
+#include <utility>
 
 #include <Common/StringTools.h>
 
@@ -36,11 +37,21 @@ Xi::Result<Crypto::PublicKey> Crypto::PublicKey::fromString(const std::string &h
   if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
     throw std::runtime_error{"invalid hex string"};
   }
-  return reval;
+  return std::move(reval);
   XI_ERROR_CATCH();
 }
 
+Crypto::PublicKey::PublicKey() { nullify(); }
+
+Crypto::PublicKey::PublicKey(Crypto::PublicKey::array_type raw) : array_type(std::move(raw)) {}
+
+Crypto::PublicKey::~PublicKey() {}
+
 std::string Crypto::PublicKey::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+
+Xi::ConstByteSpan Crypto::PublicKey::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
+
+Xi::ByteSpan Crypto::PublicKey::span() { return Xi::ByteSpan{data(), bytes()}; }
 
 bool Crypto::PublicKey::isValid() const { return check_key(*this); }
 

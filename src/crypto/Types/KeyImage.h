@@ -36,16 +36,29 @@
 
 namespace Crypto {
 struct KeyImage : Xi::ByteArray<32> {
+  using array_type = Xi::ByteArray<32>;
   static const KeyImage Null;
-
+  static inline constexpr size_t bytes() { return 32; }
   static Xi::Result<KeyImage> fromString(const std::string& hex);
 
-  KeyImage() = default;
+  KeyImage();
+  explicit KeyImage(array_type raw);
   XI_DEFAULT_COPY(KeyImage);
   XI_DEFAULT_MOVE(KeyImage);
-  ~KeyImage() = default;
+  ~KeyImage();
 
   std::string toString() const;
+
+  Xi::ConstByteSpan span() const;
+  Xi::ByteSpan span();
+
+  /*
+   * \brief isValid checks the domain of the image
+   *
+   * \return true if the key image is in the correct domain, otherwise false.
+   *
+   */
+  bool isValid() const;
 
   void nullify();
   void serialize(CryptoNote::ISerializer& serializer);

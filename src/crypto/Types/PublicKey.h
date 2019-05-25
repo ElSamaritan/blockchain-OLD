@@ -35,16 +35,21 @@
 
 namespace Crypto {
 struct PublicKey : Xi::ByteArray<32> {
+  using array_type = Xi::ByteArray<32>;
   static const PublicKey Null;
-
+  static inline constexpr size_t bytes() { return 32; }
   static Xi::Result<PublicKey> fromString(const std::string& hex);
 
-  PublicKey() = default;
+  PublicKey();
+  explicit PublicKey(array_type raw);
   XI_DEFAULT_COPY(PublicKey);
   XI_DEFAULT_MOVE(PublicKey);
-  ~PublicKey() = default;
+  ~PublicKey();
 
   std::string toString() const;
+
+  Xi::ConstByteSpan span() const;
+  Xi::ByteSpan span();
 
   /*
    * \brief checks that this is indeed a valid ecc point and has the right order.

@@ -35,16 +35,21 @@
 
 namespace Crypto {
 struct KeyDerivation : Xi::ByteArray<32> {
+  using array_type = Xi::ByteArray<32>;
   static const KeyDerivation Null;
-
+  static inline constexpr size_t bytes() { return 32; }
   static Xi::Result<KeyDerivation> fromString(const std::string& hex);
 
-  KeyDerivation() = default;
+  KeyDerivation();
+  explicit KeyDerivation(array_type raw);
   XI_DEFAULT_COPY(KeyDerivation);
   XI_DEFAULT_MOVE(KeyDerivation);
-  ~KeyDerivation() = default;
+  ~KeyDerivation();
 
   std::string toString() const;
+
+  Xi::ConstByteSpan span() const;
+  Xi::ByteSpan span();
 
   void nullify();
   void serialize(CryptoNote::ISerializer& serializer);

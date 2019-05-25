@@ -35,16 +35,21 @@
 
 namespace Crypto {
 struct SecretKey : Xi::ByteArray<32> {
+  using array_type = Xi::ByteArray<32>;
   static const SecretKey Null;
-
+  static inline constexpr size_t bytes() { return 32; }
   static Xi::Result<SecretKey> fromString(const std::string& hex);
 
-  SecretKey() = default;
+  SecretKey();
+  explicit SecretKey(array_type raw);
   XI_DEFAULT_COPY(SecretKey);
   XI_DEFAULT_MOVE(SecretKey);
-  ~SecretKey() = default;
+  ~SecretKey();
 
   std::string toString() const;
+
+  Xi::ConstByteSpan span() const;
+  Xi::ByteSpan span();
 
   void nullify();
   void serialize(CryptoNote::ISerializer& serializer);

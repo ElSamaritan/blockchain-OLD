@@ -25,6 +25,7 @@
 
 #include <array>
 #include <string>
+#include <initializer_list>
 
 #include <Xi/Global.hh>
 #include <Xi/Result.h>
@@ -35,16 +36,21 @@
 
 namespace Crypto {
 struct Signature : Xi::ByteArray<64> {
+  using array_type = Xi::ByteArray<64>;
   static const Signature Null;
-
+  static inline constexpr size_t bytes() { return 64; }
   static Xi::Result<Signature> fromString(const std::string& hex);
 
-  Signature() = default;
+  Signature();
+  explicit Signature(array_type raw);
   XI_DEFAULT_COPY(Signature);
   XI_DEFAULT_MOVE(Signature);
-  ~Signature() = default;
+  ~Signature();
 
   std::string toString() const;
+
+  Xi::ConstByteSpan span() const;
+  Xi::ByteSpan span();
 
   void nullify();
   void serialize(CryptoNote::ISerializer& serializer);
