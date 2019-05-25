@@ -172,6 +172,10 @@ size_t Currency::rewardBlocksWindowByBlockVersion(uint8_t blockMajorVersion) con
   return Xi::Config::MinerReward::window(blockMajorVersion);
 }
 
+uint64_t Currency::rewardCutOffByBlockVersion(uint8_t blockMajorVersion) const {
+  return Xi::Config::MinerReward::cutOff(blockMajorVersion);
+}
+
 uint8_t Currency::minimumMixin(uint8_t blockMajorVersion) const {
   return Xi::Config::Mixin::minimum(blockMajorVersion);
 }
@@ -249,9 +253,10 @@ bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size
                                     ? getPenalizedAmount(fee, medianSize, currentBlockSize)
                                     : fee;
   const uint64_t staticReward = staticRewardAmountForBlockVersion(blockMajorVersion);
+  const uint64_t cuttedReward = cutDigitsFromAmount(penalizedBaseReward, rewardCutOffByBlockVersion(blockMajorVersion));
 
-  emissionChange = penalizedBaseReward + staticReward - (fee - penalizedFee);
-  reward = penalizedBaseReward + penalizedFee;
+  emissionChange = cuttedReward + staticReward - (fee - penalizedFee);
+  reward = cuttedReward + penalizedFee;
 
   return true;
 }

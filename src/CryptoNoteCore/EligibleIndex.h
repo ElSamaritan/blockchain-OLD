@@ -25,7 +25,7 @@
 
 #include <cinttypes>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 namespace CryptoNote {
 /*!

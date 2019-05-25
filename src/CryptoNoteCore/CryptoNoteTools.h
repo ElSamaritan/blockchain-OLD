@@ -145,4 +145,6 @@ bool isCanonicalAmount(uint64_t amount);
 
 size_t countCanonicalDecomposition(const Transaction& tx);
 size_t countCanonicalDecomposition(const std::vector<uint64_t>& amounts);
+
+uint64_t cutDigitsFromAmount(uint64_t amount, const size_t count);
 }  // namespace CryptoNote

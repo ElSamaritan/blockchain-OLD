@@ -74,7 +74,7 @@ bool CryptoNote::toBinaryArray(const BinaryArray& object, BinaryArray& binaryArr
 }
 
 void CryptoNote::getBinaryArrayHash(const BinaryArray& binaryArray, Crypto::Hash& hash) {
-  cn_fast_hash(binaryArray.data(), binaryArray.size(), hash);
+  Crypto::Hash::compute(binaryArray, hash).throwOnError();
 }
 
 Crypto::Hash CryptoNote::getBinaryArrayHash(const BinaryArray& binaryArray) {
@@ -147,4 +147,18 @@ size_t CryptoNote::countCanonicalDecomposition(const Transaction& tx) {
   std::transform(tx.outputs.begin(), tx.outputs.end(), std::back_inserter(outs),
                  [](const auto& iOutput) { return iOutput.amount; });
   return countCanonicalDecomposition(outs);
+}
+
+uint64_t CryptoNote::cutDigitsFromAmount(uint64_t amount, const size_t count) {
+  if (count == 0) {
+    return amount;
+  } else if (count >= std::numeric_limits<uint64_t>::digits10) {
+    return 0;
+  } else {
+    for (size_t i = 0; i < count; ++i) {
+      uint64_t decimal = Xi::pow64(10, i + 1);
+      amount = amount - (amount % decimal);
+    }
+    return amount;
+  }
 }

@@ -34,7 +34,7 @@ const std::string walletdName = "xi-pgservice";
 const std::string coinName = Xi::Config::Coin::name();
 
 /* Where can your users contact you for support? E.g. discord */
-const std::string contactLink = "https://support.xiproject.io";
+const std::string contactLink = "http://chat.xiproject.io";
 
 /* The number of decimals your coin has */
 const int numDecimalPlaces = Xi::Config ::Coin::numberOfDecimalPoints();
@@ -56,5 +56,5 @@ const uint64_t defaultFee = Xi::Config::Coin::minimumFee();
 const uint64_t minimumFee = Xi::Config::Coin::minimumFee();
 
 /* The minimum amount allowed to be sent - usually 1 (in ATOMIC units!) */
-const uint64_t minimumSend = Xi::Config::Coin::minimumFee();
+const uint64_t minimumSend = 1;
 }  // namespace WalletConfig

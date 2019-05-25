@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "Common/int-util.h"
-#include "crypto/hash.h"
+
 #include <Xi/Config.h>
 #include "CheckDifficulty.h"
 
@@ -64,6 +64,6 @@ bool check_hash(const Crypto::Hash &hash, uint64_t difficulty) {
   mul(swap64le(((const uint64_t *)&hash)[2]), difficulty, low, high);
   carry = cadc(cur, low, carry);
   carry = cadc(high, top, carry);
-  return !carry;
+  return !carry && !hash.isNull();
 }
 }  // namespace CryptoNote

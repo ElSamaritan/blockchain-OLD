@@ -17,7 +17,7 @@
 
 #include "DBUtils.h"
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 namespace {
 const std::string RAW_BLOCK_NAME = "raw_block";

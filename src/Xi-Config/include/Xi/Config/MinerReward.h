@@ -35,13 +35,15 @@
  * Window : Number of previous blocks for median size calculation, blocks with used to calculate penalities for larger
  *            blocks.
  * Zone   : Size in bytes until block penalties will be introduced. If a block is mined larger than the zone
- * size the base reward will be adjusted. Further the transaction pool won't accept transactions larger than the zone,
- *           except for fusion transactions.
+ *            size the base reward will be adjusted. Further the transaction pool won't accept transactions larger than
+ *            the zone.
+ * CutOff : Number of lower digits cutted from the block reward to reduce block size. (0 <=> Disabled)
+ *
  */
 
 // clang-format off
-//                  (_Index, _Version, _Window,    _Zone)
-MakeRewardCheckpoint(     0,        1,     128,    64_kB)
+//                  (_Index, _Version, _Window,    _Zone, _CutOff)
+MakeRewardCheckpoint(     0,        1,     128,   128_kB,       4)
 // clang-format on
 
 #define CURRENT_REWARD_CHECKPOINT_INDEX 0

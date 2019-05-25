@@ -36,7 +36,7 @@ struct RewardCheckpoint;
 }  // namespace Config
 }  // namespace Xi
 
-#define MakeRewardCheckpoint(_Index, _Version, _Window, _Zone)                                                   \
+#define MakeRewardCheckpoint(_Index, _Version, _Window, _Zone, _CutOff)                                          \
   namespace Xi {                                                                                                 \
   namespace Config {                                                                                             \
   namespace MinerReward {                                                                                        \
@@ -46,6 +46,7 @@ struct RewardCheckpoint;
     static inline constexpr uint8_t version() { return _Version; }                                               \
     static inline constexpr uint32_t window() { return _Window; }                                                \
     static inline constexpr uint64_t fullRewardZone() { return _Zone; }                                          \
+    static inline constexpr uint64_t cutOff() { return _CutOff; }                                                \
     static_assert(::Xi::Config::BlockVersion::exists(_Version), "Non existing major block version referenced."); \
   };                                                                                                             \
   }                                                                                                              \

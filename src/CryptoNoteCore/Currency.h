@@ -52,6 +52,7 @@ class Currency {
   uint64_t genesisBlockReward() const { return m_genesisBlockReward; }
 
   size_t rewardBlocksWindowByBlockVersion(uint8_t blockMajorVersion) const;
+  uint64_t rewardCutOffByBlockVersion(uint8_t blockMajorVersion) const;
   size_t blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const;
   size_t minerTxBlobReservedSize() const { return m_minerTxBlobReservedSize; }
 

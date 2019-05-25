@@ -193,15 +193,15 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
     bool r = generate_key_derivation(dst_entr.addr.viewPublicKey, txkey.secretKey, derivation);
 
     if (!(r)) {
-      logger(ERROR) << "at creation outs: failed to generate_key_derivation(" << dst_entr.addr.viewPublicKey
-                                << ", " << txkey.secretKey << ")";
+      logger(ERROR) << "at creation outs: failed to generate_key_derivation(" << dst_entr.addr.viewPublicKey << ", "
+                    << txkey.secretKey << ")";
       return false;
     }
 
     r = derive_public_key(derivation, output_index, dst_entr.addr.spendPublicKey, out_eph_public_key);
     if (!(r)) {
-      logger(ERROR) << "at creation outs: failed to derive_public_key(" << derivation << ", "
-                                << output_index << ", " << dst_entr.addr.spendPublicKey << ")";
+      logger(ERROR) << "at creation outs: failed to derive_public_key(" << derivation << ", " << output_index << ", "
+                    << dst_entr.addr.spendPublicKey << ")";
       return false;
     }
 
