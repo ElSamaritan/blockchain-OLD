@@ -23,22 +23,31 @@
 
 #pragma once
 
-#include <cinttypes>
-#include <vector>
-#include <array>
+#include <cstring>
 
-#include "Xi/Algorithm/Math.h"
+#include "Xi/Byte.hh"
 
 namespace Xi {
-using Byte = uint8_t;
-using ByteVector = std::vector<uint8_t>;
 
-template <size_t _Size>
-using ByteArray = std::array<Byte, _Size>;
+template <typename _T, size_t _Bytes>
+struct enable_blob_from_this : protected ByteArray<_Bytes> {
+  using value_type = _T;
+  using array_type = ByteArray<_Bytes>;
+
+  static inline constexpr size_t bytes() { return _Bytes; }
+
+  enable_blob_from_this() { this->fill(0); }
+  explicit enable_blob_from_this(array_type raw) : array_type(std::move(raw)) {}
+
+  using array_type::data;
+  using array_type::size;
+  using array_type::operator[];
+
+  ByteSpan span() { return ByteSpan{this->data(), this->size()}; }
+  ConstByteSpan span() const { return ConstByteSpan{this->data(), this->size()}; }
+
+  inline bool operator==(const value_type &rhs) { return ::std::memcmp(this->data(), rhs.data(), bytes()) == 0; }
+  inline bool operator!=(const value_type &rhs) { return ::std::memcmp(this->data(), rhs.data(), bytes()) != 0; }
+};
+
 }  // namespace Xi
-
-static inline constexpr uint64_t operator"" _Bytes(unsigned long long bytes) { return bytes; }
-
-static inline constexpr uint64_t operator"" _kB(unsigned long long kiloBytes) { return kiloBytes * 1024; }
-
-static inline constexpr uint64_t operator"" _MB(unsigned long long megaBytes) { return megaBytes * 1024 * 1024; }
