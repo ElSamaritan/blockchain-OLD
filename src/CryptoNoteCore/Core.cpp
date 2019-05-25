@@ -167,7 +167,7 @@ uint32_t findCommonRoot(IMainChainStorage& storage, IBlockchainCache& rootSegmen
   return left;
 }
 
-const std::chrono::seconds OUTDATED_TRANSACTION_POLLING_INTERVAL = std::chrono::seconds(60);
+const std::chrono::seconds OUTDATED_TRANSACTION_POLLING_INTERVAL = std::chrono::minutes(10);
 
 }  // namespace
 
@@ -1168,6 +1168,18 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   b.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
   b.previousBlockHash = getTopBlockHash();
 
+  if (m_currency.isStaticRewardEnabledForBlockVersion(b.majorVersion)) {
+    auto staticReward = m_currency.constructStaticRewardTx(b.previousBlockHash, b.majorVersion, height);
+    if (staticReward.isError() || !staticReward.value().has_value()) {
+      logger(Logging::ERROR) << "expected static reward but consturation failed";
+      return false;
+    }
+    CachedTransaction cStaticReward{std::move(staticReward.take().value())};
+    b.staticRewardHash = cStaticReward.getTransactionHash();
+  } else {
+    b.staticRewardHash = std::nullopt;
+  }
+
   auto timestamp = timeProvider().posixNow();
   if (timestamp.isError()) {
     logger(Logging::ERROR) << "Failed to receive timestamp: " << timestamp.error().message();
@@ -1503,18 +1515,6 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
     summaryOutputAmount += output.amount;
   }
 
-  // parameters used for the additional key_image check
-  static const Crypto::KeyImage Z = {{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
-  XI_UNUSED(Z);
-  static const Crypto::KeyImage I = {{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
-  static const Crypto::KeyImage L = {{0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7,
-                                      0xa2, 0xde, 0xf9, 0xde, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10}};
-
   uint64_t summaryInputAmount = 0;
   std::unordered_set<Crypto::KeyImage> ki;
   std::set<std::pair<uint64_t, uint32_t>> outputsUsage;
@@ -1534,7 +1534,7 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
       // outputIndexes are packed here, first is absolute, others are offsets to previous,
       // so first can be zero, others can't
       // Fix discovered by Monero Lab and suggested by "fluffypony" (bitcointalk.org)
-      if (!(scalarmultKey(in.keyImage, L) == I)) {
+      if (!in.keyImage.isValid()) {
         return error::TransactionValidationError::INPUT_INVALID_DOMAIN_KEYIMAGES;
       }
 
@@ -1669,6 +1669,29 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   if (embeddedAmounts != canoncialAmounts) {
     return error::TransactionValidationError::OUTPUTS_NOT_CANONCIAL;
   }
+
+  // BEGIN: Static Reward Hash Validation ----------------------------------------------------------------------------
+  const auto& b = cachedBlock.getBlock();
+  if (m_currency.isStaticRewardEnabledForBlockVersion(b.majorVersion)) {
+    if (!b.staticRewardHash.has_value()) {
+      return error::BlockValidationError::STATIC_REWARD_MISMATCH;
+    }
+
+    auto staticReward = m_currency.constructStaticRewardTx(b.previousBlockHash, b.majorVersion, previousBlockIndex + 1);
+    if (staticReward.isError() || !staticReward.value().has_value()) {
+      logger(Logging::ERROR) << "expected static reward but consturation failed while validating block";
+      return error::BlockValidationError::STATIC_REWARD_MISMATCH;
+      ;
+    }
+    CachedTransaction cStaticReward{std::move(staticReward.take().value())};
+    const auto expectedStaticRewardHash = cStaticReward.getTransactionHash();
+    if (*b.staticRewardHash != expectedStaticRewardHash) {
+      return error::BlockValidationError::STATIC_REWARD_MISMATCH;
+    }
+  } else if (b.staticRewardHash.has_value()) {
+    return error::BlockValidationError::STATIC_REWARD_MISMATCH;
+  }
+  // END: Static Reward Hash Validation ------------------------------------------------------------------------------
 
   return error::TransactionValidationError::VALIDATION_SUCCESS;
 }
@@ -2321,7 +2344,7 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
   blockDetails.transactions.push_back(getTransactionDetails(cachedBaseTx.getTransactionHash(), segment, false));
 
   {
-    auto staticReward = m_currency.constructStaticRewardTx(blockDetails.majorVersion, blockDetails.index).takeOrThrow();
+    auto staticReward = m_currency.constructStaticRewardTx(blockTemplate).takeOrThrow();
     if (staticReward.has_value()) {
       CachedTransaction cachedStaticRewardTx(std::move(*staticReward));
       blockDetails.transactions.push_back(
@@ -2592,8 +2615,7 @@ void Core::transactionPoolCleaningProcedure() {
     for (;;) {
       timer.sleep(OUTDATED_TRANSACTION_POLLING_INTERVAL);
 
-      auto deletedTransactions =
-          static_cast<TransactionPoolCleanWrapper*>(m_transactionPool.get())->clean(getTopBlockIndex());
+      auto deletedTransactions = static_cast<TransactionPoolCleanWrapper*>(m_transactionPool.get())->clean();
       notifyObservers(
           makeDelTransactionMessage(std::move(deletedTransactions), Messages::DeleteTransaction::Reason::Outdated));
     }

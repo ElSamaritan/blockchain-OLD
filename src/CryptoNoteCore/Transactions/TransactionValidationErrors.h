@@ -66,9 +66,9 @@ enum class TransactionValidationError {
   BASE_INPUT_INVALID_NONCE = 37,       ///< Base transactions can only store public keys in their nonce.
   BASE_INVALID_SIGNATURES_COUNT = 38,  ///< Base transaction may not contain any signatures.
   OUTPUTS_NOT_CANONCIAL = 45,          ///< Base transaction may always have the canonical form.
-  STATIC_REWARD_INVALID_ADDRESS = 39,  ///< The static reward address is invalid, not the expected one.
-  STATIC_REWARD_INVALID_OUT = 40,      ///< The static reward contains an invalid out, either wrong encoded or not
-                                       ///< designated to the built in static reward address.
+  UNUSED_STATIC_REWARD_INVALID_ADDRESS = 39,  ///< The static reward address is invalid, not the expected one.
+  UNUSED_STATIC_REWARD_INVALID_OUT = 40,  ///< The static reward contains an invalid out, either wrong encoded or not
+                                          ///< designated to the built in static reward address.
   EXTRA_NONCE_TOO_LARGE =
       36,                 ///< The extra nonce of the transaction is larger than allowed (TX_EXTRA_NONCE_MAX_COUNT).
   EXTRA_TOO_LARGE = 43,   ///< Extra size exceeds threshold
@@ -149,9 +149,9 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "The base input transaction has an invalid encoded nonce";
       case TransactionValidationError::BASE_INVALID_SIGNATURES_COUNT:
         return "Base transaction contains signature, which is prohibited.";
-      case TransactionValidationError::STATIC_REWARD_INVALID_ADDRESS:
+      case TransactionValidationError::UNUSED_STATIC_REWARD_INVALID_ADDRESS:
         return "Static reward contains an unexpected public key.";
-      case TransactionValidationError::STATIC_REWARD_INVALID_OUT:
+      case TransactionValidationError::UNUSED_STATIC_REWARD_INVALID_OUT:
         return "Static reward contains an invalid output.";
       case TransactionValidationError::INPUT_AMOUNT_INSUFFICIENT:
         return "Transaction contains more output than input";

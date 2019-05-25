@@ -25,9 +25,12 @@ const Crypto::Hash& CachedBlock::getTransactionTreeHash() const {
     std::vector<Crypto::Hash> transactionHashes;
     transactionHashes.reserve(block.transactionHashes.size() + 1);
     transactionHashes.push_back(getObjectHash(block.baseTransaction));
+    if (block.staticRewardHash) {
+      transactionHashes.push_back(*block.staticRewardHash);
+    }
     transactionHashes.insert(transactionHashes.end(), block.transactionHashes.begin(), block.transactionHashes.end());
     transactionTreeHash = Crypto::Hash();
-    Crypto::tree_hash(transactionHashes.data(), transactionHashes.size(), transactionTreeHash.get());
+    Crypto::Hash::computeMerkleTree(transactionHashes, *transactionTreeHash).throwOnError();
   }
 
   return transactionTreeHash.get();
@@ -62,7 +65,9 @@ const BinaryArray& CachedBlock::getBlockHashingBinaryArray() const {
 
     const auto& treeHash = getTransactionTreeHash();
     result.insert(result.end(), treeHash.begin(), treeHash.end());
-    auto transactionCount = Common::asBinaryArray(Tools::get_varint_data(block.transactionHashes.size() + 1));
+    size_t hardCodedTransactions = block.staticRewardHash ? 2 : 1;
+    auto transactionCount =
+        Common::asBinaryArray(Tools::get_varint_data(block.transactionHashes.size() + hardCodedTransactions));
     result.insert(result.end(), transactionCount.begin(), transactionCount.end());
   }
 

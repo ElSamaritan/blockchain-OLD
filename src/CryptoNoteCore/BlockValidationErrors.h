@@ -34,7 +34,11 @@ enum class BlockValidationError {
   CUMULATIVE_BLOCK_SIZE_TOO_BIG = 7,
   DIFFICULTY_OVERHEAD = 8,
   BLOCK_REWARD_MISMATCH = 9,
+
+  /// The hash of the static reward transaction must propagate the network. If a hash was emplaced but none
+  /// expected or the emplaces hashed do not match the expected one the block is rejected.
   STATIC_REWARD_MISMATCH = 16,
+
   CHECKPOINT_BLOCK_HASH_MISMATCH = 10,
   PROOF_OF_WORK_TOO_WEAK = 11,
   TRANSACTION_ABSENT_IN_POOL = 12,
@@ -81,7 +85,7 @@ class BlockValidationErrorCategory : public std::error_category {
       case BlockValidationError::BLOCK_REWARD_MISMATCH:
         return "Block reward doesn't match expected reward";
       case BlockValidationError::STATIC_REWARD_MISMATCH:
-        return "Block static reward doesn't match expected reward";
+        return "Block static reward transaction hash does not match expected hash";
       case BlockValidationError::CHECKPOINT_BLOCK_HASH_MISMATCH:
         return "Checkpoint block hash mismatch";
       case BlockValidationError::PROOF_OF_WORK_TOO_WEAK:

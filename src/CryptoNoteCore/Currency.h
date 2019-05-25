@@ -110,8 +110,11 @@ class Currency {
   bool isStaticRewardEnabledForBlockVersion(uint8_t blockMajorVersion) const;
   uint64_t staticRewardAmountForBlockVersion(uint8_t blockMajorVersion) const;
   std::string staticRewardAddressForBlockVersion(uint8_t blockMajorVersion) const;
-  Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(uint8_t blockMajorVersion,
+  Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const Crypto::Hash& previousBlockHash,
+                                                                    uint8_t blockMajorVersion,
                                                                     uint32_t blockIndex) const;
+  Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const CachedBlock& block) const;
+  Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const BlockTemplate& block) const;
   // -------------------------------------------- Static Reward -------------------------------------------------------
 
   bool isFusionTransaction(const Transaction& transaction, uint32_t height) const;
@@ -193,6 +196,8 @@ class Currency {
 
   BlockTemplate m_genesisBlockTemplate;
   std::unique_ptr<CachedBlock> m_cachedGenesisBlock;
+
+  Xi::ByteArray<3 + Crypto::Hash::bytes()> m_staticRewardHashBuffer;
 
   Logging::LoggerRef logger;
 

@@ -492,7 +492,6 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
 
   BlockchainInterval interval;
   interval.startHeight = response.startHeight;
-  uint32_t blockIndex = interval.startHeight - 1;  // WARNING: Height = Index + 1
   std::vector<CompleteBlock> blocks;
 
   for (auto& block : response.newBlocks) {
@@ -506,7 +505,7 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
       completeBlock.block = std::move(block.block);
       completeBlock.transactions.push_back(createTransactionPrefix(completeBlock.block->baseTransaction));
       if (m_currency.isStaticRewardEnabledForBlockVersion(completeBlock.block->majorVersion)) {
-        auto staticReward = m_currency.constructStaticRewardTx(completeBlock.block->majorVersion, blockIndex++);
+        auto staticReward = m_currency.constructStaticRewardTx(*completeBlock.block);
         if (staticReward.isError()) {
           m_logger(ERROR) << "Failed to construct static reward: " << staticReward.error().message();
           return;

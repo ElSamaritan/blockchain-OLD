@@ -31,6 +31,7 @@
 
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"
+#include "Serialization/OptionalSerialization.hpp"
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
 
@@ -300,6 +301,7 @@ void serialize(BlockHeader& header, ISerializer& serializer) { serializeBlockHea
 void serialize(BlockTemplate& block, ISerializer& serializer) {
   serializeBlockHeader(block, serializer);
   serializer(block.baseTransaction, "miner_tx");
+  serializer(block.staticRewardHash, "static_reward_hash");
   serializer(block.transactionHashes, "tx_hashes");
 }
 

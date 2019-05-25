@@ -26,9 +26,9 @@ KeyPair generateKeyPair() {
   return k;
 }
 
-KeyPair generateKeyPair(uint32_t seed) {
+KeyPair generateDeterministicKeyPair(Xi::ConstByteSpan seed) {
   KeyPair k;
-  Crypto::generate_keys(k.publicKey, k.secretKey, seed);
+  Crypto::generate_deterministic_keys(k.publicKey, k.secretKey, seed);
   return k;
 }
 

@@ -223,6 +223,7 @@ bool requestRawBlock(IDataBase& database, uint32_t blockIndex, RawBlock& block) 
 
 Transaction extractTransaction(const RawBlock& block, uint32_t blockIndex, uint32_t transactionIndex,
                                const Currency& currency) {
+  XI_UNUSED(blockIndex);
   assert(transactionIndex < block.transactions.size() + 2);
 
   BlockTemplate blockTemplate;
@@ -234,7 +235,7 @@ Transaction extractTransaction(const RawBlock& block, uint32_t blockIndex, uint3
   if (transactionIndex == 0) {
     return blockTemplate.baseTransaction;
   } else if (hasStaticReward && transactionIndex == 1) {
-    return *currency.constructStaticRewardTx(blockTemplate.majorVersion, blockIndex).takeOrThrow();
+    return *currency.constructStaticRewardTx(blockTemplate).takeOrThrow();
   } else {
     const size_t staticTransactionsOffset = hasStaticReward ? 2 : 1;
     assert(transactionIndex < block.transactions.size() + staticTransactionsOffset);
@@ -916,9 +917,7 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   auto alreadyGeneratedTransactions = lastBlockInfo.alreadyGeneratedTransactions + cachedTransactions.size() + 1;
   boost::optional<CachedTransaction> staticRewardTransaction{boost::none};
   {
-    auto staticRewardConstruct =
-        currency.constructStaticRewardTx(cachedBlock.getBlock().majorVersion, cachedBlock.getBlockIndex())
-            .takeOrThrow();
+    auto staticRewardConstruct = currency.constructStaticRewardTx(cachedBlock).takeOrThrow();
     if (staticRewardConstruct.has_value()) {
       staticRewardTransaction = CachedTransaction{std::move(*staticRewardConstruct)};
     }
@@ -1512,8 +1511,7 @@ void DatabaseBlockchainCache::getRawTransactions(const std::vector<Crypto::Hash>
     if (transactionIt->second.transactionIndex == 0) {
       foundTransactions.emplace_back(toBinaryArray(block.baseTransaction));
     } else if (hasStaticReward && transactionIt->second.transactionIndex == 1) {
-      foundTransactions.emplace_back(toBinaryArray(
-          *currency.constructStaticRewardTx(block.majorVersion, transactionIt->second.blockIndex).takeOrThrow()));
+      foundTransactions.emplace_back(toBinaryArray(*currency.constructStaticRewardTx(block).takeOrThrow()));
     } else {
       const size_t staticTransactionsOffset = hasStaticReward ? 2 : 1;
       assert(blockIt->second.transactions.size() >= transactionIt->second.transactionIndex - staticTransactionsOffset);
@@ -1750,9 +1748,7 @@ void DatabaseBlockchainCache::addGenesisBlock(CachedBlock&& genesisBlock) {
   for (const TransactionOutput& output : genesisBlock.getBlock().baseTransaction.outputs) {
     genesisGeneratedCoins += output.amount;
   }
-  const auto staticReward =
-      currency.constructStaticRewardTx(genesisBlock.getBlock().majorVersion, genesisBlock.getBlockIndex())
-          .takeOrThrow();
+  const auto staticReward = currency.constructStaticRewardTx(genesisBlock).takeOrThrow();
   if (staticReward.has_value()) {
     for (const TransactionOutput& output : staticReward->outputs) {
       genesisGeneratedCoins += output.amount;

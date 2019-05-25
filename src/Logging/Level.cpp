@@ -65,9 +65,8 @@ boost::optional<Logging::LevelTranslator::internal_type> Logging::LevelTranslato
       return std::string{"debugging"};
     case Logging::TRACE:
       return std::string{"trace"};
-    default:
-      return boost::none;
   }
+  return boost::none;
 }
 
 void Logging::serialize(Logging::Level &level, CryptoNote::ISerializer &serializer) {

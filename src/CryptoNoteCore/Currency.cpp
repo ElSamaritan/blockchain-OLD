@@ -8,11 +8,12 @@
 #include "Currency.h"
 
 #include <cctype>
+#include <iterator>
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "../Common/Base58.h"
 #include "../Common/int-util.h"
@@ -25,6 +26,7 @@
 #include "CryptoNoteTools.h"
 #include "Difficulty.h"
 #include "Transactions/TransactionExtra.h"
+#include "Transactions/CachedTransaction.h"
 #include "UpgradeDetector.h"
 
 #undef ERROR
@@ -72,6 +74,11 @@ bool Currency::init() {
     return false;
   }
 
+  m_staticRewardHashBuffer.fill(0);
+  m_staticRewardHashBuffer[0] = 'X';
+  m_staticRewardHashBuffer[2] = 'I';
+  m_staticRewardHashBuffer[3] = network();
+
   return true;
 }
 
@@ -99,6 +106,13 @@ bool Currency::generateGenesisBlock() {
   m_genesisBlockTemplate.previousBlockHash.nullify();
   if (!isMainNet()) {
     m_genesisBlockTemplate.nonce += static_cast<uint8_t>(network()) * 0xFFFF;
+  }
+
+  if (isStaticRewardEnabledForBlockVersion(m_genesisBlockTemplate.majorVersion)) {
+    const CachedTransaction cStaticReward{*constructStaticRewardTx(m_genesisBlockTemplate).takeOrThrow()};
+    m_genesisBlockTemplate.staticRewardHash = cStaticReward.getTransactionHash();
+  } else {
+    m_genesisBlockTemplate.staticRewardHash = std::nullopt;
   }
 
   if (!fromBinaryArray(m_genesisBlockTemplate.baseTransaction, minerTxBlob)) {
@@ -247,7 +261,7 @@ size_t Currency::maxBlockCumulativeSize(uint64_t height) const {
   size_t maxSize = static_cast<size_t>(m_maxBlockSizeInitial + (height * m_maxBlockSizeGrowthSpeedNumerator) /
                                                                    m_maxBlockSizeGrowthSpeedDenominator);
   assert(maxSize >= m_maxBlockSizeInitial);
-  return maxSize;
+  return std::min(maxBlockBlobSize(), maxSize);
 }
 
 bool Currency::constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size_t medianSize,
@@ -346,7 +360,8 @@ std::string Currency::staticRewardAddressForBlockVersion(uint8_t blockMajorVersi
   return Xi::Config::StaticReward::address(blockMajorVersion);
 }
 
-Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(uint8_t blockMajorVersion,
+Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const Crypto::Hash& previousBlockHash,
+                                                                           uint8_t blockMajorVersion,
                                                                            uint32_t blockIndex) const {
   XI_ERROR_TRY();
   const auto rewardAmount = staticRewardAmountForBlockVersion(blockMajorVersion);
@@ -372,7 +387,10 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(uint8
   Transaction tx{};
   tx.nullify();
 
-  const KeyPair txkey = generateKeyPair(blockIndex);
+  auto saltedBuffer = m_staticRewardHashBuffer;
+  std::copy(previousBlockHash.begin(), previousBlockHash.end(), std::next(saltedBuffer.begin(), 3));
+
+  const KeyPair txkey = generateDeterministicKeyPair(saltedBuffer);
   addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
 
   BaseInput in;
@@ -417,11 +435,21 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(uint8
 
   tx.version = Xi::Config::Transaction::version();
   // lock
-  tx.unlockTime = blockIndex + m_minedMoneyUnlockWindow;
+  tx.unlockTime = 0;
   tx.inputs.push_back(in);
 
   return Xi::make_result<boost::optional<Transaction>>(std::move(tx));
   XI_ERROR_CATCH();
+}
+
+Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const CachedBlock& block) const {
+  return constructStaticRewardTx(block.getBlock().previousBlockHash, block.getBlock().majorVersion,
+                                 block.getBlockIndex());
+}
+
+Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const BlockTemplate& block) const {
+  CachedBlock cblock{block};
+  return constructStaticRewardTx(cblock);
 }
 
 bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts,

@@ -120,8 +120,7 @@ BlockchainCache::BlockchainCache(const std::string& filename, const Currency& cu
       genesisGeneratedCoins += output.amount;
     }
 
-    boost::optional<Transaction> staticReward =
-        currency.constructStaticRewardTx(genesisRawBlock.majorVersion, startIndex).takeOrThrow();
+    boost::optional<Transaction> staticReward = currency.constructStaticRewardTx(genesisRawBlock).takeOrThrow();
     if (staticReward.has_value()) {
       for (const TransactionOutput& output : staticReward->outputs) {
         genesisGeneratedCoins += output.amount;
@@ -167,8 +166,7 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
   uint64_t alreadyGeneratedCoins = 0;
   uint64_t alreadyGeneratedTransactions = 0;
 
-  boost::optional<Transaction> staticReward =
-      currency.constructStaticRewardTx(cachedBlock.getBlock().majorVersion, cachedBlock.getBlockIndex()).takeOrThrow();
+  boost::optional<Transaction> staticReward = currency.constructStaticRewardTx(cachedBlock).takeOrThrow();
 
   if (getBlockCount() == 0) {
     if (parent != nullptr) {
@@ -604,7 +602,7 @@ BinaryArray BlockchainCache::getRawTransaction(uint32_t index, uint32_t transact
     if (transactionIndex == 0) {
       return toBinaryArray(block.baseTransaction);
     } else if (transactionIndex == 1 && hasStaticReward) {
-      return toBinaryArray(*currency.constructStaticRewardTx(block.majorVersion, index).takeOrThrow());
+      return toBinaryArray(*currency.constructStaticRewardTx(block).takeOrThrow());
     } else {
       const size_t staticTransactionsOffset = hasStaticReward ? 2 : 1;
       assert(rawBlock.transactions.size() >= transactionIndex - staticTransactionsOffset);
@@ -729,11 +727,9 @@ std::vector<uint32_t> BlockchainCache::getRandomOutsByAmount(Amount amount, size
   }
 
   auto& outs = it->second.outputs;
-  auto end = std::find_if(outs.rbegin(), outs.rend(),
-                          [&](PackedOutIndex index) {
-                            return index.data.blockIndex <= blockIndex - currency.minedMoneyUnlockWindow();
-                          })
-                 .base();
+  auto end = std::find_if(outs.rbegin(), outs.rend(), [&](PackedOutIndex index) {
+               return index.data.blockIndex <= blockIndex - currency.minedMoneyUnlockWindow();
+             }).base();
   uint32_t dist = static_cast<uint32_t>(std::distance(outs.begin(), end));
   dist = std::min(static_cast<uint32_t>(count), dist);
   ShuffleGenerator<uint32_t, Crypto::random_engine<uint32_t>> generator(dist);

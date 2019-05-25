@@ -18,6 +18,7 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 
 #include <Xi/ExternalIncludePush.h>
 #include <boost/variant.hpp>
@@ -42,6 +43,7 @@ struct BlockHeader {
 
 struct BlockTemplate : public BlockHeader {
   Transaction baseTransaction;
+  std::optional<Crypto::Hash> staticRewardHash;
   std::vector<Crypto::Hash> transactionHashes;
 };
 

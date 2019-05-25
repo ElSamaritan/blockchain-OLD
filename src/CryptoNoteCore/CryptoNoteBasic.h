@@ -19,6 +19,8 @@
 
 #include <cinttypes>
 
+#include <Xi/Byte.hh>
+
 #include <boost/utility/value_init.hpp>
 #include <CryptoNoteCore/CryptoNote.h>
 
@@ -40,6 +42,6 @@ KeyPair generateKeyPair();
  *
  * This implementation will always return the same key pair for a fixed seed accross platforms.
  */
-KeyPair generateKeyPair(uint32_t seed);
+KeyPair generateDeterministicKeyPair(Xi::ConstByteSpan seed);
 
 }  // namespace CryptoNote
