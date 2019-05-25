@@ -29,7 +29,7 @@
 
 #include "Xi/Crypto/Hash/Keccak.hh"
 
-xi_crypto_hash_fast_hash_state *xi_crypto_hash_fast_hash_create()
+xi_crypto_hash_fast_hash_state *xi_crypto_hash_fast_hash_create(void)
 {
   return (xi_crypto_hash_keccak_state*)malloc(sizeof(xi_crypto_hash_keccak_state));
 }

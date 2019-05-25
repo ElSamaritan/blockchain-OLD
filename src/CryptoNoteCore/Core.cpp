@@ -230,6 +230,9 @@ void Core::transactionDeletedFromPool(const Hash& hash, ITransactionPoolObserver
     case Reason::AddedToMainChain:
       /* swallow handled by addBlockRoutine */
       break;
+    case Reason::SkipNotification:
+      /* swallow, we should not receive it in first place */
+      break;
   }
 }
 
@@ -242,6 +245,9 @@ void Core::transactionAddedToPool(const Hash& hash, ITransactionPoolObserver::Ad
     case Reason::Deserialization:
     case Reason::MainChainSwitch:
       /* swallow no appropriate blockchain event */
+      break;
+    case Reason::SkipNotification:
+      /* swallow, we should not receive it in first place */
       break;
   }
 }
