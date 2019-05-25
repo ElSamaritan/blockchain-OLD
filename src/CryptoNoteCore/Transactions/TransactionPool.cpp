@@ -24,11 +24,14 @@
 #include "CryptoNoteCore/Transactions/TransactionPool.h"
 
 #include <algorithm>
+#include <iterator>
+
+#include <Xi/Exceptions.hpp>
 
 #include <Common/int-util.h>
 #include <Common/StringTools.h>
 #include <crypto/CryptoTypes.h>
-#include <crypto/hash.h>
+
 #include <Serialization/SerializationTools.h>
 
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
@@ -114,6 +117,63 @@ bool TransactionPool::containsTransaction(const Crypto::Hash& hash) const {
 bool TransactionPool::containsKeyImage(const Crypto::KeyImage& keyImage) const {
   XI_CONCURRENT_RLOCK(m_access);
   return m_keyImageReferences.find(keyImage) != m_keyImageReferences.end();
+}
+
+std::vector<Crypto::Hash> TransactionPool::sanityCheck(const uint64_t timeout) {
+  std::vector<Crypto::Hash> removedTransactions;
+
+  m_logger(Logging::TRACE) << "Starting sanity check on transaction pool...";
+  uint64_t timestamp = 0;
+  if (auto timestampQuery = m_blockchain.timeProvider().posixNow(); !timestampQuery.isError()) {
+    timestamp = timestampQuery.value();
+  } else {
+    m_logger(Logging::ERROR) << "Time provider failed, sanity check will be unable to evaluate timeout.";
+  }
+
+  {
+    XI_CONCURRENT_RLOCK(m_access);
+
+    std::vector<std::shared_ptr<PendingTransactionInfo>> transactions;
+    transactions.reserve(m_transactions.size());
+    std::transform(m_transactions.begin(), m_transactions.end(), std::back_inserter(transactions),
+                   [](const auto& pair) { return pair.second; });
+
+    m_keyImageReferences.clear();
+    m_transactions.clear();
+    m_paymentIds.clear();
+
+    transactions.erase(std::remove_if(transactions.begin(), transactions.end(),
+                                      [](const auto& iTransaction) { return iTransaction.get() == nullptr; }),
+                       transactions.end());
+    std::sort(transactions.begin(), transactions.end(),
+              [](const auto& lhs, const auto& rhs) { return lhs->receiveTime() > rhs->receiveTime(); });
+
+    for (const auto& iTransaction : transactions) {
+      if (timestamp > iTransaction->receiveTime() && timestamp - iTransaction->receiveTime() > timeout) {
+        m_logger(Logging::TRACE) << "'" << iTransaction->transaction().getTransactionHash() << "'"
+                                 << " exceeded lifespan";
+        removedTransactions.emplace_back(iTransaction->transaction().getTransactionHash());
+      } else {
+        auto iResult = insertTransaction(iTransaction->transaction(), iTransaction->receiveTime(),
+                                         ITransactionPoolObserver::AdditionReason::SkipNotification);
+        if (iResult.isError()) {
+          m_logger(Logging::TRACE) << "'" << iTransaction->transaction().getTransactionHash() << "'"
+                                   << " could not be readded: " << iResult.error().message();
+          removedTransactions.emplace_back(iTransaction->transaction().getTransactionHash());
+        }
+      }
+    }
+  }
+
+  for (const auto& iRemoved : removedTransactions) {
+    m_observers.notify(&ITransactionPoolObserver::transactionDeletedFromPool, std::cref(iRemoved),
+                       ITransactionPoolObserver::DeletionReason::PoolCleanupProcedure);
+  }
+
+  m_logger(Logging::TRACE) << "Sanity check on transaction pool finished, removed " << removedTransactions.size()
+                           << " total.";
+
+  return removedTransactions;
 }
 
 void TransactionPool::serialize(ISerializer& serializer) {
@@ -294,7 +354,9 @@ bool TransactionPool::removeTransaction(const Crypto::Hash& hash, ITransactionPo
     }
     m_transactions.erase(search);
     invalidateStateHash();
-    m_observers.notify(&ITransactionPoolObserver::transactionDeletedFromPool, std::cref(hash), reason);
+    if (reason != ITransactionPoolObserver::DeletionReason::SkipNotification) {
+      m_observers.notify(&ITransactionPoolObserver::transactionDeletedFromPool, std::cref(hash), reason);
+    }
     return true;
   }
 }
@@ -356,7 +418,9 @@ Xi::Result<void> TransactionPool::insertTransaction(CachedTransaction transactio
         std::make_shared<PendingTransactionInfo>(std::move(transaction), validation.eligibleIndex(), receiveTime);
     m_transactions.insert(std::make_pair(transactionHash, nfo));
     m_logger(Logging::INFO) << "transaction added to pool";
-    m_observers.notify(&ITransactionPoolObserver::transactionAddedToPool, std::cref(transactionHash), reason);
+    if (reason != ITransactionPoolObserver::AdditionReason::SkipNotification) {
+      m_observers.notify(&ITransactionPoolObserver::transactionAddedToPool, std::cref(transactionHash), reason);
+    }
     return Xi::make_result<void>();
   }
 }
@@ -372,9 +436,9 @@ Crypto::Hash TransactionPool::computeStateHash() const {
   } else if (transactionHashes.size() < 2) {
     return transactionHashes[0];
   } else {
-    Crypto::Hash hash{};
-    Crypto::tree_hash(transactionHashes.data(), transactionHashes.size(), hash);
-    return hash;
+    return Crypto::Hash::compute(
+               Xi::asConstByteSpan(transactionHashes.data(), transactionHashes.size() * Crypto::Hash::bytes()))
+        .takeOrThrow();
   }
 }
 
@@ -419,7 +483,9 @@ void TransactionPool::evaluateBlockVersionUpgradeConstraints() {
 }
 
 CachedTransaction TransactionPool::getTransaction(const Crypto::Hash& hash) const {
-  return queryTransaction(hash)->transaction();
+  auto queryResult = queryTransaction(hash);
+  Xi::exceptional_if<Xi::NotFoundError>(queryResult.get() == nullptr);
+  return queryResult->transaction();
 }
 
 bool TransactionPool::removeTransaction(const Crypto::Hash& hash) {

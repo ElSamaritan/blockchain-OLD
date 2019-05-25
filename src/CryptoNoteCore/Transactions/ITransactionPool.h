@@ -84,6 +84,13 @@ class ITransactionPool {
   virtual bool containsKeyImage(const Crypto::KeyImage& keyImage) const = 0;
 
   /*!
+   * \brief sanityCheck reevalutes a contained transactions, if they are still valid.
+   * \param timeout Maximum age in seconds, of a tranasction, older ones get deleted.
+   * \return All hashes of deleted transactions. (Observers get still notified)
+   */
+  virtual std::vector<Crypto::Hash> sanityCheck(const uint64_t timeout) = 0;
+
+  /*!
    * \brief serialize loads/stores the state of the transaction pool from/into a serializer
    * \param serializer the interface for decoding/encoding data pushed
    */
@@ -95,8 +102,7 @@ class ITransactionPool {
    * \param index The eligble index of the blockchain the returned transactions must be eligible
    * \return all transactions contained in the pool satisfying the index requirement
    */
-  virtual std::vector<CachedTransaction> eligiblePoolTransactions(
-      EligibleIndex index) const = 0;
+  virtual std::vector<CachedTransaction> eligiblePoolTransactions(EligibleIndex index) const = 0;
 
   /*!
    * \brief acquireExclusiveAccess locks the transaction pool for exclusive access

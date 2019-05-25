@@ -35,6 +35,7 @@ class ITransactionPoolObserver {
                       ///< main chain gets readded.
     Deserialization,  ///< The transaction was restored from an archive or other serialization interface. Commonly this
                       ///< happens when the persistent transaction pool storage is loaded.
+    SkipNotification,  ///< Skips the notification of observers.
   };
 
   enum struct DeletionReason {
@@ -44,8 +45,9 @@ class ITransactionPoolObserver {
                                ///< double spending once added to the main chain.
     BlockMajorVersionUpgrade,  ///< The major version in the blockchain upgraded introducing new constraints the
                                ///< transaction does not satisfy anymore
-    PoolCleanupProcedure,      ///< Legacy Reason for pool cleaner wrapper
+    PoolCleanupProcedure,      ///< Transaction was in pool but got outdated or invalid while remaining there.
     Forced,                    ///< The user forced the deletion of the transaction
+    SkipNotification,          ///< Skips the notification of observers.
   };
 
  public:

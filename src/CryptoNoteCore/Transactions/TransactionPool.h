@@ -32,7 +32,7 @@
 #include <boost/optional.hpp>
 #include <Xi/ExternalIncludePop.h>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Concurrent/RecursiveLock.h>
 
 #include <crypto/crypto.h>
@@ -74,6 +74,8 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   bool containsTransaction(const Crypto::Hash& hash) const override;
   bool containsKeyImage(const Crypto::KeyImage& keyImage) const override;
 
+  std::vector<Crypto::Hash> sanityCheck(const uint64_t timeout) override;
+
   /*!
    * \copydoc ITransactionPool::serialize(ISerializer)
    *
@@ -83,8 +85,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   void serialize(ISerializer& serializer) override;
 
   TransactionQueryResult queryTransaction(const Crypto::Hash& hash) const override;
-  std::vector<CachedTransaction> eligiblePoolTransactions(
-      EligibleIndex index) const override;
+  std::vector<CachedTransaction> eligiblePoolTransactions(EligibleIndex index) const override;
   Xi::Concurrent::RecursiveLock::lock_t acquireExclusiveAccess() const override;
   // -------------------------------------- ITransactionPool End -------------------------------------------------------
 

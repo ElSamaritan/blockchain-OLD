@@ -18,6 +18,7 @@
 #pragma once
 
 #include <functional>
+#include <variant>
 
 #include "CryptoNoteCore/CryptoNote.h"
 
@@ -28,31 +29,32 @@ enum class TransactionMessageType { AddTransactionType, DeleteTransactionType };
 // immutable messages
 struct AddTransaction {
   Crypto::Hash hash;
+
+  explicit AddTransaction(Crypto::Hash hash);
 };
 
 struct DeleteTransaction {
   Crypto::Hash hash;
+
+  explicit DeleteTransaction(Crypto::Hash hash);
 };
 
 class TransactionPoolMessage {
  public:
-  TransactionPoolMessage(const AddTransaction& at);
-  TransactionPoolMessage(const DeleteTransaction& at);
+  TransactionPoolMessage(AddTransaction at);
+  TransactionPoolMessage(DeleteTransaction at);
 
   // pattern matchin API
   void match(std::function<void(const AddTransaction&)>&&, std::function<void(const DeleteTransaction&)>&&);
 
   // API with explicit type handling
   TransactionMessageType getType() const;
-  AddTransaction getAddTransaction() const;
-  DeleteTransaction getDeleteTransaction() const;
+  const AddTransaction& getAddTransaction() const;
+  const DeleteTransaction& getDeleteTransaction() const;
 
  private:
   const TransactionMessageType type;
-  union {
-    const AddTransaction addTransaction;
-    const DeleteTransaction deleteTransaction;
-  };
+  std::variant<AddTransaction, DeleteTransaction> data;
 };
 
 TransactionPoolMessage makeAddTransaction(const Crypto::Hash& hash);

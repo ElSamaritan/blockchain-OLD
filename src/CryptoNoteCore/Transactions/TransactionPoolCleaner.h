@@ -18,7 +18,7 @@
 #include "Logging/ILogger.h"
 #include "Logging/LoggerRef.h"
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <System/ContextGroup.h>
 
 namespace CryptoNote {
@@ -30,7 +30,7 @@ class TransactionPoolCleanWrapper : public ITransactionPool {
  public:
   TransactionPoolCleanWrapper(std::unique_ptr<ITransactionPool>&& transactionPool,
                               std::unique_ptr<ITimeProvider>&& timeProvider, Logging::ILogger& logger,
-                              uint64_t timeout);
+                              uint64_t m_timeout);
 
   ~TransactionPoolCleanWrapper() override;
 
@@ -45,10 +45,10 @@ class TransactionPoolCleanWrapper : public ITransactionPool {
   Xi::Result<void> pushTransaction(Transaction transaction) override;
   bool containsTransaction(const Crypto::Hash& hash) const override;
   bool containsKeyImage(const Crypto::KeyImage& keyImage) const override;
+  std::vector<Crypto::Hash> sanityCheck(const uint64_t timeout) override;
   void serialize(ISerializer& serializer) override;
   TransactionQueryResult queryTransaction(const Crypto::Hash& hash) const override;
-  std::vector<CachedTransaction> eligiblePoolTransactions(
-      EligibleIndex index) const override;
+  std::vector<CachedTransaction> eligiblePoolTransactions(EligibleIndex index) const override;
   Xi::Concurrent::RecursiveLock::lock_t acquireExclusiveAccess() const override;
 
   CachedTransaction getTransaction(const Crypto::Hash& hash) const override;
@@ -62,14 +62,14 @@ class TransactionPoolCleanWrapper : public ITransactionPool {
   uint64_t getTransactionReceiveTime(const Crypto::Hash& hash) const override;
   std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
 
-  std::vector<Crypto::Hash> clean(const uint32_t height);
+  std::vector<Crypto::Hash> clean();
 
  private:
   std::unique_ptr<ITransactionPool> transactionPool;
   std::unique_ptr<ITimeProvider> timeProvider;
   Logging::LoggerRef logger;
   std::unordered_map<Crypto::Hash, uint64_t> recentlyDeletedTransactions;
-  uint64_t timeout;
+  uint64_t m_timeout;
 
   bool isTransactionRecentlyDeleted(const Crypto::Hash& hash) const;
   void cleanRecentlyDeletedTransactions(uint64_t currentTime);

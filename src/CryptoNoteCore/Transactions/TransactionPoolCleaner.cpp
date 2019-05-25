@@ -5,6 +5,8 @@
 
 #include "CryptoNoteCore/Transactions/TransactionPoolCleaner.h"
 
+#include <Xi/Exceptions.hpp>
+
 #include <Common/StringTools.h>
 #include <System/InterruptedException.h>
 #include <System/Timer.h>
@@ -20,7 +22,7 @@ TransactionPoolCleanWrapper::TransactionPoolCleanWrapper(std::unique_ptr<ITransa
     : transactionPool(std::move(transactionPool)),
       timeProvider(std::move(timeProvider)),
       logger(logger, "TransactionPoolCleanWrapper"),
-      timeout(timeout) {
+      m_timeout(timeout) {
   assert(this->timeProvider);
 }
 
@@ -58,14 +60,17 @@ bool TransactionPoolCleanWrapper::containsKeyImage(const Crypto::KeyImage& keyIm
   return transactionPool->containsKeyImage(keyImage);
 }
 
+std::vector<Crypto::Hash> TransactionPoolCleanWrapper::sanityCheck(const uint64_t timeout) {
+  return transactionPool->sanityCheck(timeout);
+}
+
 void TransactionPoolCleanWrapper::serialize(ISerializer& serializer) { return transactionPool->serialize(serializer); }
 
 ITransactionPool::TransactionQueryResult TransactionPoolCleanWrapper::queryTransaction(const Crypto::Hash& hash) const {
   return transactionPool->queryTransaction(hash);
 }
 
-std::vector<CachedTransaction> TransactionPoolCleanWrapper::eligiblePoolTransactions(
-    EligibleIndex index) const {
+std::vector<CachedTransaction> TransactionPoolCleanWrapper::eligiblePoolTransactions(EligibleIndex index) const {
   return transactionPool->eligiblePoolTransactions(index);
 }
 
@@ -102,38 +107,10 @@ std::vector<Crypto::Hash> TransactionPoolCleanWrapper::getTransactionHashesByPay
   return transactionPool->getTransactionHashesByPaymentId(paymentId);
 }
 
-std::vector<Crypto::Hash> TransactionPoolCleanWrapper::clean(const uint32_t height) {
+std::vector<Crypto::Hash> TransactionPoolCleanWrapper::clean() {
   try {
     uint64_t currentTime = timeProvider->posixNow().value();
-    auto transactionHashes = transactionPool->getTransactionHashes();
-
-    std::vector<Crypto::Hash> deletedTransactions;
-    for (const auto& hash : transactionHashes) {
-      uint64_t transactionAge = currentTime - transactionPool->getTransactionReceiveTime(hash);
-      if (transactionAge >= timeout) {
-        logger(Logging::DEBUGGING) << "Deleting transaction " << Common::podToHex(hash) << " from pool";
-        recentlyDeletedTransactions.emplace(hash, currentTime);
-        transactionPool->removeTransaction(hash);
-        deletedTransactions.emplace_back(std::move(hash));
-      }
-
-      CachedTransaction transaction = transactionPool->getTransaction(hash);
-      std::vector<CachedTransaction> transactions;
-      transactions.emplace_back(transaction);
-
-      bool success;
-      std::string error;
-
-      std::tie(success, error) = Mixins::validate(transactions, height);
-      if (!success) {
-        logger(Logging::DEBUGGING) << "Deleting invalid transaction " << Common::podToHex(hash) << " from pool."
-                                   << error;
-        recentlyDeletedTransactions.emplace(hash, currentTime);
-        transactionPool->removeTransaction(hash);
-        deletedTransactions.emplace_back(std::move(hash));
-      }
-    }
-
+    std::vector<Crypto::Hash> deletedTransactions = sanityCheck(m_timeout);
     cleanRecentlyDeletedTransactions(currentTime);
     return deletedTransactions;
   } catch (System::InterruptedException&) {
@@ -146,12 +123,12 @@ std::vector<Crypto::Hash> TransactionPoolCleanWrapper::clean(const uint32_t heig
 
 bool TransactionPoolCleanWrapper::isTransactionRecentlyDeleted(const Crypto::Hash& hash) const {
   auto it = recentlyDeletedTransactions.find(hash);
-  return it != recentlyDeletedTransactions.end() && it->second >= timeout;
+  return it != recentlyDeletedTransactions.end() && it->second >= m_timeout;
 }
 
 void TransactionPoolCleanWrapper::cleanRecentlyDeletedTransactions(uint64_t currentTime) {
   for (auto it = recentlyDeletedTransactions.begin(); it != recentlyDeletedTransactions.end();) {
-    if (currentTime - it->second >= timeout) {
+    if (currentTime - it->second >= m_timeout) {
       it = recentlyDeletedTransactions.erase(it);
     } else {
       ++it;
