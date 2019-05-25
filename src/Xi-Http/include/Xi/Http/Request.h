@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "Xi/Http/Method.h"
 #include "Xi/Http/Version.h"

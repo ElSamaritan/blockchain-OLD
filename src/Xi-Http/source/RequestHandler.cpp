@@ -23,7 +23,7 @@
 
 #include "Xi/Http/RequestHandler.h"
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 Xi::Http::Response Xi::Http::RequestHandler::operator()(const Xi::Http::Request &request) {
   try {

@@ -21,6 +21,11 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4702)
+#endif
+
 #include "HttpsServerSession.h"
 
 #include <Xi/ExternalIncludePush.h>
@@ -89,3 +94,7 @@ void Xi::Http::HttpsServerSession::doClose() {
       m_strand, std::bind(&HttpsServerSession::onShutdown,
                           std::shared_ptr<HttpsServerSession>{shared_from_this(), this}, std::placeholders::_1)));
 }
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif

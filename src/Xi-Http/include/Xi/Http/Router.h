@@ -30,7 +30,7 @@
 #include <boost/optional.hpp>
 #include <Xi/ExternalIncludePop.h>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "Xi/Http/RequestHandler.h"
 #include "Xi/Http/FunctorRequestHandler.h"

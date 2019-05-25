@@ -25,7 +25,7 @@
 
 #include <functional>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "Xi/Http/RequestHandler.h"
 

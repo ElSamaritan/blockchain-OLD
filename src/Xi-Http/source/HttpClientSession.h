@@ -31,7 +31,7 @@
 
 #include <boost/optional.hpp>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>

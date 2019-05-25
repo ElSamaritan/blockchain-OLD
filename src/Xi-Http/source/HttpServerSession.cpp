@@ -21,6 +21,11 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4702)
+#endif
+
 #include "HttpServerSession.h"
 
 #include <Xi/ExternalIncludePush.h>
@@ -57,3 +62,7 @@ void Xi::Http::HttpServerSession::doClose() {
   m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_send, ec);
   checkErrorCode(ec);
 }
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif

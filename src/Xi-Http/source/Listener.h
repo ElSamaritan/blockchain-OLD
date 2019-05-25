@@ -26,7 +26,7 @@
 #include <memory>
 #include <string>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include <Xi/ExternalIncludePush.h>
 #include <boost/beast/core.hpp>

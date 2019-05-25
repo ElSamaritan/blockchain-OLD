@@ -56,7 +56,7 @@ class ServerSessionDetector : public std::enable_shared_from_this<ServerSessionD
  private:
   boost::asio::ip::tcp::socket m_socket;
   boost::asio::ssl::context& m_ctx;
-  boost::asio::strand<boost::asio::io_context::executor_type> m_strand;
+  boost::asio::strand<boost::asio::ip::tcp::socket::executor_type> m_strand;
   boost::beast::flat_buffer m_buffer;
   std::shared_ptr<IServerSessionBuilder> m_builder;
 };

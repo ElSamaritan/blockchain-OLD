@@ -8,13 +8,13 @@
 
 Xi::Http::Uri::Uri(const char *uri_text, Xi::Http::Uri::SchemeCategory category,
                    Xi::Http::Uri::QueryArgumentSeparator separator)
-    : m_category(category), m_path_is_rooted(false), m_port(0), m_separator(separator) {
+    : m_category(category), m_port(0), m_path_is_rooted(false), m_separator(separator) {
   setUp(std::string(uri_text), category);
 }
 
 Xi::Http::Uri::Uri(const std::string &uri_text, Xi::Http::Uri::SchemeCategory category,
                    Xi::Http::Uri::QueryArgumentSeparator separator)
-    : m_category(category), m_path_is_rooted(false), m_port(0), m_separator(separator) {
+    : m_category(category), m_port(0), m_path_is_rooted(false), m_separator(separator) {
   setUp(uri_text, category);
 }
 

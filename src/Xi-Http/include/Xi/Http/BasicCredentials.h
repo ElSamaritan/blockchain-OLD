@@ -26,7 +26,7 @@
 #include <string>
 #include <stdexcept>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Algorithm/String.h>
 
 namespace Xi {

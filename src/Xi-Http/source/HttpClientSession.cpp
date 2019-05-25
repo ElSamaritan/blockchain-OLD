@@ -21,6 +21,11 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4702)
+#endif
+
 #include "HttpClientSession.h"
 
 Xi::Http::HttpClientSession::HttpClientSession(boost::asio::io_context& io,
@@ -53,3 +58,7 @@ void Xi::Http::HttpClientSession::doOnResponseRecieved() {
 }
 
 void Xi::Http::HttpClientSession::doOnShutdown() {}
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif

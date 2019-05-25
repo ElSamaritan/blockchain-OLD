@@ -31,7 +31,7 @@
 
 #include <boost/optional.hpp>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "Xi/Http/AuthenticationType.h"
 #include "Xi/Http/ContentType.h"

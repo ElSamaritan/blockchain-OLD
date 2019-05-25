@@ -34,7 +34,7 @@
 #include <boost/config.hpp>
 #include <Xi/ExternalIncludePop.h>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Concurrent/IDispatcher.h>
 
 #include "Xi/Http/RequestHandler.h"
@@ -57,7 +57,7 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
   using request_t = BeastConversion::beast_request_t;
   using response_t = BeastConversion::beast_response_t;
   using socket_t = boost::asio::ip::tcp::socket;
-  using strand_t = boost::asio::strand<boost::asio::io_context::executor_type>;
+  using strand_t = boost::asio::strand<socket_t::executor_type>;
 
  public:
   /*!

@@ -30,7 +30,7 @@
 
 #include <System/Dispatcher.h>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "Xi/Http/Request.h"
 #include "Xi/Http/Response.h"

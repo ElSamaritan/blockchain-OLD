@@ -26,7 +26,7 @@
 #include <string>
 #include <memory>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "Xi/Http/Endpoint.h"
 #include "Xi/Http/Method.h"

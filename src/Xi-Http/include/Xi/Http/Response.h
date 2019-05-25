@@ -26,7 +26,7 @@
 #include <string>
 #include <sstream>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "Xi/Http/StatusCode.h"
 #include "Xi/Http/Version.h"

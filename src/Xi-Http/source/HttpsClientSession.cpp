@@ -21,6 +21,11 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4702)
+#endif
+
 #include "HttpsClientSession.h"
 
 Xi::Http::HttpsClientSession::HttpsClientSession(boost::asio::io_context &io, boost::asio::ssl::context &ctx,
@@ -72,3 +77,7 @@ void Xi::Http::HttpsClientSession::onHandshake(boost::beast::error_code ec) {
     fail(std::current_exception());
   }
 }
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
