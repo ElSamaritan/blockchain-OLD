@@ -72,6 +72,10 @@ macro(xi_make_library source_dir)
     target_include_directories(${lib_name} INTERFACE ${lib_include_dir})
   endif()
 
+  string(REPLACE "." "::" lib_alias_name ${lib_name})
+  add_library(${lib_alias_name} ALIAS ${lib_name})
+  list(APPEND XI_CANONICAL_LIBRARIES ${lib_alias_name})
+
   if(XI_BUILD_TESTSUITE)
     file(
       GLOB_RECURSE lib_test_files "${source_dir}/tests/**.h" "${source_dir}/tests/**.cpp")
