@@ -21,5 +21,5 @@
 #                                                                                                #
 # ============================================================================================== #
 
-cmake -DCMAKE_BUILD_TYPE=Release -DXI_BUILD_TESTSUITE=ON -DXI_BUILD_TOOLS=ON -DXI_BUILD_BREAKPAD=ON /source
+cmake -DCMAKE_BUILD_TYPE=Release -DXI_BUILD_TESTSUITE=ON -DXI_BUILD_TOOLS=ON -DXI_BUILD_BREAKPAD=ON -DXI_CACHE_USE=ON -DXI_CACHE_UPLOAD=ON /source
 make -j 6
