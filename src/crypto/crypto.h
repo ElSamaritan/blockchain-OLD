@@ -14,21 +14,15 @@
 #include <vector>
 
 #include <Xi/Exceptional.hpp>
+#include <Xi/Crypto/Random.hh>
 
 #include "crypto/CryptoTypes.h"
-#include "crypto/hash.h"
 
 namespace Crypto {
-
-extern "C" {
-#include "random.h"
-}
 
 XI_DECLARE_EXCEPTIONAL_CATEGORY(CryptoOperation)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(KeyDerivation, "cannot derivate key image", CryptoOperation)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(PublicKeyDerivation, "cannot derivate public key", CryptoOperation)
-
-extern std::mutex random_lock;
 
 struct EllipticCurvePoint {
   uint8_t data[32];
@@ -47,11 +41,15 @@ class crypto_ops {
   static void generate_keys(PublicKey &, SecretKey &);
   friend void generate_keys(PublicKey &, SecretKey &);
 
-  static void generate_keys(PublicKey &, SecretKey &, uint32_t);
-  friend void generate_keys(PublicKey &, SecretKey &, uint32_t);
+  static void generate_keys(SecretKey &);
+  friend void generate_keys(SecretKey &);
 
-  static void generate_deterministic_keys(PublicKey &pub, SecretKey &sec, SecretKey &second);
-  friend void generate_deterministic_keys(PublicKey &pub, SecretKey &sec, SecretKey &second);
+  static void generate_deterministic_keys(PublicKey &, SecretKey &, Xi::ConstByteSpan);
+  friend void generate_deterministic_keys(PublicKey &, SecretKey &, Xi::ConstByteSpan);
+
+  static void generate_deterministic_keys(SecretKey &, Xi::ConstByteSpan);
+  friend void generate_deterministic_keys(SecretKey &, Xi::ConstByteSpan);
+
   static SecretKey generate_m_keys(PublicKey &pub, SecretKey &sec, const SecretKey &recovery_key = SecretKey(),
                                    bool recover = false);
   friend SecretKey generate_m_keys(PublicKey &pub, SecretKey &sec, const SecretKey &recovery_key, bool recover);
@@ -108,8 +106,7 @@ class crypto_ops {
 template <typename T>
 typename std::enable_if<std::is_pod<T>::value, T>::type rand() {
   typename std::remove_cv<T>::type res;
-  std::lock_guard<std::mutex> lock(random_lock);
-  generate_random_bytes(sizeof(T), &res);
+  Xi::Crypto::Random::generate(Xi::ByteSpan{reinterpret_cast<Xi::Byte *>(&res), sizeof(T)});
   return res;
 }
 
@@ -135,10 +132,12 @@ class random_engine {
 /* Generate a new key pair
  */
 inline void generate_keys(PublicKey &pub, SecretKey &sec) { crypto_ops::generate_keys(pub, sec); }
-inline void generate_keys(PublicKey &pub, SecretKey &sec, uint32_t seed) { crypto_ops::generate_keys(pub, sec, seed); }
-
-inline void generate_deterministic_keys(PublicKey &pub, SecretKey &sec, SecretKey &second) {
-  crypto_ops::generate_deterministic_keys(pub, sec, second);
+inline void generate_keys(SecretKey &sec) { crypto_ops::generate_keys(sec); }
+inline void generate_deterministic_keys(PublicKey &pub, SecretKey &sec, Xi::ConstByteSpan seed) {
+  crypto_ops::generate_deterministic_keys(pub, sec, seed);
+}
+inline void generate_deterministic_keys(SecretKey &sec, Xi::ConstByteSpan seed) {
+  crypto_ops::generate_deterministic_keys(sec, seed);
 }
 
 inline SecretKey generate_m_keys(PublicKey &pub, SecretKey &sec, const SecretKey &recovery_key = SecretKey(),

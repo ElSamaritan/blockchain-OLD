@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,38 +21,33 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "crypto/cnx/cnx.h"
+#include "Xi/Crypto/Hash/Sha2.hh"
 
-#include <vector>
-#include <array>
-#include <memory>
-#include <random>
-#include <algorithm>
+#include <Xi/Exceptions.hpp>
 
-#include "crypto/aes-support.h"
-#include "crypto/cnx/distribution.h"
-#include "crypto/cnx/cnx-hash.h"
-#include "crypto/hash-extra-ops.h"
+#include "Xi/Crypto/Hash/Exceptions.hpp"
 
-void Crypto::CNX::Hash_v1::operator()(const void *data, size_t length, Crypto::Hash &hash,
-                                      bool forceSoftwareAES) const {
-  hash.nullify();
-  if (auto res = Hash::compute(Xi::asByteSpan(data, length), hash); res.isError()) {
-    hash.nullify();
-    return;
-  }
+XI_CRYPTO_HASH_DECLARE_HASH_IMPLEMENTATION(Xi::Crypto::Hash::Sha2::Hash224, 224);
+XI_CRYPTO_HASH_DECLARE_HASH_IMPLEMENTATION(Xi::Crypto::Hash::Sha2::Hash256, 256);
+XI_CRYPTO_HASH_DECLARE_HASH_IMPLEMENTATION(Xi::Crypto::Hash::Sha2::Hash384, 384);
+XI_CRYPTO_HASH_DECLARE_HASH_IMPLEMENTATION(Xi::Crypto::Hash::Sha2::Hash512, 512);
 
-  for (std::size_t accumulatedScratchpad = 0; accumulatedScratchpad < 78_kB;) {
-    uint32_t softShellIndex = get_soft_shell_index(*reinterpret_cast<uint32_t *>(&hash));
-    const uint32_t offset = offsetForHeight(softShellIndex);
-    const uint32_t scratchpadSize = scratchpadSizeForOffset(offset);
-    int8_t flags = 0;
-    if (!forceSoftwareAES && check_aes_hardware_support() && !check_aes_hardware_disabled())
-      flags |= CNX_FLAGS_HARDWARE_AES;
-    const cnx_hash_config config{scratchpadSize, scratchpadSize, hash.data(),
-                                 static_cast<uint32_t>(Crypto::Hash::bytes()), flags};
-    cnx_hash((const uint8_t *)data, length, &config, hash.data());
+void Xi::Crypto::Hash::Sha2::compute(ConstByteSpan data, Hash224 &out) {
+  exceptional_if_not<OpenSSLError>(xi_crypto_hash_sha2_224(data.data(), data.size(), out.data()) ==
+                                   XI_RETURN_CODE_SUCCESS);
+}
 
-    accumulatedScratchpad += scratchpadSize;
-  }
+void Xi::Crypto::Hash::Sha2::compute(ConstByteSpan data, Hash256 &out) {
+  exceptional_if_not<OpenSSLError>(xi_crypto_hash_sha2_256(data.data(), data.size(), out.data()) ==
+                                   XI_RETURN_CODE_SUCCESS);
+}
+
+void Xi::Crypto::Hash::Sha2::compute(ConstByteSpan data, Hash384 &out) {
+  exceptional_if_not<OpenSSLError>(xi_crypto_hash_sha2_384(data.data(), data.size(), out.data()) ==
+                                   XI_RETURN_CODE_SUCCESS);
+}
+
+void Xi::Crypto::Hash::Sha2::compute(ConstByteSpan data, Hash512 &out) {
+  exceptional_if_not<OpenSSLError>(xi_crypto_hash_sha2_512(data.data(), data.size(), out.data()) ==
+                                   XI_RETURN_CODE_SUCCESS);
 }

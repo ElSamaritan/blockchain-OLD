@@ -125,7 +125,9 @@ std::string get_update_status(ForkStatus forkStatus, uint32_t height, const std:
     case OutOfDate: {
       return " out of date, likely forked";
     }
-    default: { throw std::runtime_error("Unexpected case unhandled"); }
+    default: {
+      throw std::runtime_error("Unexpected case unhandled");
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,38 +21,20 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "crypto/cnx/cnx.h"
+#pragma once
 
-#include <vector>
-#include <array>
-#include <memory>
-#include <random>
-#include <algorithm>
+#include "Xi/Exceptional.hpp"
 
-#include "crypto/aes-support.h"
-#include "crypto/cnx/distribution.h"
-#include "crypto/cnx/cnx-hash.h"
-#include "crypto/hash-extra-ops.h"
-
-void Crypto::CNX::Hash_v1::operator()(const void *data, size_t length, Crypto::Hash &hash,
-                                      bool forceSoftwareAES) const {
-  hash.nullify();
-  if (auto res = Hash::compute(Xi::asByteSpan(data, length), hash); res.isError()) {
-    hash.nullify();
-    return;
-  }
-
-  for (std::size_t accumulatedScratchpad = 0; accumulatedScratchpad < 78_kB;) {
-    uint32_t softShellIndex = get_soft_shell_index(*reinterpret_cast<uint32_t *>(&hash));
-    const uint32_t offset = offsetForHeight(softShellIndex);
-    const uint32_t scratchpadSize = scratchpadSizeForOffset(offset);
-    int8_t flags = 0;
-    if (!forceSoftwareAES && check_aes_hardware_support() && !check_aes_hardware_disabled())
-      flags |= CNX_FLAGS_HARDWARE_AES;
-    const cnx_hash_config config{scratchpadSize, scratchpadSize, hash.data(),
-                                 static_cast<uint32_t>(Crypto::Hash::bytes()), flags};
-    cnx_hash((const uint8_t *)data, length, &config, hash.data());
-
-    accumulatedScratchpad += scratchpadSize;
-  }
-}
+namespace Xi {
+XI_DECLARE_EXCEPTIONAL_CATEGORY(Runtime)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(Runtime, "generic runtime error", Runtime)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(IndexOutOfRange, "array/vector index is out of bounds", Runtime)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(OutOfRange, "number is out of range, usually required for a cast", Runtime)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidIndex, "array/vector index is invalid in called context", Runtime)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidSize, "array/vector size is invalid", Runtime)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidVariantType, "unexpected type in variant", Runtime)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(Format, "invalid format for conversion", Runtime)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(NotImplemented, "feature required is not implemented yet", Runtime)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(NotFound, "an object was requested but not found", Runtime)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidArgument, "argument provided is invalid", Runtime)
+}  // namespace Xi

@@ -22,7 +22,7 @@
 #include <mutex>
 #include <string>
 
-#include "crypto/hash.h"
+
 #include "IWalletLegacy.h"
 
 namespace CryptoNote {

@@ -20,7 +20,7 @@
 #include <numeric>
 #include <system_error>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/Transactions/TransactionApiExtra.h"

@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,38 +21,16 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "crypto/cnx/cnx.h"
+#include "Xi/Crypto/Hash/TreeHash.hh"
 
-#include <vector>
-#include <array>
-#include <memory>
-#include <random>
-#include <algorithm>
+#include <Xi/Exceptions.hpp>
 
-#include "crypto/aes-support.h"
-#include "crypto/cnx/distribution.h"
-#include "crypto/cnx/cnx-hash.h"
-#include "crypto/hash-extra-ops.h"
+#include "Xi/Crypto/Hash/Exceptions.hpp"
 
-void Crypto::CNX::Hash_v1::operator()(const void *data, size_t length, Crypto::Hash &hash,
-                                      bool forceSoftwareAES) const {
-  hash.nullify();
-  if (auto res = Hash::compute(Xi::asByteSpan(data, length), hash); res.isError()) {
-    hash.nullify();
-    return;
-  }
-
-  for (std::size_t accumulatedScratchpad = 0; accumulatedScratchpad < 78_kB;) {
-    uint32_t softShellIndex = get_soft_shell_index(*reinterpret_cast<uint32_t *>(&hash));
-    const uint32_t offset = offsetForHeight(softShellIndex);
-    const uint32_t scratchpadSize = scratchpadSizeForOffset(offset);
-    int8_t flags = 0;
-    if (!forceSoftwareAES && check_aes_hardware_support() && !check_aes_hardware_disabled())
-      flags |= CNX_FLAGS_HARDWARE_AES;
-    const cnx_hash_config config{scratchpadSize, scratchpadSize, hash.data(),
-                                 static_cast<uint32_t>(Crypto::Hash::bytes()), flags};
-    cnx_hash((const uint8_t *)data, length, &config, hash.data());
-
-    accumulatedScratchpad += scratchpadSize;
-  }
+void Xi::Crypto::Hash::treeHash(const Xi::ConstByteSpan &data, size_t count, Xi::ByteSpan out) {
+  exceptional_if_not<InvalidSizeError>(count == 0);
+  exceptional_if_not<InvalidSizeError>(out.size_bytes() < XI_HASH_FAST_HASH_SIZE);
+  exceptional_if_not<InvalidSizeError>(data.size_bytes() == count * XI_HASH_FAST_HASH_SIZE);
+  exceptional_if_not<TreeHashError>(xi_crypto_hash_tree_hash(
+      reinterpret_cast<const xi_byte_t(*)[XI_HASH_FAST_HASH_SIZE]>(data.data()), count, out.data()));
 }

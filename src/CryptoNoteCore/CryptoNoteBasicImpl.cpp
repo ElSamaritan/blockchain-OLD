@@ -21,7 +21,7 @@
 #include "CryptoNoteSerialization.h"
 
 #include "Common/Base58.h"
-#include "crypto/hash.h"
+
 #include "Common/int-util.h"
 
 using namespace Crypto;

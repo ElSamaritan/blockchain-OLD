@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,38 +21,36 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "crypto/cnx/cnx.h"
+#include "Xi/Crypto/Hash/Crc.hpp"
 
-#include <vector>
-#include <array>
-#include <memory>
-#include <random>
-#include <algorithm>
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4701)
+#endif
 
-#include "crypto/aes-support.h"
-#include "crypto/cnx/distribution.h"
-#include "crypto/cnx/cnx-hash.h"
-#include "crypto/hash-extra-ops.h"
+#include <boost/crc.hpp>
 
-void Crypto::CNX::Hash_v1::operator()(const void *data, size_t length, Crypto::Hash &hash,
-                                      bool forceSoftwareAES) const {
-  hash.nullify();
-  if (auto res = Hash::compute(Xi::asByteSpan(data, length), hash); res.isError()) {
-    hash.nullify();
-    return;
-  }
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
-  for (std::size_t accumulatedScratchpad = 0; accumulatedScratchpad < 78_kB;) {
-    uint32_t softShellIndex = get_soft_shell_index(*reinterpret_cast<uint32_t *>(&hash));
-    const uint32_t offset = offsetForHeight(softShellIndex);
-    const uint32_t scratchpadSize = scratchpadSizeForOffset(offset);
-    int8_t flags = 0;
-    if (!forceSoftwareAES && check_aes_hardware_support() && !check_aes_hardware_disabled())
-      flags |= CNX_FLAGS_HARDWARE_AES;
-    const cnx_hash_config config{scratchpadSize, scratchpadSize, hash.data(),
-                                 static_cast<uint32_t>(Crypto::Hash::bytes()), flags};
-    cnx_hash((const uint8_t *)data, length, &config, hash.data());
+#include <boost/endian/conversion.hpp>
 
-    accumulatedScratchpad += scratchpadSize;
-  }
+#include <Xi/Exceptions.hpp>
+
+XI_CRYPTO_HASH_DECLARE_HASH_IMPLEMENTATION(Xi::Crypto::Hash::Crc::Hash16, 16)
+XI_CRYPTO_HASH_DECLARE_HASH_IMPLEMENTATION(Xi::Crypto::Hash::Crc::Hash32, 32)
+
+void Xi::Crypto::Hash::Crc::compute(Xi::ConstByteSpan data, Hash16 &out) {
+  static_assert(sizeof(boost::crc_16_type::value_type) == Hash16::bytes(), "invalid hash size for boost crc");
+  boost::crc_16_type result{};
+  result.process_bytes(data.data(), data.size());
+  *reinterpret_cast<boost::crc_16_type::value_type *>(out.data()) = boost::endian::native_to_big(result.checksum());
+}
+
+void Xi::Crypto::Hash::Crc::compute(Xi::ConstByteSpan data, Hash32 &out) {
+  static_assert(sizeof(boost::crc_32_type::value_type) == Hash32::bytes(), "invalid hash size for boost crc");
+  boost::crc_32_type result{};
+  result.process_bytes(data.data(), data.size());
+  *reinterpret_cast<boost::crc_32_type::value_type *>(out.data()) = boost::endian::native_to_big(result.checksum());
 }

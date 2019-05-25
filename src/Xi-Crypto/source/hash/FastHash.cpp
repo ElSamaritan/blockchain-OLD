@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,29 +21,14 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <Xi/Crypto/MersenneTwister.h>
+#include "Xi/Crypto/Hash/FastHash.hh"
 
-#include <random>
-#include <array>
+#include <Xi/Exceptions.hpp>
 
-#include <Xi/ExternalIncludePush.h>
-#include <gmock/gmock.h>
-#include <Xi/ExternalIncludePop.h>
+#include "Xi/Crypto/Hash/Exceptions.hpp"
 
-#define XI_TESTSUITE T_Xi_Crypto_MersenneTwister
-
-TEST(XI_TESTSUITE, ConsistentRandomValues) {
-  std::default_random_engine eng;
-  std::uniform_int_distribution<uint32_t> dist;
-
-  for (size_t i = 0; i < 32; ++i) {
-    const uint32_t seed = dist(eng);
-    Xi::Crypto::MersenneTwister twister{seed};
-    std::array<uint8_t, 64 * 1024> first;
-    twister.nextBytes(first.data(), static_cast<uint32_t>(first.size()));
-    twister.setSeed(seed);
-    std::array<uint8_t, 64 * 1024> second;
-    twister.nextBytes(second.data(), static_cast<uint32_t>(second.size()));
-    EXPECT_THAT(first, ::testing::ContainerEq(second));
-  }
+void Xi::Crypto::Hash::fastHash(Xi::ConstByteSpan data, Xi::ByteSpan out) {
+  exceptional_if_not<InvalidSizeError>(out.size() < XI_HASH_FAST_HASH_SIZE);
+  exceptional_if_not<KeccakError>(xi_crypto_hash_fast_hash(data.data(), data.size(), out.data()) !=
+                                  XI_RETURN_CODE_SUCCESS);
 }

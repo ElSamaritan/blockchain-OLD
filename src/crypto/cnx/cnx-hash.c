@@ -26,13 +26,15 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
+
+#include <Xi/Crypto/Hash/Keccak.hh>
 
 #include "crypto/hash-predef.h"
 #include "crypto/hash-allocation.h"
 #include "crypto/hash-emmintrin.h"
 #include "crypto/hash-extra-ops.h"
 #include "crypto/oaes_lib.h"
-#include "crypto/keccak.h"
 #include "crypto/__impl/cn-aes.h"
 
 #define INIT_SIZE_BLK 8
@@ -348,7 +350,7 @@ void cnx_hash(const uint8_t *data, const size_t length, const cnx_hash_config *c
   RDATA_ALIGN16 __m128i _1, _2, _3;
 
   /* CryptoNight Step 1:  Use Keccak1600 to initialize the 'state' (and 'text') buffers from the data. */
-  keccak1600(data, (int)length, (uint8_t*)&state.hs);
+  xi_crypto_hash_keccak_1600(data, length, (uint8_t*)&state.hs);
   memcpy(text, state.data.init, INIT_SIZE_BYTE);
   for(uint8_t i = 0; i < INIT_SIZE_BYTE; ++i) {
     text[i] ^= config->salt[i % config->salt_size];
@@ -446,7 +448,7 @@ void cnx_hash(const uint8_t *data, const size_t length, const cnx_hash_config *c
    * to the final 256 bit hash output.
    */
   memcpy(state.data.init, text, INIT_SIZE_BYTE);
-  keccakf((uint64_t *)&state.hs, 24);
+  xi_crypto_hash_keccakf((uint64_t *)&state.hs, 24);
   hash_extra_functions[state.hs.b[0] & 3](&state, 200, (char*)hash);
 
   xi_hash_free_state();

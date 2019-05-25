@@ -26,7 +26,6 @@
 #include <boost/optional.hpp>
 
 #include <Common/StringTools.h>
-#include <crypto/hash.h>
 
 #include "P2p/PendingLiteBlock.h"
 #include "P2p/P2pConnectionContextHistory.h"

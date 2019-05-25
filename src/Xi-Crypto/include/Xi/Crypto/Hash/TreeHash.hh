@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -19,40 +19,46 @@
  * You should have received a copy of the GNU General Public License along with this program.     *
  * If not, see <https://www.gnu.org/licenses/>.                                                   *
  *                                                                                                *
+ * ---------------------------------------------------------------------------------------------- *
+ * Previous Work                                                                                  *
+ * ---------------------------------------------------------------------------------------------- *
+ *                                                                                                *
+ * - Copyright (c) 2014-2019, The Monero Project                                                  *
+ *                                                                                                *
  * ============================================================================================== */
 
-#include "crypto/cnx/cnx.h"
+#pragma once
 
-#include <vector>
-#include <array>
-#include <memory>
-#include <random>
-#include <algorithm>
+#include "Xi/Crypto/Hash/FastHash.hh"
 
-#include "crypto/aes-support.h"
-#include "crypto/cnx/distribution.h"
-#include "crypto/cnx/cnx-hash.h"
-#include "crypto/hash-extra-ops.h"
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
-void Crypto::CNX::Hash_v1::operator()(const void *data, size_t length, Crypto::Hash &hash,
-                                      bool forceSoftwareAES) const {
-  hash.nullify();
-  if (auto res = Hash::compute(Xi::asByteSpan(data, length), hash); res.isError()) {
-    hash.nullify();
-    return;
-  }
+#include <stdlib.h>
 
-  for (std::size_t accumulatedScratchpad = 0; accumulatedScratchpad < 78_kB;) {
-    uint32_t softShellIndex = get_soft_shell_index(*reinterpret_cast<uint32_t *>(&hash));
-    const uint32_t offset = offsetForHeight(softShellIndex);
-    const uint32_t scratchpadSize = scratchpadSizeForOffset(offset);
-    int8_t flags = 0;
-    if (!forceSoftwareAES && check_aes_hardware_support() && !check_aes_hardware_disabled())
-      flags |= CNX_FLAGS_HARDWARE_AES;
-    const cnx_hash_config config{scratchpadSize, scratchpadSize, hash.data(),
-                                 static_cast<uint32_t>(Crypto::Hash::bytes()), flags};
-    cnx_hash((const uint8_t *)data, length, &config, hash.data());
+size_t xi_crypto_hash_tree_depth(size_t count);
+int xi_crypto_hash_tree_hash(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE], size_t count,
+                             xi_crypto_hash_fast rootHash);
+int xi_crypto_hash_tree_branch(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE], size_t count,
+                               xi_byte_t (*branch)[XI_HASH_FAST_HASH_SIZE]);
+int xi_crypto_hashtree_hash_from_branch(const xi_byte_t (*branch)[XI_HASH_FAST_HASH_SIZE], size_t depth,
+                                        const xi_byte_t *leaf, const xi_byte_t *path, xi_byte_t *root_hash);
 
-    accumulatedScratchpad += scratchpadSize;
-  }
+#if defined(__cplusplus)
 }
+#endif
+
+#if defined(__cplusplus)
+
+namespace Xi {
+namespace Crypto {
+namespace Hash {
+
+void treeHash(const ConstByteSpan &data, size_t count, ByteSpan out);
+
+}
+}  // namespace Crypto
+}  // namespace Xi
+
+#endif

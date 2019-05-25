@@ -19,62 +19,72 @@
  * You should have received a copy of the GNU General Public License along with this program.     *
  * If not, see <https://www.gnu.org/licenses/>.                                                   *
  *                                                                                                *
+ * ---------------------------------------------------------------------------------------------- *
+ * Previous Work                                                                                  *
+ * ---------------------------------------------------------------------------------------------- *
+ *                                                                                                *
+ * - Copyright (c) 2014-2019, The Monero Project                                                  *
+ * - Markku-Juhani O. Saarinen <mjos@iki.fi>                                                      *
+ *                                                                                                *
  * ============================================================================================== */
 
 #pragma once
 
-#include <array>
-#include <string>
-
-#include <Xi/Global.hh>
-#include <Xi/Result.h>
 #include <Xi/Byte.hh>
-#include <Xi/Span.hpp>
-#include <Xi/Crypto/Hash/FastHash.hh>
-#include <Serialization/ISerializer.h>
-#include <Xi/Algorithm/GenericHash.h>
-#include <Xi/Algorithm/GenericComparison.h>
 
+#include "Xi/Crypto/Hash/Hash.hh"
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+#include <inttypes.h>
+#include <stddef.h>
+
+#define XI_CRYPTO_HASH_KECCAK_HASH_SIZE 32U
+#define XI_CRYPTO_HASH_KECCAK_HASH_DATA_AREA 136U
+
+typedef struct xi_crypto_hash_keccak_state {
+  /// 1600 bits algorithm hashing state
+  uint64_t hash[25];
+
+  /// 1088-bit buffer for leftovers, block size = 136 B for 256-bit keccak
+  uint64_t message[17];
+
+  /// count of bytes in the message[] buffer
+  size_t rest;
+} xi_crypto_hash_keccak_state;
+
+int xi_crypto_hash_keccak(const xi_byte_t *in, size_t inlen, xi_byte_t *md, size_t mdlen);
+void xi_crypto_hash_keccakf(uint64_t st[], int rounds);
+
+int xi_crypto_hash_keccak_init(xi_crypto_hash_keccak_state *ctx);
+int xi_crypto_hash_keccak_update(xi_crypto_hash_keccak_state *ctx, const xi_byte_t *in, size_t inlen);
+int xi_crypto_hash_keccak_finish(xi_crypto_hash_keccak_state *ctx, xi_byte_t *md);
+
+int xi_crypto_hash_keccak_256(const xi_byte_t *in, size_t inlen, xi_byte_t *md);
+int xi_crypto_hash_keccak_1600(const xi_byte_t *in, size_t inlen, xi_byte_t *md);
+
+#if defined(__cplusplus)
+}
+#endif
+
+#if defined(__cplusplus)
+
+namespace Xi {
 namespace Crypto {
+namespace Hash {
+namespace Keccak {
 
-XI_DECLARE_SPANS_STRUCT(Hash)
+XI_CRYPTO_HASH_DECLARE_HASH_TYPE(Hash256, 256);
+XI_CRYPTO_HASH_DECLARE_HASH_TYPE(Hash1600, 1600);
 
-struct Hash : Xi::ByteArray<XI_HASH_FAST_HASH_SIZE> {
-  using array_type = Xi::ByteArray<XI_HASH_FAST_HASH_SIZE>;
-  static const Hash Null;
-  static inline constexpr size_t bytes() { return XI_HASH_FAST_HASH_SIZE; }
-  static Xi::Result<Hash> fromString(const std::string& hex);
+void compute(ConstByteSpan data, Hash256 &out);
+void compute(ConstByteSpan data, Hash1600 &out);
 
-  static Xi::Result<Hash> compute(Xi::ConstByteSpan data);
-  static Xi::Result<void> compute(Xi::ConstByteSpan data, Hash& out);
-  static Xi::Result<void> compute(Xi::ConstByteSpan data, Xi::ByteSpan out);
-
-  static Xi::Result<Hash> computeMerkleTree(Xi::ConstByteSpan data, size_t count);
-  static Xi::Result<void> computeMerkleTree(Xi::ConstByteSpan data, size_t count, Hash& out);
-
-  static Xi::Result<Hash> computeMerkleTree(ConstHashSpan data);
-  static Xi::Result<void> computeMerkleTree(ConstHashSpan data, Hash& out);
-
-  Hash();
-  explicit Hash(array_type raw);
-  XI_DEFAULT_COPY(Hash);
-  XI_DEFAULT_MOVE(Hash);
-  ~Hash();
-
-  bool isNull() const;
-
-  std::string toString() const;
-  std::string toShortString() const;
-
-  Xi::ConstByteSpan span() const;
-  Xi::ByteSpan span();
-
-  void nullify();
-  void serialize(CryptoNote::ISerializer& serializer);
-};
-
-XI_MAKE_GENERIC_HASH_FUNC(Hash)
-XI_MAKE_GENERIC_COMPARISON(Hash)
+}  // namespace Keccak
+}  // namespace Hash
 }  // namespace Crypto
+}  // namespace Xi
 
-XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, Hash)
+#endif

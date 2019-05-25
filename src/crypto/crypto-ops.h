@@ -100,8 +100,6 @@ void ge_sub(ge_p1p1 *, const ge_p3 *, const ge_cached *);
 
 void ge_tobytes(unsigned char *, const ge_p2 *);
 
-/* From sc_reduce.c */
-
 void sc_reduce(unsigned char *);
 
 /* New code */
@@ -125,6 +123,8 @@ void sc_sub(unsigned char *, const unsigned char *, const unsigned char *);
 void sc_mulsub(unsigned char *, const unsigned char *, const unsigned char *, const unsigned char *);
 int sc_check(const unsigned char *);
 int sc_isnonzero(const unsigned char *); /* Doesn't normalize */
+
+int sc_less_32(const unsigned char *lhs, const unsigned char *rhs);
 
 #if defined(__cplusplus)
 }

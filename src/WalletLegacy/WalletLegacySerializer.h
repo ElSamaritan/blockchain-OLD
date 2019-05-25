@@ -22,7 +22,7 @@
 #include <istream>
 #include <string>
 
-#include "crypto/hash.h"
+
 #include "crypto/chacha8.h"
 
 namespace CryptoNote {

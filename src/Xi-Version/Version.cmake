@@ -89,3 +89,4 @@ set_source_files_properties(${XI_VERSION_INPUT_FILES} PROPERTIES HEADER_FILE_ONL
 add_library(Xi.Version STATIC ${XI_VERSION_OUTPUT_FILES} ${XI_VERSION_INPUT_FILES})
 target_include_directories(Xi.Version PUBLIC ${XI_VERSION_INCLUDE_DIR})
 add_dependencies(Xi.Version Xi.Version.Generate)
+add_library(Xi::Version ALIAS Xi.Version)

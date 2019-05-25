@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,38 +21,40 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "crypto/cnx/cnx.h"
+#pragma once
 
-#include <vector>
-#include <array>
-#include <memory>
-#include <random>
-#include <algorithm>
+#include <Xi/Byte.hh>
 
-#include "crypto/aes-support.h"
-#include "crypto/cnx/distribution.h"
-#include "crypto/cnx/cnx-hash.h"
-#include "crypto/hash-extra-ops.h"
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
-void Crypto::CNX::Hash_v1::operator()(const void *data, size_t length, Crypto::Hash &hash,
-                                      bool forceSoftwareAES) const {
-  hash.nullify();
-  if (auto res = Hash::compute(Xi::asByteSpan(data, length), hash); res.isError()) {
-    hash.nullify();
-    return;
-  }
+#include <stddef.h>
 
-  for (std::size_t accumulatedScratchpad = 0; accumulatedScratchpad < 78_kB;) {
-    uint32_t softShellIndex = get_soft_shell_index(*reinterpret_cast<uint32_t *>(&hash));
-    const uint32_t offset = offsetForHeight(softShellIndex);
-    const uint32_t scratchpadSize = scratchpadSizeForOffset(offset);
-    int8_t flags = 0;
-    if (!forceSoftwareAES && check_aes_hardware_support() && !check_aes_hardware_disabled())
-      flags |= CNX_FLAGS_HARDWARE_AES;
-    const cnx_hash_config config{scratchpadSize, scratchpadSize, hash.data(),
-                                 static_cast<uint32_t>(Crypto::Hash::bytes()), flags};
-    cnx_hash((const uint8_t *)data, length, &config, hash.data());
+int xi_crypto_random_system_bytes(xi_byte_t *out, size_t count);
+int xi_crypto_random_bytes(xi_byte_t *out, size_t count);
+int xi_crypto_random_bytes_determenistic(xi_byte_t *out, size_t count, const xi_byte_t *seed, size_t seedLength);
 
-    accumulatedScratchpad += scratchpadSize;
-  }
+#if defined(__cplusplus)
 }
+#endif
+
+#if defined(__cplusplus)
+
+#include <Xi/Exceptional.hpp>
+
+namespace Xi {
+namespace Crypto {
+namespace Random {
+XI_DECLARE_EXCEPTIONAL_CATEGORY(Random)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(Generation, "failed to generate random bytes", Random)
+
+ByteVector generate(size_t count);
+ByteVector generate(size_t count, ConstByteSpan seed);
+void generate(ByteSpan out);
+void generate(ByteSpan out, ConstByteSpan seed);
+
+}  // namespace Random
+}  // namespace Crypto
+}  // namespace Xi
+#endif

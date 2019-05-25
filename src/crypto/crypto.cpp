@@ -14,11 +14,18 @@
 #include <memory>
 #include <mutex>
 
-#include <Xi/Crypto/MersenneTwister.h>
+#include <Xi/Crypto/Random.hh>
 
 #include "Common/Varint.h"
 #include "crypto.h"
-#include "hash.h"
+
+#include "crypto-ops.h"
+
+namespace {
+static const unsigned char CurveOrder[32] = {0xe3, 0x6a, 0x67, 0x72, 0x8b, 0xce, 0x13, 0x29, 0x8f, 0x30, 0x82,
+                                             0x8c, 0x0b, 0xa4, 0x10, 0x39, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0};
+}
 
 namespace Crypto {
 
@@ -27,61 +34,49 @@ using std::int32_t;
 using std::lock_guard;
 using std::mutex;
 
-extern "C" {
-#include "crypto-ops.h"
-#include "random.h"
-}
-
-mutex random_lock;
-
 static inline void random_scalar(EllipticCurveScalar &res) {
-  unsigned char tmp[64];
-  generate_random_bytes(64, tmp);
-  sc_reduce(tmp);
-  memcpy(&res, tmp, 32);
+  Xi::ByteSpan out{res.data, 32};
+  do {
+    Xi::Crypto::Random::generate(out);
+  } while (!sc_isnonzero(res.data) || sc_less_32(res.data, CurveOrder));
+  sc_reduce32(res.data);
 }
 
-static inline void random_scalar(EllipticCurveScalar &res, uint32_t seed) {
-  static thread_local Xi::Crypto::MersenneTwister __RandomEngine{0};
-  __RandomEngine.setSeed(seed);
-  unsigned char tmp[64];
-  __RandomEngine.nextBytes(tmp, 64);
-  sc_reduce(tmp);
-  memcpy(&res, tmp, 32);
+static inline void random_scalar(EllipticCurveScalar &res, Xi::ConstByteSpan seed) {
+  Xi::ByteSpan out{res.data, 32};
+  Xi::Crypto::Random::generate(out, seed);
+  while (!sc_isnonzero(res.data) || sc_less_32(res.data, CurveOrder)) {
+    Xi::Crypto::Random::generate(out, out);
+  }
+  sc_reduce32(res.data);
 }
 
 static inline void hash_to_scalar(const void *data, size_t length, EllipticCurveScalar &res) {
-  cn_fast_hash(data, length, reinterpret_cast<Hash &>(res));
-  sc_reduce32(reinterpret_cast<unsigned char *>(&res));
+  Crypto::Hash::compute(Xi::asConstByteSpan(data, length), Xi::asByteSpan(res.data, 32)).throwOnError();
+  sc_reduce32(res.data);
 }
 
 void crypto_ops::generate_keys(PublicKey &pub, SecretKey &sec) {
-  lock_guard<mutex> lock(random_lock);
+  generate_keys(sec);
   ge_p3 point;
-  random_scalar(reinterpret_cast<EllipticCurveScalar &>(sec));
-  ge_scalarmult_base(&point, reinterpret_cast<unsigned char *>(&sec));
-  ge_p3_tobytes(reinterpret_cast<unsigned char *>(&pub), &point);
+  ge_scalarmult_base(&point, sec.data());
+  ge_p3_tobytes(pub.data(), &point);
 }
 
-void crypto_ops::generate_keys(PublicKey &pub, SecretKey &sec, uint32_t seed) {
-  lock_guard<mutex> lock(random_lock);
+void crypto_ops::generate_keys(SecretKey &sec) { random_scalar(reinterpret_cast<EllipticCurveScalar &>(sec)); }
+
+void crypto_ops::generate_deterministic_keys(PublicKey &pub, SecretKey &sec, Xi::ConstByteSpan seed) {
+  generate_deterministic_keys(sec, seed);
   ge_p3 point;
+  ge_scalarmult_base(&point, sec.data());
+  ge_p3_tobytes(pub.data(), &point);
+}
+
+void crypto_ops::generate_deterministic_keys(SecretKey &sec, Xi::ConstByteSpan seed) {
   random_scalar(reinterpret_cast<EllipticCurveScalar &>(sec), seed);
-  ge_scalarmult_base(&point, reinterpret_cast<unsigned char *>(&sec));
-  ge_p3_tobytes(reinterpret_cast<unsigned char *>(&pub), &point);
-}
-
-void crypto_ops::generate_deterministic_keys(PublicKey &pub, SecretKey &sec, SecretKey &second) {
-  lock_guard<mutex> lock(random_lock);
-  ge_p3 point;
-  sec = second;
-  sc_reduce32(reinterpret_cast<unsigned char *>(&sec));  // reduce in case second round of keys (sendkeys)
-  ge_scalarmult_base(&point, reinterpret_cast<unsigned char *>(&sec));
-  ge_p3_tobytes(reinterpret_cast<unsigned char *>(&pub), &point);
 }
 
 SecretKey crypto_ops::generate_m_keys(PublicKey &pub, SecretKey &sec, const SecretKey &recovery_key, bool recover) {
-  lock_guard<mutex> lock(random_lock);
   ge_p3 point;
   SecretKey rng;
   if (recover) {
@@ -282,7 +277,6 @@ struct s_comm {
 
 void crypto_ops::generate_signature(const Hash &prefix_hash, const PublicKey &pub, const SecretKey &sec,
                                     Signature &sig) {
-  lock_guard<mutex> lock(random_lock);
   ge_p3 tmp3;
   EllipticCurveScalar k;
   s_comm buf;
@@ -331,10 +325,9 @@ bool crypto_ops::check_signature(const Hash &prefix_hash, const PublicKey &pub, 
 }
 
 static void hash_to_ec(const PublicKey &key, ge_p3 &res) {
-  Hash h;
   ge_p2 point;
   ge_p1p1 point2;
-  cn_fast_hash(std::addressof(key), sizeof(PublicKey), h);
+  auto h = Hash::compute(key.span()).takeOrThrow();
   ge_fromfe_frombytes_vartime(&point, reinterpret_cast<const unsigned char *>(&h));
   ge_mul8(&point2, &point);
   ge_p1p1_to_p3(&res, &point2);
@@ -352,10 +345,9 @@ KeyImage crypto_ops::scalarmultKey(const KeyImage &P, const KeyImage &a) {
 }
 
 void crypto_ops::hash_data_to_ec(const uint8_t *data, std::size_t len, PublicKey &key) {
-  Hash h;
   ge_p2 point;
   ge_p1p1 point2;
-  cn_fast_hash(data, len, h);
+  auto h = Hash::compute(Xi::ConstByteSpan{data, len}).takeOrThrow();
   ge_fromfe_frombytes_vartime(&point, reinterpret_cast<const unsigned char *>(&h));
   ge_mul8(&point2, &point);
   ge_p1p1_to_p2(&point, &point2);
@@ -394,7 +386,6 @@ static inline size_t rs_comm_size(size_t pubs_count) {
 
 void crypto_ops::generate_ring_signature(const Hash &prefix_hash, const KeyImage &image, const PublicKey *const *pubs,
                                          size_t pubs_count, const SecretKey &sec, size_t sec_index, Signature *sig) {
-  lock_guard<mutex> lock(random_lock);
   size_t i;
   ge_p3 image_unp;
   ge_dsmp image_pre;

@@ -28,7 +28,7 @@
 #include <memory>
 #include <climits>
 
-#include "crypto/hash.h"
+
 #include "crypto/cnx/cnx.h"
 
 namespace {

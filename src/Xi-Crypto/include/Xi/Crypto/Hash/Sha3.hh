@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,38 +21,46 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "crypto/cnx/cnx.h"
+#pragma once
 
-#include <vector>
-#include <array>
-#include <memory>
-#include <random>
-#include <algorithm>
+#include <Xi/Global.hh>
+#include <Xi/Byte.hh>
 
-#include "crypto/aes-support.h"
-#include "crypto/cnx/distribution.h"
-#include "crypto/cnx/cnx-hash.h"
-#include "crypto/hash-extra-ops.h"
+#include "Xi/Crypto/Hash/Hash.hh"
 
-void Crypto::CNX::Hash_v1::operator()(const void *data, size_t length, Crypto::Hash &hash,
-                                      bool forceSoftwareAES) const {
-  hash.nullify();
-  if (auto res = Hash::compute(Xi::asByteSpan(data, length), hash); res.isError()) {
-    hash.nullify();
-    return;
-  }
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
-  for (std::size_t accumulatedScratchpad = 0; accumulatedScratchpad < 78_kB;) {
-    uint32_t softShellIndex = get_soft_shell_index(*reinterpret_cast<uint32_t *>(&hash));
-    const uint32_t offset = offsetForHeight(softShellIndex);
-    const uint32_t scratchpadSize = scratchpadSizeForOffset(offset);
-    int8_t flags = 0;
-    if (!forceSoftwareAES && check_aes_hardware_support() && !check_aes_hardware_disabled())
-      flags |= CNX_FLAGS_HARDWARE_AES;
-    const cnx_hash_config config{scratchpadSize, scratchpadSize, hash.data(),
-                                 static_cast<uint32_t>(Crypto::Hash::bytes()), flags};
-    cnx_hash((const uint8_t *)data, length, &config, hash.data());
+#include <stdio.h>
 
-    accumulatedScratchpad += scratchpadSize;
-  }
+int xi_crypto_hash_sha3_224(const xi_byte_t *data, size_t length, xi_crypto_hash_224 out);
+int xi_crypto_hash_sha3_256(const xi_byte_t *data, size_t length, xi_crypto_hash_256 out);
+int xi_crypto_hash_sha3_384(const xi_byte_t *data, size_t length, xi_crypto_hash_384 out);
+int xi_crypto_hash_sha3_512(const xi_byte_t *data, size_t length, xi_crypto_hash_512 out);
+
+#if defined(__cplusplus)
 }
+#endif
+
+#if defined(__cplusplus)
+
+namespace Xi {
+namespace Crypto {
+namespace Hash {
+namespace Sha3 {
+XI_CRYPTO_HASH_DECLARE_HASH_TYPE(Hash224, 224);
+XI_CRYPTO_HASH_DECLARE_HASH_TYPE(Hash256, 256);
+XI_CRYPTO_HASH_DECLARE_HASH_TYPE(Hash384, 384);
+XI_CRYPTO_HASH_DECLARE_HASH_TYPE(Hash512, 512);
+
+void compute(ConstByteSpan data, Hash224 &out);
+void compute(ConstByteSpan data, Hash256 &out);
+void compute(ConstByteSpan data, Hash384 &out);
+void compute(ConstByteSpan data, Hash512 &out);
+}  // namespace Sha3
+}  // namespace Hash
+}  // namespace Crypto
+}  // namespace Xi
+
+#endif

@@ -10,11 +10,10 @@
 #include <string>
 #include <vector>
 #include <boost/utility.hpp>
-#include <Xi/Global.h>
-#include <Xi/Exceptional.h>
+#include <Xi/Global.hh>
+#include <Xi/Exceptional.hpp>
 #include <Xi/Result.h>
 #include <Xi/Config.h>
-#include "crypto/hash.h"
 #include "Logging/LoggerRef.h"
 #include "CachedBlock.h"
 #include "CryptoNoteBasic.h"

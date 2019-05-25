@@ -20,12 +20,12 @@
 
 #include <boost/iterator/iterator_facade.hpp>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Common/ShuffleGenerator.h>
 
 #include "BlockchainUtils.h"
 
-#include "crypto/hash.h"
+
 
 #include <CryptoNoteCore/BlockchainStorage.h>
 #include <CryptoNoteCore/CryptoNoteTools.h>

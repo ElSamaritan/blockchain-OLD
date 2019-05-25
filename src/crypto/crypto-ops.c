@@ -17,6 +17,8 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stddef.h>
+
 #include <Xi/Global.hh>
 
 #include "crypto-ops.h"
@@ -4058,4 +4060,18 @@ int sc_isnonzero(const unsigned char *s) {
            1) >>
           8) +
          1;
+}
+
+int sc_less_32(const unsigned char *lhs, const unsigned char *rhs)
+{
+  for (size_t i = 0; i < 32; ++i)
+  {
+    const size_t n = 31 - i;
+    if(lhs[n] < rhs[n]) {
+      return XI_TRUE;
+    } else if(lhs[n] > rhs[n]) {
+      return XI_FALSE;
+    }
+  }
+  return XI_FALSE;
 }

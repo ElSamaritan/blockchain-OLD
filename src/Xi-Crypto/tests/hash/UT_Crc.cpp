@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                       Xi Blockchain                                            *
  *                                                                                                *
@@ -21,63 +21,31 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <cinttypes>
-#include <memory>
+#include <gmock/gmock.h>
 
-namespace Xi {
-namespace Crypto {
-/*!
- * \brief The MersenneTwister class implements a pseudo random generator for consistent random values accross diefferent
- * platforms.
- */
-class MersenneTwister {
- public:
-  /*!
-   * \brief MersenneTwister construct a new generator using the given seed
-   */
-  MersenneTwister(uint32_t seed);
-  ~MersenneTwister();
+#include <map>
+#include <string>
 
-  /*!
-   * \brief setSeed sets the underlying seed. The implementation will always return the same sequence of bytes for the
-   * same seed.
-   * \param seed the seed to be applied
-   */
-  void setSeed(uint32_t seed);
+#include <Xi/Crypto/Hash/Crc.hpp>
 
-  /*!
-   * \brief generateUnit generates the next atomic unit
-   * \return a random distributed 32bit integer
-   */
-  uint32_t generateUnit();
+#include "hash/OracleTest.hpp"
 
-  /*!
-   * \brief next generates a random value in the range [min, max]
-   * \param min the minimum value to be generated
-   * \param max the maximum value to be generated
-   * \return random value in [min, max]
-   */
-  uint32_t next(uint32_t min, uint32_t max);
+#define XI_TEST_SUITE Xi_Crypto_Hash_Crc
 
-  /*!
-   * \brief next creates a new random value in the range [0, count)
-   * \param count the exclusive upper limit
-   * \return random value in [0, count)
-   */
-  uint32_t next(uint32_t count);
+TEST(XI_TEST_SUITE, Hash16) {
+  using Hash = Xi::Crypto::Hash::Crc::Hash16;
+  static const std::vector<std::pair<std::string, Hash>> Oracle{{{"", Hash{{0x00, 0x00}}},
+                                                                 {"iu6QiD1lpH", Hash{{0xd9, 0x58}}},
+                                                                 {"oPY1ZcUoPL", Hash{{0xce, 0xfe}}},
+                                                                 {"BXHHILmBXf", Hash{{0x8a, 0xed}}}}};
+  XiCryptoTest::genericHashTest<Hash>(Oracle);
+}
 
-  /*!
-   * \brief nextBytes generates a sequence of random bytes
-   * \param data the output buffer to store the sequence
-   * \param length the amount of bytes to be generated
-   */
-  void nextBytes(uint8_t* data, uint32_t length);
-
- private:
-  void fillBuffer();
-
-  struct _State;
-  std::unique_ptr<_State> m_State;
-};
-}  // namespace Crypto
-}  // namespace Xi
+TEST(XI_TEST_SUITE, Hash32) {
+  using Hash = Xi::Crypto::Hash::Crc::Hash32;
+  static const std::vector<std::pair<std::string, Hash>> Oracle{{{"", Hash{{0x00, 0x00, 0x00, 0x00}}},
+                                                                 {"iu6QiD1lpH", Hash{{0x6e, 0xa6, 0xc4, 0x60}}},
+                                                                 {"oPY1ZcUoPL", Hash{{0xfc, 0x47, 0x35, 0x98}}},
+                                                                 {"BXHHILmBXf", Hash{{0xe4, 0x66, 0x35, 0x6e}}}}};
+  XiCryptoTest::genericHashTest<Hash>(Oracle);
+}

@@ -21,7 +21,8 @@
 #include <string>
 #include <vector>
 
-#include "crypto/hash.h"
+#include "crypto/Types/Hash.h"
+
 #include "int-util.h"
 #include "Varint.h"
 
@@ -214,8 +215,8 @@ bool decode(const std::string& enc, std::string& data) {
 std::string encode_addr(uint64_t tag, const std::string& data) {
   std::string buf = get_varint_data(tag);
   buf += data;
-  Crypto::Hash hash = Crypto::cn_fast_hash(buf.data(), buf.size());
-  const char* hash_data = reinterpret_cast<const char*>(&hash);
+  Crypto::Hash hash = Crypto::Hash::compute(Xi::asConstByteSpan(buf)).takeOrThrow();
+  const char* hash_data = reinterpret_cast<const char*>(hash.data());
   buf.append(hash_data, addr_checksum_size);
   return encode(buf);
 }
@@ -230,7 +231,7 @@ bool decode_addr(const std::string& addr, uint64_t& tag, std::string& data) {
   checksum = addr_data.substr(addr_data.size() - addr_checksum_size);
 
   addr_data.resize(addr_data.size() - addr_checksum_size);
-  Crypto::Hash hash = Crypto::cn_fast_hash(addr_data.data(), addr_data.size());
+  Crypto::Hash hash = Crypto::Hash::compute(Xi::asConstByteSpan(addr)).takeOrThrow();
   std::string expected_checksum(reinterpret_cast<const char*>(&hash), addr_checksum_size);
   if (expected_checksum != checksum) return false;
 

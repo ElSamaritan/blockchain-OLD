@@ -25,7 +25,7 @@
 
 #include <Xi/Byte.hh>
 
-#include "crypto/hash.h"
+#include <crypto/Types/Hash.h>
 #include "crypto/cnx/configuration.h"
 
 namespace Crypto {

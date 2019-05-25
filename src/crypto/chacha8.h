@@ -15,8 +15,6 @@
 #include <memory.h>
 #include <string>
 
-#include "hash.h"
-
 namespace Crypto {
 extern "C" {
 #endif

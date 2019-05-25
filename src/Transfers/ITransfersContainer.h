@@ -20,7 +20,7 @@
 #include <cstdint>
 #include <limits>
 #include <vector>
-#include "crypto/hash.h"
+
 #include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 #include "Common/IObservable.h"
 #include "Common/IStreamSerializable.h"
