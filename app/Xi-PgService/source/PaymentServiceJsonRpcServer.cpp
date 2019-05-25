@@ -9,10 +9,10 @@
 
 #include <functional>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include <crypto/CryptoTypes.h>
-#include "crypto/hash.h"
+
 #include "PaymentServiceJsonRpcMessages.h"
 #include "ConfigurationManager.h"
 #include "WalletService.h"

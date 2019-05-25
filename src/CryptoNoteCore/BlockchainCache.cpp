@@ -11,7 +11,7 @@
 
 #include <boost/functional/hash.hpp>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"

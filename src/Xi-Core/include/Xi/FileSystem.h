@@ -33,7 +33,7 @@
 #include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Result.h>
-#include <Xi/Exceptional.h>
+#include <Xi/Exceptional.hpp>
 
 namespace Xi {
 namespace FileSystem {

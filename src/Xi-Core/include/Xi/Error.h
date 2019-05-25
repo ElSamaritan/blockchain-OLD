@@ -30,7 +30,7 @@
 #include <boost/variant.hpp>
 #include <Xi/ExternalIncludePop.h>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 namespace Xi {
 /*!

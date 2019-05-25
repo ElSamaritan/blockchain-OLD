@@ -23,7 +23,7 @@
 #include <WinSock2.h>
 #include <MSWSock.h>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include <System/InterruptedException.h>
 #include <System/Ipv4Address.h>

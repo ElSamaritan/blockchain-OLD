@@ -25,7 +25,7 @@
 
 #include <string>
 
-#include <Xi/Byte.h>
+#include <Xi/Byte.hh>
 
 namespace Xi {
 namespace Config {

@@ -10,11 +10,10 @@
 #include <string>
 #include <cinttypes>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/Difficulty.h"
-#include "crypto/hash.h"
 
 #include "BlockchainExplorer/BlockchainExplorerData.h"
 #include "BlockchainExplorer/BlockchainExplorerDataSerialization.h"

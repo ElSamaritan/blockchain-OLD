@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <CryptoNoteCore/CryptoNote.h>
 
 namespace CryptoNote {

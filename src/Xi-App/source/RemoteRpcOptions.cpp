@@ -23,8 +23,8 @@
 
 #include "Xi/App/RemoteRpcOptions.h"
 
-#include <Xi/Global.h>
-#include <Xi/Exceptional.h>
+#include <Xi/Global.hh>
+#include <Xi/Exceptional.hpp>
 
 namespace {
 XI_DECLARE_EXCEPTIONAL_CATEGORY(RemoteRpcOption)

@@ -14,7 +14,7 @@
 #include <ctime>
 
 #include <Xi/Version/Version.h>
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Concurrent/SystemDispatcher.h>
 
 // CryptoNote
@@ -630,7 +630,7 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
     return true;
   }
 
-  Crypto::Hash transactionHash = Crypto::cn_fast_hash(transactions.back().data(), transactions.back().size());
+  Crypto::Hash transactionHash = Crypto::Hash::compute(transactions.back()).takeOrThrow();
   logger(DEBUGGING) << "transaction " << transactionHash << " came in on_send_raw_tx";
 
   auto txPushResult = m_core.transactionPool().pushTransaction(transactions.back());
@@ -806,8 +806,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   transaction_short.size = getObjectBinarySize(blk.baseTransaction);
   res.block.transactions.push_back(transaction_short);
 
-  auto staticReward =
-      m_core.currency().constructStaticRewardTx(res.block.major_version, res.block.height - 1).takeOrThrow();
+  auto staticReward = m_core.currency().constructStaticRewardTx(blk).takeOrThrow();
   if (staticReward.has_value()) {
     // Static reward adding
     const auto& static_reward_tx = *staticReward;

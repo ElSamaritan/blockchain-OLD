@@ -19,15 +19,16 @@
 
 #include <string>
 
-#include "ILogger.h"
-#include "LoggerMessage.h"
+#include "Logging/ILogger.h"
+#include "Logging/Level.h"
+#include "Logging/LoggerMessage.h"
 
 namespace Logging {
 
 class LoggerRef {
  public:
   LoggerRef(ILogger& logger, const std::string& category);
-  LoggerMessage operator()(Level level = INFO) const;
+  LoggerMessage operator()(Level level = Level::INFO) const;
   LoggerMessage operator()(Level level, const std::string& color) const;
   ILogger& getLogger() const;
 

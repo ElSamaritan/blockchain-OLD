@@ -17,6 +17,8 @@
 
 #include "CryptoNoteCore/Transactions/TransactionExtra.h"
 
+#include <Xi/Global.hh>
+
 #include <Common/MemoryInputStream.h>
 #include <Common/StreamTools.h>
 #include <Common/StringTools.h>

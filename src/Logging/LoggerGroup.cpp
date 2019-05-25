@@ -19,7 +19,7 @@
 
 #include <algorithm>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 namespace Logging {
 

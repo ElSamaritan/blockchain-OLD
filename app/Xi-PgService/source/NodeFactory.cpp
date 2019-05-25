@@ -8,7 +8,7 @@
 #include <memory>
 #include <future>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "NodeRpcProxy/NodeRpcProxy.h"
 

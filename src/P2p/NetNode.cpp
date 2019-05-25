@@ -27,7 +27,7 @@
 #include <System/TcpListener.h>
 #include <System/TcpConnector.h>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Version/Version.h>
 #include <Xi/FileSystem.h>
 #include <Xi/Config.h>

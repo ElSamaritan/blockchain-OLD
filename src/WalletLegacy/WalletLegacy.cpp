@@ -10,7 +10,7 @@
 #include <string.h>
 #include <time.h>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "Logging/ConsoleLogger.h"
 #include "WalletLegacy/WalletHelper.h"

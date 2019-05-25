@@ -31,7 +31,7 @@
 #include <boost/optional.hpp>
 #include <Xi/ExternalIncludePop.h>
 
-#include <Xi/Byte.h>
+#include <Xi/Byte.hh>
 #include <Xi/Config/NetworkType.h>
 #include <Common/Util.h>
 #include <CryptoNoteCore/DataBaseConfig.h>

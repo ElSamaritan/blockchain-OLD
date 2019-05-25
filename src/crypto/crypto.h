@@ -13,7 +13,7 @@
 #include <type_traits>
 #include <vector>
 
-#include <Xi/Exceptional.h>
+#include <Xi/Exceptional.hpp>
 
 #include "crypto/CryptoTypes.h"
 #include "crypto/hash.h"

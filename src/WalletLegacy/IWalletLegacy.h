@@ -24,7 +24,7 @@
 #include <system_error>
 #include <vector>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "CryptoNoteCore/CryptoNote.h"
 

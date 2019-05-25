@@ -27,7 +27,7 @@
 #include <winsock2.h>
 #include "ErrorMessage.h"
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 namespace System {
 

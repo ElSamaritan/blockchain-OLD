@@ -10,7 +10,7 @@
 #include <set>
 #include <unordered_set>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Algorithm/IsUnique.h>
 
 #include "Core.h"

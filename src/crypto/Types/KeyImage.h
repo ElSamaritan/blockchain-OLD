@@ -27,9 +27,9 @@
 #include <unordered_set>
 #include <string>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Result.h>
-#include <Xi/Byte.h>
+#include <Xi/Byte.hh>
 #include <Serialization/ISerializer.h>
 #include <Xi/Algorithm/GenericHash.h>
 #include <Xi/Algorithm/GenericComparison.h>

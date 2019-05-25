@@ -22,7 +22,7 @@
 #include <System/EventLock.h>
 #include <System/RemoteContext.h>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Crypto/Chacha8.h>
 
 #include "CryptoNoteCore/Transactions/ITransactionBuilder.h"

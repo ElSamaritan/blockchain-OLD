@@ -27,7 +27,7 @@
 #include <boost/endian/conversion.hpp>
 #include <Xi/ExternalIncludePop.h>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"

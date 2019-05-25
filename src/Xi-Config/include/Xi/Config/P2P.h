@@ -27,7 +27,7 @@
 #include <chrono>
 #include <string>
 
-#include <Xi/Byte.h>
+#include <Xi/Byte.hh>
 
 #include "Xi/Config/Network.h"
 

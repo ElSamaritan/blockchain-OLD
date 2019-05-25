@@ -25,7 +25,7 @@
 
 #include <cassert>
 
-#include <Xi/Exceptional.h>
+#include <Xi/Exceptional.hpp>
 #include <Xi/FileSystem.h>
 
 namespace {

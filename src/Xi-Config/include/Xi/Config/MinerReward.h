@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <Xi/Byte.h>
+#include <Xi/Byte.hh>
 
 #include "Xi/Config/_Impl/BeginMinerReward.h"
 

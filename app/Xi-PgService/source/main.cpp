@@ -9,7 +9,7 @@
 #include <thread>
 #include <cstring>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Version/Version.h>
 
 #include "CommonCLI.h"

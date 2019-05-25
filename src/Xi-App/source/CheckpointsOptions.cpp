@@ -23,8 +23,8 @@
 
 #include "Xi/App/CheckpointsOptions.h"
 
-#include <Xi/Global.h>
-#include <Xi/Exceptional.h>
+#include <Xi/Global.hh>
+#include <Xi/Exceptional.hpp>
 #include <Xi/FileSystem.h>
 #include <Xi/Config/Checkpoints.h>
 

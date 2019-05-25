@@ -26,7 +26,7 @@
 #include <fstream>
 #include <memory>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Result.h>
 #include <Common/StdInputStream.h>
 #include <Serialization/BinaryInputStreamSerializer.h>

@@ -22,7 +22,7 @@
 #include <system_error>
 #include <unordered_set>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "crypto/crypto.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"

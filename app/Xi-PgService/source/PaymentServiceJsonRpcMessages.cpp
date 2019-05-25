@@ -5,7 +5,7 @@
 // Please see the included LICENSE file for more information.
 #include "PaymentServiceJsonRpcMessages.h"
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "Serialization/SerializationOverloads.h"
 #include "WalletService.h"

@@ -29,7 +29,7 @@
 #include <chrono>
 #include <future>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Result.h>
 
 #include <Common/ObserverManager.h>

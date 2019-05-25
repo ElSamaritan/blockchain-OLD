@@ -9,7 +9,7 @@
 #include <ctime>
 #include <chrono>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Algorithm/String.h>
 #include <Xi/Version/Version.h>
 #include <CommonCLI/CommonCLI.h>

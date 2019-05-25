@@ -9,7 +9,7 @@
 #include <cinttypes>
 #include <list>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Config.h>
 
 #include "P2pProtocolTypes.h"

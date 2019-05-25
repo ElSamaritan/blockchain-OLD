@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <utility>
 #include <type_traits>
+#include <string>
 
 namespace Xi {
 template <typename _ExceptionT>
@@ -39,6 +40,39 @@ inline void exceptional(const char* s) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   throw _ExceptionT{s};
 }
+
+template <typename _ExceptionT>
+inline void exceptional_if(bool cond) {
+  static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
+  if (cond) {
+    throw _ExceptionT{};
+  }
+}
+
+template <typename _ExceptionT>
+inline void exceptional_if(bool cond, const char* s) {
+  static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
+  if (cond) {
+    throw _ExceptionT{s};
+  }
+}
+
+template <typename _ExceptionT>
+inline void exceptional_if_not(bool cond) {
+  static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
+  if (!cond) {
+    throw _ExceptionT{};
+  }
+}
+
+template <typename _ExceptionT>
+inline void exceptional_if_not(bool cond, const char* s) {
+  static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
+  if (!cond) {
+    throw _ExceptionT{s};
+  }
+}
+
 }  // namespace Xi
 
 #define XI_DECLARE_EXCEPTIONAL_CATEGORY(CAT)                \
@@ -55,25 +89,9 @@ inline void exceptional(const char* s) {
     const char* what() const noexcept { return m.c_str(); } \
   };
 
-#define XI_DECLARE_EXCEPTIONAL_INSTANCE(X, MSG, CAT)      \
-  class X##Error : public CAT##Exception {                \
-    X##Error() : CAT##Exception(MSG) {}                   \
-    X##Error(const char* s) : CAT##Exception(s) {}        \
-                                                          \
-    friend void ::Xi::exceptional<X##Error>();            \
-    friend void ::Xi::exceptional<X##Error>(const char*); \
+#define XI_DECLARE_EXCEPTIONAL_INSTANCE(X, MSG, CAT) \
+  class X##Error : public CAT##Exception {           \
+   public:                                           \
+    X##Error() : CAT##Exception(MSG) {}              \
+    X##Error(const char* s) : CAT##Exception(s) {}   \
   };
-
-#define XI_RETURN_EC_IF(COND, EC) \
-  do {                            \
-    if (COND) {                   \
-      return EC;                  \
-    }                             \
-  } while (false)
-
-#define XI_RETURN_EC_IF_NOT(COND, EC) \
-  do {                                \
-    if (!(COND)) {                    \
-      return EC;                      \
-    }                                 \
-  } while (false)

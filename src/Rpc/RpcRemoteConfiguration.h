@@ -26,7 +26,7 @@
 #include <string>
 #include <cinttypes>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Http/SSLConfiguration.h>
 #include <Serialization/ISerializer.h>
 

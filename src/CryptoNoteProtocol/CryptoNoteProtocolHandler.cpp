@@ -12,7 +12,7 @@
 #include <boost/scope_exit.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Config/Ascii.h>
 #include <Xi/Config.h>
 #include <Xi/Config/WalletConfig.h>

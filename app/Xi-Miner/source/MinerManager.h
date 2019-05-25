@@ -28,7 +28,7 @@
 #include <random>
 #include <thread>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Result.h>
 #include <Xi/Http/Client.h>
 #include <Logging/ILogger.h>

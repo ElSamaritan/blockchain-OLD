@@ -30,7 +30,7 @@
 #include <cxxopts.hpp>
 #include <Xi/ExternalIncludePop.h>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Result.h>
 #include <Serialization/ISerializer.h>
 

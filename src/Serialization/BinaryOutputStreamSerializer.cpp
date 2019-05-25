@@ -20,7 +20,7 @@
 #include <cassert>
 #include <stdexcept>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "Common/StreamTools.h"
 

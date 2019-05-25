@@ -28,7 +28,7 @@
 #include <utility>
 #include <cassert>
 
-#include <Xi/Exceptional.h>
+#include <Xi/Exceptional.hpp>
 #include <CommonCLI/CommonCLI.h>
 #include <Logging/ConsoleLogger.h>
 #include <Logging/FileLogger.h>

@@ -26,7 +26,7 @@
 #include <vector>
 #include <array>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 namespace Xi {
 namespace Crypto {

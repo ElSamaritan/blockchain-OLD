@@ -26,7 +26,7 @@
 #include <cinttypes>
 #include <algorithm>
 
-#include <Xi/Byte.h>
+#include <Xi/Byte.hh>
 #include <Xi/Algorithm/Math.h>
 
 #include "Xi/Config/Time.h"

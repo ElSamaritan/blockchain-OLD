@@ -26,7 +26,7 @@
 #include <cinttypes>
 #include <chrono>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include <crypto/CryptoTypes.h>
 

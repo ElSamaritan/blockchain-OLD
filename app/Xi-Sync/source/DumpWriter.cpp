@@ -26,7 +26,7 @@
 #include <stdexcept>
 #include <numeric>
 
-#include <Xi/Exceptional.h>
+#include <Xi/Exceptional.hpp>
 #include <Common/VectorOutputStream.h>
 #include <CryptoNoteCore/CryptoNoteTools.h>
 

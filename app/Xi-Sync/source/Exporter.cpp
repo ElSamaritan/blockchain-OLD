@@ -25,7 +25,7 @@
 
 #include <algorithm>
 
-#include <Xi/Exceptional.h>
+#include <Xi/Exceptional.hpp>
 
 namespace {
 XI_DECLARE_EXCEPTIONAL_CATEGORY(XiSyncExporter)

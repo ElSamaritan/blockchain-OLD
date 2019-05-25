@@ -29,7 +29,7 @@
 #include <cxxopts.hpp>
 #include <Xi/ExternalIncludePop.h>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Http/SSLConfiguration.h>
 #include <System/Dispatcher.h>
 #include <Logging/LoggerManager.h>

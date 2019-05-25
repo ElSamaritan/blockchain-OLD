@@ -34,7 +34,7 @@
 #include <functional>
 #include <map>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include <Xi/ExternalIncludePush.h>
 #include <cxxopts.hpp>

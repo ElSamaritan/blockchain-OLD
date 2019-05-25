@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "CryptoNoteCore/CryptoNote.h"
 #include "P2pProtocolTypes.h"

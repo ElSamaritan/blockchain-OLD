@@ -30,7 +30,7 @@
 #include <boost/algorithm/string.hpp>
 #include <Xi/ExternalIncludePop.h>
 
-#include <Xi/Exceptional.h>
+#include <Xi/Exceptional.hpp>
 
 namespace {
 std::chrono::microseconds parseUnit(const std::string& amount, const std::string& unit) {

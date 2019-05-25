@@ -26,7 +26,7 @@
 #include <algorithm>
 #include <iterator>
 
-#include <Xi/Exceptional.h>
+#include <Xi/Exceptional.hpp>
 
 #include "CryptoNoteCore/CryptoNoteTools.h"
 

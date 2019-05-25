@@ -27,7 +27,7 @@
 #include <cinttypes>
 #include <memory>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 #include <Xi/Result.h>
 #include <Common/StdOutputStream.h>
 #include <Serialization/BinaryOutputStreamSerializer.h>

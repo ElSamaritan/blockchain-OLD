@@ -23,7 +23,7 @@
 
 #include "Xi/App/LoggingOptions.h"
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 void Xi::App::LoggingOptions::emplaceOptions(cxxopts::Options &options) {
   Logging::LevelTranslator trans{};

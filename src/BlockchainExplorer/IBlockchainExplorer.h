@@ -22,7 +22,7 @@
 #include <istream>
 #include <ostream>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "BlockchainExplorerData.h"
 

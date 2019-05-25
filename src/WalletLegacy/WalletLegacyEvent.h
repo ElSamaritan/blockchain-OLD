@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 #include "IWalletLegacy.h"
 #include "Common/ObserverManager.h"

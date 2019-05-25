@@ -23,7 +23,7 @@
 
 #include "MinerOptions.h"
 
-#include <Xi/Exceptional.h>
+#include <Xi/Exceptional.hpp>
 #include <Xi/Config/Coin.h>
 #include <crypto/crypto-ops.h>
 #include <Common/Base58.h>

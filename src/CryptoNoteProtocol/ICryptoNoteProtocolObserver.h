@@ -21,7 +21,7 @@
 #include <cstdint>
 #include <cstddef>
 
-#include <Xi/Global.h>
+#include <Xi/Global.hh>
 
 namespace CryptoNote {
 

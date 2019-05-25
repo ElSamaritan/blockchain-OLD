@@ -23,7 +23,7 @@
 
 #include "Importer.h"
 
-#include <Xi/Exceptional.h>
+#include <Xi/Exceptional.hpp>
 
 namespace {
 XI_DECLARE_EXCEPTIONAL_CATEGORY(SyncImport)

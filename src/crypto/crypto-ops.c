@@ -17,6 +17,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <Xi/Global.hh>
 
 #include "crypto-ops.h"
 

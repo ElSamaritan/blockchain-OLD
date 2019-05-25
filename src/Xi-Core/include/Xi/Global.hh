@@ -23,6 +23,32 @@
 
 #pragma once
 
+#if defined(__cplusplus)
+extern "C" {
+#include <inttypes.h>
+}
+#endif
+
+#define XI_DLL(X)
+
+#define XI_TRUE 1
+#define XI_FALSE 0
+
+#define XI_RETURN_CODE_NO_SUCCESS 1
+#define XI_RETURN_CODE_SUCCESS 0
+
+#define XI_RETURN_EC_IF(COND, EC) \
+  do {                            \
+    if (COND) return EC;          \
+  } while (XI_FALSE)
+
+#define XI_RETURN_EC_IF_NOT(COND, EC) \
+  do {                                \
+    if (!(COND)) return EC;           \
+  } while (XI_FALSE)
+
+#if defined(__cplusplus)
+
 namespace Xi {
 /*!
  * \brief Unreferenced marks the arguments as intentionally unreferenced.
@@ -71,3 +97,5 @@ inline void Unreferenced(Ts&&...) {}
 #define XI_DEFAULT_MOVE(CLASS_NAME)   \
   CLASS_NAME(CLASS_NAME&&) = default; \
   CLASS_NAME& operator=(CLASS_NAME&&) = default
+
+#endif

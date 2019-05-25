@@ -20,7 +20,8 @@
 #include <iostream>
 #include <string>
 
-#include "ILogger.h"
+#include "Logging/Level.h"
+#include "Logging/ILogger.h"
 
 namespace Logging {
 
