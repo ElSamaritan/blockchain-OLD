@@ -40,8 +40,8 @@ struct NOTIFY_REQUEST_GET_OBJECTS_request {
   std::vector<Crypto::Hash> blocks;
 
   void serialize(ISerializer& s) {
-    serializeAsBinary(txs, "txs", s);
-    serializeAsBinary(blocks, "blocks", s);
+    KV_MEMBER(txs);
+    KV_MEMBER(blocks);
   }
 };
 

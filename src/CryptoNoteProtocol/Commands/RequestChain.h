@@ -41,7 +41,7 @@ struct NOTIFY_REQUEST_CHAIN {
         block_ids; /*IDs of the first 10 blocks are sequential, next goes with pow(2,n) offset, like 2, 4, 8, 16, 32, 64
                       and so on, and the last one is always genesis block */
 
-    void serialize(ISerializer& s) { serializeAsBinary(block_ids, "block_ids", s); }
+    void serialize(ISerializer& s) { KV_MEMBER(block_ids) }
   };
 };
 
@@ -53,7 +53,7 @@ struct NOTIFY_RESPONSE_CHAIN_ENTRY_request {
   void serialize(ISerializer& s) {
     KV_MEMBER(start_height)
     KV_MEMBER(total_height)
-    serializeAsBinary(m_block_ids, "m_block_ids", s);
+    KV_MEMBER(m_block_ids)
   }
 };
 

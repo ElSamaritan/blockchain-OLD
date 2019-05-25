@@ -23,8 +23,8 @@
 #include <Common/MemoryInputStream.h>
 #include <Common/VectorOutputStream.h>
 
-#include "Serialization/KVBinaryInputStreamSerializer.h"
-#include "Serialization/KVBinaryOutputStreamSerializer.h"
+#include "Serialization/BinaryInputStreamSerializer.h"
+#include "Serialization/BinaryOutputStreamSerializer.h"
 
 namespace System {
 class TcpConnection;
@@ -88,7 +88,7 @@ class LevinProtocol {
   static Xi::Result<void> decode(const BinaryArray& buf, T& value) {
     XI_ERROR_TRY();
     Common::MemoryInputStream stream(buf.data(), buf.size());
-    KVBinaryInputStreamSerializer serializer(stream);
+    BinaryInputStreamSerializer serializer(stream);
     serialize(value, serializer);
     return Xi::make_result<void>();
     XI_ERROR_CATCH();
@@ -97,10 +97,9 @@ class LevinProtocol {
   template <typename T>
   static BinaryArray encode(const T& value) {
     BinaryArray result;
-    KVBinaryOutputStreamSerializer serializer;
-    serialize(const_cast<T&>(value), serializer);
     Common::VectorOutputStream stream(result);
-    serializer.dump(stream);
+    BinaryOutputStreamSerializer serializer{stream};
+    serialize(const_cast<T&>(value), serializer);
     return result;
   }
 

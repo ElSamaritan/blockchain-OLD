@@ -117,7 +117,7 @@ static inline void serialize(NOTIFY_NEW_TRANSACTIONS_request& request, ISerializ
 static inline void serialize(NOTIFY_RESPONSE_GET_OBJECTS_request& request, ISerializer& s) {
   s(request.txs, "txs");
   s(request.blocks, "blocks");
-  serializeAsBinary(request.missed_ids, "missed_ids", s);
+  s(request.missed_ids, "missed_ids");
   s(request.current_blockchain_height, "current_blockchain_height");
 }
 
@@ -139,7 +139,7 @@ static inline void serialize(NOTIFY_NEW_LITE_BLOCK_request& request, ISerializer
 
 static inline void serialize(NOTIFY_MISSING_TXS_REQUEST_ENTRY::request& request, ISerializer& s) {
   s(request.current_blockchain_height, "height");
-  serializeAsBinary(request.missing_txs, "txs", s);
+  s(request.missing_txs, "txs");
 }
 
 static inline void serialize(NOTIFY_MISSING_TXS_RESPONSE_ENTRY::request& request, ISerializer& s) {
