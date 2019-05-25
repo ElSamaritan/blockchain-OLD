@@ -47,17 +47,7 @@ endmacro()
 
 add_boost_b2_flag(link static)
 add_boost_b2_flag(runtime-link static)
-
-if(XI_COMPILER_DEBUG)
-  add_boost_b2_flag(variant debug)
-  add_boost_b2_flag(inlining "off")
-  add_boost_b2_flag(debug-symbols "on")
-else()
-  add_boost_b2_flag(variant release)
-  if(XI_BUILD_BREAKPAD)
-    add_boost_b2_flag(debug-symbols "on")
-  endif()
-endif()
+add_boost_b2_flag(threading multi)
 
 if(MSVC)
  list(APPEND boost_b2_args "BOOST_BUILD_DYNAMIC_VSRUNTIME=NO")

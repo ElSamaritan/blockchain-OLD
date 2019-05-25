@@ -21,6 +21,8 @@
 #                                                                                                #
 # ============================================================================================== #
 
-include(${CMAKE_SOURCE_DIR}/cmake/Hunter/Packages/ZLib.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/Hunter/Packages/OpenSSL.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/Hunter/Packages/Boost.cmake)
+set(XI_CMAKE_HUNTER_PACKAGES_DIR "${CMAKE_SOURCE_DIR}/cmake/Hunter/Packages")
+
+include(${XI_CMAKE_HUNTER_PACKAGES_DIR}/ZLib.cmake)
+include(${XI_CMAKE_HUNTER_PACKAGES_DIR}/OpenSSL.cmake)
+include(${XI_CMAKE_HUNTER_PACKAGES_DIR}/Boost.cmake)

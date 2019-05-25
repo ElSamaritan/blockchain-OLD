@@ -23,10 +23,6 @@
 
 include(ExternalProject)
 
-# Not contained in build system
-## Required On Linux
-include(madler-zlib.cmake)
-
 # Contained in buildsystem using submodules
 include(fmtlib-fmt.cmake)
 include(lz4-lz4.cmake)

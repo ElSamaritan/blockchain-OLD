@@ -23,3 +23,4 @@
 
 hunter_add_package(ZLIB)
 find_package(ZLIB CONFIG REQUIRED)
+mark_as_advanced(ZLIB_DIR)

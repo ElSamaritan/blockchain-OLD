@@ -29,3 +29,11 @@ endif()
 
 hunter_add_package(OpenSSL)
 find_package(OpenSSL REQUIRED)
+
+mark_as_advanced(
+  LIB_EAY_DEBUG
+  LIB_EAY_RELEASE
+
+  SSL_EAY_DEBUG
+  SSL_EAY_RELEASE
+)
