@@ -21,17 +21,25 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Crypto/Hash/TreeHash.hh"
+#include <gtest/gtest.h>
 
-#include <Xi/Exceptions.hpp>
+#include <crypto/crypto.h>
+#include <CryptoNoteCore/CryptoNote.h>
+#include <CryptoNoteCore/Account.h>
+#include <CryptoNoteCore/Currency.h>
 
-#include "Xi/Crypto/Hash/Exceptions.hpp"
+TEST(CryptoNote, AccountGeneration) {
+  CryptoNote::AccountKeys account;
+  Crypto::generate_keys(account.address.spendPublicKey, account.spendSecretKey);
+  CryptoNote::AccountBase::generateViewFromSpend(account.spendSecretKey, account.viewSecretKey);
+  EXPECT_TRUE(Crypto::secret_key_to_public_key(account.viewSecretKey, account.address.viewPublicKey));
 
-void Xi::Crypto::Hash::treeHash(const Xi::ConstByteSpan &data, size_t count, Xi::ByteSpan out) {
-  exceptional_if<InvalidSizeError>(count == 0);
-  exceptional_if<InvalidSizeError>(out.size_bytes() < XI_HASH_FAST_HASH_SIZE);
-  exceptional_if_not<InvalidSizeError>(data.size_bytes() == count * XI_HASH_FAST_HASH_SIZE);
-  const auto ec = xi_crypto_hash_tree_hash(reinterpret_cast<const xi_byte_t(*)[XI_HASH_FAST_HASH_SIZE]>(data.data()),
-                                           count, out.data());
-  exceptional_if_not<TreeHashError>(ec == XI_RETURN_CODE_SUCCESS);
+  auto currency = CryptoNote::CurrencyBuilder(Logging::noLogging()).currency();
+  auto address = currency.accountAddressAsString(account.address);
+
+  CryptoNote::AccountPublicAddress recoveredAddress;
+  ASSERT_TRUE(currency.parseAccountAddressString(address, recoveredAddress));
+
+  EXPECT_EQ(account.address.viewPublicKey, recoveredAddress.viewPublicKey);
+  EXPECT_EQ(account.address.spendPublicKey, recoveredAddress.spendPublicKey);
 }

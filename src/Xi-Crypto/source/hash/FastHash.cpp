@@ -28,7 +28,7 @@
 #include "Xi/Crypto/Hash/Exceptions.hpp"
 
 void Xi::Crypto::Hash::fastHash(Xi::ConstByteSpan data, Xi::ByteSpan out) {
-  exceptional_if_not<InvalidSizeError>(out.size() < XI_HASH_FAST_HASH_SIZE);
-  exceptional_if_not<KeccakError>(xi_crypto_hash_fast_hash(data.data(), data.size(), out.data()) !=
+  exceptional_if<InvalidSizeError>(out.size() < XI_HASH_FAST_HASH_SIZE);
+  exceptional_if_not<KeccakError>(xi_crypto_hash_fast_hash(data.data(), data.size(), out.data()) ==
                                   XI_RETURN_CODE_SUCCESS);
 }

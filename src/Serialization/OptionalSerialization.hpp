@@ -38,12 +38,12 @@ namespace CryptoNote {
 
 template <typename _ValueT>
 bool serialize(std::optional<_ValueT> &value, Common::StringView name, ISerializer &serializer) {
-  using native_t = typename _ValueT::value_type;
+  using native_t = typename std::remove_cv_t<_ValueT>;
   static_assert(std::is_default_constructible_v<native_t>,
                 "optional serialization expects default constructible types");
-  bool hasValue = value.has_value();
-  XI_RETURN_EC_IF_NOT(serializer.beginObject(name), false);
 
+  XI_RETURN_EC_IF_NOT(serializer.beginObject(name), false);
+  bool hasValue = value.has_value();
   XI_RETURN_EC_IF_NOT(serializer(hasValue, "has_value"), false);
   if (serializer.type() == ISerializer::INPUT) {
     if (hasValue) {

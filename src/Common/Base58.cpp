@@ -231,8 +231,11 @@ bool decode_addr(const std::string& addr, uint64_t& tag, std::string& data) {
   checksum = addr_data.substr(addr_data.size() - addr_checksum_size);
 
   addr_data.resize(addr_data.size() - addr_checksum_size);
-  Crypto::Hash hash = Crypto::Hash::compute(Xi::asConstByteSpan(addr)).takeOrThrow();
-  std::string expected_checksum(reinterpret_cast<const char*>(&hash), addr_checksum_size);
+  auto hashResult = Crypto::Hash::compute(Xi::asConstByteSpan(addr_data));
+  if (hashResult.isError()) {
+    return false;
+  }
+  std::string expected_checksum(reinterpret_cast<const char*>(hashResult.value().data()), addr_checksum_size);
   if (expected_checksum != checksum) return false;
 
   int read = Tools::read_varint(addr_data.begin(), addr_data.end(), tag);

@@ -42,6 +42,12 @@ inline void exceptional(const char* s) {
 }
 
 template <typename _ExceptionT>
+inline void exceptional(const std::string& s) {
+  static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
+  throw _ExceptionT{s};
+}
+
+template <typename _ExceptionT>
 inline void exceptional_if(bool cond) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   if (cond) {
@@ -51,6 +57,14 @@ inline void exceptional_if(bool cond) {
 
 template <typename _ExceptionT>
 inline void exceptional_if(bool cond, const char* s) {
+  static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
+  if (cond) {
+    throw _ExceptionT{s};
+  }
+}
+
+template <typename _ExceptionT>
+inline void exceptional_if(bool cond, const std::string& s) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   if (cond) {
     throw _ExceptionT{s};
@@ -73,6 +87,14 @@ inline void exceptional_if_not(bool cond, const char* s) {
   }
 }
 
+template <typename _ExceptionT>
+inline void exceptional_if_not(bool cond, const std::string& s) {
+  static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
+  if (!cond) {
+    throw _ExceptionT{s};
+  }
+}
+
 }  // namespace Xi
 
 #define XI_DECLARE_EXCEPTIONAL_CATEGORY(CAT)                \
@@ -82,6 +104,7 @@ inline void exceptional_if_not(bool cond, const char* s) {
                                                             \
    protected:                                               \
     CAT##Exception(const char* s) : m{s} {}                 \
+    CAT##Exception(const std::string& s) : m{s} {}          \
                                                             \
    public:                                                  \
     virtual ~CAT##Exception() = default;                    \
@@ -89,9 +112,10 @@ inline void exceptional_if_not(bool cond, const char* s) {
     const char* what() const noexcept { return m.c_str(); } \
   };
 
-#define XI_DECLARE_EXCEPTIONAL_INSTANCE(X, MSG, CAT) \
-  class X##Error : public CAT##Exception {           \
-   public:                                           \
-    X##Error() : CAT##Exception(MSG) {}              \
-    X##Error(const char* s) : CAT##Exception(s) {}   \
+#define XI_DECLARE_EXCEPTIONAL_INSTANCE(X, MSG, CAT)      \
+  class X##Error : public CAT##Exception {                \
+   public:                                                \
+    X##Error() : CAT##Exception(MSG) {}                   \
+    X##Error(const char* s) : CAT##Exception(s) {}        \
+    X##Error(const std::string& s) : CAT##Exception(s) {} \
   };
