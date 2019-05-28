@@ -31,7 +31,7 @@
 
 namespace CryptoNote {
 struct NOTIFY_NEW_TRANSACTIONS_request {
-  std::vector<BinaryArray> txs;
+  std::vector<BinaryArray> transactions;
 };
 
 struct NOTIFY_NEW_TRANSACTIONS {

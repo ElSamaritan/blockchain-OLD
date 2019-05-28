@@ -357,7 +357,7 @@ bool parseIpAddress(uint32_t& ip, const std::string& addr) {
   return true;
 }
 
-bool parseIpAddressAndPort(uint32_t& ip, uint32_t& port, const std::string& addr) {
+bool parseIpAddressAndPort(uint32_t& ip, uint16_t& port, const std::string& addr) {
   uint32_t v[4];
   uint32_t localPort;
 
@@ -372,7 +372,10 @@ bool parseIpAddressAndPort(uint32_t& ip, uint32_t& port, const std::string& addr
   }
 
   ip = (v[3] << 24) | (v[2] << 16) | (v[1] << 8) | v[0];
-  port = localPort;
+  if (localPort > std::numeric_limits<uint16_t>::max()) {
+    return false;
+  }
+  port = static_cast<uint16_t>(localPort);
   return true;
 }
 

@@ -11,6 +11,7 @@
 #include <unordered_set>
 
 #include <Xi/Global.hh>
+#include <Xi/Exceptions.hpp>
 #include <Xi/Algorithm/IsUnique.h>
 
 #include "Core.h"
@@ -1119,8 +1120,24 @@ std::vector<Crypto::Hash> Core::getPoolTransactionHashes() const {
 }
 
 bool Core::getPoolChanges(const Crypto::Hash& lastBlockHash, const std::vector<Crypto::Hash>& knownHashes,
-                          std::vector<BinaryArray>& addedTransactions,
+                          std::vector<Transaction>& addedTransactions,
                           std::vector<Crypto::Hash>& deletedTransactions) const {
+  throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
+
+  std::vector<Crypto::Hash> newTransactions;
+  getTransactionPoolDifference(knownHashes, newTransactions, deletedTransactions);
+
+  addedTransactions.reserve(newTransactions.size());
+  for (const auto& hash : newTransactions) {
+    addedTransactions.emplace_back(m_transactionPool->getTransaction(hash).getTransaction());
+  }
+
+  return getTopBlockHash() == lastBlockHash;
+}
+
+bool Core::getPoolChanges(const Hash& lastBlockHash, const std::vector<Hash>& knownHashes,
+                          std::vector<BinaryArray>& addedTransactions, std::vector<Hash>& deletedTransactions) const {
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
 
@@ -1147,8 +1164,8 @@ bool Core::getPoolChangesLite(const Crypto::Hash& lastBlockHash, const std::vect
   addedTransactions.reserve(newTransactions.size());
   for (const auto& hash : newTransactions) {
     TransactionPrefixInfo transactionPrefixInfo;
-    transactionPrefixInfo.txHash = hash;
-    transactionPrefixInfo.txPrefix =
+    transactionPrefixInfo.hash = hash;
+    transactionPrefixInfo.prefix =
         static_cast<const TransactionPrefix&>(m_transactionPool->getTransaction(hash).getTransaction());
     addedTransactions.emplace_back(std::move(transactionPrefixInfo));
   }
@@ -1947,7 +1964,7 @@ size_t Core::pushBlockHashes(uint32_t startIndex, uint32_t fullOffset, size_t ma
   entries.reserve(entries.size() + blockIds.size());
   for (auto& blockHash : blockIds) {
     BlockShortInfo entry;
-    entry.blockId = std::move(blockHash);
+    entry.block_hash = std::move(blockHash);
     entries.emplace_back(std::move(entry));
   }
 
@@ -2032,12 +2049,12 @@ void Core::fillQueryBlockShortInfo(uint32_t fullOffset, uint32_t currentIndex, s
 
     BlockShortInfo blockShortInfo;
     blockShortInfo.block = std::move(rawBlock.block);
-    blockShortInfo.blockId = segment->getBlockHash(blockIndex);
+    blockShortInfo.block_hash = segment->getBlockHash(blockIndex);
 
-    blockShortInfo.txPrefixes.reserve(rawBlock.transactions.size());
+    blockShortInfo.transaction_prefixes.reserve(rawBlock.transactions.size());
     for (auto& rawTransaction : rawBlock.transactions) {
       TransactionPrefixInfo prefixInfo;
-      prefixInfo.txHash =
+      prefixInfo.hash =
           getBinaryArrayHash(rawTransaction);  // TODO: is there faster way to get hash without calculation?
 
       Transaction transaction;
@@ -2046,8 +2063,8 @@ void Core::fillQueryBlockShortInfo(uint32_t fullOffset, uint32_t currentIndex, s
         throw std::runtime_error("Couldn't deserialize transaction");
       }
 
-      prefixInfo.txPrefix = std::move(static_cast<TransactionPrefix&>(transaction));
-      blockShortInfo.txPrefixes.emplace_back(std::move(prefixInfo));
+      prefixInfo.prefix = std::move(static_cast<TransactionPrefix&>(transaction));
+      blockShortInfo.transaction_prefixes.emplace_back(std::move(prefixInfo));
     }
 
     entries.emplace_back(std::move(blockShortInfo));
@@ -2398,7 +2415,8 @@ TransactionDetails Core::getTransactionDetails(const Crypto::Hash& transactionHa
     transactionsHashes.push_back(transactionHash);
 
     segment->getRawTransactions(transactionsHashes, rawTransactions, missedTransactionsHashes);
-    assert(missedTransactionsHashes.empty());
+    Xi::exceptional_if<Xi::NotFoundError>((!missedTransactionsHashes.empty()) || rawTransactions.empty(),
+                                          transactionHash.toString());
     assert(rawTransactions.size() == 1);
 
     std::vector<CachedTransaction> transactions;

@@ -103,57 +103,63 @@ struct WalletTransferDto {
   uint32_t version;
 };
 
-void serialize(WalletRecordDto& value, CryptoNote::ISerializer& serializer) {
-  serializer(value.spendPublicKey, "spend_public_key");
-  serializer(value.spendSecretKey, "spend_secret_key");
-  serializer(value.pendingBalance, "pending_balance");
-  serializer(value.actualBalance, "actual_balance");
-  serializer(value.creationTimestamp, "creation_timestamp");
+bool serialize(WalletRecordDto& value, CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(value.spendPublicKey, "spend_public_key"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.spendSecretKey, "spend_secret_key"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.pendingBalance, "pending_balance"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.actualBalance, "actual_balance"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.creationTimestamp, "creation_timestamp"), false);
+  return true;
 }
 
-void serialize(ObsoleteSpentOutputDto& value, CryptoNote::ISerializer& serializer) {
-  serializer(value.amount, "amount");
-  serializer(value.transactionHash, "transaction_hash");
-  serializer(value.outputInTransaction, "output_in_transaction");
-  serializer(value.walletIndex, "wallet_index");
-  serializer(value.spendingTransactionHash, "spending_transaction_hash");
+bool serialize(ObsoleteSpentOutputDto& value, CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(value.amount, "amount"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.transactionHash, "transaction_hash"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.outputInTransaction, "output_in_transaction"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.walletIndex, "wallet_index"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.spendingTransactionHash, "spending_transaction_hash"), false);
+  return true;
 }
 
-void serialize(ObsoleteChangeDto& value, CryptoNote::ISerializer& serializer) {
-  serializer(value.txHash, "transaction_hash");
-  serializer(value.amount, "amount");
+bool serialize(ObsoleteChangeDto& value, CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(value.txHash, "transaction_hash"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.amount, "amount"), false);
+  return true;
 }
 
-void serialize(UnlockTransactionJobDto& value, CryptoNote::ISerializer& serializer) {
-  serializer(value.blockHeight, "block_height");
-  serializer(value.transactionHash, "transaction_hash");
-  serializer(value.walletIndex, "wallet_index");
+bool serialize(UnlockTransactionJobDto& value, CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(value.blockHeight, "block_height"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.transactionHash, "transaction_hash"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.walletIndex, "wallet_index"), false);
+  return true;
 }
 
-void serialize(WalletTransactionDto& value, CryptoNote::ISerializer& serializer) {
+bool serialize(WalletTransactionDto& value, CryptoNote::ISerializer& serializer) {
   typedef std::underlying_type<CryptoNote::WalletTransactionState>::type StateType;
 
   StateType state = static_cast<StateType>(value.state);
-  serializer(state, "state");
+  XI_RETURN_EC_IF_NOT(serializer(state, "state"), false);
   value.state = static_cast<CryptoNote::WalletTransactionState>(state);
 
-  serializer(value.timestamp, "timestamp");
-  CryptoNote::serializeBlockHeight(serializer, value.blockHeight, "block_height");
-  serializer(value.hash, "hash");
-  serializer(value.totalAmount, "total_amount");
-  serializer(value.fee, "fee");
-  serializer(value.creationTime, "creation_time");
-  serializer(value.unlockTime, "unlock_time");
-  serializer(value.extra, "extra");
+  XI_RETURN_EC_IF_NOT(serializer(value.timestamp, "timestamp"), false);
+  XI_RETURN_EC_IF_NOT(CryptoNote::serializeBlockHeight(serializer, value.blockHeight, "block_height"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.hash, "hash"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.totalAmount, "total_amount"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.fee, "fee"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.creationTime, "creation_time"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.unlockTime, "unlock_time"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.extra, "extra"), false);
+  return true;
 }
 
-void serialize(WalletTransferDto& value, CryptoNote::ISerializer& serializer) {
-  serializer(value.address, "address");
-  serializer(value.amount, "amount");
+bool serialize(WalletTransferDto& value, CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(value.address, "address"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.amount, "amount"), false);
 
   if (value.version > 2) {
-    serializer(value.type, "type");
+    XI_RETURN_EC_IF_NOT(serializer(value.type, "type"), false);
   }
+  return true;
 }
 
 std::string readCipher(Common::IInputStream& source, const std::string& name) {

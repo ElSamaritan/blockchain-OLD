@@ -25,48 +25,51 @@
 
 namespace CryptoNote {
 
-void serialize(UnconfirmedTransferDetails& utd, CryptoNote::ISerializer& serializer) {
-  serializer(utd.tx, "transaction");
-  serializer(utd.amount, "amount");
-  serializer(utd.outsAmount, "outs_amount");
+bool serialize(UnconfirmedTransferDetails& utd, CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(utd.tx, "transaction"), false);
+  XI_RETURN_EC_IF_NOT(serializer(utd.amount, "amount"), false);
+  XI_RETURN_EC_IF_NOT(serializer(utd.outsAmount, "outs_amount"), false);
   uint64_t time = static_cast<uint64_t>(utd.sentTime);
-  serializer(time, "sent_time");
+  XI_RETURN_EC_IF_NOT(serializer(time, "sent_time"), false);
   utd.sentTime = static_cast<time_t>(time);
   uint64_t txId = static_cast<uint64_t>(utd.transactionId);
-  serializer(txId, "transaction_id");
+  XI_RETURN_EC_IF_NOT(serializer(txId, "transaction_id"), false);
   utd.transactionId = static_cast<size_t>(txId);
+  return true;
 }
 
-void serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer) {
+bool serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer) {
   uint64_t trId = static_cast<uint64_t>(txi.firstTransferId);
-  serializer(trId, "first_transfer_id");
+  XI_RETURN_EC_IF_NOT(serializer(trId, "first_transfer_id"), false);
   txi.firstTransferId = static_cast<size_t>(trId);
 
   uint64_t trCount = static_cast<uint64_t>(txi.transferCount);
-  serializer(trCount, "transfer_count");
+  XI_RETURN_EC_IF_NOT(serializer(trCount, "transfer_count"), false);
   txi.transferCount = static_cast<size_t>(trCount);
 
-  serializer(txi.totalAmount, "total_amount");
+  XI_RETURN_EC_IF_NOT(serializer(txi.totalAmount, "total_amount"), false);
 
-  serializer(txi.fee, "fee");
-  serializer(txi.hash, "hash");
-  serializer(txi.isCoinbase, "is_coinbase");
+  XI_RETURN_EC_IF_NOT(serializer(txi.fee, "fee"), false);
+  XI_RETURN_EC_IF_NOT(serializer(txi.hash, "hash"), false);
+  XI_RETURN_EC_IF_NOT(serializer(txi.isCoinbase, "is_coinbase"), false);
 
   CryptoNote::serializeBlockHeight(serializer, txi.blockHeight, "block_height");
 
-  serializer(txi.timestamp, "timestamp");
-  serializer(txi.unlockTime, "unlock_time");
-  serializer(txi.extra, "extra");
+  XI_RETURN_EC_IF_NOT(serializer(txi.timestamp, "timestamp"), false);
+  XI_RETURN_EC_IF_NOT(serializer(txi.unlockTime, "unlock_time"), false);
+  XI_RETURN_EC_IF_NOT(serializer(txi.extra, "extra"), false);
 
   // this field has been added later in the structure.
   // in order to not break backward binary compatibility
   // we just set it to zero
   txi.sentTime = 0;
+  return true;
 }
 
-void serialize(WalletLegacyTransfer& tr, CryptoNote::ISerializer& serializer) {
-  serializer(tr.address, "address");
-  serializer(tr.amount, "amount");
+bool serialize(WalletLegacyTransfer& tr, CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(tr.address, "address"), false);
+  XI_RETURN_EC_IF_NOT(serializer(tr.amount, "amount"), false);
+  return true;
 }
 
 }  // namespace CryptoNote

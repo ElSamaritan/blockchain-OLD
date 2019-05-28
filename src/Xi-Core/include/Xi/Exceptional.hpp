@@ -30,19 +30,19 @@
 
 namespace Xi {
 template <typename _ExceptionT>
-inline void exceptional() {
+[[noreturn]] inline void exceptional() {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   throw _ExceptionT{};
 }
 
 template <typename _ExceptionT>
-inline void exceptional(const char* s) {
+[[noreturn]] inline void exceptional(const char* s) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   throw _ExceptionT{s};
 }
 
 template <typename _ExceptionT>
-inline void exceptional(const std::string& s) {
+[[noreturn]] inline void exceptional(const std::string& s) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   throw _ExceptionT{s};
 }

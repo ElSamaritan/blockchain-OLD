@@ -9,6 +9,7 @@
 #include <future>
 
 #include <Xi/Global.hh>
+#include <Xi/Exceptions.hpp>
 
 #include "NodeRpcProxy/NodeRpcProxy.h"
 
@@ -39,6 +40,7 @@ class NodeRpcStub : public CryptoNote::INode {
 
   virtual std::string getInfo() override { return std::string(); }
   virtual void getFeeInfo() override {}
+  virtual const CryptoNote::Currency& currency() const override { Xi::exceptional<Xi::NotInitializedError>(); }
   virtual bool ping() override { return false; }
 
   virtual void getLastBlockHeaderInfo(CryptoNote::BlockHeaderInfo& info, const Callback& callback) override {
@@ -131,8 +133,7 @@ class NodeRpcStub : public CryptoNote::INode {
   }
 
   virtual void isSynchronized(bool& syncStatus, const Callback& callback) override { XI_UNUSED(syncStatus, callback); }
-  virtual std::string feeAddress() override { return std::string(); }
-  virtual uint32_t feeAmount() override { return 0; }
+  virtual std::optional<CryptoNote::FeeAddress> feeAddress() const override { return std::nullopt; }
 };
 
 class NodeInitObserver {
@@ -159,8 +160,10 @@ NodeFactory::NodeFactory() {}
 NodeFactory::~NodeFactory() {}
 
 CryptoNote::INode* NodeFactory::createNode(const std::string& daemonAddress, uint16_t daemonPort,
-                                           Xi::Http::SSLConfiguration sslConfig, Logging::ILogger& logger) {
-  std::unique_ptr<CryptoNote::INode> node(new CryptoNote::NodeRpcProxy(daemonAddress, daemonPort, sslConfig, logger));
+                                           Xi::Http::SSLConfiguration sslConfig, const CryptoNote::Currency& currency,
+                                           Logging::ILogger& logger) {
+  std::unique_ptr<CryptoNote::INode> node(
+      new CryptoNote::NodeRpcProxy(daemonAddress, daemonPort, sslConfig, currency, logger));
 
   NodeInitObserver initObserver;
   node->init(std::bind(&NodeInitObserver::initCompleted, &initObserver, std::placeholders::_1));

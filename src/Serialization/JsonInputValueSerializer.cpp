@@ -20,6 +20,8 @@
 #include <cassert>
 #include <stdexcept>
 
+#include <Xi/Global.hh>
+
 #include "Common/StringTools.h"
 
 using Common::JsonValue;
@@ -81,6 +83,21 @@ bool JsonInputValueSerializer::beginArray(size_t& size, Common::StringView name)
   }
 
   size = 0;
+  return false;
+}
+
+bool JsonInputValueSerializer::beginStaticArray(const size_t size, Common::StringView name) {
+  const JsonValue* parent = chain.back();
+  std::string strName(name);
+
+  if (parent->contains(strName)) {
+    const JsonValue& arr = (*parent)(strName);
+    XI_RETURN_EC_IF_NOT(size == arr.size(), false);
+    chain.push_back(&arr);
+    idxs.push_back(0);
+    return true;
+  }
+
   return false;
 }
 

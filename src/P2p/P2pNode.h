@@ -59,7 +59,7 @@ class P2pNode : public IP2pNode, public IStreamSerializable, IP2pNodeInternal {
 
   // P2pNode
   void start();
-  void serialize(ISerializer& s);
+  bool serialize(ISerializer& s);
 
  private:
   typedef std::unique_ptr<P2pContext> ContextPtr;

@@ -119,6 +119,6 @@ Xi::ByteSpan Crypto::Hash::span() { return Xi::ByteSpan{data(), bytes()}; }
 
 void Crypto::Hash::nullify() { fill(0); }
 
-void Crypto::Hash::serialize(CryptoNote::ISerializer &serializer) {
-  serializer.binary(data(), size() * sizeof(value_type), "blob");
+bool Crypto::Hash::serialize(CryptoNote::ISerializer &serializer) {
+  return serializer.binary(data(), size() * sizeof(value_type), "");
 }

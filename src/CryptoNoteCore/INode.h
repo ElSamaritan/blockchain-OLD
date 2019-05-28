@@ -16,6 +16,7 @@
 
 #include "crypto/crypto.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"
+#include "CryptoNoteCore/Currency.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 
 #include "BlockchainExplorer/BlockchainExplorerData.h"
@@ -96,6 +97,7 @@ class INode {
 
   virtual std::string getInfo() = 0;
   virtual void getFeeInfo() = 0;
+  virtual const Currency& currency() const = 0;
 
   /*!
    * \brief ping sends a getFeeInfo request to the server checking if the connection can be established
@@ -138,8 +140,7 @@ class INode {
   virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes,
                                std::vector<TransactionDetails>& transactions, const Callback& callback) = 0;
   virtual void isSynchronized(bool& syncStatus, const Callback& callback) = 0;
-  virtual std::string feeAddress() = 0;
-  virtual uint32_t feeAmount() = 0;
+  virtual std::optional<FeeAddress> feeAddress() const = 0;
 
   // --------------------------------------- Convenient Boilerplate Code -------------------------------------------
  public:

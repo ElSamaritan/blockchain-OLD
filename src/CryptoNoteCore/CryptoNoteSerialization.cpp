@@ -83,35 +83,36 @@ struct VariantSerializer : boost::static_visitor<> {
   std::string name;
 };
 
-void getVariantValue(CryptoNote::ISerializer& serializer, uint8_t tag, CryptoNote::TransactionInput& in) {
+[[nodiscard]] bool getVariantValue(CryptoNote::ISerializer& serializer, uint8_t tag, CryptoNote::TransactionInput& in) {
   switch (tag) {
     case 0xff: {
       CryptoNote::BaseInput v;
-      serializer(v, "value");
+      XI_RETURN_EC_IF_NOT(serializer(v, "value"), false);
       in = v;
-      break;
+      return true;
     }
     case 0x2: {
       CryptoNote::KeyInput v;
-      serializer(v, "value");
+      XI_RETURN_EC_IF_NOT(serializer(v, "value"), false);
       in = v;
-      break;
+      return true;
     }
     default:
-      throw std::runtime_error("Unknown variant tag");
+      return false;
   }
 }
 
-void getVariantValue(CryptoNote::ISerializer& serializer, uint8_t tag, CryptoNote::TransactionOutputTarget& out) {
+[[nodiscard]] bool getVariantValue(CryptoNote::ISerializer& serializer, uint8_t tag,
+                                   CryptoNote::TransactionOutputTarget& out) {
   switch (tag) {
     case 0x2: {
       CryptoNote::KeyOutput v;
       serializer(v, "data");
       out = v;
-      break;
+      return true;
     }
     default:
-      throw std::runtime_error("Unknown variant tag");
+      return false;
   }
 }
 
@@ -132,7 +133,7 @@ bool serializeVarintVector(std::vector<uint32_t>& vector, CryptoNote::ISerialize
   vector.resize(size);
 
   for (size_t i = 0; i < size; ++i) {
-    serializer(vector[i], "");
+    XI_RETURN_EC_IF_NOT(serializer(vector[i], ""), false);
   }
 
   serializer.endArray();
@@ -159,35 +160,29 @@ bool serialize(EllipticCurvePoint& ecPoint, Common::StringView name, CryptoNote:
 
 namespace CryptoNote {
 
-void serialize(TransactionPrefix& txP, ISerializer& serializer) {
-  serializer(txP.version, "version");
-
-  if ((Xi::Config::Transaction::maximumVersion() < txP.version ||
-       Xi::Config::Transaction::minimumVersion() > txP.version) &&
-      serializer.type() == ISerializer::INPUT) {
-    throw std::runtime_error("Wrong transaction version");
-  }
-
-  serializer(txP.unlockTime, "unlock_time");
-  serializer(txP.inputs, "vin");
-  serializer(txP.outputs, "vout");
-  serializeAsBinary(txP.extra, "extra", serializer);
+bool serialize(TransactionPrefix& txP, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(txP.version, "version"), false);
+  XI_RETURN_EC_IF_NOT(serializer(txP.unlockTime, "unlock_time"), false);
+  XI_RETURN_EC_IF_NOT(serializer(txP.inputs, "vin"), false);
+  XI_RETURN_EC_IF_NOT(serializer(txP.outputs, "vout"), false);
+  XI_RETURN_EC_IF_NOT(serializeAsBinary(txP.extra, "extra", serializer), false);
+  return true;
 }
 
-void serialize(BaseTransaction& tx, ISerializer& serializer) {
-  serializer(tx.version, "version");
-  serializer(tx.unlockTime, "unlock_time");
-  serializer(tx.inputs, "vin");
-  serializer(tx.outputs, "vout");
-  serializeAsBinary(tx.extra, "extra", serializer);
+bool serialize(BaseTransaction& tx, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(tx.version, "version"), false);
+  XI_RETURN_EC_IF_NOT(serializer(tx.unlockTime, "unlock_time"), false);
+  XI_RETURN_EC_IF_NOT(serializer(tx.inputs, "vin"), false);
+  XI_RETURN_EC_IF_NOT(serializer(tx.outputs, "vout"), false);
+  XI_RETURN_EC_IF_NOT(serializeAsBinary(tx.extra, "extra", serializer), false);
+  return true;
 }
 
-void serialize(Transaction& tx, ISerializer& serializer) {
-  serialize(static_cast<TransactionPrefix&>(tx), serializer);
+bool serialize(Transaction& tx, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serialize(static_cast<TransactionPrefix&>(tx), serializer), false);
 
   size_t sigSize = tx.inputs.size();
-  // TODO: make arrays without sizes
-  //  serializer.beginArray(sigSize, "signatures");
+  XI_RETURN_EC_IF_NOT(serializer.beginStaticArray(sigSize, "signatures"), false);
 
   // ignore base transaction
   if (serializer.type() == ISerializer::INPUT && !(sigSize == 1 && tx.inputs[0].type() == typeid(BaseInput))) {
@@ -196,7 +191,7 @@ void serialize(Transaction& tx, ISerializer& serializer) {
 
   bool signaturesNotExpected = tx.signatures.empty();
   if (!signaturesNotExpected && tx.inputs.size() != tx.signatures.size()) {
-    throw std::runtime_error("Serialization error: unexpected signatures size");
+    return false;
   }
 
   for (size_t i = 0; i < tx.inputs.size(); ++i) {
@@ -205,36 +200,37 @@ void serialize(Transaction& tx, ISerializer& serializer) {
       if (signatureSize == 0) {
         continue;
       } else {
-        throw std::runtime_error("Serialization error: signatures are not expected");
+        return false;
       }
     }
 
     if (serializer.type() == ISerializer::OUTPUT) {
       if (signatureSize != tx.signatures[i].size()) {
-        throw std::runtime_error("Serialization error: unexpected signatures size");
+        return false;
       }
 
       for (Crypto::Signature& sig : tx.signatures[i]) {
-        serializePod(sig, "", serializer);
+        XI_RETURN_EC_IF_NOT(serializePod(sig, "", serializer), false);
       }
 
     } else {
       std::vector<Crypto::Signature> signatures(signatureSize);
       for (Crypto::Signature& sig : signatures) {
-        serializePod(sig, "", serializer);
+        XI_RETURN_EC_IF_NOT(serializePod(sig, "", serializer), false);
       }
 
       tx.signatures[i] = std::move(signatures);
     }
   }
-  //  serializer.endArray();
+  serializer.endArray();
+  return true;
 }
 
-void serialize(TransactionInput& in, ISerializer& serializer) {
+bool serialize(TransactionInput& in, ISerializer& serializer) {
   if (serializer.type() == ISerializer::OUTPUT) {
     BinaryVariantTagGetter tagGetter;
     uint8_t tag = boost::apply_visitor(tagGetter, in);
-    serializer.binary(&tag, sizeof(tag), "type");
+    XI_RETURN_EC_IF_NOT(serializer.binary(&tag, sizeof(tag), "type"), false);
 
     VariantSerializer visitor(serializer, "value");
     boost::apply_visitor(visitor, in);
@@ -242,97 +238,105 @@ void serialize(TransactionInput& in, ISerializer& serializer) {
     uint8_t tag;
     serializer.binary(&tag, sizeof(tag), "type");
 
-    getVariantValue(serializer, tag, in);
+    XI_RETURN_EC_IF_NOT(getVariantValue(serializer, tag, in), false);
   }
+  return true;
 }
 
-void serialize(BaseInput& gen, ISerializer& serializer) { serializer(gen.blockIndex, "height"); }
-
-void serialize(KeyInput& key, ISerializer& serializer) {
-  serializer(key.amount, "amount");
-  serializeVarintVector(key.outputIndexes, serializer, "key_offsets");
-  serializer(key.keyImage, "k_image");
+bool serialize(BaseInput& gen, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(gen.blockIndex, "height"), false);
+  return true;
 }
 
-void serialize(TransactionOutput& output, ISerializer& serializer) {
-  serializer(output.amount, "amount");
-  serializer(output.target, "target");
+bool serialize(KeyInput& key, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(key.amount, "amount"), false);
+  XI_RETURN_EC_IF_NOT(serializeVarintVector(key.outputIndexes, serializer, "key_offsets"), false);
+  XI_RETURN_EC_IF_NOT(serializer(key.keyImage, "k_image"), false);
+  return true;
 }
 
-void serialize(TransactionOutputTarget& output, ISerializer& serializer) {
+bool serialize(TransactionOutput& output, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(output.amount, "amount"), false);
+  XI_RETURN_EC_IF_NOT(serializer(output.target, "target"), false);
+  return true;
+}
+
+bool serialize(TransactionOutputTarget& output, ISerializer& serializer) {
   if (serializer.type() == ISerializer::OUTPUT) {
     BinaryVariantTagGetter tagGetter;
     uint8_t tag = boost::apply_visitor(tagGetter, output);
-    serializer.binary(&tag, sizeof(tag), "type");
+    XI_RETURN_EC_IF_NOT(serializer.binary(&tag, sizeof(tag), "type"), false);
 
     VariantSerializer visitor(serializer, "data");
     boost::apply_visitor(visitor, output);
+    return true;
   } else {
     uint8_t tag;
     serializer.binary(&tag, sizeof(tag), "type");
 
-    getVariantValue(serializer, tag, output);
+    XI_RETURN_EC_IF_NOT(getVariantValue(serializer, tag, output), false);
+    return true;
   }
 }
 
-void serialize(KeyOutput& key, ISerializer& serializer) { serializer(key.key, "key"); }
+bool serialize(KeyOutput& key, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(key.key, "key"), false);
+  return true;
+}
 
-void serializeBlockHeader(BlockHeader& header, ISerializer& serializer) {
-  serializer(header.majorVersion, "major_version");
-  if (header.majorVersion > Xi::Config::BlockVersion::maximum()) {
-    throw std::runtime_error("Wrong major version");
-  }
-
-  serializer(header.minorVersion, "minor_version");
-  if (header.minorVersion != Xi::Config::BlockVersion::expectedMinorVersion()) {
-    throw std::runtime_error{"Wrong minor version"};
-  }
-
+bool serializeBlockHeader(BlockHeader& header, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(header.majorVersion, "major_version"), false);
+  XI_RETURN_EC_IF_NOT(serializer(header.minorVersion, "minor_version"), false);
   auto nonce = header.nonce;
   boost::endian::native_to_little_inplace(nonce);
-  serializer.binary(&header.nonce, sizeof(header.nonce), "nonce");
+  XI_RETURN_EC_IF_NOT(serializer.binary(&header.nonce, sizeof(header.nonce), "nonce"), false);
 
-  serializer(header.timestamp, "timestamp");
-  serializer(header.previousBlockHash, "prev_id");
+  XI_RETURN_EC_IF_NOT(serializer(header.timestamp, "timestamp"), false);
+  XI_RETURN_EC_IF_NOT(serializer(header.previousBlockHash, "prev_id"), false);
+  return true;
 }
 
-void serialize(BlockHeader& header, ISerializer& serializer) { serializeBlockHeader(header, serializer); }
+bool serialize(BlockHeader& header, ISerializer& serializer) { return serializeBlockHeader(header, serializer); }
 
-void serialize(BlockTemplate& block, ISerializer& serializer) {
-  serializeBlockHeader(block, serializer);
-  serializer(block.baseTransaction, "miner_tx");
-  serializer(block.staticRewardHash, "static_reward_hash");
-  serializer(block.transactionHashes, "tx_hashes");
+bool serialize(BlockTemplate& block, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializeBlockHeader(block, serializer), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.baseTransaction, "miner_tx"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.staticRewardHash, "static_reward_hash"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.transactionHashes, "tx_hashes"), false);
+  return true;
 }
 
-void serialize(AccountPublicAddress& address, ISerializer& serializer) {
-  serializer(address.spendPublicKey, "m_spend_public_key");
-  serializer(address.viewPublicKey, "m_view_public_key");
+bool serialize(AccountPublicAddress& address, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(address.spendPublicKey, "m_spend_public_key"), false);
+  XI_RETURN_EC_IF_NOT(serializer(address.viewPublicKey, "m_view_public_key"), false);
+  return true;
 }
 
-void serialize(AccountKeys& keys, ISerializer& s) {
-  s(keys.address, "m_account_address");
-  s(keys.spendSecretKey, "m_spend_secret_key");
-  s(keys.viewSecretKey, "m_view_secret_key");
+bool serialize(AccountKeys& keys, ISerializer& s) {
+  XI_RETURN_EC_IF_NOT(s(keys.address, "m_account_address"), false);
+  XI_RETURN_EC_IF_NOT(s(keys.spendSecretKey, "m_spend_secret_key"), false);
+  XI_RETURN_EC_IF_NOT(s(keys.viewSecretKey, "m_view_secret_key"), false);
+  return true;
 }
 
-void serialize(KeyPair& keyPair, ISerializer& serializer) {
-  serializer(keyPair.secretKey, "secret_key");
-  serializer(keyPair.publicKey, "public_key");
+bool serialize(KeyPair& keyPair, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(keyPair.secretKey, "secret_key"), false);
+  XI_RETURN_EC_IF_NOT(serializer(keyPair.publicKey, "public_key"), false);
+  return true;
 }
 
 // unpack to strings to maintain protocol compatibility with older versions
-void serialize(RawBlock& rawBlock, ISerializer& serializer) {
+bool serialize(RawBlock& rawBlock, ISerializer& serializer) {
   if (serializer.type() == ISerializer::INPUT) {
     uint64_t blockSize;
-    serializer(blockSize, "block_size");
+    XI_RETURN_EC_IF_NOT(serializer(blockSize, "block_size"), false);
     rawBlock.block.resize(static_cast<size_t>(blockSize));
   } else {
     uint64_t blockSize = rawBlock.block.size();
-    serializer(blockSize, "block_size");
+    XI_RETURN_EC_IF_NOT(serializer(blockSize, "block_size"), false);
   }
 
-  serializer.binary(rawBlock.block.data(), rawBlock.block.size(), "block");
+  XI_RETURN_EC_IF_NOT(serializer.binary(rawBlock.block.data(), rawBlock.block.size(), "block"), false);
 
   if (serializer.type() == ISerializer::INPUT) {
     uint64_t txCount;
@@ -343,30 +347,52 @@ void serialize(RawBlock& rawBlock, ISerializer& serializer) {
       uint64_t txSize;
       serializer(txSize, "tx_size");
       txBlob.resize(txSize);
-      serializer.binary(txBlob.data(), txBlob.size(), "transaction");
+      XI_RETURN_EC_IF_NOT(serializer.binary(txBlob.data(), txBlob.size(), "transaction"), false);
     }
+    return false;
   } else {
     auto txCount = rawBlock.transactions.size();
-    serializer(txCount, "tx_count");
+    XI_RETURN_EC_IF_NOT(serializer(txCount, "tx_count"), false);
 
     for (auto& txBlob : rawBlock.transactions) {
       auto txSize = txBlob.size();
-      serializer(txSize, "tx_size");
-      serializer.binary(txBlob.data(), txBlob.size(), "transaction");
+      XI_RETURN_EC_IF_NOT(serializer(txSize, "tx_size"), false);
+      XI_RETURN_EC_IF_NOT(serializer.binary(txBlob.data(), txBlob.size(), "transaction"), false);
     }
+    return true;
   }
 }
 
-void serialize(LiteBlock& block, ISerializer& serializer) {
+bool serialize(LiteBlock& block, ISerializer& serializer) {
   if (serializer.type() == ISerializer::INPUT) {
     uint64_t size;
-    serializer(size, "size");
+    XI_RETURN_EC_IF_NOT(serializer(size, "size"), false);
     block.blockTemplate.resize(size);
   } else {
     uint64_t size = block.blockTemplate.size();
-    serializer(size, "size");
+    XI_RETURN_EC_IF_NOT(serializer(size, "size"), false);
   }
-  serializer.binary(block.blockTemplate.data(), block.blockTemplate.size(), "blob");
+  XI_RETURN_EC_IF_NOT(serializer.binary(block.blockTemplate.data(), block.blockTemplate.size(), "blob"), false);
+  return true;
+}
+
+bool serialize(FeeAddress& addr, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(addr.address, "address"), false);
+  XI_RETURN_EC_IF_NOT(serializer(addr.amount, "amount"), false);
+  return true;
+}
+
+bool serialize(FullBlock& block, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(block.blockTemplate, "block_template"), false);
+  XI_RETURN_EC_IF_NOT(serializer.beginStaticArray(block.blockTemplate.transactionHashes.size(), "transactions"), false);
+  if (serializer.isInput()) {
+    block.transactions.resize(block.blockTemplate.transactionHashes.size());
+  }
+  for (auto& iTransaction : block.transactions) {
+    XI_RETURN_EC_IF_NOT(serializer(iTransaction, ""), false);
+  }
+  serializer.endArray();
+  return true;
 }
 
 }  // namespace CryptoNote

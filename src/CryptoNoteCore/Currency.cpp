@@ -109,14 +109,23 @@ bool Currency::generateGenesisBlock() {
   }
 
   if (isStaticRewardEnabledForBlockVersion(m_genesisBlockTemplate.majorVersion)) {
-    const CachedTransaction cStaticReward{*constructStaticRewardTx(m_genesisBlockTemplate).takeOrThrow()};
+    auto staticReward = constructStaticRewardTx(m_genesisBlockTemplate);
+    if (staticReward.isError()) {
+      logger(ERROR) << "Static reward construction failed: " << staticReward.error().message();
+      return false;
+    } else if (!staticReward.value().has_value()) {
+      logger(ERROR) << "Expected static reward but none given.";
+      return false;
+    }
+    const CachedTransaction cStaticReward{*staticReward.takeOrThrow()};
     m_genesisBlockTemplate.staticRewardHash = cStaticReward.getTransactionHash();
   } else {
     m_genesisBlockTemplate.staticRewardHash = std::nullopt;
   }
 
   if (!fromBinaryArray(m_genesisBlockTemplate.baseTransaction, minerTxBlob)) {
-    Xi::exceptional<TransactionParseError>("Unable to parse hex encoded genesis coinbase transaction.");
+    logger(ERROR) << "Unable to parse hex encoded genesis coinbase transaction.";
+    return false;
   }
 
   m_genesisBlockTemplate.transactionHashes = {};
@@ -385,9 +394,7 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const
   logger(TRACE) << "Generating static reward: (" << rewardAddress << ", " << rewardAmount << ")";
 
   AccountPublicAddress parsedRewardAddress = boost::value_initialized<AccountPublicAddress>();
-  if (!parseAccountAddressString(rewardAddress, parsedRewardAddress)) {
-    Xi::exceptional<AccountPublicAddressParseError>();
-  }
+  Xi::exceptional_if_not<AccountPublicAddressParseError>(parseAccountAddressString(rewardAddress, parsedRewardAddress));
 
   Transaction tx{};
   tx.nullify();

@@ -129,7 +129,7 @@ CryptoNote::INode *Xi::App::Application::remoteNode(bool pollUpdates) {
   }
   if (!m_remoteNode) {
     m_remoteNode = std::make_unique<CryptoNote::NodeRpcProxy>(m_remoteRpcOptions->Address, m_remoteRpcOptions->Port,
-                                                              m_sslConfig, logger());
+                                                              m_sslConfig, *m_currency, logger());
     if (!pollUpdates) {
       static_cast<CryptoNote::NodeRpcProxy *>(m_remoteNode.get())->setPollUpdatesEnabled(false);
     }
@@ -217,6 +217,7 @@ void Xi::App::Application::useDatabase() {
 void Xi::App::Application::useRemoteRpc() {
   if (m_remoteRpcOptions.get() == nullptr) {
     m_remoteRpcOptions = std::make_unique<RemoteRpcOptions>();
+    useCurrency();
   }
 }
 
@@ -250,10 +251,10 @@ bool Xi::App::Application::isSSLServerRequired() const { return false; }
 
 void Xi::App::Application::initializeLogger() {
   if (m_logOptions) {
-    m_consoleLogger = std::make_unique<Logging::ConsoleLogger>(
-        m_logOptions->ConsoleLogLevel.get_value_or(m_logOptions->DefaultLogLevel));
+    m_consoleLogger =
+        std::make_unique<Logging::ConsoleLogger>(m_logOptions->ConsoleLogLevel.value_or(m_logOptions->DefaultLogLevel));
     m_logger->addLogger(*m_consoleLogger);
-    auto fileLogLevel = m_logOptions->ConsoleLogLevel.get_value_or(m_logOptions->DefaultLogLevel);
+    auto fileLogLevel = m_logOptions->ConsoleLogLevel.value_or(m_logOptions->DefaultLogLevel);
     if (fileLogLevel != Logging::NONE) {
       auto fileLogger = std::make_unique<Logging::FileLogger>(fileLogLevel);
       fileLogger->init(m_logOptions->LogFilePath);

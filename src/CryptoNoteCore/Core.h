@@ -121,6 +121,9 @@ class Core : public ICore,
 
   virtual std::vector<Crypto::Hash> getPoolTransactionHashes() const override;
   virtual bool getPoolChanges(const Crypto::Hash& lastBlockHash, const std::vector<Crypto::Hash>& knownHashes,
+                              std::vector<Transaction>& addedTransactions,
+                              std::vector<Crypto::Hash>& deletedTransactions) const override;
+  virtual bool getPoolChanges(const Crypto::Hash& lastBlockHash, const std::vector<Crypto::Hash>& knownHashes,
                               std::vector<BinaryArray>& addedTransactions,
                               std::vector<Crypto::Hash>& deletedTransactions) const override;
   virtual bool getPoolChangesLite(const Crypto::Hash& lastBlockHash, const std::vector<Crypto::Hash>& knownHashes,

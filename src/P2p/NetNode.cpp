@@ -108,7 +108,7 @@ const command_line::arg_descriptor<std::string> arg_p2p_bind_ip = {"p2p-bind-ip"
                                                                    "0.0.0.0"};
 const command_line::arg_descriptor<std::string> arg_p2p_bind_port = {"p2p-bind-port", "Port for p2p network protocol",
                                                                      std::to_string(Xi::Config::P2P::defaultPort())};
-const command_line::arg_descriptor<uint32_t> arg_p2p_external_port = {
+const command_line::arg_descriptor<uint16_t> arg_p2p_external_port = {
     "p2p-external-port", "External port for p2p network protocol (if port forwarding used with NAT)", 0};
 const command_line::arg_descriptor<bool> arg_p2p_allow_local_ip = {
     "allow-local-ip", "Allow local ip add to peer list, mostly in debug purposes"};
@@ -131,7 +131,7 @@ std::string print_peerlist_to_string(const std::list<PeerlistEntry>& pl) {
   std::stringstream ss;
   ss << std::setfill('0') << std::setw(8) << std::hex << std::noshowbase;
   for (const auto& pe : pl) {
-    ss << pe.id << "\t" << pe.adr << " \tlast_seen: " << Common::timeIntervalToString(now_time - pe.last_seen)
+    ss << pe.id << "\t" << pe.address << " \tlast_seen: " << Common::timeIntervalToString(now_time - pe.last_seen)
        << std::endl;
   }
   return ss.str();
@@ -226,29 +226,29 @@ NodeServer::NodeServer(System::Dispatcher& dispatcher, Xi::Config::Network::Type
       m_peerlist_store_interval(60 * 30, false),
       m_fails_before_block{20} {}
 
-void NodeServer::serialize(ISerializer& s) {
+bool NodeServer::serialize(ISerializer& s) {
   uint8_t version = 2;
-  s(version, "version");
+  XI_RETURN_EC_IF_NOT(s(version, "version"), false);
 
   if (version < 1 || version > 2) {
-    throw std::runtime_error("Unsupported version");
+    return false;
   }
 
-  s(m_peerlist, "peerlist");
-  s(m_config.m_peer_id, "peer_id");
+  XI_RETURN_EC_IF_NOT(s(m_peerlist, "peerlist"), false);
+  XI_RETURN_EC_IF_NOT(s(m_config.m_peer_id, "peer_id"), false);
 
   if (version > 1) {
     const auto currentTimestamp = time(nullptr);
 
     uint64_t blockedCount = m_blocked_hosts.size();
-    s(blockedCount, "blocked_hosts_count");
+    XI_RETURN_EC_IF_NOT(s(blockedCount, "blocked_hosts_count"), false);
     if (s.type() == ISerializer::INPUT) {
       for (uint64_t i = 0; i < blockedCount; ++i) {
         uint32_t ip;
         int64_t timestamp;
 
-        s(ip, "");
-        s(timestamp, "");
+        XI_RETURN_EC_IF_NOT(s(ip, ""), false);
+        XI_RETURN_EC_IF_NOT(s(timestamp, ""), false);
 
         if (timestamp > currentTimestamp) {
           m_blocked_hosts[ip] = timestamp;
@@ -259,20 +259,20 @@ void NodeServer::serialize(ISerializer& s) {
       for (const auto& blocked_host : m_blocked_hosts) {
         uint32_t ip = blocked_host.first;
         int64_t timestamp = blocked_host.second;
-        s(ip, "");
-        s(timestamp, "");
+        XI_RETURN_EC_IF_NOT(s(ip, ""), false);
+        XI_RETURN_EC_IF_NOT(s(timestamp, ""), false);
       }
     }
 
     uint64_t failsScoreCount = m_host_fails_score.size();
-    s(failsScoreCount, "host_fails_score_count");
+    XI_RETURN_EC_IF_NOT(s(failsScoreCount, "host_fails_score_count"), false);
     if (s.type() == ISerializer::INPUT) {
       for (uint64_t i = 0; i < failsScoreCount; ++i) {
         uint32_t ip;
         uint64_t score;
 
-        s(ip, "");
-        s(score, "");
+        XI_RETURN_EC_IF_NOT(s(ip, ""), false);
+        XI_RETURN_EC_IF_NOT(s(score, ""), false);
 
         if (score > 2) {
           m_host_fails_score[ip] = score - 2;
@@ -285,11 +285,12 @@ void NodeServer::serialize(ISerializer& s) {
         uint32_t ip = host_fails_score.first;
         uint64_t score = host_fails_score.second;
 
-        s(ip, "");
-        s(score, "");
+        XI_RETURN_EC_IF_NOT(s(ip, ""), false);
+        XI_RETURN_EC_IF_NOT(s(score, ""), false);
       }
     }
   }
+  return true;
 }
 
 #define INVOKE_HANDLER(CMD, Handler)                                                         \
@@ -430,7 +431,7 @@ bool NodeServer::handle_command_line(const boost::program_options::variables_map
     for (const std::string& pr_str : perrs) {
       PeerlistEntry pe = boost::value_initialized<PeerlistEntry>();
       pe.id = Crypto::rand<uint64_t>();
-      bool r = parse_peer_from_string(pe.adr, pr_str);
+      bool r = parse_peer_from_string(pe.address, pr_str);
       if (!(r)) {
         logger(ERROR) << "Failed to parse address from string: " << pr_str;
         return false;
@@ -490,7 +491,7 @@ bool NodeServer::append_net_address(std::vector<NetworkAddress>& nodes, const st
   std::string host = addr.substr(0, pos);
 
   try {
-    uint32_t port = Common::fromString<uint32_t>(addr.substr(pos + 1));
+    auto port = Common::fromString<uint16_t>(addr.substr(pos + 1));
 
     System::Ipv4Resolver resolver(m_dispatcher);
     auto addrHost = resolver.resolve(host);
@@ -762,7 +763,7 @@ bool NodeServer::is_peer_used(const PeerlistEntry& peer) {
   for (const auto& kv : m_connections) {
     const auto& cntxt = kv.second;
     if (cntxt.peerId == peer.id ||
-        (!cntxt.m_is_income && peer.adr.ip == cntxt.m_remote_ip && peer.adr.port == cntxt.m_remote_port)) {
+        (!cntxt.m_is_income && peer.address.ip == cntxt.m_remote_ip && peer.address.port == cntxt.m_remote_port)) {
       return true;
     }
   }
@@ -850,7 +851,7 @@ bool NodeServer::try_to_connect_and_handshake_with_new_peer(const NetworkAddress
     }
 
     PeerlistEntry pe_local = boost::value_initialized<PeerlistEntry>();
-    pe_local.adr = na;
+    pe_local.address = na;
     pe_local.id = ctx.peerId;
     pe_local.last_seen = time(nullptr);
     m_peerlist.append_with_peer_white(pe_local);
@@ -911,10 +912,11 @@ bool NodeServer::make_new_connection_from_peerlist(bool use_white_list) {
 
     if (is_peer_used(pe)) continue;
 
-    logger(DEBUGGING) << "Selected peer: " << pe.id << " " << pe.adr << " [white=" << use_white_list << "] last_seen: "
+    logger(DEBUGGING) << "Selected peer: " << pe.id << " " << pe.address << " [white=" << use_white_list
+                      << "] last_seen: "
                       << (pe.last_seen ? Common::timeIntervalToString(time(NULL) - pe.last_seen) : "never");
 
-    if (!try_to_connect_and_handshake_with_new_peer(pe.adr, false, pe.last_seen, use_white_list)) continue;
+    if (!try_to_connect_and_handshake_with_new_peer(pe.address, false, pe.last_seen, use_white_list)) continue;
 
     return true;
   }
@@ -1011,7 +1013,7 @@ bool NodeServer::fix_time_delta(std::list<PeerlistEntry>& local_peerlist, time_t
 
   BOOST_FOREACH (PeerlistEntry& be, local_peerlist) {
     if (be.last_seen > uint64_t(local_time)) {
-      logger(ERROR) << "FOUND FUTURE peerlist for entry " << be.adr << " last_seen: " << be.last_seen
+      logger(ERROR) << "FOUND FUTURE peerlist for entry " << be.address << " last_seen: " << be.last_seen
                     << ", local_time(on remote node):" << local_time;
       return false;
     }
@@ -1281,13 +1283,13 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
 
   if (arg.node_data.peer_id != m_config.m_peer_id && arg.node_data.my_port) {
     PeerIdType peer_id_l = arg.node_data.peer_id;
-    uint32_t port_l = arg.node_data.my_port;
+    uint16_t port_l = arg.node_data.my_port;
 
     if (try_ping(arg.node_data, context)) {
       // called only(!) if success pinged, update local peerlist
       PeerlistEntry pe;
-      pe.adr.ip = context.m_remote_ip;
-      pe.adr.port = port_l;
+      pe.address.ip = context.m_remote_ip;
+      pe.address.port = port_l;
       pe.last_seen = time(nullptr);
       pe.id = peer_id_l;
       m_peerlist.append_with_peer_white(pe);

@@ -50,6 +50,13 @@ struct BlockTemplate : public BlockHeader {
 struct AccountPublicAddress {
   Crypto::PublicKey spendPublicKey;
   Crypto::PublicKey viewPublicKey;
+
+  bool isValid() const { return spendPublicKey.isValid() && viewPublicKey.isValid(); }
+};
+
+struct FeeAddress {
+  AccountPublicAddress address;
+  uint64_t amount;
 };
 
 XI_MAKE_GENERIC_COMPARISON(AccountPublicAddress)
@@ -71,6 +78,31 @@ using BinaryArray = std::vector<uint8_t>;
 struct RawBlock {
   BinaryArray block;  // BlockTemplate
   std::vector<BinaryArray> transactions;
+};
+
+/*!
+ * \brief The FullBlock struct is a type safe alternative to RawBlock where members are serialized by their type rather
+ * than being emplaced as already serialized in binary form.
+ *
+ * \attention If you do not trust the source of a full block you may want to check the integrity of the block. The block
+ * template transactions hashes MUST correspond to the transactions hashes of transactions emplaced, and their ordering
+ * MUST be the same.
+ *
+ * \example
+ * \code{.cpp}
+ * if(blockTemplate.transactionHashes.size() != transactions.size()) {
+ *  return false;
+ * }
+ *
+ * for(size_t i = 0; i < transactions.size(); ++i) {
+ *  if(blockTemplate.transactionHashes[i] != sha3_256(toBinary(transactions[i])) {
+ *    return false;
+ * }
+ * \endcode
+ */
+struct FullBlock {
+  BlockTemplate blockTemplate;
+  std::vector<Transaction> transactions;
 };
 
 struct LiteBlock {

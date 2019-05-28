@@ -38,7 +38,7 @@ struct NOTIFY_MISSING_TXS_REQUEST {
 };
 
 struct NOTIFY_MISSING_TXS_RESPONSE {
-  std::vector<BinaryArray> txs;
+  std::vector<BinaryArray> transactions;
 };
 
 struct NOTIFY_MISSING_TXS_REQUEST_ENTRY {

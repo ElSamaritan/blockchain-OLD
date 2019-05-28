@@ -22,16 +22,18 @@
 
 namespace CryptoNote {
 
-void ExtendedTransactionInfo::serialize(CryptoNote::ISerializer& s) {
-  s(static_cast<CachedTransactionInfo&>(*this), "cached_transaction");
-  s(amountToKeyIndexes, "key_indexes");
+bool ExtendedTransactionInfo::serialize(CryptoNote::ISerializer& s) {
+  XI_RETURN_EC_IF_NOT(s(static_cast<CachedTransactionInfo&>(*this), "cached_transaction"), false);
+  XI_RETURN_EC_IF_NOT(s(amountToKeyIndexes, "key_indexes"), false);
+  return true;
 }
 
-void KeyOutputInfo::serialize(ISerializer& s) {
-  s(publicKey, "public_key");
-  s(transactionHash, "transaction_hash");
-  s(unlockTime, "unlock_time");
-  s(outputIndex, "output_index");
+bool KeyOutputInfo::serialize(ISerializer& s) {
+  XI_RETURN_EC_IF_NOT(s(publicKey, "public_key"), false);
+  XI_RETURN_EC_IF_NOT(s(transactionHash, "transaction_hash"), false);
+  XI_RETURN_EC_IF_NOT(s(unlockTime, "unlock_time"), false);
+  XI_RETURN_EC_IF_NOT(s(outputIndex, "output_index"), false);
+  return true;
 }
 
 }  // namespace CryptoNote

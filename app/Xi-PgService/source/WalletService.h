@@ -104,7 +104,7 @@ class WalletService {
                                  uint32_t& fusionReadyCount, uint32_t& totalOutputCount);
   std::error_code createIntegratedAddress(const std::string& address, const std::string& paymentId,
                                           std::string& integratedAddress);
-  std::error_code getFeeInfo(std::string& address, uint32_t& amount);
+  std::error_code getFeeInfo(std::string& address, uint64_t& amount);
   uint16_t getDefaultMixin() const;
 
  private:
@@ -142,7 +142,7 @@ class WalletService {
   System::Event readyEvent;
   System::ContextGroup refreshContext;
   std::string m_node_address;
-  uint32_t m_node_fee;
+  uint64_t m_node_fee;
 
   std::map<std::string, size_t> transactionIdIndex;
 };

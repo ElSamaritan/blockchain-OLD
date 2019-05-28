@@ -76,9 +76,9 @@ bool CryptoNote::CryptoNoteProtocolSuspiciousRequestsDetector::pushAndInspect(
   };
 
   ctx.m_history.pushOccurrence<range_t>(
-      range_t{response.start_height, static_cast<uint32_t>(response.m_block_ids.size())}, 2);
+      range_t{response.start_height, static_cast<uint32_t>(response.block_hashes.size())}, 2);
   {
-    ChainRequest revealedBlocks{{response.m_block_ids.begin(), response.m_block_ids.end()}};
+    ChainRequest revealedBlocks{{response.block_hashes.begin(), response.block_hashes.end()}};
     ctx.m_history.pushOccurrence(revealedBlocks, 1);
   }
   const auto timeline = ctx.m_history.getTimeline<range_t>();

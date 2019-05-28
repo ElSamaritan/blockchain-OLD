@@ -31,16 +31,17 @@ using namespace Logging;
 
 namespace CryptoNote {
 
-void serialize(TransactionInformation& ti, CryptoNote::ISerializer& s) {
-  s(ti.transactionHash, "");
-  s(ti.publicKey, "");
-  serializeBlockHeight(s, ti.blockHeight, "");
-  s(ti.timestamp, "");
-  s(ti.unlockTime, "");
-  s(ti.totalAmountIn, "");
-  s(ti.totalAmountOut, "");
-  s(ti.extra, "");
-  s(ti.paymentId, "");
+bool serialize(TransactionInformation& ti, CryptoNote::ISerializer& s) {
+  KV_MEMBER_RENAME(ti.transactionHash, transaction_hash);
+  KV_MEMBER_RENAME(ti.publicKey, public_key);
+  KV_MEMBER_RENAME(ti.blockHeight, block_height);
+  KV_MEMBER_RENAME(ti.timestamp, timestamp);
+  KV_MEMBER_RENAME(ti.unlockTime, unlock_time);
+  KV_MEMBER_RENAME(ti.totalAmountIn, total_amount_in);
+  KV_MEMBER_RENAME(ti.totalAmountOut, total_amount_out);
+  KV_MEMBER_RENAME(ti.extra, extra);
+  KV_MEMBER_RENAME(ti.paymentId, payment_id);
+  return true;
 }
 
 const uint32_t TRANSFERS_CONTAINER_STORAGE_VERSION = 0;

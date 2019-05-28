@@ -64,37 +64,42 @@ void splitGlobalIndexes(T& sourceContainer, T& destinationContainer, uint32_t sp
 }
 }  // namespace
 
-void SpentKeyImage::serialize(ISerializer& s) {
-  s(blockIndex, "block_index");
-  s(keyImage, "key_image");
+bool SpentKeyImage::serialize(ISerializer& s) {
+  XI_RETURN_EC_IF_NOT(s(blockIndex, "block_index"), false);
+  XI_RETURN_EC_IF_NOT(s(keyImage, "key_image"), false);
+  return true;
 }
 
-void CachedTransactionInfo::serialize(ISerializer& s) {
-  s(blockIndex, "block_index");
-  s(transactionIndex, "transaction_index");
-  s(transactionHash, "transaction_hash");
-  s(unlockTime, "unlock_time");
-  s(outputs, "outputs");
-  s(globalIndexes, "global_indexes");
+bool CachedTransactionInfo::serialize(ISerializer& s) {
+  XI_RETURN_EC_IF_NOT(s(blockIndex, "block_index"), false);
+  XI_RETURN_EC_IF_NOT(s(transactionIndex, "transaction_index"), false);
+  XI_RETURN_EC_IF_NOT(s(transactionHash, "transaction_hash"), false);
+  XI_RETURN_EC_IF_NOT(s(unlockTime, "unlock_time"), false);
+  XI_RETURN_EC_IF_NOT(s(outputs, "outputs"), false);
+  XI_RETURN_EC_IF_NOT(s(globalIndexes, "global_indexes"), false);
+  return true;
 }
 
-void CachedBlockInfo::serialize(ISerializer& s) {
-  s(blockHash, "block_hash");
-  s(timestamp, "timestamp");
-  s(blockSize, "block_size");
-  s(cumulativeDifficulty, "cumulative_difficulty");
-  s(alreadyGeneratedCoins, "already_generated_coins");
-  s(alreadyGeneratedTransactions, "already_generated_transaction_count");
+bool CachedBlockInfo::serialize(ISerializer& s) {
+  XI_RETURN_EC_IF_NOT(s(blockHash, "block_hash"), false);
+  XI_RETURN_EC_IF_NOT(s(timestamp, "timestamp"), false);
+  XI_RETURN_EC_IF_NOT(s(blockSize, "block_size"), false);
+  XI_RETURN_EC_IF_NOT(s(cumulativeDifficulty, "cumulative_difficulty"), false);
+  XI_RETURN_EC_IF_NOT(s(alreadyGeneratedCoins, "already_generated_coins"), false);
+  XI_RETURN_EC_IF_NOT(s(alreadyGeneratedTransactions, "already_generated_transaction_count"), false);
+  return true;
 }
 
-void OutputGlobalIndexesForAmount::serialize(ISerializer& s) {
-  s(startIndex, "start_index");
-  s(outputs, "outputs");
+bool OutputGlobalIndexesForAmount::serialize(ISerializer& s) {
+  XI_RETURN_EC_IF_NOT(s(startIndex, "start_index"), false);
+  XI_RETURN_EC_IF_NOT(s(outputs, "outputs"), false);
+  return true;
 }
 
-void PaymentIdTransactionHashPair::serialize(ISerializer& s) {
-  s(paymentId, "payment_id");
-  s(transactionHash, "transaction_hash");
+bool PaymentIdTransactionHashPair::serialize(ISerializer& s) {
+  XI_RETURN_EC_IF_NOT(s(paymentId, "payment_id"), false);
+  XI_RETURN_EC_IF_NOT(s(transactionHash, "transaction_hash"), false);
+  return true;
 }
 
 bool serialize(PackedOutIndex& value, Common::StringView name, CryptoNote::ISerializer& serializer) {

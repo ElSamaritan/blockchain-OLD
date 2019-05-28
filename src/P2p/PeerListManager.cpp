@@ -37,33 +37,23 @@ bool serialize(boost::multi_index_container<T, Indexes>& value, Common::StringVi
   return true;
 }
 
-void serialize(NetworkAddress& na, ISerializer& s) {
-  s(na.ip, "ip");
-  s(na.port, "port");
-}
-
-void serialize(PeerlistEntry& pe, ISerializer& s) {
-  s(pe.adr, "adr");
-  s(pe.id, "id");
-  s(pe.last_seen, "last_seen");
-}
-
 }  // namespace CryptoNote
 
 PeerlistManager::Peerlist::Peerlist(peers_indexed& peers, size_t maxSize) : m_peers(peers), m_maxSize(maxSize) {}
 
-void PeerlistManager::serialize(ISerializer& s) {
+bool PeerlistManager::serialize(ISerializer& s) {
   const uint8_t currentVersion = 1;
   uint8_t version = currentVersion;
 
-  s(version, "version");
+  XI_RETURN_EC_IF_NOT(s(version, "version"), false);
 
   if (version != currentVersion) {
-    return;
+    return false;
   }
 
-  s(m_peers_white, "whitelist");
-  s(m_peers_gray, "graylist");
+  XI_RETURN_EC_IF_NOT(s(m_peers_white, "whitelist"), false);
+  XI_RETURN_EC_IF_NOT(s(m_peers_gray, "graylist"), false);
+  return true;
 }
 
 size_t PeerlistManager::Peerlist::count() const { return m_peers.size(); }
@@ -162,7 +152,7 @@ bool PeerlistManager::get_peerlist_full(std::list<PeerlistEntry>& pl_gray, std::
 }
 //--------------------------------------------------------------------------------------------------
 
-bool PeerlistManager::set_peer_just_seen(PeerIdType peer, uint32_t ip, uint32_t port) {
+bool PeerlistManager::set_peer_just_seen(PeerIdType peer, uint32_t ip, uint16_t port) {
   NetworkAddress addr;
   addr.ip = ip;
   addr.port = port;
@@ -174,7 +164,7 @@ bool PeerlistManager::set_peer_just_seen(PeerIdType peer, const NetworkAddress& 
   try {
     // find in white list
     PeerlistEntry ple;
-    ple.adr = addr;
+    ple.address = addr;
     ple.id = peer;
     ple.last_seen = time(NULL);
     return append_with_peer_white(ple);
@@ -187,10 +177,10 @@ bool PeerlistManager::set_peer_just_seen(PeerIdType peer, const NetworkAddress& 
 
 bool PeerlistManager::append_with_peer_white(const PeerlistEntry& ple) {
   try {
-    if (!is_ip_allowed(ple.adr.ip)) return true;
+    if (!is_ip_allowed(ple.address.ip)) return true;
 
     // find in white list
-    auto by_addr_it_wt = m_peers_white.get<by_addr>().find(ple.adr);
+    auto by_addr_it_wt = m_peers_white.get<by_addr>().find(ple.address);
     if (by_addr_it_wt == m_peers_white.get<by_addr>().end()) {
       // put new record into white list
       m_peers_white.insert(ple);
@@ -200,7 +190,7 @@ bool PeerlistManager::append_with_peer_white(const PeerlistEntry& ple) {
       m_peers_white.replace(by_addr_it_wt, ple);
     }
     // remove from gray list, if need
-    auto by_addr_it_gr = m_peers_gray.get<by_addr>().find(ple.adr);
+    auto by_addr_it_gr = m_peers_gray.get<by_addr>().find(ple.address);
     if (by_addr_it_gr != m_peers_gray.get<by_addr>().end()) {
       m_peers_gray.erase(by_addr_it_gr);
     }
@@ -213,14 +203,14 @@ bool PeerlistManager::append_with_peer_white(const PeerlistEntry& ple) {
 
 bool PeerlistManager::append_with_peer_gray(const PeerlistEntry& ple) {
   try {
-    if (!is_ip_allowed(ple.adr.ip)) return true;
+    if (!is_ip_allowed(ple.address.ip)) return true;
 
     // find in white list
-    auto by_addr_it_wt = m_peers_white.get<by_addr>().find(ple.adr);
+    auto by_addr_it_wt = m_peers_white.get<by_addr>().find(ple.address);
     if (by_addr_it_wt != m_peers_white.get<by_addr>().end()) return true;
 
     // update gray list
-    auto by_addr_it_gr = m_peers_gray.get<by_addr>().find(ple.adr);
+    auto by_addr_it_gr = m_peers_gray.get<by_addr>().find(ple.address);
     if (by_addr_it_gr == m_peers_gray.get<by_addr>().end()) {
       // put new record into white list
       m_peers_gray.insert(ple);

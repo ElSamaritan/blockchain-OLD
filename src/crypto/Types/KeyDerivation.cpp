@@ -54,6 +54,6 @@ Xi::ByteSpan Crypto::KeyDerivation::span() { return Xi::ByteSpan{data(), bytes()
 
 void Crypto::KeyDerivation::nullify() { fill(0); }
 
-void Crypto::KeyDerivation::serialize(CryptoNote::ISerializer &serializer) {
-  serializer.binary(data(), size() * sizeof(value_type), "blob");
+bool Crypto::KeyDerivation::serialize(CryptoNote::ISerializer &serializer) {
+  return serializer.binary(data(), size() * sizeof(value_type), "");
 }

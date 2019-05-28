@@ -38,13 +38,7 @@ class AccountBase {
   void setAccountKeys(const AccountKeys& keys);
   uint64_t get_createtime() const { return m_creation_timestamp; }
   void set_createtime(uint64_t val) { m_creation_timestamp = val; }
-  void serialize(ISerializer& s);
-
-  template <class t_archive>
-  inline void serialize(t_archive& a, const unsigned int /*ver*/) {
-    a& m_keys;
-    a& m_creation_timestamp;
-  }
+  bool serialize(ISerializer& s);
 
  private:
   void nullify();

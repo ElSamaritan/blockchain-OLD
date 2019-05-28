@@ -21,6 +21,7 @@
 #include <vector>
 #include <cinttypes>
 
+#include <Serialization/ISerializer.h>
 #include <CryptoNoteCore/BlockchainCache.h>
 
 namespace CryptoNote {
@@ -31,7 +32,7 @@ struct KeyOutputInfo {
   uint64_t unlockTime;
   uint16_t outputIndex;
 
-  void serialize(CryptoNote::ISerializer& s);
+  bool serialize(CryptoNote::ISerializer& s);
 };
 
 // inherit here to avoid breaking IBlockchainCache interface
@@ -39,7 +40,7 @@ struct ExtendedTransactionInfo : CachedTransactionInfo {
   // CachedTransactionInfo tx;
   std::map<IBlockchainCache::Amount, std::vector<IBlockchainCache::GlobalOutputIndex>>
       amountToKeyIndexes;  // global key output indexes spawned in this transaction
-  void serialize(ISerializer& s);
+  bool serialize(ISerializer& s);
 };
 
 }  // namespace CryptoNote

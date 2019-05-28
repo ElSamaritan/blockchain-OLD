@@ -92,7 +92,7 @@ bool parseAmount(std::string strAmount, uint64_t &amount) {
 }
 
 bool confirmTransaction(CryptoNote::TransactionParameters t, std::shared_ptr<WalletInfo> walletInfo,
-                        bool integratedAddress, uint32_t nodeFee, std::string originalAddress) {
+                        bool integratedAddress, uint64_t nodeFee, std::string originalAddress) {
   std::cout << std::endl << InformationMsg("Confirm Transaction?") << std::endl;
 
   std::cout << "You are sending " << SuccessMsg(formatAmount(t.destinations[0].amount)) << ", with a network fee of "
@@ -133,7 +133,7 @@ bool confirmTransaction(CryptoNote::TransactionParameters t, std::shared_ptr<Wal
 /* Note that the originalTXParams, and thus the splitTXParams already has the
    node transfer added */
 void splitTX(CryptoNote::WalletGreen &wallet, const CryptoNote::TransactionParameters originalTXParams,
-             uint32_t nodeFee) {
+             uint64_t nodeFee) {
   std::cout << "Transaction is still too large to send, splitting into "
             << "multiple chunks." << std::endl
             << "It will slightly raise the fee you have to pay," << std::endl
@@ -249,8 +249,10 @@ void splitTX(CryptoNote::WalletGreen &wallet, const CryptoNote::TransactionParam
   }
 }
 
-void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool sendAll, std::string nodeAddress,
-              uint32_t nodeFee) {
+void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, const CryptoNote::Currency &currency,
+              bool sendAll, std::optional<CryptoNote::FeeAddress> feeAddress) {
+  uint64_t nodeFee = feeAddress ? feeAddress->amount : 0;
+
   std::cout << InformationMsg(
                    "Note: You can type cancel at any time to "
                    "cancel the transaction")
@@ -329,7 +331,9 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool send
         mixin = 0;
         break;
       }
-      default: { break; }
+      default: {
+        break;
+      }
     }
   }
 
@@ -351,7 +355,9 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool send
       mixin = 0;
       break;
     }
-    default: { break; }
+    default: {
+      break;
+    }
   }
 
   const auto maybeUnlockTimestamp = getUnlockTimestamp();
@@ -389,12 +395,12 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool send
     }
   }
 
-  doTransfer(address, amount, fee, extra, walletInfo, height, integratedAddress, mixin, nodeAddress, nodeFee,
-             originalAddress, unlockTimestamp);
+  doTransfer(address, amount, fee, extra, walletInfo, height, integratedAddress, mixin, feeAddress, originalAddress,
+             unlockTimestamp, currency);
 }
 
 BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr<WalletInfo> walletInfo,
-                                  uint32_t height, uint32_t nodeFee) {
+                                  uint32_t height, uint64_t nodeFee) {
   const uint64_t balance = walletInfo->wallet.getActualBalance();
 
   const uint64_t balanceNoDust = walletInfo->wallet.getBalanceMinusDust({walletInfo->walletAddress});
@@ -436,8 +442,10 @@ BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr
 
 void doTransfer(std::string address, uint64_t amount, uint64_t fee, std::string extra,
                 std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool integratedAddress, uint64_t mixin,
-                std::string nodeAddress, uint32_t nodeFee, std::string originalAddress, uint64_t unlockTimestamp) {
+                std::optional<CryptoNote::FeeAddress> nodeFees, std::string originalAddress, uint64_t unlockTimestamp,
+                const CryptoNote::Currency &currency) {
   const uint64_t balance = walletInfo->wallet.getActualBalance();
+  const uint64_t nodeFee = nodeFees ? nodeFees->amount : 0;
 
   if (balance < amount + fee + nodeFee) {
     std::cout << WarningMsg("You don't have enough funds to cover this ") << WarningMsg("transaction!") << std::endl
@@ -450,8 +458,8 @@ void doTransfer(std::string address, uint64_t amount, uint64_t fee, std::string 
 
   p.destinations = std::vector<CryptoNote::WalletOrder>{{address, amount}};
 
-  if (!nodeAddress.empty() && nodeFee != 0) {
-    p.destinations.push_back({nodeAddress, nodeFee});
+  if (nodeFees && nodeFee > 0) {
+    p.destinations.push_back({currency.accountAddressAsString(nodeFees->address), nodeFee});
   }
 
   p.fee = fee;
@@ -469,7 +477,7 @@ void doTransfer(std::string address, uint64_t amount, uint64_t fee, std::string 
 }
 
 void sendTX(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::TransactionParameters p, uint32_t height, bool retried,
-            uint32_t nodeFee) {
+            uint64_t nodeFee) {
   try {
     auto tx = walletInfo->wallet.formTransaction(p);
 

@@ -159,15 +159,16 @@ void P2pNode::stop() {
   workingContextGroup.wait();
 }
 
-void P2pNode::serialize(ISerializer& s) {
+bool P2pNode::serialize(ISerializer& s) {
   uint8_t version = 1;
-  s(version, "version");
+  XI_RETURN_EC_IF_NOT(s(version, "version"), false);
 
   if (version != 1) {
-    return;
+    return false;
   }
 
-  s(m_peerlist, "peerlist");
+  XI_RETURN_EC_IF_NOT(s(m_peerlist, "peerlist"), false);
+  return true;
 }
 
 void P2pNode::save(std::ostream& os) {
@@ -282,10 +283,10 @@ bool P2pNode::makeNewConnectionFromPeerlist(const PeerlistManager::Peerlist& pee
       continue;
     }
 
-    logger(DEBUGGING) << "Selected peer: [" << peer.id << " " << peer.adr << "] last_seen: "
+    logger(DEBUGGING) << "Selected peer: [" << peer.id << " " << peer.address << "] last_seen: "
                       << (peer.last_seen ? Common::timeIntervalToString(time(NULL) - peer.last_seen) : "never");
 
-    auto conn = tryToConnectPeer(peer.adr);
+    auto conn = tryToConnectPeer(peer.address);
     if (conn.get()) {
       enqueueConnection(createProxy(std::move(conn)));
       return true;
@@ -338,7 +339,7 @@ bool P2pNode::isPeerUsed(const PeerlistEntry& peer) {
   }
 
   for (const auto& c : m_contexts) {
-    if (c->getPeerId() == peer.id || (!c->isIncoming() && c->getRemoteAddress() == peer.adr)) {
+    if (c->getPeerId() == peer.id || (!c->isIncoming() && c->getRemoteAddress() == peer.address)) {
       return true;
     }
   }
@@ -517,7 +518,7 @@ void P2pNode::tryPing(P2pContext& ctx) {
 
       if (response.status == PING_OK_RESPONSE_STATUS_TEXT && response.peer_id == ctx.getPeerId()) {
         PeerlistEntry entry;
-        entry.adr = peerAddress;
+        entry.address = peerAddress;
         entry.id = ctx.getPeerId();
         entry.last_seen = time(nullptr);
         m_peerlist.append_with_peer_white(entry);

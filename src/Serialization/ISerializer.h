@@ -35,6 +35,7 @@ class ISerializer {
   virtual bool beginObject(Common::StringView name) = 0;
   virtual void endObject() = 0;
   virtual bool beginArray(size_t& size, Common::StringView name) = 0;
+  virtual bool beginStaticArray(const size_t size, Common::StringView name) = 0;
   virtual void endArray() = 0;
 
   virtual bool operator()(uint8_t& value, Common::StringView name) = 0;
@@ -52,6 +53,9 @@ class ISerializer {
   virtual bool binary(void* value, size_t size, Common::StringView name) = 0;
   virtual bool binary(std::string& value, Common::StringView name) = 0;
 
+  bool isInput() const { return type() == INPUT; }
+  bool isOutput() const { return type() == OUTPUT; }
+
   template <typename T>
   bool operator()(T& value, Common::StringView name);
 };
@@ -67,14 +71,17 @@ bool serialize(T& value, Common::StringView name, ISerializer& serializer) {
     return false;
   }
 
-  serialize(value, serializer);
+  if (!serialize(value, serializer)) {
+    return false;
+  }
+
   serializer.endObject();
   return true;
 }
 
 template <typename T>
-void serialize(T& value, ISerializer& serializer) {
-  value.serialize(serializer);
+bool serialize(T& value, ISerializer& serializer) {
+  return value.serialize(serializer);
 }
 
 #ifdef __clang__
@@ -84,9 +91,17 @@ inline bool ISerializer::operator()(size_t& value, Common::StringView name) {
 }
 #endif
 
-#define KV_BEGIN_SERIALIZATION void serialize(::CryptoNote::ISerializer& s) {
-#define KV_END_SERIALIZATION }
-#define KV_MEMBER(member) s(member, #member);
-#define KV_BASE(BASE_CLASS) this->BASE_CLASS::serialize(s);
+#define KV_BEGIN_SERIALIZATION bool serialize(::CryptoNote::ISerializer& s) {
+#define KV_END_SERIALIZATION \
+  return true;               \
+  }
+#define KV_MEMBER(member) \
+  if (!s(member, #member)) return false;
+
+#define KV_MEMBER_RENAME(MEMBER, NAME) \
+  if (!s(MEMBER, #NAME)) return false;
+
+#define KV_BASE(BASE_CLASS) \
+  if (!this->BASE_CLASS::serialize(s)) return false;
 
 }  // namespace CryptoNote

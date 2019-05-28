@@ -113,7 +113,7 @@ class SSLConfiguration {
   const std::string& privateKeyPassword() const;
   void setPrivateKeyPassword(const std::string& password);
 
-  void serialize(CryptoNote::ISerializer& s);
+  bool serialize(CryptoNote::ISerializer& s);
   void emplaceOptions(cxxopts::Options& options, Usage usage);
   void initializeServerContext(boost::asio::ssl::context& ctx);
   void initializeClientContext(boost::asio::ssl::context& ctx);

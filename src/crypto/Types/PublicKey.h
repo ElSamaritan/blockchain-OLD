@@ -57,7 +57,7 @@ struct PublicKey : Xi::ByteArray<32> {
   bool isValid() const;
 
   void nullify();
-  void serialize(CryptoNote::ISerializer& serializer);
+  bool serialize(CryptoNote::ISerializer& serializer);
 };
 
 XI_MAKE_GENERIC_HASH_FUNC(PublicKey)

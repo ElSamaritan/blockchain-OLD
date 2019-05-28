@@ -55,6 +55,11 @@ bool BinaryInputStreamSerializer::beginArray(size_t& size, Common::StringView na
   return true;
 }
 
+bool BinaryInputStreamSerializer::beginStaticArray(const size_t size, StringView name) {
+  XI_UNUSED(size, name);
+  return true;
+}
+
 void BinaryInputStreamSerializer::endArray() {}
 
 bool BinaryInputStreamSerializer::operator()(uint8_t& value, Common::StringView name) {
@@ -100,9 +105,17 @@ bool BinaryInputStreamSerializer::operator()(uint64_t& value, Common::StringView
 }
 
 bool BinaryInputStreamSerializer::operator()(bool& value, Common::StringView name) {
-  XI_UNUSED(name);
-  value = read<uint8_t>(stream) != 0;
-  return true;
+  uint8_t byte;
+  XI_RETURN_EC_IF_NOT(this->operator()(byte, name), false);
+  if (byte == 0xAA) {
+    value = true;
+    return true;
+  } else if (byte == 0x55) {
+    value = false;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool BinaryInputStreamSerializer::operator()(std::string& value, Common::StringView name) {

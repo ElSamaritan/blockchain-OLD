@@ -31,7 +31,7 @@
 
 namespace CryptoNote {
 struct NOTIFY_NEW_LITE_BLOCK_request {
-  LiteBlock b;
+  LiteBlock block;
   uint32_t current_blockchain_height;
   uint32_t hop;
 };

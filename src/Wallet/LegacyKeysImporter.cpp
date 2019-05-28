@@ -32,10 +32,10 @@ struct keys_file_data {
   chacha8_iv iv;
   std::string account_data;
 
-  void serialize(CryptoNote::ISerializer& s) {
-    s(iv, "iv");
-    s(account_data, "account_data");
-  }
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(iv)
+  KV_MEMBER(account_data)
+  KV_END_SERIALIZATION
 };
 
 void loadKeysFromFile(const std::string& filename, const std::string& password, CryptoNote::AccountBase& account) {

@@ -79,6 +79,14 @@ bool JsonOutputStreamSerializer::beginArray(size_t& size, Common::StringView nam
   return true;
 }
 
+bool JsonOutputStreamSerializer::beginStaticArray(const size_t size, Common::StringView name) {
+  XI_UNUSED(size);
+  JsonValue val(JsonValue::ARRAY);
+  JsonValue& res = chain.back()->insert(std::string(name), val);
+  chain.push_back(&res);
+  return true;
+}
+
 void JsonOutputStreamSerializer::endArray() {
   assert(!chain.empty());
   chain.pop_back();

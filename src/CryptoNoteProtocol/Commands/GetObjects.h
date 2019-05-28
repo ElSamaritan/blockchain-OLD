@@ -39,10 +39,10 @@ struct NOTIFY_REQUEST_GET_OBJECTS_request {
   std::vector<Crypto::Hash> txs;
   std::vector<Crypto::Hash> blocks;
 
-  void serialize(ISerializer& s) {
-    KV_MEMBER(txs);
-    KV_MEMBER(blocks);
-  }
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(txs);
+  KV_MEMBER(blocks);
+  KV_END_SERIALIZATION
 };
 
 struct NOTIFY_REQUEST_GET_OBJECTS {
@@ -51,7 +51,7 @@ struct NOTIFY_REQUEST_GET_OBJECTS {
 };
 
 struct NOTIFY_RESPONSE_GET_OBJECTS_request {
-  std::vector<std::string> txs;
+  std::vector<std::string> transactions;
   std::vector<RawBlockLegacy> blocks;
   std::vector<Crypto::Hash> missed_ids;
   uint32_t current_blockchain_height;

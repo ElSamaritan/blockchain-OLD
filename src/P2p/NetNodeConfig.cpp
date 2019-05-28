@@ -40,7 +40,7 @@ bool parsePeersAndAddToPeerListContainer(const std::vector<std::string> peerList
   for (const std::string& peer : peerList) {
     PeerlistEntry peerListEntry = PeerlistEntry();
     peerListEntry.id = Crypto::rand<uint64_t>();
-    if (!parsePeerFromString(peerListEntry.adr, peer)) {
+    if (!parsePeerFromString(peerListEntry.address, peer)) {
       return false;
     }
     container.push_back(peerListEntry);

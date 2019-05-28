@@ -40,8 +40,9 @@ const AccountKeys &AccountBase::getAccountKeys() const { return m_keys; }
 void AccountBase::setAccountKeys(const AccountKeys &keys) { m_keys = keys; }
 //-----------------------------------------------------------------
 
-void AccountBase::serialize(ISerializer &s) {
-  s(m_keys, "m_keys");
-  s(m_creation_timestamp, "m_creation_timestamp");
+bool AccountBase::serialize(ISerializer &s) {
+  XI_RETURN_EC_IF_NOT(s(m_keys, "keys"), false);
+  XI_RETURN_EC_IF_NOT(s(m_creation_timestamp, "creation_timestamp"), false);
+  return true;
 }
 }  // namespace CryptoNote

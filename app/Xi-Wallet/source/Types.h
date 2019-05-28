@@ -100,12 +100,12 @@ struct AddressBookEntry {
      address + payment ID pair */
   bool integratedAddress;
 
-  void serialize(CryptoNote::ISerializer &s) {
-    KV_MEMBER(friendlyName)
-    KV_MEMBER(address)
-    KV_MEMBER(paymentID)
-    KV_MEMBER(integratedAddress)
-  }
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(friendlyName, friendly_name)
+  KV_MEMBER_RENAME(address, address)
+  KV_MEMBER_RENAME(paymentID, payment_id)
+  KV_MEMBER_RENAME(integratedAddress, integrated_address)
+  KV_END_SERIALIZATION
 
   /* Only compare via name as we don't really care about the contents */
   bool operator==(const AddressBookEntry &rhs) const { return rhs.friendlyName == friendlyName; }

@@ -30,65 +30,83 @@ namespace CryptoNote {
 
 ISerializer::SerializerType BinaryOutputStreamSerializer::type() const { return ISerializer::OUTPUT; }
 
-bool BinaryOutputStreamSerializer::beginObject(Common::StringView name) { return true; }
+bool BinaryOutputStreamSerializer::beginObject(Common::StringView name) {
+  XI_UNUSED(name);
+  return true;
+}
 
 void BinaryOutputStreamSerializer::endObject() {}
 
 bool BinaryOutputStreamSerializer::beginArray(size_t& size, Common::StringView name) {
+  XI_UNUSED(name);
   writeVarint(stream, size);
+  return true;
+}
+
+bool BinaryOutputStreamSerializer::beginStaticArray(const size_t size, StringView name) {
+  XI_UNUSED(size, name);
   return true;
 }
 
 void BinaryOutputStreamSerializer::endArray() {}
 
 bool BinaryOutputStreamSerializer::operator()(uint8_t& value, Common::StringView name) {
+  XI_UNUSED(name);
   writeVarint(stream, value);
   return true;
 }
 
 bool BinaryOutputStreamSerializer::operator()(uint16_t& value, Common::StringView name) {
+  XI_UNUSED(name);
   writeVarint(stream, value);
   return true;
 }
 
 bool BinaryOutputStreamSerializer::operator()(int16_t& value, Common::StringView name) {
+  XI_UNUSED(name);
   writeVarint(stream, static_cast<uint16_t>(value));
   return true;
 }
 
 bool BinaryOutputStreamSerializer::operator()(uint32_t& value, Common::StringView name) {
+  XI_UNUSED(name);
   writeVarint(stream, value);
   return true;
 }
 
 bool BinaryOutputStreamSerializer::operator()(int32_t& value, Common::StringView name) {
+  XI_UNUSED(name);
   writeVarint(stream, static_cast<uint32_t>(value));
   return true;
 }
 
 bool BinaryOutputStreamSerializer::operator()(int64_t& value, Common::StringView name) {
+  XI_UNUSED(name);
   writeVarint(stream, static_cast<uint64_t>(value));
   return true;
 }
 
 bool BinaryOutputStreamSerializer::operator()(uint64_t& value, Common::StringView name) {
+  XI_UNUSED(name);
   writeVarint(stream, value);
   return true;
 }
 
 bool BinaryOutputStreamSerializer::operator()(bool& value, Common::StringView name) {
-  char boolVal = value;
-  checkedWrite(&boolVal, 1);
+  uint8_t boolVal = value ? 0xAA : 0x55;
+  XI_RETURN_EC_IF_NOT(this->operator()(boolVal, name), false);
   return true;
 }
 
 bool BinaryOutputStreamSerializer::operator()(std::string& value, Common::StringView name) {
+  XI_UNUSED(name);
   writeVarint(stream, value.size());
   checkedWrite(value.data(), value.size());
   return true;
 }
 
 bool BinaryOutputStreamSerializer::binary(void* value, size_t size, Common::StringView name) {
+  XI_UNUSED(name);
   checkedWrite(static_cast<const char*>(value), size);
   return true;
 }

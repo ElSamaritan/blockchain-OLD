@@ -16,6 +16,7 @@
 
 #include <boost/filesystem/operations.hpp>
 
+#include <Xi/Algorithm/Math.h>
 #include <System/Timer.h>
 #include <System/InterruptedException.h>
 #include "Common/Base58.h"
@@ -342,7 +343,7 @@ std::vector<std::string> collectDestinationAddresses(const std::vector<PaymentSe
 }
 
 std::vector<CryptoNote::WalletOrder> convertWalletRpcOrdersToWalletOrders(
-    const std::vector<PaymentService::WalletRpcOrder>& orders, const std::string nodeAddress, const uint32_t nodeFee) {
+    const std::vector<PaymentService::WalletRpcOrder>& orders, const std::string nodeAddress, const uint64_t nodeFee) {
   std::vector<CryptoNote::WalletOrder> result;
 
   if (!nodeAddress.empty() && nodeFee != 0) {
@@ -473,16 +474,17 @@ void WalletService::init() {
 void WalletService::getNodeFee() {
   logger(Logging::DEBUGGING) << "Trying to retrieve node fee information." << std::endl;
 
-  m_node_address = node.feeAddress();
-  m_node_fee = node.feeAmount();
+  const auto feeAddress = node.feeAddress();
+  m_node_address = feeAddress ? currency.accountAddressAsString(feeAddress->address) : std::string{};
+  m_node_fee = feeAddress ? feeAddress->amount : 0;
 
   if (!m_node_address.empty() && m_node_fee != 0) {
     // Partially borrowed from <Tools.h>
-    uint32_t div = static_cast<uint32_t>(pow(10, Xi::Config::Coin::numberOfDecimalPoints()));
-    uint32_t coins = m_node_fee / div;
-    uint32_t cents = m_node_fee % div;
+    uint64_t div = Xi::pow64(10, currency.numberOfDecimalPlaces());
+    uint64_t coins = m_node_fee / div;
+    uint64_t cents = m_node_fee % div;
     std::stringstream stream;
-    stream << std::setfill('0') << std::setw(Xi::Config::Coin::numberOfDecimalPoints()) << cents;
+    stream << std::setfill('0') << std::setw(static_cast<std::streamsize>(currency.numberOfDecimalPlaces())) << cents;
     std::string amount = std::to_string(coins) + "." + stream.str();
 
     logger(Logging::INFO, Logging::RED) << "You have connected to a node that charges "
@@ -1392,7 +1394,7 @@ std::error_code WalletService::createIntegratedAddress(const std::string& addres
   return std::error_code();
 }
 
-std::error_code WalletService::getFeeInfo(std::string& address, uint32_t& amount) {
+std::error_code WalletService::getFeeInfo(std::string& address, uint64_t& amount) {
   address = m_node_address;
   amount = m_node_fee;
 

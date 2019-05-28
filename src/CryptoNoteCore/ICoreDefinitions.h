@@ -29,18 +29,18 @@ struct BlockFullInfo : public RawBlock {
 };
 
 struct TransactionPrefixInfo {
-  Crypto::Hash txHash;
-  TransactionPrefix txPrefix;
+  Crypto::Hash hash;
+  TransactionPrefix prefix;
 };
 
 struct BlockShortInfo {
-  Crypto::Hash blockId;
+  Crypto::Hash block_hash;
   BinaryArray block;
-  std::vector<TransactionPrefixInfo> txPrefixes;
+  std::vector<TransactionPrefixInfo> transaction_prefixes;
 };
 
-void serialize(BlockFullInfo&, ISerializer&);
-void serialize(TransactionPrefixInfo&, ISerializer&);
-void serialize(BlockShortInfo&, ISerializer&);
+bool serialize(BlockFullInfo&, ISerializer&);
+bool serialize(TransactionPrefixInfo&, ISerializer&);
+bool serialize(BlockShortInfo&, ISerializer&);
 
 }  // namespace CryptoNote

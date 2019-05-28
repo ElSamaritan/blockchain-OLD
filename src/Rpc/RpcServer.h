@@ -17,6 +17,7 @@
 #include <Xi/Http/Server.h>
 
 #include <Logging/LoggerRef.h>
+#include <CryptoNoteCore/Currency.h>
 #include "Common/Math.h"
 #include "CoreRpcServerCommandsDefinitions.h"
 #include "JsonRpc.h"
@@ -40,7 +41,7 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   typedef std::function<bool(RpcServer*, const HttpRequest& request, HttpResponse& response)> HandlerFunction;
   bool enableCors(const std::string& domain);
   bool setFeeAddress(const std::string fee_address);
-  bool setFeeAmount(const uint32_t fee_amount);
+  bool setFeeAmount(const uint64_t fee_amount);
   const std::string& getCorsDomain();
 
   bool isBlockexplorer() const;
@@ -55,6 +56,8 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   bool on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RPC_GET_INFO::response& res);
 
  private:
+  const Currency& currency() const;
+
   template <class Handler>
   struct RpcHandler {
     const Handler handler;
@@ -158,8 +161,8 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   NodeServer& m_p2p;
   ICryptoNoteProtocolHandler& m_protocol;
   std::string m_cors;
-  std::string m_fee_address;
-  uint32_t m_fee_amount;
+  std::optional<AccountPublicAddress> m_fee_address = std::nullopt;
+  uint64_t m_fee_amount = 0;
   bool m_isBlockexplorer;
   bool m_isBlockexplorerOnly;
   Xi::Concurrent::RecursiveLock m_submissionAccess;

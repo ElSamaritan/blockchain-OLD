@@ -37,4 +37,5 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(Format, "invalid format for conversion", Runtime
 XI_DECLARE_EXCEPTIONAL_INSTANCE(NotImplemented, "feature required is not implemented yet", Runtime)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(NotFound, "an object was requested but not found", Runtime)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidArgument, "argument provided is invalid", Runtime)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(NotInitialized, "object is not initialized and cannot perform yet", Runtime)
 }  // namespace Xi

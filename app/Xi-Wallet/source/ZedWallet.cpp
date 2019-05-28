@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 
   /* Our connection to xi-daemon */
   std::unique_ptr<CryptoNote::INode> node(
-      new CryptoNote::NodeRpcProxy(config.host, config.port, config.ssl, logger.getLogger()));
+      new CryptoNote::NodeRpcProxy(config.host, config.port, config.ssl, currency, logger.getLogger()));
 
   std::promise<std::error_code> errorPromise;
 
@@ -116,14 +116,14 @@ int main(int argc, char **argv) {
       returned something that it expects us to use for convenience charges
       for using that node to send transactions.
     */
-    if (node->feeAmount() != 0 && !node->feeAddress().empty()) {
+    if (const auto nodeFee = node->feeAddress(); nodeFee) {
       std::stringstream feemsg;
 
       feemsg << std::endl
              << "You have connected to a node that charges "
              << "a fee to send transactions." << std::endl
              << std::endl
-             << "The fee for sending transactions is: " << formatAmount(node->feeAmount()) << " per transaction."
+             << "The fee for sending transactions is: " << formatAmount(nodeFee->amount) << " per transaction."
              << std::endl
              << std::endl
              << "If you don't want to pay the node fee, please "

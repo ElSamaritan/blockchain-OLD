@@ -52,7 +52,7 @@ struct KeyDerivation : Xi::ByteArray<32> {
   Xi::ByteSpan span();
 
   void nullify();
-  void serialize(CryptoNote::ISerializer& serializer);
+  bool serialize(CryptoNote::ISerializer& serializer);
 };
 
 XI_MAKE_GENERIC_HASH_FUNC(KeyDerivation)

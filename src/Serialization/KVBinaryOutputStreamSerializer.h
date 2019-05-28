@@ -40,6 +40,7 @@ class KVBinaryOutputStreamSerializer : public ISerializer {
   virtual void endObject() override;
 
   virtual bool beginArray(size_t& size, Common::StringView name) override;
+  virtual bool beginStaticArray(const size_t size, Common::StringView name) override;
   virtual void endArray() override;
 
   virtual bool operator()(uint8_t& value, Common::StringView name) override;
@@ -61,7 +62,7 @@ class KVBinaryOutputStreamSerializer : public ISerializer {
   }
 
  private:
-  void writeElementPrefix(uint8_t type, Common::StringView name);
+  bool writeElementPrefix(uint8_t type, Common::StringView name);
   void checkArrayPreamble(uint8_t type);
   void updateState(uint8_t type);
   MemoryStream& stream();

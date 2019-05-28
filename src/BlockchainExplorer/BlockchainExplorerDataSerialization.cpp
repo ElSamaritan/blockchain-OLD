@@ -41,31 +41,31 @@ struct VariantSerializer : boost::static_visitor<> {
   VariantSerializer(CryptoNote::ISerializer& serializer, const std::string& name) : s(serializer), name(name) {}
 
   template <typename T>
-  void operator()(T& param) {
-    s(param, name);
+  bool operator()(T& param) {
+    return s(param, name);
   }
 
   CryptoNote::ISerializer& s;
   const std::string name;
 };
 
-void getVariantValue(CryptoNote::ISerializer& serializer, uint8_t tag,
+bool getVariantValue(CryptoNote::ISerializer& serializer, uint8_t tag,
                      boost::variant<CryptoNote::BaseInputDetails, CryptoNote::KeyInputDetails>& in) {
   switch (static_cast<SerializationTag>(tag)) {
     case SerializationTag::Base: {
       CryptoNote::BaseInputDetails v;
-      serializer(v, "data");
+      XI_RETURN_EC_IF_NOT(serializer(v, "data"), false);
       in = v;
-      break;
+      return true;
     }
     case SerializationTag::Key: {
       CryptoNote::KeyInputDetails v;
-      serializer(v, "data");
+      XI_RETURN_EC_IF_NOT(serializer(v, "data"), false);
       in = v;
-      break;
+      return true;
     }
     default:
-      throw std::runtime_error("Unknown variant tag");
+      return false;
   }
 }
 
@@ -78,65 +78,76 @@ bool serializePod(T& v, Common::StringView name, CryptoNote::ISerializer& serial
 
 // namespace CryptoNote {
 
-void serialize(TransactionOutputDetails& output, ISerializer& serializer) {
-  serializer(output.output, "output");
-  serializer(output.globalIndex, "globalIndex");
+bool serialize(TransactionOutputDetails& output, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(output.output, "output"), false);
+  XI_RETURN_EC_IF_NOT(serializer(output.globalIndex, "globalIndex"), false);
+  return true;
 }
 
-void serialize(TransactionOutputReferenceDetails& outputReference, ISerializer& serializer) {
-  serializePod(outputReference.transactionHash, "transactionHash", serializer);
-  serializer(outputReference.number, "number");
+bool serialize(TransactionOutputReferenceDetails& outputReference, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializePod(outputReference.transactionHash, "transactionHash", serializer), false);
+  XI_RETURN_EC_IF_NOT(serializer(outputReference.number, "number"), false);
+  return true;
 }
 
-void serialize(BaseInputDetails& inputBase, ISerializer& serializer) {
-  serializer(inputBase.input, "input");
-  serializer(inputBase.amount, "amount");
+bool serialize(BaseInputDetails& inputBase, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(inputBase.input, "input"), false);
+  XI_RETURN_EC_IF_NOT(serializer(inputBase.amount, "amount"), false);
+  return true;
 }
 
-void serialize(KeyInputDetails& inputToKey, ISerializer& serializer) {
-  serializer(inputToKey.input, "input");
-  serializer(inputToKey.mixin, "mixin");
-  serializer(inputToKey.output, "output");
+bool serialize(KeyInputDetails& inputToKey, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(inputToKey.input, "input"), false);
+  XI_RETURN_EC_IF_NOT(serializer(inputToKey.mixin, "mixin"), false);
+  XI_RETURN_EC_IF_NOT(serializer(inputToKey.output, "output"), false);
+  return true;
 }
 
-void serialize(TransactionInputDetails& input, ISerializer& serializer) {
+bool serialize(TransactionInputDetails& input, ISerializer& serializer) {
   if (serializer.type() == ISerializer::OUTPUT) {
     BinaryVariantTagGetter tagGetter;
     uint8_t tag = boost::apply_visitor(tagGetter, input);
-    serializer.binary(&tag, sizeof(tag), "type");
-
-    VariantSerializer visitor(serializer, "data");
-    boost::apply_visitor(visitor, input);
+    XI_RETURN_EC_IF_NOT(serializer.binary(&tag, sizeof(tag), "type"), false);
+    if (input.type() == typeid(BaseInputDetails)) {
+      XI_RETURN_EC_IF_NOT(serializer(boost::get<BaseInputDetails>(input), "data"), false);
+      return true;
+    } else if (input.type() == typeid(KeyInputDetails)) {
+      XI_RETURN_EC_IF_NOT(serializer(boost::get<KeyInputDetails>(input), "data"), false);
+      return true;
+    } else {
+      return false;
+    }
   } else {
     uint8_t tag;
-    serializer.binary(&tag, sizeof(tag), "type");
-
-    getVariantValue(serializer, tag, input);
+    XI_RETURN_EC_IF_NOT(serializer.binary(&tag, sizeof(tag), "type"), false);
+    XI_RETURN_EC_IF_NOT(getVariantValue(serializer, tag, input), false);
+    return true;
   }
 }
 
-void serialize(TransactionExtraDetails& extra, ISerializer& serializer) {
-  serializePod(extra.publicKey, "publicKey", serializer);
-  serializer(extra.nonce, "nonce");
-  serializeAsBinary(extra.raw, "raw", serializer);
+bool serialize(TransactionExtraDetails& extra, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializePod(extra.publicKey, "publicKey", serializer), false);
+  XI_RETURN_EC_IF_NOT(serializer(extra.nonce, "nonce"), false);
+  XI_RETURN_EC_IF_NOT(serializeAsBinary(extra.raw, "raw", serializer), false);
+  return true;
 }
 
-void serialize(TransactionDetails& transaction, ISerializer& serializer) {
-  serializePod(transaction.hash, "hash", serializer);
-  serializer(transaction.size, "size");
-  serializer(transaction.fee, "fee");
-  serializer(transaction.totalInputsAmount, "totalInputsAmount");
-  serializer(transaction.totalOutputsAmount, "totalOutputsAmount");
-  serializer(transaction.mixin, "mixin");
-  serializer(transaction.unlockTime, "unlockTime");
-  serializer(transaction.timestamp, "timestamp");
-  serializePod(transaction.paymentId, "paymentId", serializer);
-  serializer(transaction.inBlockchain, "inBlockchain");
-  serializePod(transaction.blockHash, "blockHash", serializer);
-  serializer(transaction.blockIndex, "blockIndex");
-  serializer(transaction.extra, "extra");
-  serializer(transaction.inputs, "inputs");
-  serializer(transaction.outputs, "outputs");
+bool serialize(TransactionDetails& transaction, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializePod(transaction.hash, "hash", serializer), false);
+  XI_RETURN_EC_IF_NOT(serializer(transaction.size, "size"), false);
+  XI_RETURN_EC_IF_NOT(serializer(transaction.fee, "fee"), false);
+  XI_RETURN_EC_IF_NOT(serializer(transaction.totalInputsAmount, "totalInputsAmount"), false);
+  XI_RETURN_EC_IF_NOT(serializer(transaction.totalOutputsAmount, "totalOutputsAmount"), false);
+  XI_RETURN_EC_IF_NOT(serializer(transaction.mixin, "mixin"), false);
+  XI_RETURN_EC_IF_NOT(serializer(transaction.unlockTime, "unlockTime"), false);
+  XI_RETURN_EC_IF_NOT(serializer(transaction.timestamp, "timestamp"), false);
+  XI_RETURN_EC_IF_NOT(serializePod(transaction.paymentId, "paymentId", serializer), false);
+  XI_RETURN_EC_IF_NOT(serializer(transaction.inBlockchain, "inBlockchain"), false);
+  XI_RETURN_EC_IF_NOT(serializePod(transaction.blockHash, "blockHash", serializer), false);
+  XI_RETURN_EC_IF_NOT(serializer(transaction.blockIndex, "blockIndex"), false);
+  XI_RETURN_EC_IF_NOT(serializer(transaction.extra, "extra"), false);
+  XI_RETURN_EC_IF_NOT(serializer(transaction.inputs, "inputs"), false);
+  XI_RETURN_EC_IF_NOT(serializer(transaction.outputs, "outputs"), false);
 
   // serializer(transaction.signatures, "signatures");
   if (serializer.type() == ISerializer::OUTPUT) {
@@ -150,45 +161,48 @@ void serialize(TransactionDetails& transaction, ISerializer& serializer) {
       ++ctr;
     }
     size_t size = transaction.signatures.size();
-    serializer(size, "signaturesSize");
-    serializer(signaturesForSerialization, "signatures");
+    XI_RETURN_EC_IF_NOT(serializer(size, "signaturesSize"), false);
+    XI_RETURN_EC_IF_NOT(serializer(signaturesForSerialization, "signatures"), false);
+    return true;
   } else {
     size_t size = 0;
-    serializer(size, "signaturesSize");
+    XI_RETURN_EC_IF_NOT(serializer(size, "signaturesSize"), false);
     transaction.signatures.resize(size);
 
     std::vector<std::pair<size_t, Crypto::Signature>> signaturesForSerialization;
-    serializer(signaturesForSerialization, "signatures");
+    XI_RETURN_EC_IF_NOT(serializer(signaturesForSerialization, "signatures"), false);
 
     for (const auto& signatureWithIndex : signaturesForSerialization) {
       transaction.signatures[signatureWithIndex.first].push_back(signatureWithIndex.second);
     }
+    return true;
   }
 }
 
-void serialize(BlockDetails& block, ISerializer& serializer) {
-  serializer(block.majorVersion, "majorVersion");
-  serializer(block.minorVersion, "minorVersion");
-  serializer(block.timestamp, "timestamp");
-  serializePod(block.prevBlockHash, "prevBlockHash", serializer);
-  serializer(block.nonce, "nonce");
-  serializer(block.index, "index");
-  serializePod(block.hash, "hash", serializer);
-  serializer(block.difficulty, "difficulty");
-  serializer(block.reward, "reward");
-  serializer(block.baseReward, "baseReward");
-  serializer(block.staticReward, "staticReward");
-  serializer(block.blockSize, "blockSize");
-  serializer(block.transactionsCumulativeSize, "transactionsCumulativeSize");
-  serializer(block.alreadyGeneratedCoins, "alreadyGeneratedCoins");
-  serializer(block.alreadyGeneratedTransactions, "alreadyGeneratedTransactions");
-  serializer(block.sizeMedian, "sizeMedian");
+bool serialize(BlockDetails& block, ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(block.majorVersion, "majorVersion"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.minorVersion, "minorVersion"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.timestamp, "timestamp"), false);
+  XI_RETURN_EC_IF_NOT(serializePod(block.prevBlockHash, "prevBlockHash", serializer), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.nonce, "nonce"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.index, "index"), false);
+  XI_RETURN_EC_IF_NOT(serializePod(block.hash, "hash", serializer), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.difficulty, "difficulty"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.reward, "reward"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.baseReward, "baseReward"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.staticReward, "staticReward"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.blockSize, "blockSize"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.transactionsCumulativeSize, "transactionsCumulativeSize"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.alreadyGeneratedCoins, "alreadyGeneratedCoins"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.alreadyGeneratedTransactions, "alreadyGeneratedTransactions"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.sizeMedian, "sizeMedian"), false);
   /* Some serializers don't support doubles, which causes this to fail and
      not serialize the whole object
   serializer(block.penalty, "penalty");
   */
-  serializer(block.totalFeeAmount, "totalFeeAmount");
-  serializer(block.transactions, "transactions");
+  XI_RETURN_EC_IF_NOT(serializer(block.totalFeeAmount, "totalFeeAmount"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.transactions, "transactions"), false);
+  return true;
 }
 
 }  // namespace CryptoNote

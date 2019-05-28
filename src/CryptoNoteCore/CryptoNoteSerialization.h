@@ -36,27 +36,29 @@ struct AccountKeys;
 
 enum class SerializationTag : uint8_t { Base = 0xff, Key = 0x2, Transaction = 0xcc, Block = 0xbb };
 
-void serialize(TransactionPrefix& txP, ISerializer& serializer);
-void serialize(Transaction& tx, ISerializer& serializer);
-void serialize(BaseTransaction& tx, ISerializer& serializer);
-void serialize(TransactionInput& in, ISerializer& serializer);
-void serialize(TransactionOutput& in, ISerializer& serializer);
+bool serialize(TransactionPrefix& txP, ISerializer& serializer);
+bool serialize(Transaction& tx, ISerializer& serializer);
+bool serialize(BaseTransaction& tx, ISerializer& serializer);
+bool serialize(TransactionInput& in, ISerializer& serializer);
+bool serialize(TransactionOutput& in, ISerializer& serializer);
 
-void serialize(BaseInput& gen, ISerializer& serializer);
-void serialize(KeyInput& key, ISerializer& serializer);
+bool serialize(BaseInput& gen, ISerializer& serializer);
+bool serialize(KeyInput& key, ISerializer& serializer);
 
-void serialize(TransactionOutput& output, ISerializer& serializer);
-void serialize(TransactionOutputTarget& output, ISerializer& serializer);
-void serialize(KeyOutput& key, ISerializer& serializer);
+bool serialize(TransactionOutput& output, ISerializer& serializer);
+bool serialize(TransactionOutputTarget& output, ISerializer& serializer);
+bool serialize(KeyOutput& key, ISerializer& serializer);
 
-void serialize(BlockHeader& header, ISerializer& serializer);
-void serialize(BlockTemplate& block, ISerializer& serializer);
+bool serialize(BlockHeader& header, ISerializer& serializer);
+bool serialize(BlockTemplate& block, ISerializer& serializer);
 
-void serialize(AccountPublicAddress& address, ISerializer& serializer);
-void serialize(AccountKeys& keys, ISerializer& s);
+bool serialize(AccountPublicAddress& address, ISerializer& serializer);
+bool serialize(FeeAddress& addr, ISerializer& serializer);
+bool serialize(AccountKeys& keys, ISerializer& s);
 
-void serialize(KeyPair& keyPair, ISerializer& serializer);
-void serialize(RawBlock& rawBlock, ISerializer& serializer);
-void serialize(LiteBlock& block, ISerializer& serializer);
+bool serialize(KeyPair& keyPair, ISerializer& serializer);
+bool serialize(RawBlock& rawBlock, ISerializer& serializer);
+bool serialize(FullBlock& block, ISerializer& serializer);
+bool serialize(LiteBlock& block, ISerializer& serializer);
 
 }  // namespace CryptoNote

@@ -65,15 +65,16 @@ void Xi::Http::SSLConfiguration::setTrustedKeysPath(const std::string &path) { m
 const std::string &Xi::Http::SSLConfiguration::privateKeyPassword() const { return m_privateKeyPassword; }
 void Xi::Http::SSLConfiguration::setPrivateKeyPassword(const std::string &password) { m_privateKeyPassword = password; }
 
-void Xi::Http::SSLConfiguration::serialize(CryptoNote::ISerializer &s) {
-  s(m_enabled, "enabled");
-  s(m_verifyPeers, "verifyPeers");
-  s(m_rootPath, "directory");
-  s(m_certificatePath, "certificatesPath");
-  s(m_privateKeyPath, "privateKeyPath");
-  s(m_dhparamPath, "dhparamPath");
-  s(m_trustedKeysPath, "trustedKeysPath");
-  s(m_privateKeyPassword, "privateKeyPassword");
+bool Xi::Http::SSLConfiguration::serialize(CryptoNote::ISerializer &s) {
+  XI_RETURN_EC_IF_NOT(s(m_enabled, "enabled"), false);
+  XI_RETURN_EC_IF_NOT(s(m_verifyPeers, "verify_peers"), false);
+  XI_RETURN_EC_IF_NOT(s(m_rootPath, "directory"), false);
+  XI_RETURN_EC_IF_NOT(s(m_certificatePath, "certificates_path"), false);
+  XI_RETURN_EC_IF_NOT(s(m_privateKeyPath, "private_key_path"), false);
+  XI_RETURN_EC_IF_NOT(s(m_dhparamPath, "dh_param_path"), false);
+  XI_RETURN_EC_IF_NOT(s(m_trustedKeysPath, "trusted_keys_path"), false);
+  XI_RETURN_EC_IF_NOT(s(m_privateKeyPassword, "private_key_password"), false);
+  return true;
 }
 
 void Xi::Http::SSLConfiguration::emplaceOptions(cxxopts::Options &options, Xi::Http::SSLConfiguration::Usage usage) {

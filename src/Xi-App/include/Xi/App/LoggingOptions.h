@@ -24,15 +24,16 @@
 #pragma once
 
 #include <string>
+#include <optional>
 
 #include <Xi/ExternalIncludePush.h>
 #include <cxxopts.hpp>
-#include <boost/optional.hpp>
 #include <Xi/ExternalIncludePop.h>
 
 #include <Logging/Level.h>
 #include <Serialization/ISerializer.h>
 #include <Serialization/SerializationOverloads.h>
+#include <Serialization/OptionalSerialization.hpp>
 
 #include "Xi/App/IOptions.h"
 
@@ -47,12 +48,12 @@ struct LoggingOptions : public IOptions {
   /*!
    * \brief ConsoleLogLevel Minimum log level for console logging, if not provided the default log level is used.
    */
-  boost::optional<Logging::Level> ConsoleLogLevel = boost::none;
+  std::optional<Logging::Level> ConsoleLogLevel = std::nullopt;
 
   /*!
    * \brief FileLogLevel Minimum log level for file logging, if not provided the default log level is used.
    */
-  boost::optional<Logging::Level> FileLogLevel = boost::none;
+  std::optional<Logging::Level> FileLogLevel = std::nullopt;
 
   /*!
    * \brief LogFilePath Path to store the log file, should be application dependent.

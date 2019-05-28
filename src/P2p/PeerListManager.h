@@ -45,7 +45,7 @@ class PeerlistManager {
                          // access by peerlist_entry::net_adress
                          boost::multi_index::ordered_unique<
                              boost::multi_index::tag<by_addr>,
-                             boost::multi_index::member<PeerlistEntry, NetworkAddress, &PeerlistEntry::adr> >,
+                             boost::multi_index::member<PeerlistEntry, NetworkAddress, &PeerlistEntry::address> >,
                          // sort by peerlist_entry::last_seen<
                          boost::multi_index::ordered_non_unique<
                              boost::multi_index::tag<by_time>,
@@ -78,14 +78,14 @@ class PeerlistManager {
   bool get_gray_peer_by_index(PeerlistEntry& p, size_t i) const;
   bool append_with_peer_white(const PeerlistEntry& pr);
   bool append_with_peer_gray(const PeerlistEntry& pr);
-  bool set_peer_just_seen(PeerIdType peer, uint32_t ip, uint32_t port);
+  bool set_peer_just_seen(PeerIdType peer, uint32_t ip, uint16_t port);
   bool set_peer_just_seen(PeerIdType peer, const NetworkAddress& addr);
   bool set_peer_unreachable(const PeerlistEntry& pr);
   bool is_ip_allowed(uint32_t ip) const;
   void trim_white_peerlist();
   void trim_gray_peerlist();
 
-  void serialize(ISerializer& s);
+  bool serialize(ISerializer& s);
 
   Peerlist& getWhite();
   Peerlist& getGray();

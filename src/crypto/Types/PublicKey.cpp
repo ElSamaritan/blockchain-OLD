@@ -57,6 +57,6 @@ bool Crypto::PublicKey::isValid() const { return check_key(*this); }
 
 void Crypto::PublicKey::nullify() { fill(0); }
 
-void Crypto::PublicKey::serialize(CryptoNote::ISerializer &serializer) {
-  serializer.binary(data(), size() * sizeof(value_type), "blob");
+bool Crypto::PublicKey::serialize(CryptoNote::ISerializer &serializer) {
+  return serializer.binary(data(), size() * sizeof(value_type), "");
 }

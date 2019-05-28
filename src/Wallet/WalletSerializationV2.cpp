@@ -77,34 +77,37 @@ struct WalletTransferDtoV2 {
   uint8_t type;
 };
 
-void serialize(UnlockTransactionJobDtoV2& value, CryptoNote::ISerializer& serializer) {
-  serializer(value.blockHeight, "blockHeight");
-  serializer(value.transactionHash, "transactionHash");
-  serializer(value.walletSpendPublicKey, "walletSpendPublicKey");
+bool serialize(UnlockTransactionJobDtoV2& value, CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(value.blockHeight, "block_height"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.transactionHash, "transaction_hash"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.walletSpendPublicKey, "wallet_spend_public_key"), false);
+  return true;
 }
 
-void serialize(WalletTransactionDtoV2& value, CryptoNote::ISerializer& serializer) {
+bool serialize(WalletTransactionDtoV2& value, CryptoNote::ISerializer& serializer) {
   typedef std::underlying_type<CryptoNote::WalletTransactionState>::type StateType;
 
   StateType state = static_cast<StateType>(value.state);
-  serializer(state, "state");
+  XI_RETURN_EC_IF_NOT(serializer(state, "state"), false);
   value.state = static_cast<CryptoNote::WalletTransactionState>(state);
 
-  serializer(value.timestamp, "timestamp");
-  CryptoNote::serializeBlockHeight(serializer, value.blockHeight, "blockHeight");
-  serializer(value.hash, "hash");
-  serializer(value.totalAmount, "totalAmount");
-  serializer(value.fee, "fee");
-  serializer(value.creationTime, "creationTime");
-  serializer(value.unlockTime, "unlockTime");
-  serializer(value.extra, "extra");
-  serializer(value.isBase, "isBase");
+  XI_RETURN_EC_IF_NOT(serializer(value.timestamp, "timestamp"), false);
+  XI_RETURN_EC_IF_NOT(CryptoNote::serializeBlockHeight(serializer, value.blockHeight, "block_height"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.hash, "hash"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.totalAmount, "total_amount"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.fee, "fee"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.creationTime, "creation_time"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.unlockTime, "unlock_time"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.extra, "extra"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.isBase, "is_base"), false);
+  return true;
 }
 
-void serialize(WalletTransferDtoV2& value, CryptoNote::ISerializer& serializer) {
-  serializer(value.address, "address");
-  serializer(value.amount, "amount");
-  serializer(value.type, "type");
+bool serialize(WalletTransferDtoV2& value, CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(value.address, "address"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.amount, "amount"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.type, "type"), false);
+  return true;
 }
 
 }  // namespace

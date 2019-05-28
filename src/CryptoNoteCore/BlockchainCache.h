@@ -47,7 +47,7 @@ struct SpentKeyImage {
   uint32_t blockIndex;
   Crypto::KeyImage keyImage;
 
-  void serialize(ISerializer& s);
+  bool serialize(ISerializer& s);
 };
 
 struct CachedTransactionInfo {
@@ -59,7 +59,7 @@ struct CachedTransactionInfo {
   // needed for getTransactionGlobalIndexes query
   std::vector<uint32_t> globalIndexes;
 
-  void serialize(ISerializer& s);
+  bool serialize(ISerializer& s);
 };
 
 struct CachedBlockInfo {
@@ -70,7 +70,7 @@ struct CachedBlockInfo {
   uint64_t alreadyGeneratedTransactions;
   uint32_t blockSize;
 
-  void serialize(ISerializer& s);
+  bool serialize(ISerializer& s);
 };
 
 struct OutputGlobalIndexesForAmount {
@@ -80,14 +80,14 @@ struct OutputGlobalIndexesForAmount {
   // 2. GlobalOutputIndex for particular output is calculated as following: startIndex + index in vector
   std::vector<PackedOutIndex> outputs;
 
-  void serialize(ISerializer& s);
+  bool serialize(ISerializer& s);
 };
 
 struct PaymentIdTransactionHashPair {
   Crypto::Hash paymentId;
   Crypto::Hash transactionHash;
 
-  void serialize(ISerializer& s);
+  bool serialize(ISerializer& s);
 };
 
 bool serialize(PackedOutIndex& value, Common::StringView name, CryptoNote::ISerializer& serializer);

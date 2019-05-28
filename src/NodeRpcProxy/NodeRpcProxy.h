@@ -41,7 +41,7 @@ class INodeRpcProxyObserver {
 class NodeRpcProxy : public CryptoNote::INode {
  public:
   NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort, ::Xi::Http::SSLConfiguration sslConfig,
-               Logging::ILogger& logger);
+               const Currency& currency, Logging::ILogger& logger);
   virtual ~NodeRpcProxy() override;
 
   virtual bool addObserver(CryptoNote::INodeObserver* observer) override;
@@ -64,6 +64,7 @@ class NodeRpcProxy : public CryptoNote::INode {
 
   virtual std::string getInfo() override;
   virtual void getFeeInfo() override;
+  virtual const Currency& currency() const override;
 
   virtual bool ping() override;
 
@@ -100,8 +101,8 @@ class NodeRpcProxy : public CryptoNote::INode {
   virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes,
                                std::vector<TransactionDetails>& transactions, const Callback& callback) override;
   virtual void isSynchronized(bool& syncStatus, const Callback& callback) override;
-  virtual std::string feeAddress() override;
-  virtual uint32_t feeAmount() override;
+
+  virtual std::optional<FeeAddress> feeAddress() const override;
 
   unsigned int rpcTimeout() const { return m_rpcTimeout; }
   void rpcTimeout(unsigned int val) { m_rpcTimeout = val; }
@@ -161,6 +162,7 @@ class NodeRpcProxy : public CryptoNote::INode {
 
  private:
   Logging::LoggerRef m_logger;
+  const Currency& m_currency;
   State m_state = STATE_NOT_INITIALIZED;
   mutable std::mutex m_mutex;
   std::condition_variable m_cv_initialized;
@@ -190,7 +192,6 @@ class NodeRpcProxy : public CryptoNote::INode {
   std::unordered_set<Crypto::Hash> m_knownTxs;
 
   bool m_connected;
-  std::string m_fee_address;
-  uint32_t m_fee_amount;
+  std::optional<FeeAddress> m_fee = std::nullopt;
 };
 }  // namespace CryptoNote

@@ -65,6 +65,6 @@ bool Crypto::KeyImage::isValid() const {
 
 void Crypto::KeyImage::nullify() { fill(0); }
 
-void Crypto::KeyImage::serialize(CryptoNote::ISerializer &serializer) {
-  serializer.binary(data(), size() * sizeof(value_type), "blob");
+bool Crypto::KeyImage::serialize(CryptoNote::ISerializer &serializer) {
+  return serializer.binary(data(), size() * sizeof(value_type), "");
 }

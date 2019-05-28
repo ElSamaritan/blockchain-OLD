@@ -30,7 +30,7 @@ bool handleCommand(const std::string command, std::shared_ptr<WalletInfo> wallet
   } else if (command == "help") {
     help(walletInfo);
   } else if (command == "transfer") {
-    transfer(walletInfo, node.getLastKnownBlockHeight(), false, node.feeAddress(), node.feeAmount());
+    transfer(walletInfo, node.getLastKnownBlockHeight(), node.currency(), false, node.feeAddress());
   }
   /* Advanced commands */
   else if (command == "ab_add") {
@@ -40,7 +40,7 @@ bool handleCommand(const std::string command, std::shared_ptr<WalletInfo> wallet
   } else if (command == "ab_list") {
     listAddressBook();
   } else if (command == "ab_send") {
-    sendFromAddressBook(walletInfo, node.getLastKnownBlockHeight(), node.feeAddress(), node.feeAmount());
+    sendFromAddressBook(walletInfo, node.getLastKnownBlockHeight(), node.currency(), node.feeAddress());
   } else if (command == "change_password") {
     changePassword(walletInfo);
   } else if (command == "make_integrated_address") {
@@ -60,7 +60,7 @@ bool handleCommand(const std::string command, std::shared_ptr<WalletInfo> wallet
   } else if (command == "save_csv") {
     saveCSV(walletInfo->wallet, node);
   } else if (command == "send_all") {
-    transfer(walletInfo, node.getLastKnownBlockHeight(), true, node.feeAddress(), node.feeAmount());
+    transfer(walletInfo, node.getLastKnownBlockHeight(), node.currency(), true, node.feeAddress());
   } else if (command == "status") {
     status(node, walletInfo->wallet);
   }

@@ -33,38 +33,38 @@ struct network_config {
   uint32_t config_id;
   uint32_t send_peerlist_sz;
 
-  void serialize(ISerializer& s) {
-    KV_MEMBER(connections_count) KV_MEMBER(handshake_interval) KV_MEMBER(packet_max_size) KV_MEMBER(config_id)
-  }
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(connections_count)
+  KV_MEMBER(handshake_interval) KV_MEMBER(packet_max_size) KV_MEMBER(config_id) KV_END_SERIALIZATION
 };
 
 struct basic_node_data {
   uuid network_id;
   uint8_t version;
   uint64_t local_time;
-  uint32_t my_port;
+  uint16_t my_port;
   PeerIdType peer_id;
 
-  void serialize(ISerializer& s) {
-    KV_MEMBER(network_id)
-    if (s.type() == ISerializer::INPUT) {
-      version = 0;
-    }
-    KV_MEMBER(version)
-    KV_MEMBER(peer_id)
-    KV_MEMBER(local_time)
-    KV_MEMBER(my_port)
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(network_id)
+  if (s.type() == ISerializer::INPUT) {
+    version = 0;
   }
+  KV_MEMBER(version)
+  KV_MEMBER(peer_id)
+  KV_MEMBER(local_time)
+  KV_MEMBER(my_port)
+  KV_END_SERIALIZATION
 };
 
 struct CORE_SYNC_DATA {
   uint32_t current_height;
   Crypto::Hash top_id;
 
-  void serialize(ISerializer& s) {
-    KV_MEMBER(current_height)
-    KV_MEMBER(top_id)
-  }
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(current_height)
+  KV_MEMBER(top_id)
+  KV_END_SERIALIZATION
 };
 
 #define P2P_COMMANDS_POOL_BASE 1000
@@ -79,10 +79,10 @@ struct COMMAND_HANDSHAKE {
     basic_node_data node_data;
     CORE_SYNC_DATA payload_data;
 
-    void serialize(ISerializer& s) {
-      KV_MEMBER(node_data)
-      KV_MEMBER(payload_data)
-    }
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(node_data)
+    KV_MEMBER(payload_data)
+    KV_END_SERIALIZATION
   };
 
   struct response {
@@ -90,11 +90,11 @@ struct COMMAND_HANDSHAKE {
     CORE_SYNC_DATA payload_data;
     std::list<PeerlistEntry> local_peerlist;
 
-    void serialize(ISerializer& s) {
-      KV_MEMBER(node_data)
-      KV_MEMBER(payload_data)
-      serializeAsBinary(local_peerlist, "local_peerlist", s);
-    }
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(node_data)
+    KV_MEMBER(payload_data)
+    serializeAsBinary(local_peerlist, "local_peerlist", s);
+    KV_END_SERIALIZATION
   };
 };
 
@@ -107,7 +107,7 @@ struct COMMAND_TIMED_SYNC {
   struct request {
     CORE_SYNC_DATA payload_data;
 
-    void serialize(ISerializer& s) { KV_MEMBER(payload_data) }
+    KV_BEGIN_SERIALIZATION KV_MEMBER(payload_data) KV_END_SERIALIZATION
   };
 
   struct response {
@@ -115,11 +115,11 @@ struct COMMAND_TIMED_SYNC {
     CORE_SYNC_DATA payload_data;
     std::list<PeerlistEntry> local_peerlist;
 
-    void serialize(ISerializer& s) {
-      KV_MEMBER(local_time)
-      KV_MEMBER(payload_data)
-      serializeAsBinary(local_peerlist, "local_peerlist", s);
-    }
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(local_time)
+    KV_MEMBER(payload_data)
+    serializeAsBinary(local_peerlist, "local_peerlist", s);
+    KV_END_SERIALIZATION
   };
 };
 
@@ -139,19 +139,20 @@ struct COMMAND_PING {
 
   struct request {
     /*actually we don't need to send any real data*/
-    void serialize(ISerializer& s) { XI_UNUSED(s); }
+    KV_BEGIN_SERIALIZATION XI_UNUSED(s);
+    KV_END_SERIALIZATION
   };
 
   struct response {
     std::string status;
     PeerIdType peer_id;
 
-    void serialize(ISerializer& s) {
-      KV_MEMBER(status)
-      KV_MEMBER(peer_id)
-    }
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(status)
+    KV_MEMBER(peer_id)
+    KV_END_SERIALIZATION
   };
-};
+};  // namespace CryptoNote
 
 #ifdef ALLOW_DEBUG_COMMANDS
 // These commands are considered as insecure, and made in debug purposes for a limited lifetime.
@@ -162,11 +163,11 @@ struct proof_of_trust {
   uint64_t time;
   Crypto::Signature sign;
 
-  void serialize(ISerializer& s) {
-    KV_MEMBER(peer_id)
-    KV_MEMBER(time)
-    KV_MEMBER(sign)
-  }
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(peer_id)
+  KV_MEMBER(time)
+  KV_MEMBER(sign)
+}
 };
 
 inline Crypto::Hash get_proof_of_trust_hash(const proof_of_trust& pot) {
@@ -182,25 +183,28 @@ struct COMMAND_REQUEST_STAT_INFO {
   struct request {
     proof_of_trust tr;
 
-    void serialize(ISerializer& s) { KV_MEMBER(tr) }
-  };
-
-  struct response {
-    std::string version;
-    std::string os_version;
-    uint64_t connections_count;
-    uint64_t incoming_connections_count;
-    CoreStatistics payload_info;
-
-    void serialize(ISerializer& s) {
-      KV_MEMBER(version)
-      KV_MEMBER(os_version)
-      KV_MEMBER(connections_count)
-      KV_MEMBER(incoming_connections_count)
-      KV_MEMBER(payload_info)
-    }
-  };
+    KV_BEGIN_SERIALIZATION KV_MEMBER(tr)
+  }
 };
+
+struct response {
+  std::string version;
+  std::string os_version;
+  uint64_t connections_count;
+  uint64_t incoming_connections_count;
+  CoreStatistics payload_info;
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(version)
+  KV_MEMBER(os_version)
+  KV_MEMBER(connections_count)
+  KV_MEMBER(incoming_connections_count)
+  KV_MEMBER(payload_info)
+}
+}
+;
+}
+;
 
 /************************************************************************/
 /*                                                                      */
@@ -211,25 +215,28 @@ struct COMMAND_REQUEST_NETWORK_STATE {
   struct request {
     proof_of_trust tr;
 
-    void serialize(ISerializer& s) { KV_MEMBER(tr) }
-  };
-
-  struct response {
-    std::list<PeerlistEntry> local_peerlist_white;
-    std::list<PeerlistEntry> local_peerlist_gray;
-    std::list<connection_entry> connections_list;
-    PeerIdType my_id;
-    uint64_t local_time;
-
-    void serialize(ISerializer& s) {
-      serializeAsBinary(local_peerlist_white, "local_peerlist_white", s);
-      serializeAsBinary(local_peerlist_gray, "local_peerlist_gray", s);
-      serializeAsBinary(connections_list, "connections_list", s);
-      KV_MEMBER(my_id)
-      KV_MEMBER(local_time)
-    }
-  };
+    KV_BEGIN_SERIALIZATION KV_MEMBER(tr)
+  }
 };
+
+struct response {
+  std::list<PeerlistEntry> local_peerlist_white;
+  std::list<PeerlistEntry> local_peerlist_gray;
+  std::list<connection_entry> connections_list;
+  PeerIdType my_id;
+  uint64_t local_time;
+
+  KV_BEGIN_SERIALIZATION
+  serializeAsBinary(local_peerlist_white, "local_peerlist_white", s);
+  serializeAsBinary(local_peerlist_gray, "local_peerlist_gray", s);
+  serializeAsBinary(connections_list, "connections_list", s);
+  KV_MEMBER(my_id)
+  KV_MEMBER(local_time)
+}
+}
+;
+}
+;
 
 /************************************************************************/
 /*                                                                      */
@@ -238,15 +245,19 @@ struct COMMAND_REQUEST_PEER_ID {
   enum { ID = P2P_COMMANDS_POOL_BASE + 6 };
 
   struct request {
-    void serialize(ISerializer& s) {}
-  };
-
-  struct response {
-    PeerIdType my_id;
-
-    void serialize(ISerializer& s) { KV_MEMBER(my_id) }
-  };
+    KV_BEGIN_SERIALIZATION
+  }
 };
+
+struct response {
+  PeerIdType my_id;
+
+  KV_BEGIN_SERIALIZATION KV_MEMBER(my_id)
+}
+}
+;
+}
+;
 
 #endif
 

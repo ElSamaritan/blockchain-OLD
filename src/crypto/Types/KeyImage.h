@@ -61,7 +61,7 @@ struct KeyImage : Xi::ByteArray<32> {
   bool isValid() const;
 
   void nullify();
-  void serialize(CryptoNote::ISerializer& serializer);
+  bool serialize(CryptoNote::ISerializer& serializer);
 };
 
 using KeyImageSet = std::unordered_set<KeyImage>;

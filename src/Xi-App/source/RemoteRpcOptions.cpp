@@ -54,7 +54,7 @@ bool Xi::App::RemoteRpcOptions::evaluateParsedOptions(const cxxopts::Options &op
       exceptional<AmbiguousEndpointError>();
     }
     uint32_t _ip = 0;
-    uint32_t _port = 0;
+    uint16_t _port = 0;
     if (!Common::parseIpAddressAndPort(_ip, _port, result["rpc-remote-host"].as<std::string>())) {
       exceptional<InvalidHostFormatError>();
     }

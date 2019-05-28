@@ -84,23 +84,24 @@ struct TransactionOutputInformationEx : public TransactionOutputInformationIn {
   SpentOutputDescriptor getSpentOutputDescriptor() const { return SpentOutputDescriptor(*this); }
   const Crypto::Hash& getTransactionHash() const { return transactionHash; }
 
-  void serialize(CryptoNote::ISerializer& s) {
-    s(reinterpret_cast<uint8_t&>(type), "type");
-    s(amount, "");
-    serializeGlobalOutputIndex(s, globalOutputIndex, "");
-    s(outputInTransaction, "");
-    s(transactionPublicKey, "");
-    s(keyImage, "");
-    s(unlockTime, "");
-    serializeBlockHeight(s, blockHeight, "");
-    s(transactionIndex, "");
-    s(transactionHash, "");
-    s(visible, "");
+  KV_BEGIN_SERIALIZATION
+  XI_RETURN_EC_IF_NOT(s(reinterpret_cast<uint8_t&>(type), "type"), false);
+  KV_MEMBER(amount)
+  KV_MEMBER_RENAME(globalOutputIndex, global_output_index)
+  KV_MEMBER_RENAME(outputInTransaction, output_in_transaction)
+  KV_MEMBER_RENAME(transactionPublicKey, transaction_public_key)
+  KV_MEMBER_RENAME(keyImage, key_image)
+  KV_MEMBER_RENAME(unlockTime, unlock_time)
+  KV_MEMBER_RENAME(blockHeight, block_height)
+  KV_MEMBER_RENAME(blockHeight, block_height)
+  KV_MEMBER_RENAME(transactionIndex, transaction_index)
+  KV_MEMBER_RENAME(transactionHash, transaction_hash)
+  KV_MEMBER(visible)
 
-    if (type == TransactionTypes::OutputType::Key) {
-      s(outputKey, "");
-    }
+  if (type == TransactionTypes::OutputType::Key) {
+    KV_MEMBER_RENAME(outputKey, output_key)
   }
+  KV_END_SERIALIZATION
 };
 
 struct TransactionBlockInfo {
@@ -108,11 +109,11 @@ struct TransactionBlockInfo {
   uint64_t timestamp;
   uint32_t transactionIndex;
 
-  void serialize(ISerializer& s) {
-    serializeBlockHeight(s, height, "height");
-    s(timestamp, "timestamp");
-    s(transactionIndex, "transactionIndex");
-  }
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(height)
+  KV_MEMBER(timestamp)
+  KV_MEMBER_RENAME(transactionIndex, transaction_index)
+  KV_END_SERIALIZATION
 };
 
 struct SpentTransactionOutput : TransactionOutputInformationEx {
@@ -122,12 +123,12 @@ struct SpentTransactionOutput : TransactionOutputInformationEx {
 
   const Crypto::Hash& getSpendingTransactionHash() const { return spendingTransactionHash; }
 
-  void serialize(ISerializer& s) {
-    TransactionOutputInformationEx::serialize(s);
-    s(spendingBlock, "spendingBlock");
-    s(spendingTransactionHash, "spendingTransactionHash");
-    s(inputInTransaction, "inputInTransaction");
-  }
+  KV_BEGIN_SERIALIZATION
+  KV_BASE(TransactionOutputInformationEx)
+  KV_MEMBER_RENAME(spendingBlock, spending_block)
+  KV_MEMBER_RENAME(spendingTransactionHash, spending_transaction_hash)
+  KV_MEMBER_RENAME(inputInTransaction, input_in_transaction)
+  KV_END_SERIALIZATION
 };
 
 enum class KeyImageState { Unconfirmed, Confirmed, Spent };

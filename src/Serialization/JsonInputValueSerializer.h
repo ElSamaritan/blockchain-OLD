@@ -27,7 +27,7 @@ class JsonInputValueSerializer : public ISerializer {
  public:
   JsonInputValueSerializer(const Common::JsonValue& value);
   JsonInputValueSerializer(Common::JsonValue&& value);
-  virtual ~JsonInputValueSerializer();
+  virtual ~JsonInputValueSerializer() override;
 
   SerializerType type() const override;
 
@@ -35,6 +35,7 @@ class JsonInputValueSerializer : public ISerializer {
   virtual void endObject() override;
 
   virtual bool beginArray(size_t& size, Common::StringView name) override;
+  virtual bool beginStaticArray(const size_t size, Common::StringView name) override;
   virtual void endArray() override;
 
   virtual bool operator()(uint8_t& value, Common::StringView name) override;

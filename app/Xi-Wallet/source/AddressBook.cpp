@@ -136,8 +136,8 @@ const Maybe<const AddressBookEntry> getAddressBookEntry(AddressBook addressBook)
   }
 }
 
-void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, std::string feeAddress,
-                         uint32_t feeAmount) {
+void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, const CryptoNote::Currency& currency,
+                         std::optional<CryptoNote::FeeAddress> feeAddress) {
   auto addressBook = getAddressBook();
 
   if (isAddressBookEmpty(addressBook)) {
@@ -176,7 +176,7 @@ void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, uint32_t height
   auto originalAddress = addressBookEntry.address;
   auto address = originalAddress;
   auto amount = maybeAmount.x;
-  auto fee = WalletConfig::defaultFee;
+  auto fee = currency.minimumFee();
   auto extra = getExtraFromPaymentID(addressBookEntry.paymentID);
   auto mixin = CryptoNote::getDefaultMixinByHeight(height);
   auto integrated = addressBookEntry.integratedAddress;
@@ -186,9 +186,8 @@ void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, uint32_t height
     address = addrPaymentIDPair.x.first;
     extra = getExtraFromPaymentID(addrPaymentIDPair.x.second);
   }
-
-  doTransfer(address, amount, fee, extra, walletInfo, height, integrated, mixin, feeAddress, feeAmount, originalAddress,
-             unlockTimestamp);
+  doTransfer(address, amount, fee, extra, walletInfo, height, integrated, mixin, feeAddress, originalAddress,
+             unlockTimestamp, currency);
 }
 
 bool isAddressBookEmpty(AddressBook addressBook) {
@@ -264,7 +263,7 @@ void listAddressBook() {
 
   int index = 1;
 
-  for (const auto &i : addressBook) {
+  for (const auto& i : addressBook) {
     std::cout << InformationMsg("Address Book Entry #") << InformationMsg(std::to_string(index)) << InformationMsg(":")
               << std::endl
               << std::endl

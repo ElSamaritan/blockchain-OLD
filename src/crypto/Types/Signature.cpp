@@ -54,6 +54,6 @@ Xi::ByteSpan Crypto::Signature::span() { return Xi::ByteSpan{data(), bytes()}; }
 
 void Crypto::Signature::nullify() { fill(0); }
 
-void Crypto::Signature::serialize(CryptoNote::ISerializer &serializer) {
-  serializer.binary(data(), size() * sizeof(value_type), "blob");
+bool Crypto::Signature::serialize(CryptoNote::ISerializer &serializer) {
+  return serializer.binary(data(), size() * sizeof(value_type), "");
 }

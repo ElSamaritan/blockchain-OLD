@@ -54,6 +54,6 @@ Xi::ByteSpan Crypto::SecretKey::span() { return Xi::ByteSpan{data(), bytes()}; }
 
 void Crypto::SecretKey::nullify() { fill(0); }
 
-void Crypto::SecretKey::serialize(CryptoNote::ISerializer &serializer) {
-  serializer.binary(data(), size() * sizeof(value_type), "blob");
+bool Crypto::SecretKey::serialize(CryptoNote::ISerializer &serializer) {
+  return serializer.binary(data(), size() * sizeof(value_type), "blob");
 }

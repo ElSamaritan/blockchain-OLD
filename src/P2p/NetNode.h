@@ -118,7 +118,7 @@ class NodeServer : public IP2pEndpoint {
   uint32_t get_this_peer_port() { return m_listeningPort; }
   CryptoNote::CryptoNoteProtocolHandler& get_payload_object();
 
-  void serialize(ISerializer& s);
+  bool serialize(ISerializer& s);
 
   // debug functions
   bool log_peerlist();
@@ -225,10 +225,10 @@ class NodeServer : public IP2pEndpoint {
     network_config m_net_config;
     uint64_t m_peer_id;
 
-    void serialize(ISerializer& s) {
-      KV_MEMBER(m_net_config)
-      KV_MEMBER(m_peer_id)
-    }
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(m_net_config)
+    KV_MEMBER(m_peer_id)
+    KV_END_SERIALIZATION
   };
 
   config m_config;
@@ -236,8 +236,8 @@ class NodeServer : public IP2pEndpoint {
 
   bool m_have_address;
   bool m_first_connection_maker_call;
-  uint32_t m_listeningPort;
-  uint32_t m_external_port;
+  uint16_t m_listeningPort;
+  uint16_t m_external_port;
   uint32_t m_ip_address;
   bool m_allow_local_ip;
   bool m_hide_my_port;

@@ -34,9 +34,9 @@
 
 namespace CryptoNote {
 struct NOTIFY_REQUEST_TX_POOL_request {
-  std::vector<Crypto::Hash> txs;
+  std::vector<Crypto::Hash> transactions;
 
-  void serialize(ISerializer& s) { KV_MEMBER(txs) }
+  KV_BEGIN_SERIALIZATION KV_MEMBER(transactions) KV_END_SERIALIZATION
 };
 
 struct NOTIFY_REQUEST_TX_POOL {

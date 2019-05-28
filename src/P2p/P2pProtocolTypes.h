@@ -20,7 +20,9 @@
 #include <string.h>
 #include <tuple>
 #include <boost/uuid/uuid.hpp>
+#include <Xi/Global.hh>
 #include "Common/StringTools.h"
+#include <Serialization/ISerializer.h>
 
 namespace CryptoNote {
 typedef boost::uuids::uuid uuid;
@@ -31,13 +33,24 @@ typedef uint64_t PeerIdType;
 
 struct NetworkAddress {
   uint32_t ip;
-  uint32_t port;
+  uint16_t port;
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(ip)
+  KV_MEMBER(port)
+  KV_END_SERIALIZATION
 };
 
 struct PeerlistEntry {
-  NetworkAddress adr;
+  NetworkAddress address;
   PeerIdType id;
   uint64_t last_seen;
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(address)
+  KV_MEMBER(id)
+  KV_MEMBER(last_seen)
+  KV_END_SERIALIZATION
 };
 
 struct connection_entry {

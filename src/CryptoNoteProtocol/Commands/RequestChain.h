@@ -38,23 +38,23 @@ struct NOTIFY_REQUEST_CHAIN {
 
   struct request {
     std::vector<Crypto::Hash>
-        block_ids; /*IDs of the first 10 blocks are sequential, next goes with pow(2,n) offset, like 2, 4, 8, 16, 32, 64
-                      and so on, and the last one is always genesis block */
+        block_hashes; /*IDs of the first 10 blocks are sequential, next goes with pow(2,n) offset, like 2, 4, 8, 16, 32,
+                      64 and so on, and the last one is always genesis block */
 
-    void serialize(ISerializer& s) { KV_MEMBER(block_ids) }
+    KV_BEGIN_SERIALIZATION KV_MEMBER(block_hashes) KV_END_SERIALIZATION
   };
 };
 
 struct NOTIFY_RESPONSE_CHAIN_ENTRY_request {
   uint32_t start_height;
   uint32_t total_height;
-  std::vector<Crypto::Hash> m_block_ids;
+  std::vector<Crypto::Hash> block_hashes;
 
-  void serialize(ISerializer& s) {
-    KV_MEMBER(start_height)
-    KV_MEMBER(total_height)
-    KV_MEMBER(m_block_ids)
-  }
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(start_height)
+  KV_MEMBER(total_height)
+  KV_MEMBER(block_hashes)
+  KV_END_SERIALIZATION
 };
 
 struct NOTIFY_RESPONSE_CHAIN_ENTRY {

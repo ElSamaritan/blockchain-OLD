@@ -69,15 +69,24 @@ boost::optional<Logging::LevelTranslator::internal_type> Logging::LevelTranslato
   return boost::none;
 }
 
-void Logging::serialize(Logging::Level &level, CryptoNote::ISerializer &serializer) {
+bool Logging::serialize(Logging::Level &level, CryptoNote::ISerializer &serializer) {
   LevelTranslator translator{};
   if (serializer.type() == CryptoNote::ISerializer::INPUT) {
     std::string str;
     serializer(str, "log-level");
-    level = translator.get_value(str).get_value_or(Level::NONE);
+    auto maybeLevel = translator.get_value(str);
+    if (!maybeLevel.has_value()) {
+      return false;
+    }
+    level = *maybeLevel;
+    return true;
   } else {
     assert(serializer.type() == CryptoNote::ISerializer::OUTPUT);
-    std::string str = translator.put_value(level).get_value_or("none");
-    serializer(str, "log-level");
+    auto maybeString = translator.put_value(level);
+    if (!maybeString.has_value()) {
+      return false;
+    }
+    serializer(*maybeString, "log-level");
+    return true;
   }
 }

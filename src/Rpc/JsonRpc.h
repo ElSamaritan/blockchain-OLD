@@ -57,13 +57,13 @@ class JsonRpcError : public std::exception {
     return message.c_str();
   }
 
-  void serialize(ISerializer& s) {
-    s(code, "code");
-    s(message, "message");
-  }
-
   int code;
   std::string message;
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(code)
+  KV_MEMBER(message)
+  KV_END_SERIALIZATION
 };
 
 typedef boost::optional<Common::JsonValue> OptionalId;
