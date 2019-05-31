@@ -17,6 +17,9 @@
 
 #include "SynchronizationState.h"
 
+#include <Xi/Global.hh>
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
+
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
@@ -27,11 +30,11 @@ using namespace Common;
 
 namespace CryptoNote {
 
-SynchronizationState::ShortHistory SynchronizationState::getShortHistory(uint32_t localHeight) const {
+SynchronizationState::ShortHistory SynchronizationState::getShortHistory(BlockHeight localHeight) const {
   ShortHistory history;
   uint32_t i = 0;
   uint32_t current_multiplier = 1;
-  uint32_t sz = std::min(static_cast<uint32_t>(m_blockchain.size()), localHeight + 1);
+  uint32_t sz = std::min(static_cast<uint32_t>(m_blockchain.size()), localHeight.native());
 
   if (!sz) return history;
 
@@ -57,15 +60,17 @@ SynchronizationState::ShortHistory SynchronizationState::getShortHistory(uint32_
 }
 
 SynchronizationState::CheckResult SynchronizationState::checkInterval(const BlockchainInterval& interval) const {
-  assert(interval.startHeight <= m_blockchain.size());
+  assert(interval.startHeight.native() <= m_blockchain.size());
 
-  CheckResult result = {false, 0, false, 0};
+  CheckResult result = {false, BlockHeight::Genesis, false, BlockHeight::Genesis};
 
-  uint32_t intervalEnd = interval.startHeight + static_cast<uint32_t>(interval.blocks.size());
-  uint32_t iterationEnd = std::min(static_cast<uint32_t>(m_blockchain.size()), intervalEnd);
+  BlockHeight intervalEnd =
+      interval.startHeight + BlockOffset::fromNative(static_cast<uint32_t>(interval.blocks.size()));
+  BlockHeight iterationEnd =
+      std::min(BlockHeight::fromNative(static_cast<BlockHeight::value_type>(m_blockchain.size())), intervalEnd);
 
-  for (uint32_t i = interval.startHeight; i < iterationEnd; ++i) {
-    if (m_blockchain[i] != interval.blocks[i - interval.startHeight]) {
+  for (BlockHeight i = interval.startHeight; i < iterationEnd; i.advance(1)) {
+    if (m_blockchain[i.native()] != interval.blocks[i.native() - interval.startHeight.native()]) {
       result.detachRequired = true;
       result.detachHeight = i;
       break;
@@ -78,51 +83,55 @@ SynchronizationState::CheckResult SynchronizationState::checkInterval(const Bloc
     return result;
   }
 
-  if (intervalEnd > m_blockchain.size()) {
+  if (intervalEnd.toSize() > m_blockchain.size()) {
     result.hasNewBlocks = true;
-    result.newBlockHeight = static_cast<uint32_t>(m_blockchain.size());
+    result.newBlockHeight = BlockHeight::fromNative(static_cast<uint32_t>(m_blockchain.size()));
   }
 
   return result;
 }
 
-void SynchronizationState::detach(uint32_t height) {
-  assert(height < m_blockchain.size());
-  m_blockchain.resize(height);
+void SynchronizationState::detach(BlockHeight height) {
+  assert(height.native() < m_blockchain.size());
+  m_blockchain.resize(height.native());
 }
 
-void SynchronizationState::addBlocks(const Crypto::Hash* blockHashes, uint32_t height, uint32_t count) {
+void SynchronizationState::addBlocks(const Crypto::Hash* blockHashes, BlockHeight height, uint32_t count) {
   assert(blockHashes);
   auto size = m_blockchain.size();
   if (size) {
   }
   // Dummy fix for simplewallet or walletd when sync
-  if (height == 0) height = 1;
-  assert(size == height);
+  if (height.isNull()) height = BlockHeight::fromIndex(0);
+  assert(size == height.native());
   m_blockchain.insert(m_blockchain.end(), blockHashes, blockHashes + count);
 }
 
-uint32_t SynchronizationState::getHeight() const { return static_cast<uint32_t>(m_blockchain.size()); }
+BlockHeight SynchronizationState::getHeight() const {
+  return BlockHeight::fromNative(static_cast<BlockHeight::value_type>(m_blockchain.size()));
+}
 
 const std::vector<Crypto::Hash>& SynchronizationState::getKnownBlockHashes() const { return m_blockchain; }
 
-void SynchronizationState::save(std::ostream& os) {
+bool SynchronizationState::save(std::ostream& os) {
   StdOutputStream stream(os);
   CryptoNote::BinaryOutputStreamSerializer s(stream);
-  serialize(s, "state");
+  XI_RETURN_EC_IF_NOT(serialize(s, "state"), false);
+  return !os.bad();
 }
 
-void SynchronizationState::load(std::istream& in) {
+bool SynchronizationState::load(std::istream& in) {
   StdInputStream stream(in);
   CryptoNote::BinaryInputStreamSerializer s(stream);
-  serialize(s, "state");
+  XI_RETURN_EC_IF_NOT(serialize(s, "state"), false);
+  return !in.bad();
 }
 
-CryptoNote::ISerializer& SynchronizationState::serialize(CryptoNote::ISerializer& s, const std::string& name) {
-  s.beginObject(name);
-  s(m_blockchain, "blockchain");
+bool SynchronizationState::serialize(CryptoNote::ISerializer& s, const std::string& name) {
+  XI_RETURN_EC_IF_NOT(s.beginObject(name), false);
+  XI_RETURN_EC_IF_NOT(s(m_blockchain, "blockchain"), false);
   s.endObject();
-  return s;
+  return true;
 }
 
 }  // namespace CryptoNote

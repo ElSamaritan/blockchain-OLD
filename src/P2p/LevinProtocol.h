@@ -90,7 +90,7 @@ class LevinProtocol {
     Common::MemoryInputStream stream(buf.data(), buf.size());
     BinaryInputStreamSerializer serializer(stream);
     Xi::exceptional_if_not<Xi::RuntimeError>(serialize(value, serializer));
-    return Xi::make_result<void>();
+    return Xi::success();
     XI_ERROR_CATCH();
   }
 

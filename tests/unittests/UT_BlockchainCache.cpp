@@ -21,40 +21,53 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include <gtest/gtest.h>
 
-#include <Xi/Byte.hh>
+#include <memory>
+#include <string>
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
+#include <Xi/FileSystem.h>
+#include <Logging/ConsoleLogger.h>
+#include <crypto/crypto.h>
+#include <CryptoNoteCore/BlockchainCache.h>
 
-#include <stddef.h>
+namespace {
 
-int xi_crypto_random_system_bytes(xi_byte_t *out, size_t count);
-int xi_crypto_random_bytes(xi_byte_t *out, size_t count);
-int xi_crypto_random_bytes_determenistic(xi_byte_t *out, size_t count, const xi_byte_t *seed, size_t seedLength);
+class CryptoNote_BlockchainCache : public ::testing::Test {
+ public:
+  std::string filename{"./blockchain_cache_test"};
+  Logging::ConsoleLogger logger{Logging::TRACE};
+  std::unique_ptr<CryptoNote::Currency> currency;
+  std::unique_ptr<CryptoNote::BlockchainCache> cache;
 
-#if defined(__cplusplus)
+  void SetUp() override {
+    using namespace CryptoNote;
+
+    Xi::FileSystem::removeFileIfExists(filename).throwOnError();
+    currency = std::make_unique<Currency>(CurrencyBuilder{logger}.currency());
+    cache = std::make_unique<BlockchainCache>(filename, *currency, logger, nullptr);
+    ASSERT_NE(cache.get(), nullptr);
+  }
+
+  void TearDown() override {
+    cache.release();
+    ASSERT_EQ(cache, nullptr);
+  }
+};
+
+}  // namespace
+
+TEST_F(CryptoNote_BlockchainCache, TransactionHashConsistency) {
+  using namespace CryptoNote;
+
+  CachedBlock genesisBlock{currency->genesisBlock()};
+  CachedTransaction genesisTransaction{cache->getRawTransaction(0, 0)};
+  CachedTransaction staticRewardTransaction{cache->getRawTransaction(0, 1)};
+  const auto genesisHash = cache->getTopBlockHash();
+
+  EXPECT_EQ(genesisHash.toString(), genesisBlock.getBlockHash().toString());
+  EXPECT_EQ(genesisTransaction.getTransactionHash().toString(),
+            CachedTransaction{genesisBlock.getBlock().baseTransaction}.getTransactionHash().toString());
+  EXPECT_EQ(staticRewardTransaction.getTransactionHash().toString(),
+            genesisBlock.getBlock().staticRewardHash->toString());
 }
-#endif
-
-#if defined(__cplusplus)
-
-#include <Xi/Exceptional.hpp>
-
-namespace Xi {
-namespace Crypto {
-namespace Random {
-XI_DECLARE_EXCEPTIONAL_CATEGORY(Random)
-XI_DECLARE_EXCEPTIONAL_INSTANCE(Generation, "failed to generate random bytes", Random)
-
-ByteVector generate(size_t count);
-ByteVector generate(size_t count, ConstByteSpan seed);
-void generate(ByteSpan out);
-void generate(ByteSpan out, ConstByteSpan seed);
-
-}  // namespace Random
-}  // namespace Crypto
-}  // namespace Xi
-#endif

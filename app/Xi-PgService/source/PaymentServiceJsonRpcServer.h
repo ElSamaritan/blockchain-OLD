@@ -10,6 +10,8 @@
 #include <unordered_map>
 #include <string>
 
+#include <Xi/Exceptions.hpp>
+
 #include "Common/JsonValue.h"
 #include "JsonRpcServer/JsonRpcServer.h"
 #include "PaymentServiceJsonRpcMessages.h"
@@ -57,28 +59,16 @@ class PaymentServiceJsonRpcServer : public CryptoNote::JsonRpcServer {
       }
 
       CryptoNote::JsonOutputStreamSerializer outputSerializer;
-      serialize(response, outputSerializer);
+      if (!serialize(response, outputSerializer)) {
+        throw std::runtime_error("response serialization failed");
+      }
       fillJsonResponse(outputSerializer.getValue(), jsonResponse);
     };
   }
 
   template <typename RequestType>
   void SerializeRequest(RequestType& request, CryptoNote::JsonInputValueSerializer& inputSerializer) {
-    serialize(request, inputSerializer);
-  }
-
-  void SerializeRequest(SendTransaction::Request& request, CryptoNote::JsonInputValueSerializer& inputSerializer) {
-    request.serialize(inputSerializer, service);
-  }
-
-  void SerializeRequest(CreateDelayedTransaction::Request& request,
-                        CryptoNote::JsonInputValueSerializer& inputSerializer) {
-    request.serialize(inputSerializer, service);
-  }
-
-  void SerializeRequest(SendFusionTransaction::Request& request,
-                        CryptoNote::JsonInputValueSerializer& inputSerializer) {
-    request.serialize(inputSerializer, service);
+    Xi::exceptional_if_not<Xi::RuntimeError>(serialize(request, inputSerializer));
   }
 
   std::unordered_map<std::string, HandlerFunction> handlers;

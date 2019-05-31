@@ -46,7 +46,7 @@ class TransactionPoolCleanWrapper : public ITransactionPool {
   bool containsTransaction(const Crypto::Hash& hash) const override;
   bool containsKeyImage(const Crypto::KeyImage& keyImage) const override;
   std::vector<Crypto::Hash> sanityCheck(const uint64_t timeout) override;
-  void serialize(ISerializer& serializer) override;
+  [[nodiscard]] bool serialize(ISerializer& serializer) override;
   TransactionQueryResult queryTransaction(const Crypto::Hash& hash) const override;
   std::vector<CachedTransaction> eligiblePoolTransactions(EligibleIndex index) const override;
   Xi::Concurrent::RecursiveLock::lock_t acquireExclusiveAccess() const override;

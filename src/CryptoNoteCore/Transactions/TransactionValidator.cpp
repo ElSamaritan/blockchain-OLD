@@ -51,33 +51,33 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValida
   const auto &tx = transaction.getTransaction();
   EligibleIndex eligibleIndex{};
 
-  if (chain().hasTransaction(transaction.getTransactionHash())) return Xi::make_error(Error::EXISTS_IN_BLOCKCHAIN);
-  if (transaction.getBlobSize() > currency().maxTxSize(blockVersion())) return Xi::make_error(Error::TOO_LARGE);
-  if (hasInvalidExtra(tx)) return Xi::make_error(Error::EXTRA_ILL_FORMED);
-  if (hasUnsupportedVersion(tx.version)) return Xi::make_error(Error::INVALID_VERSION);
-  if (tx.inputs.empty()) return Xi::make_error(Error::EMPTY_INPUTS);
-  if (!validateCanonicalDecomposition(tx)) return Xi::make_error(Error::OUTPUTS_NOT_CANONCIAL);
+  if (chain().hasTransaction(transaction.getTransactionHash())) return Xi::failure(Error::EXISTS_IN_BLOCKCHAIN);
+  if (transaction.getBlobSize() > currency().maxTxSize(blockVersion())) return Xi::failure(Error::TOO_LARGE);
+  if (hasInvalidExtra(tx)) return Xi::failure(Error::EXTRA_ILL_FORMED);
+  if (hasUnsupportedVersion(tx.version)) return Xi::failure(Error::INVALID_VERSION);
+  if (tx.inputs.empty()) return Xi::failure(Error::EMPTY_INPUTS);
+  if (!validateCanonicalDecomposition(tx)) return Xi::failure(Error::OUTPUTS_NOT_CANONCIAL);
 
-  if (containsUnsupportedInputTypes(tx)) return Xi::make_error(Error::BASE_INPUT_UNEXPECTED_TYPE);
-  if (containsUnsupportedOutputTypes(tx)) return Xi::make_error(Error::OUTPUT_UNEXPECTED_TYPE);
-  if (containsEmptyOutput(tx)) return Xi::make_error(Error::OUTPUT_ZERO_AMOUNT);
-  if (containsInvalidOutputKey(transaction.getOutputKeys())) return Xi::make_error(Error::OUTPUT_INVALID_KEY);
-  if (hasInputOverflow(tx)) return Xi::make_error(Error::INPUTS_AMOUNT_OVERFLOW);
-  if (hasOutputOverflow(tx)) return Xi::make_error(Error::OUTPUTS_AMOUNT_OVERFLOW);
-  if (containsKeyImageDuplicates(transaction.getKeyImages())) return Xi::make_error(Error::INPUT_IDENTICAL_KEYIMAGES);
-  if (containsSpendedKey(transaction.getKeyImagesSet())) return Xi::make_error(Error::INPUT_KEYIMAGE_ALREADY_SPENT);
+  if (containsUnsupportedInputTypes(tx)) return Xi::failure(Error::BASE_INPUT_UNEXPECTED_TYPE);
+  if (containsUnsupportedOutputTypes(tx)) return Xi::failure(Error::OUTPUT_UNEXPECTED_TYPE);
+  if (containsEmptyOutput(tx)) return Xi::failure(Error::OUTPUT_ZERO_AMOUNT);
+  if (containsInvalidOutputKey(transaction.getOutputKeys())) return Xi::failure(Error::OUTPUT_INVALID_KEY);
+  if (hasInputOverflow(tx)) return Xi::failure(Error::INPUTS_AMOUNT_OVERFLOW);
+  if (hasOutputOverflow(tx)) return Xi::failure(Error::OUTPUTS_AMOUNT_OVERFLOW);
+  if (containsKeyImageDuplicates(transaction.getKeyImages())) return Xi::failure(Error::INPUT_IDENTICAL_KEYIMAGES);
+  if (containsSpendedKey(transaction.getKeyImagesSet())) return Xi::failure(Error::INPUT_KEYIMAGE_ALREADY_SPENT);
 
   {
     const auto mixinValidationResult = validateMixin(transaction);
-    if (mixinValidationResult != Error::VALIDATION_SUCCESS) return Xi::make_error(mixinValidationResult);
+    if (mixinValidationResult != Error::VALIDATION_SUCCESS) return Xi::failure(mixinValidationResult);
   }
 
   const uint64_t inputAmount = transaction.getInputAmount();
   const uint64_t outputAmount = transaction.getOutputAmount();
 
-  if (inputAmount < outputAmount) return Xi::make_error(Error::INPUT_AMOUNT_INSUFFICIENT);
+  if (inputAmount < outputAmount) return Xi::failure(Error::INPUT_AMOUNT_INSUFFICIENT);
 
-  if (isFeeInsufficient(transaction)) return Xi::make_error(Error::FEE_INSUFFICIENT);
+  if (isFeeInsufficient(transaction)) return Xi::failure(Error::FEE_INSUFFICIENT);
 
   if (!isInCheckpointRange()) {
     const auto inputValidationResult = validateInputs(transaction);
@@ -87,9 +87,9 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValida
       eligibleIndex = inputValidationResult.value();
     }
     if (containsInvalidDomainKeyImage(transaction.getKeyImages()))
-      return Xi::make_error(Error::INPUT_INVALID_DOMAIN_KEYIMAGES);
+      return Xi::failure(Error::INPUT_INVALID_DOMAIN_KEYIMAGES);
   }
-  return eligibleIndex;
+  return Xi::success(eligibleIndex);
 }
 
 CryptoNote::error::TransactionValidationError CryptoNote::TransactionValidator::getErrorCode(
@@ -110,13 +110,13 @@ bool CryptoNote::TransactionValidator::hasUnsupportedVersion(const uint8_t versi
 
 bool CryptoNote::TransactionValidator::containsUnsupportedInputTypes(const CryptoNote::Transaction &transaction) const {
   return std::any_of(transaction.inputs.begin(), transaction.inputs.end(),
-                     [](const auto &input) { return input.type() != typeid(KeyInput); });
+                     [](const auto &input) { return !std::holds_alternative<KeyInput>(input); });
 }
 
 bool CryptoNote::TransactionValidator::containsUnsupportedOutputTypes(
     const CryptoNote::Transaction &transaction) const {
   return std::any_of(transaction.outputs.begin(), transaction.outputs.end(),
-                     [](const auto &output) { return output.target.type() != typeid(KeyOutput); });
+                     [](const auto &output) { return !std::holds_alternative<KeyOutput>(output.target); });
 }
 
 bool CryptoNote::TransactionValidator::containsEmptyOutput(const CryptoNote::Transaction &transaction) const {
@@ -194,20 +194,20 @@ CryptoNote::TransactionValidator::extractOutputKeys(uint64_t amount, const std::
         } else {
           minTimestamp = std::max(minTimestamp, info.unlockTime);
         }
-        outputKeys.push_back(boost::get<KeyOutput>(info.outputs[index.data.outputIndex]).key);
+        outputKeys.push_back(std::get<KeyOutput>(info.outputs[index.data.outputIndex]).key);
         return ExtractOutputKeysResult::SUCCESS;
       });
   if (queryResult != ExtractOutputKeysResult::SUCCESS) {
-    return Xi::make_error(getErrorCode(queryResult));
+    return Xi::failure(getErrorCode(queryResult));
   } else {
-    return Xi::make_result<std::tuple<std::vector<Crypto::PublicKey>, EligibleIndex>>(
+    return Xi::emplaceSuccess<std::tuple<std::vector<Crypto::PublicKey>, EligibleIndex>>(
         std::move(outputKeys), EligibleIndex{minHeight, minTimestamp});
   }
 }
 
 Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validateKeyInput(
     const CryptoNote::KeyInput &keyInput, size_t inputIndex, const CryptoNote::CachedTransaction &transaction) const {
-  if (keyInput.outputIndexes.empty()) return Xi::make_error(Error::INPUT_EMPTY_OUTPUT_USAGE);
+  if (keyInput.outputIndices.empty()) return Xi::failure(Error::INPUT_EMPTY_OUTPUT_USAGE);
 
   const auto globalIndexes = getTransactionInputIndices(keyInput);
   auto extractionResult = extractOutputKeys(keyInput.amount, globalIndexes);
@@ -216,7 +216,7 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validate
   EligibleIndex index;
   std::tie(outputKeys, index) = extractionResult.take();
   if (outputKeys.size() != transaction.getTransaction().signatures[inputIndex].size()) {
-    return Xi::make_error(Error::INPUT_INVALID_SIGNATURES_COUNT);
+    return Xi::failure(Error::INPUT_INVALID_SIGNATURES_COUNT);
   }
 
   std::vector<const Crypto::PublicKey *> outputKeyPointers;
@@ -226,9 +226,9 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validate
   if (!Crypto::check_ring_signature(transaction.getTransactionPrefixHash(), keyInput.keyImage, outputKeyPointers.data(),
                                     outputKeyPointers.size(),
                                     transaction.getTransaction().signatures[inputIndex].data(), true)) {
-    return Xi::make_error(Error::INPUT_INVALID_SIGNATURES);
+    return Xi::failure(Error::INPUT_INVALID_SIGNATURES);
   }
-  return index;
+  return Xi::success(index);
 }
 
 Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validateInputs(
@@ -237,9 +237,8 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validate
   uint32_t minHeight = 0;
   uint64_t minTimestamp = 0;
   for (const auto &input : transaction.getTransaction().inputs) {
-    if (input.type() == typeid(KeyInput)) {
-      const auto &keyInput = boost::get<KeyInput>(input);
-      const auto keyInputValidation = validateKeyInput(keyInput, inputIndex, transaction);
+    if (auto keyInput = std::get_if<KeyInput>(&input)) {
+      const auto keyInputValidation = validateKeyInput(*keyInput, inputIndex, transaction);
       if (keyInputValidation.isError())
         return keyInputValidation.error();
       else {
@@ -248,12 +247,12 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validate
         minTimestamp = std::max(minTimestamp, index.Timestamp);
       }
     } else {
-      return Xi::make_error(Error::BASE_INPUT_UNEXPECTED_TYPE);
+      return Xi::failure(Error::BASE_INPUT_UNEXPECTED_TYPE);
     }
     inputIndex += 1;
   }
 
-  return Xi::make_result<EligibleIndex>(minHeight, minTimestamp);
+  return Xi::emplaceSuccess<EligibleIndex>(minHeight, minTimestamp);
 }
 
 CryptoNote::error::TransactionValidationError CryptoNote::TransactionValidator::validateMixin(
@@ -272,7 +271,7 @@ CryptoNote::error::TransactionValidationError CryptoNote::TransactionValidator::
 
     KeyInput input;
     tx->getInput(i, input);
-    const uint64_t currentRingSize = input.outputIndexes.size();
+    const uint64_t currentRingSize = input.outputIndices.size();
     if (currentRingSize > ringSize) {
       ringSize = currentRingSize;
     }

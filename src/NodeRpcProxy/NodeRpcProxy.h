@@ -55,12 +55,12 @@ class NodeRpcProxy : public CryptoNote::INode {
   virtual bool shutdown() override;
 
   virtual size_t getPeerCount() const override;
-  virtual uint32_t getLastLocalBlockHeight() const override;
-  virtual uint32_t getLastKnownBlockHeight() const override;
+  virtual BlockHeight getLastLocalBlockHeight() const override;
+  virtual BlockHeight getLastKnownBlockHeight() const override;
   virtual uint32_t getLocalBlockCount() const override;
   virtual uint32_t getKnownBlockCount() const override;
   virtual uint64_t getLastLocalBlockTimestamp() const override;
-  virtual uint64_t getNodeHeight() const override;
+  virtual BlockHeight getNodeHeight() const override;
 
   virtual std::string getInfo() override;
   virtual void getFeeInfo() override;
@@ -81,23 +81,23 @@ class NodeRpcProxy : public CryptoNote::INode {
                                       std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result,
                                       const Callback& callback) override;
   virtual void getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
-                            uint32_t& startHeight, const Callback& callback) override;
+                            BlockHeight& startHeight, const Callback& callback) override;
   virtual void getTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,
                                                std::vector<uint32_t>& outsGlobalIndices,
                                                const Callback& callback) override;
   virtual void queryBlocks(std::vector<Crypto::Hash>&& knownBlockIds, uint64_t timestamp,
-                           std::vector<BlockShortEntry>& newBlocks, uint32_t& startHeight,
+                           std::vector<BlockShortEntry>& newBlocks, BlockHeight& startHeight,
                            const Callback& callback) override;
   virtual void getPoolSymmetricDifference(std::vector<Crypto::Hash>&& knownPoolTxIds, Crypto::Hash knownBlockId,
                                           bool& isBcActual, std::vector<std::unique_ptr<ITransactionReader>>& newTxs,
                                           std::vector<Crypto::Hash>& deletedTxIds, const Callback& callback) override;
-  virtual void getBlocks(const std::vector<uint32_t>& blockHeights, std::vector<std::vector<BlockDetails>>& blocks,
+  virtual void getBlocks(const std::vector<BlockHeight>& blockHeights, std::vector<std::vector<BlockDetails>>& blocks,
                          const Callback& callback) override;
   virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks,
                          const Callback& callback) override;
-  virtual void getRawBlocksByRange(uint32_t height, uint32_t count, std::vector<RawBlock>& blocks,
+  virtual void getRawBlocksByRange(BlockHeight height, uint32_t count, std::vector<RawBlock>& blocks,
                                    const Callback& callback) override;
-  virtual void getBlock(const uint32_t blockHeight, BlockDetails& block, const Callback& callback) override;
+  virtual void getBlock(const BlockHeight blockHeight, BlockDetails& block, const Callback& callback) override;
   virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes,
                                std::vector<TransactionDetails>& transactions, const Callback& callback) override;
   virtual void isSynchronized(bool& syncStatus, const Callback& callback) override;
@@ -131,20 +131,20 @@ class NodeRpcProxy : public CryptoNote::INode {
       std::vector<uint64_t>& amounts, uint16_t outsCount,
       std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result);
   std::error_code doGetNewBlocks(std::vector<Crypto::Hash>& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
-                                 uint32_t& startHeight);
+                                 BlockHeight& startHeight);
   std::error_code doGetTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,
                                                     std::vector<uint32_t>& outsGlobalIndices);
   std::error_code doQueryBlocksLite(const std::vector<Crypto::Hash>& knownBlockIds, uint64_t timestamp,
-                                    std::vector<CryptoNote::BlockShortEntry>& newBlocks, uint32_t& startHeight);
+                                    std::vector<CryptoNote::BlockShortEntry>& newBlocks, BlockHeight& startHeight);
   std::error_code doGetPoolSymmetricDifference(std::vector<Crypto::Hash>&& knownPoolTxIds, Crypto::Hash knownBlockId,
                                                bool& isBcActual,
                                                std::vector<std::unique_ptr<ITransactionReader>>& newTxs,
                                                std::vector<Crypto::Hash>& deletedTxIds);
-  std::error_code doGetBlocksByHeight(const std::vector<uint32_t>& blockHeights,
+  std::error_code doGetBlocksByHeight(const std::vector<BlockHeight>& blockHeights,
                                       std::vector<std::vector<BlockDetails>>& blocks);
   std::error_code doGetBlocksByHash(const std::vector<Crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks);
-  std::error_code doGetRawBlocksByRange(uint32_t height, uint32_t count, std::vector<RawBlock>& blocks);
-  std::error_code doGetBlock(const uint32_t blockHeight, BlockDetails& block);
+  std::error_code doGetRawBlocksByRange(BlockHeight height, uint32_t count, std::vector<RawBlock>& blocks);
+  std::error_code doGetBlock(const BlockHeight blockHeight, BlockDetails& block);
   std::error_code doGetTransactionHashesByPaymentId(const Crypto::Hash& paymentId,
                                                     std::vector<Crypto::Hash>& transactionHashes);
   std::error_code doGetTransactions(const std::vector<Crypto::Hash>& transactionHashes,
@@ -184,8 +184,8 @@ class NodeRpcProxy : public CryptoNote::INode {
   bool m_stop = false;
   std::atomic_bool m_pollUpdates{true};
   std::atomic<size_t> m_peerCount;
-  std::atomic<uint32_t> m_networkHeight;
-  std::atomic<uint64_t> m_nodeHeight;
+  std::atomic<BlockHeight> m_networkHeight;
+  std::atomic<BlockHeight> m_nodeHeight;
 
   BlockHeaderInfo lastLocalBlockHeaderInfo;
   // protect it with mutex if decided to add worker threads

@@ -177,11 +177,11 @@ void WalletLegacy::initSync() {
   AccountSubscription sub;
   sub.keys = reinterpret_cast<const AccountKeys&>(m_account.getAccountKeys());
   sub.transactionSpendableAge = 1;
-  sub.syncStart.height = 0;
+  sub.syncStart.height = BlockHeight::Genesis;
   sub.syncStart.timestamp = m_account.get_createtime() - ACCOUN_CREATE_TIME_ACCURACY;
   if (m_syncAll == 1) {
     sub.syncStart.timestamp = 0;
-    if (m_syncStartHeight) {
+    if (!m_syncStartHeight.isNull()) {
       sub.syncStart.height = m_syncStartHeight;
     }
   }
@@ -205,14 +205,16 @@ void WalletLegacy::doLoad(std::istream& source) {
 
     std::string cache;
     WalletLegacySerializer serializer(m_account, m_transactionsCache);
-    serializer.deserialize(source, m_password, cache);
+    if (!serializer.deserialize(source, m_password, cache)) {
+      throw std::runtime_error("wallet load failed");
+    }
 
     initSync();
 
     try {
       if (!cache.empty()) {
         std::stringstream stream(cache);
-        m_transfersSync.load(stream);
+        Xi::exceptional_if_not<Xi::RuntimeError>(m_transfersSync.load(stream), "transfers cache load failed");
       }
     } catch (const std::exception&) {
       // ignore cache loading errors
@@ -301,9 +303,9 @@ void WalletLegacy::reset() {
   }
 }
 
-void WalletLegacy::reset(uint64_t height) {
+void WalletLegacy::reset(BlockHeight height) {
   m_syncAll = 1;
-  m_syncStartHeight = height;
+  m_syncStartHeight = height.isNull() ? BlockHeight::Genesis : height;
   reset();
 }
 
@@ -339,11 +341,15 @@ void WalletLegacy::doSave(std::ostream& destination, bool saveDetailed, bool sav
 
     if (saveCache) {
       std::stringstream stream;
-      m_transfersSync.save(stream);
-      cache = stream.str();
+      if (m_transfersSync.save(stream)) {
+        cache = stream.str();
+      } else {
+        Xi::exceptional<Xi::RuntimeError>("transfers sync cache save failed");
+      }
     }
 
-    serializer.serialize(destination, m_password, saveDetailed, cache);
+    Xi::exceptional_if_not<Xi::RuntimeError>(serializer.serialize(destination, m_password, saveDetailed, cache),
+                                             "cache serialization failed");
 
     m_state = INITIALIZED;
     m_blockchainSync.start();  // XXX: start can throw. what to do in this case?
@@ -451,8 +457,8 @@ TransactionId WalletLegacy::sendTransaction(const std::vector<WalletLegacyTransf
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
     request = m_sender->makeSendRequest(txId, events, transfers, fee,
-                                        Xi::Config::BlockVersion::version(m_node.getLastKnownBlockHeight()), extra,
-                                        mixIn, unlockTimestamp);
+                                        Xi::Config::BlockVersion::version(m_node.getLastKnownBlockHeight().toIndex()),
+                                        extra, mixIn, unlockTimestamp);
   }
 
   notifyClients(events);
@@ -605,12 +611,12 @@ void WalletLegacy::notifyIfBalanceChanged() {
   }
 }
 
-void WalletLegacy::syncAll(bool syncWalletFromZero, uint64_t height) {
+void WalletLegacy::syncAll(bool syncWalletFromZero, BlockHeight height) {
   m_syncAll = syncWalletFromZero;
-  if (height) {
+  if (!height.isNull()) {
     m_syncStartHeight = height;
   } else {
-    m_syncStartHeight = 0;
+    m_syncStartHeight = BlockHeight::Genesis;
   }
 }
 void WalletLegacy::getAccountKeys(AccountKeys& keys) {

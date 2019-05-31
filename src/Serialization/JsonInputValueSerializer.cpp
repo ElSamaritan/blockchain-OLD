@@ -19,6 +19,7 @@
 
 #include <cassert>
 #include <stdexcept>
+#include <unordered_set>
 
 #include <Xi/Global.hh>
 
@@ -87,18 +88,10 @@ bool JsonInputValueSerializer::beginArray(size_t& size, Common::StringView name)
 }
 
 bool JsonInputValueSerializer::beginStaticArray(const size_t size, Common::StringView name) {
-  const JsonValue* parent = chain.back();
-  std::string strName(name);
-
-  if (parent->contains(strName)) {
-    const JsonValue& arr = (*parent)(strName);
-    XI_RETURN_EC_IF_NOT(size == arr.size(), false);
-    chain.push_back(&arr);
-    idxs.push_back(0);
-    return true;
-  }
-
-  return false;
+  size_t actualSize = ~size;
+  XI_RETURN_EC_IF_NOT(beginArray(actualSize, name), false);
+  XI_RETURN_EC_IF_NOT(actualSize == size, false);
+  return true;
 }
 
 void JsonInputValueSerializer::endArray() {
@@ -162,6 +155,41 @@ bool JsonInputValueSerializer::binary(std::string& _value, Common::StringView na
   std::string valueHex = ptr->getString();
   _value = Common::asString(Common::fromHex(valueHex));
 
+  return true;
+}
+
+bool JsonInputValueSerializer::maybe(bool& _value, Common::StringView name) {
+  auto maybeValue = getValue(name);
+  _value = maybeValue == nullptr ? false : !maybeValue->isNil();
+  return true;
+}
+
+bool JsonInputValueSerializer::typeTag(TypeTag& tag, Common::StringView name) {
+  TypeTag::text_type tTag{TypeTag::NoTextTag};
+  XI_RETURN_EC_IF_NOT(this->operator()(tTag, name), false);
+  XI_RETURN_EC_IF(tTag == TypeTag::NoTextTag, false);
+  tag = TypeTag{TypeTag::NoBinaryTag, tTag};
+  return true;
+}
+
+bool JsonInputValueSerializer::flag(std::vector<TypeTag>& flag, Common::StringView name) {
+  flag.clear();
+  bool hasFlag = false;
+  XI_RETURN_EC_IF_NOT(maybe(hasFlag, name), false);
+  XI_RETURN_EC_IF_NOT(hasFlag, true);
+
+  size_t size = 0;
+  XI_RETURN_EC_IF_NOT(beginArray(size, name), false);
+  XI_RETURN_EC_IF(size > 14, false);
+
+  std::unordered_set<std::string> processedFlags{};
+  for (size_t i = 0; i < size; ++i) {
+    TypeTag iTag = TypeTag::Null;
+    XI_RETURN_EC_IF_NOT(typeTag(iTag, ""), false);
+    XI_RETURN_EC_IF_NOT(processedFlags.insert(iTag.text()).second, false);
+    flag.push_back(iTag);
+  }
+  endArray();
   return true;
 }
 

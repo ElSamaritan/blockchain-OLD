@@ -47,11 +47,11 @@ std::string Xi::Error::message() const {
   }
 }
 
-bool Xi::Error::isException() const { return m_error.type() == typeid(std::exception_ptr); }
-std::exception_ptr Xi::Error::exception() const { return boost::get<std::exception_ptr>(m_error); }
+bool Xi::Error::isException() const { return std::holds_alternative<std::exception_ptr>(m_error); }
+std::exception_ptr Xi::Error::exception() const { return std::get<std::exception_ptr>(m_error); }
 
-bool Xi::Error::isErrorCode() const { return m_error.type() == typeid(std::error_code); }
-std::error_code Xi::Error::errorCode() const { return boost::get<std::error_code>(m_error); }
+bool Xi::Error::isErrorCode() const { return std::holds_alternative<std::error_code>(m_error); }
+std::error_code Xi::Error::errorCode() const { return std::get<std::error_code>(m_error); }
 
 void Xi::Error::throwException() const {
   if (isException()) {
@@ -64,4 +64,4 @@ void Xi::Error::throwException() const {
   }
 }
 
-bool Xi::Error::isNotInitialized() const { return m_error.type() == typeid(not_initialized_tag); }
+bool Xi::Error::isNotInitialized() const { return std::holds_alternative<not_initialized_tag>(m_error); }

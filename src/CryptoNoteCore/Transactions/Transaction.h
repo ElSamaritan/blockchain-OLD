@@ -25,31 +25,42 @@
 
 #include <cinttypes>
 #include <vector>
+#include <variant>
 
 #include <Xi/ExternalIncludePush.h>
 #include <boost/variant.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Serialization/VariantSerialization.hpp>
 #include <crypto/CryptoTypes.h>
 
+#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
+
 namespace CryptoNote {
+
 struct BaseInput {
-  uint32_t blockIndex;
+  /// Index of the block generating coins.
+  BlockHeight height;
 };
 
 struct KeyInput {
+  /// Amount of the used input, all used outputs must correspond to this amount.
   uint64_t amount;
-  std::vector<uint32_t> outputIndexes;
+
+  /// Delta encoded global indices of outputs used (real one + mixins)
+  std::vector<uint32_t> outputIndices;
+
+  /// Double spending protection.
   Crypto::KeyImage keyImage;
 };
 
 struct KeyOutput {
+  /// Diffie Hellmann key exchange, derived from the epheremal keys and destination public key.
   Crypto::PublicKey key;
 };
 
-typedef boost::variant<BaseInput, KeyInput> TransactionInput;
-
-typedef boost::variant<KeyOutput> TransactionOutputTarget;
+typedef std::variant<BaseInput, KeyInput> TransactionInput;
+typedef std::variant<KeyOutput> TransactionOutputTarget;
 
 struct TransactionOutput {
   uint64_t amount;
@@ -77,3 +88,8 @@ struct Transaction : public TransactionPrefix {
 
 struct BaseTransaction : public TransactionPrefix {};
 }  // namespace CryptoNote
+
+XI_SERIALIZATION_VARIANT_TAG(CryptoNote::TransactionInput, 0, 0x01, "base_input")
+XI_SERIALIZATION_VARIANT_TAG(CryptoNote::TransactionInput, 1, 0x02, "key_input")
+
+XI_SERIALIZATION_VARIANT_TAG(CryptoNote::TransactionOutputTarget, 0, 0x01, "key_output")

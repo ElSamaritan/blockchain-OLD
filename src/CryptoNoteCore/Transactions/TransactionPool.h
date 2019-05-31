@@ -82,7 +82,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
    * Transactions and their receive time will be serialized. Eligible indices will be skipped as can and should
    * be recalcuated once the cache gets restored, othwerise they may wont be up to date.
    */
-  void serialize(ISerializer& serializer) override;
+  [[nodiscard]] bool serialize(ISerializer& serializer) override;
 
   TransactionQueryResult queryTransaction(const Crypto::Hash& hash) const override;
   std::vector<CachedTransaction> eligiblePoolTransactions(EligibleIndex index) const override;

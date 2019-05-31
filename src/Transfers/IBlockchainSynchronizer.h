@@ -51,8 +51,8 @@ class IBlockchainConsumer : public IObservable<IBlockchainConsumerObserver> {
   virtual ~IBlockchainConsumer() {}
   virtual SynchronizationStart getSyncStart() = 0;
   virtual const std::unordered_set<Crypto::Hash>& getKnownPoolTxIds() const = 0;
-  virtual void onBlockchainDetach(uint32_t height) = 0;
-  virtual uint32_t onNewBlocks(const CompleteBlock* blocks, uint32_t startHeight, uint32_t count) = 0;
+  virtual void onBlockchainDetach(BlockHeight height) = 0;
+  virtual uint32_t onNewBlocks(const CompleteBlock* blocks, BlockHeight startHeight, uint32_t count) = 0;
   virtual std::error_code onPoolUpdated(const std::vector<std::unique_ptr<ITransactionReader>>& addedTransactions,
                                         const std::vector<Crypto::Hash>& deletedTransactions) = 0;
 
@@ -67,8 +67,8 @@ class IBlockchainConsumerObserver {
   virtual void onBlocksAdded(IBlockchainConsumer* consumer, const std::vector<Crypto::Hash>& blockHashes) {
     XI_UNUSED(consumer, blockHashes);
   }
-  virtual void onBlockchainDetach(IBlockchainConsumer* consumer, uint32_t blockIndex) {
-    XI_UNUSED(consumer, blockIndex);
+  virtual void onBlockchainDetach(IBlockchainConsumer* consumer, BlockHeight blockHeight) {
+    XI_UNUSED(consumer, blockHeight);
   }
   virtual void onTransactionDeleteBegin(IBlockchainConsumer* consumer, Crypto::Hash transactionHash) {
     XI_UNUSED(consumer, transactionHash);

@@ -21,6 +21,7 @@
 #include <limits>
 #include <utility>
 
+#include <Xi/Types/Flag.h>
 #include <Common/ArrayView.h>
 
 #include "CryptoNoteCore/CryptoNote.h"
@@ -84,8 +85,8 @@ class IBlockchainCache {
                          const TransactionValidatorState& validatorState, size_t blockSize, uint64_t generatedCoins,
                          uint64_t blockDifficulty, RawBlock&& rawBlock) = 0;
   virtual PushedBlockInfo getPushedBlockInfo(uint32_t index) const = 0;
-  virtual bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) const = 0;
-  virtual bool checkIfSpent(const Crypto::KeyImage& keyImage) const = 0;
+  [[nodiscard]] virtual bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) const = 0;
+  [[nodiscard]] virtual bool checkIfSpent(const Crypto::KeyImage& keyImage) const = 0;
 
   /*!
    * \brief isTransactionSpendTimeUnlocked Validates if the output of a transaction is unlocked, eligible to
@@ -99,7 +100,7 @@ class IBlockchainCache {
    *
    * \return True if the output can be used, otherwise false
    */
-  virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime) const = 0;
+  [[nodiscard]] virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime) const = 0;
 
   /*!
    * \brief isTransactionSpendTimeUnlocked Validates if the output of a transaction is unlocked, eligible to
@@ -113,7 +114,7 @@ class IBlockchainCache {
    *
    * \return True if the output can be used, otherwise false
    */
-  virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const = 0;
+  [[nodiscard]] virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const = 0;
 
   /*!
    * \brief isTransactionSpendTimeUnlocked Validates if the output of a transaction is unlocked, eligible to
@@ -128,7 +129,8 @@ class IBlockchainCache {
    *
    * \return True if the output can be used, otherwise false
    */
-  virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex, uint64_t timestamp) const = 0;
+  [[nodiscard]] virtual bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex,
+                                                            uint64_t timestamp) const = 0;
 
   virtual ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
                                                        std::vector<Crypto::PublicKey>& publicKeys) const = 0;
@@ -211,8 +213,8 @@ class IBlockchainCache {
   virtual void addChild(IBlockchainCache*) = 0;
   virtual bool deleteChild(IBlockchainCache*) = 0;
 
-  virtual void save() = 0;
-  virtual void load() = 0;
+  [[nodiscard]] virtual bool save() = 0;
+  [[nodiscard]] virtual bool load() = 0;
 
   virtual std::vector<uint64_t> getLastUnits(size_t count, uint32_t blockIndex, UseGenesis use,
                                              std::function<uint64_t(const CachedBlockInfo&)> pred) const = 0;

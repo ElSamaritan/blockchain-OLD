@@ -8,6 +8,8 @@
 #include "TransfersSynchronizer.h"
 #include "TransfersConsumer.h"
 
+#include <Xi/Exceptions.hpp>
+
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
@@ -102,10 +104,10 @@ void TransfersSyncronizer::onBlocksAdded(IBlockchainConsumer* consumer, const st
   }
 }
 
-void TransfersSyncronizer::onBlockchainDetach(IBlockchainConsumer* consumer, uint32_t blockIndex) {
+void TransfersSyncronizer::onBlockchainDetach(IBlockchainConsumer* consumer, BlockHeight blockHeight) {
   auto it = findSubscriberForConsumer(consumer);
   if (it != m_subscribers.end()) {
-    it->second->notify(&ITransfersSynchronizerObserver::onBlockchainDetach, it->first, blockIndex);
+    it->second->notify(&ITransfersSynchronizerObserver::onBlockchainDetach, it->first, blockHeight);
   }
 }
 
@@ -149,16 +151,16 @@ void TransfersSyncronizer::unsubscribeConsumerNotifications(const Crypto::Public
   m_subscribers.at(viewPublicKey)->remove(observer);
 }
 
-void TransfersSyncronizer::save(std::ostream& os) {
-  m_sync.save(os);
+bool TransfersSyncronizer::save(std::ostream& os) {
+  XI_RETURN_EC_IF_NOT(m_sync.save(os), false);
 
   StdOutputStream stream(os);
   CryptoNote::BinaryOutputStreamSerializer s(stream);
-  s(const_cast<uint32_t&>(TRANSFERS_STORAGE_ARCHIVE_VERSION), "version");
+  XI_RETURN_EC_IF_NOT(s(const_cast<uint32_t&>(TRANSFERS_STORAGE_ARCHIVE_VERSION), "version"), false);
 
   size_t subscriptionCount = m_consumers.size();
 
-  s.beginArray(subscriptionCount, "consumers");
+  XI_RETURN_EC_IF_NOT(s.beginArray(subscriptionCount, "consumers"), false);
 
   for (const auto& consumer : m_consumers) {
     s.beginObject("");
@@ -166,29 +168,29 @@ void TransfersSyncronizer::save(std::ostream& os) {
 
     std::stringstream consumerState;
     // synchronization state
-    m_sync.getConsumerState(consumer.second.get())->save(consumerState);
+    XI_RETURN_EC_IF_NOT(m_sync.getConsumerState(consumer.second.get())->save(consumerState), false);
 
     std::string blob = consumerState.str();
-    s(blob, "state");
+    XI_RETURN_EC_IF_NOT(s(blob, "state"), false);
 
     std::vector<AccountPublicAddress> subscriptions;
     consumer.second->getSubscriptions(subscriptions);
     size_t subCount = subscriptions.size();
 
-    s.beginArray(subCount, "subscriptions");
+    XI_RETURN_EC_IF_NOT(s.beginArray(subCount, "subscriptions"), false);
 
     for (auto& addr : subscriptions) {
       auto sub = consumer.second->getSubscription(addr);
       if (sub != nullptr) {
-        s.beginObject("");
+        XI_RETURN_EC_IF_NOT(s.beginObject(""), false);
 
         std::stringstream subState;
         assert(sub);
-        sub->getContainer().save(subState);
+        XI_RETURN_EC_IF_NOT(sub->getContainer().save(subState), false);
         // store data block
         std::string innerBlob = subState.str();
-        s(addr, "address");
-        s(innerBlob, "state");
+        XI_RETURN_EC_IF_NOT(s(addr, "address"), false);
+        XI_RETURN_EC_IF_NOT(s(innerBlob, "state"), false);
 
         s.endObject();
       }
@@ -197,34 +199,32 @@ void TransfersSyncronizer::save(std::ostream& os) {
     s.endArray();
     s.endObject();
   }
+  return true;
 }
 
 namespace {
 std::string getObjectState(IStreamSerializable& obj) {
   std::stringstream stream;
-  obj.save(stream);
+  Xi::exceptional_if_not<Xi::RuntimeError>(obj.save(stream), "getObjectState serialization failed");
   return stream.str();
 }
 
 void setObjectState(IStreamSerializable& obj, const std::string& state) {
   std::stringstream stream(state);
-  obj.load(stream);
+  Xi::exceptional_if_not<Xi::RuntimeError>(obj.load(stream), "setObjectState deserialization failed");
 }
 
 }  // namespace
 
-void TransfersSyncronizer::load(std::istream& is) {
-  m_sync.load(is);
+bool TransfersSyncronizer::load(std::istream& is) {
+  XI_RETURN_EC_IF_NOT(m_sync.load(is), false);
 
   StdInputStream inputStream(is);
   CryptoNote::BinaryInputStreamSerializer s(inputStream);
   uint32_t version = 0;
 
-  s(version, "version");
-
-  if (version > TRANSFERS_STORAGE_ARCHIVE_VERSION) {
-    throw std::runtime_error("TransfersSyncronizer version mismatch");
-  }
+  XI_RETURN_EC_IF_NOT(s(version, "version"), false);
+  XI_RETURN_EC_IF(version > TRANSFERS_STORAGE_ARCHIVE_VERSION, false);
 
   struct ConsumerState {
     PublicKey viewKey;
@@ -236,15 +236,15 @@ void TransfersSyncronizer::load(std::istream& is) {
 
   try {
     size_t subscriptionCount = 0;
-    s.beginArray(subscriptionCount, "consumers");
+    XI_RETURN_EC_IF_NOT(s.beginArray(subscriptionCount, "consumers"), false);
 
     while (subscriptionCount--) {
-      s.beginObject("");
+      XI_RETURN_EC_IF_NOT(s.beginObject(""), false);
       PublicKey viewKey;
-      s(viewKey, "view_key");
+      XI_RETURN_EC_IF_NOT(s(viewKey, "view_key"), false);
 
       std::string blob;
-      s(blob, "state");
+      XI_RETURN_EC_IF_NOT(s(blob, "state"), false);
 
       auto subIter = m_consumers.find(viewKey);
       if (subIter != m_consumers.end()) {
@@ -256,12 +256,12 @@ void TransfersSyncronizer::load(std::istream& is) {
           auto prevConsumerState = getObjectState(*consumerState);
           // load consumer state
           setObjectState(*consumerState, blob);
-          updatedStates.push_back(ConsumerState{viewKey, std::move(prevConsumerState)});
+          updatedStates.push_back(ConsumerState{viewKey, std::move(prevConsumerState), {}});
         }
 
         // load subscriptions
         size_t subCount = 0;
-        s.beginArray(subCount, "subscriptions");
+        XI_RETURN_EC_IF_NOT(s.beginArray(subCount, "subscriptions"), false);
 
         while (subCount--) {
           s.beginObject("");
@@ -269,8 +269,8 @@ void TransfersSyncronizer::load(std::istream& is) {
           AccountPublicAddress acc;
           std::string state;
 
-          s(acc, "address");
-          s(state, "state");
+          XI_RETURN_EC_IF_NOT(s(acc, "address"), false);
+          XI_RETURN_EC_IF_NOT(s(state, "state"), false);
 
           auto sub = subIter->second->getSubscription(acc);
 
@@ -295,6 +295,7 @@ void TransfersSyncronizer::load(std::istream& is) {
 
     s.endArray();
 
+    return true;
   } catch (...) {
     // rollback state
     for (const auto& consumerState : updatedStates) {

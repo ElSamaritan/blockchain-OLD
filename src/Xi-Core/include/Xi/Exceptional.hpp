@@ -51,7 +51,7 @@ template <typename _ExceptionT>
 inline void exceptional_if(bool cond) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   if (cond) {
-    throw _ExceptionT{};
+    exceptional<_ExceptionT>();
   }
 }
 
@@ -59,7 +59,7 @@ template <typename _ExceptionT>
 inline void exceptional_if(bool cond, const char* s) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   if (cond) {
-    throw _ExceptionT{s};
+    exceptional<_ExceptionT>(s);
   }
 }
 
@@ -67,7 +67,7 @@ template <typename _ExceptionT>
 inline void exceptional_if(bool cond, const std::string& s) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   if (cond) {
-    throw _ExceptionT{s};
+    exceptional<_ExceptionT>(s);
   }
 }
 
@@ -75,7 +75,7 @@ template <typename _ExceptionT>
 inline void exceptional_if_not(bool cond) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   if (!cond) {
-    throw _ExceptionT{};
+    exceptional<_ExceptionT>();
   }
 }
 
@@ -83,7 +83,7 @@ template <typename _ExceptionT>
 inline void exceptional_if_not(bool cond, const char* s) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   if (!cond) {
-    throw _ExceptionT{s};
+    exceptional<_ExceptionT>(s);
   }
 }
 
@@ -91,7 +91,7 @@ template <typename _ExceptionT>
 inline void exceptional_if_not(bool cond, const std::string& s) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   if (!cond) {
-    throw _ExceptionT{s};
+    exceptional<_ExceptionT>(s);
   }
 }
 

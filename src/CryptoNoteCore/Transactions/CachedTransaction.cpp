@@ -56,7 +56,7 @@ Xi::Result<CachedTransaction> CachedTransaction::fromBinaryArray(const BinaryArr
   } else {
     CachedTransaction reval{transaction};
     reval.transactionBinaryArray = blob;
-    return Xi::make_result<CachedTransaction>(std::move(reval));
+    return Xi::success<CachedTransaction>(std::move(reval));
   }
 }
 

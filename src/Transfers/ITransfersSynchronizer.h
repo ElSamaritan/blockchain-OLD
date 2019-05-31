@@ -22,6 +22,7 @@
 #include <vector>
 
 #include <Xi/Global.hh>
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 #include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 #include "Transfers/ITransfersContainer.h"
@@ -31,7 +32,7 @@ namespace CryptoNote {
 
 struct SynchronizationStart {
   uint64_t timestamp;
-  uint64_t height;
+  BlockHeight height;
 };
 
 struct AccountSubscription {
@@ -46,7 +47,7 @@ class ITransfersObserver {
  public:
   virtual ~ITransfersObserver() = default;
 
-  virtual void onError(ITransfersSubscription* object, uint32_t height, std::error_code ec) {
+  virtual void onError(ITransfersSubscription* object, BlockHeight height, std::error_code ec) {
     XI_UNUSED(object, height, ec);
   }
   virtual void onTransactionUpdated(ITransfersSubscription* object, const Crypto::Hash& transactionHash) {
@@ -77,8 +78,8 @@ class ITransfersSynchronizerObserver {
   virtual void onBlocksAdded(const Crypto::PublicKey& viewPublicKey, const std::vector<Crypto::Hash>& blockHashes) {
     XI_UNUSED(viewPublicKey, blockHashes);
   }
-  virtual void onBlockchainDetach(const Crypto::PublicKey& viewPublicKey, uint32_t blockIndex) {
-    XI_UNUSED(viewPublicKey, blockIndex);
+  virtual void onBlockchainDetach(const Crypto::PublicKey& viewPublicKey, BlockHeight height) {
+    XI_UNUSED(viewPublicKey, height);
   }
   virtual void onTransactionDeleteBegin(const Crypto::PublicKey& viewPublicKey, Crypto::Hash transactionHash) {
     XI_UNUSED(viewPublicKey, transactionHash);

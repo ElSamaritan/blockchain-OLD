@@ -38,7 +38,10 @@ void read(IInputStream& in, void* data, size_t size) {
   }
 }
 
-void read(IInputStream& in, int8_t& value) { read(in, &value, sizeof(value)); }
+void read(IInputStream& in, int8_t& value) {
+  read(in, &value, sizeof(value));
+  boost::endian::little_to_native_inplace(value);
+}
 
 void read(IInputStream& in, int16_t& value) {
   read(in, &value, sizeof(value));
@@ -81,28 +84,6 @@ void read(IInputStream& in, std::string& data, size_t size) {
   std::vector<char> temp(size);
   read(in, temp.data(), size);
   data.assign(temp.data(), size);
-}
-
-void readVarint(IInputStream& in, uint8_t& value) {
-  uint8_t temp = 0;
-  for (uint8_t shift = 0;; shift += 7) {
-    uint8_t piece;
-    read(in, piece);
-    if (shift >= sizeof(temp) * 8 - 7 && piece >= 1 << (sizeof(temp) * 8 - shift)) {
-      throw std::runtime_error("readVarint, value overflow");
-    }
-
-    temp |= static_cast<size_t>(piece & 0x7f) << shift;
-    if ((piece & 0x80) == 0) {
-      if (piece == 0 && shift != 0) {
-        throw std::runtime_error("readVarint, invalid value representation");
-      }
-
-      break;
-    }
-  }
-
-  value = temp;
 }
 
 void readVarint(IInputStream& in, uint16_t& value) {
@@ -200,7 +181,10 @@ void write(IOutputStream& out, int64_t value) {
   write(out, &value, sizeof(value));
 }
 
-void write(IOutputStream& out, uint8_t value) { write(out, &value, sizeof(value)); }
+void write(IOutputStream& out, uint8_t value) {
+  boost::endian::native_to_little_inplace(value);
+  write(out, &value, sizeof(value));
+}
 
 void write(IOutputStream& out, uint16_t value) {
   boost::endian::native_to_little_inplace(value);

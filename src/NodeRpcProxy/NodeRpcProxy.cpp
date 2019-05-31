@@ -54,14 +54,14 @@ NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort,
                            const Currency& currency, Logging::ILogger& logger)
     : m_logger(logger, "NodeRpcProxy"),
       m_currency{currency},
-      m_rpcTimeout(10000),
-      m_pullInterval(5000),
       m_nodeHost(nodeHost),
       m_nodePort(nodePort),
-      m_connected(true),
+      m_rpcTimeout(10000),
+      m_pullInterval(5000),
       m_peerCount(0),
-      m_networkHeight(0),
-      m_nodeHeight(0) {
+      m_networkHeight(BlockHeight::Null),
+      m_nodeHeight(BlockHeight::Null),
+      m_connected(true) {
   resetInternalState();
   m_httpClient = std::make_unique<Xi::Http::Client>(nodeHost, nodePort, sslConfig);
 }
@@ -77,14 +77,14 @@ NodeRpcProxy::~NodeRpcProxy() {
 void NodeRpcProxy::resetInternalState() {
   m_stop = false;
   m_peerCount.store(0, std::memory_order_relaxed);
-  m_networkHeight.store(0, std::memory_order_relaxed);
-  lastLocalBlockHeaderInfo.index = 0;
+  m_networkHeight.store(BlockHeight::Null, std::memory_order_relaxed);
+  lastLocalBlockHeaderInfo.height = BlockHeight::Null;
   lastLocalBlockHeaderInfo.majorVersion = 0;
   lastLocalBlockHeaderInfo.minorVersion = 0;
   lastLocalBlockHeaderInfo.timestamp = 0;
-  lastLocalBlockHeaderInfo.hash = CryptoNote::NULL_HASH;
-  lastLocalBlockHeaderInfo.prevHash = CryptoNote::NULL_HASH;
-  lastLocalBlockHeaderInfo.nonce = 0;
+  lastLocalBlockHeaderInfo.hash = Crypto::Hash::Null;
+  lastLocalBlockHeaderInfo.prevHash = Crypto::Hash::Null;
+  lastLocalBlockHeaderInfo.nonce = BlockHeaderNonce::Null;
   lastLocalBlockHeaderInfo.isAlternative = false;
   lastLocalBlockHeaderInfo.depth = 0;
   lastLocalBlockHeaderInfo.difficulty = 0;
@@ -244,9 +244,9 @@ void NodeRpcProxy::updateBlockchainStatus() {
     Crypto::Hash prevBlockHash = rsp.block_header.prev_hash;
 
     std::unique_lock<std::mutex> lock(m_mutex);
-    uint32_t blockIndex = rsp.block_header.height;
+    auto blockHeight = rsp.block_header.height;
     if (blockHash != lastLocalBlockHeaderInfo.hash) {
-      lastLocalBlockHeaderInfo.index = blockIndex;
+      lastLocalBlockHeaderInfo.height = blockHeight;
       lastLocalBlockHeaderInfo.majorVersion = rsp.block_header.major_version;
       lastLocalBlockHeaderInfo.minorVersion = rsp.block_header.minor_version;
       lastLocalBlockHeaderInfo.timestamp = rsp.block_header.timestamp;
@@ -258,7 +258,7 @@ void NodeRpcProxy::updateBlockchainStatus() {
       lastLocalBlockHeaderInfo.difficulty = rsp.block_header.difficulty;
       lastLocalBlockHeaderInfo.reward = rsp.block_header.reward;
       lock.unlock();
-      m_observerManager.notify(&INodeObserver::localBlockchainUpdated, blockIndex);
+      m_observerManager.notify(&INodeObserver::localBlockchainUpdated, blockHeight);
     }
   }
 
@@ -270,10 +270,10 @@ void NodeRpcProxy::updateBlockchainStatus() {
     // a quirk to let wallets work with previous versions daemons.
     // Previous daemons didn't have the 'last_known_block_index' parameter in RPC so it may have zero value.
     std::unique_lock<std::mutex> lock(m_mutex);
-    auto lastKnownBlockIndex = std::max(getInfoResp.last_known_block_index, lastLocalBlockHeaderInfo.index);
+    auto lastKnownBlockHeight = std::max(getInfoResp.last_known_block_height, lastLocalBlockHeaderInfo.height);
     lock.unlock();
-    if (m_networkHeight.load(std::memory_order_relaxed) != lastKnownBlockIndex) {
-      m_networkHeight.store(lastKnownBlockIndex, std::memory_order_relaxed);
+    if (m_networkHeight.load(std::memory_order_relaxed) != lastKnownBlockHeight) {
+      m_networkHeight.store(lastKnownBlockHeight, std::memory_order_relaxed);
       m_observerManager.notify(&INodeObserver::lastKnownBlockHeightUpdated,
                                m_networkHeight.load(std::memory_order_relaxed));
     }
@@ -321,7 +321,7 @@ std::error_code NodeRpcProxy::doGetLastBlockHeaderInfo(BlockHeaderInfo& info) {
     Crypto::Hash blockHash = rsp.block_header.hash;
     Crypto::Hash prevBlockHash = rsp.block_header.prev_hash;
 
-    info.index = rsp.block_header.height - 1;
+    info.height = rsp.block_header.height;
     info.majorVersion = rsp.block_header.major_version;
     info.minorVersion = rsp.block_header.minor_version;
     info.timestamp = rsp.block_header.timestamp;
@@ -410,21 +410,21 @@ bool NodeRpcProxy::removeObserver(CryptoNote::INodeRpcProxyObserver* observer) {
 
 size_t NodeRpcProxy::getPeerCount() const { return m_peerCount.load(std::memory_order_relaxed); }
 
-uint32_t NodeRpcProxy::getLastLocalBlockHeight() const {
+BlockHeight NodeRpcProxy::getLastLocalBlockHeight() const {
   std::lock_guard<std::mutex> lock(m_mutex);
-  return lastLocalBlockHeaderInfo.index;
+  return lastLocalBlockHeaderInfo.height;
 }
 
-uint32_t NodeRpcProxy::getLastKnownBlockHeight() const { return m_networkHeight.load(std::memory_order_relaxed); }
+BlockHeight NodeRpcProxy::getLastKnownBlockHeight() const { return m_networkHeight.load(std::memory_order_relaxed); }
 
 uint32_t NodeRpcProxy::getLocalBlockCount() const {
   std::lock_guard<std::mutex> lock(m_mutex);
-  return lastLocalBlockHeaderInfo.index + 1;
+  return lastLocalBlockHeaderInfo.height.native();
 }
 
-uint32_t NodeRpcProxy::getKnownBlockCount() const { return m_networkHeight.load(std::memory_order_relaxed) + 1; }
+uint32_t NodeRpcProxy::getKnownBlockCount() const { return m_networkHeight.load(std::memory_order_relaxed).native(); }
 
-uint64_t NodeRpcProxy::getNodeHeight() const { return m_nodeHeight.load(std::memory_order_relaxed); }
+BlockHeight NodeRpcProxy::getNodeHeight() const { return m_nodeHeight.load(std::memory_order_relaxed); }
 
 uint64_t NodeRpcProxy::getLastLocalBlockTimestamp() const {
   std::lock_guard<std::mutex> lock(m_mutex);
@@ -504,7 +504,7 @@ void NodeRpcProxy::getRandomOutsByAmounts(
 }
 
 void NodeRpcProxy::getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
-                                uint32_t& startHeight, const Callback& callback) {
+                                BlockHeight& startHeight, const Callback& callback) {
   std::lock_guard<std::mutex> lock(m_mutex);
   if (m_state != STATE_INITIALIZED) {
     callback(make_error_code(error::NOT_INITIALIZED));
@@ -530,7 +530,7 @@ void NodeRpcProxy::getTransactionOutsGlobalIndices(const Crypto::Hash& transacti
 }
 
 void NodeRpcProxy::queryBlocks(std::vector<Crypto::Hash>&& knownBlockIds, uint64_t timestamp,
-                               std::vector<BlockShortEntry>& newBlocks, uint32_t& startHeight,
+                               std::vector<BlockShortEntry>& newBlocks, BlockHeight& startHeight,
                                const Callback& callback) {
   std::lock_guard<std::mutex> lock(m_mutex);
   if (m_state != STATE_INITIALIZED) {
@@ -561,8 +561,8 @@ void NodeRpcProxy::getPoolSymmetricDifference(std::vector<Crypto::Hash>&& knownP
       callback);
 }
 
-void NodeRpcProxy::getBlocks(const std::vector<uint32_t>& blockHeights, std::vector<std::vector<BlockDetails>>& blocks,
-                             const Callback& callback) {
+void NodeRpcProxy::getBlocks(const std::vector<BlockHeight>& blockHeights,
+                             std::vector<std::vector<BlockDetails>>& blocks, const Callback& callback) {
   std::lock_guard<std::mutex> lock(m_mutex);
   if (m_state != STATE_INITIALIZED) {
     callback(make_error_code(error::NOT_INITIALIZED));
@@ -585,7 +585,7 @@ void NodeRpcProxy::getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::
                   callback);
 }
 
-void NodeRpcProxy::getRawBlocksByRange(uint32_t height, uint32_t count, std::vector<RawBlock>& blocks,
+void NodeRpcProxy::getRawBlocksByRange(BlockHeight height, uint32_t count, std::vector<RawBlock>& blocks,
                                        const INode::Callback& callback) {
   std::lock_guard<std::mutex> lock{m_mutex};
 
@@ -597,7 +597,7 @@ void NodeRpcProxy::getRawBlocksByRange(uint32_t height, uint32_t count, std::vec
   scheduleRequest(std::bind(&NodeRpcProxy::doGetRawBlocksByRange, this, height, count, std::ref(blocks)), callback);
 }
 
-void NodeRpcProxy::getBlock(const uint32_t blockHeight, BlockDetails& block, const Callback& callback) {
+void NodeRpcProxy::getBlock(const BlockHeight blockHeight, BlockDetails& block, const Callback& callback) {
   std::lock_guard<std::mutex> lock(m_mutex);
   if (m_state != STATE_INITIALIZED) {
     callback(make_error_code(error::NOT_INITIALIZED));
@@ -627,7 +627,7 @@ void NodeRpcProxy::isSynchronized(bool& syncStatus, const Callback& callback) {
     return;
   }
 
-  syncStatus = getPeerCount() > 0 && getNodeHeight() + 1 >= getLastKnownBlockHeight();
+  syncStatus = getPeerCount() > 0 && getNodeHeight() >= getLastKnownBlockHeight();
   callback(std::error_code());
 }
 
@@ -660,7 +660,7 @@ std::error_code NodeRpcProxy::doGetRandomOutsByAmounts(
 }
 
 std::error_code NodeRpcProxy::doGetNewBlocks(std::vector<Crypto::Hash>& knownBlockIds,
-                                             std::vector<CryptoNote::RawBlock>& newBlocks, uint32_t& startHeight) {
+                                             std::vector<CryptoNote::RawBlock>& newBlocks, BlockHeight& startHeight) {
   CryptoNote::COMMAND_RPC_GET_BLOCKS_FAST::request req = AUTO_VAL_INIT(req);
   CryptoNote::COMMAND_RPC_GET_BLOCKS_FAST::response rsp = AUTO_VAL_INIT(rsp);
   req.block_hashes = std::move(knownBlockIds);
@@ -668,9 +668,10 @@ std::error_code NodeRpcProxy::doGetNewBlocks(std::vector<Crypto::Hash>& knownBlo
   m_logger(TRACE) << "Send getblocks request";
   std::error_code ec = jsonCommand("/getblocks", req, rsp);
   if (!ec) {
-    m_logger(TRACE) << "getblocks complete, start_height " << rsp.start_height << ", block count " << rsp.blocks.size();
+    m_logger(TRACE) << "getblocks complete, start_height " << rsp.start_height.native() << ", block count "
+                    << rsp.blocks.size();
     newBlocks = std::move(rsp.blocks);
-    startHeight = static_cast<uint32_t>(rsp.start_height);
+    startHeight = rsp.start_height;
   } else {
     m_logger(TRACE) << "getblocks failed: " << ec << ", " << ec.message();
   }
@@ -701,7 +702,7 @@ std::error_code NodeRpcProxy::doGetTransactionOutsGlobalIndices(const Crypto::Ha
 
 std::error_code NodeRpcProxy::doQueryBlocksLite(const std::vector<Crypto::Hash>& knownBlockIds, uint64_t timestamp,
                                                 std::vector<CryptoNote::BlockShortEntry>& newBlocks,
-                                                uint32_t& startHeight) {
+                                                BlockHeight& startHeight) {
   CryptoNote::COMMAND_RPC_QUERY_BLOCKS_LITE::request req = AUTO_VAL_INIT(req);
   CryptoNote::COMMAND_RPC_QUERY_BLOCKS_LITE::response rsp = AUTO_VAL_INIT(rsp);
 
@@ -715,9 +716,9 @@ std::error_code NodeRpcProxy::doQueryBlocksLite(const std::vector<Crypto::Hash>&
     return ec;
   }
 
-  m_logger(TRACE) << "queryblockslite complete, startHeight " << rsp.start_height << ", block count "
+  m_logger(TRACE) << "queryblockslite complete, startHeight " << rsp.start_height.native() << ", block count "
                   << rsp.blocks.size();
-  startHeight = static_cast<uint32_t>(rsp.start_height);
+  startHeight = rsp.start_height;
 
   for (auto& item : rsp.blocks) {
     BlockShortEntry bse;
@@ -775,7 +776,7 @@ std::error_code NodeRpcProxy::doGetPoolSymmetricDifference(std::vector<Crypto::H
   return ec;
 }
 
-std::error_code NodeRpcProxy::doGetBlocksByHeight(const std::vector<uint32_t>& blockHeights,
+std::error_code NodeRpcProxy::doGetBlocksByHeight(const std::vector<BlockHeight>& blockHeights,
                                                   std::vector<std::vector<BlockDetails>>& blocks) {
   COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HEIGHTS::request req = AUTO_VAL_INIT(req);
   COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HEIGHTS::response resp = AUTO_VAL_INIT(resp);
@@ -809,7 +810,7 @@ std::error_code NodeRpcProxy::doGetBlocksByHash(const std::vector<Crypto::Hash>&
   return ec;
 }
 
-std::error_code NodeRpcProxy::doGetRawBlocksByRange(uint32_t height, uint32_t count, std::vector<RawBlock>& blocks) {
+std::error_code NodeRpcProxy::doGetRawBlocksByRange(BlockHeight height, uint32_t count, std::vector<RawBlock>& blocks) {
   F_COMMAND_RPC_GET_BLOCKS_RAW_BY_RANGE::request req = AUTO_VAL_INIT(req);
   F_COMMAND_RPC_GET_BLOCKS_RAW_BY_RANGE::response resp = AUTO_VAL_INIT(resp);
 
@@ -832,7 +833,7 @@ std::error_code NodeRpcProxy::doGetRawBlocksByRange(uint32_t height, uint32_t co
   return ec;
 }
 
-std::error_code NodeRpcProxy::doGetBlock(const uint32_t blockHeight, BlockDetails& block) {
+std::error_code NodeRpcProxy::doGetBlock(const BlockHeight blockHeight, BlockDetails& block) {
   COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT::request req = AUTO_VAL_INIT(req);
   COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT::response resp = AUTO_VAL_INIT(resp);
 

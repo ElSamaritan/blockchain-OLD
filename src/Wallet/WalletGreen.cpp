@@ -23,6 +23,8 @@
 #include <System/RemoteContext.h>
 
 #include <Xi/Global.hh>
+#include <Xi/Crypto/Random/Random.hh>
+#include <Xi/Crypto/Random/Engine.hpp>
 #include <Xi/Crypto/Chacha8.h>
 
 #include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
@@ -149,7 +151,8 @@ WalletGreen::~WalletGreen() {
 }
 
 void WalletGreen::createViewWallet(const std::string& path, const std::string& password, const std::string address,
-                                   const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight, bool newAddress) {
+                                   const Crypto::SecretKey& viewSecretKey, const BlockHeight scanHeight,
+                                   bool newAddress) {
   CryptoNote::AccountPublicAddress publicKeys;
   uint64_t prefix;
 
@@ -167,12 +170,12 @@ void WalletGreen::initialize(const std::string& path, const std::string& passwor
   Crypto::SecretKey viewSecretKey;
   Crypto::generate_keys(viewPublicKey, viewSecretKey);
 
-  initWithKeys(path, password, viewPublicKey, viewSecretKey, 0, true);
+  initWithKeys(path, password, viewPublicKey, viewSecretKey, BlockHeight::Genesis, true);
   m_logger(INFO) << "New container initialized, public view key " << viewPublicKey;
 }
 
 void WalletGreen::initializeWithViewKey(const std::string& path, const std::string& password,
-                                        const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight,
+                                        const Crypto::SecretKey& viewSecretKey, const BlockHeight scanHeight,
                                         bool newAddress) {
   Crypto::PublicKey viewPublicKey;
   if (!Crypto::secret_key_to_public_key(viewSecretKey, viewPublicKey)) {
@@ -336,7 +339,7 @@ void WalletGreen::incNextIv() {
 
 void WalletGreen::initWithKeys(const std::string& path, const std::string& password,
                                const Crypto::PublicKey& viewPublicKey, const Crypto::SecretKey& viewSecretKey,
-                               const uint32_t scanHeight, const bool newAddress) {
+                               const BlockHeight scanHeight, const bool newAddress) {
   if (m_state != WalletState::NOT_INITIALIZED) {
     m_logger(ERROR) << "Failed to initialize with keys: already initialized. Current state: " << m_state;
     throw std::system_error(make_error_code(CryptoNote::error::ALREADY_INITIALIZED));
@@ -347,7 +350,7 @@ void WalletGreen::initWithKeys(const std::string& path, const std::string& passw
   ContainerStorage newStorage(path, Common::FileMappedVectorOpenMode::CREATE, sizeof(ContainerStoragePrefix));
   ContainerStoragePrefix* prefix = reinterpret_cast<ContainerStoragePrefix*>(newStorage.prefix());
   prefix->version = static_cast<uint8_t>(WalletSerializerV2::SERIALIZATION_VERSION);
-  prefix->nextIv = Crypto::rand<Crypto::chacha8_iv>();
+  prefix->nextIv = Xi::Crypto::Random::generate<Crypto::chacha8_iv>();
 
   Xi::Crypto::Chacha8::generate_key(password, m_key.data, CHACHA8_KEY_SIZE);
 
@@ -596,11 +599,13 @@ void WalletGreen::loadWalletCache(std::unordered_set<Crypto::PublicKey>& addedKe
                        m_transactionSoftLockTime);
 
   Common::MemoryInputStream containerStream(contanerData.data(), contanerData.size());
-  s.load(containerStream, reinterpret_cast<const ContainerStoragePrefix*>(m_containerStorage.prefix())->version);
-  addedKeys = std::move(s.addedKeys());
-  deletedKeys = std::move(s.deletedKeys());
-
-  m_logger(DEBUGGING) << "Container cache loaded";
+  if (!s.load(containerStream, reinterpret_cast<const ContainerStoragePrefix*>(m_containerStorage.prefix())->version)) {
+    m_logger(FATAL) << "Container cache load failed";
+  } else {
+    addedKeys = std::move(s.addedKeys());
+    deletedKeys = std::move(s.deletedKeys());
+    m_logger(DEBUGGING) << "Container cache loaded";
+  }
 }
 
 void WalletGreen::saveWalletCache(ContainerStorage& storage, const Crypto::chacha8_key& key, WalletSaveLevel saveLevel,
@@ -633,14 +638,14 @@ void WalletGreen::saveWalletCache(ContainerStorage& storage, const Crypto::chach
                        m_unlockTransactionsJob, transactions, transfers, m_uncommitedTransactions,
                        const_cast<std::string&>(extra), m_transactionSoftLockTime);
 
-  s.save(containerStream, saveLevel);
-
-  encryptAndSaveContainerData(storage, key, containerData.data(), containerData.size());
-  storage.flush();
-
-  m_extra = extra;
-
-  m_logger(DEBUGGING) << "Container saving finished";
+  if (!s.save(containerStream, saveLevel)) {
+    m_logger(FATAL) << "Container saving failed";
+  } else {
+    encryptAndSaveContainerData(storage, key, containerData.data(), containerData.size());
+    storage.flush();
+    m_extra = extra;
+    m_logger(DEBUGGING) << "Container saving finished";
+  }
 }
 
 void WalletGreen::copyContainerStorageKeys(ContainerStorage& src, const chacha8_key& srcKey, ContainerStorage& dst,
@@ -682,7 +687,7 @@ void WalletGreen::copyContainerStoragePrefix(ContainerStorage& src, const chacha
   ContainerStoragePrefix* srcPrefix = reinterpret_cast<ContainerStoragePrefix*>(src.prefix());
   ContainerStoragePrefix* dstPrefix = reinterpret_cast<ContainerStoragePrefix*>(dst.prefix());
   dstPrefix->version = srcPrefix->version;
-  dstPrefix->nextIv = Crypto::rand<chacha8_iv>();
+  dstPrefix->nextIv = Xi::Crypto::Random::generate<chacha8_iv>();
 
   Crypto::PublicKey publicKey;
   Crypto::SecretKey secretKey;
@@ -758,13 +763,13 @@ void WalletGreen::loadSpendKeys() {
     wallet.creationTimestamp = creationTimestamp;
 
     if (i == 0) {
-      isTrackingMode = wallet.spendSecretKey == NULL_SECRET_KEY;
-    } else if ((isTrackingMode && wallet.spendSecretKey != NULL_SECRET_KEY) ||
-               (!isTrackingMode && wallet.spendSecretKey == NULL_SECRET_KEY)) {
+      isTrackingMode = wallet.spendSecretKey == SecretKey::Null;
+    } else if ((isTrackingMode && wallet.spendSecretKey != SecretKey::Null) ||
+               (!isTrackingMode && wallet.spendSecretKey == SecretKey::Null)) {
       throw std::system_error(make_error_code(error::BAD_ADDRESS), "All addresses must be whether tracking or not");
     }
 
-    if (wallet.spendSecretKey != NULL_SECRET_KEY) {
+    if (wallet.spendSecretKey != SecretKey::Null) {
       throwIfKeysMismatch(wallet.spendSecretKey, wallet.spendPublicKey,
                           "Restored spend public key doesn't correspond to secret key");
     } else {
@@ -798,7 +803,7 @@ void WalletGreen::subscribeWallets() {
       sub.keys.viewSecretKey = m_viewSecretKey;
       sub.keys.spendSecretKey = wallet.spendSecretKey;
       sub.transactionSpendableAge = m_transactionSoftLockTime;
-      sub.syncStart.height = 0;
+      sub.syncStart.height = BlockHeight::Genesis;
       sub.syncStart.timestamp = wallet.creationTimestamp;
 
       auto& subscription = m_synchronizer.addSubscription(sub);
@@ -851,7 +856,7 @@ void WalletGreen::convertAndLoadWalletFile(const std::string& path, std::ifstrea
   m_containerStorage.open(tmpPath.string(), Common::FileMappedVectorOpenMode::CREATE, sizeof(ContainerStoragePrefix));
   ContainerStoragePrefix* prefix = reinterpret_cast<ContainerStoragePrefix*>(m_containerStorage.prefix());
   prefix->version = WalletSerializerV2::SERIALIZATION_VERSION;
-  prefix->nextIv = Crypto::rand<Crypto::chacha8_iv>();
+  prefix->nextIv = Xi::Crypto::Random::generate<Crypto::chacha8_iv>();
 
   uint64_t creationTimestamp = time(nullptr);
   prefix->encryptedViewKeys = encryptKeyPair(m_viewPublicKey, m_viewSecretKey, creationTimestamp);
@@ -972,10 +977,10 @@ std::string WalletGreen::createAddress() {
 
   Crypto::generate_keys(spendKey.publicKey, spendKey.secretKey);
 
-  return doCreateAddress(spendKey.publicKey, spendKey.secretKey, 0, true);
+  return doCreateAddress(spendKey.publicKey, spendKey.secretKey, BlockHeight::Genesis, true);
 }
 
-std::string WalletGreen::createAddress(const Crypto::SecretKey& spendSecretKey, const uint32_t scanHeight,
+std::string WalletGreen::createAddress(const Crypto::SecretKey& spendSecretKey, const BlockHeight scanHeight,
                                        const bool newAddress) {
   Crypto::PublicKey spendPublicKey;
 
@@ -987,18 +992,18 @@ std::string WalletGreen::createAddress(const Crypto::SecretKey& spendSecretKey, 
   return doCreateAddress(spendPublicKey, spendSecretKey, scanHeight, newAddress);
 }
 
-std::string WalletGreen::createAddress(const Crypto::PublicKey& spendPublicKey, const uint32_t scanHeight,
+std::string WalletGreen::createAddress(const Crypto::PublicKey& spendPublicKey, const BlockHeight scanHeight,
                                        const bool newAddress) {
   if (!Crypto::check_key(spendPublicKey)) {
     m_logger(ERROR) << "createAddress(" << spendPublicKey << ") Wrong public key format";
     throw std::system_error(make_error_code(error::WRONG_PARAMETERS), "Wrong public key format");
   }
 
-  return doCreateAddress(spendPublicKey, NULL_SECRET_KEY, scanHeight, newAddress);
+  return doCreateAddress(spendPublicKey, SecretKey::Null, scanHeight, newAddress);
 }
 
 std::vector<std::string> WalletGreen::createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys,
-                                                        const uint32_t scanHeight, const bool newAddress) {
+                                                        const BlockHeight scanHeight, const bool newAddress) {
   std::vector<NewAddressData> addressDataList(spendSecretKeys.size());
 
   for (size_t i = 0; i < spendSecretKeys.size(); ++i) {
@@ -1018,7 +1023,7 @@ std::vector<std::string> WalletGreen::createAddressList(const std::vector<Crypto
 }
 
 std::string WalletGreen::doCreateAddress(const Crypto::PublicKey& spendPublicKey,
-                                         const Crypto::SecretKey& spendSecretKey, const uint32_t scanHeight,
+                                         const Crypto::SecretKey& spendSecretKey, const BlockHeight scanHeight,
                                          const bool newAddress) {
   std::vector<NewAddressData> addressDataList;
 
@@ -1032,7 +1037,7 @@ std::string WalletGreen::doCreateAddress(const Crypto::PublicKey& spendPublicKey
 }
 
 std::vector<std::string> WalletGreen::doCreateAddressList(const std::vector<NewAddressData>& addressDataList,
-                                                          const uint32_t scanHeight, const bool newAddress) {
+                                                          const BlockHeight scanHeight, const bool newAddress) {
   throwIfNotInitialized();
   throwIfStopped();
 
@@ -1107,7 +1112,7 @@ std::vector<std::string> WalletGreen::doCreateAddressList(const std::vector<NewA
   return addresses;
 }
 
-std::string WalletGreen::addWallet(const NewAddressData& addressData, uint32_t scanHeight, bool newAddress) {
+std::string WalletGreen::addWallet(const NewAddressData& addressData, BlockHeight scanHeight, bool newAddress) {
   const SecretKey spendSecretKey = addressData.spendSecretKey;
   const PublicKey spendPublicKey = addressData.spendPublicKey;
 
@@ -1115,11 +1120,11 @@ std::string WalletGreen::addWallet(const NewAddressData& addressData, uint32_t s
 
   auto trackingMode = getTrackingMode();
 
-  if ((trackingMode == WalletTrackingMode::TRACKING && spendSecretKey != NULL_SECRET_KEY) ||
-      (trackingMode == WalletTrackingMode::NOT_TRACKING && spendSecretKey == NULL_SECRET_KEY)) {
+  if ((trackingMode == WalletTrackingMode::TRACKING && spendSecretKey != SecretKey::Null) ||
+      (trackingMode == WalletTrackingMode::NOT_TRACKING && spendSecretKey == SecretKey::Null)) {
     m_logger(ERROR) << "Failed to add wallet: incompatible tracking mode and spend secret key, tracking mode="
                     << trackingMode << ", spendSecretKey "
-                    << (spendSecretKey == NULL_SECRET_KEY ? "is null" : "is not null");
+                    << (spendSecretKey == SecretKey::Null ? "is null" : "is not null");
     throw std::system_error(make_error_code(error::WRONG_PARAMETERS));
   }
 
@@ -1182,10 +1187,10 @@ std::string WalletGreen::addWallet(const NewAddressData& addressData, uint32_t s
   }
 }
 
-CryptoNote::BlockDetails WalletGreen::getBlock(const uint32_t blockHeight) {
+CryptoNote::BlockDetails WalletGreen::getBlock(const BlockHeight blockHeight) {
   CryptoNote::BlockDetails block;
 
-  if (m_node.getLastKnownBlockHeight() == 0) {
+  if (m_node.getLastKnownBlockHeight().isNull()) {
     return block;
   }
 
@@ -1202,8 +1207,8 @@ CryptoNote::BlockDetails WalletGreen::getBlock(const uint32_t blockHeight) {
   return block;
 }
 
-uint64_t WalletGreen::scanHeightToTimestamp(const uint32_t scanHeight) {
-  if (scanHeight == 0) {
+uint64_t WalletGreen::scanHeightToTimestamp(const BlockHeight scanHeight) {
+  if (scanHeight.isNull()) {
     return 0;
   }
 
@@ -1215,7 +1220,7 @@ uint64_t WalletGreen::scanHeightToTimestamp(const uint32_t scanHeight) {
   }
 
   /* Get the amount of seconds since the blockchain launched */
-  uint64_t secondsSinceLaunch = scanHeight * Xi::Config::Time::blockTimeSeconds();
+  uint64_t secondsSinceLaunch = scanHeight.toIndex() * Xi::Config::Time::blockTimeSeconds();
 
   /* Add a bit of a buffer in case of difficulty weirdness, blocks coming
      out too fast */
@@ -1239,7 +1244,7 @@ uint64_t WalletGreen::getCurrentTimestampAdjusted() {
   /* Take the amount of time a block can potentially be in the past/future
    * Get the largest adjustment possible */
   int64_t adjust = std::chrono::seconds{Xi::Config::Time::futureTimeLimit(Xi::Config::BlockVersion::version(
-                                            static_cast<uint32_t>(m_node.getLastKnownBlockHeight())))}
+                                            m_node.getLastKnownBlockHeight().toIndex()))}
                        .count();
   assert(adjust >= 0);
 
@@ -1247,7 +1252,7 @@ uint64_t WalletGreen::getCurrentTimestampAdjusted() {
   return time - adjust;
 }
 
-void WalletGreen::reset(const uint32_t scanHeight) {
+void WalletGreen::reset(const BlockHeight scanHeight) {
   throwIfNotInitialized();
   throwIfStopped();
 
@@ -1501,8 +1506,8 @@ uint64_t WalletGreen::getBalanceMinusDust(const std::vector<std::string>& addres
 
   return selectTransfers(needed,
                          /* Don't include dust outputs */
-                         false, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()), std::move(wallets),
-                         unused);
+                         false, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight().toIndex()),
+                         std::move(wallets), unused);
 }
 
 void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets, const std::vector<WalletOrder>& orders,
@@ -1515,7 +1520,7 @@ void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets, const st
 
   std::vector<OutputToTransfer> selectedTransfers;
   uint64_t foundMoney = selectTransfers(preparedTransaction.neededMoney, mixIn == 0,
-                                        m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()),
+                                        m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight().toIndex()),
                                         std::move(wallets), selectedTransfers);
 
   if (foundMoney < preparedTransaction.neededMoney) {
@@ -1537,7 +1542,7 @@ void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets, const st
 
   uint64_t donationAmount = pushDonationTransferIfPossible(
       donation, foundMoney - preparedTransaction.neededMoney,
-      m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()), preparedTransaction.destinations);
+      m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight().toIndex()), preparedTransaction.destinations);
   preparedTransaction.changeAmount = foundMoney - preparedTransaction.neededMoney - donationAmount;
 
   std::vector<ReceiverAmounts> decomposedOutputs = splitDestinations(preparedTransaction.destinations, m_currency);
@@ -1549,7 +1554,7 @@ void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets, const st
     preparedTransaction.destinations.emplace_back(std::move(changeTransfer));
 
     auto splittedChange = splitAmount(preparedTransaction.changeAmount, changeDestination,
-                                      m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
+                                      m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight().toIndex()));
     decomposedOutputs.emplace_back(std::move(splittedChange));
   }
 
@@ -2029,7 +2034,7 @@ bool WalletGreen::updateWalletTransactionInfo(size_t transactionId, const Crypto
 
   if (updated) {
     m_logger(DEBUGGING) << "Transaction updated, ID " << transactionId << ", hash " << it->hash << ", block "
-                        << it->blockHeight << ", state " << it->state;
+                        << it->blockHeight.native() << ", state " << it->state;
   }
 
   return updated;
@@ -2058,8 +2063,8 @@ size_t WalletGreen::insertBlockchainTransaction(const TransactionInformation& in
   size_t txId = index.size();
   index.push_back(std::move(tx));
 
-  m_logger(DEBUGGING) << "Transaction added, ID " << txId << ", hash " << tx.hash << ", block " << tx.blockHeight
-                      << ", state " << tx.state;
+  m_logger(DEBUGGING) << "Transaction added, ID " << txId << ", hash " << tx.hash << ", block "
+                      << tx.blockHeight.native() << ", state " << tx.state;
 
   return txId;
 }
@@ -2290,7 +2295,7 @@ std::unique_ptr<CryptoNote::ITransactionBuilder> WalletGreen::makeTransaction(
   }
 
   std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(),
-               std::default_random_engine{Crypto::rand<std::default_random_engine::result_type>()});
+               std::default_random_engine{Xi::Crypto::Random::generate<std::default_random_engine::result_type>()});
   std::sort(amountsToAddresses.begin(), amountsToAddresses.end(),
             [](const AmountToAddress& left, const AmountToAddress& right) { return left.second < right.second; });
 
@@ -2363,8 +2368,9 @@ size_t WalletGreen::validateSaveAndSendTransaction(const ITransactionReader& tra
   size_t transactionId = insertOutgoingTransactionAndPushEvent(transaction.getTransactionHash(), fee,
                                                                transaction.getExtra(), transaction.getUnlockTime());
   m_logger(DEBUGGING) << "Transaction added to container, ID " << transactionId << ", hash "
-                      << transaction.getTransactionHash() << ", block " << m_transactions[transactionId].blockHeight
-                      << ", state " << m_transactions[transactionId].state;
+                      << transaction.getTransactionHash() << ", block "
+                      << m_transactions[transactionId].blockHeight.native() << ", state "
+                      << m_transactions[transactionId].state;
   Tools::ScopeExit rollbackTransactionInsertion(
       [this, transactionId] { updateTransactionStateAndPushEvent(transactionId, WalletTransactionState::FAILED); });
 
@@ -2468,7 +2474,7 @@ uint64_t WalletGreen::selectTransfers(uint64_t neededMoney, bool dust, uint64_t 
     }
   }
 
-  ShuffleGenerator<size_t, Crypto::random_engine<size_t>> indexGenerator(walletOuts.size());
+  ShuffleGenerator<size_t, Xi::Crypto::Random::Engine64> indexGenerator(walletOuts.size());
   while (foundMoney < neededMoney && !indexGenerator.empty()) {
     auto& out = walletOuts[indexGenerator()];
     foundMoney += out.second.amount;
@@ -2476,7 +2482,7 @@ uint64_t WalletGreen::selectTransfers(uint64_t neededMoney, bool dust, uint64_t 
   }
 
   if (dust && !dustOutputs.empty()) {
-    ShuffleGenerator<size_t, Crypto::random_engine<size_t>> dustIndexGenerator(dustOutputs.size());
+    ShuffleGenerator<size_t, Xi::Crypto::Random::Engine64> dustIndexGenerator(dustOutputs.size());
     do {
       auto& out = dustOutputs[dustIndexGenerator()];
       foundMoney += out.second.amount;
@@ -2535,7 +2541,7 @@ std::vector<WalletGreen::WalletOuts> WalletGreen::pickWallets(const std::vector<
 
 std::vector<CryptoNote::WalletGreen::ReceiverAmounts> WalletGreen::splitDestinations(
     const std::vector<CryptoNote::WalletTransfer>& destinations, const CryptoNote::Currency& currency) {
-  uint64_t dustThreshold = currency.defaultDustThreshold(m_node.getLastKnownBlockHeight());
+  uint64_t dustThreshold = currency.defaultDustThreshold(m_node.getLastKnownBlockHeight().toIndex());
   std::vector<ReceiverAmounts> decomposedOutputs;
   for (const auto& destination : destinations) {
     AccountPublicAddress address = parseAccountAddressString(destination.address);
@@ -2637,28 +2643,29 @@ std::vector<TransactionsInBlockInfo> WalletGreen::getTransactions(const Crypto::
   auto heightIt = m_blockchain.project<BlockHeightIndex>(it);
 
   uint32_t blockIndex = static_cast<uint32_t>(std::distance(m_blockchain.get<BlockHeightIndex>().begin(), heightIt));
-  return getTransactionsInBlocks(blockIndex, count);
+  return getTransactionsInBlocks(BlockHeight::fromIndex(blockIndex), count);
 }
 
-std::vector<TransactionsInBlockInfo> WalletGreen::getTransactions(uint32_t blockIndex, size_t count) const {
+std::vector<TransactionsInBlockInfo> WalletGreen::getTransactions(BlockHeight blockHeight, size_t count) const {
   throwIfNotInitialized();
   throwIfStopped();
 
-  return getTransactionsInBlocks(blockIndex, count);
+  return getTransactionsInBlocks(blockHeight, count);
 }
 
-std::vector<Crypto::Hash> WalletGreen::getBlockHashes(uint32_t blockIndex, size_t count) const {
+std::vector<Crypto::Hash> WalletGreen::getBlockHashes(BlockHeight blockHeight, size_t count) const {
   throwIfNotInitialized();
   throwIfStopped();
 
   auto& index = m_blockchain.get<BlockHeightIndex>();
 
-  if (blockIndex >= index.size()) {
+  if (blockHeight.native() > index.size()) {
     return std::vector<Crypto::Hash>();
   }
 
-  auto start = std::next(index.begin(), blockIndex);
-  auto end = std::next(index.begin(), std::min(index.size(), blockIndex + count));
+  auto start = std::next(index.begin(), blockHeight.toIndex());
+  auto end =
+      std::next(index.begin(), static_cast<std::ptrdiff_t>(std::min(index.size(), blockHeight.toIndex() + count)));
   return std::vector<Crypto::Hash>(start, end);
 }
 
@@ -2742,9 +2749,9 @@ void WalletGreen::throwIfNotInitialized() const {
   }
 }
 
-void WalletGreen::onError(ITransfersSubscription* object, uint32_t height, std::error_code ec) {
+void WalletGreen::onError(ITransfersSubscription* object, BlockHeight height, std::error_code ec) {
   XI_UNUSED(object);
-  m_logger(ERROR) << "Synchronization error: " << ec << ", " << ec.message() << ", height " << height;
+  m_logger(ERROR) << "Synchronization error: " << ec << ", " << ec.message() << ", height " << height.native();
 }
 
 void WalletGreen::synchronizationProgressUpdated(uint32_t processedBlockCount, uint32_t totalBlockCount) {
@@ -2773,9 +2780,7 @@ void WalletGreen::onSynchronizationProgressUpdated(uint32_t processedBlockCount,
   }
 
   pushEvent(makeSyncProgressUpdatedEvent(processedBlockCount, totalBlockCount));
-
-  uint32_t currentHeight = processedBlockCount - 1;
-  unlockBalances(currentHeight);
+  unlockBalances(BlockHeight::fromNative(processedBlockCount));
 }
 
 void WalletGreen::onSynchronizationCompleted() {
@@ -2805,22 +2810,22 @@ void WalletGreen::blocksAdded(const std::vector<Crypto::Hash>& blockHashes) {
   m_blockchain.insert(m_blockchain.end(), blockHashes.begin(), blockHashes.end());
 }
 
-void WalletGreen::onBlockchainDetach(const Crypto::PublicKey& viewPublicKey, uint32_t blockIndex) {
+void WalletGreen::onBlockchainDetach(const Crypto::PublicKey& viewPublicKey, BlockHeight blockHeight) {
   XI_UNUSED(viewPublicKey);
-  m_dispatcher.remoteSpawn([this, blockIndex]() { blocksRollback(blockIndex); });
+  m_dispatcher.remoteSpawn([this, blockHeight]() { blocksRollback(blockHeight); });
 }
 
-void WalletGreen::blocksRollback(uint32_t blockIndex) {
+void WalletGreen::blocksRollback(BlockHeight blockHeight) {
   System::EventLock lk(m_readyEvent);
 
-  m_logger(TRACE) << "blocksRollback " << blockIndex;
+  m_logger(TRACE) << "blocksRollback " << blockHeight.native();
 
   if (m_state == WalletState::NOT_INITIALIZED) {
     return;
   }
 
   auto& blockHeightIndex = m_blockchain.get<BlockHeightIndex>();
-  blockHeightIndex.erase(std::next(blockHeightIndex.begin(), blockIndex), blockHeightIndex.end());
+  blockHeightIndex.erase(std::next(blockHeightIndex.begin(), blockHeight.toIndex()), blockHeightIndex.end());
 }
 
 void WalletGreen::onTransactionDeleteBegin(const Crypto::PublicKey& viewPublicKey, Crypto::Hash transactionHash) {
@@ -2843,7 +2848,7 @@ void WalletGreen::transactionDeleteEnd(Crypto::Hash transactionHash) {
   m_logger(TRACE) << "transactionDeleteEnd " << transactionHash;
 }
 
-void WalletGreen::unlockBalances(uint32_t height) {
+void WalletGreen::unlockBalances(BlockHeight height) {
   auto& index = m_unlockTransactionsJob.get<BlockHeightIndex>();
   auto upper = index.upper_bound(height);
 
@@ -2888,10 +2893,10 @@ void WalletGreen::transactionUpdated(const TransactionInformation& transactionIn
   System::EventLock lk(m_readyEvent);
 
   m_logger(DEBUGGING) << "transactionUpdated event, hash " << transactionInfo.transactionHash << ", block "
-                      << transactionInfo.blockHeight << ", totalAmountIn "
+                      << transactionInfo.blockHeight.native() << ", totalAmountIn "
                       << m_currency.formatAmount(transactionInfo.totalAmountIn) << ", totalAmountOut "
                       << m_currency.formatAmount(transactionInfo.totalAmountOut)
-                      << (transactionInfo.paymentId == NULL_HASH
+                      << (transactionInfo.paymentId == Hash::Null
                               ? ""
                               : ", paymentId " + podToHex(transactionInfo.paymentId));
 
@@ -2930,9 +2935,11 @@ void WalletGreen::transactionUpdated(const TransactionInformation& transactionIn
   for (auto containerAmounts : containerAmountsList) {
     updateBalance(containerAmounts.container);
 
-    if (transactionInfo.blockHeight != CryptoNote::WALLET_UNCONFIRMED_TRANSACTION_HEIGHT) {
-      uint32_t unlockHeight = std::max(transactionInfo.blockHeight + m_transactionSoftLockTime,
-                                       static_cast<uint32_t>(transactionInfo.unlockTime));
+    if (!transactionInfo.blockHeight.isNull()) {
+      BlockHeight unlockHeight =
+          transactionInfo.blockHeight.next(static_cast<BlockHeight::signed_value_type>(m_transactionSoftLockTime));
+      unlockHeight =
+          std::min(unlockHeight, BlockHeight::fromIndex(m_currency.estimateUnlockIndex(transactionInfo.unlockTime)));
       insertUnlockTransactionJob(transactionInfo.transactionHash, unlockHeight, containerAmounts.container);
     }
   }
@@ -3020,13 +3027,13 @@ void WalletGreen::transactionDeleted(ITransfersSubscription* object, const Hash&
     auto transactionId = getTransactionId(transactionHash);
     auto tx = m_transactions[transactionId];
     m_logger(INFO) << "Transaction deleted, ID " << transactionId << ", hash " << transactionHash << ", state "
-                   << tx.state << ", block " << tx.blockHeight << ", totalAmount "
+                   << tx.state << ", block " << tx.blockHeight.native() << ", totalAmount "
                    << m_currency.formatAmount(tx.totalAmount) << ", fee " << m_currency.formatAmount(tx.fee);
     pushEvent(makeTransactionUpdatedEvent(transactionId));
   }
 }
 
-void WalletGreen::insertUnlockTransactionJob(const Hash& transactionHash, uint32_t blockHeight,
+void WalletGreen::insertUnlockTransactionJob(const Hash& transactionHash, BlockHeight blockHeight,
                                              CryptoNote::ITransfersContainer* container) {
   auto& index = m_unlockTransactionsJob.get<BlockHeightIndex>();
   index.insert({blockHeight, container, transactionHash});
@@ -3186,7 +3193,7 @@ WalletGreen::WalletTrackingMode WalletGreen::getTrackingMode() const {
     return WalletTrackingMode::NO_ADDRESSES;
   }
 
-  return m_walletsContainer.get<RandomAccessIndex>().begin()->spendSecretKey == NULL_SECRET_KEY
+  return m_walletsContainer.get<RandomAccessIndex>().begin()->spendSecretKey == SecretKey::Null
              ? WalletTrackingMode::TRACKING
              : WalletTrackingMode::NOT_TRACKING;
 }
@@ -3221,15 +3228,15 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint16_t mixin,
 
   const size_t MAX_FUSION_OUTPUT_COUNT = 4;
 
-  const uint32_t height = m_node.getLastKnownBlockHeight();
-  const uint8_t blockVersion = m_currency.majorBlockVersionForHeight(height + 1);
+  const auto height = m_node.getLastKnownBlockHeight();
+  const uint8_t blockVersion = m_currency.majorBlockVersionForIndex(height.toIndex());
 
-  if (threshold <= m_currency.defaultFusionDustThreshold(height)) {
+  if (threshold <= m_currency.defaultFusionDustThreshold(height.toIndex())) {
     m_logger(ERROR) << "Fusion transaction threshold is too small. Threshold " << m_currency.formatAmount(threshold)
                     << ", minimum threshold "
-                    << m_currency.formatAmount(m_currency.defaultFusionDustThreshold(height) + 1);
+                    << m_currency.formatAmount(m_currency.defaultFusionDustThreshold(height.toIndex()) + 1);
     throw std::runtime_error("Threshold must be greater than " +
-                             m_currency.formatAmount(m_currency.defaultFusionDustThreshold(height)));
+                             m_currency.formatAmount(m_currency.defaultFusionDustThreshold(height.toIndex())));
   }
 
   if (m_walletsContainer.get<RandomAccessIndex>().size() == 0) {
@@ -3380,8 +3387,9 @@ bool WalletGreen::isFusionTransaction(const WalletTransaction& walletTx) const {
     const auto blockHeight = txInfo.blockHeight == WALLET_UNCONFIRMED_TRANSACTION_HEIGHT
                                  ? m_node.getLastKnownBlockHeight()
                                  : txInfo.blockHeight;
-    return m_currency.isFusionTransaction(inputsAmounts, outputsAmounts, 0,
-                                          blockHeight);  // size = 0 here because can't get real size of tx in wallet.
+    return m_currency.isFusionTransaction(
+        inputsAmounts, outputsAmounts, 0,
+        blockHeight.toIndex());  // size = 0 here because can't get real size of tx in wallet.
   }
 }
 
@@ -3402,7 +3410,7 @@ IFusionManager::EstimateResult WalletGreen::estimate(uint64_t threshold,
     for (auto& out : walletOuts[walletIndex].outs) {
       uint8_t powerOfTen = 0;
       if (m_currency.isAmountApplicableInFusionTransactionInput(out.amount, threshold, powerOfTen,
-                                                                m_node.getLastKnownBlockHeight())) {
+                                                                m_node.getLastKnownBlockHeight().toIndex())) {
         assert(powerOfTen < std::numeric_limits<uint64_t>::digits10 + 1);
         bucketSizes[powerOfTen]++;
       }
@@ -3430,7 +3438,7 @@ std::vector<WalletGreen::OutputToTransfer> WalletGreen::pickRandomFusionInputs(
     for (auto& out : walletOuts[walletIndex].outs) {
       uint8_t powerOfTen = 0;
       if (m_currency.isAmountApplicableInFusionTransactionInput(out.amount, threshold, powerOfTen,
-                                                                m_node.getLastKnownBlockHeight())) {
+                                                                m_node.getLastKnownBlockHeight().toIndex())) {
         allFusionReadyOuts.push_back({std::move(out), walletOuts[walletIndex].wallet});
         assert(powerOfTen < std::numeric_limits<uint64_t>::digits10 + 1);
         bucketSizes[powerOfTen]++;
@@ -3442,7 +3450,7 @@ std::vector<WalletGreen::OutputToTransfer> WalletGreen::pickRandomFusionInputs(
   std::vector<uint8_t> bucketNumbers(bucketSizes.size());
   std::iota(bucketNumbers.begin(), bucketNumbers.end(), static_cast<uint8_t>(0u));
   std::shuffle(bucketNumbers.begin(), bucketNumbers.end(),
-               std::default_random_engine{Crypto::rand<std::default_random_engine::result_type>()});
+               std::default_random_engine{Xi::Crypto::Random::generate<std::default_random_engine::result_type>()});
   size_t bucketNumberIndex = 0;
   for (; bucketNumberIndex < bucketNumbers.size(); ++bucketNumberIndex) {
     if (bucketSizes[bucketNumbers[bucketNumberIndex]] >= minInputCount) {
@@ -3481,7 +3489,7 @@ std::vector<WalletGreen::OutputToTransfer> WalletGreen::pickRandomFusionInputs(
     return selectedOuts;
   }
 
-  ShuffleGenerator<size_t, Crypto::random_engine<size_t>> generator(selectedOuts.size());
+  ShuffleGenerator<size_t, Xi::Crypto::Random::Engine64> generator(selectedOuts.size());
   std::vector<WalletGreen::OutputToTransfer> trimmedSelectedOuts;
   trimmedSelectedOuts.reserve(maxInputCount);
   for (size_t i = 0; i < maxInputCount; ++i) {
@@ -3492,29 +3500,29 @@ std::vector<WalletGreen::OutputToTransfer> WalletGreen::pickRandomFusionInputs(
   return trimmedSelectedOuts;
 }
 
-std::vector<TransactionsInBlockInfo> WalletGreen::getTransactionsInBlocks(uint32_t blockIndex, size_t count) const {
+std::vector<TransactionsInBlockInfo> WalletGreen::getTransactionsInBlocks(BlockHeight blockHeight, size_t count) const {
   if (count == 0) {
     m_logger(ERROR) << "Bad argument: block count must be greater than zero";
     throw std::system_error(make_error_code(error::WRONG_PARAMETERS), "blocks count must be greater than zero");
   }
 
-  if (blockIndex == 0) {
+  if (blockHeight.isNull()) {
     m_logger(ERROR) << "Bad argument: blockIndex must be greater than zero";
     throw std::system_error(make_error_code(error::WRONG_PARAMETERS), "blockIndex must be greater than zero");
   }
 
   std::vector<TransactionsInBlockInfo> result;
 
-  if (blockIndex >= m_blockchain.size()) {
+  if (blockHeight.native() > m_blockchain.size()) {
     return result;
   }
 
   auto& blockHeightIndex = m_transactions.get<BlockHeightIndex>();
-  uint32_t stopIndex = static_cast<uint32_t>(std::min(m_blockchain.size(), blockIndex + count));
+  BlockHeight stopHeight = std::min(BlockHeight::fromSize(m_blockchain.size()), blockHeight.next(count));
 
-  for (uint32_t height = blockIndex; height < stopIndex; ++height) {
+  for (auto height = blockHeight; height < stopHeight && !height.isNull(); height.advance(1)) {
     TransactionsInBlockInfo info;
-    info.blockHash = m_blockchain[height - 1];
+    info.blockHash = m_blockchain[height.toIndex()];
 
     auto lowerBound = blockHeightIndex.lower_bound(height);
     auto upperBound = blockHeightIndex.upper_bound(height);
@@ -3537,9 +3545,9 @@ std::vector<TransactionsInBlockInfo> WalletGreen::getTransactionsInBlocks(uint32
   return result;
 }
 
-Crypto::Hash WalletGreen::getBlockHashByIndex(uint32_t blockIndex) const {
-  assert(blockIndex < m_blockchain.size());
-  return m_blockchain.get<BlockHeightIndex>()[blockIndex];
+Crypto::Hash WalletGreen::getBlockHashByHeight(BlockHeight blockHeight) const {
+  assert(blockHeight.toIndex() < m_blockchain.size());
+  return m_blockchain.get<BlockHeightIndex>()[blockHeight.toIndex()];
 }
 
 std::vector<WalletTransfer> WalletGreen::getTransactionTransfers(const WalletTransaction& transaction) const {
@@ -3740,8 +3748,8 @@ void WalletGreen::deleteFromUncommitedTransactions(const std::vector<size_t>& de
 
 */
 size_t WalletGreen::getMaxTxSize() {
-  const uint32_t currentHeight = m_node.getLastKnownBlockHeight();
-  return m_currency.maxTxSize(Xi::Config::BlockVersion::version(currentHeight));
+  const auto currentHeight = m_node.getLastKnownBlockHeight();
+  return m_currency.maxTxSize(Xi::Config::BlockVersion::version(currentHeight.toIndex()));
 }
 
 }  // namespace CryptoNote

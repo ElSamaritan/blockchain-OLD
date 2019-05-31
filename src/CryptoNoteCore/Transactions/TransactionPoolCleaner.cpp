@@ -64,7 +64,7 @@ std::vector<Crypto::Hash> TransactionPoolCleanWrapper::sanityCheck(const uint64_
   return transactionPool->sanityCheck(timeout);
 }
 
-void TransactionPoolCleanWrapper::serialize(ISerializer& serializer) { return transactionPool->serialize(serializer); }
+bool TransactionPoolCleanWrapper::serialize(ISerializer& serializer) { return transactionPool->serialize(serializer); }
 
 ITransactionPool::TransactionQueryResult TransactionPoolCleanWrapper::queryTransaction(const Crypto::Hash& hash) const {
   return transactionPool->queryTransaction(hash);

@@ -54,12 +54,12 @@ class P2pNode : public IP2pNode, public IStreamSerializable, IP2pNodeInternal {
   virtual void stop() override;
 
   // IStreamSerializable
-  virtual void save(std::ostream& os) override;
-  virtual void load(std::istream& in) override;
+  [[nodiscard]] virtual bool save(std::ostream& os) override;
+  [[nodiscard]] virtual bool load(std::istream& in) override;
 
   // P2pNode
   void start();
-  bool serialize(ISerializer& s);
+  [[nodiscard]] bool serialize(ISerializer& s);
 
  private:
   typedef std::unique_ptr<P2pContext> ContextPtr;

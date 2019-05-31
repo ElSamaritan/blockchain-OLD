@@ -42,10 +42,12 @@ class Currency {
   uint64_t publicAddressBase58Prefix() const { return m_publicAddressBase58Prefix; }
   uint32_t minedMoneyUnlockWindow() const { return m_minedMoneyUnlockWindow; }
 
-  uint8_t majorBlockVersionForHeight(uint32_t blockHeight) const;
+  uint8_t majorBlockVersionForIndex(uint32_t blockHeight) const;
 
   uint32_t timestampCheckWindow(uint32_t blockHeight, uint8_t majorVersion) const;
   uint64_t blockFutureTimeLimit(uint32_t blockHeight, uint8_t majorVersion) const;
+
+  uint32_t blockTimeTarget() const;
 
   uint64_t moneySupply() const { return m_moneySupply; }
   unsigned int emissionSpeedFactor() const { return m_emissionSpeedFactor; }
@@ -64,8 +66,8 @@ class Currency {
 
   uint64_t minimumFee() const { return m_mininumFee; }
   uint64_t defaultDustThresholdForMajorVersion(uint8_t blockMajorVersion) const;
-  uint64_t defaultDustThreshold(uint32_t height) const;
-  uint64_t defaultFusionDustThreshold(uint32_t height) const;
+  uint64_t defaultDustThreshold(uint32_t index) const;
+  uint64_t defaultFusionDustThreshold(uint32_t index) const;
 
   uint32_t upgradeHeight(uint8_t majorVersion) const;
 
@@ -117,6 +119,13 @@ class Currency {
   Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const CachedBlock& block) const;
   Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const BlockTemplate& block) const;
   // -------------------------------------------- Static Reward -------------------------------------------------------
+
+  // ----------------------------------------------- Locking ----------------------------------------------------------
+  bool isLockedBasedOnTimestamp(uint64_t unlock) const;
+  bool isLockedBasedOnBlockIndex(uint64_t unlock) const;
+  bool isUnlockSatisfied(uint64_t unlock, uint32_t blockIndex, uint64_t timestamp) const;
+  uint32_t estimateUnlockIndex(uint64_t unlock) const;
+  // ----------------------------------------------- Locking ----------------------------------------------------------
 
   bool isFusionTransaction(const Transaction& transaction, uint32_t height) const;
   bool isFusionTransaction(const Transaction& transaction, size_t size, uint32_t height) const;
@@ -198,7 +207,7 @@ class Currency {
   BlockTemplate m_genesisBlockTemplate;
   std::unique_ptr<CachedBlock> m_cachedGenesisBlock;
 
-  Xi::ByteArray<3 + Crypto::Hash::bytes()> m_staticRewardHashBuffer;
+  Xi::ByteVector m_staticRewardSalt{};
 
   Logging::LoggerRef logger;
 

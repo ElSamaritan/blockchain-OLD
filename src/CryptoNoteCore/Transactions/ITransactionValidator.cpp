@@ -35,10 +35,10 @@ Xi::Result<CryptoNote::TransactionValidationResult> CryptoNote::ITransactionVali
     if (result.isError()) {
       return result.error();
     } else {
-      return Xi::make_result<TransactionValidationResult>(std::move(transaction), result.value());
+      return Xi::emplaceSuccess<TransactionValidationResult>(std::move(transaction), result.value());
     }
   } catch (...) {
-    return Xi::make_error(std::current_exception());
+    return Xi::failure(std::current_exception());
   }
 }
 
@@ -49,9 +49,9 @@ Xi::Result<CryptoNote::TransactionValidationResult> CryptoNote::ITransactionVali
     if (result.isError()) {
       return result.error();
     } else {
-      return Xi::make_result<TransactionValidationResult>(result.value());
+      return Xi::emplaceSuccess<TransactionValidationResult>(result.value());
     }
   } catch (...) {
-    return Xi::make_error(std::current_exception());
+    return Xi::failure(std::current_exception());
   }
 }

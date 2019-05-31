@@ -100,7 +100,8 @@ BlockchainReadBatch& BlockchainReadBatch::requestTransactionCountByPaymentId(con
 
 BlockchainReadBatch& BlockchainReadBatch::requestTransactionHashByPaymentId(const Crypto::Hash& paymentId,
                                                                             uint32_t transactionIndexWithinPaymentId) {
-  state.transactionHashesByPaymentIds.emplace(std::make_pair(paymentId, transactionIndexWithinPaymentId), NULL_HASH);
+  state.transactionHashesByPaymentIds.emplace(std::make_pair(paymentId, transactionIndexWithinPaymentId),
+                                              Crypto::Hash::Null);
   return *this;
 }
 
@@ -151,15 +152,15 @@ std::vector<std::string> BlockchainReadBatch::getRawKeys() const {
   DB::serializeKeys(rawKeys, DB::KEY_OUTPUT_KEY_PREFIX, state.keyOutputKeys);
 
   if (state.lastBlockIndex.second) {
-    rawKeys.emplace_back(DB::serializeKey(DB::BLOCK_INDEX_TO_BLOCK_HASH_PREFIX, DB::LAST_BLOCK_INDEX_KEY));
+    rawKeys.emplace_back(DB::serializeKey(DB::LAST_BLOCK_INDEX_KEY, DB::noKey()));
   }
 
   if (state.keyOutputAmountsCount.second) {
-    rawKeys.emplace_back(DB::serializeKey(DB::KEY_OUTPUT_AMOUNTS_COUNT_PREFIX, DB::KEY_OUTPUT_AMOUNTS_COUNT_KEY));
+    rawKeys.emplace_back(DB::serializeKey(DB::KEY_OUTPUT_AMOUNTS_COUNT_KEY, DB::noKey()));
   }
 
   if (state.transactionsCount.second) {
-    rawKeys.emplace_back(DB::serializeKey(DB::TRANSACTION_HASH_TO_TRANSACTION_INFO_PREFIX, DB::TRANSACTIONS_COUNT_KEY));
+    rawKeys.emplace_back(DB::serializeKey(DB::TRANSACTIONS_COUNT_KEY, DB::noKey()));
   }
 
   // assert(!rawKeys.empty());
@@ -260,9 +261,9 @@ void BlockchainReadBatch::submitRawResult(const std::vector<std::string>& values
   DB::deserializeValues(state.blockHashesByTimestamp, iter, DB::TIMESTAMP_TO_BLOCKHASHES_PREFIX);
   DB::deserializeValues(state.keyOutputKeys, iter, DB::KEY_OUTPUT_KEY_PREFIX);
 
-  DB::deserializeValue(state.lastBlockIndex, iter, DB::BLOCK_INDEX_TO_BLOCK_HASH_PREFIX);
-  DB::deserializeValue(state.keyOutputAmountsCount, iter, DB::KEY_OUTPUT_AMOUNTS_COUNT_PREFIX);
-  DB::deserializeValue(state.transactionsCount, iter, DB::TRANSACTION_HASH_TO_TRANSACTION_INFO_PREFIX);
+  DB::deserializeValue(state.lastBlockIndex, iter, DB::LAST_BLOCK_INDEX_KEY);
+  DB::deserializeValue(state.keyOutputAmountsCount, iter, DB::KEY_OUTPUT_AMOUNTS_COUNT_KEY);
+  DB::deserializeValue(state.transactionsCount, iter, DB::TRANSACTIONS_COUNT_KEY);
 
   assert(iter == range.end());
 

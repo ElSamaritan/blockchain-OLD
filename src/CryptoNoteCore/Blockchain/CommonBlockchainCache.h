@@ -42,14 +42,15 @@ class CommonBlockchainCache : public IBlockchainCache {
   virtual ~CommonBlockchainCache() override = default;
 
   // ------------------------------------------ IBlockchainCache ------------------------------------------------------
-  bool isTransactionSpendTimeUnlocked(uint64_t unlockTime) const override;
-  bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const override;
-  bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex, uint64_t timestamp) const override;
+  [[nodiscard]] bool isTransactionSpendTimeUnlocked(uint64_t unlockTime) const override;
+  [[nodiscard]] bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const override;
+  [[nodiscard]] bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex,
+                                                    uint64_t timestamp) const override;
   // ------------------------------------------ IBlockchainCache ------------------------------------------------------
 
  private:
-  bool isTransactionSpendTimeUnlockedByBlockIndex(uint64_t unlockTime, uint32_t blockIndex) const;
-  bool isTransactionSpendTimeUnlockedByTimestamp(uint64_t unlockTime, uint32_t blockIndex) const;
+  [[nodiscard]] bool isTransactionSpendTimeUnlockedByBlockIndex(uint64_t unlockTime, uint32_t blockIndex) const;
+  [[nodiscard]] bool isTransactionSpendTimeUnlockedByTimestamp(uint64_t unlockTime, uint32_t blockIndex) const;
 
  private:
   Logging::LoggerRef m_logger;

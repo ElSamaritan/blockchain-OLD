@@ -24,7 +24,7 @@
 
 namespace CryptoNote {
 
-uint16_t getDefaultMixinByHeight(const uint32_t height) {
+uint16_t getDefaultMixinByIndex(const uint32_t height) {
   return Xi::Config::Mixin::defaultValue(Xi::Config::BlockVersion::version(height));
 }
 

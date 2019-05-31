@@ -56,24 +56,24 @@ class BlockchainSynchronizer : public IObservableImpl<IBlockchainSynchronizerObs
   virtual void stop() override;
 
   // IStreamSerializable
-  virtual void save(std::ostream& os) override;
-  virtual void load(std::istream& in) override;
+  [[nodiscard]] virtual bool save(std::ostream& os) override;
+  [[nodiscard]] virtual bool load(std::istream& in) override;
 
   // INodeObserver
-  virtual void localBlockchainUpdated(uint32_t height) override;
-  virtual void lastKnownBlockHeightUpdated(uint32_t height) override;
+  virtual void localBlockchainUpdated(BlockHeight height) override;
+  virtual void lastKnownBlockHeightUpdated(BlockHeight height) override;
   virtual void poolChanged() override;
 
  private:
   struct GetBlocksResponse {
-    uint32_t startHeight;
+    BlockHeight startHeight;
     std::vector<BlockShortEntry> newBlocks;
   };
 
   struct GetBlocksRequest {
     GetBlocksRequest() {
       syncStart.timestamp = 0;
-      syncStart.height = 0;
+      syncStart.height = BlockHeight::Genesis;
     }
     SynchronizationStart syncStart;
     std::vector<Crypto::Hash> knownBlocks;

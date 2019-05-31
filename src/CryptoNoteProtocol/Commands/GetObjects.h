@@ -30,6 +30,7 @@
 #include <Serialization/SerializationOverloads.h>
 #include <crypto/CryptoTypes.h>
 #include <CryptoNoteCore/CryptoNote.h>
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 #include "CryptoNoteProtocol/Commands/CryptoNoteProtocolCommand.h"
 #include "CryptoNoteProtocol/Structures/RawBlockLegacy.h"
@@ -54,7 +55,7 @@ struct NOTIFY_RESPONSE_GET_OBJECTS_request {
   std::vector<std::string> transactions;
   std::vector<RawBlockLegacy> blocks;
   std::vector<Crypto::Hash> missed_ids;
-  uint32_t current_blockchain_height;
+  BlockHeight current_blockchain_height;
 };
 
 struct NOTIFY_RESPONSE_GET_OBJECTS {

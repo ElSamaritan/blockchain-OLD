@@ -45,7 +45,7 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(StreamCorrupted, "stream corrupted while writing
 
 Xi::Result<std::unique_ptr<XiSync::DumpWriter>> XiSync::DumpWriter::open(const std::string &file) {
   XI_ERROR_TRY();
-  return Xi::make_result<std::unique_ptr<DumpWriter>>(new DumpWriter{file});
+  return success(std::unique_ptr<DumpWriter>{new DumpWriter{file}});
   XI_ERROR_CATCH();
 }
 
@@ -90,7 +90,7 @@ Xi::Result<void> XiSync::DumpWriter::write(uint32_t startIndex, std::vector<Cryp
     Xi::exceptional<StreamCorruptedError>();
   }
 
-  return Xi::make_result<void>();
+  return Xi::success();
   XI_ERROR_CATCH();
 }
 

@@ -175,18 +175,19 @@ std::string createIntegratedAddress(const std::string &address, const std::strin
   CryptoNote::AccountPublicAddress addr;
 
   /* Get the private + public key from the address */
-  CryptoNote::parseAccountAddressString(prefix, addr, address);
+  if (!CryptoNote::parseAccountAddressString(prefix, addr, address)) {
+    throw std::runtime_error("invalid address provided");
+  }
 
   /* Pack as a binary array */
-  CryptoNote::BinaryArray ba;
-  CryptoNote::toBinaryArray(addr, ba);
+  CryptoNote::BinaryArray ba = CryptoNote::toBinaryArray(addr);
   std::string keys = Common::asString(ba);
 
   /* Encode prefix + paymentID + keys as an address */
   return Tools::Base58::encode_addr(Xi::Config::Coin::addressBas58Prefix(), paymentID + keys);
 }
 
-uint32_t getScanHeight() {
+CryptoNote::BlockHeight getScanHeight() {
   while (true) {
     std::cout << InformationMsg("What height would you like to begin ") << InformationMsg("scanning your wallet from?")
               << std::endl
@@ -208,11 +209,12 @@ uint32_t getScanHeight() {
     removeCharFromString(stringHeight, ',');
 
     if (stringHeight == std::string{""}) {
-      return 0;
+      return CryptoNote::BlockHeight::Genesis;
     }
 
     try {
-      return std::stoul(stringHeight);
+      const auto height = std::stoul(stringHeight);
+      return height > 0 ? CryptoNote::BlockHeight::fromNative(height) : CryptoNote::BlockHeight::Genesis;
     } catch (const std::invalid_argument &) {
       std::cout << WarningMsg("Failed to parse height - input is not ") << WarningMsg("a number!") << std::endl
                 << std::endl;

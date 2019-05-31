@@ -11,6 +11,7 @@
 #include <Xi/Config.h>
 #include <Xi/Algorithm/String.h>
 
+#include <Xi/Crypto/Random/Random.hh>
 #include <Common/Util.h>
 #include "Common/CommandLine.h"
 #include "Common/StringTools.h"
@@ -39,7 +40,7 @@ bool parsePeersAndAddToPeerListContainer(const std::vector<std::string> peerList
                                          std::vector<PeerlistEntry>& container) {
   for (const std::string& peer : peerList) {
     PeerlistEntry peerListEntry = PeerlistEntry();
-    peerListEntry.id = Crypto::rand<uint64_t>();
+    peerListEntry.id = Xi::Crypto::Random::generate<uint64_t>();
     if (!parsePeerFromString(peerListEntry.address, peer)) {
       return false;
     }

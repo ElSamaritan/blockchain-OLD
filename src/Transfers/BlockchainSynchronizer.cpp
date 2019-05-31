@@ -195,6 +195,7 @@ std::error_code BlockchainSynchronizer::doAddUnconfirmedTransaction(const ITrans
 
 void BlockchainSynchronizer::doRemoveUnconfirmedTransaction(const Crypto::Hash& transactionHash) {
   std::unique_lock<std::mutex> lk(m_consumersMutex);
+  (void)lk;
 
   for (auto& consumer : m_consumers) {
     consumer.first->removeUnconfirmedTransaction(transactionHash);
@@ -203,23 +204,25 @@ void BlockchainSynchronizer::doRemoveUnconfirmedTransaction(const Crypto::Hash& 
   m_logger(INFO) << "Unconfirmed transaction removed, hash " << transactionHash;
 }
 
-void BlockchainSynchronizer::save(std::ostream& os) {
+bool BlockchainSynchronizer::save(std::ostream& os) {
   m_logger(INFO) << "Saving...";
   os.write(reinterpret_cast<const char*>(&m_genesisBlockHash), sizeof(m_genesisBlockHash));
   m_logger(INFO) << "Saved";
+  return !os.bad();
 }
 
-void BlockchainSynchronizer::load(std::istream& in) {
+bool BlockchainSynchronizer::load(std::istream& in) {
   m_logger(INFO) << "Loading...";
   Hash genesisBlockHash;
   in.read(reinterpret_cast<char*>(&genesisBlockHash), sizeof(genesisBlockHash));
   if (genesisBlockHash != m_genesisBlockHash) {
     auto message = "Failed to load: genesis block hash does not match stored state";
     m_logger(ERROR) << message << ", read " << genesisBlockHash << ", expected " << m_genesisBlockHash;
-    throw std::runtime_error(message);
+    return false;
   }
 
   m_logger(INFO) << "Loaded";
+  return !in.bad();
 }
 
 //--------------------------- FSM ------------------------------------
@@ -338,10 +341,14 @@ void BlockchainSynchronizer::workingProcedure() {
 void BlockchainSynchronizer::start() {
   m_logger(INFO) << "Starting...";
 
-  if (m_consumers.empty()) {
-    auto message = "Failed to start: no consumers";
-    m_logger(ERROR) << message;
-    throw std::runtime_error(message);
+  {
+    std::unique_lock<std::mutex> lk(m_consumersMutex);
+    (void)lk;
+    if (m_consumers.empty()) {
+      auto message = "Failed to start: no consumers";
+      m_logger(ERROR) << message;
+      throw std::runtime_error(message);
+    }
   }
 
   State nextState;
@@ -375,13 +382,13 @@ void BlockchainSynchronizer::stop() {
   m_logger(INFO) << "Stopped";
 }
 
-void BlockchainSynchronizer::localBlockchainUpdated(uint32_t height) {
-  m_logger(DEBUGGING) << "Event: localBlockchainUpdated " << height;
+void BlockchainSynchronizer::localBlockchainUpdated(BlockHeight height) {
+  m_logger(DEBUGGING) << "Event: localBlockchainUpdated " << height.native();
   setFutureState(State::blockchainSync);
 }
 
-void BlockchainSynchronizer::lastKnownBlockHeightUpdated(uint32_t height) {
-  m_logger(DEBUGGING) << "Event: lastKnownBlockHeightUpdated " << height;
+void BlockchainSynchronizer::lastKnownBlockHeightUpdated(BlockHeight height) {
+  m_logger(DEBUGGING) << "Event: lastKnownBlockHeightUpdated " << height.native();
   setFutureState(State::blockchainSync);
 }
 
@@ -438,13 +445,13 @@ BlockchainSynchronizer::GetBlocksRequest BlockchainSynchronizer::getCommonHistor
     syncStart.height = std::min(syncStart.height, consumerStart.height);
   }
 
-  m_logger(DEBUGGING) << "Shortest chain size " << shortest->second->getHeight();
+  m_logger(DEBUGGING) << "Shortest chain size " << shortest->second->getHeight().native();
 
   request.knownBlocks = shortest->second->getShortHistory(m_node.getLastLocalBlockHeight());
   request.syncStart = syncStart;
 
-  m_logger(DEBUGGING) << "Common history: start block index " << request.syncStart.height << ", sparse chain size "
-                      << request.knownBlocks.size();
+  m_logger(DEBUGGING) << "Common history: start block height " << request.syncStart.height.native()
+                      << ", sparse chain size " << request.knownBlocks.size();
 
   return request;
 }
@@ -473,7 +480,7 @@ void BlockchainSynchronizer::startBlockchainSync() {
         setFutureStateIf(State::idle, [this] { return m_futureState != State::stopped; });
         m_observerManager.notify(&IBlockchainSynchronizerObserver::synchronizationCompleted, ec);
       } else {
-        m_logger(DEBUGGING) << "Blocks received, start index " << response.startHeight << ", count "
+        m_logger(DEBUGGING) << "Blocks received, start height " << response.startHeight.native() << ", count "
                             << response.newBlocks.size();
         processBlocks(response);
       }
@@ -487,7 +494,7 @@ void BlockchainSynchronizer::startBlockchainSync() {
 }
 
 void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
-  m_logger(DEBUGGING) << "Process blocks, start index " << response.startHeight << ", count "
+  m_logger(DEBUGGING) << "Process blocks, start height " << response.startHeight.native() << ", count "
                       << response.newBlocks.size();
 
   BlockchainInterval interval;
@@ -535,7 +542,7 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
     blocks.push_back(std::move(completeBlock));
   }
 
-  uint32_t processedBlockCount = response.startHeight + static_cast<uint32_t>(response.newBlocks.size());
+  uint32_t processedBlockCount = response.startHeight.native() + static_cast<uint32_t>(response.newBlocks.size());
   if (!checkIfShouldStop()) {
     response.newBlocks.clear();
     std::unique_lock<std::mutex> lk(m_consumersMutex);
@@ -582,38 +589,34 @@ BlockchainSynchronizer::UpdateConsumersResult BlockchainSynchronizer::updateCons
   bool smthChanged = false;
   bool hasErrors = false;
 
-  uint32_t lastBlockIndex = std::numeric_limits<uint32_t>::max();
+  BlockHeight lastBlockHeight = BlockHeight::Null;
   for (auto& kv : m_consumers) {
     auto result = kv.second->checkInterval(interval);
 
     if (result.detachRequired) {
-      m_logger(DEBUGGING) << "Detach consumer, consumer " << kv.first << ", block index " << result.detachHeight;
+      m_logger(DEBUGGING) << "Detach consumer, consumer " << kv.first << ", block height "
+                          << toString(result.detachHeight);
       kv.first->onBlockchainDetach(result.detachHeight);
       kv.second->detach(result.detachHeight);
     }
 
-    if (result.newBlockHeight == 1) {
-      result.newBlockHeight = 0;
-    }
     if (result.hasNewBlocks) {
-      uint32_t startOffset = result.newBlockHeight - interval.startHeight;
-      if (result.newBlockHeight == 0) {
-        startOffset = 0;
-      }
-      uint32_t blockCount = static_cast<uint32_t>(blocks.size()) - startOffset;
+      auto startOffset = result.newBlockHeight - interval.startHeight;
+      auto blockCount = BlockHeight::fromSize(blocks.size()) - startOffset;
       // update consumer
-      m_logger(DEBUGGING) << "Adding blocks to consumer, consumer " << kv.first << ", start index "
-                          << result.newBlockHeight << ", count " << blockCount;
-      uint32_t addedCount = kv.first->onNewBlocks(blocks.data() + startOffset, result.newBlockHeight, blockCount);
+      m_logger(DEBUGGING) << "Adding blocks to consumer, consumer " << kv.first << ", start height "
+                          << toString(result.newBlockHeight) << ", count " << blockCount.native();
+      uint32_t addedCount =
+          kv.first->onNewBlocks(blocks.data() + startOffset.native(), result.newBlockHeight, blockCount.native());
       if (addedCount > 0) {
-        if (addedCount < blockCount) {
-          m_logger(ERROR) << "Failed to add " << (blockCount - addedCount) << " blocks of " << blockCount
-                          << " to consumer, consumer " << kv.first;
+        if (addedCount < blockCount.native()) {
+          m_logger(ERROR) << "Failed to add " << (blockCount.native() - addedCount) << " blocks of "
+                          << blockCount.native() << " to consumer, consumer " << kv.first;
           hasErrors = true;
         }
 
         // update state if consumer succeeded
-        kv.second->addBlocks(interval.blocks.data() + startOffset, result.newBlockHeight, addedCount);
+        kv.second->addBlocks(interval.blocks.data() + startOffset.native(), result.newBlockHeight, addedCount);
         smthChanged = true;
       } else {
         m_logger(ERROR) << "Failed to add blocks to consumer, consumer " << kv.first;
@@ -621,15 +624,14 @@ BlockchainSynchronizer::UpdateConsumersResult BlockchainSynchronizer::updateCons
       }
 
       if (addedCount > 0) {
-        lastBlockIndex = std::min(lastBlockIndex, startOffset + addedCount - 1);
+        lastBlockHeight = std::max(lastBlockHeight, BlockHeight::fromSize(addedCount) + startOffset);
       }
     }
   }
 
-  if (lastBlockIndex != std::numeric_limits<uint32_t>::max()) {
-    assert(lastBlockIndex < blocks.size());
-    lastBlockId = blocks[lastBlockIndex].blockHash;
-    m_logger(DEBUGGING) << "Last block hash " << lastBlockId << ", index " << (interval.startHeight + lastBlockIndex);
+  if (!lastBlockHeight.isNull()) {
+    assert(lastBlockHeight.native() <= blocks.size());
+    lastBlockId = blocks[lastBlockHeight.toIndex()].blockHash;
   }
 
   if (hasErrors) {

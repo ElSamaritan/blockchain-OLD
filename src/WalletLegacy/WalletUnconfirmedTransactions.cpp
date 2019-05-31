@@ -34,7 +34,7 @@ WalletUnconfirmedTransactions::WalletUnconfirmedTransactions(uint64_t uncofirmed
     : m_uncofirmedTransactionsLiveTime(uncofirmedTransactionsLiveTime) {}
 
 bool WalletUnconfirmedTransactions::serialize(ISerializer& s) {
-  s(m_unconfirmedTxs, "transactions");
+  XI_RETURN_EC_IF_NOT(s(m_unconfirmedTxs, "transactions"), false);
   if (s.type() == ISerializer::INPUT) {
     collectUsedOutputs();
   }

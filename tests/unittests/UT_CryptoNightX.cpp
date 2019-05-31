@@ -28,7 +28,6 @@
 #include <memory>
 #include <climits>
 
-
 #include "crypto/cnx/cnx.h"
 
 namespace {
@@ -38,7 +37,7 @@ using HashFn = Crypto::CNX::Hash_v1;
 }  // namespace
 
 TEST(CryptoNightX, HashConsistency) {
-  const uint8_t NumBlocks = 100;
+  const uint8_t NumBlocks = 10;
   const uint8_t BlockSize = 76;
   auto data = std::make_unique<std::vector<uint16_t>>();
   random_bytes_engine rbe;

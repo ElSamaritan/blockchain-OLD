@@ -21,30 +21,6 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Crypto/Random.hh"
+#include "Xi/Memory/Clear.hh"
 
-#include <Xi/Global.hh>
-#include <Xi/Exceptions.hpp>
-
-Xi::ByteVector Xi::Crypto::Random::generate(size_t count) {
-  Xi::ByteVector reval;
-  reval.resize(count);
-  generate(ByteSpan{reval.data(), count});
-  return reval;
-}
-
-void Xi::Crypto::Random::generate(Xi::ByteSpan out) {
-  exceptional_if<GenerationError>(xi_crypto_random_bytes(out.data(), out.size()) != XI_RETURN_CODE_SUCCESS);
-}
-
-Xi::ByteVector Xi::Crypto::Random::generate(size_t count, ConstByteSpan seed) {
-  Xi::ByteVector reval;
-  reval.resize(count);
-  generate(ByteSpan{reval.data(), count}, seed);
-  return reval;
-}
-
-void Xi::Crypto::Random::generate(ByteSpan out, ConstByteSpan seed) {
-  exceptional_if<GenerationError>(
-      xi_crypto_random_bytes_determenistic(out.data(), out.size(), seed.data(), seed.size()) != XI_RETURN_CODE_SUCCESS);
-}
+void Xi::Memory::clear(Xi::ByteSpan data) { xi_memory_clear(data.data(), data.size_bytes()); }

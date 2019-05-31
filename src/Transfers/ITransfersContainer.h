@@ -21,6 +21,7 @@
 #include <limits>
 #include <vector>
 
+#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
 #include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 #include "Common/IObservable.h"
 #include "Common/IStreamSerializable.h"
@@ -33,7 +34,7 @@ struct TransactionInformation {
   // transaction info
   Crypto::Hash transactionHash;
   Crypto::PublicKey publicKey;
-  uint32_t blockHeight;
+  BlockHeight blockHeight;
   uint64_t timestamp;
   uint64_t unlockTime;
   uint64_t totalAmountIn;
@@ -57,7 +58,7 @@ struct TransactionOutputInformation {
 };
 
 struct TransactionSpentOutputInformation : public TransactionOutputInformation {
-  uint32_t spendingBlockHeight;
+  BlockHeight spendingBlockHeight;
   uint64_t timestamp;
   Crypto::Hash spendingTransactionHash;
   Crypto::KeyImage keyImage;  //!< \attention Used only for TransactionTypes::OutputType::Key

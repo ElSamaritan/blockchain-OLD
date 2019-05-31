@@ -33,9 +33,9 @@ class TransfersSubscription : public IObservableImpl<ITransfersObserver, ITransf
   TransfersSubscription(const CryptoNote::Currency& currency, Logging::ILogger& logger, const AccountSubscription& sub);
 
   SynchronizationStart getSyncStart();
-  void onBlockchainDetach(uint32_t height);
-  void onError(const std::error_code& ec, uint32_t height);
-  bool advanceHeight(uint32_t height);
+  void onBlockchainDetach(BlockHeight height);
+  void onError(const std::error_code& ec, BlockHeight height);
+  bool advanceHeight(BlockHeight height);
   const AccountKeys& getKeys() const;
   bool addTransaction(const TransactionBlockInfo& blockInfo, const ITransactionReader& tx,
                       const std::vector<TransactionOutputInformationIn>& transfers);

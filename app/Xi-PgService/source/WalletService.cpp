@@ -38,7 +38,6 @@
 #include "NodeFactory.h"
 
 #include "Wallet/WalletGreen.h"
-#include "Wallet/LegacyKeysImporter.h"
 #include "Wallet/WalletErrors.h"
 #include "Wallet/WalletUtils.h"
 #include "WalletServiceErrorCategory.h"
@@ -208,7 +207,7 @@ PaymentService::TransactionRpcInfo convertTransactionWithTransfersToTransactionR
 
   transactionInfo.state = static_cast<uint8_t>(transactionWithTransfers.transaction.state);
   transactionInfo.transactionHash = Common::podToHex(transactionWithTransfers.transaction.hash);
-  transactionInfo.blockIndex = transactionWithTransfers.transaction.blockHeight;
+  transactionInfo.blockHeight = transactionWithTransfers.transaction.blockHeight;
   transactionInfo.timestamp = transactionWithTransfers.transaction.timestamp;
   transactionInfo.isBase = transactionWithTransfers.transaction.isBase;
   transactionInfo.unlockTime = transactionWithTransfers.transaction.unlockTime;
@@ -372,6 +371,9 @@ void generateNewWallet(const CryptoNote::Currency& currency, const WalletConfigu
   CryptoNote::IWallet* wallet = new CryptoNote::WalletGreen(dispatcher, currency, *nodeStub, logger);
   std::unique_ptr<CryptoNote::IWallet> walletGuard(wallet);
 
+  const auto scanHeight =
+      conf.scanHeight < 1 ? CryptoNote::BlockHeight::Genesis : CryptoNote::BlockHeight::fromNative(conf.scanHeight);
+
   std::string address;
   if (conf.secretSpendKey.empty() && conf.secretViewKey.empty() && conf.mnemonicSeed.empty()) {
     log(Logging::INFO) << "Generating new wallet";
@@ -382,8 +384,9 @@ void generateNewWallet(const CryptoNote::Currency& currency, const WalletConfigu
     Crypto::generate_keys(spendKey.publicKey, spendKey.secretKey);
     CryptoNote::AccountBase::generateViewFromSpend(spendKey.secretKey, private_view_key);
 
-    wallet->initializeWithViewKey(conf.walletFile, conf.walletPassword, private_view_key, 0, true);
-    address = wallet->createAddress(spendKey.secretKey, 0, true);
+    wallet->initializeWithViewKey(conf.walletFile, conf.walletPassword, private_view_key,
+                                  CryptoNote::BlockHeight::Genesis, true);
+    address = wallet->createAddress(spendKey.secretKey, CryptoNote::BlockHeight::Genesis, true);
 
     log(Logging::INFO) << "New wallet is generated. Address: " << address;
   } else if (!conf.mnemonicSeed.empty()) {
@@ -402,8 +405,8 @@ void generateNewWallet(const CryptoNote::Currency& currency, const WalletConfigu
     }
 
     CryptoNote::AccountBase::generateViewFromSpend(private_spend_key, private_view_key);
-    wallet->initializeWithViewKey(conf.walletFile, conf.walletPassword, private_view_key, conf.scanHeight, false);
-    address = wallet->createAddress(private_spend_key, conf.scanHeight, false);
+    wallet->initializeWithViewKey(conf.walletFile, conf.walletPassword, private_view_key, scanHeight, false);
+    address = wallet->createAddress(private_spend_key, scanHeight, false);
     log(Logging::INFO) << "Imported wallet successfully.";
   } else {
     if (conf.secretSpendKey.empty() || conf.secretViewKey.empty()) {
@@ -427,8 +430,8 @@ void generateNewWallet(const CryptoNote::Currency& currency, const WalletConfigu
       Crypto::SecretKey private_spend_key = *(struct Crypto::SecretKey*)&private_spend_key_hash;
       Crypto::SecretKey private_view_key = *(struct Crypto::SecretKey*)&private_view_key_hash;
 
-      wallet->initializeWithViewKey(conf.walletFile, conf.walletPassword, private_view_key, conf.scanHeight, false);
-      address = wallet->createAddress(private_spend_key, conf.scanHeight, false);
+      wallet->initializeWithViewKey(conf.walletFile, conf.walletPassword, private_view_key, scanHeight, false);
+      address = wallet->createAddress(private_spend_key, scanHeight, false);
       log(Logging::INFO) << "Imported wallet successfully.";
     }
   }
@@ -566,7 +569,7 @@ std::error_code WalletService::exportWallet(const std::string& fileName) {
   return std::error_code();
 }
 
-std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
+std::error_code WalletService::resetWallet(const BlockHeight scanHeight) {
   try {
     System::EventLock lk(readyEvent);
 
@@ -590,7 +593,7 @@ std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
   return std::error_code();
 }
 
-std::error_code WalletService::replaceWithNewWallet(const std::string& viewSecretKeyText, const uint32_t scanHeight,
+std::error_code WalletService::replaceWithNewWallet(const std::string& viewSecretKeyText, const BlockHeight scanHeight,
                                                     const bool newAddress) {
   try {
     System::EventLock lk(readyEvent);
@@ -620,7 +623,7 @@ std::error_code WalletService::replaceWithNewWallet(const std::string& viewSecre
   return std::error_code();
 }
 
-std::error_code WalletService::createAddress(const std::string& spendSecretKeyText, uint32_t scanHeight,
+std::error_code WalletService::createAddress(const std::string& spendSecretKeyText, CryptoNote::BlockHeight scanHeight,
                                              bool newAddress, std::string& address) {
   try {
     System::EventLock lk(readyEvent);
@@ -645,7 +648,7 @@ std::error_code WalletService::createAddress(const std::string& spendSecretKeyTe
 }
 
 std::error_code WalletService::createAddressList(const std::vector<std::string>& spendSecretKeysText,
-                                                 uint32_t scanHeight, bool newAddress,
+                                                 BlockHeight scanHeight, bool newAddress,
                                                  std::vector<std::string>& addresses) {
   try {
     System::EventLock lk(readyEvent);
@@ -700,7 +703,7 @@ std::error_code WalletService::createAddress(std::string& address) {
   return std::error_code();
 }
 
-std::error_code WalletService::createTrackingAddress(const std::string& spendPublicKeyText, uint32_t scanHeight,
+std::error_code WalletService::createTrackingAddress(const std::string& spendPublicKeyText, BlockHeight scanHeight,
                                                      bool newAddress, std::string& address) {
   XI_UNUSED(newAddress);
   try {
@@ -790,11 +793,11 @@ std::error_code WalletService::getBalance(uint64_t& availableBalance, uint64_t& 
   return std::error_code();
 }
 
-std::error_code WalletService::getBlockHashes(uint32_t firstBlockIndex, uint32_t blockCount,
+std::error_code WalletService::getBlockHashes(BlockHeight firstBlockHeight, uint32_t blockCount,
                                               std::vector<std::string>& blockHashes) {
   try {
     System::EventLock lk(readyEvent);
-    std::vector<Crypto::Hash> hashes = wallet.getBlockHashes(firstBlockIndex, blockCount);
+    std::vector<Crypto::Hash> hashes = wallet.getBlockHashes(firstBlockHeight, blockCount);
 
     blockHashes.reserve(hashes.size());
     for (const auto& hash : hashes) {
@@ -877,8 +880,9 @@ std::error_code WalletService::getTransactionHashes(const std::vector<std::strin
   return std::error_code();
 }
 
-std::error_code WalletService::getTransactionHashes(const std::vector<std::string>& addresses, uint32_t firstBlockIndex,
-                                                    uint32_t blockCount, const std::string& paymentId,
+std::error_code WalletService::getTransactionHashes(const std::vector<std::string>& addresses,
+                                                    BlockHeight firstBlockHeight, uint32_t blockCount,
+                                                    const std::string& paymentId,
                                                     std::vector<TransactionHashesInBlockRpcInfo>& transactionHashes) {
   try {
     System::EventLock lk(readyEvent);
@@ -889,7 +893,7 @@ std::error_code WalletService::getTransactionHashes(const std::vector<std::strin
     }
 
     TransactionsInBlockInfoFilter transactionFilter(addresses, paymentId);
-    transactionHashes = getRpcTransactionHashes(firstBlockIndex, blockCount, transactionFilter);
+    transactionHashes = getRpcTransactionHashes(firstBlockHeight, blockCount, transactionFilter);
 
   } catch (std::system_error& x) {
     logger(Logging::WARNING) << "Error while getting transactions: " << x.what();
@@ -930,7 +934,7 @@ std::error_code WalletService::getTransactions(const std::vector<std::string>& a
   return std::error_code();
 }
 
-std::error_code WalletService::getTransactions(const std::vector<std::string>& addresses, uint32_t firstBlockIndex,
+std::error_code WalletService::getTransactions(const std::vector<std::string>& addresses, BlockHeight firstBlockHeight,
                                                uint32_t blockCount, const std::string& paymentId,
                                                std::vector<TransactionsInBlockRpcInfo>& transactions) {
   try {
@@ -943,7 +947,7 @@ std::error_code WalletService::getTransactions(const std::vector<std::string>& a
 
     TransactionsInBlockInfoFilter transactionFilter(addresses, paymentId);
 
-    transactions = getRpcTransactions(firstBlockIndex, blockCount, transactionFilter);
+    transactions = getRpcTransactions(firstBlockHeight, blockCount, transactionFilter);
   } catch (std::system_error& x) {
     logger(Logging::WARNING) << "Error while getting transactions: " << x.what();
     return x.code();
@@ -1059,7 +1063,7 @@ std::error_code WalletService::sendTransaction(SendTransaction::Request& request
     std::error_code error_code;
 
     std::tie(success, error, error_code) =
-        CryptoNote::Mixins::validate(request.anonymity, node.getLastKnownBlockHeight());
+        CryptoNote::Mixins::validate(request.anonymity, node.getLastKnownBlockHeight().toIndex());
 
     if (!success) {
       logger(Logging::WARNING) << error;
@@ -1283,23 +1287,23 @@ std::error_code WalletService::getUnconfirmedTransactionHashes(const std::vector
 
 /* blockCount = the blocks the wallet has synced. knownBlockCount = the top block the daemon knows of.
  * localDaemonBlockCount = the blocks the daemon has synced. */
-std::error_code WalletService::getStatus(uint32_t& blockCount, uint32_t& knownBlockCount,
-                                         uint64_t& localDaemonBlockCount, std::string& lastBlockHash,
+std::error_code WalletService::getStatus(BlockHeight& blockCount, BlockHeight& knownBlockCount,
+                                         BlockHeight& localDaemonBlockCount, std::string& lastBlockHash,
                                          uint32_t& peerCount) {
   try {
     System::EventLock lk(readyEvent);
 
-    System::RemoteContext<std::tuple<uint32_t, uint64_t, uint32_t>> remoteContext(dispatcher, [this]() {
+    System::RemoteContext<std::tuple<BlockHeight, BlockHeight, uint32_t>> remoteContext(dispatcher, [this]() {
       /* Daemon remote height, daemon local height, peer count */
-      return std::make_tuple(node.getKnownBlockCount(), node.getNodeHeight(),
+      return std::make_tuple(BlockHeight::fromSize(node.getKnownBlockCount()), node.getNodeHeight(),
                              static_cast<uint32_t>(node.getPeerCount()));
     });
 
     std::tie(knownBlockCount, localDaemonBlockCount, peerCount) = remoteContext.get();
 
-    blockCount = wallet.getBlockCount();
+    blockCount = BlockHeight::fromSize(wallet.getBlockCount());
 
-    auto lastHashes = wallet.getBlockHashes(blockCount - 1, 1);
+    auto lastHashes = wallet.getBlockHashes(blockCount, 1);
     lastBlockHash = Common::podToHex(lastHashes.back());
   } catch (std::system_error& x) {
     logger(Logging::WARNING) << "Error while getting status: " << x.what();
@@ -1381,11 +1385,15 @@ std::error_code WalletService::createIntegratedAddress(const std::string& addres
   CryptoNote::AccountPublicAddress addr;
 
   /* Get the private + public key from the address */
-  CryptoNote::parseAccountAddressString(prefix, addr, address);
+  if (!CryptoNote::parseAccountAddressString(prefix, addr, address)) {
+    return make_error_code(CryptoNote::error::BAD_ADDRESS);
+  }
 
   /* Pack as a binary array */
   CryptoNote::BinaryArray ba;
-  CryptoNote::toBinaryArray(addr, ba);
+  if (!CryptoNote::toBinaryArray(addr, ba)) {
+    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+  }
   std::string keys = Common::asString(ba);
 
   /* Encode prefix + paymentID + keys as an address */
@@ -1402,7 +1410,7 @@ std::error_code WalletService::getFeeInfo(std::string& address, uint64_t& amount
 }
 
 uint16_t WalletService::getDefaultMixin() const {
-  return CryptoNote::getDefaultMixinByHeight(node.getLastKnownBlockHeight());
+  return CryptoNote::getDefaultMixinByIndex(node.getLastKnownBlockHeight().toIndex());
 }
 
 void WalletService::refresh() {
@@ -1422,9 +1430,9 @@ void WalletService::refresh() {
   }
 }
 
-void WalletService::reset(const uint32_t scanHeight) { wallet.reset(scanHeight); }
+void WalletService::reset(const BlockHeight scanHeight) { wallet.reset(scanHeight); }
 
-void WalletService::replaceWithNewWallet(const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight,
+void WalletService::replaceWithNewWallet(const Crypto::SecretKey& viewSecretKey, const BlockHeight scanHeight,
                                          const bool newAddress) {
   wallet.stop();
   wallet.shutdown();
@@ -1461,9 +1469,9 @@ std::vector<CryptoNote::TransactionsInBlockInfo> WalletService::getTransactions(
   return result;
 }
 
-std::vector<CryptoNote::TransactionsInBlockInfo> WalletService::getTransactions(uint32_t firstBlockIndex,
+std::vector<CryptoNote::TransactionsInBlockInfo> WalletService::getTransactions(BlockHeight firstBlockHeight,
                                                                                 size_t blockCount) const {
-  std::vector<CryptoNote::TransactionsInBlockInfo> result = wallet.getTransactions(firstBlockIndex, blockCount);
+  std::vector<CryptoNote::TransactionsInBlockInfo> result = wallet.getTransactions(firstBlockHeight, blockCount);
   if (result.empty()) {
     throw std::system_error(make_error_code(CryptoNote::error::WalletServiceErrorCode::OBJECT_NOT_FOUND));
   }
@@ -1479,8 +1487,8 @@ std::vector<TransactionHashesInBlockRpcInfo> WalletService::getRpcTransactionHas
 }
 
 std::vector<TransactionHashesInBlockRpcInfo> WalletService::getRpcTransactionHashes(
-    uint32_t firstBlockIndex, size_t blockCount, const TransactionsInBlockInfoFilter& filter) const {
-  std::vector<CryptoNote::TransactionsInBlockInfo> allTransactions = getTransactions(firstBlockIndex, blockCount);
+    BlockHeight firstBlockHeight, size_t blockCount, const TransactionsInBlockInfoFilter& filter) const {
+  std::vector<CryptoNote::TransactionsInBlockInfo> allTransactions = getTransactions(firstBlockHeight, blockCount);
   std::vector<CryptoNote::TransactionsInBlockInfo> filteredTransactions = filterTransactions(allTransactions, filter);
   return convertTransactionsInBlockInfoToTransactionHashesInBlockRpcInfo(filteredTransactions);
 }
@@ -1493,8 +1501,8 @@ std::vector<TransactionsInBlockRpcInfo> WalletService::getRpcTransactions(
 }
 
 std::vector<TransactionsInBlockRpcInfo> WalletService::getRpcTransactions(
-    uint32_t firstBlockIndex, size_t blockCount, const TransactionsInBlockInfoFilter& filter) const {
-  std::vector<CryptoNote::TransactionsInBlockInfo> allTransactions = getTransactions(firstBlockIndex, blockCount);
+    BlockHeight firstBlockHeight, size_t blockCount, const TransactionsInBlockInfoFilter& filter) const {
+  std::vector<CryptoNote::TransactionsInBlockInfo> allTransactions = getTransactions(firstBlockHeight, blockCount);
   std::vector<CryptoNote::TransactionsInBlockInfo> filteredTransactions = filterTransactions(allTransactions, filter);
   return convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(filteredTransactions);
 }

@@ -37,7 +37,7 @@ Xi::Result<Crypto::PublicKey> Crypto::PublicKey::fromString(const std::string &h
   if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
     throw std::runtime_error{"invalid hex string"};
   }
-  return std::move(reval);
+  return success(std::move(reval));
   XI_ERROR_CATCH();
 }
 
@@ -49,6 +49,8 @@ Crypto::PublicKey::~PublicKey() {}
 
 std::string Crypto::PublicKey::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
 
+bool Crypto::PublicKey::isNull() const { return *this == PublicKey::Null; }
+
 Xi::ConstByteSpan Crypto::PublicKey::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
 
 Xi::ByteSpan Crypto::PublicKey::span() { return Xi::ByteSpan{data(), bytes()}; }
@@ -57,6 +59,6 @@ bool Crypto::PublicKey::isValid() const { return check_key(*this); }
 
 void Crypto::PublicKey::nullify() { fill(0); }
 
-bool Crypto::PublicKey::serialize(CryptoNote::ISerializer &serializer) {
-  return serializer.binary(data(), size() * sizeof(value_type), "");
+bool Crypto::serialize(Crypto::PublicKey &publicKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
+  return serializer.binary(publicKey.data(), PublicKey::bytes(), name);
 }

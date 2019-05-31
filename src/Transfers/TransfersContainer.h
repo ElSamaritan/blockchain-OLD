@@ -32,6 +32,7 @@
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "CryptoNoteCore/Currency.h"
+#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
 #include "Logging/LoggerRef.h"
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"
@@ -77,7 +78,7 @@ struct TransactionOutputInformationIn : public TransactionOutputInformation {
 
 struct TransactionOutputInformationEx : public TransactionOutputInformationIn {
   uint64_t unlockTime;
-  uint32_t blockHeight;
+  BlockHeight blockHeight;
   uint32_t transactionIndex;
   bool visible;
 
@@ -105,7 +106,7 @@ struct TransactionOutputInformationEx : public TransactionOutputInformationIn {
 };
 
 struct TransactionBlockInfo {
-  uint32_t height;
+  BlockHeight height;
   uint64_t timestamp;
   uint32_t transactionIndex;
 
@@ -148,8 +149,8 @@ class TransfersContainer : public ITransfersContainer {
   bool markTransactionConfirmed(const TransactionBlockInfo& block, const Crypto::Hash& transactionHash,
                                 const std::vector<uint32_t>& globalIndices);
 
-  std::vector<Crypto::Hash> detach(uint32_t height);
-  bool advanceHeight(uint32_t height);
+  std::vector<Crypto::Hash> detach(BlockHeight height);
+  bool advanceHeight(BlockHeight height);
 
   // ITransfersContainer
   virtual size_t transfersCount() const override;
@@ -167,8 +168,8 @@ class TransfersContainer : public ITransfersContainer {
   virtual std::vector<TransactionSpentOutputInformation> getSpentOutputs() const override;
 
   // IStreamSerializable
-  virtual void save(std::ostream& os) override;
-  virtual void load(std::istream& in) override;
+  [[nodiscard]] virtual bool save(std::ostream& os) override;
+  [[nodiscard]] virtual bool load(std::istream& in) override;
 
  private:
   struct ContainingTransactionIndex {};
@@ -180,7 +181,7 @@ class TransfersContainer : public ITransfersContainer {
       boost::multi_index::indexed_by<boost::multi_index::hashed_unique<BOOST_MULTI_INDEX_MEMBER(
                                          TransactionInformation, Crypto::Hash, transactionHash)>,
                                      boost::multi_index::ordered_non_unique<BOOST_MULTI_INDEX_MEMBER(
-                                         TransactionInformation, uint32_t, blockHeight)> > >
+                                         TransactionInformation, BlockHeight, blockHeight)> > >
       TransactionMultiIndex;
 
   typedef boost::multi_index_container<
@@ -250,7 +251,7 @@ class TransfersContainer : public ITransfersContainer {
   AvailableTransfersMultiIndex m_availableTransfers;
   SpentTransfersMultiIndex m_spentTransfers;
 
-  uint32_t m_currentHeight;  // current height is needed to check if a transfer is unlocked
+  BlockHeight m_currentHeight;  // current height is needed to check if a transfer is unlocked
   size_t m_transactionSpendableAge;
   const CryptoNote::Currency& m_currency;
   mutable std::mutex m_mutex;

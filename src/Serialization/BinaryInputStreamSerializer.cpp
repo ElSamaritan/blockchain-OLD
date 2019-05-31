@@ -64,7 +64,7 @@ void BinaryInputStreamSerializer::endArray() {}
 
 bool BinaryInputStreamSerializer::operator()(uint8_t& value, Common::StringView name) {
   XI_UNUSED(name);
-  readVarint(stream, value);
+  read(stream, value);
   return true;
 }
 
@@ -107,10 +107,10 @@ bool BinaryInputStreamSerializer::operator()(uint64_t& value, Common::StringView
 bool BinaryInputStreamSerializer::operator()(bool& value, Common::StringView name) {
   uint8_t byte;
   XI_RETURN_EC_IF_NOT(this->operator()(byte, name), false);
-  if (byte == 0xAA) {
+  if (byte == 0b01010101) {
     value = true;
     return true;
-  } else if (byte == 0x55) {
+  } else if (byte == 0b00101010) {
     value = false;
     return true;
   } else {
@@ -119,24 +119,9 @@ bool BinaryInputStreamSerializer::operator()(bool& value, Common::StringView nam
 }
 
 bool BinaryInputStreamSerializer::operator()(std::string& value, Common::StringView name) {
+  XI_UNUSED(name);
   uint64_t size;
   readVarint(stream, size);
-
-  /* Can't take up more than a block size */
-  if (size > Xi::Config::Limits::maximumBlockExtraSize() && std::string(name.getData()) == "mm_tag") {
-    std::vector<char> temp;
-    temp.resize(1);
-
-    /* Read to the end of the stream, and throw the data away, otherwise
-       transaction won't validate. There should be a better way to do this? */
-    while (size > 0) {
-      checkedRead(&temp[0], 1);
-      size--;
-    }
-
-    value.clear();
-    return true;
-  }
 
   if (size > 0) {
     std::vector<char> temp;
@@ -158,6 +143,29 @@ bool BinaryInputStreamSerializer::binary(void* value, size_t size, Common::Strin
 }
 
 bool BinaryInputStreamSerializer::binary(std::string& value, Common::StringView name) { return (*this)(value, name); }
+
+bool BinaryInputStreamSerializer::maybe(bool& value, Common::StringView name) { return this->operator()(value, name); }
+
+bool BinaryInputStreamSerializer::typeTag(TypeTag& tag, Common::StringView name) {
+  TypeTag::binary_type bTag = TypeTag::NoBinaryTag;
+  XI_RETURN_EC_IF_NOT(this->operator()(bTag, name), false);
+  XI_RETURN_EC_IF(bTag == TypeTag::NoBinaryTag, false);
+  tag = TypeTag{bTag, TypeTag::NoTextTag};
+  return true;
+}
+
+bool BinaryInputStreamSerializer::flag(std::vector<TypeTag>& flag, Common::StringView name) {
+  uint16_t nativeFlag = 0;
+  XI_RETURN_EC_IF_NOT(this->operator()(nativeFlag, name), false);
+  XI_RETURN_EC_IF(nativeFlag > (1 << 14), false);
+  flag.clear();
+  for (size_t i = 0; (1 << i) <= nativeFlag; ++i) {
+    if ((nativeFlag & (1 << i))) {
+      flag.emplace_back(i + 1, TypeTag::NoTextTag);
+    }
+  }
+  return true;
+}
 
 bool BinaryInputStreamSerializer::operator()(double& value, Common::StringView name) {
   XI_UNUSED(value, name);

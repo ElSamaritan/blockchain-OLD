@@ -32,8 +32,9 @@
 #include "BenchmarkResult.h"
 
 namespace XiBenchmark {
-void serialize_cpu_features(const cpu_features::X86Features& features, CryptoNote::ISerializer& serializer);
-void serialize_cpu_info(const cpu_features::X86Info& info, CryptoNote::ISerializer& serializer);
-void serialize_benchmark_result(const BenchmarkResult& result, CryptoNote::ISerializer& serializer);
-void serialize_benchmark_summary(const BencharkSummary& summary, CryptoNote::ISerializer& serializer);
+[[nodiscard]] bool serialize_cpu_features(const cpu_features::X86Features& features,
+                                          CryptoNote::ISerializer& serializer);
+[[nodiscard]] bool serialize_cpu_info(const cpu_features::X86Info& info, CryptoNote::ISerializer& serializer);
+[[nodiscard]] bool serialize_benchmark_result(const BenchmarkResult& result, CryptoNote::ISerializer& serializer);
+[[nodiscard]] bool serialize_benchmark_summary(const BencharkSummary& summary, CryptoNote::ISerializer& serializer);
 }  // namespace XiBenchmark

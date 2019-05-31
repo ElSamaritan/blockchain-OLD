@@ -57,7 +57,7 @@ std::shared_ptr<WalletInfo> createViewWallet(CryptoNote::WalletGreen &wallet) {
 
   const std::string walletPass = getWalletPassword(true, msg);
 
-  const uint32_t scanHeight = getScanHeight();
+  const auto scanHeight = getScanHeight();
 
   wallet.createViewWallet(walletFileName, walletPass, address, privateViewKey, scanHeight, false);
 
@@ -116,7 +116,7 @@ std::shared_ptr<WalletInfo> importFromKeys(CryptoNote::WalletGreen &wallet, Cryp
 
   const std::string walletPass = getWalletPassword(true, msg);
 
-  const uint32_t scanHeight = getScanHeight();
+  const auto scanHeight = getScanHeight();
 
   connectingMsg();
 
@@ -146,9 +146,9 @@ std::shared_ptr<WalletInfo> generateWallet(CryptoNote::WalletGreen &wallet) {
 
   CryptoNote::AccountBase::generateViewFromSpend(spendKey.secretKey, privateViewKey);
 
-  wallet.initializeWithViewKey(walletFileName, walletPass, privateViewKey, 0, true);
+  wallet.initializeWithViewKey(walletFileName, walletPass, privateViewKey, CryptoNote::BlockHeight::Genesis, true);
 
-  const std::string walletAddress = wallet.createAddress(spendKey.secretKey, 0, true);
+  const std::string walletAddress = wallet.createAddress(spendKey.secretKey, CryptoNote::BlockHeight::Genesis, true);
 
   promptSaveKeys(wallet);
 
@@ -187,7 +187,7 @@ std::shared_ptr<WalletInfo> openWallet(CryptoNote::WalletGreen &wallet, Config &
 
       bool viewWallet = false;
 
-      if (privateSpendKey == CryptoNote::NULL_SECRET_KEY) {
+      if (privateSpendKey == Crypto::SecretKey::Null) {
         std::cout << std::endl
                   << InformationMsg("Your view only wallet ") << InformationMsg(walletAddress)
                   << InformationMsg(" has been successfully opened!") << std::endl

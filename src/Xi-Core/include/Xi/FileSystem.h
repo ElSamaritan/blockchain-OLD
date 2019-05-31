@@ -41,12 +41,14 @@ namespace FileSystem {
 XI_DECLARE_EXCEPTIONAL_CATEGORY(FileSystem)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InsufficientSpace, "your hard drive has insufficient space for the operation",
                                 FileSystem)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidType, "request encountered a file type that were not expected", FileSystem)
 
 Xi::Result<boost::filesystem::space_info> availableSpace(const std::string& directory);
 Xi::Result<boost::tribool> isRotationalDrive(const std::string& path);
 Xi::Result<void> ensureDirectoryExists(const std::string& directory);
 Xi::Result<void> removeDircetoryIfExists(const std::string& directory);
 Xi::Result<bool> exists(const std::string& path);
+Xi::Result<void> removeFileIfExists(const std::string& path);
 
 }  // namespace FileSystem
 }  // namespace Xi

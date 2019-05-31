@@ -260,11 +260,13 @@ int main(int argc, char* argv[]) {
         std::unique_ptr<IBlockchainCacheFactory>(new DatabaseBlockchainCacheFactory(database, logger.getLogger())),
         createSwappedMainChainStorage(config.dataDirectory, currency));
 
-    ccore.load();
+    if (!ccore.load()) {
+      logger(FATAL) << "Core initialization failed";
+      return EXIT_FAILURE;
+    }
     logger(INFO) << "Core initialized OK";
 
     // ------------------------------------------ Transaction Pool
-    // ----------------------------------------------------
     logger(INFO) << "Initializing transaction pool...";
     const auto transactionPoolFile = path(config.dataDirectory) / currency.txPoolFileName();
     if (!exists(transactionPoolFile)) {
@@ -273,12 +275,15 @@ int main(int argc, char* argv[]) {
       std::ifstream poolFileStream{transactionPoolFile.string(), std::ios::in | std::ios::binary};
       Common::StdInputStream poolInputStream{poolFileStream};
       BinaryInputStreamSerializer poolSerializer(poolInputStream);
-      ccore.transactionPool().serialize(poolSerializer);
-      logger(INFO) << "Imported " << ccore.transactionPool().size() << " pending pool transactions.";
+      if (!ccore.transactionPool().serialize(poolSerializer)) {
+        logger(ERROR) << "Transaction pool load failed, cleaning state...";
+        ccore.transactionPool().forceFlush();
+      } else {
+        logger(INFO) << "Imported " << ccore.transactionPool().size() << " pending pool transactions.";
+      }
     }
     logger(INFO) << "Transaction Pool initialized OK";
     // ------------------------------------------ Transaction Pool
-    // ----------------------------------------------------
 
     CryptoNote::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
     CryptoNote::NodeServer p2psrv(dispatcher, config.network, cprotocol, logManager);
@@ -322,7 +327,9 @@ int main(int argc, char* argv[]) {
     });
 
     logger(INFO) << "Starting p2p net loop...";
-    p2psrv.run();
+    if (!p2psrv.run()) {
+      logger(FATAL) << "p2p server initialization failed";
+    }
     logger(INFO) << "p2p net loop stopped";
 
     dch.stop_handling();
@@ -336,24 +343,29 @@ int main(int argc, char* argv[]) {
 
     // deinitialize components
     logger(INFO) << "Deinitializing p2p...";
-    p2psrv.deinit();
+    if (!p2psrv.deinit()) {
+      logger(FATAL) << "p2p shutdown failed, p2p files may be corrupted.";
+    }
 
     // ------------------------------------------ Transaction Pool
-    // ----------------------------------------------------
     logger(INFO) << "Exporting transaction pool...";
     {
       std::ofstream poolFileStream{transactionPoolFile.string(), std::ios::out | std::ios::binary | std::ios::trunc};
       Common::StdOutputStream poolInputStream{poolFileStream};
       BinaryOutputStreamSerializer poolSerializer(poolInputStream);
-      ccore.transactionPool().serialize(poolSerializer);
+      if (!ccore.transactionPool().serialize(poolSerializer)) {
+        logger(ERROR)
+            << "Transaction pool save failed, your transaction pool may be corrupted and discarded on next start";
+      }
       logger(INFO) << "Exported " << ccore.transactionPool().size() << " pending pool transactions.";
     }
     logger(INFO) << "Transaction Pool epxported OK";
     // ------------------------------------------ Transaction Pool
-    // ----------------------------------------------------
 
     cprotocol.set_p2p_endpoint(nullptr);
-    ccore.save();
+    if (!ccore.save()) {
+      logger(FATAL) << "Blockchain save failed, your chain may be corrupted next time you start the daemon.";
+    }
 
   } catch (const std::exception& e) {
     logger(ERROR) << "Exception: " << e.what();

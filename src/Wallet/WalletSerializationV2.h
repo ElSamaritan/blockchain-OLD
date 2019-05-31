@@ -37,8 +37,8 @@ class WalletSerializerV2 {
                      WalletTransfers& transfers, UncommitedTransactions& uncommitedTransactions, std::string& extra,
                      uint32_t transactionSoftLockTime);
 
-  void load(Common::IInputStream& source, uint8_t version);
-  void save(Common::IOutputStream& destination, WalletSaveLevel saveLevel);
+  [[nodiscard]] bool load(Common::IInputStream& source, uint8_t version);
+  [[nodiscard]] bool save(Common::IOutputStream& destination, WalletSaveLevel saveLevel);
 
   std::unordered_set<Crypto::PublicKey>& addedKeys();
   std::unordered_set<Crypto::PublicKey>& deletedKeys();
@@ -47,20 +47,20 @@ class WalletSerializerV2 {
   static const uint8_t SERIALIZATION_VERSION = 6;
 
  private:
-  void loadKeyListAndBalances(CryptoNote::ISerializer& serializer, bool saveCache);
-  void saveKeyListAndBalances(CryptoNote::ISerializer& serializer, bool saveCache);
+  [[nodiscard]] bool loadKeyListAndBalances(CryptoNote::ISerializer& serializer, bool saveCache);
+  [[nodiscard]] bool saveKeyListAndBalances(CryptoNote::ISerializer& serializer, bool saveCache);
 
-  void loadTransactions(CryptoNote::ISerializer& serializer);
-  void saveTransactions(CryptoNote::ISerializer& serializer);
+  [[nodiscard]] bool loadTransactions(CryptoNote::ISerializer& serializer);
+  [[nodiscard]] bool saveTransactions(CryptoNote::ISerializer& serializer);
 
-  void loadTransfers(CryptoNote::ISerializer& serializer);
-  void saveTransfers(CryptoNote::ISerializer& serializer);
+  [[nodiscard]] bool loadTransfers(CryptoNote::ISerializer& serializer);
+  [[nodiscard]] bool saveTransfers(CryptoNote::ISerializer& serializer);
 
-  void loadTransfersSynchronizer(CryptoNote::ISerializer& serializer);
-  void saveTransfersSynchronizer(CryptoNote::ISerializer& serializer);
+  [[nodiscard]] bool loadTransfersSynchronizer(CryptoNote::ISerializer& serializer);
+  [[nodiscard]] bool saveTransfersSynchronizer(CryptoNote::ISerializer& serializer);
 
-  void loadUnlockTransactionsJobs(CryptoNote::ISerializer& serializer);
-  void saveUnlockTransactionsJobs(CryptoNote::ISerializer& serializer);
+  [[nodiscard]] bool loadUnlockTransactionsJobs(CryptoNote::ISerializer& serializer);
+  [[nodiscard]] bool saveUnlockTransactionsJobs(CryptoNote::ISerializer& serializer);
 
   ITransfersObserver& m_transfersObserver;
   uint64_t& m_actualBalance;

@@ -50,8 +50,8 @@ class TransfersSyncronizer : public ITransfersSynchronizer, public IBlockchainCo
                          const Crypto::PublicKey& outputKey);
 
   // IStreamSerializable
-  virtual void save(std::ostream& os) override;
-  virtual void load(std::istream& in) override;
+  [[nodiscard]] virtual bool save(std::ostream& os) override;
+  [[nodiscard]] virtual bool load(std::istream& in) override;
 
  private:
   Logging::LoggerRef m_logger;
@@ -70,7 +70,7 @@ class TransfersSyncronizer : public ITransfersSynchronizer, public IBlockchainCo
   const CryptoNote::Currency& m_currency;
 
   virtual void onBlocksAdded(IBlockchainConsumer* consumer, const std::vector<Crypto::Hash>& blockHashes) override;
-  virtual void onBlockchainDetach(IBlockchainConsumer* consumer, uint32_t blockIndex) override;
+  virtual void onBlockchainDetach(IBlockchainConsumer* consumer, BlockHeight blockHeight) override;
   virtual void onTransactionDeleteBegin(IBlockchainConsumer* consumer, Crypto::Hash transactionHash) override;
   virtual void onTransactionDeleteEnd(IBlockchainConsumer* consumer, Crypto::Hash transactionHash) override;
   virtual void onTransactionUpdated(IBlockchainConsumer* consumer, const Crypto::Hash& transactionHash,

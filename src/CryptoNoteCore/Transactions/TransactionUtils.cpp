@@ -36,8 +36,8 @@ namespace CryptoNote {
 bool checkInputsKeyimagesDiff(const CryptoNote::TransactionPrefix& tx) {
   std::unordered_set<Crypto::KeyImage> ki;
   for (const auto& in : tx.inputs) {
-    if (in.type() == typeid(KeyInput)) {
-      if (!ki.insert(boost::get<KeyInput>(in).keyImage).second) return false;
+    if (auto keyInput = std::get_if<KeyInput>(&in)) {
+      if (!ki.insert(keyInput->keyImage).second) return false;
     }
   }
 
@@ -47,16 +47,16 @@ bool checkInputsKeyimagesDiff(const CryptoNote::TransactionPrefix& tx) {
 // TransactionInput helper functions
 
 size_t getRequiredSignaturesCount(const TransactionInput& in) {
-  if (in.type() == typeid(KeyInput)) {
-    return boost::get<KeyInput>(in).outputIndexes.size();
+  if (auto keyInput = std::get_if<KeyInput>(&in)) {
+    return keyInput->outputIndices.size();
   }
 
   return 0;
 }
 
 uint64_t getTransactionInputAmount(const TransactionInput& in) {
-  if (in.type() == typeid(KeyInput)) {
-    return boost::get<KeyInput>(in).amount;
+  if (auto keyInput = std::get_if<KeyInput>(&in)) {
+    return keyInput->amount;
   } else {
     return 0;
   }
@@ -75,8 +75,8 @@ uint64_t getTransactionOutputAmount(const Transaction& transaction) {
 }
 
 boost::optional<KeyImage> getTransactionInputKeyImage(const TransactionInput& input) {
-  if (input.type() == typeid(KeyInput)) {
-    return boost::optional<KeyImage>{boost::get<KeyInput>(input).keyImage};
+  if (auto keyInput = std::get_if<KeyInput>(&input)) {
+    return boost::optional<KeyImage>{keyInput->keyImage};
   } else {
     return boost::optional<KeyImage>{};
   }
@@ -95,8 +95,8 @@ std::vector<KeyImage> getTransactionKeyImages(const Transaction& transaction) {
 }
 
 PublicKey getTransactionOutputKey(const TransactionOutputTarget& target) {
-  if (target.type() == typeid(KeyOutput)) {
-    return boost::get<KeyOutput>(target).key;
+  if (auto keyOutput = std::get_if<KeyOutput>(&target)) {
+    return keyOutput->key;
   } else {
     throw std::runtime_error{"Unexpected transaction output type."};
   }
@@ -112,11 +112,11 @@ std::vector<PublicKey> getTransactionOutputKeys(const Transaction& transaction) 
 }
 
 TransactionTypes::InputType getTransactionInputType(const TransactionInput& in) {
-  if (in.type() == typeid(KeyInput)) {
+  if (std::holds_alternative<KeyInput>(in)) {
     return TransactionTypes::InputType::Key;
   }
 
-  if (in.type() == typeid(BaseInput)) {
+  if (std::holds_alternative<BaseInput>(in)) {
     return TransactionTypes::InputType::Generating;
   }
 
@@ -144,7 +144,7 @@ const TransactionInput& getInputChecked(const CryptoNote::TransactionPrefix& tra
 // TransactionOutput helper functions
 
 TransactionTypes::OutputType getTransactionOutputType(const TransactionOutputTarget& out) {
-  if (out.type() == typeid(KeyOutput)) {
+  if (std::holds_alternative<KeyOutput>(out)) {
     return TransactionTypes::OutputType::Key;
   }
 
@@ -193,9 +193,9 @@ bool findOutputsToAccount(const CryptoNote::TransactionPrefix& transaction, cons
   generate_key_derivation(txPubKey, keys.viewSecretKey, derivation);
 
   for (const TransactionOutput& o : transaction.outputs) {
-    assert(o.target.type() == typeid(KeyOutput));
-    if (o.target.type() == typeid(KeyOutput)) {
-      if (is_out_to_acc(keys, boost::get<KeyOutput>(o.target), derivation, keyIndex)) {
+    assert(std::holds_alternative<KeyOutput>(o.target));
+    if (auto keyOutput = std::get_if<KeyOutput>(&o.target)) {
+      if (is_out_to_acc(keys, *keyOutput, derivation, keyIndex)) {
         out.push_back(outputIndex);
         amount += o.amount;
       }
@@ -211,11 +211,11 @@ bool findOutputsToAccount(const CryptoNote::TransactionPrefix& transaction, cons
 
 std::vector<uint32_t> getTransactionInputIndices(const KeyInput& input) {
   std::vector<uint32_t> indices{};
-  if (input.outputIndexes.empty()) return indices;
-  indices.resize(input.outputIndexes.size());
-  indices[0] = input.outputIndexes[0];
-  for (size_t i = 1; i < input.outputIndexes.size(); ++i) {
-    indices[i] = indices[i - 1] + input.outputIndexes[i];
+  if (input.outputIndices.empty()) return indices;
+  indices.resize(input.outputIndices.size());
+  indices[0] = input.outputIndices[0];
+  for (size_t i = 1; i < input.outputIndices.size(); ++i) {
+    indices[i] = indices[i - 1] + input.outputIndices[i];
   }
   return indices;
 }

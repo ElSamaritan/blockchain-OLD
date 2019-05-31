@@ -70,11 +70,13 @@ struct Hash : Xi::ByteArray<XI_HASH_FAST_HASH_SIZE> {
   Xi::ByteSpan span();
 
   void nullify();
-  bool serialize(CryptoNote::ISerializer& serializer);
 };
 
 XI_MAKE_GENERIC_HASH_FUNC(Hash)
 XI_MAKE_GENERIC_COMPARISON(Hash)
+
+[[nodiscard]]  bool serialize(Hash& hash, Common::StringView name, CryptoNote::ISerializer& serializer);
+
 }  // namespace Crypto
 
 XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, Hash)

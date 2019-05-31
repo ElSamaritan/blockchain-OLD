@@ -26,6 +26,7 @@
 #include <boost/optional.hpp>
 
 #include <Common/StringTools.h>
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 #include "P2p/PendingLiteBlock.h"
 #include "P2p/P2pConnectionContextHistory.h"
@@ -54,8 +55,8 @@ struct CryptoNoteConnectionContext {
   std::list<Crypto::Hash> m_needed_objects;
   std::unordered_set<Crypto::Hash> m_requested_objects;
   boost::optional<PendingLiteBlock> m_pending_lite_block;
-  uint32_t m_remote_blockchain_height = 0;
-  uint32_t m_last_response_height = 0;
+  BlockHeight m_remote_blockchain_height{};
+  BlockHeight m_last_response_height{};
   P2pConnectionContextHistory m_history;
 };
 

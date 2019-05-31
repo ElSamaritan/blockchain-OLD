@@ -20,6 +20,8 @@
 #include <cinttypes>
 #include <string>
 
+#include <Xi/Global.hh>
+
 #include "Serialization/ISerializer.h"
 
 namespace CryptoNote {
@@ -31,12 +33,13 @@ struct CoreStatistics {
   uint64_t alternativeBlockCount;
   std::string topBlockHashString;
 
-  void serialize(ISerializer& s) {
-    s(transactionPoolSize, "tx_pool_size");
-    s(transactionPoolState, "tx_pool_state");
-    s(blockchainHeight, "blockchain_height");
-    s(alternativeBlockCount, "alternative_blocks");
-    s(topBlockHashString, "top_block_id_str");
+  bool serialize(ISerializer& s) {
+    XI_RETURN_EC_IF_NOT(s(transactionPoolSize, "tx_pool_size"), false);
+    XI_RETURN_EC_IF_NOT(s(transactionPoolState, "tx_pool_state"), false);
+    XI_RETURN_EC_IF_NOT(s(blockchainHeight, "blockchain_height"), false);
+    XI_RETURN_EC_IF_NOT(s(alternativeBlockCount, "alternative_blocks"), false);
+    XI_RETURN_EC_IF_NOT(s(topBlockHashString, "top_block_id_str"), false);
+    return true;
   }
 };
 

@@ -32,7 +32,7 @@
 Xi::Result<std::unique_ptr<XiSync::DumpReader>> XiSync::DumpReader::open(const std::string &file,
                                                                          XiSync::DumpReader::Visitor &visitor) {
   XI_ERROR_TRY();
-  return Xi::make_result<std::unique_ptr<XiSync::DumpReader>>(new DumpReader{file, visitor});
+  return success(std::unique_ptr<DumpReader>{new DumpReader{file, visitor}});
   XI_ERROR_CATCH();
 }
 
@@ -49,7 +49,7 @@ Xi::Result<bool> XiSync::DumpReader::next() {
     m_serializer(batch.Blocks, "");
     m_visitor.onBatch(std::move(batch));
   }
-  return m_stdStream.peek() != EOF && !m_stdStream.eof();
+  return success(m_stdStream.peek() != EOF && !m_stdStream.eof());
   XI_ERROR_CATCH();
 }
 
@@ -57,7 +57,7 @@ Xi::Result<void> XiSync::DumpReader::readAll() {
   XI_ERROR_TRY();
   while (next().valueOrThrow())
     ;
-  return Xi::make_result<void>();
+  return success();
   XI_ERROR_CATCH();
 }
 

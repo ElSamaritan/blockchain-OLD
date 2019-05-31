@@ -26,6 +26,7 @@
 #include <string>
 #include <cassert>
 
+#include <Xi/Global.hh>
 #include <Xi/Algorithm/String.h>
 
 #define LOG_LEVEL_STRING_CASE(LEVEL)                                                                         \
@@ -73,7 +74,7 @@ bool Logging::serialize(Logging::Level &level, CryptoNote::ISerializer &serializ
   LevelTranslator translator{};
   if (serializer.type() == CryptoNote::ISerializer::INPUT) {
     std::string str;
-    serializer(str, "log-level");
+    XI_RETURN_EC_IF_NOT(serializer(str, "log_level"), false);
     auto maybeLevel = translator.get_value(str);
     if (!maybeLevel.has_value()) {
       return false;
@@ -86,7 +87,7 @@ bool Logging::serialize(Logging::Level &level, CryptoNote::ISerializer &serializ
     if (!maybeString.has_value()) {
       return false;
     }
-    serializer(*maybeString, "log-level");
+    XI_RETURN_EC_IF_NOT(serializer(*maybeString, "log_level"), false);
     return true;
   }
 }

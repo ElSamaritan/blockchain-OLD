@@ -47,16 +47,19 @@ struct SecretKey : Xi::ByteArray<32> {
   ~SecretKey();
 
   std::string toString() const;
+  bool isNull() const;
 
   Xi::ConstByteSpan span() const;
   Xi::ByteSpan span();
 
   void nullify();
-  bool serialize(CryptoNote::ISerializer& serializer);
 };
 
 XI_MAKE_GENERIC_HASH_FUNC(SecretKey)
 XI_MAKE_GENERIC_COMPARISON(SecretKey)
+
+[[nodiscard]]  bool serialize(SecretKey& secretKey, Common::StringView name, CryptoNote::ISerializer& serializer);
+
 }  // namespace Crypto
 
 XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, SecretKey)

@@ -71,7 +71,7 @@ bool CryptoNote::CryptoNoteProtocolSuspiciousRequestsDetector::pushAndInspect(
   XI_UNUSED(request);
 
   struct range_t {
-    uint32_t start;
+    BlockHeight start;
     uint32_t count;
   };
 
@@ -88,10 +88,11 @@ bool CryptoNote::CryptoNoteProtocolSuspiciousRequestsDetector::pushAndInspect(
       if (timeline[i]->timestamp - timeline[i - 1]->timestamp > std::chrono::minutes{1}) {
         continue;
       }
-      if (timeline[i - 1]->value.start + timeline[i - 1]->value.count > timeline[i]->value.start + 1) {
+      if (timeline[i - 1]->value.start + BlockOffset::fromNative(timeline[i - 1]->value.count) >
+          timeline[i]->value.start + BlockOffset::fromNative(1)) {
         m_logger(Logging::DEBUGGING) << ctx << " none consecutive chain request, last_end="
-                                     << timeline[i - 1]->value.start + timeline[i - 1]->value.count
-                                     << " current_start=" << timeline[i]->value.start;
+                                     << timeline[i - 1]->value.start.native() + timeline[i - 1]->value.count
+                                     << " current_start=" << timeline[i]->value.start.native();
         P2P_CLEAR_AND_REPORT();
       }
     }

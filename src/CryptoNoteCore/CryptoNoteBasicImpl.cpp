@@ -74,13 +74,9 @@ std::string getAccountAddressAsStr(uint64_t prefix, const AccountPublicAddress& 
 bool is_coinbase(const Transaction& tx) {
   if (tx.inputs.size() != 1) {
     return false;
+  } else {
+    return std::holds_alternative<BaseInput>(tx.inputs[0]);
   }
-
-  if (tx.inputs[0].type() != typeid(BaseInput)) {
-    return false;
-  }
-
-  return true;
 }
 //-----------------------------------------------------------------------
 bool parseAccountAddressString(uint64_t& prefix, AccountPublicAddress& adr, const std::string& str) {

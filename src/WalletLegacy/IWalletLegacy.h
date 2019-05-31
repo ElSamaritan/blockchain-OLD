@@ -27,6 +27,7 @@
 #include <Xi/Global.hh>
 
 #include "CryptoNoteCore/CryptoNote.h"
+#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
 
 namespace CryptoNote {
 
@@ -40,7 +41,7 @@ struct WalletLegacyTransfer {
 
 const TransactionId WALLET_LEGACY_INVALID_TRANSACTION_ID = std::numeric_limits<TransactionId>::max();
 const TransferId WALLET_LEGACY_INVALID_TRANSFER_ID = std::numeric_limits<TransferId>::max();
-const uint32_t WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT = std::numeric_limits<uint32_t>::max();
+const BlockHeight WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT = BlockHeight::Null;
 
 enum class WalletLegacyTransactionState : uint8_t {
   Active,   // --> {Deleted}
@@ -60,7 +61,7 @@ struct WalletLegacyTransaction {
   uint64_t unlockTime;
   Crypto::Hash hash;
   bool isCoinbase;
-  uint32_t blockHeight;
+  BlockHeight blockHeight;
   uint64_t timestamp;
   std::string extra;
   WalletLegacyTransactionState state;
@@ -94,7 +95,7 @@ class IWalletLegacy {
   virtual void initWithKeys(const AccountKeys& accountKeys, const std::string& password) = 0;
   virtual void shutdown() = 0;
   virtual void reset() = 0;
-  virtual void reset(uint64_t height) = 0;
+  virtual void reset(BlockHeight height) = 0;
 
   virtual void save(std::ostream& destination, bool saveDetailed = true, bool saveCache = true) = 0;
 
@@ -122,7 +123,7 @@ class IWalletLegacy {
   virtual std::error_code cancelTransaction(size_t transferId) = 0;
 
   virtual void getAccountKeys(AccountKeys& keys) = 0;
-  virtual void syncAll(bool syncWalletFromZero = 0, uint64_t height = 0) = 0;
+  virtual void syncAll(bool syncWalletFromZero = 0, BlockHeight height = BlockHeight::Genesis) = 0;
 };
 
 }  // namespace CryptoNote

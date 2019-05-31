@@ -38,7 +38,7 @@ struct array_hasher {
 /************************************************************************/
 uint64_t getPenalizedAmount(uint64_t amount, size_t medianSize, size_t currentBlockSize);
 std::string getAccountAddressAsStr(uint64_t prefix, const AccountPublicAddress &adr);
-bool parseAccountAddressString(uint64_t &prefix, AccountPublicAddress &adr, const std::string &str);
+[[nodiscard]] bool parseAccountAddressString(uint64_t &prefix, AccountPublicAddress &adr, const std::string &str);
 bool is_coinbase(const Transaction &tx);
 
 // bool operator ==(const CryptoNote::Transaction& a, const CryptoNote::Transaction& b);

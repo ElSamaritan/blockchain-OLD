@@ -21,6 +21,8 @@
 #include <map>
 #include <string>
 
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
+
 #include "CommonTypes.h"
 #include "Common/IStreamSerializable.h"
 #include "Serialization/ISerializer.h"
@@ -31,9 +33,9 @@ class SynchronizationState : public IStreamSerializable {
  public:
   struct CheckResult {
     bool detachRequired;
-    uint32_t detachHeight;
+    BlockHeight detachHeight;
     bool hasNewBlocks;
-    uint32_t newBlockHeight;
+    BlockHeight newBlockHeight;
   };
 
   typedef std::vector<Crypto::Hash> ShortHistory;
@@ -41,20 +43,20 @@ class SynchronizationState : public IStreamSerializable {
   explicit SynchronizationState(const Crypto::Hash& genesisBlockHash) { m_blockchain.push_back(genesisBlockHash); }
   ~SynchronizationState() override = default;
 
-  ShortHistory getShortHistory(uint32_t localHeight) const;
+  ShortHistory getShortHistory(BlockHeight localHeight) const;
   CheckResult checkInterval(const BlockchainInterval& interval) const;
 
-  void detach(uint32_t height);
-  void addBlocks(const Crypto::Hash* blockHashes, uint32_t height, uint32_t count);
-  uint32_t getHeight() const;
+  void detach(BlockHeight height);
+  void addBlocks(const Crypto::Hash* blockHashes, BlockHeight height, uint32_t count);
+  BlockHeight getHeight() const;
   const std::vector<Crypto::Hash>& getKnownBlockHashes() const;
 
   // IStreamSerializable
-  virtual void save(std::ostream& os) override;
-  virtual void load(std::istream& in) override;
+  [[nodiscard]] virtual bool save(std::ostream& os) override;
+  [[nodiscard]] virtual bool load(std::istream& in) override;
 
   // serialization
-  CryptoNote::ISerializer& serialize(CryptoNote::ISerializer& s, const std::string& name);
+  [[nodiscard]] bool serialize(CryptoNote::ISerializer& s, const std::string& name);
 
  private:
   std::vector<Crypto::Hash> m_blockchain;

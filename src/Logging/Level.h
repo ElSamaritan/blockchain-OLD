@@ -43,5 +43,5 @@ class LevelTranslator {
   boost::optional<internal_type> put_value(external_type const& v);
 };
 
-bool serialize(Level& level, CryptoNote::ISerializer& serializer);
+[[nodiscard]]  bool serialize(Level& level, CryptoNote::ISerializer& serializer);
 }  // namespace Logging

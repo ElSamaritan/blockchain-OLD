@@ -25,7 +25,7 @@
 
 #include <gmock/gmock.h>
 
-#include <Xi/Crypto/Random.hh>
+#include <Xi/Crypto/Random/Random.hh>
 #include <Xi/Crypto/Hash/Keccak.hh>
 #include <Xi/Crypto/Hash/Sha3.hh>
 

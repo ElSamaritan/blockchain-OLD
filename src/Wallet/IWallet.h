@@ -21,12 +21,13 @@
 #include <string>
 #include <vector>
 #include "CryptoNoteCore/CryptoNote.h"
+#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
 
 namespace CryptoNote {
 
 const size_t WALLET_INVALID_TRANSACTION_ID = std::numeric_limits<size_t>::max();
 const size_t WALLET_INVALID_TRANSFER_ID = std::numeric_limits<size_t>::max();
-const uint32_t WALLET_UNCONFIRMED_TRANSACTION_HEIGHT = std::numeric_limits<uint32_t>::max();
+const BlockHeight WALLET_UNCONFIRMED_TRANSACTION_HEIGHT = BlockHeight::Null;
 
 enum class WalletTransactionState : uint8_t { SUCCEEDED = 0, FAILED, CANCELLED, CREATED, DELETED };
 
@@ -65,7 +66,7 @@ struct WalletEvent {
 struct WalletTransaction {
   WalletTransactionState state;
   uint64_t timestamp;
-  uint32_t blockHeight;
+  BlockHeight blockHeight;
   Crypto::Hash hash;
   int64_t totalAmount;
   uint64_t fee;
@@ -120,7 +121,7 @@ class IWallet {
 
   virtual void initialize(const std::string& path, const std::string& password) = 0;
   virtual void initializeWithViewKey(const std::string& path, const std::string& password,
-                                     const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight,
+                                     const Crypto::SecretKey& viewSecretKey, const BlockHeight scanHeight,
                                      const bool newAddress) = 0;
   virtual void load(const std::string& path, const std::string& password, std::string& extra) = 0;
   virtual void load(const std::string& path, const std::string& password) = 0;
@@ -128,7 +129,7 @@ class IWallet {
 
   virtual void changePassword(const std::string& oldPassword, const std::string& newPassword) = 0;
   virtual void save(WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") = 0;
-  virtual void reset(const uint32_t scanHeight) = 0;
+  virtual void reset(const BlockHeight scanHeight) = 0;
   virtual void exportWallet(const std::string& path, bool encrypt = true,
                             WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") = 0;
 
@@ -139,13 +140,13 @@ class IWallet {
   virtual KeyPair getViewKey() const = 0;
 
   virtual std::string createAddress() = 0;
-  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey, const uint32_t scanHeight,
+  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey, const BlockHeight scanHeight,
                                     const bool newAddress) = 0;
-  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey, const uint32_t scanHeight,
+  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey, const BlockHeight scanHeight,
                                     const bool newAddress) = 0;
 
   virtual std::vector<std::string> createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys,
-                                                     const uint32_t scanHeight, const bool newAddress) = 0;
+                                                     const BlockHeight scanHeight, const bool newAddress) = 0;
 
   virtual void deleteAddress(const std::string& address) = 0;
 
@@ -161,8 +162,8 @@ class IWallet {
 
   virtual WalletTransactionWithTransfers getTransaction(const Crypto::Hash& transactionHash) const = 0;
   virtual std::vector<TransactionsInBlockInfo> getTransactions(const Crypto::Hash& blockHash, size_t count) const = 0;
-  virtual std::vector<TransactionsInBlockInfo> getTransactions(uint32_t blockIndex, size_t count) const = 0;
-  virtual std::vector<Crypto::Hash> getBlockHashes(uint32_t blockIndex, size_t count) const = 0;
+  virtual std::vector<TransactionsInBlockInfo> getTransactions(BlockHeight blockHeight, size_t count) const = 0;
+  virtual std::vector<Crypto::Hash> getBlockHashes(BlockHeight blockHeight, size_t count) const = 0;
   virtual uint32_t getBlockCount() const = 0;
   virtual std::vector<WalletTransactionWithTransfers> getUnconfirmedTransactions() const = 0;
   virtual std::vector<size_t> getDelayedTransactionIds() const = 0;

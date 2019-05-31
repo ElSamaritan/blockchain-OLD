@@ -23,6 +23,8 @@
 
 #include <Xi/Global.hh>
 
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
+
 namespace CryptoNote {
 
 class ICryptoNoteProtocolObserver {
@@ -30,8 +32,8 @@ class ICryptoNoteProtocolObserver {
   virtual ~ICryptoNoteProtocolObserver() = default;
 
   virtual void peerCountUpdated(size_t count) { XI_UNUSED(count); }
-  virtual void lastKnownBlockHeightUpdated(uint32_t height) { XI_UNUSED(height); }
-  virtual void blockchainSynchronized(uint32_t topHeight) { XI_UNUSED(topHeight); }
+  virtual void lastKnownBlockHeightUpdated(BlockHeight height) { XI_UNUSED(height); }
+  virtual void blockchainSynchronized(BlockHeight topHeight) { XI_UNUSED(topHeight); }
 };
 
 }  // namespace CryptoNote

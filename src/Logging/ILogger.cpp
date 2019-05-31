@@ -93,7 +93,7 @@ const std::string &defaultColor(Level level) {
 
 Xi::Result<std::unique_ptr<ILogger>> ILogger::fromConfiguration(const LoggerConfiguration &config) {
   XI_UNUSED(config);
-  return Xi::make_result<std::unique_ptr<ILogger>>(nullptr);
+  return Xi::success<std::unique_ptr<ILogger>>(nullptr);
 }
 
 ILogger &noLogging() {

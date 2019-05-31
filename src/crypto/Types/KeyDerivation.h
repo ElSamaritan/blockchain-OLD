@@ -52,11 +52,13 @@ struct KeyDerivation : Xi::ByteArray<32> {
   Xi::ByteSpan span();
 
   void nullify();
-  bool serialize(CryptoNote::ISerializer& serializer);
 };
 
 XI_MAKE_GENERIC_HASH_FUNC(KeyDerivation)
 XI_MAKE_GENERIC_COMPARISON(KeyDerivation)
+
+[[nodiscard]]  bool serialize(KeyDerivation& keyDerivation, Common::StringView name, CryptoNote::ISerializer& serializer);
+
 }  // namespace Crypto
 
 XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, KeyDerivation)

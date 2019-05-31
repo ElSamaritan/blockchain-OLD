@@ -275,7 +275,9 @@ const T& SwappedVector<T>::operator[](uint64_t index) {
 
   Common::StdInputStream stream(m_itemsFile);
   CryptoNote::BinaryInputStreamSerializer archive(stream);
-  serialize(tempItem, archive);
+  if (!serialize(tempItem, archive)) {
+    throw std::runtime_error("SwappedVector::operator[] - Deserialization failed.");
+  }
 
   T* item = prepare(index);
   std::swap(tempItem, *item);
@@ -347,7 +349,9 @@ void SwappedVector<T>::push_back(const T& item) {
 
     Common::StdOutputStream stream(m_itemsFile);
     CryptoNote::BinaryOutputStreamSerializer archive(stream);
-    serialize(const_cast<T&>(item), archive);
+    if (!serialize(const_cast<T&>(item), archive)) {
+      throw std::runtime_error("SwappedVector::push_back - Serializatin faield.");
+    }
 
     itemsFileSize = m_itemsFile.tellp();
   }

@@ -41,6 +41,7 @@
 #include <cpuinfo_x86.h>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Global.hh>
 #include <CommonCLI/CommonCLI.h>
 #include <CommonCLI/Centered.h>
 #include <Logging/ConsoleLogger.h>
@@ -57,7 +58,7 @@ using format_hander = std::function<std::string(const XiBenchmark::BencharkSumma
 
 std::string format_json(const XiBenchmark::BencharkSummary& summary) {
   CryptoNote::JsonOutputStreamSerializer serializer{};
-  serialize_benchmark_summary(summary, serializer);
+  XI_RETURN_EC_IF_NOT(serialize_benchmark_summary(summary, serializer), "");
   return serializer.getValue().toString();
 }
 

@@ -192,7 +192,11 @@ void Xi::App::Application::setUp() { initializeLogger(); }
 
 void Xi::App::Application::tearDown() {
   if (m_remoteNode) m_remoteNode->shutdown();
-  if (m_core) m_core->save();
+  if (m_core) {
+    if (!m_core->save() && m_ologger) {
+      (*m_ologger)(Logging::FATAL) << "Core routine save procedure failed.";
+    }
+  }
   if (m_database) m_database->shutdown();
 }
 
@@ -286,5 +290,10 @@ void Xi::App::Application::initializeCore() {
       *currency(), logger(), *checkpoints(), dispatcher(),
       std::make_unique<CryptoNote::DatabaseBlockchainCacheFactory>(*database(), logger()),
       CryptoNote::createSwappedMainChainStorage(m_dbOptions->DataDirectory, *currency()));
-  m_core->load();
+  if (!m_core->load()) {
+    if (m_ologger) {
+      (*m_ologger)(Logging::FATAL) << "Core loading procedure failed.";
+      throw std::runtime_error("unable to load core");
+    }
+  }
 }

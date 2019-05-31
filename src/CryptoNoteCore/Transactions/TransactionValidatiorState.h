@@ -22,6 +22,5 @@ struct TransactionValidatorState {
 
 void mergeStates(TransactionValidatorState& destination, const TransactionValidatorState& source);
 bool hasIntersections(const TransactionValidatorState& destination, const TransactionValidatorState& source);
-void excludeFromState(TransactionValidatorState& state, const CachedTransaction& transaction);
 
 }  // namespace CryptoNote

@@ -21,11 +21,10 @@
 #include <boost/iterator/iterator_facade.hpp>
 
 #include <Xi/Global.hh>
+#include <Xi/Crypto/Random/Engine.hpp>
 #include <Common/ShuffleGenerator.h>
 
 #include "BlockchainUtils.h"
-
-
 
 #include <CryptoNoteCore/BlockchainStorage.h>
 #include <CryptoNoteCore/CryptoNoteTools.h>
@@ -37,7 +36,7 @@ namespace CryptoNote {
 namespace {
 
 const uint32_t ONE_DAY_SECONDS = 60 * 60 * 24;
-const CachedBlockInfo NULL_CACHED_BLOCK_INFO{NULL_HASH, 0, 0, 0, 0, 0};
+const CachedBlockInfo NULL_CACHED_BLOCK_INFO{Crypto::Hash::Null, 0, 0, 0, 0, 0};
 
 bool requestPackedOutputs(IBlockchainCache::Amount amount, Common::ArrayView<uint32_t> globalIndexes,
                           IDataBase& database, std::vector<PackedOutIndex>& result) {
@@ -397,7 +396,7 @@ const std::string DB_VERSION_KEY = "db_scheme_version";
 
 class DatabaseVersionReadBatch : public IReadBatch {
  public:
-  virtual ~DatabaseVersionReadBatch() {}
+  virtual ~DatabaseVersionReadBatch() override {}
 
   virtual std::vector<std::string> getRawKeys() const override { return {DB_VERSION_KEY}; }
 
@@ -797,7 +796,7 @@ void DatabaseBlockchainCache::pushTransaction(const CachedTransaction& cachedTra
     poi.data.transactionIndex = transactionBlockIndex;
     poi.data.outputIndex = outputCount++;
 
-    if (output.target.type() == typeid(KeyOutput)) {
+    if (auto keyOutput = std::get_if<KeyOutput>(&output.target)) {
       keyIndexes[output.amount].push_back(poi);
       auto outputCountForAmount = updateKeyOutputCount(output.amount, 1);
       if (outputCountForAmount == 1) {
@@ -811,7 +810,7 @@ void DatabaseBlockchainCache::pushTransaction(const CachedTransaction& cachedTra
       transactionCacheInfo.amountToKeyIndexes[output.amount].push_back(globalIndex);
 
       KeyOutputInfo outputInfo;
-      outputInfo.publicKey = boost::get<KeyOutput>(output.target).key;
+      outputInfo.publicKey = keyOutput->key;
       outputInfo.transactionHash = transactionCacheInfo.transactionHash;
       outputInfo.unlockTime = transactionCacheInfo.unlockTime;
       outputInfo.outputIndex = poi.data.outputIndex;
@@ -1045,8 +1044,8 @@ ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputKeys(uint64_t a
                                return ExtractOutputKeysResult::OUTPUT_LOCKED;
                              }
 
-                             assert(info.outputs[index.data.outputIndex].type() == typeid(KeyOutput));
-                             publicKeys.push_back(boost::get<KeyOutput>(info.outputs[index.data.outputIndex]).key);
+                             assert(std::holds_alternative<KeyOutput>(info.outputs[index.data.outputIndex]));
+                             publicKeys.push_back(std::get<KeyOutput>(info.outputs[index.data.outputIndex]).key);
                              return ExtractOutputKeysResult::SUCCESS;
                            });
 }
@@ -1454,9 +1453,9 @@ uint32_t DatabaseBlockchainCache::getBlockIndexContainingTx(const Crypto::Hash& 
 
 size_t DatabaseBlockchainCache::getChildCount() const { return children.size(); }
 
-void DatabaseBlockchainCache::save() {}
+bool DatabaseBlockchainCache::save() { return true; }
 
-void DatabaseBlockchainCache::load() {}
+bool DatabaseBlockchainCache::load() { return true; }
 
 std::vector<BinaryArray> DatabaseBlockchainCache::getRawTransactions(
     const std::vector<Crypto::Hash>& transactions, std::vector<Crypto::Hash>& missedTransactions) const {
@@ -1533,6 +1532,7 @@ BinaryArray DatabaseBlockchainCache::getRawTransaction(uint32_t blockIndex, uint
 
 std::vector<Crypto::Hash> DatabaseBlockchainCache::getTransactionHashes() const {
   assert(false);
+  // TODO (njamnjam)
   return {};
 }
 
@@ -1546,16 +1546,15 @@ std::vector<uint32_t> DatabaseBlockchainCache::getRandomOutsByAmount(uint64_t am
   std::vector<uint32_t> resultOuts;
   resultOuts.reserve(outputsToPick);
 
-  ShuffleGenerator<uint32_t, Crypto::random_engine<uint32_t>> generator(outputsCount[amount]);
+  ShuffleGenerator<uint32_t, Xi::Crypto::Random::Engine32> generator(outputsCount[amount]);
 
   while (outputsToPick) {
     std::vector<uint32_t> globalIndexes;
     globalIndexes.reserve(outputsToPick);
 
     try {
-      for (uint32_t i = 0; i < outputsToPick; ++i, globalIndexes.push_back(generator())) {
-      }
-      // std::generate_n(std::back_inserter(globalIndexes), outputsToPick, generator);
+      for (uint32_t i = 0; i < outputsToPick; ++i, globalIndexes.push_back(generator())) /* */
+        ;
     } catch (const SequenceEnded&) {
       logger(Logging::TRACE) << "getRandomOutsByAmount: generator reached sequence end";
       return resultOuts;

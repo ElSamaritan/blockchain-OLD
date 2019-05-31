@@ -22,6 +22,8 @@
 
 #include <Common/StringView.h>
 
+#include "Serialization/TypeTag.hpp"
+
 namespace CryptoNote {
 
 class ISerializer {
@@ -32,41 +34,61 @@ class ISerializer {
 
   virtual SerializerType type() const = 0;
 
-  virtual bool beginObject(Common::StringView name) = 0;
+  [[nodiscard]] virtual bool beginObject(Common::StringView name) = 0;
   virtual void endObject() = 0;
-  virtual bool beginArray(size_t& size, Common::StringView name) = 0;
-  virtual bool beginStaticArray(const size_t size, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool beginArray(size_t& size, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool beginStaticArray(const size_t size, Common::StringView name) = 0;
   virtual void endArray() = 0;
 
-  virtual bool operator()(uint8_t& value, Common::StringView name) = 0;
-  virtual bool operator()(int16_t& value, Common::StringView name) = 0;
-  virtual bool operator()(uint16_t& value, Common::StringView name) = 0;
-  virtual bool operator()(int32_t& value, Common::StringView name) = 0;
-  virtual bool operator()(uint32_t& value, Common::StringView name) = 0;
-  virtual bool operator()(int64_t& value, Common::StringView name) = 0;
-  virtual bool operator()(uint64_t& value, Common::StringView name) = 0;
-  virtual bool operator()(double& value, Common::StringView name) = 0;
-  virtual bool operator()(bool& value, Common::StringView name) = 0;
-  virtual bool operator()(std::string& value, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool operator()(uint8_t& value, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool operator()(int16_t& value, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool operator()(uint16_t& value, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool operator()(int32_t& value, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool operator()(uint32_t& value, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool operator()(int64_t& value, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool operator()(uint64_t& value, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool operator()(double& value, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool operator()(bool& value, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool operator()(std::string& value, Common::StringView name) = 0;
 
   // read/write binary block
-  virtual bool binary(void* value, size_t size, Common::StringView name) = 0;
-  virtual bool binary(std::string& value, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool binary(void* value, size_t size, Common::StringView name) = 0;
+  [[nodiscard]] virtual bool binary(std::string& value, Common::StringView name) = 0;
 
-  bool isInput() const { return type() == INPUT; }
-  bool isOutput() const { return type() == OUTPUT; }
+  // optionals
+  [[nodiscard]] virtual bool maybe(bool& value, Common::StringView name) = 0;
+
+  // variants
+  [[nodiscard]] virtual bool typeTag(TypeTag& tag, Common::StringView name) = 0;
+
+  // flags
+  [[nodiscard]] virtual bool flag(std::vector<TypeTag>& flag, Common::StringView name) = 0;
+
+  /*!
+   *  \cond
+   *    isInput() == !isOutput()
+   *  \endcond
+   */
+  [[nodiscard]] bool isInput() const { return type() == INPUT; }
+
+  /*!
+   *  \cond
+   *    isOutput() == !isInput()
+   *  \endcond
+   */
+  [[nodiscard]] bool isOutput() const { return type() == OUTPUT; }
 
   template <typename T>
-  bool operator()(T& value, Common::StringView name);
+  [[nodiscard]] bool operator()(T& value, Common::StringView name);
 };
 
 template <typename T>
-bool ISerializer::operator()(T& value, Common::StringView name) {
+[[nodiscard]] bool ISerializer::operator()(T& value, Common::StringView name) {
   return serialize(value, name, *this);
 }
 
 template <typename T>
-bool serialize(T& value, Common::StringView name, ISerializer& serializer) {
+[[nodiscard]] bool serialize(T& value, Common::StringView name, ISerializer& serializer) {
   if (!serializer.beginObject(name)) {
     return false;
   }
@@ -80,18 +102,18 @@ bool serialize(T& value, Common::StringView name, ISerializer& serializer) {
 }
 
 template <typename T>
-bool serialize(T& value, ISerializer& serializer) {
+[[nodiscard]] bool serialize(T& value, ISerializer& serializer) {
   return value.serialize(serializer);
 }
 
 #ifdef __clang__
 template <>
-inline bool ISerializer::operator()(size_t& value, Common::StringView name) {
+[[nodiscard]] inline bool ISerializer::operator()(size_t& value, Common::StringView name) {
   return operator()(*reinterpret_cast<uint64_t*>(&value), name);
 }
 #endif
 
-#define KV_BEGIN_SERIALIZATION bool serialize(::CryptoNote::ISerializer& s) {
+#define KV_BEGIN_SERIALIZATION [[nodiscard]] bool serialize(::CryptoNote::ISerializer& s) {
 #define KV_END_SERIALIZATION \
   return true;               \
   }

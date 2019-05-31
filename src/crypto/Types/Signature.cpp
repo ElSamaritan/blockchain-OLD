@@ -36,7 +36,7 @@ Xi::Result<Crypto::Signature> Crypto::Signature::fromString(const std::string &h
   if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
     throw std::runtime_error{"invalid hex string"};
   }
-  return std::move(reval);
+  return success(std::move(reval));
   XI_ERROR_CATCH();
 }
 
@@ -54,6 +54,6 @@ Xi::ByteSpan Crypto::Signature::span() { return Xi::ByteSpan{data(), bytes()}; }
 
 void Crypto::Signature::nullify() { fill(0); }
 
-bool Crypto::Signature::serialize(CryptoNote::ISerializer &serializer) {
-  return serializer.binary(data(), size() * sizeof(value_type), "");
+bool Crypto::serialize(Crypto::Signature &signature, Common::StringView name, CryptoNote::ISerializer &serializer) {
+  return serializer.binary(signature.data(), Signature::bytes(), name);
 }

@@ -111,14 +111,14 @@ class NodeServer : public IP2pEndpoint {
   NodeServer(System::Dispatcher& dispatcher, ::Xi::Config::Network::Type network,
              CryptoNote::CryptoNoteProtocolHandler& payload_handler, Logging::ILogger& log);
 
-  bool run();
-  bool init(const NetNodeConfig& config);
-  bool deinit();
+  [[nodiscard]] bool run();
+  [[nodiscard]] bool init(const NetNodeConfig& config);
+  [[nodiscard]] bool deinit();
   bool sendStopSignal();
   uint32_t get_this_peer_port() { return m_listeningPort; }
   CryptoNote::CryptoNoteProtocolHandler& get_payload_object();
 
-  bool serialize(ISerializer& s);
+  [[nodiscard]] bool serialize(ISerializer& s);
 
   // debug functions
   bool log_peerlist();
@@ -148,9 +148,9 @@ class NodeServer : public IP2pEndpoint {
   bool check_trust(const proof_of_trust& tr);
 #endif
 
-  bool init_config();
-  bool make_default_config();
-  bool store_config();
+  [[nodiscard]] bool init_config();
+  [[nodiscard]] bool make_default_config();
+  [[nodiscard]] bool store_config();
   void initUpnp();
 
   bool handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContext& context, bool just_take_peerlist = false);

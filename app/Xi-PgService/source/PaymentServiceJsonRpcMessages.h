@@ -12,6 +12,7 @@
 #include <string>
 
 #include "Serialization/ISerializer.h"
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 namespace PaymentService {
 
@@ -49,7 +50,7 @@ struct Reset {
   struct Request {
     std::string viewSecretKey;
 
-    uint32_t scanHeight = 0;
+    CryptoNote::BlockHeight scanHeight = CryptoNote::BlockHeight::Null;
 
     bool newAddress = false;
 
@@ -93,9 +94,9 @@ struct GetStatus {
   };
 
   struct Response {
-    uint32_t blockCount;
-    uint32_t knownBlockCount;
-    uint64_t localDaemonBlockCount;
+    CryptoNote::BlockHeight blockCount;
+    CryptoNote::BlockHeight knownBlockCount;
+    CryptoNote::BlockHeight localDaemonBlockCount;
     std::string lastBlockHash;
     uint32_t peerCount;
 
@@ -120,7 +121,7 @@ struct CreateAddress {
     std::string spendSecretKey;
     std::string spendPublicKey;
 
-    uint32_t scanHeight = 0;
+    CryptoNote::BlockHeight scanHeight = CryptoNote::BlockHeight::Null;
 
     bool newAddress = false;
 
@@ -138,7 +139,7 @@ struct CreateAddressList {
   struct Request {
     std::vector<std::string> spendSecretKeys;
 
-    uint16_t scanHeight = 0;
+    CryptoNote::BlockHeight scanHeight = CryptoNote::BlockHeight::Null;
 
     bool newAddress = false;
 
@@ -196,7 +197,7 @@ struct GetBalance {
 
 struct GetBlockHashes {
   struct Request {
-    uint32_t firstBlockIndex;
+    CryptoNote::BlockHeight firstBlockHeight;
     uint32_t blockCount;
 
     bool serialize(CryptoNote::ISerializer& serializer);
@@ -219,8 +220,8 @@ struct TransactionHashesInBlockRpcInfo {
 struct GetTransactionHashes {
   struct Request {
     std::vector<std::string> addresses;
+    CryptoNote::BlockHeight firstBlockHeight = CryptoNote::BlockHeight::Null;
     std::string blockHash;
-    uint32_t firstBlockIndex = std::numeric_limits<uint32_t>::max();
     uint32_t blockCount;
     std::string paymentId;
 
@@ -245,7 +246,7 @@ struct TransferRpcInfo {
 struct TransactionRpcInfo {
   uint8_t state;
   std::string transactionHash;
-  uint32_t blockIndex;
+  CryptoNote::BlockHeight blockHeight;
   uint64_t timestamp;
   bool isBase;
   uint64_t unlockTime;
@@ -283,7 +284,7 @@ struct GetTransactions {
   struct Request {
     std::vector<std::string> addresses;
     std::string blockHash;
-    uint32_t firstBlockIndex = std::numeric_limits<uint32_t>::max();
+    CryptoNote::BlockHeight firstBlockHeight = CryptoNote::BlockHeight::Null;
     uint32_t blockCount;
     std::string paymentId;
 
@@ -329,7 +330,7 @@ struct SendTransaction {
     std::string paymentId;
     uint64_t unlockTime = 0;
 
-    bool serialize(CryptoNote::ISerializer& serializer, const WalletService& service);
+    bool serialize(CryptoNote::ISerializer& serializer);
   };
 
   struct Response {
@@ -350,7 +351,7 @@ struct CreateDelayedTransaction {
     std::string paymentId;
     uint64_t unlockTime = 0;
 
-    bool serialize(CryptoNote::ISerializer& serializer, const WalletService& service);
+    bool serialize(CryptoNote::ISerializer& serializer);
   };
 
   struct Response {
@@ -403,7 +404,7 @@ struct SendFusionTransaction {
     std::vector<std::string> addresses;
     std::string destinationAddress;
 
-    bool serialize(CryptoNote::ISerializer& serializer, const WalletService& service);
+    bool serialize(CryptoNote::ISerializer& serializer);
   };
 
   struct Response {

@@ -22,9 +22,9 @@
 #include <vector>
 
 #include <crypto/CryptoTypes.h>
-#include "CryptoNoteCore/CryptoNote.h"
-
-#include <boost/variant.hpp>
+#include <Serialization/VariantSerialization.hpp>
+#include <CryptoNoteCore/CryptoNote.h>
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 namespace CryptoNote {
 
@@ -51,7 +51,7 @@ struct KeyInputDetails {
   TransactionOutputReferenceDetails output;
 };
 
-typedef boost::variant<BaseInputDetails, KeyInputDetails> TransactionInputDetails;
+typedef std::variant<BaseInputDetails, KeyInputDetails> TransactionInputDetails;
 
 struct TransactionExtraDetails {
   Crypto::PublicKey publicKey;
@@ -72,7 +72,7 @@ struct TransactionDetails {
   bool hasPaymentId = false;
   bool inBlockchain = false;
   Crypto::Hash blockHash;
-  uint32_t blockIndex = 0;
+  BlockHeight blockHeight = BlockHeight::Null;
   TransactionExtraDetails extra;
   std::vector<std::vector<Crypto::Signature>> signatures;
   std::vector<TransactionInputDetails> inputs;
@@ -84,9 +84,9 @@ struct BlockDetails {
   uint8_t minorVersion = 0;
   uint64_t timestamp = 0;
   Crypto::Hash prevBlockHash;
-  uint32_t nonce = 0;
+  BlockHeaderNonce nonce = BlockHeaderNonce::Null;
   bool isAlternative = false;
-  uint32_t index = 0;
+  BlockHeight height = BlockHeight::Null;
   Crypto::Hash hash;
   uint64_t difficulty = 0;
   uint64_t reward = 0;
@@ -103,3 +103,6 @@ struct BlockDetails {
 };
 
 }  // namespace CryptoNote
+
+XI_SERIALIZATION_VARIANT_TAG(CryptoNote::TransactionInputDetails, 0, 0x01, "base_input");
+XI_SERIALIZATION_VARIANT_TAG(CryptoNote::TransactionInputDetails, 1, 0x02, "key_input");

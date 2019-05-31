@@ -28,9 +28,10 @@
 #include <System/TcpConnector.h>
 
 #include <Xi/Global.hh>
-#include <Xi/Version/Version.h>
 #include <Xi/FileSystem.h>
 #include <Xi/Config.h>
+#include <Xi/Version/Version.h>
+#include <Xi/Crypto/Random/Random.hh>
 
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
@@ -55,7 +56,7 @@ namespace {
 size_t get_random_index_with_fixed_probability(size_t max_index) {
   // divide by zero workaround
   if (!max_index) return 0;
-  size_t x = Crypto::rand<size_t>() % (max_index + 1);
+  size_t x = Xi::Crypto::Random::generate<size_t>() % (max_index + 1);
   return (x * x * x) / (max_index * max_index);  // parabola \/
 }
 
@@ -359,7 +360,7 @@ bool NodeServer::init_config() {
       if (!p2p_data.fail()) {
         StdInputStream inputStream(p2p_data);
         BinaryInputStreamSerializer a(inputStream);
-        CryptoNote::serialize(*this, a);
+        XI_RETURN_EC_IF_NOT(CryptoNote::serialize(*this, a), false);
         loaded = true;
       }
     } catch (const std::exception& e) {
@@ -367,7 +368,7 @@ bool NodeServer::init_config() {
     }
 
     if (!loaded) {
-      make_default_config();
+      XI_RETURN_EC_IF_NOT(make_default_config(), false);
     }
 
     // at this moment we have hardcoded config
@@ -413,7 +414,7 @@ bool NodeServer::is_ip_address_blocked(const uint32_t ip) { return evaluate_bloc
 
 //-----------------------------------------------------------------------------------
 bool NodeServer::make_default_config() {
-  m_config.m_peer_id = Crypto::rand<uint64_t>();
+  m_config.m_peer_id = Xi::Crypto::Random::generate<uint64_t>();
   logger(INFO) << "Generated new peer ID: " << m_config.m_peer_id;
   return true;
 }
@@ -430,7 +431,7 @@ bool NodeServer::handle_command_line(const boost::program_options::variables_map
     std::vector<std::string> perrs = command_line::get_arg(vm, arg_p2p_add_peer);
     for (const std::string& pr_str : perrs) {
       PeerlistEntry pe = boost::value_initialized<PeerlistEntry>();
-      pe.id = Crypto::rand<uint64_t>();
+      pe.id = Xi::Crypto::Random::generate<uint64_t>();
       bool r = parse_peer_from_string(pe.address, pr_str);
       if (!(r)) {
         logger(ERROR) << "Failed to parse address from string: " << pr_str;
@@ -607,8 +608,7 @@ bool NodeServer::store_config() {
 
     StdOutputStream stream(p2p_data);
     BinaryOutputStreamSerializer a(stream);
-    CryptoNote::serialize(*this, a);
-    return true;
+    return CryptoNote::serialize(*this, a);
   } catch (const std::exception& e) {
     logger(FATAL) << "store_config failed: " << e.what();
   }
@@ -935,7 +935,7 @@ bool NodeServer::connections_maker() {
 
   if (!m_peerlist.get_white_peers_count() && m_seed_nodes.size()) {
     size_t try_count = 0;
-    size_t current_index = Crypto::rand<size_t>() % m_seed_nodes.size();
+    size_t current_index = Xi::Crypto::Random::generate<size_t>() % m_seed_nodes.size();
 
     while (true) {
       if (try_to_connect_and_handshake_with_new_peer(m_seed_nodes[current_index], true)) break;

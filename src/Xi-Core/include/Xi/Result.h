@@ -26,15 +26,16 @@
 #include <memory>
 #include <utility>
 #include <type_traits>
-
-#include <Xi/ExternalIncludePush.h>
-#include <boost/variant.hpp>
-#include <boost/optional.hpp>
-#include <Xi/ExternalIncludePop.h>
+#include <variant>
+#include <optional>
 
 #include <Xi/Error.h>
 
 namespace Xi {
+
+struct result_success {};
+struct result_failure {};
+
 /*!
  * \brief The Result class wraps an expected return value to be either the value or an error.
  *
@@ -56,34 +57,31 @@ namespace Xi {
 template <typename _ValueT>
 class [[nodiscard]] Result {
  public:
-  using value_t = typename std::decay<_ValueT>::type;
+  using value_t = std::decay_t<_ValueT>;
 
  private:
-  boost::variant<Error, value_t> m_result;
-
-  const value_t& value(std::true_type) const { return boost::get<value_t>(m_result); }
-  value_t value(std::false_type) const { return boost::get<value_t>(m_result); }
+  std::variant<Error, value_t> m_result;
 
  public:
-  explicit Result() : m_result{Error{}} {}
-  /* implicit */ Result(const Error& err) : m_result{err} {}
-  /* implicit */ Result(value_t && value) : m_result{std::forward<value_t>(value)} {}
-
-  XI_DEFAULT_COPY(Result);
-  XI_DEFAULT_MOVE(Result);
+  explicit Result() : m_result{std::in_place_index<0>, Error{}} {}
+  explicit Result(result_failure) : m_result{std::in_place_index<0>, Error{}} {}
+  /* implicit */ Result(const Error& err) : m_result{std::in_place_index<0>, err} {}
+  Result(result_success, value_t value) : m_result{std::in_place_index<1>, std::forward<value_t>(value)} {}
 
   ~Result() = default;
 
-  bool isValue() const { return m_result.type() == typeid(value_t); }
-  bool isError() const { return m_result.type() != typeid(value_t); }
+  bool isError() const { return this->m_result.index() == 0; }
+  bool isValue() const { return this->m_result.index() == 1; }
 
-  const Error& error() const { return boost::get<Error>(m_result); }
+  const Error& error() const { return std::get<Error>(m_result); }
 
-  auto value() const { return value(typename std::is_compound<value_t>::type{}); }
+  std::conditional_t<std::is_compound_v<value_t>, const value_t&, value_t> value() const {
+    return std::get<1>(m_result);
+  }
 
   value_t take() {
     static_assert(std::is_move_constructible<value_t>::value, "You can only take move constructible types.");
-    return std::move(boost::get<value_t>(m_result));
+    return std::move(std::get<1>(m_result));
   }
 
   void throwOnError() {
@@ -103,24 +101,22 @@ class [[nodiscard]] Result {
   }
 };
 
-struct result_success {};
-
 template <>
 class [[nodiscard]] Result<void> {
  private:
-  boost::optional<Error> m_error;
+  std::optional<Error> m_error;
 
  public:
   explicit Result() : m_error{Error{}} {}
-  /* implicit */ Result(result_success) : m_error{boost::none} {}
+  explicit Result(result_success) : m_error{std::nullopt} {}
   /* implicit */ Result(const Error& err) : m_error{err} {}
   XI_DEFAULT_COPY(Result);
   XI_DEFAULT_MOVE(Result);
   ~Result() = default;
 
-  bool isError() const { return m_error.is_initialized(); }
+  bool isError() const { return m_error.has_value(); }
 
-  const Error& error() const { return m_error.get(); }
+  const Error& error() const { return *m_error; }
 
   void throwOnError() {
     if (isError()) {
@@ -129,14 +125,36 @@ class [[nodiscard]] Result<void> {
   }
 };
 
-template <typename _ValueT, typename... _ArgsT>
-inline Result<_ValueT> make_result(_ArgsT&&... args) {
-  return Result<_ValueT>{typename Result<_ValueT>::value_t{std::forward<_ArgsT>(args)...}};
+inline Error failure(std::exception_ptr e) { return makeError(e); }
+inline Error failure(std::error_code e) { return makeError(e); }
+
+template <typename _ValueT>
+inline Result<std::decay_t<_ValueT>> success(_ValueT&& val) {
+  return Result<std::decay_t<_ValueT>>{result_success{}, typename Result<_ValueT>::value_t{std::forward<_ValueT>(val)}};
 }
 
-template <>
-inline Result<void> make_result<void>() {
-  return Result<void>{result_success{}};
+template <typename _ValueT, typename... _ArgsT>
+inline Result<std::decay_t<_ValueT>> emplaceSuccess(_ArgsT&&... args) {
+  return Result<std::decay_t<_ValueT>>{result_success{},
+                                       typename Result<_ValueT>::value_t{std::forward<_ArgsT>(args)...}};
 }
+
+inline Result<void> success() { return Result<void>{result_success{}}; }
 
 }  // namespace Xi
+
+#define XI_ERROR_TRY()        \
+  using ::Xi::success;        \
+  using ::Xi::emplaceSuccess; \
+  using ::Xi::failure;        \
+  try {                       \
+    do {                      \
+  } while (0)
+
+#define XI_ERROR_CATCH()                              \
+  }                                                   \
+  catch (...) {                                       \
+    return ::Xi::makeError(std::current_exception()); \
+  }                                                   \
+  do {                                                \
+  } while (0)

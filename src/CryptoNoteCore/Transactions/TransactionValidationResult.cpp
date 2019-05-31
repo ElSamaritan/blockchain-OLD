@@ -53,5 +53,5 @@ Xi::Result<void> CryptoNote::TransactionValidationResult::emplace(CryptoNote::Tr
     m_transactions.emplace_back(std::move(transaction));
   }
   m_elgibileIndex = EligibleIndex::lowerBound(m_elgibileIndex, other.m_elgibileIndex);
-  return Xi::make_result<void>();
+  return Xi::success();
 }

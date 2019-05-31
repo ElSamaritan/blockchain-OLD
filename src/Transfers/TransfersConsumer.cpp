@@ -24,9 +24,9 @@ using namespace Crypto;
 using namespace Logging;
 using namespace Common;
 
-std::unordered_set<Crypto::Hash> transactions_hash_seen;
-std::unordered_set<Crypto::PublicKey> public_keys_seen;
-std::mutex seen_mutex;
+static std::unordered_set<Crypto::Hash> transactions_hash_seen;
+static std::unordered_set<Crypto::PublicKey> public_keys_seen;
+static std::mutex seen_mutex;
 
 namespace {
 
@@ -95,7 +95,7 @@ namespace CryptoNote {
 
 TransfersConsumer::TransfersConsumer(const CryptoNote::Currency& currency, INode& node, Logging::ILogger& logger,
                                      const SecretKey& viewSecret)
-    : m_node(node), m_viewSecret(viewSecret), m_currency(currency), m_logger(logger, "TransfersConsumer") {
+    : m_viewSecret(viewSecret), m_node(node), m_currency(currency), m_logger(logger, "TransfersConsumer") {
   updateSyncStart();
 }
 
@@ -157,7 +157,7 @@ void TransfersConsumer::initTransactionPool(const std::unordered_set<Crypto::Has
 void TransfersConsumer::updateSyncStart() {
   SynchronizationStart start;
 
-  start.height = std::numeric_limits<uint64_t>::max();
+  start.height = BlockHeight::fromNative(BlockHeight::max());
   start.timestamp = std::numeric_limits<uint64_t>::max();
 
   for (const auto& kv : m_subscriptions) {
@@ -169,9 +169,13 @@ void TransfersConsumer::updateSyncStart() {
   m_syncStart = start;
 }
 
-SynchronizationStart TransfersConsumer::getSyncStart() { return m_syncStart; }
+SynchronizationStart TransfersConsumer::getSyncStart() {
+  int affe = 4;
+  (void)affe;
+  return m_syncStart;
+}
 
-void TransfersConsumer::onBlockchainDetach(uint32_t height) {
+void TransfersConsumer::onBlockchainDetach(BlockHeight height) {
   m_observerManager.notify(&IBlockchainConsumerObserver::onBlockchainDetach, this, height);
 
   for (const auto& kv : m_subscriptions) {
@@ -179,7 +183,7 @@ void TransfersConsumer::onBlockchainDetach(uint32_t height) {
   }
 }
 
-uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, uint32_t startHeight, uint32_t count) {
+uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, BlockHeight startHeight, uint32_t count) {
   assert(blocks);
   assert(count > 0);
 
@@ -220,13 +224,13 @@ uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, uint32_t st
       }
 
       TransactionBlockInfo blockInfo;
-      blockInfo.height = startHeight + i;
+      blockInfo.height = startHeight.next(i);
       blockInfo.timestamp = block->timestamp;
       blockInfo.transactionIndex = 0;  // position in block
 
       for (const auto& tx : blocks[i].transactions) {
         auto pubKey = tx->getTransactionPublicKey();
-        if (pubKey == NULL_PUBLIC_KEY) {
+        if (pubKey == PublicKey::Null) {
           ++blockInfo.transactionIndex;
           continue;
         }
@@ -303,17 +307,16 @@ uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, uint32_t st
       if (tx.isLastTransactionInBlock) {
         ++processedBlockCount;
         m_logger(TRACE) << "Processed block " << processedBlockCount << " of " << count
-                        << ", last processed block index " << tx.blockInfo.height << ", hash "
+                        << ", last processed block index " << tx.blockInfo.height.native() << ", hash "
                         << blocks[processedBlockCount - 1].blockHash;
 
-        auto newHeight = startHeight + processedBlockCount - 1;
+        auto newHeight = startHeight.next(processedBlockCount - 1);
         forEachSubscription([newHeight](TransfersSubscription& sub) { sub.advanceHeight(newHeight); });
       }
     }
   } catch (const MarkTransactionConfirmedException& e) {
-    m_logger(ERROR) << "Failed to process block transactions: failed to confirm transaction "
-                                << e.getTxHash()
-                                << ", remove this transaction from all containers and transaction pool";
+    m_logger(ERROR) << "Failed to process block transactions: failed to confirm transaction " << e.getTxHash()
+                    << ", remove this transaction from all containers and transaction pool";
     forEachSubscription([&e](TransfersSubscription& sub) { sub.deleteUnconfirmedTransaction(e.getTxHash()); });
 
     m_poolTxs.erase(e.getTxHash());
@@ -324,12 +327,12 @@ uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, uint32_t st
   }
 
   if (processedBlockCount < count) {
-    uint32_t detachIndex = startHeight + processedBlockCount;
-    m_logger(ERROR) << "Not all block transactions are processed, fully processed block count: "
-                                << processedBlockCount << " of " << count << ", last processed block hash "
-                                << (processedBlockCount > 0 ? blocks[processedBlockCount - 1].blockHash : NULL_HASH)
-                                << ", detach block index " << detachIndex << " to remove partially processed block";
-    forEachSubscription([detachIndex](TransfersSubscription& sub) { sub.onBlockchainDetach(detachIndex); });
+    BlockHeight detachHeight = startHeight.next(processedBlockCount);
+    m_logger(ERROR) << "Not all block transactions are processed, fully processed block count: " << processedBlockCount
+                    << " of " << count << ", last processed block hash "
+                    << (processedBlockCount > 0 ? blocks[processedBlockCount - 1].blockHash : Hash::Null)
+                    << ", detach block height " << detachHeight.native() << " to remove partially processed block";
+    forEachSubscription([detachHeight](TransfersSubscription& sub) { sub.onBlockchainDetach(detachHeight); });
   }
 
   return processedBlockCount;
@@ -514,7 +517,7 @@ void TransfersConsumer::processTransaction(const TransactionBlockInfo& blockInfo
   std::vector<TransactionOutputInformationIn> emptyOutputs;
   std::vector<ITransfersContainer*> transactionContainers;
 
-  m_logger(TRACE) << "Process transaction, block " << blockInfo.height << ", transaction index "
+  m_logger(TRACE) << "Process transaction, block " << blockInfo.height.native() << ", transaction index "
                   << blockInfo.transactionIndex << ", hash " << tx.getTransactionHash();
   bool someContainerUpdated = false;
   for (auto& kv : m_subscriptions) {

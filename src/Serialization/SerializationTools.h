@@ -25,8 +25,8 @@
 #include <Common/StringOutputStream.h>
 #include "JsonInputStreamSerializer.h"
 #include "JsonOutputStreamSerializer.h"
-#include "KVBinaryInputStreamSerializer.h"
-#include "KVBinaryOutputStreamSerializer.h"
+#include "BinaryInputStreamSerializer.h"
+#include "BinaryOutputStreamSerializer.h"
 
 namespace Common {
 
@@ -53,7 +53,9 @@ namespace CryptoNote {
 template <typename T>
 Common::JsonValue storeToJsonValue(const T& v) {
   JsonOutputStreamSerializer s;
-  serialize(const_cast<T&>(v), s);
+  if (!serialize(const_cast<T&>(v), s)) {
+    throw std::runtime_error("json serialization failed");
+  }
   return s.getValue();
 }
 
@@ -84,7 +86,9 @@ inline Common::JsonValue storeToJsonValue(const std::string& v) {
 template <typename T>
 void loadFromJsonValue(T& v, const Common::JsonValue& js) {
   JsonInputValueSerializer s(js);
-  serialize(v, s);
+  if (!serialize(v, s)) {
+    throw std::runtime_error("json deserialization failed");
+  }
 }
 
 template <typename T>
@@ -107,7 +111,17 @@ std::string storeToJson(const T& v) {
 }
 
 template <typename T>
-bool loadFromJson(T& v, const std::string& buf) {
+[[nodiscard]] bool storeToJson(const T& v, std::string& out) {
+  try {
+    out = storeToJsonValue(v).toString();
+    return true;
+  } catch (...) {
+    return false;
+  }
+}
+
+template <typename T>
+[[nodiscard]] bool loadFromJson(T& v, const std::string& buf) {
   try {
     if (buf.empty()) {
       return true;
@@ -118,29 +132,6 @@ bool loadFromJson(T& v, const std::string& buf) {
     return false;
   }
   return true;
-}
-
-template <typename T>
-std::string storeToBinaryKeyValue(const T& v) {
-  KVBinaryOutputStreamSerializer s;
-  serialize(const_cast<T&>(v), s);
-
-  std::string result;
-  Common::StringOutputStream stream(result);
-  s.dump(stream);
-  return result;
-}
-
-template <typename T>
-bool loadFromBinaryKeyValue(T& v, const std::string& buf) {
-  try {
-    Common::MemoryInputStream stream(buf.data(), buf.size());
-    KVBinaryInputStreamSerializer s(stream);
-    serialize(v, s);
-    return true;
-  } catch (std::exception&) {
-    return false;
-  }
 }
 
 }  // namespace CryptoNote

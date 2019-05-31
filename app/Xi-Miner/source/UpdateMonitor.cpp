@@ -37,8 +37,7 @@ Xi::Result<std::unique_ptr<XiMiner::UpdateMonitor>> XiMiner::UpdateMonitor::star
     std::string address, CryptoNote::Currency &currency, const CryptoNote::RpcRemoteConfiguration &remote,
     Logging::ILogger &logger) {
   XI_ERROR_TRY();
-  return Xi::make_result<std::unique_ptr<UpdateMonitor>>(
-      new UpdateMonitor{std::move(address), currency, remote, logger});
+  return success(std::unique_ptr<UpdateMonitor>{new UpdateMonitor{std::move(address), currency, remote, logger}});
   XI_ERROR_CATCH();
 }
 
@@ -90,7 +89,7 @@ Xi::Result<std::string> XiMiner::UpdateMonitor::getBlockTemplateState() {
   CryptoNote::JsonRpc::invokeJsonRpcCommand(m_http, CryptoNote::RpcCommands::GetBlockTemplateState::identifier(),
                                             request, response);
   m_logger(Logging::TRACE) << "block template state: " << response.template_state;
-  return Xi::make_result<std::string>(std::move(response.template_state));
+  return success(std::move(response.template_state));
   XI_ERROR_CATCH();
 }
 
@@ -115,7 +114,7 @@ Xi::Result<XiMiner::MinerBlockTemplate> XiMiner::UpdateMonitor::getBlockTemplate
   reval.TemplateState = response.template_state;
   reval.HashArray = block.getBlockHashingBinaryArray();
   reval.NonceOffset = block.getNonceOffset();
-  return Xi::make_result<MinerBlockTemplate>(std::move(reval));
+  return success(std::move(reval));
   XI_ERROR_CATCH();
 }
 

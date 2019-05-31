@@ -17,6 +17,8 @@
 
 #include "KeysStorage.h"
 
+#include <Xi/Global.hh>
+
 #include "WalletLegacy/WalletLegacySerialization.h"
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"
@@ -24,18 +26,20 @@
 
 namespace CryptoNote {
 
-void KeysStorage::serialize(ISerializer& serializer, const std::string& name) {
-  serializer.beginObject(name);
+bool KeysStorage::serialize(ISerializer& serializer, const std::string& name) {
+  XI_RETURN_EC_IF_NOT(serializer.beginObject(name), false);
 
-  serializer(creationTimestamp, "creation_timestamp");
+  XI_RETURN_EC_IF_NOT(serializer(creationTimestamp, "creation_timestamp"), false);
 
-  serializer(spendPublicKey, "spend_public_key");
-  serializer(spendSecretKey, "spend_secret_key");
+  XI_RETURN_EC_IF_NOT(serializer(spendPublicKey, "spend_public_key"), false);
+  XI_RETURN_EC_IF_NOT(serializer(spendSecretKey, "spend_secret_key"), false);
 
-  serializer(viewPublicKey, "view_public_key");
-  serializer(viewSecretKey, "view_secret_key");
+  XI_RETURN_EC_IF_NOT(serializer(viewPublicKey, "view_public_key"), false);
+  XI_RETURN_EC_IF_NOT(serializer(viewSecretKey, "view_secret_key"), false);
 
   serializer.endObject();
+
+  return true;
 }
 
 }  // namespace CryptoNote

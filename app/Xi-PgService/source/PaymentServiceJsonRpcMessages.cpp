@@ -111,15 +111,8 @@ bool CreateAddress::Response::serialize(CryptoNote::ISerializer& serializer) { r
 
 bool CreateAddressList::Request::serialize(CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(spendSecretKeys, "spend_secret_keys"), false);
-
-  bool hasNewAddress = serializer(newAddress, "new_address");
-  bool hasScanHeight = serializer(scanHeight, "scan_height");
-
-  /* Can't specify both that it is a new address, and a height to begin
-     scanning from */
-  if (hasNewAddress && hasScanHeight) {
-    return false;
-  }
+  XI_RETURN_EC_IF_NOT(serializer(newAddress, "new_address"), false);
+  XI_RETURN_EC_IF_NOT(serializer(scanHeight, "scan_height"), false);
   return true;
 }
 
@@ -151,7 +144,7 @@ bool GetBalance::Response::serialize(CryptoNote::ISerializer& serializer) {
 }
 
 bool GetBlockHashes::Request::serialize(CryptoNote::ISerializer& serializer) {
-  XI_RETURN_EC_IF_NOT(serializer(firstBlockIndex, "first_block_index"), false);
+  XI_RETURN_EC_IF_NOT(serializer(firstBlockHeight, "first_block_height"), false);
   XI_RETURN_EC_IF_NOT(serializer(blockCount, "block_count"), false);
   return true;
 }
@@ -167,17 +160,11 @@ bool TransactionHashesInBlockRpcInfo::serialize(CryptoNote::ISerializer& seriali
 }
 
 bool GetTransactionHashes::Request::serialize(CryptoNote::ISerializer& serializer) {
-  serializer(addresses, "addresses");
-
-  if (serializer(blockHash, "block_hash") == serializer(firstBlockIndex, "first_block_index")) {
-    return false;
-  }
-
-  if (!serializer(blockCount, "block_count")) {
-    return false;
-  }
-
-  serializer(paymentId, "payment_id");
+  XI_RETURN_EC_IF_NOT(serializer(addresses, "addresses"), false);
+  XI_RETURN_EC_IF_NOT(serializer(firstBlockHeight, "first_block_height"), false);
+  XI_RETURN_EC_IF_NOT(serializer(blockHash, "block_hash"), false);
+  XI_RETURN_EC_IF_NOT(serializer(blockCount, "block_count"), false);
+  XI_RETURN_EC_IF_NOT(serializer(paymentId, "payment_id"), false);
   return true;
 }
 
@@ -195,7 +182,7 @@ bool TransferRpcInfo::serialize(CryptoNote::ISerializer& serializer) {
 bool TransactionRpcInfo::serialize(CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(state, "state"), false);
   XI_RETURN_EC_IF_NOT(serializer(transactionHash, "transaction_hash"), false);
-  XI_RETURN_EC_IF_NOT(serializer(blockIndex, "block_index"), false);
+  XI_RETURN_EC_IF_NOT(serializer(blockHeight, "block_height"), false);
   XI_RETURN_EC_IF_NOT(serializer(timestamp, "timestamp"), false);
   XI_RETURN_EC_IF_NOT(serializer(isBase, "is_base"), false);
   XI_RETURN_EC_IF_NOT(serializer(unlockTime, "unlock_time"), false);
@@ -222,17 +209,11 @@ bool TransactionsInBlockRpcInfo::serialize(CryptoNote::ISerializer& serializer) 
 }
 
 bool GetTransactions::Request::serialize(CryptoNote::ISerializer& serializer) {
-  serializer(addresses, "addresses");
-
-  if (serializer(blockHash, "block_hash") == serializer(firstBlockIndex, "first_block_index")) {
-    return false;
-  }
-
-  if (!serializer(blockCount, "block_count")) {
-    return false;
-  }
-
-  serializer(paymentId, "payment_id");
+  XI_RETURN_EC_IF_NOT(serializer(addresses, "addresses"), false);
+  XI_RETURN_EC_IF_NOT(serializer(blockHash, "block_hash"), false);
+  XI_RETURN_EC_IF_NOT(serializer(firstBlockHeight, "first_block_height"), false);
+  XI_RETURN_EC_IF_NOT(serializer(blockCount, "block_count"), false);
+  XI_RETURN_EC_IF_NOT(serializer(paymentId, "payment_id"), false);
   return true;
 }
 
@@ -252,50 +233,30 @@ bool WalletRpcOrder::serialize(CryptoNote::ISerializer& serializer) {
   return true;
 }
 
-bool SendTransaction::Request::serialize(CryptoNote::ISerializer& serializer, const WalletService& service) {
-  serializer(sourceAddresses, "addresses");
-
+bool SendTransaction::Request::serialize(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(sourceAddresses, "addresses"), false);
   XI_RETURN_EC_IF_NOT(serializer(transfers, "transfers"), false);
   XI_RETURN_EC_IF_NOT(serializer(changeAddress, "change_address"), false);
   XI_RETURN_EC_IF_NOT(serializer(fee, "fee"), false);
-
-  if (!serializer(anonymity, "anonymity")) {
-    anonymity = service.getDefaultMixin();
-  }
-
-  bool hasExtra = serializer(extra, "extra");
-  bool hasPaymentId = serializer(paymentId, "payment_id");
-
-  if (hasExtra && hasPaymentId) {
-    return false;
-  }
-
+  XI_RETURN_EC_IF_NOT(serializer(anonymity, "anonymity"), false);
+  XI_RETURN_EC_IF_NOT(serializer(extra, "extra"), false);
+  XI_RETURN_EC_IF_NOT(serializer(paymentId, "payment_id"), false);
   XI_RETURN_EC_IF_NOT(serializer(unlockTime, "unlock_time"), false);
   return true;
 }
 
 bool SendTransaction::Response::serialize(CryptoNote::ISerializer& serializer) {
-  return serializer(transactionHash, "transactionHash");
+  return serializer(transactionHash, "transaction_hash");
 }
 
-bool CreateDelayedTransaction::Request::serialize(CryptoNote::ISerializer& serializer, const WalletService& service) {
-  serializer(addresses, "addresses");
-
+bool CreateDelayedTransaction::Request::serialize(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(addresses, "addresses"), false);
   XI_RETURN_EC_IF_NOT(serializer(transfers, "transfers"), false);
   XI_RETURN_EC_IF_NOT(serializer(changeAddress, "change_address"), false);
   XI_RETURN_EC_IF_NOT(serializer(fee, "fee"), false);
-
-  if (!serializer(anonymity, "anonymity")) {
-    anonymity = service.getDefaultMixin();
-  }
-
-  bool hasExtra = serializer(extra, "extra");
-  bool hasPaymentId = serializer(paymentId, "payment_id");
-
-  if (hasExtra && hasPaymentId) {
-    return false;
-  }
-
+  XI_RETURN_EC_IF_NOT(serializer(anonymity, "anonymity"), false);
+  XI_RETURN_EC_IF_NOT(serializer(extra, "extra"), false);
+  XI_RETURN_EC_IF_NOT(serializer(paymentId, "payment_id"), false);
   XI_RETURN_EC_IF_NOT(serializer(unlockTime, "unlock_time"), false);
   return true;
 }
@@ -331,13 +292,9 @@ bool SendDelayedTransaction::Response::serialize(CryptoNote::ISerializer& serial
   return true;
 }
 
-bool SendFusionTransaction::Request::serialize(CryptoNote::ISerializer& serializer, const WalletService& service) {
+bool SendFusionTransaction::Request::serialize(CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(threshold, "threshold"), false);
-
-  if (!serializer(anonymity, "anonymity")) {
-    anonymity = service.getDefaultMixin();
-  }
-
+  XI_RETURN_EC_IF_NOT(serializer(anonymity, "anonymity"), false);
   XI_RETURN_EC_IF_NOT(serializer(addresses, "addresses"), false);
   XI_RETURN_EC_IF_NOT(serializer(destinationAddress, "destination_address"), false);
   return true;

@@ -174,8 +174,8 @@ CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency& currency, S
       m_p2p(p_net_layout),
       m_synchronized(false),
       m_stop(false),
-      m_observedHeight(0),
-      m_blockchainHeight(0),
+      m_observedHeight(BlockHeight::fromIndex(0)),
+      m_blockchainHeight(BlockHeight::fromIndex(0)),
       m_peersCount(0),
       m_suspiciousGuard{log},
       m_logger(log, "protocol") {
@@ -199,7 +199,7 @@ void CryptoNoteProtocolHandler::onConnectionClosed(CryptoNoteConnectionContext& 
   bool updated = false;
   {
     std::lock_guard<std::mutex> lock(m_observedHeightMutex);
-    uint64_t prevHeight = m_observedHeight;
+    auto prevHeight = m_observedHeight;
     recalculateMaxObservedHeight(context);
     if (prevHeight != m_observedHeight) {
       updated = true;
@@ -207,7 +207,7 @@ void CryptoNoteProtocolHandler::onConnectionClosed(CryptoNoteConnectionContext& 
   }
 
   if (updated) {
-    m_logger(TRACE) << "Observed height updated: " << m_observedHeight;
+    m_logger(TRACE) << "Observed height updated: " << m_observedHeight.native();
     m_observerManager.notify(&ICryptoNoteProtocolObserver::lastKnownBlockHeightUpdated, m_observedHeight);
   }
 
@@ -257,7 +257,9 @@ void CryptoNoteProtocolHandler::log_connections() {
   m_logger(INFO) << "Connections: " << ENDL << ss.str();
 }
 
-uint32_t CryptoNoteProtocolHandler::get_current_blockchain_height() { return m_core.getTopBlockIndex() + 1; }
+BlockHeight CryptoNoteProtocolHandler::get_current_blockchain_height() {
+  return BlockHeight::fromIndex(m_core.getTopBlockIndex());
+}
 
 bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& hshd,
                                                           CryptoNoteConnectionContext& context, bool is_initial) {
@@ -272,29 +274,28 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
       context.m_state = CryptoNoteConnectionContext::state_normal;
     }
   } else {
-    uint32_t currentHeight = get_current_blockchain_height();
-
-    uint32_t remoteHeight = hshd.current_height;
+    const auto currentHeight = get_current_blockchain_height();
+    const auto remoteHeight = hshd.current_height;
 
     /* Find the difference between the remote and the local height */
-    int64_t diff = static_cast<int64_t>(remoteHeight) - static_cast<int64_t>(currentHeight);
+    auto diff = remoteHeight - currentHeight;
 
     /* Find out how many days behind/ahead we are from the remote height */
-    uint64_t days = static_cast<uint64_t>(std::abs(diff)) / (24 * 60 * 60 / m_currency.difficultyTarget());
+    uint64_t days = static_cast<uint64_t>(std::abs(diff.native())) / (24 * 60 * 60 / m_currency.difficultyTarget());
 
     std::stringstream ss;
 
     ss << "Your " << Xi::Config::Coin::name() << " node is syncing with the network ";
 
     /* We're behind the remote node */
-    if (diff >= 0) {
+    if (diff >= BlockOffset::fromNative(0)) {
       ss << "(" << Common::get_sync_percentage(currentHeight, remoteHeight) << "% complete) ";
 
-      ss << "You are " << diff << " blocks (" << days << " days) behind ";
+      ss << "You are " << diff.native() << " blocks (" << days << " days) behind ";
     }
     /* We're ahead of the remote node, no need to print percentages */
     else {
-      ss << "You are " << std::abs(diff) << " blocks (" << days << " days) ahead ";
+      ss << "You are " << std::abs(diff.native()) << " blocks (" << days << " days) ahead ";
     }
 
     ss << "the current peer you're connected to. It's not a race, grab a coffee. ";
@@ -302,7 +303,7 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
     auto logLevel = Logging::TRACE;
     /* Log at different levels depending upon if we're ahead, behind, and if it's
       a newly formed connection */
-    if (diff >= 0) {
+    if (diff >= BlockOffset::fromNative(0)) {
       if (is_initial) {
         logLevel = Logging::INFO;
       } else {
@@ -311,7 +312,8 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
     }
     m_logger(logLevel, Logging::CYAN) << context << ss.str();
 
-    m_logger(Logging::DEBUGGING) << "Remote top block height: " << hshd.current_height << ", id: " << hshd.top_id;
+    m_logger(Logging::DEBUGGING) << "Remote top block height: " << hshd.current_height.native()
+                                 << ", id: " << hshd.top_id;
     // let the socket to send response to handshake, but request callback, to let send request data after response
     m_logger(Logging::TRACE) << context << "requesting synchronization";
     context.m_state = CryptoNoteConnectionContext::state_sync_required;
@@ -330,7 +332,7 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
 
 bool CryptoNoteProtocolHandler::get_payload_sync_data(CORE_SYNC_DATA& hshd) {
   hshd.top_id = m_core.getTopBlockHash();
-  hshd.current_height = m_core.getTopBlockIndex() + 1;
+  hshd.current_height = BlockHeight::fromIndex(m_core.getTopBlockIndex());
   return true;
 }
 
@@ -460,7 +462,7 @@ int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_RE
     return 1;
   }
 
-  rsp.current_blockchain_height = m_core.getTopBlockIndex() + 1;
+  rsp.current_blockchain_height = BlockHeight::fromIndex(m_core.getTopBlockIndex());
   std::vector<RawBlock> rawBlocks;
   m_core.getBlocks(arg.blocks, rawBlocks, rsp.missed_ids);
 
@@ -468,7 +470,7 @@ int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_RE
 
   m_logger(Logging::TRACE) << context << "-->>NOTIFY_RESPONSE_GET_OBJECTS: blocks.size()=" << rsp.blocks.size()
                            << ", txs.size()=" << rsp.transactions.size()
-                           << ", rsp.m_current_blockchain_height=" << rsp.current_blockchain_height
+                           << ", rsp.m_current_blockchain_height=" << rsp.current_blockchain_height.native()
                            << ", missed_ids.size()=" << rsp.missed_ids.size();
 
   if (m_suspiciousGuard.pushAndInspect(context, arg, rsp)) {
@@ -491,8 +493,8 @@ int CryptoNoteProtocolHandler::handle_response_get_objects(int command, NOTIFY_R
 
   if (context.m_last_response_height > arg.current_blockchain_height) {
     m_logger(Logging::ERROR) << context << "sent wrong NOTIFY_HAVE_OBJECTS: arg.m_current_blockchain_height="
-                             << arg.current_blockchain_height
-                             << " < m_last_response_height=" << context.m_last_response_height
+                             << arg.current_blockchain_height.native()
+                             << " < m_last_response_height=" << context.m_last_response_height.native()
                              << ", dropping connection";
     m_p2p->report_failure(context.m_remote_ip, P2pPenalty::InvalidResponse);
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
@@ -614,7 +616,7 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
   return 0;
 }
 
-int CryptoNoteProtocolHandler::doPushLiteBlock(CryptoNoteConnectionContext& context, uint32_t hops, uint32_t height,
+int CryptoNoteProtocolHandler::doPushLiteBlock(CryptoNoteConnectionContext& context, uint32_t hops, BlockHeight height,
                                                LiteBlock block, std::vector<CachedTransaction> txs) {
   context.m_pending_lite_block = boost::none;
   auto result = m_core.addBlock(LiteBlock{block}, std::move(txs));
@@ -660,10 +662,10 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(CryptoNoteConnectionContext& cont
     m_logger(Logging::TRACE) << context
                              << "Lite block missing transactions, going to request transactions from publisher.";
     NOTIFY_MISSING_TXS_REQUEST_ENTRY::request missingTxRequest;
-    missingTxRequest.current_blockchain_height = m_core.getTopBlockIndex() + 1;
+    missingTxRequest.current_blockchain_height = BlockHeight::fromIndex(m_core.getTopBlockIndex());
     missingTxRequest.missing_txs = result.take();
     context.m_pending_lite_block = PendingLiteBlock{
-        std::move(block), hops, height, {missingTxRequest.missing_txs.begin(), missingTxRequest.missing_txs.end()}};
+        std::move(block), height, hops, {missingTxRequest.missing_txs.begin(), missingTxRequest.missing_txs.end()}};
 
     if (!post_notify<NOTIFY_MISSING_TXS_REQUEST_ENTRY>(*m_p2p, missingTxRequest, context)) {
       m_logger(Logging::ERROR)
@@ -703,9 +705,10 @@ int CryptoNoteProtocolHandler::handle_request_chain(int command, NOTIFY_REQUEST_
   }
 
   NOTIFY_RESPONSE_CHAIN_ENTRY::request r;
-  auto idQueryResult =
-      m_core.findBlockchainSupplement(arg.block_hashes, Xi::Config::Network::blockIdentifiersSynchronizationBatchSize(),
-                                      r.total_height, r.start_height);
+  auto totalIndex = r.total_height.toIndex();
+  auto startIndex = r.start_height.toIndex();
+  auto idQueryResult = m_core.findBlockchainSupplement(
+      arg.block_hashes, Xi::Config::Network::blockIdentifiersSynchronizationBatchSize(), totalIndex, startIndex);
   if (idQueryResult.isError()) {
     m_logger(Logging::ERROR) << context
                              << "Failed to handle NOTIFY_REQUEST_CHAIN. Blockchain supplement query returned error: "
@@ -716,8 +719,9 @@ int CryptoNoteProtocolHandler::handle_request_chain(int command, NOTIFY_REQUEST_
   }
   r.block_hashes = idQueryResult.take();
 
-  m_logger(Logging::TRACE) << context << "-->>NOTIFY_RESPONSE_CHAIN_ENTRY: m_start_height=" << r.start_height
-                           << ", m_total_height=" << r.total_height << ", m_block_ids.size()=" << r.block_hashes.size();
+  m_logger(Logging::TRACE) << context << "-->>NOTIFY_RESPONSE_CHAIN_ENTRY: m_start_height=" << r.start_height.native()
+                           << ", m_total_height=" << r.total_height.native()
+                           << ", m_block_ids.size()=" << r.block_hashes.size();
   if (m_suspiciousGuard.pushAndInspect(context, arg, r)) {
     m_p2p->report_failure(context.m_remote_ip, P2pPenalty::SuspiciousRequestSequence);
     P2P_DROP_AND_LOG_RETURN("suspicious sequence of chain requests");
@@ -748,18 +752,19 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
                              << ", txs.size()=" << req.txs.size();
     post_notify<NOTIFY_REQUEST_GET_OBJECTS>(*m_p2p, req, context);
   } else if (context.m_last_response_height <
-             context.m_remote_blockchain_height - 1) {  // we have to fetch more objects ids, request blockchain entry
+             context.m_remote_blockchain_height -
+                 BlockOffset::fromNative(1)) {  // we have to fetch more objects ids, request blockchain entry
 
     NOTIFY_REQUEST_CHAIN::request r = boost::value_initialized<NOTIFY_REQUEST_CHAIN::request>();
     r.block_hashes = m_core.buildSparseChain();
     m_logger(Logging::TRACE) << context << "-->>NOTIFY_REQUEST_CHAIN: m_block_ids.size()=" << r.block_hashes.size();
     post_notify<NOTIFY_REQUEST_CHAIN>(*m_p2p, r, context);
   } else {
-    if (!(context.m_last_response_height == context.m_remote_blockchain_height - 1 &&
+    if (!(context.m_last_response_height == context.m_remote_blockchain_height - BlockOffset::fromNative(1) &&
           !context.m_needed_objects.size() && !context.m_requested_objects.size())) {
       m_logger(Logging::ERROR) << "request_missing_blocks final condition failed!"
-                               << "\r\nm_last_response_height=" << context.m_last_response_height
-                               << "\r\nm_remote_blockchain_height=" << context.m_remote_blockchain_height
+                               << "\r\nm_last_response_height=" << context.m_last_response_height.native()
+                               << "\r\nm_remote_blockchain_height=" << context.m_remote_blockchain_height.native()
                                << "\r\nm_needed_objects.size()=" << context.m_needed_objects.size()
                                << "\r\nm_requested_objects.size()=" << context.m_requested_objects.size()
                                << "\r\non connection [" << context << "]";
@@ -795,7 +800,8 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized() {
 
     m_logger(INFO) << Xi::Config::asciiArt(true) << ENDL;
 
-    m_observerManager.notify(&ICryptoNoteProtocolObserver::blockchainSynchronized, m_core.getTopBlockIndex());
+    m_observerManager.notify(&ICryptoNoteProtocolObserver::blockchainSynchronized,
+                             BlockHeight::fromIndex(m_core.getTopBlockIndex()));
   }
   return true;
 }
@@ -804,7 +810,8 @@ int CryptoNoteProtocolHandler::handle_response_chain_entry(int command, NOTIFY_R
                                                            CryptoNoteConnectionContext& context) {
   XI_UNUSED(command);
   m_logger(Logging::TRACE) << context << "NOTIFY_RESPONSE_CHAIN_ENTRY: m_block_ids.size()=" << arg.block_hashes.size()
-                           << ", m_start_height=" << arg.start_height << ", m_total_height=" << arg.total_height;
+                           << ", m_start_height=" << arg.start_height.native()
+                           << ", m_total_height=" << arg.total_height.native();
 
   if (!arg.block_hashes.size()) {
     m_logger(Logging::ERROR) << context << "sent empty m_block_ids, dropping connection";
@@ -822,12 +829,12 @@ int CryptoNoteProtocolHandler::handle_response_chain_entry(int command, NOTIFY_R
   }
 
   context.m_remote_blockchain_height = arg.total_height;
-  context.m_last_response_height = arg.start_height + static_cast<uint32_t>(arg.block_hashes.size()) - 1;
+  context.m_last_response_height =
+      arg.start_height + BlockOffset::fromNative(static_cast<uint32_t>(arg.block_hashes.size()) - 1);
 
   if (context.m_last_response_height > context.m_remote_blockchain_height) {
-    m_logger(Logging::ERROR) << context
-                             << "sent wrong NOTIFY_RESPONSE_CHAIN_ENTRY, with \r\nm_total_height=" << arg.total_height
-                             << "\r\nm_start_height=" << arg.start_height
+    m_logger(Logging::ERROR) << context << "sent wrong NOTIFY_RESPONSE_CHAIN_ENTRY, with \r\nm_total_height="
+                             << arg.total_height.native() << "\r\nm_start_height=" << arg.start_height.native()
                              << "\r\nm_block_ids.size()=" << arg.block_hashes.size();
     m_p2p->report_failure(context.m_remote_ip, P2pPenalty::InvalidResponse);
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
@@ -983,7 +990,7 @@ int CryptoNoteProtocolHandler::handle_notify_missing_txs_response(int command,
 void CryptoNoteProtocolHandler::relayBlock(LiteBlock&& arg) {
   NOTIFY_NEW_LITE_BLOCK::request req;
   req.block = std::move(arg);
-  req.current_blockchain_height = m_core.getTopBlockIndex() + 1;
+  req.current_blockchain_height = BlockHeight::fromIndex(m_core.getTopBlockIndex());
   req.hop = 0;
   m_p2p->externalRelayNotifyToAll(NOTIFY_NEW_LITE_BLOCK::ID, LevinProtocol::encode(req), nullptr);
 }
@@ -1007,15 +1014,16 @@ void CryptoNoteProtocolHandler::requestMissingPoolTransactions(CryptoNoteConnect
   }
 }
 
-void CryptoNoteProtocolHandler::updateObservedHeight(uint32_t peerHeight, const CryptoNoteConnectionContext& context) {
+void CryptoNoteProtocolHandler::updateObservedHeight(BlockHeight peerHeight,
+                                                     const CryptoNoteConnectionContext& context) {
   bool updated = false;
   {
     std::lock_guard<std::mutex> lock(m_observedHeightMutex);
 
-    uint32_t height = m_observedHeight;
-    if (context.m_remote_blockchain_height != 0 &&
-        context.m_last_response_height <= context.m_remote_blockchain_height - 1) {
-      m_observedHeight = context.m_remote_blockchain_height - 1;
+    BlockHeight height = m_observedHeight;
+    if (!context.m_remote_blockchain_height.isNull() &&
+        context.m_last_response_height <= context.m_remote_blockchain_height - BlockOffset::fromNative(1)) {
+      m_observedHeight = context.m_remote_blockchain_height - BlockOffset::fromNative(1);
       if (m_observedHeight != height) {
         updated = true;
       }
@@ -1038,19 +1046,19 @@ void CryptoNoteProtocolHandler::updateObservedHeight(uint32_t peerHeight, const 
     std::lock_guard<std::mutex> lock(m_blockchainHeightMutex);
     if (peerHeight > m_blockchainHeight) {
       m_blockchainHeight = peerHeight;
-      m_logger(Logging::INFO) << "New Top Block Detected: " << peerHeight;
+      m_logger(Logging::INFO) << "New Top Block Detected: " << peerHeight.native();
     }
   }
 
   if (updated) {
-    m_logger(TRACE) << "Observed height updated: " << m_observedHeight;
+    m_logger(TRACE) << "Observed height updated: " << m_observedHeight.native();
     m_observerManager.notify(&ICryptoNoteProtocolObserver::lastKnownBlockHeightUpdated, m_observedHeight);
   }
 }
 
 void CryptoNoteProtocolHandler::recalculateMaxObservedHeight(const CryptoNoteConnectionContext& context) {
   // should be locked outside
-  uint32_t peerHeight = 0;
+  BlockHeight peerHeight;
   m_p2p->for_each_connection([&peerHeight, &context](const CryptoNoteConnectionContext& ctx, PeerIdType peerId) {
     XI_UNUSED(peerId);
     if (ctx.m_connection_id != context.m_connection_id) {
@@ -1058,18 +1066,18 @@ void CryptoNoteProtocolHandler::recalculateMaxObservedHeight(const CryptoNoteCon
     }
   });
 
-  m_observedHeight = std::max(peerHeight, m_core.getTopBlockIndex() + 1);
+  m_observedHeight = std::max(peerHeight, BlockHeight::fromIndex(m_core.getTopBlockIndex()));
   if (context.m_state == CryptoNoteConnectionContext::state_normal) {
-    m_observedHeight = m_core.getTopBlockIndex();
+    m_observedHeight = BlockHeight::fromIndex(m_core.getTopBlockIndex());
   }
 }
 
-uint32_t CryptoNoteProtocolHandler::getObservedHeight() const {
+BlockHeight CryptoNoteProtocolHandler::getObservedHeight() const {
   std::lock_guard<std::mutex> lock(m_observedHeightMutex);
   return m_observedHeight;
 };
 
-uint32_t CryptoNoteProtocolHandler::getBlockchainHeight() const {
+BlockHeight CryptoNoteProtocolHandler::getBlockchainHeight() const {
   std::lock_guard<std::mutex> lock(m_blockchainHeightMutex);
   return m_blockchainHeight;
 };

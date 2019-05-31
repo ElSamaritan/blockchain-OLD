@@ -29,8 +29,6 @@ extern "C" {
 }
 #endif
 
-#define XI_DLL(X)
-
 #define XI_TRUE 1
 #define XI_FALSE 0
 

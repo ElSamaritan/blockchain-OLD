@@ -27,6 +27,7 @@
 #include <string>
 
 #include <Serialization/ISerializer.h>
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 namespace CryptoNote {
 namespace RpcCommands {
@@ -49,7 +50,7 @@ struct GetBlockTemplate {
 
   struct response {
     uint64_t difficulty;
-    uint32_t height;
+    BlockHeight height;
     uint32_t reserved_offset;
     std::string blocktemplate_blob;
     std::string status;

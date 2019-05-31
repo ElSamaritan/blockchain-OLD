@@ -36,7 +36,7 @@ struct KeysStorage {
   Crypto::PublicKey viewPublicKey;
   Crypto::SecretKey viewSecretKey;
 
-  void serialize(ISerializer& serializer, const std::string& name);
+  [[nodiscard]] bool serialize(ISerializer& serializer, const std::string& name);
 };
 
 }  // namespace CryptoNote

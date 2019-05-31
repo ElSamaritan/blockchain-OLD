@@ -26,12 +26,13 @@
 #include <boost/optional.hpp>
 
 #include "CryptoNoteCore/INode.h"
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 #include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 
 namespace CryptoNote {
 
 struct BlockchainInterval {
-  uint32_t startHeight;
+  BlockHeight startHeight;
   std::vector<Crypto::Hash> blocks;
 };
 

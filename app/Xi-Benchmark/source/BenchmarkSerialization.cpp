@@ -23,151 +23,157 @@
 
 #include "BenchmarkSerialization.h"
 
-void XiBenchmark::serialize_cpu_features(const cpu_features::X86Features &features,
+#include <Xi/Global.hh>
+
+bool XiBenchmark::serialize_cpu_features(const cpu_features::X86Features &features,
                                          CryptoNote::ISerializer &serializer) {
   bool aes = features.aes != 0;
-  serializer(aes, "aes");
+  XI_RETURN_EC_IF_NOT(serializer(aes, "aes"), false);
   bool erms = features.erms != 0;
-  serializer(erms, "erms");
+  XI_RETURN_EC_IF_NOT(serializer(erms, "erms"), false);
   bool f16c = features.f16c != 0;
-  serializer(f16c, "f16c");
+  XI_RETURN_EC_IF_NOT(serializer(f16c, "f16c"), false);
   bool fma3 = features.fma3 != 0;
-  serializer(fma3, "fma3");
+  XI_RETURN_EC_IF_NOT(serializer(fma3, "fma3"), false);
   bool vpclmulqdq = features.vpclmulqdq != 0;
-  serializer(vpclmulqdq, "vpclmulqdq");
+  XI_RETURN_EC_IF_NOT(serializer(vpclmulqdq, "vpclmulqdq"), false);
   bool bmi1 = features.bmi1 != 0;
-  serializer(bmi1, "bmi1");
+  XI_RETURN_EC_IF_NOT(serializer(bmi1, "bmi1"), false);
   bool bmi2 = features.bmi2 != 0;
-  serializer(bmi2, "bmi2");
+  XI_RETURN_EC_IF_NOT(serializer(bmi2, "bmi2"), false);
 
   bool ssse3 = features.ssse3 != 0;
-  serializer(ssse3, "ssse3");
+  XI_RETURN_EC_IF_NOT(serializer(ssse3, "ssse3"), false);
   bool sse4_1 = features.sse4_1 != 0;
-  serializer(sse4_1, "sse4_1");
+  XI_RETURN_EC_IF_NOT(serializer(sse4_1, "sse4_1"), false);
   bool sse4_2 = features.sse4_2 != 0;
-  serializer(sse4_2, "sse4_2");
+  XI_RETURN_EC_IF_NOT(serializer(sse4_2, "sse4_2"), false);
 
   bool avx = features.avx != 0;
-  serializer(avx, "avx");
+  XI_RETURN_EC_IF_NOT(serializer(avx, "avx"), false);
   bool avx2 = features.avx2 != 0;
-  serializer(avx2, "avx2");
+  XI_RETURN_EC_IF_NOT(serializer(avx2, "avx2"), false);
 
   bool avx512f = features.avx512f != 0;
-  serializer(avx512f, "avx512f");
+  XI_RETURN_EC_IF_NOT(serializer(avx512f, "avx512f"), false);
   bool avx512cd = features.avx512cd != 0;
-  serializer(avx512cd, "avx512cd");
+  XI_RETURN_EC_IF_NOT(serializer(avx512cd, "avx512cd"), false);
   bool avx512er = features.avx512er != 0;
-  serializer(avx512er, "avx512er");
+  XI_RETURN_EC_IF_NOT(serializer(avx512er, "avx512er"), false);
   bool avx512pf = features.avx512pf != 0;
-  serializer(avx512pf, "avx512pf");
+  XI_RETURN_EC_IF_NOT(serializer(avx512pf, "avx512pf"), false);
   bool avx512bw = features.avx512bw != 0;
-  serializer(avx512bw, "avx512bw");
+  XI_RETURN_EC_IF_NOT(serializer(avx512bw, "avx512bw"), false);
   bool avx512dq = features.avx512dq != 0;
-  serializer(avx512dq, "avx512dq");
+  XI_RETURN_EC_IF_NOT(serializer(avx512dq, "avx512dq"), false);
   bool avx512vl = features.avx512vl != 0;
-  serializer(avx512vl, "avx512vl");
+  XI_RETURN_EC_IF_NOT(serializer(avx512vl, "avx512vl"), false);
   bool avx512ifma = features.avx512ifma != 0;
-  serializer(avx512ifma, "avx512ifma");
+  XI_RETURN_EC_IF_NOT(serializer(avx512ifma, "avx512ifma"), false);
   bool avx512vbmi = features.avx512vbmi != 0;
-  serializer(avx512vbmi, "avx512vbmi");
+  XI_RETURN_EC_IF_NOT(serializer(avx512vbmi, "avx512vbmi"), false);
   bool avx512vbmi2 = features.avx512vbmi2 != 0;
-  serializer(avx512vbmi2, "avx512vbmi2");
+  XI_RETURN_EC_IF_NOT(serializer(avx512vbmi2, "avx512vbmi2"), false);
   bool avx512vnni = features.avx512vnni != 0;
-  serializer(avx512vnni, "avx512vnni");
+  XI_RETURN_EC_IF_NOT(serializer(avx512vnni, "avx512vnni"), false);
   bool avx512bitalg = features.avx512bitalg != 0;
-  serializer(avx512bitalg, "avx512bitalg");
+  XI_RETURN_EC_IF_NOT(serializer(avx512bitalg, "avx512bitalg"), false);
   bool avx512vpopcntdq = features.avx512vpopcntdq != 0;
-  serializer(avx512vpopcntdq, "avx512vpopcntdq");
+  XI_RETURN_EC_IF_NOT(serializer(avx512vpopcntdq, "avx512vpopcntdq"), false);
   bool avx512_4vnniw = features.avx512_4vnniw != 0;
-  serializer(avx512_4vnniw, "avx512_4vnniw");
+  XI_RETURN_EC_IF_NOT(serializer(avx512_4vnniw, "avx512_4vnniw"), false);
   bool avx512_4vbmi2 = features.avx512_4vbmi2 != 0;
-  serializer(avx512_4vbmi2, "avx512_4vbmi2");
+  XI_RETURN_EC_IF_NOT(serializer(avx512_4vbmi2, "avx512_4vbmi2"), false);
 
   bool smx = features.smx != 0;
-  serializer(smx, "smx");
+  XI_RETURN_EC_IF_NOT(serializer(smx, "smx"), false);
   bool sgx = features.sgx != 0;
-  serializer(sgx, "sgx");
+  XI_RETURN_EC_IF_NOT(serializer(sgx, "sgx"), false);
   bool cx16 = features.cx16 != 0;
-  serializer(cx16, "cx16");
+  XI_RETURN_EC_IF_NOT(serializer(cx16, "cx16"), false);
   bool sha = features.sha != 0;
-  serializer(sha, "sha");
+  XI_RETURN_EC_IF_NOT(serializer(sha, "sha"), false);
   bool popcnt = features.popcnt != 0;
-  serializer(popcnt, "popcnt");
+  XI_RETURN_EC_IF_NOT(serializer(popcnt, "popcnt"), false);
   bool movbe = features.movbe != 0;
-  serializer(movbe, "movbe");
+  XI_RETURN_EC_IF_NOT(serializer(movbe, "movbe"), false);
   bool rdrnd = features.rdrnd != 0;
-  serializer(rdrnd, "rdrnd");
+  XI_RETURN_EC_IF_NOT(serializer(rdrnd, "rdrnd"), false);
+  return true;
 }
 
-void XiBenchmark::serialize_cpu_info(const cpu_features::X86Info &info, CryptoNote::ISerializer &serializer) {
-  serializer.beginObject("features");
-  serialize_cpu_features(info.features, serializer);
+bool XiBenchmark::serialize_cpu_info(const cpu_features::X86Info &info, CryptoNote::ISerializer &serializer) {
+  XI_RETURN_EC_IF_NOT(serializer.beginObject("features"), false);
+  XI_RETURN_EC_IF_NOT(serialize_cpu_features(info.features, serializer), false);
   serializer.endObject();
   int family = info.family;
-  serializer(family, "family");
+  XI_RETURN_EC_IF_NOT(serializer(family, "family"), false);
   int model = info.model;
-  serializer(model, "model");
+  XI_RETURN_EC_IF_NOT(serializer(model, "model"), false);
   int stepping = info.stepping;
-  serializer(stepping, "stepping");
+  XI_RETURN_EC_IF_NOT(serializer(stepping, "stepping"), false);
   std::string vendor{info.vendor};
-  serializer(vendor, "vendor");
+  XI_RETURN_EC_IF_NOT(serializer(vendor, "vendor"), false);
+  return true;
 }
 
-void XiBenchmark::serialize_benchmark_result(const XiBenchmark::BenchmarkResult &result,
+bool XiBenchmark::serialize_benchmark_result(const XiBenchmark::BenchmarkResult &result,
                                              CryptoNote::ISerializer &serializer) {
   std::string algorithm = result.Algorithm;
-  serializer(algorithm, "algorithm");
+  XI_RETURN_EC_IF_NOT(serializer(algorithm, "algorithm"), false);
   uint32_t blocks = result.Blocks;
-  serializer(blocks, "blocks");
+  XI_RETURN_EC_IF_NOT(serializer(blocks, "blocks"), false);
   uint32_t size = result.Size;
-  serializer(size, "size");
+  XI_RETURN_EC_IF_NOT(serializer(size, "size"), false);
   int64_t bestDuration = result.bestDuration().count();
-  serializer(bestDuration, "bestDuration");
+  XI_RETURN_EC_IF_NOT(serializer(bestDuration, "best_duration"), false);
   int64_t worstDuration = result.worstDuration().count();
-  serializer(worstDuration, "worstDuration");
+  XI_RETURN_EC_IF_NOT(serializer(worstDuration, "worst_duration"), false);
   int64_t averageDuration = result.averageDuration().count();
-  serializer(averageDuration, "averageDuration");
+  XI_RETURN_EC_IF_NOT(serializer(averageDuration, "average_duration"), false);
   int64_t totalDuration = result.totalDuration().count();
-  serializer(totalDuration, "totalDuration");
+  XI_RETURN_EC_IF_NOT(serializer(totalDuration, "total_duration"), false);
   size_t threads = result.ThreadResults.size();
-  serializer(threads, "threads");
+  XI_RETURN_EC_IF_NOT(serializer(threads, "threads"), false);
   size_t totalHashes = result.totalHashes();
-  serializer(totalHashes, "totalHashes");
+  XI_RETURN_EC_IF_NOT(serializer(totalHashes, "total_hashes"), false);
   double bestHashrate = result.bestHashrate();
-  serializer(bestHashrate, "bestHashrate");
+  XI_RETURN_EC_IF_NOT(serializer(bestHashrate, "best_hashrate"), false);
   double worstHashrate = result.worstHashrate();
-  serializer(worstHashrate, "worstHashrate");
+  XI_RETURN_EC_IF_NOT(serializer(worstHashrate, "worst_hashrate"), false);
   double averageHashrate = result.averageHashrate();
-  serializer(averageHashrate, "averageHashrate");
+  XI_RETURN_EC_IF_NOT(serializer(averageHashrate, "average_hashrate"), false);
   double totalHashrate = result.totalHashrate();
-  serializer(totalHashrate, "totalHashrate");
+  XI_RETURN_EC_IF_NOT(serializer(totalHashrate, "total_hashrate"), false);
 
-  serializer.beginArray(threads, "threadResults");
+  XI_RETURN_EC_IF_NOT(serializer.beginArray(threads, "thread_results"), false);
   for (const auto &iThreadResult : result.ThreadResults) {
-    serializer.beginObject("");
+    XI_RETURN_EC_IF_NOT(serializer.beginObject(""), false);
     int64_t duration = iThreadResult.Duration.count();
-    serializer(duration, "duration");
+    XI_RETURN_EC_IF_NOT(serializer(duration, "duration"), false);
     double hashrate = to_hashrate(iThreadResult.Duration, result.Blocks);
-    serializer(hashrate, "hashrate");
+    XI_RETURN_EC_IF_NOT(serializer(hashrate, "hashrate"), false);
     serializer.endObject();
   }
   serializer.endArray();
+  return true;
 }
 
-void XiBenchmark::serialize_benchmark_summary(const XiBenchmark::BencharkSummary &summary,
+bool XiBenchmark::serialize_benchmark_summary(const XiBenchmark::BencharkSummary &summary,
                                               CryptoNote::ISerializer &serializer) {
-  serializer.beginObject("cpuInfo");
-  serialize_cpu_info(summary.CPUInfo, serializer);
+  XI_RETURN_EC_IF_NOT(serializer.beginObject("cpu_info"), false);
+  XI_RETURN_EC_IF_NOT(serialize_cpu_info(summary.CPUInfo, serializer), false);
   serializer.endObject();
   std::string arch = summary.Architecture;
-  serializer(arch, "architecture");
+  XI_RETURN_EC_IF_NOT(serializer(arch, "architecture"), false);
 
   size_t runs = summary.Benchmarks.size();
-  serializer.beginArray(runs, "benchmarks");
+  XI_RETURN_EC_IF_NOT(serializer.beginArray(runs, "benchmarks"), false);
   for (const auto &benchmark : summary.Benchmarks) {
-    serializer.beginObject("");
-    serialize_benchmark_result(benchmark, serializer);
+    XI_RETURN_EC_IF_NOT(serializer.beginObject(""), false);
+    XI_RETURN_EC_IF_NOT(serialize_benchmark_result(benchmark, serializer), false);
     serializer.endObject();
   }
   serializer.endArray();
+  return true;
 }

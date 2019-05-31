@@ -113,7 +113,7 @@ class Span {
 
   Span slice(size_type start) {
     exceptional_if<OutOfRangeError>(start > this->m_size);
-    return this->slice(start, this->m_size - start);
+    return this->slice(start, this->size());
   }
 };
 

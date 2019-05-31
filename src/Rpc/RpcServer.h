@@ -139,7 +139,7 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   bool on_get_block_header_by_height(const COMMAND_RPC_GET_BLOCK_HEADER_BY_HEIGHT::request& req,
                                      COMMAND_RPC_GET_BLOCK_HEADER_BY_HEIGHT::response& res);
 
-  void fill_block_header_response(const BlockTemplate& blk, bool orphan_status, uint32_t index,
+  void fill_block_header_response(const BlockTemplate& blk, bool orphan_status, BlockHeight height,
                                   const Crypto::Hash& hash, block_header_response& responce);
   RawBlock prepareRawBlock(BinaryArray&& blockBlob);
 

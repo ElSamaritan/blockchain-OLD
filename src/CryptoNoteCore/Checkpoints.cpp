@@ -31,14 +31,14 @@ bool Checkpoints::isEnabled() const { return m_enabled; }
 void Checkpoints::setEnabled(bool useCheckpoints) { m_enabled = useCheckpoints; }
 //---------------------------------------------------------------------------
 bool Checkpoints::addCheckpoint(uint32_t index, const std::string &hash_str) {
-  Crypto::Hash h = NULL_HASH;
+  auto hashParseResult = Crypto::Hash::fromString(hash_str);
 
-  if (!Common::podFromHex(hash_str, h)) {
+  if (hashParseResult.isError()) {
     logger(ERROR) << "INVALID HASH IN CHECKPOINTS!";
     return false;
+  } else {
+    return addCheckpoint(index, hashParseResult.value());
   }
-
-  return addCheckpoint(index, h);
 }
 
 bool Checkpoints::addCheckpoint(uint32_t index, const Crypto::Hash &hash) {

@@ -21,62 +21,28 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <gmock/gmock.h>
+#pragma once
 
-#include <thread>
-#include <algorithm>
+#include <Xi/Global.hh>
+#include <Xi/Byte.hh>
 
-#include <Xi/Crypto/Random.hh>
+#include "Common/IInputStream.h"
 
-#define XI_TEST_SUITE Xi_Crypto_Random
+namespace Common {
 
-TEST(XI_TEST_SUITE, Generate) {
-  using namespace ::testing;
-  using namespace Xi::Crypto::Random;
+class ByteSpanInputStream final : public IInputStream {
+ public:
+  explicit ByteSpanInputStream(Xi::ConstByteSpan input);
+  XI_DELETE_COPY(ByteSpanInputStream);
+  XI_DEFAULT_MOVE(ByteSpanInputStream);
+  ~ByteSpanInputStream() override = default;
 
-  {
-    Xi::ByteArray<74> bytes;
-    generate(bytes);
-    EXPECT_THAT(bytes, Contains(Ne(0)));
-  }
+  size_t readSome(void* data, size_t size) override;
 
-  {
-    Xi::ByteArray<0> bytes;
-    generate(bytes);
-  }
+  bool isEndOfStream() const;
 
-  for (size_t i = 0; i < 16; ++i) {
-    size_t count = 1ull << i;
-    auto vecByte = generate(count);
-    EXPECT_EQ(vecByte.size(), count);
-  }
+ private:
+  Xi::ConstByteSpan m_input;
+};
 
-  {
-    Xi::ByteArray<512> first, second;
-    auto generateArray = [](auto &buffer) { generate(buffer); };
-    std::thread t1{std::bind(generateArray, std::ref(first))};
-    std::thread t2{std::bind(generateArray, std::ref(second))};
-    t1.join();
-    t2.join();
-    EXPECT_NE(first, second);
-  }
-}
-
-TEST(XI_TEST_SUITE, GenerateDetermenistic) {
-  using namespace ::testing;
-  using namespace Xi::Crypto::Random;
-
-  Xi::ByteArray<74> bytes;
-  generate(bytes);
-  EXPECT_THAT(bytes, Contains(Ne(0)));
-
-  Xi::ByteArray<512> first, second;
-  for (size_t i = 0; i < 10; ++i) {
-    auto generateArray = [&bytes](auto &buffer) { generate(buffer, bytes); };
-    std::thread t1{std::bind(generateArray, std::ref(first))};
-    std::thread t2{std::bind(generateArray, std::ref(second))};
-    t1.join();
-    t2.join();
-    EXPECT_EQ(first, second);
-  }
-}
+}  // namespace Common

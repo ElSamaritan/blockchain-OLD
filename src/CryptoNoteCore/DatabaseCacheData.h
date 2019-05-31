@@ -32,7 +32,7 @@ struct KeyOutputInfo {
   uint64_t unlockTime;
   uint16_t outputIndex;
 
-  bool serialize(CryptoNote::ISerializer& s);
+  [[nodiscard]] bool serialize(CryptoNote::ISerializer& s);
 };
 
 // inherit here to avoid breaking IBlockchainCache interface
@@ -40,7 +40,7 @@ struct ExtendedTransactionInfo : CachedTransactionInfo {
   // CachedTransactionInfo tx;
   std::map<IBlockchainCache::Amount, std::vector<IBlockchainCache::GlobalOutputIndex>>
       amountToKeyIndexes;  // global key output indexes spawned in this transaction
-  bool serialize(ISerializer& s);
+  [[nodiscard]] bool serialize(ISerializer& s);
 };
 
 }  // namespace CryptoNote

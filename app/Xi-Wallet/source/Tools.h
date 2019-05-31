@@ -48,7 +48,7 @@ std::string createIntegratedAddress(const std::string &address, const std::strin
 
 uint64_t getDivisor();
 
-uint32_t getScanHeight();
+CryptoNote::BlockHeight getScanHeight();
 
 template <typename T, typename Function>
 std::vector<T> filter(const std::vector<T> &input, Function predicate) {

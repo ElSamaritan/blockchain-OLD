@@ -68,8 +68,8 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
   int handleCommand(bool is_notify, int command, const BinaryArray& in_buff, BinaryArray& buff_out,
                     CryptoNoteConnectionContext& context, bool& handled);
   virtual size_t getPeerCount() const override;
-  virtual uint32_t getObservedHeight() const override;
-  virtual uint32_t getBlockchainHeight() const override;
+  virtual BlockHeight getObservedHeight() const override;
+  virtual BlockHeight getBlockchainHeight() const override;
   void requestMissingPoolTransactions(CryptoNoteConnectionContext& context);
 
  private:
@@ -97,16 +97,16 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
   virtual void relayTransactions(const std::vector<BinaryArray>& transactions) override;
   //----------------------------------------------------------------------------------
 
-  uint32_t get_current_blockchain_height();
+  CryptoNote::BlockHeight get_current_blockchain_height();
   bool request_missing_objects(CryptoNoteConnectionContext& context, bool check_having_blocks);
   bool on_connection_synchronized();
-  void updateObservedHeight(uint32_t peerHeight, const CryptoNoteConnectionContext& context);
+  void updateObservedHeight(BlockHeight peerHeight, const CryptoNoteConnectionContext& context);
   void recalculateMaxObservedHeight(const CryptoNoteConnectionContext& context);
   int processObjects(CryptoNoteConnectionContext& context, std::vector<RawBlock>&& rawBlocks,
                      const std::vector<CachedBlock>& cachedBlocks);
 
  private:
-  int doPushLiteBlock(CryptoNoteConnectionContext& context, uint32_t hops, uint32_t height, LiteBlock block,
+  int doPushLiteBlock(CryptoNoteConnectionContext& context, uint32_t hops, BlockHeight height, LiteBlock block,
                       std::vector<CachedTransaction> txs);
 
   void reportFailureIfSynced(CryptoNoteConnectionContext& context, P2pPenalty penalty);
@@ -122,10 +122,10 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
   std::atomic<bool> m_stop;
 
   mutable std::mutex m_observedHeightMutex;
-  uint32_t m_observedHeight;
+  BlockHeight m_observedHeight;
 
   mutable std::mutex m_blockchainHeightMutex;
-  uint32_t m_blockchainHeight;
+  BlockHeight m_blockchainHeight;
 
   std::atomic<size_t> m_peersCount;
   Tools::ObserverManager<ICryptoNoteProtocolObserver> m_observerManager;

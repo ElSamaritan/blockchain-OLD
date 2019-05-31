@@ -47,7 +47,7 @@ struct SpentKeyImage {
   uint32_t blockIndex;
   Crypto::KeyImage keyImage;
 
-  bool serialize(ISerializer& s);
+  [[nodiscard]] bool serialize(ISerializer& s);
 };
 
 struct CachedTransactionInfo {
@@ -59,7 +59,7 @@ struct CachedTransactionInfo {
   // needed for getTransactionGlobalIndexes query
   std::vector<uint32_t> globalIndexes;
 
-  bool serialize(ISerializer& s);
+  [[nodiscard]] bool serialize(ISerializer& s);
 };
 
 struct CachedBlockInfo {
@@ -70,7 +70,7 @@ struct CachedBlockInfo {
   uint64_t alreadyGeneratedTransactions;
   uint32_t blockSize;
 
-  bool serialize(ISerializer& s);
+  [[nodiscard]] bool serialize(ISerializer& s);
 };
 
 struct OutputGlobalIndexesForAmount {
@@ -80,17 +80,17 @@ struct OutputGlobalIndexesForAmount {
   // 2. GlobalOutputIndex for particular output is calculated as following: startIndex + index in vector
   std::vector<PackedOutIndex> outputs;
 
-  bool serialize(ISerializer& s);
+  [[nodiscard]] bool serialize(ISerializer& s);
 };
 
 struct PaymentIdTransactionHashPair {
   Crypto::Hash paymentId;
   Crypto::Hash transactionHash;
 
-  bool serialize(ISerializer& s);
+  [[nodiscard]] bool serialize(ISerializer& s);
 };
 
-bool serialize(PackedOutIndex& value, Common::StringView name, CryptoNote::ISerializer& serializer);
+[[nodiscard]] bool serialize(PackedOutIndex& value, Common::StringView name, CryptoNote::ISerializer& serializer);
 
 class DatabaseBlockchainCache;
 
@@ -108,8 +108,8 @@ class BlockchainCache : public CommonBlockchainCache {
                          uint64_t blockDifficulty, RawBlock&& rawBlock) override;
 
   virtual PushedBlockInfo getPushedBlockInfo(uint32_t index) const override;
-  bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) const override;
-  bool checkIfSpent(const Crypto::KeyImage& keyImage) const override;
+  [[nodiscard]] bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) const override;
+  [[nodiscard]] bool checkIfSpent(const Crypto::KeyImage& keyImage) const override;
 
   ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
                                                std::vector<Crypto::PublicKey>& publicKeys) const override;
@@ -175,8 +175,8 @@ class BlockchainCache : public CommonBlockchainCache {
   virtual void addChild(IBlockchainCache* child) override;
   virtual bool deleteChild(IBlockchainCache*) override;
 
-  virtual void save() override;
-  virtual void load() override;
+  [[nodiscard]] virtual bool save() override;
+  [[nodiscard]] virtual bool load() override;
 
   virtual std::vector<BinaryArray> getRawTransactions(const std::vector<Crypto::Hash>& transactions,
                                                       std::vector<Crypto::Hash>& missedTransactions) const override;
@@ -286,7 +286,7 @@ class BlockchainCache : public CommonBlockchainCache {
 
   std::vector<IBlockchainCache*> children;
 
-  void serialize(ISerializer& s);
+  [[nodiscard]] bool serialize(ISerializer& s);
 
   void addSpentKeyImage(const Crypto::KeyImage& keyImage, uint32_t blockIndex);
   void pushTransaction(const CachedTransaction& tx, uint32_t blockIndex, uint16_t transactionBlockIndex);

@@ -38,7 +38,6 @@ void read(IInputStream& in, uint32_t& value);
 void read(IInputStream& in, uint64_t& value);
 void read(IInputStream& in, std::vector<uint8_t>& data, size_t size);
 void read(IInputStream& in, std::string& data, size_t size);
-void readVarint(IInputStream& in, uint8_t& value);
 void readVarint(IInputStream& in, uint16_t& value);
 void readVarint(IInputStream& in, uint32_t& value);
 void readVarint(IInputStream& in, uint64_t& value);

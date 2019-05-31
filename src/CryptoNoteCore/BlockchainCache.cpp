@@ -12,6 +12,7 @@
 #include <boost/functional/hash.hpp>
 
 #include <Xi/Global.hh>
+#include <Xi/Crypto/Random/Engine.hpp>
 
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
@@ -102,7 +103,7 @@ bool PaymentIdTransactionHashPair::serialize(ISerializer& s) {
   return true;
 }
 
-bool serialize(PackedOutIndex& value, Common::StringView name, CryptoNote::ISerializer& serializer) {
+[[nodiscard]] bool serialize(PackedOutIndex& value, Common::StringView name, CryptoNote::ISerializer& serializer) {
   return serializer(value.packedValue, name);
 }
 
@@ -410,7 +411,7 @@ void BlockchainCache::pushTransaction(const CachedTransaction& cachedTransaction
     poi.data.transactionIndex = transactionInBlockIndex;
     poi.data.outputIndex = outputCount++;
 
-    if (output.target.type() == typeid(KeyOutput)) {
+    if (std::holds_alternative<KeyOutput>(output.target)) {
       transactionCacheInfo.globalIndexes.push_back(insertKeyOutputToGlobalIndex(output.amount, poi, blockIndex));
     }
   }
@@ -419,15 +420,12 @@ void BlockchainCache::pushTransaction(const CachedTransaction& cachedTransaction
   transactions.get<TransactionInBlockTag>().emplace(std::move(transactionCacheInfo));
 
   PaymentIdTransactionHashPair paymentIdTransactionHash;
-  if (!getPaymentIdFromTxExtra(tx.extra, paymentIdTransactionHash.paymentId)) {
-    logger(Logging::DEBUGGING) << "Transaction " << cachedTransaction.getTransactionHash() << " successfully added";
-    return;
+  if (getPaymentIdFromTxExtra(tx.extra, paymentIdTransactionHash.paymentId)) {
+    logger(Logging::DEBUGGING) << "Payment id found: " << paymentIdTransactionHash.paymentId;
+    paymentIdTransactionHash.transactionHash = cachedTransaction.getTransactionHash();
+    paymentIds.emplace(std::move(paymentIdTransactionHash));
   }
 
-  logger(Logging::DEBUGGING) << "Payment id found: " << paymentIdTransactionHash.paymentId;
-
-  paymentIdTransactionHash.transactionHash = cachedTransaction.getTransactionHash();
-  paymentIds.emplace(std::move(paymentIdTransactionHash));
   logger(Logging::DEBUGGING) << "Transaction " << cachedTransaction.getTransactionHash() << " successfully added";
 }
 
@@ -663,20 +661,25 @@ bool BlockchainCache::deleteChild(IBlockchainCache* child) {
   return true;
 }
 
-void BlockchainCache::serialize(ISerializer& s) {
+bool BlockchainCache::serialize(ISerializer& s) {
   assert(s.type() == ISerializer::OUTPUT);
 
   uint32_t version = CURRENT_SERIALIZATION_VERSION;
 
-  s(version, "version");
+  XI_RETURN_EC_IF_NOT(s(version, "version"), false);
 
   if (s.type() == ISerializer::OUTPUT) {
-    writeSequence<CachedTransactionInfo>(transactions.begin(), transactions.end(), "transactions", s);
-    writeSequence<SpentKeyImage>(spentKeyImages.begin(), spentKeyImages.end(), "spent_key_images", s);
-    writeSequence<CachedBlockInfo>(blockInfos.begin(), blockInfos.end(), "block_hash_indexes", s);
-    writeSequence<PaymentIdTransactionHashPair>(paymentIds.begin(), paymentIds.end(), "payment_id_indexes", s);
-
-    s(keyOutputsGlobalIndexes, "key_outputs_global_indexes");
+    XI_RETURN_EC_IF_NOT(
+        writeSequence<CachedTransactionInfo>(transactions.begin(), transactions.end(), "transactions", s), false);
+    XI_RETURN_EC_IF_NOT(
+        writeSequence<SpentKeyImage>(spentKeyImages.begin(), spentKeyImages.end(), "spent_key_images", s), false);
+    XI_RETURN_EC_IF_NOT(writeSequence<CachedBlockInfo>(blockInfos.begin(), blockInfos.end(), "block_hash_indexes", s),
+                        false);
+    XI_RETURN_EC_IF_NOT(
+        writeSequence<PaymentIdTransactionHashPair>(paymentIds.begin(), paymentIds.end(), "payment_id_indexes", s),
+        false);
+    XI_RETURN_EC_IF_NOT(s(keyOutputsGlobalIndexes, "key_outputs_global_indexes"), false);
+    return true;
   } else {
     TransactionsCacheContainer restoredTransactions;
     SpentKeyImagesContainer restoredSpentKeyImages;
@@ -684,38 +687,41 @@ void BlockchainCache::serialize(ISerializer& s) {
     OutputsGlobalIndexesContainer restoredKeyOutputsGlobalIndexes;
     PaymentIdContainer restoredPaymentIds;
 
-    readSequence<CachedTransactionInfo>(std::inserter(restoredTransactions, restoredTransactions.end()), "transactions",
-                                        s);
-    readSequence<SpentKeyImage>(std::inserter(restoredSpentKeyImages, restoredSpentKeyImages.end()), "spent_key_images",
-                                s);
-    readSequence<CachedBlockInfo>(std::back_inserter(restoredBlockHashIndex), "block_hash_indexes", s);
-    readSequence<PaymentIdTransactionHashPair>(std::inserter(restoredPaymentIds, restoredPaymentIds.end()),
-                                               "payment_id_indexes", s);
+    XI_RETURN_EC_IF_NOT(readSequence<CachedTransactionInfo>(
+                            std::inserter(restoredTransactions, restoredTransactions.end()), "transactions", s),
+                        false);
+    XI_RETURN_EC_IF_NOT(readSequence<SpentKeyImage>(std::inserter(restoredSpentKeyImages, restoredSpentKeyImages.end()),
+                                                    "spent_key_images", s),
+                        false);
+    XI_RETURN_EC_IF_NOT(
+        readSequence<CachedBlockInfo>(std::back_inserter(restoredBlockHashIndex), "block_hash_indexes", s), false);
+    XI_RETURN_EC_IF_NOT(readSequence<PaymentIdTransactionHashPair>(
+                            std::inserter(restoredPaymentIds, restoredPaymentIds.end()), "payment_id_indexes", s),
+                        false);
 
-    s(restoredKeyOutputsGlobalIndexes, "key_outputs_global_indexes");
+    XI_RETURN_EC_IF_NOT(s(restoredKeyOutputsGlobalIndexes, "key_outputs_global_indexes"), false);
 
     transactions = std::move(restoredTransactions);
     spentKeyImages = std::move(restoredSpentKeyImages);
     blockInfos = std::move(restoredBlockHashIndex);
     keyOutputsGlobalIndexes = std::move(restoredKeyOutputsGlobalIndexes);
     paymentIds = std::move(restoredPaymentIds);
+    return true;
   }
 }
 
-void BlockchainCache::save() {
+bool BlockchainCache::save() {
   std::ofstream file(filename.c_str());
   Common::StdOutputStream stream(file);
   CryptoNote::BinaryOutputStreamSerializer s(stream);
-
-  serialize(s);
+  return serialize(s);
 }
 
-void BlockchainCache::load() {
+bool BlockchainCache::load() {
   std::ifstream file(filename.c_str());
   Common::StdInputStream stream(file);
   CryptoNote::BinaryInputStreamSerializer s(stream);
-
-  serialize(s);
+  return serialize(s);
 }
 
 ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount,
@@ -737,7 +743,7 @@ std::vector<uint32_t> BlockchainCache::getRandomOutsByAmount(Amount amount, size
              }).base();
   uint32_t dist = static_cast<uint32_t>(std::distance(outs.begin(), end));
   dist = std::min(static_cast<uint32_t>(count), dist);
-  ShuffleGenerator<uint32_t, Crypto::random_engine<uint32_t>> generator(dist);
+  ShuffleGenerator<uint32_t, Xi::Crypto::Random::Engine32> generator(dist);
   while (dist--) {
     auto offset = generator();
     auto& outIndex = it->second.outputs[offset];
@@ -783,8 +789,8 @@ ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount, u
                                return ExtractOutputKeysResult::OUTPUT_LOCKED;
                              }
 
-                             assert(info.outputs[index.data.outputIndex].type() == typeid(KeyOutput));
-                             publicKeys.push_back(boost::get<KeyOutput>(info.outputs[index.data.outputIndex]).key);
+                             const auto& keyOutput = std::get<KeyOutput>(info.outputs[index.data.outputIndex]);
+                             publicKeys.push_back(keyOutput.key);
                              return ExtractOutputKeysResult::SUCCESS;
                            });
 }

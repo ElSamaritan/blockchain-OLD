@@ -51,6 +51,9 @@ class BinaryInputStreamSerializer : public ISerializer {
   virtual bool operator()(std::string& value, Common::StringView name) override;
   virtual bool binary(void* value, size_t size, Common::StringView name) override;
   virtual bool binary(std::string& value, Common::StringView name) override;
+  virtual bool maybe(bool& value, Common::StringView name) override;
+  virtual bool typeTag(TypeTag& tag, Common::StringView name) override;
+  virtual bool flag(std::vector<TypeTag>& flag, Common::StringView name) override;
 
   template <typename T>
   bool operator()(T& value, Common::StringView name) {

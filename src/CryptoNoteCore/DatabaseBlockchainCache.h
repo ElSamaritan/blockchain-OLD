@@ -68,8 +68,8 @@ class DatabaseBlockchainCache : public CommonBlockchainCache {
                  const TransactionValidatorState& validatorState, size_t blockSize, uint64_t generatedCoins,
                  uint64_t blockDifficulty, RawBlock&& rawBlock) override;
   virtual PushedBlockInfo getPushedBlockInfo(uint32_t index) const override;
-  bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) const override;
-  bool checkIfSpent(const Crypto::KeyImage& keyImage) const override;
+  [[nodiscard]] bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) const override;
+  [[nodiscard]] bool checkIfSpent(const Crypto::KeyImage& keyImage) const override;
 
   ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
                                                std::vector<Crypto::PublicKey>& publicKeys) const override;
@@ -145,8 +145,8 @@ class DatabaseBlockchainCache : public CommonBlockchainCache {
   virtual void addChild(IBlockchainCache* ptr) override;
   virtual bool deleteChild(IBlockchainCache* ptr) override;
 
-  virtual void save() override;
-  virtual void load() override;
+  [[nodiscard]] virtual bool save() override;
+  [[nodiscard]] virtual bool load() override;
 
   virtual std::vector<BinaryArray> getRawTransactions(const std::vector<Crypto::Hash>& transactions,
                                                       std::vector<Crypto::Hash>& missedTransactions) const override;

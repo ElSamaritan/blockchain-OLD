@@ -36,7 +36,7 @@ Xi::Result<Crypto::SecretKey> Crypto::SecretKey::fromString(const std::string &h
   if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
     throw std::runtime_error{"invalid hex string"};
   }
-  return std::move(reval);
+  return success(std::move(reval));
   XI_ERROR_CATCH();
 }
 
@@ -48,12 +48,14 @@ Crypto::SecretKey::~SecretKey() {}
 
 std::string Crypto::SecretKey::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
 
+bool Crypto::SecretKey::isNull() const { return *this == SecretKey::Null; }
+
 Xi::ConstByteSpan Crypto::SecretKey::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
 
 Xi::ByteSpan Crypto::SecretKey::span() { return Xi::ByteSpan{data(), bytes()}; }
 
 void Crypto::SecretKey::nullify() { fill(0); }
 
-bool Crypto::SecretKey::serialize(CryptoNote::ISerializer &serializer) {
-  return serializer.binary(data(), size() * sizeof(value_type), "blob");
+bool Crypto::serialize(Crypto::SecretKey &secretKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
+  return serializer.binary(secretKey.data(), SecretKey::bytes(), name);
 }

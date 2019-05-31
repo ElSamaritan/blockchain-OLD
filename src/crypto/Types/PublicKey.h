@@ -47,6 +47,7 @@ struct PublicKey : Xi::ByteArray<32> {
   ~PublicKey();
 
   std::string toString() const;
+  bool isNull() const;
 
   Xi::ConstByteSpan span() const;
   Xi::ByteSpan span();
@@ -57,11 +58,13 @@ struct PublicKey : Xi::ByteArray<32> {
   bool isValid() const;
 
   void nullify();
-  bool serialize(CryptoNote::ISerializer& serializer);
 };
 
 XI_MAKE_GENERIC_HASH_FUNC(PublicKey)
 XI_MAKE_GENERIC_COMPARISON(PublicKey)
+
+[[nodiscard]] bool serialize(PublicKey& publicKey, Common::StringView name, CryptoNote::ISerializer& serializer);
+
 }  // namespace Crypto
 
 XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, PublicKey)

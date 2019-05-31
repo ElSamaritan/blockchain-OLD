@@ -26,14 +26,14 @@
 Xi::Result<boost::filesystem::space_info> Xi::FileSystem::availableSpace(const std::string &directory) {
   XI_ERROR_TRY();
   boost::filesystem::path path(directory);
-  return boost::filesystem::space(path);
+  return success(boost::filesystem::space(path));
   XI_ERROR_CATCH();
 }
 
 Xi::Result<boost::logic::tribool> Xi::FileSystem::isRotationalDrive(const std::string &path) {
   XI_UNUSED(path);
   XI_ERROR_TRY();
-  return make_result<boost::logic::tribool>(boost::logic::indeterminate);
+  return success<boost::logic::tribool>(boost::logic::indeterminate);
   XI_ERROR_CATCH();
 }
 
@@ -42,12 +42,12 @@ Xi::Result<void> Xi::FileSystem::ensureDirectoryExists(const std::string &direct
   boost::system::error_code ec;
   boost::filesystem::path path{directory};
   if (boost::filesystem::is_directory(path, ec)) {
-    return make_result<void>();
+    return success();
   }
   if (boost::filesystem::create_directories(path, ec)) {
-    return make_result<void>();
+    return success();
   } else {
-    return make_error(ec);
+    return makeError(ec);
   }
 }
 
@@ -56,20 +56,41 @@ Xi::Result<void> Xi::FileSystem::removeDircetoryIfExists(const std::string &dire
   using namespace boost::filesystem;
   boost::filesystem::path path{directory};
   if (!exists(path)) {
-    return make_result<void>();
+    return success();
   }
   boost::system::error_code ec;
   if (boost::filesystem::is_directory(path, ec)) {
     remove_all(path, ec);
     if (ec) {
-      return make_error(ec);
+      return failure(ec);
     } else {
-      return make_result<void>();
+      return success();
     }
   } else {
-    return make_error(ec);
+    return failure(ec);
   }
   XI_ERROR_CATCH();
 }
 
-Xi::Result<bool> Xi::FileSystem::exists(const std::string &path) { return boost::filesystem::exists(path); }
+Xi::Result<bool> Xi::FileSystem::exists(const std::string &path) { return success(boost::filesystem::exists(path)); }
+
+Xi::Result<void> Xi::FileSystem::removeFileIfExists(const std::string &p) {
+  XI_ERROR_TRY();
+  boost::system::error_code ec;
+  if (exists(p).takeOrThrow()) {
+    if (boost::filesystem::is_regular_file(p, ec)) {
+      boost::filesystem::remove(p, ec);
+      if (ec) {
+        return makeError(ec);
+      }
+    } else {
+      exceptional<InvalidTypeError>("file removal was request but the path not points to a regular file");
+    }
+
+    if (ec) {
+      return makeError(ec);
+    }
+  }
+  return success();
+  XI_ERROR_CATCH();
+}

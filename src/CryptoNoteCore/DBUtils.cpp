@@ -19,32 +19,29 @@
 
 #include <Xi/Global.hh>
 
-namespace {
-const std::string RAW_BLOCK_NAME = "raw_block";
-const std::string RAW_TXS_NAME = "raw_txs";
-}  // namespace
-
 namespace CryptoNote {
 namespace DB {
 std::string serialize(const RawBlock& value, const std::string& name) {
-  XI_UNUSED(name);
   std::stringstream ss;
   Common::StdOutputStream stream(ss);
   CryptoNote::BinaryOutputStreamSerializer serializer(stream);
 
-  serializer(const_cast<RawBlock&>(value).block, RAW_BLOCK_NAME);
-  serializer(const_cast<RawBlock&>(value).transactions, RAW_TXS_NAME);
+  Xi::exceptional_if_not<SerializationError>(serializer.beginObject(name));
+  Xi::exceptional_if_not<SerializationError>(serializer(const_cast<RawBlock&>(value).block, "raw_block"));
+  Xi::exceptional_if_not<SerializationError>(serializer(const_cast<RawBlock&>(value).transactions, "raw_transactions"));
+  serializer.endObject();
 
   return ss.str();
 }
 
 void deserialize(const std::string& serialized, RawBlock& value, const std::string& name) {
-  XI_UNUSED(name);
   std::stringstream ss(serialized);
   Common::StdInputStream stream(ss);
   CryptoNote::BinaryInputStreamSerializer serializer(stream);
-  serializer(value.block, RAW_BLOCK_NAME);
-  serializer(value.transactions, RAW_TXS_NAME);
+  Xi::exceptional_if_not<DeserializationError>(serializer.beginObject(name));
+  Xi::exceptional_if_not<DeserializationError>(serializer(value.block, "raw_block"));
+  Xi::exceptional_if_not<DeserializationError>(serializer(value.transactions, "raw_transactions"));
+  serializer.endObject();
 }
 }  // namespace DB
 }  // namespace CryptoNote

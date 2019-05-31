@@ -61,13 +61,15 @@ struct KeyImage : Xi::ByteArray<32> {
   bool isValid() const;
 
   void nullify();
-  bool serialize(CryptoNote::ISerializer& serializer);
 };
 
 using KeyImageSet = std::unordered_set<KeyImage>;
 
 XI_MAKE_GENERIC_HASH_FUNC(KeyImage)
 XI_MAKE_GENERIC_COMPARISON(KeyImage)
+
+[[nodiscard]]  bool serialize(KeyImage& keyImage, Common::StringView name, CryptoNote::ISerializer& serializer);
+
 }  // namespace Crypto
 
 XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, KeyImage)

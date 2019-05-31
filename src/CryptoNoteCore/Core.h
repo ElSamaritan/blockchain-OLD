@@ -131,7 +131,7 @@ class Core : public ICore,
                                   std::vector<Crypto::Hash>& deletedTransactions) const override;
 
   virtual bool getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, const BinaryArray& extraNonce,
-                                uint64_t& difficulty, uint32_t& height) const override;
+                                uint64_t& difficulty, uint32_t& index) const override;
 
   virtual CoreStatistics getCoreStatistics() const override;
 
@@ -149,8 +149,8 @@ class Core : public ICore,
 
   const Currency& getCurrency() const;
 
-  virtual void save() override;
-  virtual void load() override;
+  [[nodiscard]] virtual bool save() override;
+  [[nodiscard]] virtual bool load() override;
 
   virtual BlockDetails getBlockDetails(const Crypto::Hash& blockHash) const override;
   BlockDetails getBlockDetails(const uint32_t blockHeight) const;
@@ -160,7 +160,7 @@ class Core : public ICore,
                                                                size_t secondsCount) const override;
   virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
 
-  virtual uint64_t get_current_blockchain_height() const;
+  virtual BlockHeight get_current_blockchain_height() const;
 
  private:
   const Currency& m_currency;
@@ -238,7 +238,7 @@ class Core : public ICore,
                                     std::vector<Crypto::Hash>& newTransactions,
                                     std::vector<Crypto::Hash>& deletedTransactions) const;
 
-  uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
+  uint8_t getBlockMajorVersionForIndex(uint32_t height) const;
   size_t calculateCumulativeBlocksizeLimit(uint32_t height) const;
 
   /*!
@@ -254,7 +254,7 @@ class Core : public ICore,
    *    see https://pubsonline.informs.org/doi/abs/10.1287/opre.5.2.266
    * .
    */
-  void fillBlockTemplate(BlockTemplate& block, uint32_t height, size_t fullRewardZone, size_t maxCumulativeSize,
+  void fillBlockTemplate(BlockTemplate& block, uint32_t index, size_t fullRewardZone, size_t maxCumulativeSize,
                          size_t& transactionsSize, uint64_t& fee) const;
   void deleteAlternativeChains();
   void deleteLeaf(size_t leafIndex);
@@ -269,9 +269,12 @@ class Core : public ICore,
   void updateBlockMedianSize();
   bool isTransactionValidForPool(const CachedTransaction& cachedTransaction, TransactionValidatorState& validatorState);
 
-  void initRootSegment();
-  void importBlocksFromStorage();
-  void importTransactionPool();
+  [[nodiscard]] bool initRootSegment();
+  [[nodiscard]] bool importBlocksFromStorage();
+
+  [[nodiscard]] bool importTransactionPool();
+  [[nodiscard]] bool exportTransactionPool();
+
   void cutSegment(IBlockchainCache& segment, uint32_t startIndex);
 
   void switchMainChainStorage(uint32_t splitBlockIndex, IBlockchainCache& newChain);

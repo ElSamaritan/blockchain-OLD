@@ -27,11 +27,11 @@ using namespace CryptoNote;
 
 namespace CryptoNote {
 template <typename T, typename Indexes>
-bool serialize(boost::multi_index_container<T, Indexes>& value, Common::StringView name, ISerializer& s) {
+[[nodiscard]] bool serialize(boost::multi_index_container<T, Indexes>& value, Common::StringView name, ISerializer& s) {
   if (s.type() == ISerializer::INPUT) {
-    readSequence<T>(std::inserter(value, value.end()), name, s);
+    XI_RETURN_EC_IF_NOT(readSequence<T>(std::inserter(value, value.end()), name, s), false);
   } else {
-    writeSequence<T>(value.begin(), value.end(), name, s);
+    XI_RETURN_EC_IF_NOT(writeSequence<T>(value.begin(), value.end(), name, s), false);
   }
 
   return true;

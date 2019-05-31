@@ -99,6 +99,6 @@ Xi::Result<std::chrono::microseconds> Xi::Time::parseDuration(std::string str) {
     total += parseUnit(boost::to_lower_copy(tokens[i]), boost::to_lower_copy(tokens[i + 1]));
   }
 
-  return total;
+  return success(total);
   XI_ERROR_CATCH();
 }

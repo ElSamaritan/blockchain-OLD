@@ -34,9 +34,9 @@ std::future<Xi::Result<void>> CryptoNote::INode::init() {
   auto future = promise->get_future();
   init([promise](std::error_code ec) mutable {
     if (ec) {
-      promise->set_value(Xi::make_error(ec));
+      promise->set_value(Xi::failure(ec));
     } else {
-      promise->set_value(Xi::make_result<void>());
+      promise->set_value(Xi::success());
     }
   });
   return future;
@@ -48,24 +48,24 @@ std::future<Xi::Result<CryptoNote::BlockHeaderInfo>> CryptoNote::INode::getLastB
   auto future = promise->get_future();
   getLastBlockHeaderInfo(*reval, [promise, reval](std::error_code ec) mutable {
     if (ec) {
-      promise->set_value(Xi::make_error(ec));
+      promise->set_value(Xi::failure(ec));
     } else {
-      promise->set_value(Xi::make_result<BlockHeaderInfo>(std::move(*reval)));
+      promise->set_value(Xi::success(std::move(*reval)));
     }
   });
   return future;
 }
 
-std::future<Xi::Result<std::vector<CryptoNote::RawBlock>>> CryptoNote::INode::getRawBlocksByRange(uint32_t height,
+std::future<Xi::Result<std::vector<CryptoNote::RawBlock>>> CryptoNote::INode::getRawBlocksByRange(BlockHeight height,
                                                                                                   uint32_t count) {
   auto promise = std::make_shared<std::promise<Xi::Result<std::vector<RawBlock>>>>();
   auto reval = std::make_shared<std::vector<RawBlock>>();
   auto future = promise->get_future();
   getRawBlocksByRange(height, count, *reval, [promise, reval](std::error_code ec) mutable {
     if (ec) {
-      promise->set_value(Xi::make_error(ec));
+      promise->set_value(Xi::failure(ec));
     } else {
-      promise->set_value(Xi::Result<std::vector<RawBlock>>(std::move(*reval)));
+      promise->set_value(Xi::success(std::move(*reval)));
     }
   });
   return future;

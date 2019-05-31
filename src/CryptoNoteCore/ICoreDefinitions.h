@@ -39,8 +39,8 @@ struct BlockShortInfo {
   std::vector<TransactionPrefixInfo> transaction_prefixes;
 };
 
-bool serialize(BlockFullInfo&, ISerializer&);
-bool serialize(TransactionPrefixInfo&, ISerializer&);
-bool serialize(BlockShortInfo&, ISerializer&);
+[[nodiscard]] bool serialize(BlockFullInfo&, ISerializer&);
+[[nodiscard]] bool serialize(TransactionPrefixInfo&, ISerializer&);
+[[nodiscard]] bool serialize(BlockShortInfo&, ISerializer&);
 
 }  // namespace CryptoNote

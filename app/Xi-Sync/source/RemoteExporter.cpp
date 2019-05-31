@@ -32,7 +32,7 @@ XiSync::RemoteExporter::RemoteExporter(CryptoNote::INode &remote, XiSync::DumpWr
 
 uint32_t XiSync::RemoteExporter::topBlockIndex() const {
   const auto remoteStatus = m_remote.getLastBlockHeaderInfo().get().takeOrThrow();
-  return remoteStatus.index;
+  return remoteStatus.height.toIndex();
 }
 
 std::vector<CryptoNote::RawBlock> XiSync::RemoteExporter::queryBlocks(uint32_t startIndex, uint32_t count) const {
@@ -40,7 +40,9 @@ std::vector<CryptoNote::RawBlock> XiSync::RemoteExporter::queryBlocks(uint32_t s
   reval.reserve(count);
   for (uint32_t index = startIndex; index < startIndex + count; index += 100) {
     const uint32_t left = (startIndex + count) - index;
-    auto blocks = m_remote.getRawBlocksByRange(index + 1, std::min<uint32_t>(left, 100)).get().takeOrThrow();
+    auto blocks = m_remote.getRawBlocksByRange(CryptoNote::BlockHeight::fromIndex(index), std::min<uint32_t>(left, 100))
+                      .get()
+                      .takeOrThrow();
     std::transform(blocks.begin(), blocks.end(), std::back_inserter(reval), [](auto &&b) { return std::move(b); });
   }
   return reval;

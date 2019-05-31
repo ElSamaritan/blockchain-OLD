@@ -85,9 +85,9 @@ Crypto::Hash CryptoNote::getBinaryArrayHash(const BinaryArray& binaryArray) {
 
 uint64_t CryptoNote::getInputAmount(const Transaction& transaction) {
   uint64_t amount = 0;
-  for (auto& input : transaction.inputs) {
-    if (input.type() == typeid(KeyInput)) {
-      amount += boost::get<KeyInput>(input).amount;
+  for (const auto& input : transaction.inputs) {
+    if (auto keyInput = std::get_if<KeyInput>(&input)) {
+      amount += keyInput->amount;
     }
   }
 
@@ -99,8 +99,8 @@ std::vector<uint64_t> CryptoNote::getInputsAmounts(const Transaction& transactio
   inputsAmounts.reserve(transaction.inputs.size());
 
   for (auto& input : transaction.inputs) {
-    if (input.type() == typeid(KeyInput)) {
-      inputsAmounts.push_back(boost::get<KeyInput>(input).amount);
+    if (auto keyInput = std::get_if<KeyInput>(&input)) {
+      inputsAmounts.push_back(keyInput->amount);
     }
   }
 

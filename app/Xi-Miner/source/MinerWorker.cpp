@@ -126,7 +126,7 @@ void XiMiner::MinerWorker::mineLoop() {
       Crypto::Hash h;
       Crypto::CNX::Hash_v1{}(block.HashArray.data(), block.HashArray.size(), h);
       if (CryptoNote::check_hash(h, block.Difficutly)) {
-        block.Template.nonce = currentNonce;
+        block.Template.nonce.setAsInteger(currentNonce);
         m_observer.notify(&Observer::onBlockFound, block.Template);
       }
       currentNonce += nonceStep;

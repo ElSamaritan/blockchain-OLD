@@ -93,9 +93,9 @@ void balance(CryptoNote::INode &node, CryptoNote::WalletGreen &wallet, bool view
   const uint64_t confirmedBalance = wallet.getActualBalance();
   const uint64_t totalBalance = unconfirmedBalance + confirmedBalance;
 
-  const uint32_t localHeight = node.getLastLocalBlockHeight();
-  const uint32_t remoteHeight = node.getLastKnownBlockHeight();
-  const uint32_t walletHeight = wallet.getBlockCount();
+  const auto localHeight = node.getLastLocalBlockHeight();
+  const auto remoteHeight = node.getLastKnownBlockHeight();
+  const auto walletHeight = CryptoNote::BlockHeight::fromSize(wallet.getBlockCount());
 
   std::cout << "Available balance: " << SuccessMsg(formatAmount(confirmedBalance)) << std::endl
             << "Locked (unconfirmed) balance: " << WarningMsg(formatAmount(unconfirmedBalance)) << std::endl
@@ -124,7 +124,7 @@ void balance(CryptoNote::INode &node, CryptoNote::WalletGreen &wallet, bool view
   }
   /* Small buffer because wallet height doesn't update instantly like node
      height does */
-  else if (walletHeight + 1000 < remoteHeight) {
+  else if (walletHeight.next(10) < remoteHeight) {
     std::cout << std::endl
               << InformationMsg(
                      "The blockchain is still being scanned for "
@@ -134,7 +134,8 @@ void balance(CryptoNote::INode &node, CryptoNote::WalletGreen &wallet, bool view
   }
 }
 
-void printHeights(uint32_t localHeight, uint32_t remoteHeight, uint32_t walletHeight) {
+void printHeights(CryptoNote::BlockHeight localHeight, CryptoNote::BlockHeight remoteHeight,
+                  CryptoNote::BlockHeight walletHeight) {
   /* This is the height that the wallet has been scanned to. The blockchain
      can be fully updated, but we have to walk the chain to find our
      transactions, and this number indicates that progress. */
@@ -142,24 +143,25 @@ void printHeights(uint32_t localHeight, uint32_t remoteHeight, uint32_t walletHe
 
   /* Small buffer because wallet height doesn't update instantly like node
      height does */
-  if (walletHeight + 1000 > remoteHeight) {
-    std::cout << SuccessMsg(std::to_string(walletHeight));
+  if (walletHeight.next(10) > remoteHeight) {
+    std::cout << SuccessMsg(toString(walletHeight));
   } else {
-    std::cout << WarningMsg(std::to_string(walletHeight));
+    std::cout << WarningMsg(toString(walletHeight));
   }
 
   std::cout << std::endl << "Local blockchain height: ";
 
   if (localHeight == remoteHeight) {
-    std::cout << SuccessMsg(std::to_string(localHeight));
+    std::cout << SuccessMsg(toString(localHeight));
   } else {
-    std::cout << WarningMsg(std::to_string(localHeight));
+    std::cout << WarningMsg(toString(localHeight));
   }
 
-  std::cout << std::endl << "Network blockchain height: " << SuccessMsg(std::to_string(remoteHeight)) << std::endl;
+  std::cout << std::endl << "Network blockchain height: " << SuccessMsg(toString(remoteHeight)) << std::endl;
 }
 
-void printSyncStatus(uint32_t localHeight, uint32_t remoteHeight, uint32_t walletHeight) {
+void printSyncStatus(CryptoNote::BlockHeight localHeight, CryptoNote::BlockHeight remoteHeight,
+                     CryptoNote::BlockHeight walletHeight) {
   std::string networkSyncPercentage = Common::get_sync_percentage(localHeight, remoteHeight) + "%";
 
   std::string walletSyncPercentage = Common::get_sync_percentage(walletHeight, remoteHeight) + "%";
@@ -175,18 +177,19 @@ void printSyncStatus(uint32_t localHeight, uint32_t remoteHeight, uint32_t walle
   std::cout << "Wallet sync status: ";
 
   /* Small buffer because wallet height is not always completely accurate */
-  if (walletHeight + 1000 > remoteHeight) {
+  if (walletHeight.next(10) > remoteHeight) {
     std::cout << SuccessMsg(walletSyncPercentage) << std::endl;
   } else {
     std::cout << WarningMsg(walletSyncPercentage) << std::endl;
   }
 }
 
-void printSyncSummary(uint32_t localHeight, uint32_t remoteHeight, uint32_t walletHeight) {
-  if (localHeight == 0 && remoteHeight == 0) {
+void printSyncSummary(CryptoNote::BlockHeight localHeight, CryptoNote::BlockHeight remoteHeight,
+                      CryptoNote::BlockHeight walletHeight) {
+  if (localHeight.isNull() && remoteHeight.isNull()) {
     std::cout << WarningMsg("Uh oh, it looks like you don't have ") << WarningMsg(WalletConfig::daemonName)
               << WarningMsg(" open!") << std::endl;
-  } else if (walletHeight + 1000 < remoteHeight && localHeight == remoteHeight) {
+  } else if (walletHeight.next(10) < remoteHeight && localHeight == remoteHeight) {
     std::cout << InformationMsg(
                      "You are synced with the network, but the "
                      "blockchain is still being scanned for "
@@ -222,9 +225,9 @@ void printHashrate(uint64_t difficulty) {
    data. This ensures it returns promptly, and doesn't hang waiting for a
    response when the node is having issues. */
 void status(CryptoNote::INode &node, CryptoNote::WalletGreen &wallet) {
-  uint32_t localHeight = node.getLastLocalBlockHeight();
-  uint32_t remoteHeight = node.getLastKnownBlockHeight();
-  uint32_t walletHeight = wallet.getBlockCount();
+  auto localHeight = node.getLastLocalBlockHeight();
+  auto remoteHeight = node.getLastKnownBlockHeight();
+  auto walletHeight = CryptoNote::BlockHeight::fromSize(wallet.getBlockCount());
 
   /* Print the heights of local, remote, and wallet */
   printHeights(localHeight, remoteHeight, walletHeight);
@@ -249,7 +252,7 @@ void status(CryptoNote::INode &node, CryptoNote::WalletGreen &wallet) {
 }
 
 void reset(CryptoNote::INode &node, std::shared_ptr<WalletInfo> walletInfo) {
-  uint32_t scanHeight = getScanHeight();
+  auto scanHeight = getScanHeight();
 
   std::cout << std::endl
             << InformationMsg("This process may take some time to complete.") << std::endl
@@ -305,7 +308,7 @@ void saveCSV(CryptoNote::WalletGreen &wallet, CryptoNote::INode &node) {
     const std::string direction = t.totalAmount > 0 ? "IN" : "OUT";
 
     csv << unixTimeToDate(t.timestamp) << "," /* Timestamp */
-        << t.blockHeight << ","               /* Block Height */
+        << toString(t.blockHeight) << ","     /* Block Height */
         << Common::podToHex(t.hash) << ","    /* Hash */
         << amount << ","                      /* Amount */
         << direction                          /* In/Out */
@@ -328,7 +331,7 @@ void printOutgoingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
             << WarningMsg("    Hash          " + Common::podToHex(t.hash)) << std::endl;
 
   if (t.timestamp != 0) {
-    std::cout << WarningMsg("    Block height  ") << WarningMsg(std::to_string(t.blockHeight)) << std::endl
+    std::cout << WarningMsg("    Block height  ") << WarningMsg(toString(t.blockHeight)) << std::endl
               << WarningMsg("    Timestamp     ") << WarningMsg(unixTimeToDate(t.timestamp)) << std::endl;
   }
 
@@ -354,7 +357,7 @@ void printIncomingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
             << SuccessMsg("    Hash          " + Common::podToHex(t.hash)) << std::endl;
 
   if (t.timestamp != 0) {
-    std::cout << SuccessMsg("    Block height  ") << SuccessMsg(std::to_string(t.blockHeight)) << std::endl
+    std::cout << SuccessMsg("    Block height  ") << SuccessMsg(toString(t.blockHeight)) << std::endl
               << SuccessMsg("    Timestamp     ") << SuccessMsg(unixTimeToDate(t.timestamp)) << std::endl;
   }
 

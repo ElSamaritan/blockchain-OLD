@@ -9,6 +9,7 @@
 #include <stdexcept>
 
 #include <Xi/Crypto/Chacha8.h>
+#include <Xi/Crypto/Random/Random.hh>
 
 #include "Common/MemoryInputStream.h"
 #include "Common/StdInputStream.h"
@@ -30,20 +31,20 @@ WalletLegacySerializer::WalletLegacySerializer(CryptoNote::AccountBase& account,
                                                WalletUserTransactionsCache& transactionsCache)
     : account(account), transactionsCache(transactionsCache), walletSerializationVersion(1) {}
 
-void WalletLegacySerializer::serialize(std::ostream& stream, const std::string& password, bool saveDetailed,
+bool WalletLegacySerializer::serialize(std::ostream& stream, const std::string& password, bool saveDetailed,
                                        const std::string& cache) {
   std::stringstream plainArchive;
   StdOutputStream plainStream(plainArchive);
   CryptoNote::BinaryOutputStreamSerializer serializer(plainStream);
-  saveKeys(serializer);
+  XI_RETURN_EC_IF_NOT(saveKeys(serializer), false);
 
-  serializer(saveDetailed, "has_details");
+  XI_RETURN_EC_IF_NOT(serializer(saveDetailed, "has_details"), false);
 
   if (saveDetailed) {
-    serializer(transactionsCache, "details");
+    XI_RETURN_EC_IF_NOT(serializer(transactionsCache, "details"), false);
   }
 
-  serializer.binary(const_cast<std::string&>(cache), "cache");
+  XI_RETURN_EC_IF_NOT(serializer.binary(const_cast<std::string&>(cache), "cache"), false);
 
   std::string plain = plainArchive.str();
   std::string cipher;
@@ -53,16 +54,17 @@ void WalletLegacySerializer::serialize(std::ostream& stream, const std::string& 
   uint32_t version = walletSerializationVersion;
   StdOutputStream output(stream);
   CryptoNote::BinaryOutputStreamSerializer s(output);
-  s.beginObject("wallet");
-  s(version, "version");
-  s(iv, "iv");
-  s(cipher, "data");
+  XI_RETURN_EC_IF_NOT(s.beginObject("wallet"), false);
+  XI_RETURN_EC_IF_NOT(s(version, "version"), false);
+  XI_RETURN_EC_IF_NOT(s(iv, "iv"), false);
+  XI_RETURN_EC_IF_NOT(s(cipher, "data"), false);
   s.endObject();
 
   stream.flush();
+  return true;
 }
 
-void WalletLegacySerializer::saveKeys(CryptoNote::ISerializer& serializer) {
+bool WalletLegacySerializer::saveKeys(CryptoNote::ISerializer& serializer) {
   CryptoNote::KeysStorage keys;
   CryptoNote::AccountKeys acc = account.getAccountKeys();
 
@@ -72,7 +74,7 @@ void WalletLegacySerializer::saveKeys(CryptoNote::ISerializer& serializer) {
   keys.viewPublicKey = acc.address.viewPublicKey;
   keys.viewSecretKey = acc.viewSecretKey;
 
-  keys.serialize(serializer, "keys");
+  return keys.serialize(serializer, "keys");
 }
 
 Crypto::chacha8_iv WalletLegacySerializer::encrypt(const std::string& plain, const std::string& password,
@@ -82,26 +84,26 @@ Crypto::chacha8_iv WalletLegacySerializer::encrypt(const std::string& plain, con
 
   cipher.resize(plain.size());
 
-  Crypto::chacha8_iv iv = Crypto::rand<Crypto::chacha8_iv>();
+  Crypto::chacha8_iv iv = Xi::Crypto::Random::generate<Crypto::chacha8_iv>();
   Crypto::chacha8(plain.data(), plain.size(), key, iv, &cipher[0]);
 
   return iv;
 }
 
-void WalletLegacySerializer::deserialize(std::istream& stream, const std::string& password, std::string& cache) {
+bool WalletLegacySerializer::deserialize(std::istream& stream, const std::string& password, std::string& cache) {
   StdInputStream stdStream(stream);
   CryptoNote::BinaryInputStreamSerializer serializerEncrypted(stdStream);
 
-  serializerEncrypted.beginObject("wallet");
+  XI_RETURN_EC_IF_NOT(serializerEncrypted.beginObject("wallet"), false);
 
   uint32_t version;
-  serializerEncrypted(version, "version");
+  XI_RETURN_EC_IF_NOT(serializerEncrypted(version, "version"), false);
 
   Crypto::chacha8_iv iv;
-  serializerEncrypted(iv, "iv");
+  XI_RETURN_EC_IF_NOT(serializerEncrypted(iv, "iv"), false);
 
   std::string cipher;
-  serializerEncrypted(cipher, "data");
+  XI_RETURN_EC_IF_NOT(serializerEncrypted(cipher, "data"), false);
 
   serializerEncrypted.endObject();
 
@@ -111,10 +113,10 @@ void WalletLegacySerializer::deserialize(std::istream& stream, const std::string
   MemoryInputStream decryptedStream(plain.data(), plain.size());
   CryptoNote::BinaryInputStreamSerializer serializer(decryptedStream);
 
-  loadKeys(serializer);
+  XI_RETURN_EC_IF_NOT(loadKeys(serializer), false);
   throwIfKeysMismatch(account.getAccountKeys().viewSecretKey, account.getAccountKeys().address.viewPublicKey);
 
-  if (account.getAccountKeys().spendSecretKey != NULL_SECRET_KEY) {
+  if (!account.getAccountKeys().spendSecretKey.isNull()) {
     throwIfKeysMismatch(account.getAccountKeys().spendSecretKey, account.getAccountKeys().address.spendPublicKey);
   } else {
     if (!Crypto::check_key(account.getAccountKeys().address.spendPublicKey)) {
@@ -124,13 +126,14 @@ void WalletLegacySerializer::deserialize(std::istream& stream, const std::string
 
   bool detailsSaved;
 
-  serializer(detailsSaved, "has_details");
+  XI_RETURN_EC_IF_NOT(serializer(detailsSaved, "has_details"), false);
 
   if (detailsSaved) {
-    serializer(transactionsCache, "details");
+    XI_RETURN_EC_IF_NOT(serializer(transactionsCache, "details"), false);
   }
 
-  serializer.binary(cache, "cache");
+  XI_RETURN_EC_IF_NOT(serializer.binary(cache, "cache"), false);
+  return true;
 }
 
 void WalletLegacySerializer::decrypt(const std::string& cipher, std::string& plain, Crypto::chacha8_iv iv,
@@ -143,11 +146,11 @@ void WalletLegacySerializer::decrypt(const std::string& cipher, std::string& pla
   Crypto::chacha8(cipher.data(), cipher.size(), key, iv, &plain[0]);
 }
 
-void WalletLegacySerializer::loadKeys(CryptoNote::ISerializer& serializer) {
+bool WalletLegacySerializer::loadKeys(CryptoNote::ISerializer& serializer) {
   CryptoNote::KeysStorage keys;
 
   try {
-    keys.serialize(serializer, "keys");
+    XI_RETURN_EC_IF_NOT(keys.serialize(serializer, "keys"), false);
   } catch (const std::runtime_error&) {
     throw std::system_error(make_error_code(CryptoNote::error::WRONG_PASSWORD));
   }
@@ -160,6 +163,7 @@ void WalletLegacySerializer::loadKeys(CryptoNote::ISerializer& serializer) {
 
   account.setAccountKeys(acc);
   account.set_createtime(keys.creationTimestamp);
+  return true;
 }
 
 }  // namespace CryptoNote

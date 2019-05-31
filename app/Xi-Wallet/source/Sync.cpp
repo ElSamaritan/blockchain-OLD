@@ -40,9 +40,9 @@ void checkForNewTransactions(std::shared_ptr<WalletInfo> walletInfo) {
 }
 
 void syncWallet(CryptoNote::INode &node, std::shared_ptr<WalletInfo> walletInfo) {
-  uint32_t localHeight = node.getLastLocalBlockHeight();
-  uint32_t walletHeight = walletInfo->wallet.getBlockCount();
-  uint32_t remoteHeight = node.getLastKnownBlockHeight();
+  auto localHeight = node.getLastLocalBlockHeight();
+  auto walletHeight = CryptoNote::BlockHeight::fromSize(walletInfo->wallet.getBlockCount());
+  auto remoteHeight = node.getLastKnownBlockHeight();
 
   size_t transactionCount = walletInfo->wallet.getTransactionCount();
 
@@ -61,7 +61,7 @@ void syncWallet(CryptoNote::INode &node, std::shared_ptr<WalletInfo> walletInfo)
   /* If we open a legacy wallet then it will load the transactions but not
      have the walletHeight == transaction height. Lets just throw away the
      transactions and rescan. */
-  if (walletHeight == 1 && transactionCount != 0) {
+  if (walletHeight == CryptoNote::BlockHeight::Genesis && transactionCount != 0) {
     std::cout << "Upgrading your wallet from an older version of the "
               << "software..." << std::endl
               << "Unfortunately, we have "
@@ -72,7 +72,7 @@ void syncWallet(CryptoNote::INode &node, std::shared_ptr<WalletInfo> walletInfo)
     walletInfo->wallet.clearCaches(true, false);
   }
 
-  if (walletHeight == 1) {
+  if (walletHeight == CryptoNote::BlockHeight::Genesis) {
     std::cout << "Scanning through the blockchain to find transactions "
               << "that belong to you." << std::endl
               << "Please wait, this will take some time." << std::endl
@@ -92,10 +92,9 @@ void syncWallet(CryptoNote::INode &node, std::shared_ptr<WalletInfo> walletInfo)
 
     localHeight = node.getLastLocalBlockHeight();
     remoteHeight = node.getLastKnownBlockHeight();
-    std::cout << SuccessMsg(std::to_string(walletHeight)) << " of " << InformationMsg(std::to_string(localHeight))
-              << std::endl;
+    std::cout << SuccessMsg(toString(walletHeight)) << " of " << InformationMsg(toString(localHeight)) << std::endl;
 
-    const uint32_t tmpWalletHeight = walletInfo->wallet.getBlockCount();
+    const auto tmpWalletHeight = CryptoNote::BlockHeight::fromSize(walletInfo->wallet.getBlockCount());
 
     int waitSeconds = 1;
 

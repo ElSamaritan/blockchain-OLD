@@ -236,7 +236,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGetBalance(const GetBalance::
 
 std::error_code PaymentServiceJsonRpcServer::handleGetBlockHashes(const GetBlockHashes::Request& request,
                                                                   GetBlockHashes::Response& response) {
-  return service.getBlockHashes(request.firstBlockIndex, request.blockCount, response.blockHashes);
+  return service.getBlockHashes(request.firstBlockHeight, request.blockCount, response.blockHashes);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetTransactionHashes(const GetTransactionHashes::Request& request,
@@ -245,7 +245,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGetTransactionHashes(const Ge
     return service.getTransactionHashes(request.addresses, request.blockHash, request.blockCount, request.paymentId,
                                         response.items);
   } else {
-    return service.getTransactionHashes(request.addresses, request.firstBlockIndex, request.blockCount,
+    return service.getTransactionHashes(request.addresses, request.firstBlockHeight, request.blockCount,
                                         request.paymentId, response.items);
   }
 }
@@ -256,7 +256,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGetTransactions(const GetTran
     return service.getTransactions(request.addresses, request.blockHash, request.blockCount, request.paymentId,
                                    response.items);
   } else {
-    return service.getTransactions(request.addresses, request.firstBlockIndex, request.blockCount, request.paymentId,
+    return service.getTransactions(request.addresses, request.firstBlockHeight, request.blockCount, request.paymentId,
                                    response.items);
   }
 }

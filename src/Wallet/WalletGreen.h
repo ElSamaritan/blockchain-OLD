@@ -54,7 +54,7 @@ class WalletGreen : public IWallet,
 
   virtual void initialize(const std::string& path, const std::string& password) override;
   virtual void initializeWithViewKey(const std::string& path, const std::string& password,
-                                     const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight,
+                                     const Crypto::SecretKey& viewSecretKey, const BlockHeight scanHeight,
                                      bool newAddress) override;
   virtual void load(const std::string& path, const std::string& password, std::string& extra) override;
   virtual void load(const std::string& path, const std::string& password) override;
@@ -62,7 +62,7 @@ class WalletGreen : public IWallet,
 
   virtual void changePassword(const std::string& oldPassword, const std::string& newPassword) override;
   virtual void save(WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") override;
-  virtual void reset(const uint32_t scanHeight) override;
+  virtual void reset(const BlockHeight scanHeight) override;
   virtual void exportWallet(const std::string& path, bool encrypt = true,
                             WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL,
                             const std::string& extra = "") override;
@@ -74,13 +74,13 @@ class WalletGreen : public IWallet,
   virtual KeyPair getViewKey() const override;
 
   virtual std::string createAddress() override;
-  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey, const uint32_t scanHeight,
+  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey, const BlockHeight scanHeight,
                                     const bool newAddress) override;
-  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey, const uint32_t scanHeight,
+  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey, const BlockHeight scanHeight,
                                     const bool newAddress) override;
 
   virtual std::vector<std::string> createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys,
-                                                     const uint32_t scanHeight, const bool newAddress) override;
+                                                     const BlockHeight scanHeight, const bool newAddress) override;
 
   virtual void deleteAddress(const std::string& address) override;
 
@@ -97,8 +97,8 @@ class WalletGreen : public IWallet,
   virtual WalletTransactionWithTransfers getTransaction(const Crypto::Hash& transactionHash) const override;
   virtual std::vector<TransactionsInBlockInfo> getTransactions(const Crypto::Hash& blockHash,
                                                                size_t count) const override;
-  virtual std::vector<TransactionsInBlockInfo> getTransactions(uint32_t blockIndex, size_t count) const override;
-  virtual std::vector<Crypto::Hash> getBlockHashes(uint32_t blockIndex, size_t count) const override;
+  virtual std::vector<TransactionsInBlockInfo> getTransactions(BlockHeight blockHeight, size_t count) const override;
+  virtual std::vector<Crypto::Hash> getBlockHashes(BlockHeight blockHeight, size_t count) const override;
   virtual uint32_t getBlockCount() const override;
   virtual std::vector<WalletTransactionWithTransfers> getUnconfirmedTransactions() const override;
   virtual std::vector<size_t> getDelayedTransactionIds() const override;
@@ -118,7 +118,7 @@ class WalletGreen : public IWallet,
   void clearCaches(bool clearTransactions, bool clearCachedData);
   void clearCacheAndShutdown();
   void createViewWallet(const std::string& path, const std::string& password, const std::string address,
-                        const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight, const bool newAddress);
+                        const Crypto::SecretKey& viewSecretKey, const BlockHeight scanHeight, const bool newAddress);
   uint64_t getBalanceMinusDust(const std::vector<std::string>& addresses);
 
   virtual void start() override;
@@ -156,15 +156,15 @@ class WalletGreen : public IWallet,
   static void incIv(Crypto::chacha8_iv& iv);
   void incNextIv();
   void initWithKeys(const std::string& path, const std::string& password, const Crypto::PublicKey& viewPublicKey,
-                    const Crypto::SecretKey& viewSecretKey, const uint32_t scanHeight, const bool newAddress);
+                    const Crypto::SecretKey& viewSecretKey, const BlockHeight scanHeight, const bool newAddress);
   std::string doCreateAddress(const Crypto::PublicKey& spendPublicKey, const Crypto::SecretKey& spendSecretKey,
-                              const uint32_t scanHeight, const bool newAddress);
+                              const BlockHeight scanHeight, const bool newAddress);
   std::vector<std::string> doCreateAddressList(const std::vector<NewAddressData>& addressDataList,
-                                               const uint32_t scanHeight, const bool newAddress);
+                                               const BlockHeight scanHeight, const bool newAddress);
 
-  CryptoNote::BlockDetails getBlock(const uint32_t blockHeight);
+  CryptoNote::BlockDetails getBlock(const BlockHeight blockHeight);
 
-  uint64_t scanHeightToTimestamp(const uint32_t scanHeight);
+  uint64_t scanHeightToTimestamp(const BlockHeight scanHeight);
 
   uint64_t getCurrentTimestampAdjusted();
 
@@ -211,7 +211,7 @@ class WalletGreen : public IWallet,
 
   typedef std::unordered_map<std::string, AddressAmounts> TransfersMap;
 
-  virtual void onError(ITransfersSubscription* object, uint32_t height, std::error_code ec) override;
+  virtual void onError(ITransfersSubscription* object, BlockHeight height, std::error_code ec) override;
 
   virtual void onTransactionUpdated(const Crypto::PublicKey& viewPublicKey, const Crypto::Hash& transactionHash,
                                     const std::vector<ITransfersContainer*>& containers) override;
@@ -231,8 +231,8 @@ class WalletGreen : public IWallet,
                              const std::vector<Crypto::Hash>& blockHashes) override;
   void blocksAdded(const std::vector<Crypto::Hash>& blockHashes);
 
-  virtual void onBlockchainDetach(const Crypto::PublicKey& viewPublicKey, uint32_t blockIndex) override;
-  void blocksRollback(uint32_t blockIndex);
+  virtual void onBlockchainDetach(const Crypto::PublicKey& viewPublicKey, BlockHeight blockHeight) override;
+  void blocksRollback(BlockHeight blockHeight);
 
   virtual void onTransactionDeleteBegin(const Crypto::PublicKey& viewPublicKey, Crypto::Hash transactionHash) override;
   void transactionDeleteBegin(Crypto::Hash transactionHash);
@@ -245,14 +245,14 @@ class WalletGreen : public IWallet,
   std::vector<WalletOuts> pickWallets(const std::vector<std::string>& addresses) const;
 
   void updateBalance(CryptoNote::ITransfersContainer* container);
-  void unlockBalances(uint32_t height);
+  void unlockBalances(BlockHeight height);
 
   const WalletRecord& getWalletRecord(const Crypto::PublicKey& key) const;
   const WalletRecord& getWalletRecord(const std::string& address) const;
   const WalletRecord& getWalletRecord(CryptoNote::ITransfersContainer* container) const;
 
   CryptoNote::AccountPublicAddress parseAddress(const std::string& address) const;
-  std::string addWallet(const NewAddressData& addressData, uint32_t scanHeight, bool newAddress);
+  std::string addWallet(const NewAddressData& addressData, BlockHeight scanHeight, bool newAddress);
   AccountKeys makeAccountKeys(const WalletRecord& wallet) const;
   size_t getTransactionId(const Crypto::Hash& transactionHash) const;
   void pushEvent(const WalletEvent& event);
@@ -327,7 +327,7 @@ class WalletGreen : public IWallet,
   bool eraseForeignTransfers(size_t transactionId, size_t firstTransferIdx,
                              const std::unordered_set<std::string>& knownAddresses, bool eraseOutputTransfers);
   void pushBackOutgoingTransfers(size_t txId, const std::vector<WalletTransfer>& destinations);
-  void insertUnlockTransactionJob(const Crypto::Hash& transactionHash, uint32_t blockHeight,
+  void insertUnlockTransactionJob(const Crypto::Hash& transactionHash, BlockHeight blockHeight,
                                   CryptoNote::ITransfersContainer* container);
   void deleteUnlockTransactionJob(const Crypto::Hash& transactionHash);
   void startBlockchainSynchronizer();
@@ -365,8 +365,8 @@ class WalletGreen : public IWallet,
   WalletTrackingMode getTrackingMode() const;
 
   TransfersRange getTransactionTransfersRange(size_t transactionIndex) const;
-  std::vector<TransactionsInBlockInfo> getTransactionsInBlocks(uint32_t blockIndex, size_t count) const;
-  Crypto::Hash getBlockHashByIndex(uint32_t blockIndex) const;
+  std::vector<TransactionsInBlockInfo> getTransactionsInBlocks(BlockHeight blockHeight, size_t count) const;
+  Crypto::Hash getBlockHashByHeight(BlockHeight blockHeight) const;
 
   std::vector<WalletTransfer> getTransactionTransfers(const WalletTransaction& transaction) const;
   void filterOutTransactions(WalletTransactions& transactions, WalletTransfers& transfers,

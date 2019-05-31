@@ -24,6 +24,7 @@
 #include "CryptoNoteCore/Blockchain/CommonBlockchainCache.h"
 
 #include <ctime>
+#include <cassert>
 
 using Logging::Level;
 
@@ -35,7 +36,7 @@ bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t 
 }
 
 bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const {
-  if (unlockTime < m_currency.maxBlockHeight()) {
+  if (m_currency.isLockedBasedOnBlockIndex(unlockTime)) {
     return isTransactionSpendTimeUnlockedByBlockIndex(unlockTime, blockIndex);
   } else {
     return isTransactionSpendTimeUnlockedByTimestamp(unlockTime, blockIndex);
@@ -44,17 +45,13 @@ bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t 
 
 bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex,
                                                                        uint64_t timestamp) const {
-  if (unlockTime < m_currency.maxBlockHeight()) {
-    return isTransactionSpendTimeUnlockedByBlockIndex(unlockTime, blockIndex);
-  } else {
-    return timestamp + m_currency.lockedTxAllowedDeltaSeconds() >= unlockTime;
-  }
+  return m_currency.isUnlockSatisfied(unlockTime, blockIndex, timestamp);
 }
 
 bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlockedByBlockIndex(uint64_t unlockTime,
                                                                                    uint32_t blockIndex) const {
   assert(unlockTime < m_currency.maxBlockHeight());
-  return blockIndex + m_currency.lockedTxAllowedDeltaBlocks() >= unlockTime;
+  return m_currency.isUnlockSatisfied(unlockTime, blockIndex, 0);
 }
 
 bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlockedByTimestamp(uint64_t unlockTime,
@@ -62,9 +59,9 @@ bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlockedByTimestam
   assert(unlockTime > m_currency.maxBlockHeight());
   assert(blockIndex < getTopBlockIndex() + 1);
 
-  if (blockIndex < getTopBlockIndex() + 1) {
+  if (blockIndex > getTopBlockIndex()) {
     m_logger(Level::FATAL)
-        << "Cannot query children for transaction spend time unlock timestamp, this would be unambiguous.";
+        << "Cannot query children for transaction spend time unlock timestamp, this would be ambiguous.";
     return false;
   }
 
@@ -79,18 +76,13 @@ bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlockedByTimestam
   }
 
   uint64_t timestamp = 0;
-  if (blockIndex > getTopBlockIndex()) {
-    time_t localTime = time(nullptr);
-    if (localTime < 0) {
-      m_logger(Level::FATAL) << "Unable to retrieve unix timestamp. Expected > 0, actual: " << timestamp;
-      return false;
-    } else {
-      timestamp = static_cast<uint64_t>(localTime);
-    }
+  time_t localTime = time(nullptr);
+  if (localTime < 0) {
+    m_logger(Level::FATAL) << "Unable to retrieve unix timestamp. Expected > 0, actual: " << timestamp;
+    return false;
   } else {
-    const auto block = getPushedBlockInfo(blockIndex);
-    timestamp = block.timestamp;
+    timestamp = static_cast<uint64_t>(localTime);
   }
 
-  return timestamp + m_currency.lockedTxAllowedDeltaSeconds() >= unlockTime;
+  return m_currency.isUnlockSatisfied(unlockTime, blockIndex, timestamp);
 }

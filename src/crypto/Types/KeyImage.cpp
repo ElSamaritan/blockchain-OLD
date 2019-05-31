@@ -37,7 +37,7 @@ Xi::Result<Crypto::KeyImage> Crypto::KeyImage::fromString(const std::string &hex
   if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
     throw std::runtime_error{"invalid hex string"};
   }
-  return std::move(reval);
+  return success(std::move(reval));
   XI_ERROR_CATCH();
 }
 
@@ -65,6 +65,6 @@ bool Crypto::KeyImage::isValid() const {
 
 void Crypto::KeyImage::nullify() { fill(0); }
 
-bool Crypto::KeyImage::serialize(CryptoNote::ISerializer &serializer) {
-  return serializer.binary(data(), size() * sizeof(value_type), "");
+bool Crypto::serialize(Crypto::KeyImage &keyImage, Common::StringView name, CryptoNote::ISerializer &serializer) {
+  return serializer.binary(keyImage.data(), KeyImage::bytes(), name);
 }

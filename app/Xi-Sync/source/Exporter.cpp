@@ -59,6 +59,6 @@ Xi::Result<void> XiSync::Exporter::exportBlocks(uint32_t startIndex, uint32_t co
     m_logger(Logging::INFO) << totalWritten << " of " << (topIndex + 1) << " written";
   }
   m_logger(Logging::INFO) << "export finished";
-  return Xi::make_result<void>();
+  return Xi::success();
   XI_ERROR_CATCH();
 }

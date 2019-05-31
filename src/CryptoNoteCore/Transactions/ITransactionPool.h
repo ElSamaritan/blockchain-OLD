@@ -94,7 +94,7 @@ class ITransactionPool {
    * \brief serialize loads/stores the state of the transaction pool from/into a serializer
    * \param serializer the interface for decoding/encoding data pushed
    */
-  virtual void serialize(ISerializer& serializer) = 0;
+  [[nodiscard]] virtual bool serialize(ISerializer& serializer) = 0;
 
   /*!
    * \brief eligiblePoolTransactions queries pool transactions ready to be mined and sorts them to prioratize more

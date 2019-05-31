@@ -176,8 +176,8 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string>& args) {
   CryptoNote::COMMAND_RPC_GET_BLOCK_HEADERS_RANGE::response res;
   CryptoNote::JsonRpc::JsonRpcError error_resp;
 
-  req.start_height = start_index + 1;
-  req.end_height = end_index + 1;
+  req.start_height = CryptoNote::BlockHeight::fromIndex(start_index);
+  req.end_height = CryptoNote::BlockHeight::fromIndex(end_index);
 
   if (!m_prpc_server->on_get_block_headers_range(req, res, error_resp) || res.status != CORE_RPC_STATUS_OK) {
     std::cout << "Response status was expected to be '" << CORE_RPC_STATUS_OK "' actually is '" << res.status << "'."
@@ -194,13 +194,13 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string>& args) {
       first = false;
     }
 
-    std::cout << "height: " << header.height << ", timestamp: " << header.timestamp
+    std::cout << "height: " << header.height.native() << ", timestamp: " << header.timestamp
               << ", difficulty: " << header.difficulty << ", size: " << header.block_size
               << ", transactions: " << header.transactions_count << ENDL
               << "major version: " << unsigned(header.major_version)
               << ", minor version: " << unsigned(header.minor_version) << ENDL << "block id: " << header.hash
               << ", previous block id: " << header.prev_hash << ENDL << "difficulty: " << header.difficulty
-              << ", nonce: " << header.nonce << ", reward: " << currency.formatAmount(header.reward) << ENDL;
+              << ", nonce: " << toString(header.nonce) << ", reward: " << currency.formatAmount(header.reward) << ENDL;
   }
 
   return true;

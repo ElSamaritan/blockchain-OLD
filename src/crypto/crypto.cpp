@@ -14,7 +14,8 @@
 #include <memory>
 #include <mutex>
 
-#include <Xi/Crypto/Random.hh>
+#include <Xi/Crypto/Random/Random.hh>
+#include <Xi/Crypto/Random/Engine.hpp>
 
 #include "Common/Varint.h"
 #include "crypto.h"
@@ -38,16 +39,16 @@ static inline void random_scalar(EllipticCurveScalar &res) {
   Xi::ByteSpan out{res.data, 32};
   do {
     Xi::Crypto::Random::generate(out);
-  } while (!sc_isnonzero(res.data) || sc_less_32(res.data, CurveOrder));
+  } while (!sc_isnonzero(out.data()) && !sc_less_32(out.data(), CurveOrder));
   sc_reduce32(res.data);
 }
 
 static inline void random_scalar(EllipticCurveScalar &res, Xi::ConstByteSpan seed) {
   Xi::ByteSpan out{res.data, 32};
-  Xi::Crypto::Random::generate(out, seed);
-  while (!sc_isnonzero(res.data) || sc_less_32(res.data, CurveOrder)) {
-    Xi::Crypto::Random::generate(out, out);
-  }
+  Xi::Crypto::Random::Engine32 engine{seed};
+  do {
+    engine(out);
+  } while (!sc_isnonzero(out.data()) && !sc_less_32(out.data(), CurveOrder));
   sc_reduce32(res.data);
 }
 

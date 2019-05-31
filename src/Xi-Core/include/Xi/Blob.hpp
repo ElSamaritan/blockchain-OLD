@@ -25,6 +25,7 @@
 
 #include <cstring>
 
+#include "Xi/Span.hpp"
 #include "Xi/Byte.hh"
 
 namespace Xi {
@@ -40,6 +41,7 @@ struct enable_blob_from_this : protected ByteArray<_Bytes> {
   explicit enable_blob_from_this(array_type raw) : array_type(std::move(raw)) {}
 
   using array_type::data;
+  using array_type::fill;
   using array_type::size;
   using array_type::operator[];
 

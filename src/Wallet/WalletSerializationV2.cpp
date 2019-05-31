@@ -28,13 +28,24 @@ namespace {
 
 // DO NOT CHANGE IT
 struct UnlockTransactionJobDtoV2 {
-  uint32_t blockHeight;
+  CryptoNote::BlockHeight blockHeight;
   Hash transactionHash;
   Crypto::PublicKey walletSpendPublicKey;
 };
 
 // DO NOT CHANGE IT
 struct WalletTransactionDtoV2 {
+  CryptoNote::WalletTransactionState state;
+  uint64_t timestamp;
+  CryptoNote::BlockHeight blockHeight;
+  Hash hash;
+  int64_t totalAmount;
+  uint64_t fee;
+  uint64_t creationTime;
+  uint64_t unlockTime;
+  std::string extra;
+  bool isBase;
+
   WalletTransactionDtoV2() {}
 
   WalletTransactionDtoV2(const CryptoNote::WalletTransaction& wallet) {
@@ -49,17 +60,6 @@ struct WalletTransactionDtoV2 {
     extra = wallet.extra;
     isBase = wallet.isBase;
   }
-
-  CryptoNote::WalletTransactionState state;
-  uint64_t timestamp;
-  uint32_t blockHeight;
-  Hash hash;
-  int64_t totalAmount;
-  uint64_t fee;
-  uint64_t creationTime;
-  uint64_t unlockTime;
-  std::string extra;
-  bool isBase;
 };
 
 // DO NOT CHANGE IT
@@ -77,14 +77,14 @@ struct WalletTransferDtoV2 {
   uint8_t type;
 };
 
-bool serialize(UnlockTransactionJobDtoV2& value, CryptoNote::ISerializer& serializer) {
+[[nodiscard]] bool serialize(UnlockTransactionJobDtoV2& value, CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(value.blockHeight, "block_height"), false);
   XI_RETURN_EC_IF_NOT(serializer(value.transactionHash, "transaction_hash"), false);
   XI_RETURN_EC_IF_NOT(serializer(value.walletSpendPublicKey, "wallet_spend_public_key"), false);
   return true;
 }
 
-bool serialize(WalletTransactionDtoV2& value, CryptoNote::ISerializer& serializer) {
+[[nodiscard]] bool serialize(WalletTransactionDtoV2& value, CryptoNote::ISerializer& serializer) {
   typedef std::underlying_type<CryptoNote::WalletTransactionState>::type StateType;
 
   StateType state = static_cast<StateType>(value.state);
@@ -92,7 +92,7 @@ bool serialize(WalletTransactionDtoV2& value, CryptoNote::ISerializer& serialize
   value.state = static_cast<CryptoNote::WalletTransactionState>(state);
 
   XI_RETURN_EC_IF_NOT(serializer(value.timestamp, "timestamp"), false);
-  XI_RETURN_EC_IF_NOT(CryptoNote::serializeBlockHeight(serializer, value.blockHeight, "block_height"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.blockHeight, "block_height"), false);
   XI_RETURN_EC_IF_NOT(serializer(value.hash, "hash"), false);
   XI_RETURN_EC_IF_NOT(serializer(value.totalAmount, "total_amount"), false);
   XI_RETURN_EC_IF_NOT(serializer(value.fee, "fee"), false);
@@ -103,7 +103,7 @@ bool serialize(WalletTransactionDtoV2& value, CryptoNote::ISerializer& serialize
   return true;
 }
 
-bool serialize(WalletTransferDtoV2& value, CryptoNote::ISerializer& serializer) {
+[[nodiscard]] bool serialize(WalletTransferDtoV2& value, CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(value.address, "address"), false);
   XI_RETURN_EC_IF_NOT(serializer(value.amount, "amount"), false);
   XI_RETURN_EC_IF_NOT(serializer(value.type, "type"), false);
@@ -132,7 +132,7 @@ WalletSerializerV2::WalletSerializerV2(ITransfersObserver& transfersObserver, ui
       m_extra(extra),
       m_transactionSoftLockTime(transactionSoftLockTime) {}
 
-void WalletSerializerV2::load(Common::IInputStream& source, uint8_t version) {
+bool WalletSerializerV2::load(Common::IInputStream& source, uint8_t version) {
   if (version != WalletSerializerV2::SERIALIZATION_VERSION) throw std::runtime_error{"Unsupported wallet version."};
 
   CryptoNote::BinaryInputStreamSerializer s(source);
@@ -141,51 +141,53 @@ void WalletSerializerV2::load(Common::IInputStream& source, uint8_t version) {
   s(saveLevelValue, "saveLevel");
   WalletSaveLevel saveLevel = static_cast<WalletSaveLevel>(saveLevelValue);
 
-  loadKeyListAndBalances(s, saveLevel == WalletSaveLevel::SAVE_ALL);
+  XI_RETURN_EC_IF_NOT(loadKeyListAndBalances(s, saveLevel == WalletSaveLevel::SAVE_ALL), false);
 
   if (saveLevel == WalletSaveLevel::SAVE_KEYS_AND_TRANSACTIONS || saveLevel == WalletSaveLevel::SAVE_ALL) {
-    loadTransactions(s);
-    loadTransfers(s);
+    XI_RETURN_EC_IF_NOT(loadTransactions(s), false);
+    XI_RETURN_EC_IF_NOT(loadTransfers(s), false);
   }
 
   if (saveLevel == WalletSaveLevel::SAVE_ALL) {
-    loadTransfersSynchronizer(s);
-    loadUnlockTransactionsJobs(s);
-    s(m_uncommitedTransactions, "uncommitedTransactions");
+    XI_RETURN_EC_IF_NOT(loadTransfersSynchronizer(s), false);
+    XI_RETURN_EC_IF_NOT(loadUnlockTransactionsJobs(s), false);
+    XI_RETURN_EC_IF_NOT(s(m_uncommitedTransactions, "uncommitedTransactions"), false);
   }
 
-  s(m_extra, "extra");
+  XI_RETURN_EC_IF_NOT(s(m_extra, "extra"), false);
+  return true;
 }
 
-void WalletSerializerV2::save(Common::IOutputStream& destination, WalletSaveLevel saveLevel) {
+bool WalletSerializerV2::save(Common::IOutputStream& destination, WalletSaveLevel saveLevel) {
   CryptoNote::BinaryOutputStreamSerializer s(destination);
 
   uint8_t saveLevelValue = static_cast<uint8_t>(saveLevel);
   s(saveLevelValue, "saveLevel");
 
-  saveKeyListAndBalances(s, saveLevel == WalletSaveLevel::SAVE_ALL);
+  XI_RETURN_EC_IF_NOT(saveKeyListAndBalances(s, saveLevel == WalletSaveLevel::SAVE_ALL), false);
 
   if (saveLevel == WalletSaveLevel::SAVE_KEYS_AND_TRANSACTIONS || saveLevel == WalletSaveLevel::SAVE_ALL) {
-    saveTransactions(s);
-    saveTransfers(s);
+    XI_RETURN_EC_IF_NOT(saveTransactions(s), false);
+    XI_RETURN_EC_IF_NOT(saveTransfers(s), false);
   }
 
   if (saveLevel == WalletSaveLevel::SAVE_ALL) {
-    saveTransfersSynchronizer(s);
-    saveUnlockTransactionsJobs(s);
-    s(m_uncommitedTransactions, "uncommitedTransactions");
+    XI_RETURN_EC_IF_NOT(saveTransfersSynchronizer(s), false);
+    XI_RETURN_EC_IF_NOT(saveUnlockTransactionsJobs(s), false);
+    XI_RETURN_EC_IF_NOT(s(m_uncommitedTransactions, "uncommitedTransactions"), false);
   }
 
-  s(m_extra, "extra");
+  XI_RETURN_EC_IF_NOT(s(m_extra, "extra"), false);
+  return true;
 }
 
 std::unordered_set<Crypto::PublicKey>& WalletSerializerV2::addedKeys() { return m_addedKeys; }
 
 std::unordered_set<Crypto::PublicKey>& WalletSerializerV2::deletedKeys() { return m_deletedKeys; }
 
-void WalletSerializerV2::loadKeyListAndBalances(CryptoNote::ISerializer& serializer, bool saveCache) {
+bool WalletSerializerV2::loadKeyListAndBalances(CryptoNote::ISerializer& serializer, bool saveCache) {
   size_t walletCount;
-  serializer(walletCount, "walletCount");
+  XI_RETURN_EC_IF_NOT(serializer(walletCount, "walletCount"), false);
 
   m_actualBalance = 0;
   m_pendingBalance = 0;
@@ -197,11 +199,11 @@ void WalletSerializerV2::loadKeyListAndBalances(CryptoNote::ISerializer& seriali
     Crypto::PublicKey spendPublicKey;
     uint64_t actualBalance = 0;
     uint64_t pendingBalance = 0;
-    serializer(spendPublicKey, "spendPublicKey");
+    XI_RETURN_EC_IF_NOT(serializer(spendPublicKey, "spendPublicKey"), false);
 
     if (saveCache) {
-      serializer(actualBalance, "actualBalance");
-      serializer(pendingBalance, "pendingBalance");
+      XI_RETURN_EC_IF_NOT(serializer(actualBalance, "actualBalance"), false);
+      XI_RETURN_EC_IF_NOT(serializer(pendingBalance, "pendingBalance"), false);
     }
 
     cachedKeySet.insert(spendPublicKey);
@@ -225,30 +227,32 @@ void WalletSerializerV2::loadKeyListAndBalances(CryptoNote::ISerializer& seriali
       m_addedKeys.insert(wallet.spendPublicKey);
     }
   }
+  return true;
 }
 
-void WalletSerializerV2::saveKeyListAndBalances(CryptoNote::ISerializer& serializer, bool saveCache) {
+bool WalletSerializerV2::saveKeyListAndBalances(CryptoNote::ISerializer& serializer, bool saveCache) {
   auto walletCount = m_walletsContainer.get<RandomAccessIndex>().size();
-  serializer(walletCount, "walletCount");
+  XI_RETURN_EC_IF_NOT(serializer(walletCount, "walletCount"), false);
   for (auto wallet : m_walletsContainer.get<RandomAccessIndex>()) {
-    serializer(wallet.spendPublicKey, "spendPublicKey");
+    XI_RETURN_EC_IF_NOT(serializer(wallet.spendPublicKey, "spendPublicKey"), false);
 
     if (saveCache) {
-      serializer(wallet.actualBalance, "actualBalance");
-      serializer(wallet.pendingBalance, "pendingBalance");
+      XI_RETURN_EC_IF_NOT(serializer(wallet.actualBalance, "actualBalance"), false);
+      XI_RETURN_EC_IF_NOT(serializer(wallet.pendingBalance, "pendingBalance"), false);
     }
   }
+  return true;
 }
 
-void WalletSerializerV2::loadTransactions(CryptoNote::ISerializer& serializer) {
+bool WalletSerializerV2::loadTransactions(CryptoNote::ISerializer& serializer) {
   uint64_t count = 0;
-  serializer(count, "transactionCount");
+  XI_RETURN_EC_IF_NOT(serializer(count, "transactionCount"), false);
 
   m_transactions.get<RandomAccessIndex>().reserve(count);
 
   for (uint64_t i = 0; i < count; ++i) {
     WalletTransactionDtoV2 dto;
-    serializer(dto, "transaction");
+    XI_RETURN_EC_IF_NOT(serializer(dto, "transaction"), false);
 
     WalletTransaction tx;
     tx.state = dto.state;
@@ -264,30 +268,32 @@ void WalletSerializerV2::loadTransactions(CryptoNote::ISerializer& serializer) {
 
     m_transactions.get<RandomAccessIndex>().emplace_back(std::move(tx));
   }
+  return true;
 }
 
-void WalletSerializerV2::saveTransactions(CryptoNote::ISerializer& serializer) {
+bool WalletSerializerV2::saveTransactions(CryptoNote::ISerializer& serializer) {
   uint64_t count = m_transactions.size();
-  serializer(count, "transactionCount");
+  XI_RETURN_EC_IF_NOT(serializer(count, "transactionCount"), false);
 
   for (const auto& tx : m_transactions) {
     WalletTransactionDtoV2 dto(tx);
-    serializer(dto, "transaction");
+    XI_RETURN_EC_IF_NOT(serializer(dto, "transaction"), false);
   }
+  return true;
 }
 
-void WalletSerializerV2::loadTransfers(CryptoNote::ISerializer& serializer) {
+bool WalletSerializerV2::loadTransfers(CryptoNote::ISerializer& serializer) {
   uint64_t count = 0;
-  serializer(count, "transferCount");
+  XI_RETURN_EC_IF_NOT(serializer(count, "transferCount"), false);
 
   m_transfers.reserve(count);
 
   for (uint64_t i = 0; i < count; ++i) {
     uint64_t txId = 0;
-    serializer(txId, "transactionId");
+    XI_RETURN_EC_IF_NOT(serializer(txId, "transactionId"), false);
 
     WalletTransferDtoV2 dto;
-    serializer(dto, "transfer");
+    XI_RETURN_EC_IF_NOT(serializer(dto, "transfer"), false);
 
     WalletTransfer tr;
     tr.address = dto.address;
@@ -297,49 +303,53 @@ void WalletSerializerV2::loadTransfers(CryptoNote::ISerializer& serializer) {
     m_transfers.emplace_back(std::piecewise_construct, std::forward_as_tuple(txId),
                              std::forward_as_tuple(std::move(tr)));
   }
+  return true;
 }
 
-void WalletSerializerV2::saveTransfers(CryptoNote::ISerializer& serializer) {
+bool WalletSerializerV2::saveTransfers(CryptoNote::ISerializer& serializer) {
   uint64_t count = m_transfers.size();
-  serializer(count, "transferCount");
+  XI_RETURN_EC_IF_NOT(serializer(count, "transferCount"), false);
 
   for (const auto& kv : m_transfers) {
     uint64_t txId = kv.first;
 
     WalletTransferDtoV2 tr(kv.second);
 
-    serializer(txId, "transactionId");
-    serializer(tr, "transfer");
+    XI_RETURN_EC_IF_NOT(serializer(txId, "transactionId"), false);
+    XI_RETURN_EC_IF_NOT(serializer(tr, "transfer"), false);
   }
+  return true;
 }
 
-void WalletSerializerV2::loadTransfersSynchronizer(CryptoNote::ISerializer& serializer) {
+bool WalletSerializerV2::loadTransfersSynchronizer(CryptoNote::ISerializer& serializer) {
   std::string transfersSynchronizerData;
-  serializer(transfersSynchronizerData, "transfersSynchronizer");
+  XI_RETURN_EC_IF_NOT(serializer(transfersSynchronizerData, "transfersSynchronizer"), false);
 
   std::stringstream stream(transfersSynchronizerData);
-  m_synchronizer.load(stream);
+  XI_RETURN_EC_IF_NOT(m_synchronizer.load(stream), false);
+  return true;
 }
 
-void WalletSerializerV2::saveTransfersSynchronizer(CryptoNote::ISerializer& serializer) {
+bool WalletSerializerV2::saveTransfersSynchronizer(CryptoNote::ISerializer& serializer) {
   std::stringstream stream;
-  m_synchronizer.save(stream);
+  XI_RETURN_EC_IF_NOT(m_synchronizer.save(stream), false);
   stream.flush();
 
   std::string transfersSynchronizerData = stream.str();
-  serializer(transfersSynchronizerData, "transfersSynchronizer");
+  XI_RETURN_EC_IF_NOT(serializer(transfersSynchronizerData, "transfersSynchronizer"), false);
+  return true;
 }
 
-void WalletSerializerV2::loadUnlockTransactionsJobs(CryptoNote::ISerializer& serializer) {
+bool WalletSerializerV2::loadUnlockTransactionsJobs(CryptoNote::ISerializer& serializer) {
   auto& index = m_unlockTransactions.get<TransactionHashIndex>();
   auto& walletsIndex = m_walletsContainer.get<KeysIndex>();
 
   uint64_t jobsCount = 0;
-  serializer(jobsCount, "unlockTransactionsJobsCount");
+  XI_RETURN_EC_IF_NOT(serializer(jobsCount, "unlockTransactionsJobsCount"), false);
 
   for (uint64_t i = 0; i < jobsCount; ++i) {
     UnlockTransactionJobDtoV2 dto;
-    serializer(dto, "unlockTransactionsJob");
+    XI_RETURN_EC_IF_NOT(serializer(dto, "unlockTransactionsJob"), false);
 
     auto walletIt = walletsIndex.find(dto.walletSpendPublicKey);
     if (walletIt != walletsIndex.end()) {
@@ -351,14 +361,15 @@ void WalletSerializerV2::loadUnlockTransactionsJobs(CryptoNote::ISerializer& ser
       index.emplace(std::move(job));
     }
   }
+  return true;
 }
 
-void WalletSerializerV2::saveUnlockTransactionsJobs(CryptoNote::ISerializer& serializer) {
+bool WalletSerializerV2::saveUnlockTransactionsJobs(CryptoNote::ISerializer& serializer) {
   auto& index = m_unlockTransactions.get<TransactionHashIndex>();
   auto& wallets = m_walletsContainer.get<TransfersContainerIndex>();
 
   uint64_t jobsCount = index.size();
-  serializer(jobsCount, "unlockTransactionsJobsCount");
+  XI_RETURN_EC_IF_NOT(serializer(jobsCount, "unlockTransactionsJobsCount"), false);
 
   for (const auto& j : index) {
     auto containerIt = wallets.find(j.container);
@@ -372,8 +383,9 @@ void WalletSerializerV2::saveUnlockTransactionsJobs(CryptoNote::ISerializer& ser
     dto.transactionHash = j.transactionHash;
     dto.walletSpendPublicKey = keyIt->spendPublicKey;
 
-    serializer(dto, "unlockTransactionsJob");
+    XI_RETURN_EC_IF_NOT(serializer(dto, "unlockTransactionsJob"), false);
   }
+  return true;
 }
 
 }  // namespace CryptoNote

@@ -29,6 +29,7 @@
 #include <Serialization/SerializationOverloads.h>
 #include <crypto/CryptoTypes.h>
 #include <CryptoNoteCore/CryptoNote.h>
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 #include "CryptoNoteProtocol/Commands/CryptoNoteProtocolCommand.h"
 
@@ -46,8 +47,8 @@ struct NOTIFY_REQUEST_CHAIN {
 };
 
 struct NOTIFY_RESPONSE_CHAIN_ENTRY_request {
-  uint32_t start_height;
-  uint32_t total_height;
+  BlockHeight start_height;
+  BlockHeight total_height;
   std::vector<Crypto::Hash> block_hashes;
 
   KV_BEGIN_SERIALIZATION

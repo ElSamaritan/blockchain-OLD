@@ -80,10 +80,10 @@ uint32_t CachedBlock::getBlockIndex() const {
       blockIndex = 0;
     } else {
       const auto& in = block.baseTransaction.inputs[0];
-      if (in.type() != typeid(BaseInput)) {
-        blockIndex = 0;
+      if (auto base = std::get_if<BaseInput>(&in)) {
+        blockIndex = base->height.toIndex();
       } else {
-        blockIndex = boost::get<BaseInput>(in).blockIndex;
+        blockIndex = 0;
       }
     }
   }

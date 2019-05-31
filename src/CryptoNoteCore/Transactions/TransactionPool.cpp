@@ -176,7 +176,7 @@ std::vector<Crypto::Hash> TransactionPool::sanityCheck(const uint64_t timeout) {
   return removedTransactions;
 }
 
-void TransactionPool::serialize(ISerializer& serializer) {
+bool TransactionPool::serialize(ISerializer& serializer) {
   std::vector<std::string> transactionBlobs;
   std::vector<PosixTimestamp> transactionTimestamps;
   if (serializer.type() == ISerializer::OUTPUT) {
@@ -192,8 +192,8 @@ void TransactionPool::serialize(ISerializer& serializer) {
     }
   }
 
-  serializeContainer(transactionBlobs, "transaction_blobs", serializer);
-  serializeContainer(transactionTimestamps, "transaction_timestamps", serializer);
+  XI_RETURN_EC_IF_NOT(serializeContainer(transactionBlobs, "transaction_blobs", serializer), false);
+  XI_RETURN_EC_IF_NOT(serializeContainer(transactionTimestamps, "transaction_timestamps", serializer), false);
 
   if (serializer.type() == ISerializer::INPUT) {
     std::vector<BinaryArray> rawTransactions;
@@ -206,6 +206,7 @@ void TransactionPool::serialize(ISerializer& serializer) {
         Transaction iTransaction;
         if (!fromBinaryArray(iTransaction, rawTransactions[i])) {
           m_logger(Logging::ERROR) << "failed to deserialize transaction";
+          return false;
         } else {
           auto insertionResult = insertTransaction(CachedTransaction{std::move(iTransaction)}, transactionTimestamps[i],
                                                    Addition::Deserialization);
@@ -216,6 +217,7 @@ void TransactionPool::serialize(ISerializer& serializer) {
       }
     }
   }
+  return true;
 }
 
 ITransactionPool::TransactionQueryResult TransactionPool::queryTransaction(const Crypto::Hash& hash) const {
@@ -364,13 +366,13 @@ bool TransactionPool::removeTransaction(const Crypto::Hash& hash, ITransactionPo
 Xi::Result<EligibleIndex> TransactionPool::currentEligibleIndex() const {
   const auto mainChain = m_blockchain.mainChain();
   if (mainChain == nullptr) {
-    return Xi::make_error(Error::MAIN_CHAIN_MISSING);
+    return Xi::failure(Error::MAIN_CHAIN_MISSING);
   }
   const auto timestamp = m_blockchain.timeProvider().posixNow();
   if (timestamp.isError()) {
     return timestamp.error();
   }
-  return Xi::make_result<EligibleIndex>(mainChain->getTopBlockIndex() + 1, timestamp.value());
+  return Xi::emplaceSuccess<EligibleIndex>(mainChain->getTopBlockIndex() + 1, timestamp.value());
 }
 
 Xi::Result<void> TransactionPool::insertTransaction(Transaction transaction,
@@ -421,7 +423,7 @@ Xi::Result<void> TransactionPool::insertTransaction(CachedTransaction transactio
     if (reason != ITransactionPoolObserver::AdditionReason::SkipNotification) {
       m_observers.notify(&ITransactionPoolObserver::transactionAddedToPool, std::cref(transactionHash), reason);
     }
-    return Xi::make_result<void>();
+    return Xi::success();
   }
 }
 

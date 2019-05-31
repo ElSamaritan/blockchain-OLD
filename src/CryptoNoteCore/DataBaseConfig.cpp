@@ -108,7 +108,7 @@ void toString(const CryptoNote::DataBaseConfig::Compression &compression, std::s
 }
 }  // namespace Common
 
-bool serialize(DataBaseConfig::Compression &compression, ISerializer &s) {
+[[nodiscard]]  bool serialize(DataBaseConfig::Compression &compression, ISerializer &s) {
   if (s.type() == ISerializer::INPUT) {
     std::string str;
     XI_RETURN_EC_IF_NOT(s.binary(str, ""), false);

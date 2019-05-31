@@ -36,7 +36,7 @@ Xi::Result<Crypto::KeyDerivation> Crypto::KeyDerivation::fromString(const std::s
   if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
     throw std::runtime_error{"invalid hex string"};
   }
-  return std::move(reval);
+  return success(std::move(reval));
   XI_ERROR_CATCH();
 }
 
@@ -54,6 +54,7 @@ Xi::ByteSpan Crypto::KeyDerivation::span() { return Xi::ByteSpan{data(), bytes()
 
 void Crypto::KeyDerivation::nullify() { fill(0); }
 
-bool Crypto::KeyDerivation::serialize(CryptoNote::ISerializer &serializer) {
-  return serializer.binary(data(), size() * sizeof(value_type), "");
+bool Crypto::serialize(Crypto::KeyDerivation &keyDerivation, Common::StringView name,
+                       CryptoNote::ISerializer &serializer) {
+  return serializer.binary(keyDerivation.data(), KeyDerivation::bytes(), name);
 }

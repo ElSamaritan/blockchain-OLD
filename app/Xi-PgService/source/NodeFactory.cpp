@@ -31,12 +31,12 @@ class NodeRpcStub : public CryptoNote::INode {
   virtual bool shutdown() override { return true; }
 
   virtual size_t getPeerCount() const override { return 0; }
-  virtual uint32_t getLastLocalBlockHeight() const override { return 0; }
-  virtual uint32_t getLastKnownBlockHeight() const override { return 0; }
+  virtual CryptoNote::BlockHeight getLastLocalBlockHeight() const override { return CryptoNote::BlockHeight::Null; }
+  virtual CryptoNote::BlockHeight getLastKnownBlockHeight() const override { return CryptoNote::BlockHeight::Null; }
   virtual uint32_t getLocalBlockCount() const override { return 0; }
   virtual uint32_t getKnownBlockCount() const override { return 0; }
   virtual uint64_t getLastLocalBlockTimestamp() const override { return 0; }
-  virtual uint64_t getNodeHeight() const override { return 0; }
+  virtual CryptoNote::BlockHeight getNodeHeight() const override { return CryptoNote::BlockHeight::Null; }
 
   virtual std::string getInfo() override { return std::string(); }
   virtual void getFeeInfo() override {}
@@ -76,10 +76,10 @@ class NodeRpcStub : public CryptoNote::INode {
     XI_UNUSED(amounts, outsCount, result, callback);
   }
   virtual void getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
-                            uint32_t& startHeight, const Callback& callback) override {
+                            CryptoNote::BlockHeight& startHeight, const Callback& callback) override {
     XI_UNUSED(knownBlockIds);
     XI_UNUSED(newBlocks);
-    startHeight = 0;
+    startHeight = CryptoNote::BlockHeight::Null;
     callback(std::error_code());
   }
   virtual void getTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,
@@ -89,10 +89,10 @@ class NodeRpcStub : public CryptoNote::INode {
   }
 
   virtual void queryBlocks(std::vector<Crypto::Hash>&& knownBlockIds, uint64_t timestamp,
-                           std::vector<CryptoNote::BlockShortEntry>& newBlocks, uint32_t& startHeight,
+                           std::vector<CryptoNote::BlockShortEntry>& newBlocks, CryptoNote::BlockHeight& startHeight,
                            const Callback& callback) override {
     XI_UNUSED(knownBlockIds, timestamp, newBlocks);
-    startHeight = 0;
+    startHeight = CryptoNote::BlockHeight::Null;
     callback(std::error_code());
   }
 
@@ -105,7 +105,7 @@ class NodeRpcStub : public CryptoNote::INode {
     callback(std::error_code());
   }
 
-  virtual void getBlocks(const std::vector<uint32_t>& blockHeights,
+  virtual void getBlocks(const std::vector<CryptoNote::BlockHeight>& blockHeights,
                          std::vector<std::vector<CryptoNote::BlockDetails>>& blocks,
                          const Callback& callback) override {
     XI_UNUSED(blockHeights, blocks, callback);
@@ -116,13 +116,13 @@ class NodeRpcStub : public CryptoNote::INode {
     XI_UNUSED(blockHashes, blocks, callback);
   }
 
-  virtual void getBlock(const uint32_t blockHeight, CryptoNote::BlockDetails& block,
+  virtual void getBlock(const CryptoNote::BlockHeight blockHeight, CryptoNote::BlockDetails& block,
                         const Callback& callback) override {
     XI_UNUSED(blockHeight, block, callback);
   }
 
-  virtual void getRawBlocksByRange(uint32_t height, uint32_t count, std::vector<CryptoNote::RawBlock>& blocks,
-                                   const Callback& callback) override {
+  virtual void getRawBlocksByRange(CryptoNote::BlockHeight height, uint32_t count,
+                                   std::vector<CryptoNote::RawBlock>& blocks, const Callback& callback) override {
     XI_UNUSED(height, count, blocks, callback);
   }
 

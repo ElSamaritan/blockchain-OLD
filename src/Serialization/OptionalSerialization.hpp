@@ -25,6 +25,7 @@
 
 #include <optional>
 #include <type_traits>
+#include <cassert>
 
 #include <Xi/ExternalIncludePush.h>
 #include <boost/utility/value_init.hpp>
@@ -37,27 +38,29 @@
 namespace CryptoNote {
 
 template <typename _ValueT>
-bool serialize(std::optional<_ValueT> &value, Common::StringView name, ISerializer &serializer) {
+[[nodiscard]] bool serialize(std::optional<_ValueT> &value, Common::StringView name, ISerializer &serializer) {
   using native_t = typename std::remove_cv_t<_ValueT>;
   static_assert(std::is_default_constructible_v<native_t>,
                 "optional serialization expects default constructible types");
 
-  XI_RETURN_EC_IF_NOT(serializer.beginObject(name), false);
   bool hasValue = value.has_value();
-  XI_RETURN_EC_IF_NOT(serializer(hasValue, "has_value"), false);
-  if (serializer.type() == ISerializer::INPUT) {
+  XI_RETURN_EC_IF_NOT(serializer.maybe(hasValue, name), false);
+  if (serializer.isInput()) {
     if (hasValue) {
       value.emplace();
-      XI_RETURN_EC_IF_NOT(serializer(*value, "value"), false);
+      return serializer(*value, "value");
     } else {
       value = std::nullopt;
+      return true;
     }
-  } else if (hasValue) {
-    XI_RETURN_EC_IF_NOT(serializer(*value, "value"), false);
+  } else {
+    assert(serializer.isOutput());
+    if (hasValue) {
+      return serializer(*value, "value");
+    } else {
+      return true;
+    }
   }
-
-  serializer.endObject();
-  return true;
 }
 
 }  // namespace CryptoNote

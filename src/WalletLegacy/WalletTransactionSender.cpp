@@ -21,7 +21,7 @@
 #include <list>
 #include <vector>
 
-#include "crypto/crypto.h"  //for rand()
+#include <Xi/Crypto/Random/Random.hh>
 #include "CryptoNoteCore/Account.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
@@ -210,7 +210,7 @@ std::shared_ptr<WalletRequest> WalletTransactionSender::doSendTransaction(
     constructTx(m_keys, sources, splittedDests, transaction.extra, transaction.unlockTime, m_upperTransactionSizeLimit,
                 tx);
 
-    getObjectHash(tx, transaction.hash);
+    transaction.hash = getObjectHash(tx);
 
     m_transactionsCache.updateTransaction(context->transactionId, tx, totalAmount, context->selectedTransfers);
 
@@ -383,7 +383,7 @@ uint64_t WalletTransactionSender::selectTransfersToSend(uint64_t neededMoney, bo
     }
   }
 
-  std::default_random_engine randomGenerator(Crypto::rand<std::default_random_engine::result_type>());
+  std::default_random_engine randomGenerator(Xi::Crypto::Random::generate<std::default_random_engine::result_type>());
   bool selectOneDust = addDust && !unusedDust.empty();
   uint64_t foundMoney = 0;
 

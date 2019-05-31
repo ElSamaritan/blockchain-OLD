@@ -31,13 +31,24 @@
 namespace CryptoNote {
 
 void getBinaryArrayHash(const BinaryArray& binaryArray, Crypto::Hash& hash);
-Crypto::Hash getBinaryArrayHash(const BinaryArray& binaryArray);
+[[nodiscard]] Crypto::Hash getBinaryArrayHash(const BinaryArray& binaryArray);
+// throws exception if serialization failed
+template <class T>
+[[nodiscard]] BinaryArray toBinaryArray(const T& object) {
+  BinaryArray ba;
+  ::Common::VectorOutputStream stream(ba);
+  BinaryOutputStreamSerializer serializer(stream);
+  if (!serialize(const_cast<T&>(object), serializer)) {
+    throw std::runtime_error("serialization failed");
+  }
+  return ba;
+}
 
 // noexcept
 template <class T>
-bool toBinaryArray(const T& object, BinaryArray& binaryArray) {
+[[nodiscard]] bool toBinaryArray(const T& object, BinaryArray& binaryArray) {
   try {
-    binaryArray = toBinaryArray(object);
+    binaryArray = toBinaryArray<T>(object);
   } catch (std::exception&) {
     return false;
   }
@@ -46,24 +57,16 @@ bool toBinaryArray(const T& object, BinaryArray& binaryArray) {
 }
 
 template <>
-bool toBinaryArray(const BinaryArray& object, BinaryArray& binaryArray);
-
-// throws exception if serialization failed
-template <class T>
-BinaryArray toBinaryArray(const T& object) {
-  BinaryArray ba;
-  ::Common::VectorOutputStream stream(ba);
-  BinaryOutputStreamSerializer serializer(stream);
-  serialize(const_cast<T&>(object), serializer);
-  return ba;
-}
+[[nodiscard]] bool toBinaryArray<BinaryArray>(const BinaryArray& object, BinaryArray& binaryArray);
 
 template <class T>
-T fromBinaryArray(const BinaryArray& binaryArray) {
+[[nodiscard]] T fromBinaryArray(const BinaryArray& binaryArray) {
   T object;
   Common::MemoryInputStream stream(binaryArray.data(), binaryArray.size());
   BinaryInputStreamSerializer serializer(stream);
-  serialize(object, serializer);
+  if (!serialize(object, serializer)) {
+    throw std::runtime_error("deserialization failed");
+  }
   if (!stream.endOfStream()) {  // check that all data was consumed
     throw std::runtime_error("failed to unpack type");
   }
@@ -72,7 +75,7 @@ T fromBinaryArray(const BinaryArray& binaryArray) {
 }
 
 template <class T>
-bool fromBinaryArray(T& object, const BinaryArray& binaryArray) {
+[[nodiscard]] bool fromBinaryArray(T& object, const BinaryArray& binaryArray) {
   try {
     object = fromBinaryArray<T>(binaryArray);
   } catch (std::exception&) {
@@ -83,54 +86,74 @@ bool fromBinaryArray(T& object, const BinaryArray& binaryArray) {
 }
 
 template <class T>
-bool getObjectBinarySize(const T& object, size_t& size) {
-  BinaryArray ba;
-  if (!toBinaryArray(object, ba)) {
-    size = (std::numeric_limits<size_t>::max)();
+[[nodiscard]] bool getObjectBinarySize(const T& object, size_t& size) {
+  try {
+    BinaryArray ba;
+    if (!toBinaryArray(object, ba)) {
+      size = (std::numeric_limits<size_t>::max)();
+      return false;
+    }
+
+    size = ba.size();
+    return true;
+  } catch (...) {
+    size = 0;
     return false;
   }
-
-  size = ba.size();
-  return true;
 }
 
 template <class T>
-size_t getObjectBinarySize(const T& object) {
+[[nodiscard]] size_t getObjectBinarySize(const T& object) {
   size_t size;
-  getObjectBinarySize(object, size);
+  if (!getObjectBinarySize(object, size)) {
+    throw std::runtime_error("unable to compute object binary size");
+  }
   return size;
 }
 
 template <class T>
-bool getObjectHash(const T& object, Crypto::Hash& hash) {
-  BinaryArray ba;
-  if (!toBinaryArray(object, ba)) {
-    hash = NULL_HASH;
+[[nodiscard]] bool getObjectHash(const T& object, Crypto::Hash& hash) {
+  try {
+    BinaryArray ba;
+    if (!toBinaryArray(object, ba)) {
+      hash = ::Crypto::Hash::Null;
+      return false;
+    }
+
+    hash = getBinaryArrayHash(ba);
+    return true;
+  } catch (...) {
+    hash.nullify();
     return false;
   }
-
-  hash = getBinaryArrayHash(ba);
-  return true;
 }
 
 template <class T>
-bool getObjectHash(const T& object, Crypto::Hash& hash, size_t& size) {
-  BinaryArray ba;
-  if (!toBinaryArray(object, ba)) {
-    hash = NULL_HASH;
+[[nodiscard]] bool getObjectHash(const T& object, Crypto::Hash& hash, size_t& size) {
+  try {
+    BinaryArray ba;
+    if (!toBinaryArray(object, ba)) {
+      hash = ::Crypto::Hash::Null;
+      size = (std::numeric_limits<size_t>::max)();
+      return false;
+    }
+
+    size = ba.size();
+    hash = getBinaryArrayHash(ba);
+    return true;
+  } catch (...) {
+    hash.nullify();
     size = (std::numeric_limits<size_t>::max)();
     return false;
   }
-
-  size = ba.size();
-  hash = getBinaryArrayHash(ba);
-  return true;
 }
 
 template <class T>
-Crypto::Hash getObjectHash(const T& object) {
+[[nodiscard]] Crypto::Hash getObjectHash(const T& object) {
   Crypto::Hash hash;
-  getObjectHash(object, hash);
+  if (!getObjectHash(object, hash)) {
+    throw std::runtime_error("object hash computation failed");
+  }
   return hash;
 }
 

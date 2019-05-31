@@ -85,7 +85,7 @@ class PeerlistManager {
   void trim_white_peerlist();
   void trim_gray_peerlist();
 
-  bool serialize(ISerializer& s);
+[[nodiscard]]  bool serialize(ISerializer& s);
 
   Peerlist& getWhite();
   Peerlist& getGray();

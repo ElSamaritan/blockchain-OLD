@@ -10,7 +10,8 @@
 
 #include <Xi/Result.h>
 
-#include <CryptoNoteCore/CryptoNote.h>
+#include "CryptoNoteCore/CryptoNote.h"
+#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
 
 #include "AddBlockErrors.h"
 #include "AddBlockErrorCondition.h"
@@ -108,8 +109,8 @@ class ICore {
 
   virtual CoreStatistics getCoreStatistics() const = 0;
 
-  virtual void save() = 0;
-  virtual void load() = 0;
+  [[nodiscard]] virtual bool save() = 0;
+  [[nodiscard]] virtual bool load() = 0;
 
   virtual BlockDetails getBlockDetails(const Crypto::Hash& blockHash) const = 0;
   virtual TransactionDetails getTransactionDetails(const Crypto::Hash& transactionHash) const = 0;

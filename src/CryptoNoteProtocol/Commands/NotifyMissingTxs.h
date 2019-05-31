@@ -28,12 +28,13 @@
 
 #include <crypto/CryptoTypes.h>
 #include <CryptoNoteCore/CryptoNote.h>
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 #include "CryptoNoteProtocol/Commands/CryptoNoteProtocolCommand.h"
 
 namespace CryptoNote {
 struct NOTIFY_MISSING_TXS_REQUEST {
-  uint32_t current_blockchain_height;
+  BlockHeight current_blockchain_height;
   std::vector<Crypto::Hash> missing_txs;
 };
 

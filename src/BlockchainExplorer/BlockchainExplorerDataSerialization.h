@@ -23,16 +23,15 @@
 
 namespace CryptoNote {
 
-bool serialize(TransactionOutputDetails& output, ISerializer& serializer);
-bool serialize(TransactionOutputReferenceDetails& outputReference, ISerializer& serializer);
+[[nodiscard]] bool serialize(TransactionOutputDetails& output, ISerializer& serializer);
+[[nodiscard]] bool serialize(TransactionOutputReferenceDetails& outputReference, ISerializer& serializer);
 
-bool serialize(BaseInputDetails& inputBase, ISerializer& serializer);
-bool serialize(KeyInputDetails& inputToKey, ISerializer& serializer);
-bool serialize(TransactionInputDetails& input, ISerializer& serializer);
+[[nodiscard]] bool serialize(BaseInputDetails& inputBase, ISerializer& serializer);
+[[nodiscard]] bool serialize(KeyInputDetails& inputToKey, ISerializer& serializer);
 
-bool serialize(TransactionExtraDetails& extra, ISerializer& serializer);
-bool serialize(TransactionDetails& transaction, ISerializer& serializer);
+[[nodiscard]] bool serialize(TransactionExtraDetails& extra, ISerializer& serializer);
+[[nodiscard]] bool serialize(TransactionDetails& transaction, ISerializer& serializer);
 
-bool serialize(BlockDetails& block, ISerializer& serializer);
+[[nodiscard]] bool serialize(BlockDetails& block, ISerializer& serializer);
 
 }  // namespace CryptoNote

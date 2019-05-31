@@ -34,9 +34,9 @@ WalletUserTransactionsCache::WalletUserTransactionsCache(uint64_t mempoolTxLiveT
 
 bool WalletUserTransactionsCache::serialize(CryptoNote::ISerializer& s) {
   if (s.type() == CryptoNote::ISerializer::INPUT) {
-    s(m_transactions, "transactions");
-    s(m_transfers, "transfers");
-    s(m_unconfirmedTransactions, "unconfirmed");
+    XI_RETURN_EC_IF_NOT(s(m_transactions, "transactions"), false);
+    XI_RETURN_EC_IF_NOT(s(m_transfers, "transfers"), false);
+    XI_RETURN_EC_IF_NOT(s(m_unconfirmedTransactions, "unconfirmed"), false);
 
     updateUnconfirmedTransactions();
     deleteOutdatedTransactions();
@@ -45,9 +45,9 @@ bool WalletUserTransactionsCache::serialize(CryptoNote::ISerializer& s) {
     UserTransfers transfersToSave;
 
     getGoodItems(txsToSave, transfersToSave);
-    s(txsToSave, "transactions");
-    s(transfersToSave, "transfers");
-    s(m_unconfirmedTransactions, "unconfirmed");
+    XI_RETURN_EC_IF_NOT(s(txsToSave, "transactions"), false);
+    XI_RETURN_EC_IF_NOT(s(transfersToSave, "transfers"), false);
+    XI_RETURN_EC_IF_NOT(s(m_unconfirmedTransactions, "unconfirmed"), false);
   }
 
   return true;

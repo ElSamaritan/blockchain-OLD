@@ -24,9 +24,10 @@
 
 namespace Crypto {
 
-bool serialize(chacha8_iv& chacha, Common::StringView name, CryptoNote::ISerializer& serializer);
-bool serialize(EllipticCurveScalar& ecScalar, Common::StringView name, CryptoNote::ISerializer& serializer);
-bool serialize(EllipticCurvePoint& ecPoint, Common::StringView name, CryptoNote::ISerializer& serializer);
+[[nodiscard]] bool serialize(chacha8_iv& chacha, Common::StringView name, CryptoNote::ISerializer& serializer);
+[[nodiscard]] bool serialize(EllipticCurveScalar& ecScalar, Common::StringView name,
+                             CryptoNote::ISerializer& serializer);
+[[nodiscard]] bool serialize(EllipticCurvePoint& ecPoint, Common::StringView name, CryptoNote::ISerializer& serializer);
 
 }  // namespace Crypto
 
@@ -34,31 +35,26 @@ namespace CryptoNote {
 
 struct AccountKeys;
 
-enum class SerializationTag : uint8_t { Base = 0xff, Key = 0x2, Transaction = 0xcc, Block = 0xbb };
+[[nodiscard]] bool serialize(TransactionPrefix& txP, ISerializer& serializer);
+[[nodiscard]] bool serialize(Transaction& tx, ISerializer& serializer);
+[[nodiscard]] bool serialize(BaseTransaction& tx, ISerializer& serializer);
+[[nodiscard]] bool serialize(TransactionOutput& in, ISerializer& serializer);
 
-bool serialize(TransactionPrefix& txP, ISerializer& serializer);
-bool serialize(Transaction& tx, ISerializer& serializer);
-bool serialize(BaseTransaction& tx, ISerializer& serializer);
-bool serialize(TransactionInput& in, ISerializer& serializer);
-bool serialize(TransactionOutput& in, ISerializer& serializer);
+[[nodiscard]] bool serialize(BaseInput& gen, ISerializer& serializer);
+[[nodiscard]] bool serialize(KeyInput& key, ISerializer& serializer);
 
-bool serialize(BaseInput& gen, ISerializer& serializer);
-bool serialize(KeyInput& key, ISerializer& serializer);
+[[nodiscard]] bool serialize(TransactionOutput& output, ISerializer& serializer);
+[[nodiscard]] bool serialize(KeyOutput& key, ISerializer& serializer);
 
-bool serialize(TransactionOutput& output, ISerializer& serializer);
-bool serialize(TransactionOutputTarget& output, ISerializer& serializer);
-bool serialize(KeyOutput& key, ISerializer& serializer);
+[[nodiscard]] bool serialize(BlockTemplate& block, ISerializer& serializer);
 
-bool serialize(BlockHeader& header, ISerializer& serializer);
-bool serialize(BlockTemplate& block, ISerializer& serializer);
+[[nodiscard]] bool serialize(AccountPublicAddress& address, ISerializer& serializer);
+[[nodiscard]] bool serialize(FeeAddress& addr, ISerializer& serializer);
+[[nodiscard]] bool serialize(AccountKeys& keys, ISerializer& s);
 
-bool serialize(AccountPublicAddress& address, ISerializer& serializer);
-bool serialize(FeeAddress& addr, ISerializer& serializer);
-bool serialize(AccountKeys& keys, ISerializer& s);
-
-bool serialize(KeyPair& keyPair, ISerializer& serializer);
-bool serialize(RawBlock& rawBlock, ISerializer& serializer);
-bool serialize(FullBlock& block, ISerializer& serializer);
-bool serialize(LiteBlock& block, ISerializer& serializer);
+[[nodiscard]] bool serialize(KeyPair& keyPair, ISerializer& serializer);
+[[nodiscard]] bool serialize(RawBlock& rawBlock, ISerializer& serializer);
+[[nodiscard]] bool serialize(FullBlock& block, ISerializer& serializer);
+[[nodiscard]] bool serialize(LiteBlock& block, ISerializer& serializer);
 
 }  // namespace CryptoNote

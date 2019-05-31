@@ -14,6 +14,7 @@
 
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/Difficulty.h"
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 #include "BlockchainExplorer/BlockchainExplorerData.h"
 #include "BlockchainExplorer/BlockchainExplorerDataSerialization.h"
@@ -48,8 +49,8 @@ struct COMMAND_RPC_GET_HEIGHT {
   typedef EMPTY_STRUCT request;
 
   struct response {
-    uint32_t height;
-    uint32_t network_height;
+    BlockHeight height;
+    BlockHeight network_height;
     std::string status;
 
     KV_BEGIN_SERIALIZATION
@@ -72,8 +73,8 @@ struct COMMAND_RPC_GET_BLOCKS_FAST {
 
   struct response {
     std::vector<RawBlock> blocks;
-    uint32_t start_height;
-    uint32_t current_height;
+    BlockHeight start_height;
+    BlockHeight current_height;
     std::string status;
 
     KV_BEGIN_SERIALIZATION
@@ -267,7 +268,7 @@ struct COMMAND_RPC_GET_INFO {
 
   struct response {
     std::string status;
-    uint32_t height;
+    BlockHeight height;
     uint64_t difficulty;
     uint64_t tx_count;
     uint64_t tx_pool_size;
@@ -278,10 +279,10 @@ struct COMMAND_RPC_GET_INFO {
     uint64_t incoming_connections_count;
     uint64_t white_peerlist_size;
     uint64_t grey_peerlist_size;
-    uint32_t last_known_block_index;
-    uint32_t network_height;
-    std::vector<uint32_t> upgrade_heights;
-    uint32_t supported_height;
+    BlockHeight last_known_block_height;
+    BlockHeight network_height;
+    std::vector<BlockHeight> upgrade_heights;
+    BlockHeight supported_height;
     uint32_t hashrate;
     uint8_t major_version;
     uint8_t minor_version;
@@ -303,7 +304,7 @@ struct COMMAND_RPC_GET_INFO {
     KV_MEMBER(incoming_connections_count)
     KV_MEMBER(white_peerlist_size)
     KV_MEMBER(grey_peerlist_size)
-    KV_MEMBER(last_known_block_index)
+    KV_MEMBER(last_known_block_height)
     KV_MEMBER(network_height)
     KV_MEMBER(upgrade_heights)
     KV_MEMBER(supported_height)
@@ -347,7 +348,7 @@ struct COMMAND_RPC_GETBLOCKCOUNT {
 
 struct COMMAND_RPC_GETBLOCKHASH {
   struct request {
-    uint32_t height;
+    BlockHeight height;
 
     KV_BEGIN_SERIALIZATION
     KV_MEMBER(height)
@@ -390,7 +391,7 @@ struct COMMAND_RPC_GETBLOCKTEMPLATE {
 
   struct response {
     uint64_t difficulty;
-    uint32_t height;
+    BlockHeight height;
     uint64_t reserved_offset;
     BlockTemplate block_template;
     std::string status;
@@ -428,9 +429,9 @@ struct block_header_response {
   uint8_t minor_version;
   uint64_t timestamp;
   Crypto::Hash prev_hash;
-  uint32_t nonce;
+  BlockHeaderNonce nonce;
   bool orphan_status;
-  uint32_t height;
+  BlockHeight height;
   uint32_t depth;
   Crypto::Hash hash;
   uint64_t difficulty;
@@ -469,35 +470,26 @@ struct BLOCK_HEADER_RESPONSE {
 
 struct COMMAND_RPC_GET_BLOCK_HEADERS_RANGE {
   struct request {
-    uint32_t start_height;
-    uint32_t end_height;
+    BlockHeight start_height;
+    BlockHeight end_height;
 
     KV_BEGIN_SERIALIZATION
     KV_MEMBER(start_height)
     KV_MEMBER(end_height)
-  }
-  /*BEGIN_KV_SERIALIZE_MAP()
-  KV_SERIALIZE(start_height)
-  KV_SERIALIZE(end_height)
-  END_KV_SERIALIZE_MAP()*/
-};
+    KV_END_SERIALIZATION
+  };
 
-struct response {
-  std::string status;
-  std::vector<block_header_response> headers;
-  bool untrusted;
+  struct response {
+    std::string status;
+    std::vector<block_header_response> headers;
+    bool untrusted;
 
-  KV_BEGIN_SERIALIZATION
-  KV_MEMBER(status)
-  KV_MEMBER(headers)
-  KV_MEMBER(untrusted)
-  KV_END_SERIALIZATION
-  /*BEGIN_KV_SERIALIZE_MAP()
-  KV_SERIALIZE(status)
-  KV_SERIALIZE(headers)
-  KV_SERIALIZE(untrusted)
-  END_KV_SERIALIZE_MAP()*/
-};
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(status)
+    KV_MEMBER(headers)
+    KV_MEMBER(untrusted)
+    KV_END_SERIALIZATION
+  };
 };  // namespace CryptoNote
 
 struct f_transaction_short_response {
@@ -535,8 +527,8 @@ struct f_transaction_details_response {
 struct f_block_short_response {
   uint64_t difficulty;
   uint64_t timestamp;
-  uint32_t height;
-  std::string hash;
+  BlockHeight height;
+  Crypto::Hash hash;
   uint64_t cumulative_size;
   uint64_t transactions_count;
 
@@ -554,9 +546,9 @@ struct f_block_details_response {
   uint8_t minor_version;
   uint64_t timestamp;
   Crypto::Hash previous_hash;
-  uint32_t nonce;
+  BlockHeaderNonce nonce;
   bool orphan_status;
-  uint32_t height;
+  BlockHeight height;
   uint64_t depth;
   Crypto::Hash hash;
   uint64_t difficulty;
@@ -614,7 +606,7 @@ struct COMMAND_RPC_GET_BLOCK_HEADER_BY_HASH {
 
 struct COMMAND_RPC_GET_BLOCK_HEADER_BY_HEIGHT {
   struct request {
-    uint32_t height;
+    BlockHeight height;
 
     KV_BEGIN_SERIALIZATION KV_MEMBER(height) KV_END_SERIALIZATION
   };
@@ -624,7 +616,7 @@ struct COMMAND_RPC_GET_BLOCK_HEADER_BY_HEIGHT {
 
 struct F_COMMAND_RPC_GET_BLOCKS_LIST {
   struct request {
-    uint32_t height;
+    BlockHeight height;
 
     KV_BEGIN_SERIALIZATION KV_MEMBER(height) KV_END_SERIALIZATION
   };
@@ -658,8 +650,8 @@ struct F_COMMAND_RPC_GET_BLOCK_DETAILS {
 
 struct F_COMMAND_RPC_GET_BLOCKS_RAW_BY_RANGE {
   struct request {
-    uint32_t height;  ///< Index + 1
-    uint32_t count;   ///< Number of blocks to query, may not exceed 100.
+    BlockHeight height;  ///< Index + 1
+    uint32_t count;      ///< Number of blocks to query, may not exceed 100.
 
     KV_BEGIN_SERIALIZATION
     KV_MEMBER(height)
@@ -749,8 +741,8 @@ struct COMMAND_RPC_QUERY_BLOCKS {
 
   struct response {
     std::string status;
-    uint64_t start_height;
-    uint64_t current_height;
+    BlockHeight start_height;
+    BlockHeight current_height;
     uint64_t full_offset;
     std::vector<BlockFullInfo> blocks;
 
@@ -775,8 +767,8 @@ struct COMMAND_RPC_QUERY_BLOCKS_LITE {
 
   struct response {
     std::string status;
-    uint64_t start_height;
-    uint64_t current_height;
+    BlockHeight start_height;
+    BlockHeight current_height;
     uint64_t full_offset;
     std::vector<BlockShortInfo> blocks;
 
@@ -791,7 +783,7 @@ struct COMMAND_RPC_QUERY_BLOCKS_LITE {
 
 struct COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HEIGHTS {
   struct request {
-    std::vector<uint32_t> block_heights;
+    std::vector<BlockHeight> block_heights;
 
     KV_BEGIN_SERIALIZATION KV_MEMBER(block_heights);
     KV_END_SERIALIZATION
@@ -837,8 +829,8 @@ struct COMMAND_RPC_QUERY_BLOCKS_DETAILED {
 
   struct response {
     std::string status;
-    uint64_t start_height;
-    uint64_t current_height;
+    BlockHeight start_height;
+    BlockHeight current_height;
     uint64_t full_offset;
     std::vector<BlockDetails> blocks;
 
@@ -853,7 +845,7 @@ struct COMMAND_RPC_QUERY_BLOCKS_DETAILED {
 
 struct COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT {
   struct request {
-    uint32_t block_height;
+    BlockHeight block_height;
 
     KV_BEGIN_SERIALIZATION KV_MEMBER(block_height) KV_END_SERIALIZATION
   };

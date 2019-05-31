@@ -24,9 +24,9 @@ std::string get_mining_speed(uint32_t hr) {
 }
 
 //--------------------------------------------------------------------------------
-std::string get_sync_percentage(uint32_t height, uint32_t target_height) {
+std::string get_sync_percentage(CryptoNote::BlockHeight height, CryptoNote::BlockHeight target_height) {
   /* Don't divide by zero */
-  if (height == 0 || target_height == 0) {
+  if (height.isNull() || target_height.isNull()) {
     return "0.00";
   }
 
@@ -35,7 +35,7 @@ std::string get_sync_percentage(uint32_t height, uint32_t target_height) {
     height = target_height;
   }
 
-  float pc = 100.0f * height / target_height;
+  float pc = 100.0f * height.native() / target_height.native();
 
   if (height < target_height && pc > 99.99f) {
     pc = 99.99f;  // to avoid 100% when not fully synced
@@ -46,13 +46,14 @@ std::string get_sync_percentage(uint32_t height, uint32_t target_height) {
 
 enum ForkStatus { UpToDate, ForkLater, ForkSoonReady, ForkSoonNotReady, OutOfDate };
 
-ForkStatus get_fork_status(uint32_t height, std::vector<uint32_t> upgrade_heights, uint32_t supported_height) {
+ForkStatus get_fork_status(CryptoNote::BlockHeight height, std::vector<CryptoNote::BlockHeight> upgrade_heights,
+                           CryptoNote::BlockHeight supported_height) {
   /* Allow fork heights to be empty */
   if (upgrade_heights.empty()) {
     return UpToDate;
   }
 
-  uint32_t next_fork = 0;
+  CryptoNote::BlockHeight next_fork;
 
   for (auto upgrade : upgrade_heights) {
     /* We have hit an upgrade already that the user cannot support */
@@ -67,7 +68,7 @@ ForkStatus get_fork_status(uint32_t height, std::vector<uint32_t> upgrade_height
     }
   }
 
-  uint64_t days = (next_fork - height) / Xi::Config::Time::expectedBlocksPerDay();
+  auto days = (next_fork - height).native() / Xi::Config::Time::expectedBlocksPerDay();
 
   /* Next fork in < 30 days away */
   if (days < 30) {
@@ -86,8 +87,8 @@ ForkStatus get_fork_status(uint32_t height, std::vector<uint32_t> upgrade_height
   return ForkLater;
 }
 
-std::string get_fork_time(uint32_t height, const std::vector<uint32_t>& upgrade_heights) {
-  uint32_t next_fork = 0;
+std::string get_fork_time(CryptoNote::BlockHeight height, const std::vector<CryptoNote::BlockHeight>& upgrade_heights) {
+  CryptoNote::BlockHeight next_fork;
 
   for (auto upgrade : upgrade_heights) {
     /* Get the next fork height */
@@ -97,20 +98,21 @@ std::string get_fork_time(uint32_t height, const std::vector<uint32_t>& upgrade_
     }
   }
 
-  uint32_t heightOffset = next_fork - height;
-  uint64_t days = heightOffset / Xi::Config::Time::expectedBlocksPerDay();
+  auto heightOffset = next_fork - height;
+  auto days = heightOffset.native() / Xi::Config::Time::expectedBlocksPerDay();
   if (height == next_fork) {
     return " (forking now),";
   } else if (days < 1) {
-    uint64_t hours = static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::hours>(heightOffset * Xi::Config::Time::blockTime()).count());
+    const auto hours =
+        std::chrono::duration_cast<std::chrono::hours>(heightOffset.native() * Xi::Config::Time::blockTime()).count();
     return (boost::format(" (next fork in %.1f hours),") % hours).str();
   } else {
     return (boost::format(" (next fork in %.1f days),") % days).str();
   }
 }
 
-std::string get_update_status(ForkStatus forkStatus, uint32_t height, const std::vector<uint32_t>& upgrade_heights) {
+std::string get_update_status(ForkStatus forkStatus, CryptoNote::BlockHeight height,
+                              const std::vector<CryptoNote::BlockHeight>& upgrade_heights) {
   switch (forkStatus) {
     case UpToDate:
     case ForkLater: {
@@ -132,10 +134,11 @@ std::string get_update_status(ForkStatus forkStatus, uint32_t height, const std:
 }
 
 //--------------------------------------------------------------------------------
-std::string get_upgrade_info(uint32_t supported_height, std::vector<uint32_t> upgrade_heights) {
+std::string get_upgrade_info(CryptoNote::BlockHeight supported_height,
+                             std::vector<CryptoNote::BlockHeight> upgrade_heights) {
   for (auto upgrade : upgrade_heights) {
     if (upgrade > supported_height) {
-      return "The network forked at height " + std::to_string(upgrade) +
+      return "The network forked at height " + std::to_string(upgrade.native()) +
              ", please update your software: " + Xi::Config::Coin::downloadUrl();
     }
   }
@@ -150,7 +153,7 @@ std::string get_status_string(const CryptoNote::COMMAND_RPC_GET_INFO::response& 
   std::time_t uptime = std::time(nullptr) - iresp.start_time;
   auto forkStatus = get_fork_status(iresp.network_height, iresp.upgrade_heights, iresp.supported_height);
 
-  ss << "Height: " << iresp.height << "/" << iresp.network_height << " ("
+  ss << "Height: " << iresp.height.native() << "/" << iresp.network_height.native() << " ("
      << get_sync_percentage(iresp.height, iresp.network_height) << "%) "
      << "on " << iresp.network << (iresp.synced ? " synced, " : " syncing, ") << "net hash "
      << get_mining_speed(iresp.hashrate) << ", "

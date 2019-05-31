@@ -59,7 +59,7 @@ class DataBaseConfig {
   Compression compression;
 };
 
-bool serialize(DataBaseConfig::Compression& compression, ISerializer& s);
+[[nodiscard]]  bool serialize(DataBaseConfig::Compression& compression, ISerializer& s);
 }  // namespace CryptoNote
 
 namespace Common {

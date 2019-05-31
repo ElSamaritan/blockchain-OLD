@@ -53,11 +53,13 @@ struct Signature : Xi::ByteArray<64> {
   Xi::ByteSpan span();
 
   void nullify();
-  bool serialize(CryptoNote::ISerializer& serializer);
 };
 
 XI_MAKE_GENERIC_HASH_FUNC(Signature)
 XI_MAKE_GENERIC_COMPARISON(Signature)
+
+[[nodiscard]]  bool serialize(Signature& signature, Common::StringView name, CryptoNote::ISerializer& serializer);
+
 }  // namespace Crypto
 
 XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, Signature)

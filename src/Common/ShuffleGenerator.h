@@ -30,7 +30,7 @@ class SequenceEnded : public std::runtime_error {
 template <typename T, typename Gen>
 class ShuffleGenerator {
  public:
-  ShuffleGenerator(T n, const Gen& gen = Gen()) : N(n), generator(gen), count(n) {}
+  ShuffleGenerator(T n) : N(n), generator(), count(n) {}
 
   T operator()() {
     if (count == 0) {

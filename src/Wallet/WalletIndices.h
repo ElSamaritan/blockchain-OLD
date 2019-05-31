@@ -81,19 +81,19 @@ typedef boost::multi_index_container<
     WalletsContainer;
 
 struct UnlockTransactionJob {
-  uint32_t blockHeight;
+  BlockHeight blockHeight;
   CryptoNote::ITransfersContainer* container;
   Crypto::Hash transactionHash;
 };
 
 typedef boost::multi_index_container<
-    UnlockTransactionJob,
-    boost::multi_index::indexed_by<
-        boost::multi_index::ordered_non_unique<boost::multi_index::tag<BlockHeightIndex>,
-                                               BOOST_MULTI_INDEX_MEMBER(UnlockTransactionJob, uint32_t, blockHeight)>,
-        boost::multi_index::hashed_non_unique<boost::multi_index::tag<TransactionHashIndex>,
-                                              BOOST_MULTI_INDEX_MEMBER(UnlockTransactionJob, Crypto::Hash,
-                                                                       transactionHash)> > >
+    UnlockTransactionJob, boost::multi_index::indexed_by<
+                              boost::multi_index::ordered_non_unique<
+                                  boost::multi_index::tag<BlockHeightIndex>,
+                                  BOOST_MULTI_INDEX_MEMBER(UnlockTransactionJob, BlockHeight, blockHeight)>,
+                              boost::multi_index::hashed_non_unique<
+                                  boost::multi_index::tag<TransactionHashIndex>,
+                                  BOOST_MULTI_INDEX_MEMBER(UnlockTransactionJob, Crypto::Hash, transactionHash)> > >
     UnlockTransactionJobs;
 
 typedef boost::multi_index_container<
@@ -105,7 +105,7 @@ typedef boost::multi_index_container<
                                                                      &CryptoNote::WalletTransaction::hash> >,
         boost::multi_index::ordered_non_unique<
             boost::multi_index::tag<BlockHeightIndex>,
-            boost::multi_index::member<CryptoNote::WalletTransaction, uint32_t,
+            boost::multi_index::member<CryptoNote::WalletTransaction, CryptoNote::BlockHeight,
                                        &CryptoNote::WalletTransaction::blockHeight> > > >
     WalletTransactions;
 

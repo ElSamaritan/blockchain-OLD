@@ -54,7 +54,8 @@ class IBlockchainExplorer {
   virtual void init() = 0;
   virtual void shutdown() = 0;
 
-  virtual bool getBlocks(const std::vector<uint32_t>& blockHeights, std::vector<std::vector<BlockDetails>>& blocks) = 0;
+  virtual bool getBlocks(const std::vector<BlockHeight>& blockHeights,
+                         std::vector<std::vector<BlockDetails>>& blocks) = 0;
   virtual bool getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks) = 0;
   virtual bool getBlocks(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit,
                          std::vector<BlockDetails>& blocks, uint32_t& blocksNumberWithinTimestamps) = 0;

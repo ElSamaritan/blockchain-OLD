@@ -25,11 +25,12 @@
 
 #include <Xi/Global.hh>
 #include <CryptoNoteCore/CryptoNote.h>
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 namespace CryptoNote {
 struct PendingLiteBlock {
   LiteBlock Block;
-  uint32_t Height;
+  BlockHeight Height;
   uint32_t Hops;
   std::unordered_set<Crypto::Hash> MissingTransactions;
 };

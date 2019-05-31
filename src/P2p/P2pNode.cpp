@@ -17,6 +17,7 @@
 #include <System/TcpConnector.h>
 
 #include <Xi/Config.h>
+#include <Xi/Crypto/Random/Random.hh>
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
@@ -60,7 +61,7 @@ class PeerIndexGenerator {
       return 0;
     }
 
-    size_t x = Crypto::rand<size_t>() % (maxIndex + 1);
+    size_t x = Xi::Crypto::Random::generate<uint64_t>() % (maxIndex + 1);
     return (x * x * x) / (maxIndex * maxIndex);
   }
 
@@ -108,7 +109,7 @@ P2pNode::P2pNode(int, const P2pNodeConfig& cfg, Dispatcher& dispatcher, Logging:
       m_cfg(cfg),
       m_myPeerId(peerId),
       m_genesisHash(genesisHash),
-      m_genesisPayload(CORE_SYNC_DATA{1, genesisHash}),
+      m_genesisPayload(CORE_SYNC_DATA{BlockHeight::fromIndex(1), genesisHash}),
       m_dispatcher(dispatcher),
       workingContextGroup(dispatcher),
       m_connectorTimer(dispatcher),
@@ -171,16 +172,16 @@ bool P2pNode::serialize(ISerializer& s) {
   return true;
 }
 
-void P2pNode::save(std::ostream& os) {
+bool P2pNode::save(std::ostream& os) {
   StdOutputStream stream(os);
   BinaryOutputStreamSerializer a(stream);
-  CryptoNote::serialize(*this, a);
+  return CryptoNote::serialize(*this, a);
 }
 
-void P2pNode::load(std::istream& in) {
+bool P2pNode::load(std::istream& in) {
   StdInputStream stream(in);
   BinaryInputStreamSerializer a(stream);
-  CryptoNote::serialize(*this, a);
+  return CryptoNote::serialize(*this, a);
 }
 
 void P2pNode::acceptLoop() {

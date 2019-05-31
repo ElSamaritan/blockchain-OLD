@@ -93,7 +93,7 @@ Hash TransactionBuilder::getTransactionPrefixHash() const {
 }
 
 PublicKey TransactionBuilder::getTransactionPublicKey() const {
-  PublicKey pk(NULL_PUBLIC_KEY);
+  PublicKey pk(PublicKey::Null);
   extra.getPublicKey(pk);
   return pk;
 }
@@ -147,10 +147,10 @@ size_t TransactionBuilder::addInput(const AccountKeys& senderKeys, const Transac
 
   // fill outputs array and use relative offsets
   for (const auto& out : info.outputs) {
-    input.outputIndexes.push_back(out.outputIndex);
+    input.outputIndices.push_back(out.outputIndex);
   }
 
-  input.outputIndexes = absolute_output_offsets_to_relative(input.outputIndexes);
+  input.outputIndices = absolute_output_offsets_to_relative(input.outputIndices);
   return addInput(input);
 }
 
@@ -177,7 +177,7 @@ size_t TransactionBuilder::addOutput(uint64_t amount, const KeyOutput& out) {
 
 void TransactionBuilder::signInputKey(size_t index, const TransactionTypes::InputKeyInfo& info,
                                       const KeyPair& ephKeys) {
-  const auto& input = boost::get<KeyInput>(getInputChecked(transaction, index, TransactionTypes::InputType::Key));
+  const auto& input = std::get<KeyInput>(getInputChecked(transaction, index, TransactionTypes::InputType::Key));
   Hash prefixHash = getTransactionPrefixHash();
 
   std::vector<Signature> signatures;
@@ -267,7 +267,7 @@ TransactionTypes::InputType TransactionBuilder::getInputType(size_t index) const
 }
 
 void TransactionBuilder::getInput(size_t index, KeyInput& input) const {
-  input = boost::get<KeyInput>(getInputChecked(transaction, index, TransactionTypes::InputType::Key));
+  input = std::get<KeyInput>(getInputChecked(transaction, index, TransactionTypes::InputType::Key));
 }
 
 size_t TransactionBuilder::getOutputCount() const { return transaction.outputs.size(); }
@@ -283,7 +283,7 @@ TransactionTypes::OutputType TransactionBuilder::getOutputType(size_t index) con
 
 void TransactionBuilder::getOutput(size_t index, KeyOutput& output, uint64_t& amount) const {
   const auto& out = getOutputChecked(transaction, index, TransactionTypes::OutputType::Key);
-  output = boost::get<KeyOutput>(out.target);
+  output = std::get<KeyOutput>(out.target);
   amount = out.amount;
 }
 

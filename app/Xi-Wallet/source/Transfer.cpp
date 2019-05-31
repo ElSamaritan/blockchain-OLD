@@ -249,8 +249,8 @@ void splitTX(CryptoNote::WalletGreen &wallet, const CryptoNote::TransactionParam
   }
 }
 
-void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, const CryptoNote::Currency &currency,
-              bool sendAll, std::optional<CryptoNote::FeeAddress> feeAddress) {
+void transfer(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::BlockHeight height,
+              const CryptoNote::Currency &currency, bool sendAll, std::optional<CryptoNote::FeeAddress> feeAddress) {
   uint64_t nodeFee = feeAddress ? feeAddress->amount : 0;
 
   std::cout << InformationMsg(
@@ -308,7 +308,7 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, const Cry
      the fee from full balance */
   uint64_t amount = 0;
 
-  uint64_t mixin = CryptoNote::getDefaultMixinByHeight(height);
+  uint64_t mixin = CryptoNote::getDefaultMixinByIndex(height.toIndex());
 
   /* If we're sending everything, obviously we don't need to ask them how
      much to send */
@@ -370,7 +370,7 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, const Cry
   /* This doesn't account for dust. We should probably make a function to
      check for balance minus dust */
   if (sendAll) {
-    if (CryptoNote::getDefaultMixinByHeight(height) != 0 && balance != balanceNoDust) {
+    if (CryptoNote::getDefaultMixinByIndex(height.toIndex()) != 0 && balance != balanceNoDust) {
       uint64_t unsendable = balance - balanceNoDust;
 
       amount = balanceNoDust - fee - nodeFee;
@@ -378,7 +378,7 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, const Cry
       std::cout << WarningMsg("Due to dust inputs, we are unable to ") << WarningMsg("send ")
                 << InformationMsg(formatAmount(unsendable)) << WarningMsg("of your balance.") << std::endl;
 
-      if (Xi::Config::Mixin::isZeroMixinAllowed(Xi::Config::BlockVersion::version(height))) {
+      if (Xi::Config::Mixin::isZeroMixinAllowed(Xi::Config::BlockVersion::version(height.toIndex()))) {
         std::cout << "Alternatively, you can set the mixin count to "
                   << "zero to send it all." << std::endl;
 
@@ -400,7 +400,7 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, const Cry
 }
 
 BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr<WalletInfo> walletInfo,
-                                  uint32_t height, uint64_t nodeFee) {
+                                  CryptoNote::BlockHeight height, uint64_t nodeFee) {
   const uint64_t balance = walletInfo->wallet.getActualBalance();
 
   const uint64_t balanceNoDust = walletInfo->wallet.getBalanceMinusDust({walletInfo->walletAddress});
@@ -417,7 +417,7 @@ BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr
               << std::endl;
 
     return NotEnoughBalance;
-  } else if (CryptoNote::getDefaultMixinByHeight(height) != 0 &&
+  } else if (CryptoNote::getDefaultMixinByIndex(height.toIndex()) != 0 &&
              balanceNoDust < amount + WalletConfig::minimumFee + nodeFee) {
     std::cout << std::endl
               << WarningMsg("This transaction is unable to be sent ") << WarningMsg("due to dust inputs.") << std::endl
@@ -425,7 +425,7 @@ BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr
               << " without issues (includes a network fee of " << InformationMsg(formatAmount(fee)) << " and "
               << " a node fee of " << InformationMsg(formatAmount(nodeFee)) << ")" << std::endl;
 
-    if (Xi::Config::Mixin::isZeroMixinAllowed(Xi::Config::BlockVersion::version(height))) {
+    if (Xi::Config::Mixin::isZeroMixinAllowed(Xi::Config::BlockVersion::version(height.toIndex()))) {
       std::cout << "Alternatively, you can sent the mixin "
                 << "count to 0." << std::endl;
 
@@ -441,9 +441,9 @@ BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr
 }
 
 void doTransfer(std::string address, uint64_t amount, uint64_t fee, std::string extra,
-                std::shared_ptr<WalletInfo> walletInfo, uint32_t height, bool integratedAddress, uint64_t mixin,
-                std::optional<CryptoNote::FeeAddress> nodeFees, std::string originalAddress, uint64_t unlockTimestamp,
-                const CryptoNote::Currency &currency) {
+                std::shared_ptr<WalletInfo> walletInfo, CryptoNote::BlockHeight height, bool integratedAddress,
+                uint64_t mixin, std::optional<CryptoNote::FeeAddress> nodeFees, std::string originalAddress,
+                uint64_t unlockTimestamp, const CryptoNote::Currency &currency) {
   const uint64_t balance = walletInfo->wallet.getActualBalance();
   const uint64_t nodeFee = nodeFees ? nodeFees->amount : 0;
 
@@ -476,8 +476,8 @@ void doTransfer(std::string address, uint64_t amount, uint64_t fee, std::string 
   sendTX(walletInfo, p, height, false, nodeFee);
 }
 
-void sendTX(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::TransactionParameters p, uint32_t height, bool retried,
-            uint64_t nodeFee) {
+void sendTX(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::TransactionParameters p, CryptoNote::BlockHeight height,
+            bool retried, uint64_t nodeFee) {
   try {
     auto tx = walletInfo->wallet.formTransaction(p);
 
@@ -517,7 +517,7 @@ void sendTX(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::TransactionParam
   }
 }
 
-bool handleTransferError(const std::system_error &e, bool retried, uint32_t height) {
+bool handleTransferError(const std::system_error &e, bool retried, CryptoNote::BlockHeight height) {
   if (retried) {
     std::cout << WarningMsg("Failed to send transaction!") << std::endl << "Error message: " << e.what() << std::endl;
 
@@ -547,7 +547,7 @@ bool handleTransferError(const std::system_error &e, bool retried, uint32_t heig
       /* If a mixin of zero is allowed, or we are below the
          fork height when it's banned, ask them to resend with
          zero */
-      if (Xi::Config::Mixin::isZeroMixinAllowed(Xi::Config::BlockVersion::version(height))) {
+      if (Xi::Config::Mixin::isZeroMixinAllowed(Xi::Config::BlockVersion::version(height.toIndex()))) {
         std::cout << "Alternatively, you can set the mixin "
                   << "count to 0." << std::endl;
 

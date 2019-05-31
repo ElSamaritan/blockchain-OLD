@@ -18,6 +18,7 @@
 #include "TransfersSubscription.h"
 #include "WalletLegacy/IWalletLegacy.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
+#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
 
 using namespace Crypto;
 using namespace Logging;
@@ -31,9 +32,13 @@ TransfersSubscription::TransfersSubscription(const CryptoNote::Currency& currenc
       transfers(currency, logger, sub.transactionSpendableAge),
       m_address(currency.accountAddressAsString(sub.keys.address)) {}
 
-SynchronizationStart TransfersSubscription::getSyncStart() { return subscription.syncStart; }
+SynchronizationStart TransfersSubscription::getSyncStart() {
+  int affe = 4;
+  (void)affe;
+  return subscription.syncStart;
+}
 
-void TransfersSubscription::onBlockchainDetach(uint32_t height) {
+void TransfersSubscription::onBlockchainDetach(BlockHeight height) {
   std::vector<Hash> deletedTransactions = transfers.detach(height);
   for (auto& hash : deletedTransactions) {
     logger(TRACE) << "Transaction deleted from wallet " << m_address << ", hash " << hash;
@@ -41,14 +46,14 @@ void TransfersSubscription::onBlockchainDetach(uint32_t height) {
   }
 }
 
-void TransfersSubscription::onError(const std::error_code& ec, uint32_t height) {
+void TransfersSubscription::onError(const std::error_code& ec, BlockHeight height) {
   if (height != WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
     transfers.detach(height);
   }
   m_observerManager.notify(&ITransfersObserver::onError, this, height, ec);
 }
 
-bool TransfersSubscription::advanceHeight(uint32_t height) { return transfers.advanceHeight(height); }
+bool TransfersSubscription::advanceHeight(BlockHeight height) { return transfers.advanceHeight(height); }
 
 const AccountKeys& TransfersSubscription::getKeys() const { return subscription.keys; }
 

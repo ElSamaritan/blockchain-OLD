@@ -93,7 +93,7 @@ class Mixins {
 
       KeyInput input;
       tx->getInput(i, input);
-      const uint64_t currentRingSize = input.outputIndexes.size();
+      const uint64_t currentRingSize = input.outputIndices.size();
       if (currentRingSize > ringSize) {
         ringSize = currentRingSize;
       }

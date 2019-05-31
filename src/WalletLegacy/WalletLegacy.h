@@ -50,7 +50,7 @@ class SyncStarter;
 class WalletLegacy : public IWalletLegacy, IBlockchainSynchronizerObserver, ITransfersObserver {
  public:
   WalletLegacy(const CryptoNote::Currency& currency, INode& node);
-  virtual ~WalletLegacy();
+  virtual ~WalletLegacy() override;
 
   virtual void addObserver(IWalletLegacyObserver* observer) override;
   virtual void removeObserver(IWalletLegacyObserver* observer) override;
@@ -60,7 +60,7 @@ class WalletLegacy : public IWalletLegacy, IBlockchainSynchronizerObserver, ITra
   virtual void initWithKeys(const AccountKeys& accountKeys, const std::string& password) override;
   virtual void shutdown() override;
   virtual void reset() override;
-  virtual void reset(uint64_t height) override;
+  virtual void reset(BlockHeight height) override;
 
   virtual void save(std::ostream& destination, bool saveDetailed = true, bool saveCache = true) override;
 
@@ -87,7 +87,7 @@ class WalletLegacy : public IWalletLegacy, IBlockchainSynchronizerObserver, ITra
                                         uint64_t unlockTimestamp = 0) override;
   virtual std::error_code cancelTransaction(size_t transactionId) override;
 
-  void syncAll(bool syncWalletFromZero, uint64_t height) override;
+  void syncAll(bool syncWalletFromZero, BlockHeight height) override;
   virtual void getAccountKeys(AccountKeys& keys) override;
 
  private:
@@ -138,7 +138,7 @@ class WalletLegacy : public IWalletLegacy, IBlockchainSynchronizerObserver, ITra
 
   std::unique_ptr<SyncStarter> m_onInitSyncStarter;
   bool m_syncAll = 0;
-  uint64_t m_syncStartHeight = 0;
+  BlockHeight m_syncStartHeight = BlockHeight::Genesis;
 };
 
 }  // namespace CryptoNote

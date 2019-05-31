@@ -19,111 +19,162 @@
 
 #include <string>
 #include <sstream>
+#include <iterator>
 
+#include <Xi/Exceptional.hpp>
+#include <Serialization/SerializationOverloads.h>
+#include <Serialization/BinaryInputStreamSerializer.h>
+#include <Serialization/BinaryOutputStreamSerializer.h>
+
+#include <Common/ByteSpanInputStream.hpp>
 #include "Common/StdOutputStream.h"
-#include "Serialization/KVBinaryOutputStreamSerializer.h"
-#include "Serialization/SerializationOverloads.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "Common/StdInputStream.h"
-#include "Serialization/KVBinaryInputStreamSerializer.h"
 
 namespace CryptoNote {
 namespace DB {
-const std::string BLOCK_INDEX_TO_KEY_IMAGE_PREFIX = "0";
-const std::string BLOCK_INDEX_TO_TX_HASHES_PREFIX = "1";
-const std::string BLOCK_INDEX_TO_TRANSACTION_INFO_PREFIX = "2";
-const std::string BLOCK_INDEX_TO_RAW_BLOCK_PREFIX = "4";
 
-const std::string BLOCK_HASH_TO_BLOCK_INDEX_PREFIX = "5";
-const std::string BLOCK_INDEX_TO_BLOCK_INFO_PREFIX = "6";
+XI_DECLARE_EXCEPTIONAL_CATEGORY(Database)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(Serialization, "object serialization failed", Database)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(Deserialization, "object deserialization failed", Database)
 
-const std::string KEY_IMAGE_TO_BLOCK_INDEX_PREFIX = "7";
-const std::string BLOCK_INDEX_TO_BLOCK_HASH_PREFIX = "8";
+struct KeyPrefix {
+  Xi::ByteArray<2> Prefix;
 
-const std::string TRANSACTION_HASH_TO_TRANSACTION_INFO_PREFIX = "a";
+  explicit KeyPrefix(const Xi::Byte prefix) {
+    this->Prefix[0] = prefix;
+    this->Prefix[1] = 0xFF;
+  }
 
-const std::string KEY_OUTPUT_AMOUNT_PREFIX = "b";
+  bool operator==(const KeyPrefix& rhs) const { return Prefix == rhs.Prefix; }
+  bool operator!=(const KeyPrefix& rhs) const { return Prefix != rhs.Prefix; }
+};
+static inline KeyPrefix makePrefix(const Xi::Byte prefix) { return KeyPrefix{prefix}; }
 
-const std::string CLOSEST_TIMESTAMP_BLOCK_INDEX_PREFIX = "e";
+struct NoKey {
+  KV_BEGIN_SERIALIZATION
+  XI_UNUSED(s)
+  KV_END_SERIALIZATION
 
-const std::string PAYMENT_ID_TO_TX_HASH_PREFIX = "f";
+  bool operator==(const NoKey&) const { return true; }
+  bool operator!=(const NoKey&) const { return false; }
+};
+static inline NoKey noKey() { return NoKey{}; }
 
-const std::string TIMESTAMP_TO_BLOCKHASHES_PREFIX = "g";
+const KeyPrefix BLOCK_INDEX_TO_KEY_IMAGE_PREFIX = makePrefix(0x01);
+const KeyPrefix BLOCK_INDEX_TO_TX_HASHES_PREFIX = makePrefix(0x02);
+const KeyPrefix BLOCK_INDEX_TO_TRANSACTION_INFO_PREFIX = makePrefix(0x03);
+const KeyPrefix BLOCK_INDEX_TO_RAW_BLOCK_PREFIX = makePrefix(0x04);
+const KeyPrefix BLOCK_HASH_TO_BLOCK_INDEX_PREFIX = makePrefix(0x05);
+const KeyPrefix BLOCK_INDEX_TO_BLOCK_INFO_PREFIX = makePrefix(0x06);
+const KeyPrefix KEY_IMAGE_TO_BLOCK_INDEX_PREFIX = makePrefix(0x07);
+const KeyPrefix BLOCK_INDEX_TO_BLOCK_HASH_PREFIX = makePrefix(0x08);
+const KeyPrefix TRANSACTION_HASH_TO_TRANSACTION_INFO_PREFIX = makePrefix(0x09);
+const KeyPrefix KEY_OUTPUT_AMOUNT_PREFIX = makePrefix(0x0A);
+const KeyPrefix CLOSEST_TIMESTAMP_BLOCK_INDEX_PREFIX = makePrefix(0x0B);
+const KeyPrefix PAYMENT_ID_TO_TX_HASH_PREFIX = makePrefix(0x0C);
+const KeyPrefix TIMESTAMP_TO_BLOCKHASHES_PREFIX = makePrefix(0x0D);
+const KeyPrefix KEY_OUTPUT_AMOUNTS_COUNT_PREFIX = makePrefix(0x0E);
+const KeyPrefix LAST_BLOCK_INDEX_KEY = makePrefix(0x0F);
+const KeyPrefix KEY_OUTPUT_AMOUNTS_COUNT_KEY = makePrefix(0x10);
+const KeyPrefix TRANSACTIONS_COUNT_KEY = makePrefix(0x11);
+const KeyPrefix KEY_OUTPUT_KEY_PREFIX = makePrefix(0x12);
 
-const std::string KEY_OUTPUT_AMOUNTS_COUNT_PREFIX = "h";
+template <typename _KeyT>
+std::string serializeKey(const KeyPrefix& cprefix, const _KeyT& ckey) {
+  using namespace Xi;
 
-const std::string LAST_BLOCK_INDEX_KEY = "last_block_index";
+  auto& prefix = const_cast<KeyPrefix&>(cprefix);
+  auto& key = const_cast<_KeyT&>(ckey);
 
-const std::string KEY_OUTPUT_AMOUNTS_COUNT_KEY = "key_amounts_count";
+  std::stringstream builder{};
+  Common::StdOutputStream stream{builder};
+  BinaryOutputStreamSerializer serializer{stream};
 
-const std::string TRANSACTIONS_COUNT_KEY = "txs_count";
+  exceptional_if_not<SerializationError>(serializer.binary(prefix.Prefix.data(), prefix.Prefix.size(), "prefix"),
+                                         "database prefix serialization failed");
+  exceptional_if_not<SerializationError>(serializer(key, "key"), "database key serialization failed");
 
-const std::string KEY_OUTPUT_KEY_PREFIX = "j";
-
-template <class Value>
-std::string serialize(const Value& value, const std::string& name) {
-  CryptoNote::KVBinaryOutputStreamSerializer serializer;
-  std::stringstream ss;
-  Common::StdOutputStream stream(ss);
-
-  serializer(const_cast<Value&>(value), name);
-  serializer.dump(stream);
-
-  return ss.str();
+  return builder.str();
 }
 
-std::string serialize(const RawBlock& value, const std::string &name);
+template <typename _KeyT, typename _ValueT>
+std::pair<std::string, std::string> serialize(const KeyPrefix& cprefix, const _KeyT& ckey, const _ValueT& cvalue) {
+  using namespace Xi;
 
-template <class Key, class Value>
-std::pair<std::string, std::string> serialize(const std::string& keyPrefix, const Key& key, const Value& value) {
-  return {DB::serialize(std::make_pair(keyPrefix, key), keyPrefix), DB::serialize(value, keyPrefix)};
+  auto& value = const_cast<_ValueT&>(cvalue);
+
+  std::stringstream builder{};
+  Common::StdOutputStream stream{builder};
+  BinaryOutputStreamSerializer serializer{stream};
+
+  auto key = serializeKey(cprefix, ckey);
+  exceptional_if_not<SerializationError>(serializer(value, "value"), "database value serialization failed");
+
+  return std::make_pair(std::move(key), builder.str());
 }
 
-template <class Key>
-std::string serializeKey(const std::string& keyPrefix, const Key& key) {
-  return DB::serialize(std::make_pair(keyPrefix, key), keyPrefix);
-}
-
-template <class Value>
-void deserialize(const std::string& serialized, Value& value, const std::string& name) {
-  std::stringstream ss(serialized);
-  Common::StdInputStream stream(ss);
-  CryptoNote::KVBinaryInputStreamSerializer serializer(stream);
-  serializer(value, name);
-}
-
-void deserialize(const std::string& serialized, RawBlock& value, const std::string &name);
-
-template <class Key, class Value>
-void serializeKeys(std::vector<std::string>& rawKeys, const std::string keyPrefix,
-                   const std::unordered_map<Key, Value>& map) {
-  for (const std::pair<Key, Value>& kv : map) {
-    rawKeys.emplace_back(DB::serializeKey(keyPrefix, kv.first));
+template <typename _KeyT, typename _ValueT>
+void serializeKeys(std::vector<std::string>& rawKeys, const KeyPrefix& prefix,
+                   const std::unordered_map<_KeyT, _ValueT>& values) {
+  for (const auto& valuePair : values) {
+    rawKeys.emplace_back(serializeKey(prefix, valuePair.first));
   }
 }
 
-template <class Key, class Value, class Iterator>
-void deserializeValues(std::unordered_map<Key, Value>& map, Iterator& serializedValuesIter, const std::string& name) {
-  for (auto iter = map.begin(); iter != map.end(); ++serializedValuesIter) {
-    if (boost::get<1>(*serializedValuesIter)) {
-      DB::deserialize(boost::get<0>(*serializedValuesIter), iter->second, name);
-      ++iter;
+template <typename _KeyT, typename _ValueT>
+void deserialize(const std::string& serialized, _ValueT& value, const _KeyT& expectedKey,
+                 const KeyPrefix& expectedPrefix) {
+  using namespace Xi;
+
+  XI_UNUSED(expectedKey, expectedPrefix);
+
+  Common::ByteSpanInputStream stream{Xi::asConstByteSpan(serialized)};
+  CryptoNote::BinaryInputStreamSerializer serializer(stream);
+
+  //  KeyPrefix actualPrefix{0};
+  //  _KeyT actualKey{};
+
+  //  exceptional_if_not<DeserializationError>(
+  //      serializer.binary(actualPrefix.Prefix.data(), actualPrefix.Prefix.size(), "prefix"),
+  //      "database prefix deserialization failed");
+  //  exceptional_if_not<DeserializationError>(actualKey == expectedKey,
+  //                                           "database deserialized prefix and expected prefix missmatch");
+  //  exceptional_if_not<DeserializationError>(serializer(actualKey, "key"), "database key deserialization failed");
+  //  exceptional_if_not<DeserializationError>(actualKey == expectedKey,
+  //                                           "database deserialized key and exptected key missmatch");
+  exceptional_if_not<DeserializationError>(serializer(value, "value"), "database value deserialization failed");
+  exceptional_if_not<DeserializationError>(stream.isEndOfStream(), "database deserialization has left overs");
+}
+
+template <typename _ValueT, typename _IteratorT>
+void deserializeValue(std::pair<_ValueT, bool>& container, _IteratorT& combinedIter, const KeyPrefix& prefix) {
+  const bool wasRequested = container.second;
+  if (wasRequested) {
+    const bool found = boost::get<1>(*combinedIter);
+    if (found) {
+      const auto& blob = boost::get<0>(*combinedIter);
+      DB::deserialize(blob, container.first, DB::noKey(), prefix);
     } else {
-      iter = map.erase(iter);
+      container = {_ValueT{}, false};
     }
+    std::advance(combinedIter, 1);
   }
 }
 
-template <class Value, class Iterator>
-void deserializeValue(std::pair<Value, bool>& pair, Iterator& serializedValuesIter, const std::string& name) {
-  if (pair.second) {
-    if (boost::get<1>(*serializedValuesIter)) {
-      DB::deserialize(boost::get<0>(*serializedValuesIter), pair.first, name);
+template <typename _KeyT, typename _ValueT, typename _IteratorT>
+void deserializeValues(std::unordered_map<_KeyT, _ValueT>& container, _IteratorT& combinedIter,
+                       const KeyPrefix& prefix) {
+  for (auto i = container.begin(); i != container.end(); std::advance(combinedIter, 1)) {
+    const bool found = boost::get<1>(*combinedIter);
+    if (found) {
+      const auto& blob = boost::get<0>(*combinedIter);
+      DB::deserialize(blob, i->second, i->first, prefix);
+      std::advance(i, 1);
     } else {
-      pair = {Value{}, false};
+      i = container.erase(i);
     }
-    ++serializedValuesIter;
   }
 }
 }  // namespace DB

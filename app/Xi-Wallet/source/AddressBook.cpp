@@ -136,8 +136,8 @@ const Maybe<const AddressBookEntry> getAddressBookEntry(AddressBook addressBook)
   }
 }
 
-void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, uint32_t height, const CryptoNote::Currency& currency,
-                         std::optional<CryptoNote::FeeAddress> feeAddress) {
+void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::BlockHeight height,
+                         const CryptoNote::Currency& currency, std::optional<CryptoNote::FeeAddress> feeAddress) {
   auto addressBook = getAddressBook();
 
   if (isAddressBookEmpty(addressBook)) {
@@ -178,7 +178,7 @@ void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, uint32_t height
   auto amount = maybeAmount.x;
   auto fee = currency.minimumFee();
   auto extra = getExtraFromPaymentID(addressBookEntry.paymentID);
-  auto mixin = CryptoNote::getDefaultMixinByHeight(height);
+  auto mixin = CryptoNote::getDefaultMixinByIndex(height.toIndex());
   auto integrated = addressBookEntry.integratedAddress;
 
   if (integrated) {
@@ -298,7 +298,9 @@ AddressBook getAddressBook() {
     buffer << input.rdbuf();
     input.close();
 
-    CryptoNote::loadFromJson(addressBook, buffer.str());
+    if (!CryptoNote::loadFromJson(addressBook, buffer.str())) {
+      throw std::runtime_error("failed to read address book file.");
+    }
   }
 
   return addressBook;

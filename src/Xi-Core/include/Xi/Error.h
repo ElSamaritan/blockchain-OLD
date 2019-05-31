@@ -25,10 +25,7 @@
 
 #include <exception>
 #include <system_error>
-
-#include <Xi/ExternalIncludePush.h>
-#include <boost/variant.hpp>
-#include <Xi/ExternalIncludePop.h>
+#include <variant>
 
 #include <Xi/Global.hh>
 
@@ -63,14 +60,14 @@ class [[nodiscard]] Error {
    * \code
    * try {
    *  ...
-   *  return Xi::make_result<void>();
+   *  return Xi::success();
    * } catch(...) {
    *  return Xi::make_error(std::current_exception());
    * }
    * \endcode
    */
-  /* implicit */ Error(std::exception_ptr e);
-  /* implicit */ Error(std::error_code ec);
+  explicit Error(std::exception_ptr e);
+  explicit Error(std::error_code ec);
   XI_DEFAULT_MOVE(Error);
   XI_DEFAULT_COPY(Error);
   ~Error() = default;
@@ -116,22 +113,10 @@ class [[nodiscard]] Error {
   [[noreturn]] void throwException() const;
 
  private:
-  boost::variant<not_initialized_tag, std::exception_ptr, std::error_code> m_error;
+  std::variant<not_initialized_tag, std::exception_ptr, std::error_code> m_error;
 };
 
-inline Error make_error(std::exception_ptr e) { return Error{e}; }
-inline Error make_error(std::error_code ec) { return Error{ec}; }
+inline Error makeError(std::exception_ptr e) { return Error{e}; }
+inline Error makeError(std::error_code ec) { return Error{ec}; }
 
-#define XI_ERROR_TRY() \
-  try {                \
-    do {               \
-  } while (0)
-
-#define XI_ERROR_CATCH()                               \
-  }                                                    \
-  catch (...) {                                        \
-    return ::Xi::make_error(std::current_exception()); \
-  }                                                    \
-  do {                                                 \
-  } while (0)
 }  // namespace Xi

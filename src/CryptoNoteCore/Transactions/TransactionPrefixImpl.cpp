@@ -95,7 +95,7 @@ Hash TransactionPrefixImpl::getTransactionHash() const { return m_txHash; }
 Hash TransactionPrefixImpl::getTransactionPrefixHash() const { return getObjectHash(m_txPrefix); }
 
 PublicKey TransactionPrefixImpl::getTransactionPublicKey() const {
-  Crypto::PublicKey pk(NULL_PUBLIC_KEY);
+  Crypto::PublicKey pk(PublicKey::Null);
   m_extra.getPublicKey(pk);
   return pk;
 }
@@ -141,7 +141,7 @@ TransactionTypes::InputType TransactionPrefixImpl::getInputType(size_t index) co
 }
 
 void TransactionPrefixImpl::getInput(size_t index, KeyInput& input) const {
-  input = boost::get<KeyInput>(getInputChecked(m_txPrefix, index, TransactionTypes::InputType::Key));
+  input = std::get<KeyInput>(getInputChecked(m_txPrefix, index, TransactionTypes::InputType::Key));
 }
 
 size_t TransactionPrefixImpl::getOutputCount() const { return m_txPrefix.outputs.size(); }
@@ -157,7 +157,7 @@ TransactionTypes::OutputType TransactionPrefixImpl::getOutputType(size_t index) 
 
 void TransactionPrefixImpl::getOutput(size_t index, KeyOutput& output, uint64_t& amount) const {
   const auto& out = getOutputChecked(m_txPrefix, index, TransactionTypes::OutputType::Key);
-  output = boost::get<KeyOutput>(out.target);
+  output = std::get<KeyOutput>(out.target);
   amount = out.amount;
 }
 

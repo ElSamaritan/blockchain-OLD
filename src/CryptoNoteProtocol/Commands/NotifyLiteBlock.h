@@ -26,13 +26,14 @@
 #include <cinttypes>
 
 #include <CryptoNoteCore/CryptoNote.h>
+#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 #include "CryptoNoteProtocol/Commands/CryptoNoteProtocolCommand.h"
 
 namespace CryptoNote {
 struct NOTIFY_NEW_LITE_BLOCK_request {
   LiteBlock block;
-  uint32_t current_blockchain_height;
+  BlockHeight current_blockchain_height;
   uint32_t hop;
 };
 

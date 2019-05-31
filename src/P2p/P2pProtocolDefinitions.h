@@ -15,6 +15,7 @@
 #include "P2pProtocolTypes.h"
 #include "crypto/crypto.h"
 #include "CryptoNoteCore/CoreStatistics.h"
+#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
 
 // new serialization
 #include "Serialization/ISerializer.h"
@@ -58,7 +59,7 @@ struct basic_node_data {
 };
 
 struct CORE_SYNC_DATA {
-  uint32_t current_height;
+  BlockHeight current_height;
   Crypto::Hash top_id;
 
   KV_BEGIN_SERIALIZATION
@@ -93,7 +94,7 @@ struct COMMAND_HANDSHAKE {
     KV_BEGIN_SERIALIZATION
     KV_MEMBER(node_data)
     KV_MEMBER(payload_data)
-    serializeAsBinary(local_peerlist, "local_peerlist", s);
+    KV_MEMBER(local_peerlist);
     KV_END_SERIALIZATION
   };
 };
@@ -118,7 +119,7 @@ struct COMMAND_TIMED_SYNC {
     KV_BEGIN_SERIALIZATION
     KV_MEMBER(local_time)
     KV_MEMBER(payload_data)
-    serializeAsBinary(local_peerlist, "local_peerlist", s);
+    KV_MEMBER(local_peerlist);
     KV_END_SERIALIZATION
   };
 };

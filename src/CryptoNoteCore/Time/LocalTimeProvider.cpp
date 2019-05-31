@@ -26,9 +26,9 @@
 Xi::Result<CryptoNote::PosixTimestamp> CryptoNote::LocalRealTimeProvider::posixNow() const {
   const auto timestamp = std::chrono::seconds{std::time(nullptr)}.count();
   if (timestamp < 0) {
-    return Xi::make_error(error::TimeError::NEGATIVE_POSIX_TIMESTAMP);
+    return Xi::failure(error::TimeError::NEGATIVE_POSIX_TIMESTAMP);
   } else {
-    return static_cast<uint64_t>(timestamp);
+    return Xi::success(static_cast<CryptoNote::PosixTimestamp>(timestamp));
   }
 }
 
