@@ -18,7 +18,7 @@
 #include "SynchronizationState.h"
 
 #include <Xi/Global.hh>
-#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
+
 
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"

@@ -14,7 +14,6 @@
 
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/Difficulty.h"
-#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 #include "BlockchainExplorer/BlockchainExplorerData.h"
 #include "BlockchainExplorer/BlockchainExplorerDataSerialization.h"
@@ -429,7 +428,7 @@ struct block_header_response {
   uint8_t minor_version;
   uint64_t timestamp;
   Crypto::Hash prev_hash;
-  BlockHeaderNonce nonce;
+  BlockNonce nonce;
   bool orphan_status;
   BlockHeight height;
   uint32_t depth;
@@ -546,7 +545,7 @@ struct f_block_details_response {
   uint8_t minor_version;
   uint64_t timestamp;
   Crypto::Hash previous_hash;
-  BlockHeaderNonce nonce;
+  BlockNonce nonce;
   bool orphan_status;
   BlockHeight height;
   uint64_t depth;

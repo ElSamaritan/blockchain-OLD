@@ -31,16 +31,15 @@
 #include <boost/variant.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Blockchain/Block/Height.hpp>
 #include <Serialization/VariantSerialization.hpp>
 #include <crypto/CryptoTypes.h>
-
-#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
 
 namespace CryptoNote {
 
 struct BaseInput {
   /// Index of the block generating coins.
-  BlockHeight height;
+  Xi::Blockchain::Block::Height height;
 };
 
 struct KeyInput {

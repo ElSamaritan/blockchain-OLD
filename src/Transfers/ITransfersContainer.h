@@ -21,7 +21,7 @@
 #include <limits>
 #include <vector>
 
-#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
+#include "CryptoNoteCore/CryptoNote.h"
 #include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 #include "Common/IObservable.h"
 #include "Common/IStreamSerializable.h"

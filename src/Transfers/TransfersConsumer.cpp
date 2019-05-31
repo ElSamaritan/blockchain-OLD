@@ -157,7 +157,7 @@ void TransfersConsumer::initTransactionPool(const std::unordered_set<Crypto::Has
 void TransfersConsumer::updateSyncStart() {
   SynchronizationStart start;
 
-  start.height = BlockHeight::fromNative(BlockHeight::max());
+  start.height = BlockHeight::max();
   start.timestamp = std::numeric_limits<uint64_t>::max();
 
   for (const auto& kv : m_subscriptions) {

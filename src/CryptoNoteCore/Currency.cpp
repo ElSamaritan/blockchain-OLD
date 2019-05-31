@@ -470,8 +470,7 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const
 }
 
 bool Currency::isLockedBasedOnTimestamp(uint64_t unlock) const { return !isLockedBasedOnBlockIndex(unlock); }
-
-bool Currency::isLockedBasedOnBlockIndex(uint64_t unlock) const { return unlock < maxBlockHeight(); }
+bool Currency::isLockedBasedOnBlockIndex(uint64_t unlock) const { return unlock <= BlockHeight::max().toIndex(); }
 
 bool Currency::isUnlockSatisfied(uint64_t unlock, uint32_t blockIndex, uint64_t timestamp) const {
   if (isLockedBasedOnBlockIndex(unlock)) {
@@ -491,10 +490,10 @@ uint32_t Currency::estimateUnlockIndex(uint64_t unlock) const {
       return 0;
     } else {
       auto estimate = (genesisTimestamp() - unlock) / blockTimeTarget() + 1;
-      if (estimate < maxBlockHeight()) {
+      if (estimate <= BlockHeight::max().toIndex()) {
         return static_cast<uint32_t>(estimate);
       } else {
-        return maxBlockHeight() - 1;
+        return BlockHeight::max().toIndex();
       }
     }
   }
@@ -684,8 +683,7 @@ size_t Currency::getApproximateMaximumInputCount(size_t transactionSize, size_t 
 Currency::Currency(ILogger& log) : logger(log, "currency") {}
 
 Currency::Currency(Currency&& currency)
-    : m_maxBlockHeight(currency.m_maxBlockHeight),
-      m_maxBlockBlobSize(currency.m_maxBlockBlobSize),
+    : m_maxBlockBlobSize(currency.m_maxBlockBlobSize),
       m_maxTxSize(currency.m_maxTxSize),
       m_publicAddressBase58Prefix(currency.m_publicAddressBase58Prefix),
       m_minedMoneyUnlockWindow(currency.m_minedMoneyUnlockWindow),
@@ -719,7 +717,6 @@ Currency::Currency(Currency&& currency)
       logger(currency.logger) {}
 
 CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
-  maxBlockNumber(Xi::Config::Limits::maximumHeight());
   maxBlockBlobSize(Xi::Config::Limits::maximumBlockBlobSize());
   maxTxSize(Xi::Config::Limits::maximumTransactionSize());
   publicAddressBase58Prefix(Xi::Config::Coin::addressBas58Prefix());

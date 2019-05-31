@@ -26,7 +26,6 @@
 #include <boost/optional.hpp>
 
 #include <Common/StringTools.h>
-#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 #include "P2p/PendingLiteBlock.h"
 #include "P2p/P2pConnectionContextHistory.h"

@@ -21,31 +21,31 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "CryptoNoteCore/Blockchain/BlockHeaderNonce.hpp"
+#pragma once
 
-#include <Common/StringTools.h>
+#include <cinttypes>
 
-#include <boost/endian/conversion.hpp>
+#include <crypto/Types/Hash.h>
 
-const CryptoNote::BlockHeaderNonce CryptoNote::BlockHeaderNonce::Null{{0, 0, 0, 0}};
+#include "Xi/Blockchain/Block/Features.hpp"
+#include "Xi/Blockchain/Block/Nonce.hpp"
 
-bool CryptoNote::serialize(CryptoNote::BlockHeaderNonce &value, Common::StringView name,
-                           CryptoNote::ISerializer &serializer) {
-  return serializer.binary(value.data(), value.size(), name);
-}
+namespace Xi {
+namespace Blockchain {
+namespace Block {
 
-void CryptoNote::BlockHeaderNonce::advance(CryptoNote::BlockHeaderNonce::integer_type offset) {
-  setAsInteger(asInteger() + offset);
-}
+struct Header {
+  uint8_t majorVersion;
+  uint8_t minorVersion;
+  Features features;
+  Nonce nonce;
+  uint64_t timestamp;
+  ::Crypto::Hash previousBlockHash;
 
-void CryptoNote::BlockHeaderNonce::setAsInteger(CryptoNote::BlockHeaderNonce::integer_type value) {
-  *reinterpret_cast<integer_type *>(data()) = boost::endian::native_to_little(value);
-}
+  [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
+};
 
-CryptoNote::BlockHeaderNonce::integer_type CryptoNote::BlockHeaderNonce::asInteger() const {
-  return boost::endian::little_to_native(*reinterpret_cast<const integer_type *>(data()));
-}
+}  // namespace Block
+}  // namespace Blockchain
 
-std::string CryptoNote::toString(const CryptoNote::BlockHeaderNonce &nonce) {
-  return Common::toHex(nonce.data(), nonce.size());
-}
+}  // namespace Xi

@@ -28,14 +28,16 @@
 #include <Xi/Blob.hpp>
 #include <Serialization/ISerializer.h>
 
-namespace CryptoNote {
+namespace Xi {
+namespace Blockchain {
+namespace Block {
 
-struct BlockHeaderNonce : Xi::enable_blob_from_this<BlockHeaderNonce, 4> {
+struct Nonce : Xi::enable_blob_from_this<Nonce, 4> {
   using enable_blob_from_this::enable_blob_from_this;
   using integer_type = uint32_t;
   using signed_integer_type = std::make_signed_t<integer_type>;
 
-  static const BlockHeaderNonce Null;
+  static const Nonce Null;
 
   void advance(integer_type offset);
 
@@ -43,8 +45,10 @@ struct BlockHeaderNonce : Xi::enable_blob_from_this<BlockHeaderNonce, 4> {
   integer_type asInteger() const;
 };
 
-std::string toString(const BlockHeaderNonce& nonce);
+std::string toString(const Nonce& nonce);
 
-[[nodiscard]] bool serialize(BlockHeaderNonce& value, Common::StringView name, ISerializer& serializer);
+[[nodiscard]] bool serialize(Nonce& value, Common::StringView name, CryptoNote::ISerializer& serializer);
 
-}  // namespace CryptoNote
+}  // namespace Block
+}  // namespace Blockchain
+}  // namespace Xi

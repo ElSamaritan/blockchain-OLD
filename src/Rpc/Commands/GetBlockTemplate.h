@@ -27,7 +27,7 @@
 #include <string>
 
 #include <Serialization/ISerializer.h>
-#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
+
 
 namespace CryptoNote {
 namespace RpcCommands {

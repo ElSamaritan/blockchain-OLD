@@ -21,14 +21,31 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "CryptoNoteCore/Blockchain/BlockHeader.hpp"
+#include "Xi/Blockchain/Block/Nonce.hpp"
 
-bool CryptoNote::BlockHeader::serialize(CryptoNote::ISerializer &serializer) {
-  XI_RETURN_EC_IF_NOT(serializer(majorVersion, "major_version"), false);
-  XI_RETURN_EC_IF_NOT(serializer(minorVersion, "minor_version"), false);
-  XI_RETURN_EC_IF_NOT(serializer(nonce, "nonce"), false);
-  XI_RETURN_EC_IF_NOT(serializer(features, "features"), false);
-  XI_RETURN_EC_IF_NOT(serializer(timestamp, "timestamp"), false);
-  XI_RETURN_EC_IF_NOT(serializer(previousBlockHash, "previous_block_hash"), false);
-  return true;
+#include <Common/StringTools.h>
+
+#include <boost/endian/conversion.hpp>
+
+const Xi::Blockchain::Block::Nonce Xi::Blockchain::Block::Nonce::Null{{0, 0, 0, 0}};
+
+bool Xi::Blockchain::Block::serialize(Xi::Blockchain::Block::Nonce &value, Common::StringView name,
+                                      CryptoNote::ISerializer &serializer) {
+  return serializer.binary(value.data(), value.size(), name);
+}
+
+void Xi::Blockchain::Block::Nonce::advance(Xi::Blockchain::Block::Nonce::integer_type offset) {
+  setAsInteger(asInteger() + offset);
+}
+
+void Xi::Blockchain::Block::Nonce::setAsInteger(Xi::Blockchain::Block::Nonce::integer_type value) {
+  *reinterpret_cast<integer_type *>(data()) = boost::endian::native_to_little(value);
+}
+
+Xi::Blockchain::Block::Nonce::integer_type Xi::Blockchain::Block::Nonce::asInteger() const {
+  return boost::endian::little_to_native(*reinterpret_cast<const integer_type *>(data()));
+}
+
+std::string Xi::Blockchain::Block::toString(const Xi::Blockchain::Block::Nonce &nonce) {
+  return Common::toHex(nonce.data(), nonce.size());
 }

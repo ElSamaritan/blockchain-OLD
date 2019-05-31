@@ -11,7 +11,6 @@
 #include <Xi/Result.h>
 
 #include "CryptoNoteCore/CryptoNote.h"
-#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
 
 #include "AddBlockErrors.h"
 #include "AddBlockErrorCondition.h"

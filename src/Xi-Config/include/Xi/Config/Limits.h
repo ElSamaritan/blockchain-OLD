@@ -36,7 +36,6 @@ namespace Config {
 namespace Limits {
 
 /* +++ Block Sizes +++ */
-inline constexpr uint32_t maximumHeight() { return (uint32_t)500_M; }
 inline constexpr uint64_t maximumTransactionSize() { return 1_T; }
 
 inline constexpr uint64_t maximumBlockBlobSize() { return 2_MB; }

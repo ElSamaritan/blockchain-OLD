@@ -50,13 +50,13 @@ bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t 
 
 bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlockedByBlockIndex(uint64_t unlockTime,
                                                                                    uint32_t blockIndex) const {
-  assert(unlockTime < m_currency.maxBlockHeight());
+  assert(unlockTime <= BlockHeight::max().toIndex());
   return m_currency.isUnlockSatisfied(unlockTime, blockIndex, 0);
 }
 
 bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlockedByTimestamp(uint64_t unlockTime,
                                                                                   uint32_t blockIndex) const {
-  assert(unlockTime > m_currency.maxBlockHeight());
+  assert(unlockTime > BlockHeight::max().toIndex());
   assert(blockIndex < getTopBlockIndex() + 1);
 
   if (blockIndex > getTopBlockIndex()) {

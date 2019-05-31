@@ -189,9 +189,10 @@ CryptoNote::TransactionValidator::extractOutputKeys(uint64_t amount, const std::
       amount, chain().getTopBlockIndex(), {indices.data(), indices.size()},
       [&, this](const CachedTransactionInfo &info, PackedOutIndex index, uint32_t globalIndex) {
         XI_UNUSED(globalIndex);
-        if (info.unlockTime < currency().maxBlockHeight()) {
+        if (currency().isLockedBasedOnBlockIndex(info.unlockTime)) {
           minHeight = std::max<uint32_t>(minHeight, static_cast<uint32_t>(info.unlockTime));
         } else {
+          assert(currency().isLockedBasedOnTimestamp(info.unlockTime));
           minTimestamp = std::max(minTimestamp, info.unlockTime);
         }
         outputKeys.push_back(std::get<KeyOutput>(info.outputs[index.data.outputIndex]).key);

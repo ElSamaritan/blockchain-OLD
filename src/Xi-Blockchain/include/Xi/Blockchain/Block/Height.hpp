@@ -24,32 +24,82 @@
 #pragma once
 
 #include <cinttypes>
+#include <utility>
+#include <limits>
+#include <type_traits>
+#include <string>
 
-#include <Xi/Types/Flag.h>
-#include <Serialization/FlagSerialization.hpp>
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
 
-namespace CryptoNote {
+#include "Xi/Blockchain/Block/Offset.hpp"
 
-enum struct BlockFeatures : uint8_t {
-  /// Serializes the static reward fields. If static rewards are enabled for the current major version this flag is
-  /// mandatory.
-  StaticReward = 1 << 0,
+namespace Xi {
+namespace Blockchain {
+namespace Block {
 
-  /// Serializes upgrade version, enabling voting to upgrade to a new major version accepting a new consensus algorithm.
-  UpgradeVoting = 1 << 1,
+class Height {
+ public:
+  using value_type = uint32_t;
+  using signed_value_type = std::make_signed_t<value_type>;
 
-  /// Changes PoW evaluation based on potentially different block headers, encoded in an extra merge mining hashes
-  /// field. The evaluation of the block header takes place by comparing an indexed merge mining hash to the provided
-  /// block header hash.
-  MergeMining = 1 << 2,
+  static Height min();
+  static Height max();
+
+ public:
+  static const Height Null;
+  static const Height Genesis;
+
+  static Height fromIndex(value_type index);
+  static Height fromNative(value_type native);
+  static Height fromSize(size_t native);
+
+ public:
+  Height();
+  XI_DEFAULT_COPY(Height);
+  ~Height() = default;
+
+  void displace(signed_value_type offset);
+  void advance(size_t offset);
+  Height shift(signed_value_type offset) const;
+  Height next(size_t offset) const;
+
+  value_type native() const;
+  value_type toIndex() const;
+  value_type toSize() const;
+
+  bool isNull() const;
+
+  bool operator==(const Height rhs) const;
+  bool operator!=(const Height rhs) const;
+  bool operator<(const Height rhs) const;
+  bool operator<=(const Height rhs) const;
+  bool operator>(const Height rhs) const;
+  bool operator>=(const Height rhs) const;
+
+ private:
+  explicit Height(value_type height);
+
+ private:
+  uint32_t m_height;
 };
 
-XI_MAKE_FLAG_OPERATIONS(BlockFeatures)
-XI_SERIALIZATION_FLAG(BlockFeatures)
+Offset operator-(const Height lhs, const Height rhs);
+Height operator-(const Height& lhs, const Offset rhs);
+Height& operator-=(Height& lhs, const Offset rhs);
+Height operator+(const Height& lhs, const Offset rhs);
+Height& operator+=(Height& lhs, const Offset rhs);
 
-}  // namespace CryptoNote
+std::string toString(const Height height);
+[[nodiscard]] bool serialize(Height& height, Common::StringView name, CryptoNote::ISerializer& serializer);
 
-XI_SERIALIZATION_FLAG_RANGE(CryptoNote::BlockFeatures, StaticReward, MergeMining)
-XI_SERIALIZATION_FLAG_TAG(CryptoNote::BlockFeatures, StaticReward, "static_reward")
-XI_SERIALIZATION_FLAG_TAG(CryptoNote::BlockFeatures, UpgradeVoting, "upgrade_voting")
-XI_SERIALIZATION_FLAG_TAG(CryptoNote::BlockFeatures, MergeMining, "merge_mining")
+}  // namespace Block
+}  // namespace Blockchain
+}  // namespace Xi
+
+namespace std {
+template <>
+struct hash<Xi::Blockchain::Block::Height> {
+  std::size_t operator()(const Xi::Blockchain::Block::Height offset) const;
+};
+}  // namespace std

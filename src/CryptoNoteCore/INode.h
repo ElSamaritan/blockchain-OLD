@@ -67,7 +67,7 @@ struct BlockHeaderInfo {
   uint64_t timestamp;
   Crypto::Hash hash;
   Crypto::Hash prevHash;
-  BlockHeaderNonce nonce;
+  BlockNonce nonce;
   bool isAlternative;
   uint32_t depth;  // last block index = current block index + depth
   uint64_t difficulty;

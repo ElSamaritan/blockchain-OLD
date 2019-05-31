@@ -23,7 +23,7 @@
 
 #include <Xi/Global.hh>
 
-#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
+
 
 namespace CryptoNote {
 

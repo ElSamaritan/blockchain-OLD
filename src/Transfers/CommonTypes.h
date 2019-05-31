@@ -26,7 +26,7 @@
 #include <boost/optional.hpp>
 
 #include "CryptoNoteCore/INode.h"
-#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
+
 #include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 
 namespace CryptoNote {

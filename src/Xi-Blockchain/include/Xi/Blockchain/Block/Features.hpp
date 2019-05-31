@@ -21,41 +21,39 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "CryptoNoteCore/Blockchain/BlockOffset.hpp"
+#pragma once
 
-CryptoNote::BlockOffset::BlockOffset(CryptoNote::BlockOffset::value_type value) : m_native{value} {}
+#include <cinttypes>
 
-CryptoNote::BlockOffset CryptoNote::BlockOffset::fromNative(const CryptoNote::BlockOffset::value_type value) {
-  return BlockOffset{value};
-}
+#include <Xi/Types/Flag.h>
+#include <Serialization/FlagSerialization.hpp>
 
-CryptoNote::BlockOffset::BlockOffset() : m_native{0} {}
+namespace Xi {
+namespace Blockchain {
+namespace Block {
 
-int64_t CryptoNote::BlockOffset::native() const { return m_native; }
+enum struct Features : uint8_t {
+  /// Serializes the static reward fields. If static rewards are enabled for the current major version this flag is
+  /// mandatory.
+  StaticReward = 1 << 0,
 
-bool CryptoNote::BlockOffset::operator==(const CryptoNote::BlockOffset rhs) const { return m_native == rhs.m_native; }
-bool CryptoNote::BlockOffset::operator!=(const CryptoNote::BlockOffset rhs) const { return m_native != rhs.m_native; }
-bool CryptoNote::BlockOffset::operator<(const CryptoNote::BlockOffset rhs) const { return m_native < rhs.m_native; }
-bool CryptoNote::BlockOffset::operator<=(const CryptoNote::BlockOffset rhs) const { return m_native <= rhs.m_native; }
-bool CryptoNote::BlockOffset::operator>(const CryptoNote::BlockOffset rhs) const { return m_native > rhs.m_native; }
-bool CryptoNote::BlockOffset::operator>=(const CryptoNote::BlockOffset rhs) const { return m_native >= rhs.m_native; }
+  /// Serializes upgrade version, enabling voting to upgrade to a new major version accepting a new consensus algorithm.
+  UpgradeVoting = 1 << 1,
 
-size_t std::hash<CryptoNote::BlockOffset>::operator()(const CryptoNote::BlockOffset offset) const {
-  return std::hash<CryptoNote::BlockOffset::value_type>{}(offset.native());
-}
+  /// Changes PoW evaluation based on potentially different block headers, encoded in an extra merge mining hashes
+  /// field. The evaluation of the block header takes place by comparing an indexed merge mining hash to the provided
+  /// block header hash.
+  MergeMining = 1 << 2,
+};
 
-CryptoNote::BlockOffset CryptoNote::operator+(const CryptoNote::BlockOffset lhs, const CryptoNote::BlockOffset rhs) {
-  return BlockOffset::fromNative(lhs.native() + rhs.native());
-}
+XI_MAKE_FLAG_OPERATIONS(Features)
+XI_SERIALIZATION_FLAG(Features)
 
-CryptoNote::BlockOffset& CryptoNote::operator+=(CryptoNote::BlockOffset& lhs, const CryptoNote::BlockOffset rhs) {
-  return lhs = BlockOffset::fromNative(lhs.native() + rhs.native());
-}
+}  // namespace Block
+}  // namespace Blockchain
+}  // namespace Xi
 
-CryptoNote::BlockOffset CryptoNote::operator-(const CryptoNote::BlockOffset lhs, const CryptoNote::BlockOffset rhs) {
-  return BlockOffset::fromNative(lhs.native() - rhs.native());
-}
-
-CryptoNote::BlockOffset& CryptoNote::operator-=(CryptoNote::BlockOffset& lhs, const CryptoNote::BlockOffset rhs) {
-  return lhs = BlockOffset::fromNative(lhs.native() - rhs.native());
-}
+XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Block::Features, StaticReward, MergeMining)
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Features, StaticReward, "static_reward")
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Features, UpgradeVoting, "upgrade_voting")
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Features, MergeMining, "merge_mining")

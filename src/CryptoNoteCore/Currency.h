@@ -33,8 +33,6 @@ class Currency {
  public:
   XI_DELETE_COPY(Currency);
 
-  uint32_t maxBlockHeight() const { return m_maxBlockHeight; }
-
   size_t maxBlockBlobSize() const { return m_maxBlockBlobSize; }
   size_t maxTxSize(uint8_t blockMajorVersion) const;
   uint8_t maxTxVersion() const;
@@ -159,7 +157,6 @@ class Currency {
   bool generateGenesisBlock();
 
  private:
-  uint32_t m_maxBlockHeight;
   size_t m_maxBlockBlobSize;
   size_t m_maxTxSize;
   uint64_t m_publicAddressBase58Prefix;
@@ -228,10 +225,6 @@ class CurrencyBuilder : boost::noncopyable {
 
   Transaction generateGenesisTransaction();
   Transaction generateGenesisTransaction(const std::vector<AccountPublicAddress>& targets);
-  CurrencyBuilder& maxBlockNumber(uint32_t val) {
-    m_currency.m_maxBlockHeight = val;
-    return *this;
-  }
   CurrencyBuilder& maxBlockBlobSize(size_t val) {
     m_currency.m_maxBlockBlobSize = val;
     return *this;

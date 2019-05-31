@@ -32,7 +32,7 @@
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "CryptoNoteCore/Currency.h"
-#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
+#include "CryptoNoteCore/CryptoNote.h"
 #include "Logging/LoggerRef.h"
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"

@@ -20,7 +20,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
+#include <CryptoNoteCore/CryptoNote.h>
 
 namespace CryptoNote {
 class ICryptoNoteProtocolObserver;

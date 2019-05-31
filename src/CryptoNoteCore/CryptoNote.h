@@ -26,18 +26,23 @@
 #include <boost/optional.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Blockchain/Block/Header.hpp>
+#include <Xi/Blockchain/Block/Height.hpp>
+
 #include <Xi/Types/Flag.h>
 #include <Xi/Algorithm/GenericComparison.h>
 #include <Xi/Algorithm/GenericHash.h>
 #include <Serialization/FlagSerialization.hpp>
 #include <crypto/CryptoTypes.h>
 
-#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
-#include "CryptoNoteCore/Blockchain/BlockHeader.hpp"
-#include "CryptoNoteCore/Blockchain/BlockHeaderNonce.hpp"
 #include "CryptoNoteCore/Transactions/Transaction.h"
 
 namespace CryptoNote {
+
+using BlockHeight = Xi::Blockchain::Block::Height;
+using BlockOffset = Xi::Blockchain::Block::Offset;
+using BlockNonce = Xi::Blockchain::Block::Nonce;
+using BlockHeader = Xi::Blockchain::Block::Header;
 
 struct BlockTemplate : public BlockHeader {
   Transaction baseTransaction;

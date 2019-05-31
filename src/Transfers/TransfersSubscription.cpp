@@ -18,7 +18,7 @@
 #include "TransfersSubscription.h"
 #include "WalletLegacy/IWalletLegacy.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
-#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
+#include "CryptoNoteCore/CryptoNote.h"
 
 using namespace Crypto;
 using namespace Logging;

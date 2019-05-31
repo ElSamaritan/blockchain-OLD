@@ -12,7 +12,7 @@
 #include <string>
 
 #include "Serialization/ISerializer.h"
-#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
+#include <CryptoNoteCore/CryptoNote.h>
 
 namespace PaymentService {
 

@@ -28,7 +28,6 @@
 
 #include <crypto/CryptoTypes.h>
 #include <CryptoNoteCore/CryptoNote.h>
-#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 #include "CryptoNoteProtocol/Commands/CryptoNoteProtocolCommand.h"
 

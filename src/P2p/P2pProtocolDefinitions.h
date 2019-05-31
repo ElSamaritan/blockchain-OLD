@@ -15,7 +15,7 @@
 #include "P2pProtocolTypes.h"
 #include "crypto/crypto.h"
 #include "CryptoNoteCore/CoreStatistics.h"
-#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
+#include <CryptoNoteCore/CryptoNote.h>
 
 // new serialization
 #include "Serialization/ISerializer.h"

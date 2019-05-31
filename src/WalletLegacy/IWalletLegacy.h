@@ -27,7 +27,6 @@
 #include <Xi/Global.hh>
 
 #include "CryptoNoteCore/CryptoNote.h"
-#include "CryptoNoteCore/Blockchain/BlockHeight.hpp"
 
 namespace CryptoNote {
 

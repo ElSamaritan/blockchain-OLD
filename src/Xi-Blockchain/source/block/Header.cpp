@@ -21,28 +21,14 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/Blockchain/Block/Header.hpp"
 
-#include <cinttypes>
-#include <optional>
-
-#include <crypto/Types/Hash.h>
-#include <Serialization/ISerializer.h>
-
-#include "CryptoNoteCore/Blockchain/BlockFeatures.hpp"
-#include "CryptoNoteCore/Blockchain/BlockHeaderNonce.hpp"
-
-namespace CryptoNote {
-
-struct BlockHeader {
-  uint8_t majorVersion;
-  uint8_t minorVersion;
-  BlockFeatures features;
-  BlockHeaderNonce nonce;
-  uint64_t timestamp;
-  Crypto::Hash previousBlockHash;
-
-  [[nodiscard]] bool serialize(ISerializer& serializer);
-};
-
-}  // namespace CryptoNote
+bool Xi::Blockchain::Block::Header::serialize(CryptoNote::ISerializer &serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(majorVersion, "major_version"), false);
+  XI_RETURN_EC_IF_NOT(serializer(minorVersion, "minor_version"), false);
+  XI_RETURN_EC_IF_NOT(serializer(nonce, "nonce"), false);
+  XI_RETURN_EC_IF_NOT(serializer(features, "features"), false);
+  XI_RETURN_EC_IF_NOT(serializer(timestamp, "timestamp"), false);
+  XI_RETURN_EC_IF_NOT(serializer(previousBlockHash, "previous_block_hash"), false);
+  return true;
+}

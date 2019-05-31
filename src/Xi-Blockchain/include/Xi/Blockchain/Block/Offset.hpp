@@ -28,46 +28,50 @@
 
 #include <Xi/Global.hh>
 
-namespace CryptoNote {
+namespace Xi {
+namespace Blockchain {
+namespace Block {
 
-class BlockOffset final {
+class Offset final {
  public:
   using value_type = int64_t;
 
  public:
-  static BlockOffset fromNative(const value_type value);
+  static Offset fromNative(const value_type value);
 
  public:
-  BlockOffset();
-  XI_DEFAULT_COPY(BlockOffset);
-  ~BlockOffset() = default;
+  Offset();
+  XI_DEFAULT_COPY(Offset);
+  ~Offset() = default;
 
   int64_t native() const;
 
-  bool operator==(const BlockOffset rhs) const;
-  bool operator!=(const BlockOffset rhs) const;
-  bool operator<(const BlockOffset rhs) const;
-  bool operator<=(const BlockOffset rhs) const;
-  bool operator>(const BlockOffset rhs) const;
-  bool operator>=(const BlockOffset rhs) const;
+  bool operator==(const Offset rhs) const;
+  bool operator!=(const Offset rhs) const;
+  bool operator<(const Offset rhs) const;
+  bool operator<=(const Offset rhs) const;
+  bool operator>(const Offset rhs) const;
+  bool operator>=(const Offset rhs) const;
 
  private:
-  explicit BlockOffset(value_type value);
+  explicit Offset(value_type value);
 
  private:
   value_type m_native;
 };
 
-BlockOffset operator+(const BlockOffset lhs, const BlockOffset rhs);
-BlockOffset& operator+=(BlockOffset& lhs, const BlockOffset rhs);
-BlockOffset operator-(const BlockOffset lhs, const BlockOffset rhs);
-BlockOffset& operator-=(BlockOffset& lhs, const BlockOffset rhs);
+Offset operator+(const Offset lhs, const Offset rhs);
+Offset& operator+=(Offset& lhs, const Offset rhs);
+Offset operator-(const Offset lhs, const Offset rhs);
+Offset& operator-=(Offset& lhs, const Offset rhs);
 
-}  // namespace CryptoNote
+}  // namespace Block
+}  // namespace Blockchain
+}  // namespace Xi
 
 namespace std {
 template <>
-struct hash<CryptoNote::BlockOffset> {
-  std::size_t operator()(const CryptoNote::BlockOffset offset) const;
+struct hash<Xi::Blockchain::Block::Offset> {
+  std::size_t operator()(const Xi::Blockchain::Block::Offset offset) const;
 };
 }  // namespace std

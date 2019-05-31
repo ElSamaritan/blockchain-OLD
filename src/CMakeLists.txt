@@ -133,6 +133,16 @@ xi_make_library(
     Common
 )
 
+xi_make_library(
+  Xi-Blockchain
+
+  PUBLIC_LIBRARIES
+    Xi::Core
+    Xi::Crypto
+    Crypto
+    Serialization
+)
+
 if(XI_BUILD_BREAKPAD)
   xi_make_library(
     Xi-CrashHandler

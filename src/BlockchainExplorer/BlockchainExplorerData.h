@@ -24,7 +24,6 @@
 #include <crypto/CryptoTypes.h>
 #include <Serialization/VariantSerialization.hpp>
 #include <CryptoNoteCore/CryptoNote.h>
-#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
 
 namespace CryptoNote {
 
@@ -84,7 +83,7 @@ struct BlockDetails {
   uint8_t minorVersion = 0;
   uint64_t timestamp = 0;
   Crypto::Hash prevBlockHash;
-  BlockHeaderNonce nonce = BlockHeaderNonce::Null;
+  BlockNonce nonce = BlockNonce::Null;
   bool isAlternative = false;
   BlockHeight height = BlockHeight::Null;
   Crypto::Hash hash;

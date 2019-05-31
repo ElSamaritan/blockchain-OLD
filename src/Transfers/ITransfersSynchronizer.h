@@ -22,7 +22,7 @@
 #include <vector>
 
 #include <Xi/Global.hh>
-#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
+
 
 #include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 #include "Transfers/ITransfersContainer.h"

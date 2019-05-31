@@ -21,7 +21,7 @@
 #include <map>
 #include <string>
 
-#include <CryptoNoteCore/Blockchain/BlockHeight.hpp>
+
 
 #include "CommonTypes.h"
 #include "Common/IStreamSerializable.h"
