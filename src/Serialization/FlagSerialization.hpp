@@ -27,8 +27,6 @@
 #include <cassert>
 #include <cinttypes>
 
-#include <Xi/Types/Flag.h>
-
 #include "Serialization/ISerializer.h"
 #include "Serialization/TypeTag.hpp"
 

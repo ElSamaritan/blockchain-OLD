@@ -21,60 +21,43 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
-
 #include <type_traits>
 
-#include <Xi/Global.hh>
-
 namespace Xi {
-namespace Types {
+namespace TypeSafe {
 
-/*!
- * \brief Arithmetic wraps an arithmetic type and is only compatible to its own type.
- *
- * Encoding values for different semantic meaning with the same type can lead to hard errors.
- * Use this class to make an arithmetic type that is only compatible to itself.
- */
 template <typename _ValueT, typename _CompType>
-struct enable_arithmetic_from_this {
+struct EnableIntegralFromThis {
+ public:
   static_assert(std::is_arithmetic_v<_ValueT>, "Arithmetic can only wrap arithmetic types");
 
-  using value_t = _ValueT;
+  using value_type = _ValueT;
   using compatible_t = _CompType;
 
-  value_t value;  ///< stores the actual value representation
+ protected:
+  value_type value;  ///< stores the actual value representation
 
-  compatible_t& this_compatible() { return *static_cast<compatible_t*>(this); }
-  const compatible_t& this_compatible() const { return *static_cast<const compatible_t*>(this); }
+ private:
+  constexpr compatible_t &this_compatible() { return *static_cast<compatible_t *>(this); }
+  constexpr const compatible_t &this_compatible() const { return *static_cast<const compatible_t *>(this); }
 
-  explicit enable_arithmetic_from_this() : value{} {}
-  explicit enable_arithmetic_from_this(value_t _value) : value{_value} {}
-  explicit enable_arithmetic_from_this(const enable_arithmetic_from_this& _value) : value{_value.value} {}
-  compatible_t& operator=(compatible_t _value) {
+ public:
+  explicit constexpr EnableIntegralFromThis() : value{} {}
+  explicit constexpr EnableIntegralFromThis(value_type _value) : value{_value} {}
+  explicit constexpr EnableIntegralFromThis(const EnableIntegralFromThis &_value) : value{_value.value} {}
+  compatible_t &operator=(compatible_t _value) {
     this->value = _value;
     return this_compatible();
   }
 
-  bool operator==(const compatible_t& rhs) const { return this->value == rhs.value; }
-  bool operator!=(const compatible_t& rhs) const { return this->value != rhs.value; }
+  constexpr bool operator==(const compatible_t &rhs) const { return this->value == rhs.value; }
+  constexpr bool operator!=(const compatible_t &rhs) const { return this->value != rhs.value; }
 
-  bool operator<(const compatible_t& rhs) const { return this->value < rhs.value; }
-  bool operator<=(const compatible_t& rhs) const { return this->value <= rhs.value; }
-  bool operator>(const compatible_t& rhs) const { return this->value > rhs.value; }
-  bool operator>=(const compatible_t& rhs) const { return this->value >= rhs.value; }
-
-  compatible_t operator+(compatible_t rhs) const { return compatible_t{this->value + rhs.value}; }
-  compatible_t& operator+=(compatible_t rhs) {
-    this->value += rhs.value;
-    return this_compatible();
-  }
-
-  compatible_t operator-(compatible_t rhs) const { return compatible_t{this->value - rhs.value}; }
-  compatible_t& operator-=(compatible_t rhs) {
-    this->value -= rhs.value;
-    return this_compatible();
-  }
+  constexpr bool operator<(const compatible_t &rhs) const { return this->value < rhs.value; }
+  constexpr bool operator<=(const compatible_t &rhs) const { return this->value <= rhs.value; }
+  constexpr bool operator>(const compatible_t &rhs) const { return this->value > rhs.value; }
+  constexpr bool operator>=(const compatible_t &rhs) const { return this->value >= rhs.value; }
 };
-}  // namespace Types
+
+}  // namespace TypeSafe
 }  // namespace Xi

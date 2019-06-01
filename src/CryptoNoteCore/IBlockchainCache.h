@@ -21,7 +21,6 @@
 #include <limits>
 #include <utility>
 
-#include <Xi/Types/Flag.h>
 #include <Common/ArrayView.h>
 
 #include "CryptoNoteCore/CryptoNote.h"

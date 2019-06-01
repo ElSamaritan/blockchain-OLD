@@ -25,7 +25,7 @@
 
 #include <cinttypes>
 
-#include <Xi/Types/Flag.h>
+#include <Xi/TypeSafe/Flag.hpp>
 #include <Serialization/FlagSerialization.hpp>
 
 namespace Xi {
@@ -46,7 +46,7 @@ enum struct Features : uint8_t {
   MergeMining = 1 << 2,
 };
 
-XI_MAKE_FLAG_OPERATIONS(Features)
+XI_TYPESAFE_FLAG_MAKE_OPERATIONS(Features)
 XI_SERIALIZATION_FLAG(Features)
 
 }  // namespace Block

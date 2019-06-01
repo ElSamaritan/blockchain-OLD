@@ -23,4 +23,5 @@
 
 #pragma once
 
-#include "Xi/Types/Arithmetic.h"
+#include "Xi/TypeSafe/Flag.hpp"
+#include "Xi/TypeSafe/Integral.hpp"

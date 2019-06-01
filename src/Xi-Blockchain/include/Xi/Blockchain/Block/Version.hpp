@@ -27,7 +27,7 @@
 #include <string>
 
 #include <Serialization/ISerializer.h>
-#include <Xi/Types/Integral.hpp>
+#include <Xi/TypeSafe/Integral.hpp>
 
 namespace Xi {
 namespace Blockchain {
@@ -44,8 +44,8 @@ namespace Block {
  * change (\see Voting System).
  *
  */
-struct Version : enable_integral_from_this<uint8_t, Version> {
-  using enable_integral_from_this::enable_integral_from_this;
+struct Version : TypeSafe::EnableIntegralFromThis<uint8_t, Version> {
+  using EnableIntegralFromThis::EnableIntegralFromThis;
 
   /*!
    * \brief Null Well defined optional state, the null value is interpreted as no value given.

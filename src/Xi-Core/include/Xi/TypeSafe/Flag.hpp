@@ -25,7 +25,7 @@
 
 #include <type_traits>
 
-#define XI_MAKE_FLAG_OPERATIONS(_FlagT)                                                                             \
+#define XI_TYPESAFE_FLAG_MAKE_OPERATIONS(_FlagT)                                                                    \
   inline constexpr _FlagT operator|(_FlagT a, _FlagT b) noexcept {                                                  \
     return _FlagT(((std::underlying_type<_FlagT>::type)a) | ((std::underlying_type<_FlagT>::type)b));               \
   }                                                                                                                 \
@@ -47,21 +47,13 @@
   }
 
 template <typename _FlagT>
-inline constexpr bool flags_are_set(_FlagT value, _FlagT flags) {
+[[nodiscard]] inline constexpr bool hasFlag(_FlagT value, _FlagT flags) {
+  static_assert(std::is_enum_v<_FlagT>, "flags are only well defined for enum types.");
   return (value & flags) == flags;
 }
 
 template <typename _FlagT>
-inline constexpr bool flags_are_not_set(_FlagT value, _FlagT flags) {
-  return (value & flags) == 0;
-}
-
-template <typename _FlagT>
-inline constexpr _FlagT flags_set(_FlagT value, _FlagT flags) {
-  return value | flags;
-}
-
-template <typename _FlagT>
-inline constexpr _FlagT flags_unset(_FlagT value, _FlagT flags) {
+[[nodiscard]] inline constexpr _FlagT discardFlag(_FlagT value, _FlagT flags) {
+  static_assert(std::is_enum_v<_FlagT>, "flags are only well defined for enum types.");
   return value & (~flags);
 }

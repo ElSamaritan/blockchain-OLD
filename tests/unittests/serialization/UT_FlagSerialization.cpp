@@ -26,7 +26,7 @@
 #include <vector>
 #include <memory>
 
-#include <Xi/Types/Flag.h>
+#include <Xi/TypeSafe/Flag.hpp>
 #include <Serialization/BinaryInputStreamSerializer.h>
 #include <Serialization/BinaryOutputStreamSerializer.h>
 #include <Serialization/JsonInputStreamSerializer.h>
@@ -64,7 +64,7 @@ enum struct StandardFlag {
   OutOfRange = 1 << 8
 };
 
-XI_MAKE_FLAG_OPERATIONS(StandardFlag)
+XI_TYPESAFE_FLAG_MAKE_OPERATIONS(StandardFlag)
 XI_SERIALIZATION_FLAG(StandardFlag)
 
 struct TestStruct {
@@ -103,8 +103,8 @@ TEST(CryptoNote_Serialization, BinaryFlags) {
   EXPECT_EQ(legit.second, deserialized.second);
   EXPECT_EQ(legit.third, deserialized.third);
 
-  EXPECT_TRUE(flags_are_set(deserialized.third, StandardFlag::First));
-  EXPECT_TRUE(flags_are_set(deserialized.third, StandardFlag::Second));
+  EXPECT_TRUE(hasFlag(deserialized.third, StandardFlag::First));
+  EXPECT_TRUE(hasFlag(deserialized.third, StandardFlag::Second));
 
   {
     TestStruct notLegit = legit;
@@ -158,8 +158,8 @@ TEST(CryptoNote_Serialization, JsonFlags) {
   EXPECT_EQ(legit.second, deserialized.second);
   EXPECT_EQ(legit.third, deserialized.third);
 
-  EXPECT_TRUE(flags_are_set(deserialized.third, StandardFlag::First));
-  EXPECT_TRUE(flags_are_set(deserialized.third, StandardFlag::Second));
+  EXPECT_TRUE(hasFlag(deserialized.third, StandardFlag::First));
+  EXPECT_TRUE(hasFlag(deserialized.third, StandardFlag::Second));
 
   {
     TestStruct notLegit = legit;

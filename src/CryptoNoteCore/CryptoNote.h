@@ -30,7 +30,6 @@
 #include <Xi/Blockchain/Block/Version.hpp>
 #include <Xi/Blockchain/Block/Height.hpp>
 
-#include <Xi/Types/Flag.h>
 #include <Xi/Algorithm/GenericComparison.h>
 #include <Xi/Algorithm/GenericHash.h>
 #include <Serialization/FlagSerialization.hpp>
