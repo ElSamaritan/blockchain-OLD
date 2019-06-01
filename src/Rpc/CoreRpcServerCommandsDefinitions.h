@@ -283,7 +283,7 @@ struct COMMAND_RPC_GET_INFO {
     std::vector<BlockHeight> upgrade_heights;
     BlockHeight supported_height;
     uint32_t hashrate;
-    uint8_t major_version;
+    BlockVersion major_version;
     uint8_t minor_version;
     std::string version;
     uint64_t start_time;
@@ -424,7 +424,7 @@ struct COMMAND_RPC_SUBMITBLOCK {
 };
 
 struct block_header_response {
-  uint8_t major_version;
+  BlockVersion major_version;
   uint8_t minor_version;
   uint64_t timestamp;
   Crypto::Hash prev_hash;
@@ -541,7 +541,7 @@ struct f_block_short_response {
 };
 
 struct f_block_details_response {
-  uint8_t major_version;
+  BlockVersion major_version;
   uint8_t minor_version;
   uint64_t timestamp;
   Crypto::Hash previous_hash;

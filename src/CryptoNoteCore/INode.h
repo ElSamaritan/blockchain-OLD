@@ -62,7 +62,7 @@ struct BlockShortEntry {
 
 struct BlockHeaderInfo {
   BlockHeight height;
-  uint8_t majorVersion;
+  BlockVersion majorVersion;
   uint8_t minorVersion;
   uint64_t timestamp;
   Crypto::Hash hash;

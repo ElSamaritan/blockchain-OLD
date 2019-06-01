@@ -26,7 +26,7 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 
 CryptoNote::PoolTransactionValidator::PoolTransactionValidator(const CryptoNote::ITransactionPool &pool,
-                                                               uint8_t blockVersion, const IBlockchainCache &chain,
+                                                               BlockVersion blockVersion, const IBlockchainCache &chain,
                                                                const Currency &currency)
     : TransactionValidator(blockVersion, chain, currency), m_pool{pool} {}
 

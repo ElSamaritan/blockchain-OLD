@@ -79,7 +79,7 @@ void NodeRpcProxy::resetInternalState() {
   m_peerCount.store(0, std::memory_order_relaxed);
   m_networkHeight.store(BlockHeight::Null, std::memory_order_relaxed);
   lastLocalBlockHeaderInfo.height = BlockHeight::Null;
-  lastLocalBlockHeaderInfo.majorVersion = 0;
+  lastLocalBlockHeaderInfo.majorVersion = BlockVersion::Null;
   lastLocalBlockHeaderInfo.minorVersion = 0;
   lastLocalBlockHeaderInfo.timestamp = 0;
   lastLocalBlockHeaderInfo.hash = Crypto::Hash::Null;

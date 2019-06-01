@@ -29,14 +29,14 @@ namespace CryptoNote {
 
 class NoVotingUpgradeDetector : public IUpgradeDetector {
  public:
-  NoVotingUpgradeDetector(uint8_t targetVersion, uint32_t upgradeIndex);
+  NoVotingUpgradeDetector(Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeIndex);
   ~NoVotingUpgradeDetector() override;
 
-  uint8_t targetVersion() const override;
+  Xi::Blockchain::Block::Version targetVersion() const override;
   uint32_t upgradeIndex() const override;
 
  private:
-  uint8_t m_targetVersion;
+  Xi::Blockchain::Block::Version m_targetVersion;
   uint32_t m_upgradeIndex;
 };
 
@@ -46,6 +46,7 @@ class NoVotingUpgradeDetector : public IUpgradeDetector {
  * \param upgradeIndex The height of the blockchain when the new major version should be applied
  * \return An upgrade detector managing the upgrade by a version dependent strategy voting/no voting
  */
-std::unique_ptr<IUpgradeDetector> makeUpgradeDetector(uint8_t targetVersion, uint32_t upgradeIndex);
+std::unique_ptr<IUpgradeDetector> makeUpgradeDetector(Xi::Blockchain::Block::Version targetVersion,
+                                                      uint32_t upgradeIndex);
 
 }  // namespace CryptoNote

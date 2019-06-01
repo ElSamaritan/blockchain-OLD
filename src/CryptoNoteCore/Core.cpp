@@ -124,7 +124,7 @@ int64_t getEmissionChange(const Currency& currency, IBlockchainCache& segment, u
                           const CachedBlock& cachedBlock, uint64_t cumulativeSize, uint64_t cumulativeFee) {
   uint64_t reward = 0;
   int64_t emissionChange = 0;
-  const uint8_t majorVersion = cachedBlock.getBlock().majorVersion;
+  const auto majorVersion = cachedBlock.getBlock().majorVersion;
   auto alreadyGeneratedCoins = segment.getAlreadyGeneratedCoins(previousBlockIndex);
   auto lastBlocksSizes = segment.getLastBlocksSizes(currency.rewardBlocksWindowByBlockVersion(majorVersion),
                                                     previousBlockIndex, addGenesisBlock);
@@ -617,7 +617,7 @@ uint64_t Core::getDifficultyForNextBlock() const {
 
   uint32_t topBlockIndex = mainChain->getTopBlockIndex();
 
-  uint8_t nextBlockMajorVersion = getBlockMajorVersionForIndex(topBlockIndex);
+  auto nextBlockMajorVersion = getBlockMajorVersionForIndex(topBlockIndex);
 
   size_t blocksCount =
       std::min(static_cast<size_t>(topBlockIndex), m_currency.difficultyBlocksCountByVersion(nextBlockMajorVersion));
@@ -1188,7 +1188,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   }
 
   b = boost::value_initialized<BlockTemplate>();
-  b.majorVersion = getBlockMajorVersionForIndex(index);
+  b.majorVersion = BlockVersion{getBlockMajorVersionForIndex(index)};
   b.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
   b.previousBlockHash = getTopBlockHash();
 
@@ -1230,7 +1230,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
      https://github.com/loki-project/loki/pull/26 */
 
   /* How many blocks we look in the past to calculate the median timestamp */
-  uint32_t blockchain_timestamp_check_window = m_currency.timestampCheckWindow(index, b.majorVersion);
+  uint32_t blockchain_timestamp_check_window = m_currency.timestampCheckWindow(b.majorVersion);
 
   /* Skip the first N blocks, we don't have enough blocks to calculate a
      proper median yet */
@@ -1398,7 +1398,7 @@ std::vector<Transaction> Core::getPoolTransactions() const {
 
 bool Core::extractTransactions(const std::vector<BinaryArray>& rawTransactions,
                                std::vector<CachedTransaction>& transactions, uint64_t& cumulativeSize,
-                               uint8_t blockMajorVersion) {
+                               BlockVersion blockMajorVersion) {
   try {
     for (const auto& rawTransaction : rawTransactions) {
       if (rawTransaction.size() > m_currency.maxTxSize(blockMajorVersion)) {
@@ -1419,7 +1419,7 @@ bool Core::extractTransactions(const std::vector<BinaryArray>& rawTransactions,
 
 std::error_code Core::validateTransaction(const CachedTransaction& cachedTransaction, TransactionValidatorState& state,
                                           IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex,
-                                          uint8_t blockMajorVersion, uint64_t blockTimestamp) {
+                                          BlockVersion blockMajorVersion, uint64_t blockTimestamp) {
   // TransactionValidatorState currentState;
   if (cachedTransaction.getTransactionBinaryArray().size() > currency().maxTxSize(blockMajorVersion)) {
     return error::TransactionValidationError::TOO_LARGE;
@@ -1618,14 +1618,13 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     return error::BlockValidationError::WRONG_MINOR_VERSION;
   }
 
-  if (block.timestamp >
-      getAdjustedTime() + m_currency.blockFutureTimeLimit(previousBlockIndex + 1, block.majorVersion)) {
+  if (block.timestamp > getAdjustedTime() + m_currency.blockFutureTimeLimit(block.majorVersion)) {
     return error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_FUTURE;
   }
 
-  auto timestamps = cache->getLastTimestamps(
-      m_currency.timestampCheckWindow(previousBlockIndex + 1, block.majorVersion), previousBlockIndex, addGenesisBlock);
-  if (timestamps.size() >= m_currency.timestampCheckWindow(previousBlockIndex + 1, block.majorVersion)) {
+  auto timestamps = cache->getLastTimestamps(m_currency.timestampCheckWindow(block.majorVersion), previousBlockIndex,
+                                             addGenesisBlock);
+  if (timestamps.size() >= m_currency.timestampCheckWindow(block.majorVersion)) {
     auto median_ts = Common::medianValue(timestamps);
     if (block.timestamp < median_ts) {
       return error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_PAST;
@@ -1691,7 +1690,7 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   }
 
   std::vector<uint64_t> canoncialAmounts;
-  decomposeAmount(minerReward, currency().defaultDustThresholdForMajorVersion(block.majorVersion), canoncialAmounts);
+  decomposeAmount(minerReward, canoncialAmounts);
 
   if (embeddedAmounts != canoncialAmounts) {
     return error::TransactionValidationError::OUTPUTS_NOT_CANONCIAL;
@@ -2134,12 +2133,12 @@ void Core::getTransactionPoolDifference(const std::vector<Crypto::Hash>& knownHa
   deletedTransactions.assign(knownTransactions.begin(), knownTransactions.end());
 }
 
-uint8_t Core::getBlockMajorVersionForIndex(uint32_t height) const {
+BlockVersion Core::getBlockMajorVersionForIndex(uint32_t height) const {
   return m_upgradeManager->getBlockMajorVersion(height);
 }
 
 size_t Core::calculateCumulativeBlocksizeLimit(uint32_t height) const {
-  uint8_t nextBlockMajorVersion = getBlockMajorVersionForIndex(height);
+  const auto nextBlockMajorVersion = getBlockMajorVersionForIndex(height);
   size_t nextBlockGrantedFullRewardZone = m_currency.blockGrantedFullRewardZoneByBlockVersion(nextBlockMajorVersion);
 
   assert(!chainsStorage.empty());

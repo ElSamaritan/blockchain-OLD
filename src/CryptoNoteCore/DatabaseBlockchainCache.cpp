@@ -1095,7 +1095,7 @@ uint32_t DatabaseBlockchainCache::getTopBlockIndex() const {
   return *topBlockIndex;
 }
 
-uint8_t DatabaseBlockchainCache::getBlockMajorVersionForHeight(uint32_t height) const {
+BlockVersion DatabaseBlockchainCache::getBlockMajorVersionForHeight(uint32_t height) const {
   UpgradeManager upgradeManager;
   for (auto version : Xi::Config::BlockVersion::versions())
     upgradeManager.addMajorBlockVersion(version, currency.upgradeHeight(version));
@@ -1188,7 +1188,7 @@ uint64_t DatabaseBlockchainCache::getDifficultyForNextBlock() const {
 
 uint64_t DatabaseBlockchainCache::getDifficultyForNextBlock(uint32_t blockIndex) const {
   assert(blockIndex <= getTopBlockIndex());
-  uint8_t nextBlockMajorVersion = getBlockMajorVersionForHeight(blockIndex + 1);
+  const auto nextBlockMajorVersion = getBlockMajorVersionForHeight(blockIndex + 1);
   auto timestamps =
       getLastTimestamps(currency.difficultyBlocksCountByVersion(nextBlockMajorVersion), blockIndex, UseGenesis{false});
   auto commulativeDifficulties = getLastCumulativeDifficulties(

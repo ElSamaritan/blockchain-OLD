@@ -25,6 +25,8 @@
 
 #include <cinttypes>
 
+#include <Xi/Blockchain/Block/Version.hpp>
+
 #ifndef CURRENT_MIXIN_CHECKPOINT_INDEX
 #pragma error "CURRENT_MIXIN_CHECKPOINT_INDEX must be defined."
 #endif
@@ -36,25 +38,25 @@ namespace Config {
 namespace Mixin {
 
 struct MixinCheckpointResolver {
-  template <uint8_t _Index>
-  static inline bool isZeroMixinAllowed(uint8_t version);
+  template <Blockchain::Block::Version::value_type _Index>
+  static inline bool isZeroMixinAllowed(Blockchain::Block::Version version);
 
-  template <uint8_t _Index>
-  static inline uint8_t minimum(uint8_t version);
+  template <Blockchain::Block::Version::value_type _Index>
+  static inline uint8_t minimum(Blockchain::Block::Version version);
 
-  template <uint8_t _Index>
-  static inline uint8_t maximum(uint8_t version);
+  template <Blockchain::Block::Version::value_type _Index>
+  static inline uint8_t maximum(Blockchain::Block::Version version);
 
-  template <uint8_t _Index>
-  static inline uint8_t defaultValue(uint8_t version);
+  template <Blockchain::Block::Version::value_type _Index>
+  static inline uint8_t defaultValue(Blockchain::Block::Version version);
 };
 
 template <>
-inline bool MixinCheckpointResolver::isZeroMixinAllowed<0>(uint8_t) {
+inline bool MixinCheckpointResolver::isZeroMixinAllowed<0>(Blockchain::Block::Version) {
   return MixinCheckpoint<0>::minimum() == 0;
 }
-template <uint8_t _Index>
-inline bool MixinCheckpointResolver::isZeroMixinAllowed(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline bool MixinCheckpointResolver::isZeroMixinAllowed(Blockchain::Block::Version version) {
   if (version >= MixinCheckpoint<_Index>::version())
     return MixinCheckpoint<_Index>::minimum() == 0;
   else
@@ -62,11 +64,11 @@ inline bool MixinCheckpointResolver::isZeroMixinAllowed(uint8_t version) {
 }
 
 template <>
-inline uint8_t MixinCheckpointResolver::minimum<0>(uint8_t) {
+inline uint8_t MixinCheckpointResolver::minimum<0>(Blockchain::Block::Version) {
   return MixinCheckpoint<0>::minimum();
 }
-template <uint8_t _Index>
-inline uint8_t MixinCheckpointResolver::minimum(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline uint8_t MixinCheckpointResolver::minimum(Blockchain::Block::Version version) {
   if (version >= MixinCheckpoint<_Index>::version())
     return MixinCheckpoint<_Index>::minimum();
   else
@@ -74,11 +76,11 @@ inline uint8_t MixinCheckpointResolver::minimum(uint8_t version) {
 }
 
 template <>
-inline uint8_t MixinCheckpointResolver::maximum<0>(uint8_t) {
+inline uint8_t MixinCheckpointResolver::maximum<0>(Blockchain::Block::Version) {
   return MixinCheckpoint<0>::maximum();
 }
-template <uint8_t _Index>
-inline uint8_t MixinCheckpointResolver::maximum(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline uint8_t MixinCheckpointResolver::maximum(Blockchain::Block::Version version) {
   if (version >= MixinCheckpoint<_Index>::version())
     return MixinCheckpoint<_Index>::maximum();
   else
@@ -86,27 +88,27 @@ inline uint8_t MixinCheckpointResolver::maximum(uint8_t version) {
 }
 
 template <>
-inline uint8_t MixinCheckpointResolver::defaultValue<0>(uint8_t) {
+inline uint8_t MixinCheckpointResolver::defaultValue<0>(Blockchain::Block::Version) {
   return MixinCheckpoint<0>::defaultValue();
 }
-template <uint8_t _Index>
-inline uint8_t MixinCheckpointResolver::defaultValue(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline uint8_t MixinCheckpointResolver::defaultValue(Blockchain::Block::Version version) {
   if (version >= MixinCheckpoint<_Index>::version())
     return MixinCheckpoint<_Index>::defaultValue();
   else
     return defaultValue<_Index - 1>(version);
 }
 
-inline bool isZeroMixinAllowed(uint8_t version) {
+inline bool isZeroMixinAllowed(Blockchain::Block::Version version) {
   return MixinCheckpointResolver::isZeroMixinAllowed<CURRENT_MIXIN_CHECKPOINT_INDEX>(version);
 }
-inline uint8_t minimum(uint8_t version) {
+inline uint8_t minimum(Blockchain::Block::Version version) {
   return MixinCheckpointResolver::minimum<CURRENT_MIXIN_CHECKPOINT_INDEX>(version);
 }
-inline uint8_t maximum(uint8_t version) {
+inline uint8_t maximum(Blockchain::Block::Version version) {
   return MixinCheckpointResolver::maximum<CURRENT_MIXIN_CHECKPOINT_INDEX>(version);
 }
-inline uint8_t defaultValue(uint8_t version) {
+inline uint8_t defaultValue(Blockchain::Block::Version version) {
   return MixinCheckpointResolver::defaultValue<CURRENT_MIXIN_CHECKPOINT_INDEX>(version);
 }
 

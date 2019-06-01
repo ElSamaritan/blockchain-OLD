@@ -30,25 +30,26 @@
 namespace Xi {
 namespace Config {
 namespace Mixin {
-template <uint8_t _Index>
+template <Blockchain::Block::Version::value_type _Index>
 struct MixinCheckpoint;
 }
 }  // namespace Config
 }  // namespace Xi
 
-#define MakeMixinCheckpoint(_Index, _Version, _Min, _Max, _Default)                                              \
-  namespace Xi {                                                                                                 \
-  namespace Config {                                                                                             \
-  namespace Mixin {                                                                                              \
-  template <>                                                                                                    \
-  struct MixinCheckpoint<_Index> {                                                                               \
-    static inline constexpr uint8_t index() { return _Index; }                                                   \
-    static inline constexpr uint8_t version() { return _Version; }                                               \
-    static inline constexpr uint8_t minimum() { return _Min; }                                                   \
-    static inline constexpr uint8_t maximum() { return _Max; }                                                   \
-    static inline constexpr uint8_t defaultValue() { return _Default; }                                          \
-    static_assert(::Xi::Config::BlockVersion::exists(_Version), "Non existing major block version referenced."); \
-  };                                                                                                             \
-  }                                                                                                              \
-  }                                                                                                              \
+#define MakeMixinCheckpoint(_Index, _Version, _Min, _Max, _Default)                                               \
+  namespace Xi {                                                                                                  \
+  namespace Config {                                                                                              \
+  namespace Mixin {                                                                                               \
+  template <>                                                                                                     \
+  struct MixinCheckpoint<_Index> {                                                                                \
+    static inline constexpr uint8_t index() { return _Index; }                                                    \
+    static inline constexpr Blockchain::Block::Version version() { return Blockchain::Block::Version{_Version}; } \
+    static inline constexpr uint8_t minimum() { return _Min; }                                                    \
+    static inline constexpr uint8_t maximum() { return _Max; }                                                    \
+    static inline constexpr uint8_t defaultValue() { return _Default; }                                           \
+    static_assert(::Xi::Config::BlockVersion::exists(Blockchain::Block::Version{_Version}),                       \
+                  "Non existing major block version referenced.");                                                \
+  };                                                                                                              \
+  }                                                                                                               \
+  }                                                                                                               \
   }

@@ -26,6 +26,8 @@
 #include <cinttypes>
 #include <string>
 
+#include <Xi/Blockchain/Block/Version.hpp>
+
 #include "Xi/Config/BlockVersion.h"
 
 namespace Xi {
@@ -37,21 +39,22 @@ struct StaticRewardCheckpoint;
 }  // namespace Config
 }  // namespace Xi
 
-#define MakeStaticRewardCheckpoint(_Index, _Version, _Amount, _Address)                                          \
-  namespace Xi {                                                                                                 \
-  namespace Config {                                                                                             \
-  namespace StaticReward {                                                                                       \
-  template <>                                                                                                    \
-  struct StaticRewardCheckpoint<_Index> {                                                                        \
-    static inline constexpr uint8_t index() { return _Index; }                                                   \
-    static inline constexpr uint8_t version() { return _Version; }                                               \
-    static inline constexpr uint64_t amount() { return _Amount; }                                                \
-    static inline std::string address() {                                                                        \
-      static const std::string __Address{_Address};                                                              \
-      return __Address;                                                                                          \
-    }                                                                                                            \
-    static_assert(::Xi::Config::BlockVersion::exists(_Version), "Non existing major block version referenced."); \
-  };                                                                                                             \
-  }                                                                                                              \
-  }                                                                                                              \
+#define MakeStaticRewardCheckpoint(_Index, _Version, _Amount, _Address)                                           \
+  namespace Xi {                                                                                                  \
+  namespace Config {                                                                                              \
+  namespace StaticReward {                                                                                        \
+  template <>                                                                                                     \
+  struct StaticRewardCheckpoint<_Index> {                                                                         \
+    static inline constexpr Blockchain::Block::Version::value_type index() { return _Index; }                     \
+    static inline constexpr Blockchain::Block::Version version() { return Blockchain::Block::Version{_Version}; } \
+    static inline constexpr uint64_t amount() { return _Amount; }                                                 \
+    static inline std::string address() {                                                                         \
+      static const std::string __Address{_Address};                                                               \
+      return __Address;                                                                                           \
+    }                                                                                                             \
+    static_assert(::Xi::Config::BlockVersion::exists(Blockchain::Block::Version{_Version}),                       \
+                  "Non existing major block version referenced.");                                                \
+  };                                                                                                              \
+  }                                                                                                               \
+  }                                                                                                               \
   }

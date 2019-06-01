@@ -27,6 +27,8 @@
 #include <cinttypes>
 #include <chrono>
 
+#include <Xi/Blockchain/Block/Version.hpp>
+
 #include "CryptoNoteCore/Difficulty.h"
 
 #include "Xi/Config/BlockVersion.h"
@@ -34,23 +36,24 @@
 namespace Xi {
 namespace Config {
 namespace Hashes {
-template <uint8_t _Index>
+template <Blockchain::Block::Version::value_type _Index>
 struct HashCheckpoint;
 }
 }  // namespace Config
 }  // namespace Xi
 
-#define MakeHashCheckpoint(_Index, _Version, _Algorithm)                                                         \
-  namespace Xi {                                                                                                 \
-  namespace Config {                                                                                             \
-  namespace Hashes {                                                                                             \
-  template <>                                                                                                    \
-  struct HashCheckpoint<_Index> {                                                                                \
-    static inline constexpr uint8_t index() { return _Index; }                                                   \
-    static inline constexpr uint8_t version() { return _Version; }                                               \
-    using algorithm = _Algorithm;                                                                                \
-    static_assert(::Xi::Config::BlockVersion::exists(_Version), "Non existing major block version referenced."); \
-  };                                                                                                             \
-  }                                                                                                              \
-  }                                                                                                              \
+#define MakeHashCheckpoint(_Index, _Version, _Algorithm)                                                          \
+  namespace Xi {                                                                                                  \
+  namespace Config {                                                                                              \
+  namespace Hashes {                                                                                              \
+  template <>                                                                                                     \
+  struct HashCheckpoint<_Index> {                                                                                 \
+    static inline constexpr uint8_t index() { return _Index; }                                                    \
+    static inline constexpr Blockchain::Block::Version version() { return Blockchain::Block::Version{_Version}; } \
+    using algorithm = _Algorithm;                                                                                 \
+    static_assert(::Xi::Config::BlockVersion::exists(Blockchain::Block::Version{_Version}),                       \
+                  "Non existing major block version referenced.");                                                \
+  };                                                                                                              \
+  }                                                                                                               \
+  }                                                                                                               \
   }

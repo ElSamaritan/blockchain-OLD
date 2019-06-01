@@ -25,6 +25,8 @@
 
 #include <cinttypes>
 
+#include <Xi/Blockchain/Block/Version.hpp>
+
 #include "Xi/Config/MinerReward.h"
 
 #undef MakeRewardCheckpoint
@@ -38,22 +40,22 @@ namespace Config {
 namespace MinerReward {
 
 struct RewardCheckpointResolver {
-  template <uint8_t>
-  static inline uint32_t window(uint8_t version);
+  template <Blockchain::Block::Version::value_type>
+  static inline uint32_t window(Blockchain::Block::Version version);
 
-  template <uint8_t>
-  static inline uint64_t fullRewardZone(uint8_t version);
+  template <Blockchain::Block::Version::value_type>
+  static inline uint64_t fullRewardZone(Blockchain::Block::Version version);
 
-  template <uint8_t>
-  static inline uint64_t cutOff(uint8_t version);
+  template <Blockchain::Block::Version::value_type>
+  static inline uint64_t cutOff(Blockchain::Block::Version version);
 };
 
 template <>
-inline uint32_t RewardCheckpointResolver::window<0>(uint8_t) {
+inline uint32_t RewardCheckpointResolver::window<0>(Blockchain::Block::Version) {
   return RewardCheckpoint<0>::window();
 }
-template <uint8_t _Index>
-inline uint32_t RewardCheckpointResolver::window(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline uint32_t RewardCheckpointResolver::window(Blockchain::Block::Version version) {
   if (version >= RewardCheckpoint<_Index>::version())
     return RewardCheckpoint<_Index>::window();
   else
@@ -61,11 +63,11 @@ inline uint32_t RewardCheckpointResolver::window(uint8_t version) {
 }
 
 template <>
-inline uint64_t RewardCheckpointResolver::fullRewardZone<0>(uint8_t) {
+inline uint64_t RewardCheckpointResolver::fullRewardZone<0>(Blockchain::Block::Version) {
   return RewardCheckpoint<0>::fullRewardZone();
 }
-template <uint8_t _Index>
-inline uint64_t RewardCheckpointResolver::fullRewardZone(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline uint64_t RewardCheckpointResolver::fullRewardZone(Blockchain::Block::Version version) {
   if (version >= RewardCheckpoint<_Index>::version())
     return RewardCheckpoint<_Index>::fullRewardZone();
   else
@@ -73,26 +75,26 @@ inline uint64_t RewardCheckpointResolver::fullRewardZone(uint8_t version) {
 }
 
 template <>
-inline uint64_t RewardCheckpointResolver::cutOff<0>(uint8_t) {
+inline uint64_t RewardCheckpointResolver::cutOff<0>(Blockchain::Block::Version) {
   return RewardCheckpoint<0>::cutOff();
 }
-template <uint8_t _Index>
-inline uint64_t RewardCheckpointResolver::cutOff(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline uint64_t RewardCheckpointResolver::cutOff(Blockchain::Block::Version version) {
   if (version >= RewardCheckpoint<_Index>::version())
     return RewardCheckpoint<_Index>::cutOff();
   else
     return cutOff<_Index - 1>(version);
 }
 
-inline uint32_t window(uint8_t version) {
+inline uint32_t window(Blockchain::Block::Version version) {
   return RewardCheckpointResolver::window<CURRENT_REWARD_CHECKPOINT_INDEX>(version);
 }
 
-inline uint64_t fullRewardZone(uint8_t version) {
+inline uint64_t fullRewardZone(Blockchain::Block::Version version) {
   return RewardCheckpointResolver::fullRewardZone<CURRENT_REWARD_CHECKPOINT_INDEX>(version);
 }
 
-inline uint64_t cutOff(uint8_t version) {
+inline uint64_t cutOff(Blockchain::Block::Version version) {
   return RewardCheckpointResolver::cutOff<CURRENT_REWARD_CHECKPOINT_INDEX>(version);
 }
 

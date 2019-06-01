@@ -191,12 +191,12 @@ class Core : public ICore,
 
   bool extractTransactions(const std::vector<BinaryArray>& rawTransactions,
                            std::vector<CachedTransaction>& transactions, uint64_t& cumulativeSize,
-                           uint8_t blockMajorVersion);
+                           BlockVersion blockMajorVersion);
 
   std::error_code validateSemantic(const Transaction& transaction, uint64_t& fee, uint32_t blockIndex);
   std::error_code validateTransaction(const CachedTransaction& transaction, TransactionValidatorState& state,
                                       IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex,
-                                      uint8_t blockMajorVersion, uint64_t blockTimestamp);
+                                      BlockVersion blockMajorVersion, uint64_t blockTimestamp);
 
   Xi::Result<uint32_t> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds) const;
   std::vector<Crypto::Hash> getBlockHashes(uint32_t startBlockIndex, uint32_t maxCount) const;
@@ -238,7 +238,7 @@ class Core : public ICore,
                                     std::vector<Crypto::Hash>& newTransactions,
                                     std::vector<Crypto::Hash>& deletedTransactions) const;
 
-  uint8_t getBlockMajorVersionForIndex(uint32_t height) const;
+  BlockVersion getBlockMajorVersionForIndex(uint32_t height) const;
   size_t calculateCumulativeBlocksizeLimit(uint32_t height) const;
 
   /*!

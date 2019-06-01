@@ -27,6 +27,7 @@
 #include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Blockchain/Block/Header.hpp>
+#include <Xi/Blockchain/Block/Version.hpp>
 #include <Xi/Blockchain/Block/Height.hpp>
 
 #include <Xi/Types/Flag.h>
@@ -39,6 +40,7 @@
 
 namespace CryptoNote {
 
+using BlockVersion = Xi::Blockchain::Block::Version;
 using BlockHeight = Xi::Blockchain::Block::Height;
 using BlockOffset = Xi::Blockchain::Block::Offset;
 using BlockNonce = Xi::Blockchain::Block::Nonce;

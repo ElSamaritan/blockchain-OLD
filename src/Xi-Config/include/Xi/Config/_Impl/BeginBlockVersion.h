@@ -25,10 +25,12 @@
 
 #include <cinttypes>
 
+#include <Xi/Blockchain/Block/Version.hpp>
+
 namespace Xi {
 namespace Config {
 namespace BlockVersion {
-template <uint8_t _Index>
+template <Blockchain::Block::Version::value_type>
 struct BlockVersionCheckpoint {
   static inline constexpr bool exists() { return false; }
 };
@@ -36,18 +38,18 @@ struct BlockVersionCheckpoint {
 }  // namespace Config
 }  // namespace Xi
 
-#define MakeBlockVersionCheckpoint(_Index, _Height, _Version, _IsFork) \
-  namespace Xi {                                                       \
-  namespace Config {                                                   \
-  namespace BlockVersion {                                             \
-  template <>                                                          \
-  struct BlockVersionCheckpoint<_Index> {                              \
-    static inline constexpr bool exists() { return true; }             \
-    static inline constexpr uint8_t index() { return _Index; }         \
-    static inline constexpr uint32_t height() { return _Height; }      \
-    static inline constexpr uint8_t version() { return _Version; }     \
-    static inline constexpr bool isFork() { return _IsFork; }          \
-  };                                                                   \
-  }                                                                    \
-  }                                                                    \
+#define MakeBlockVersionCheckpoint(_Index, _Height, _Version, _IsFork)                                            \
+  namespace Xi {                                                                                                  \
+  namespace Config {                                                                                              \
+  namespace BlockVersion {                                                                                        \
+  template <>                                                                                                     \
+  struct BlockVersionCheckpoint<_Index> {                                                                         \
+    static inline constexpr bool exists() { return true; }                                                        \
+    static inline constexpr uint8_t index() { return _Index; }                                                    \
+    static inline constexpr uint32_t height() { return _Height; }                                                 \
+    static inline constexpr Blockchain::Block::Version version() { return Blockchain::Block::Version{_Version}; } \
+    static inline constexpr bool isFork() { return _IsFork; }                                                     \
+  };                                                                                                              \
+  }                                                                                                               \
+  }                                                                                                               \
   }

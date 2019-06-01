@@ -27,6 +27,8 @@
 #include <algorithm>
 #include <vector>
 
+#include <Xi/Blockchain/Block/Version.hpp>
+
 #include "Xi/Config/BlockVersion.h"
 
 #undef MakeBlockVersionCheckpoint
@@ -36,34 +38,34 @@ namespace Config {
 namespace BlockVersion {
 
 struct BlockVersionCheckpointResolver {
-  template <uint8_t _Index>
-  static inline uint8_t version(uint32_t height);
+  template <Blockchain::Block::Version::value_type>
+  static inline Blockchain::Block::Version version(uint32_t height);
 
-  template <uint8_t _Index>
-  static inline constexpr bool exists(uint8_t majorVersion);
+  template <Blockchain::Block::Version::value_type _Index>
+  static inline constexpr bool exists(Blockchain::Block::Version majorVersion);
 
-  template <uint8_t>
-  static inline void versions(std::vector<uint8_t>& versions);
+  template <Blockchain::Block::Version::value_type>
+  static inline void versions(std::vector<Blockchain::Block::Version>& versions);
 
-  template <uint8_t _Index>
-  static inline uint8_t maximum();
+  template <Blockchain::Block::Version::value_type _Index>
+  static inline Blockchain::Block::Version maximum();
 
-  template <uint8_t _UpgradeHeight>
-  static inline uint32_t upgradeHeight(uint8_t majorVersion);
+  template <Blockchain::Block::Version::value_type _UpgradeHeight>
+  static inline uint32_t upgradeHeight(Blockchain::Block::Version majorVersion);
 
-  template <uint8_t>
+  template <Blockchain::Block::Version::value_type>
   static inline void upgradeHeights(std::vector<uint32_t>& heights);
 
-  template <uint8_t>
+  template <Blockchain::Block::Version::value_type>
   static inline void forks(std::vector<uint32_t>& heights);
 };
 
 template <>
-inline uint8_t BlockVersionCheckpointResolver::version<0>(uint32_t) {
+inline Blockchain::Block::Version BlockVersionCheckpointResolver::version<0>(uint32_t) {
   return BlockVersionCheckpoint<0>::version();
 }
-template <uint8_t _Index>
-inline uint8_t BlockVersionCheckpointResolver::version(uint32_t height) {
+template <Blockchain::Block::Version::value_type _Index>
+inline Blockchain::Block::Version BlockVersionCheckpointResolver::version(uint32_t height) {
   if (height >= BlockVersionCheckpoint<_Index>::height())
     return BlockVersionCheckpoint<_Index>::version();
   else
@@ -71,43 +73,43 @@ inline uint8_t BlockVersionCheckpointResolver::version(uint32_t height) {
 }
 
 template <>
-inline constexpr bool BlockVersionCheckpointResolver::exists<0>(uint8_t majorVersion) {
+inline constexpr bool BlockVersionCheckpointResolver::exists<0>(Blockchain::Block::Version majorVersion) {
   return BlockVersionCheckpoint<0>::version() == majorVersion;
 }
 
 template <uint8_t _Version>
-inline constexpr bool BlockVersionCheckpointResolver::exists(uint8_t majorVersion) {
+inline constexpr bool BlockVersionCheckpointResolver::exists(Blockchain::Block::Version majorVersion) {
   return BlockVersionCheckpoint<_Version>::version() == majorVersion || exists<_Version - 1>(majorVersion);
 }
 
 template <>
-inline void BlockVersionCheckpointResolver::versions<0>(std::vector<uint8_t>& _versions) {
+inline void BlockVersionCheckpointResolver::versions<0>(std::vector<Blockchain::Block::Version>& _versions) {
   _versions.push_back(BlockVersionCheckpoint<0>::version());
 }
 template <uint8_t _Index>
-inline void BlockVersionCheckpointResolver::versions(std::vector<uint8_t>& _versions) {
+inline void BlockVersionCheckpointResolver::versions(std::vector<Blockchain::Block::Version>& _versions) {
   versions<_Index - 1>(_versions);
   _versions.push_back(BlockVersionCheckpoint<_Index>::version());
 }
 
 template <>
-inline uint8_t BlockVersionCheckpointResolver::maximum<0>() {
+inline Blockchain::Block::Version BlockVersionCheckpointResolver::maximum<0>() {
   return BlockVersionCheckpoint<0>::version();
 }
 template <uint8_t _Index>
-inline uint8_t BlockVersionCheckpointResolver::maximum() {
+inline Blockchain::Block::Version BlockVersionCheckpointResolver::maximum() {
   return std::max(BlockVersionCheckpoint<_Index>::version(), maximum<_Index - 1>());
 }
 
 template <>
-inline uint32_t BlockVersionCheckpointResolver::upgradeHeight<0>(uint8_t majorVersion) {
+inline uint32_t BlockVersionCheckpointResolver::upgradeHeight<0>(Blockchain::Block::Version majorVersion) {
   if (majorVersion != BlockVersionCheckpoint<0>::version())
     return static_cast<uint32_t>(-1);
   else
     return BlockVersionCheckpoint<0>::height();
 }
 template <uint8_t _Index>
-inline uint32_t BlockVersionCheckpointResolver::upgradeHeight(uint8_t majorVersion) {
+inline uint32_t BlockVersionCheckpointResolver::upgradeHeight(Blockchain::Block::Version majorVersion) {
   if (majorVersion == BlockVersionCheckpoint<_Index>::version())
     return BlockVersionCheckpoint<_Index>::height();
   else
@@ -138,23 +140,25 @@ inline void BlockVersionCheckpointResolver::forks(std::vector<uint32_t>& heights
   }
 }
 
-inline uint8_t version(uint32_t height) {
+inline Blockchain::Block::Version version(uint32_t height) {
   return BlockVersionCheckpointResolver::version<CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX>(height);
 }
 
-inline constexpr bool exists(uint8_t majorVersion) {
+inline constexpr bool exists(Blockchain::Block::Version majorVersion) {
   return BlockVersionCheckpointResolver::exists<CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX>(majorVersion);
 }
 
-inline std::vector<uint8_t> versions() {
-  std::vector<uint8_t> _versions;
+inline std::vector<Blockchain::Block::Version> versions() {
+  std::vector<Blockchain::Block::Version> _versions;
   BlockVersionCheckpointResolver::versions<CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX>(_versions);
   return _versions;
 }
 
-inline uint8_t maximum() { return BlockVersionCheckpointResolver::maximum<CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX>(); }
+inline Blockchain::Block::Version maximum() {
+  return BlockVersionCheckpointResolver::maximum<CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX>();
+}
 
-inline uint32_t upgradeHeight(uint8_t majorVersion) {
+inline uint32_t upgradeHeight(Blockchain::Block::Version majorVersion) {
   return BlockVersionCheckpointResolver::upgradeHeight<CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX>(majorVersion);
 }
 

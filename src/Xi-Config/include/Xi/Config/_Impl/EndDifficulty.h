@@ -29,6 +29,8 @@
 
 #include <cinttypes>
 
+#include <Xi/Blockchain/Block/Version.hpp>
+
 #include "Xi/Config/Time.h"
 
 #undef MakeDifficultyCheckpoint
@@ -38,23 +40,23 @@ namespace Config {
 namespace Difficulty {
 
 struct DifficultyCheckpointResolver {
-  template <uint8_t _Index>
-  static inline uint32_t windowSize(uint8_t version);
+  template <Blockchain::Block::Version::value_type _Index>
+  static inline uint32_t windowSize(Blockchain::Block::Version version);
 
-  template <uint8_t _Index>
-  static inline uint64_t initialValue(uint8_t version);
+  template <Blockchain::Block::Version::value_type _Index>
+  static inline uint64_t initialValue(Blockchain::Block::Version version);
 
-  template <uint8_t _Index>
-  static inline uint64_t nextDifficulty(uint8_t version, const std::vector<uint64_t> &timestamps,
+  template <Blockchain::Block::Version::value_type _Index>
+  static inline uint64_t nextDifficulty(Blockchain::Block::Version version, const std::vector<uint64_t> &timestamps,
                                         const std::vector<uint64_t> &cumulativeDifficulties);
 };
 
 template <>
-inline uint32_t DifficultyCheckpointResolver::windowSize<0>(uint8_t) {
+inline uint32_t DifficultyCheckpointResolver::windowSize<0>(Blockchain::Block::Version) {
   return DifficultyCheckpoint<0>::windowSize();
 }
-template <uint8_t _Index>
-inline uint32_t DifficultyCheckpointResolver::windowSize(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline uint32_t DifficultyCheckpointResolver::windowSize(Blockchain::Block::Version version) {
   if (version >= DifficultyCheckpoint<_Index>::version())
     return DifficultyCheckpoint<_Index>::windowSize();
   else
@@ -62,11 +64,11 @@ inline uint32_t DifficultyCheckpointResolver::windowSize(uint8_t version) {
 }
 
 template <>
-inline uint64_t DifficultyCheckpointResolver::initialValue<0>(uint8_t) {
+inline uint64_t DifficultyCheckpointResolver::initialValue<0>(Blockchain::Block::Version) {
   return DifficultyCheckpoint<0>::initialValue();
 }
-template <uint8_t _Index>
-inline uint64_t DifficultyCheckpointResolver::initialValue(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline uint64_t DifficultyCheckpointResolver::initialValue(Blockchain::Block::Version version) {
   if (version >= DifficultyCheckpoint<_Index>::version())
     return DifficultyCheckpoint<_Index>::initialValue();
   else
@@ -74,7 +76,7 @@ inline uint64_t DifficultyCheckpointResolver::initialValue(uint8_t version) {
 }
 
 template <>
-inline uint64_t DifficultyCheckpointResolver::nextDifficulty<0>(uint8_t /* version */,
+inline uint64_t DifficultyCheckpointResolver::nextDifficulty<0>(Blockchain::Block::Version /* version */,
                                                                 const std::vector<uint64_t> &timestamps,
                                                                 const std::vector<uint64_t> &cumulativeDifficulties) {
   if (timestamps.size() < DifficultyCheckpoint<0>::windowSize() + 1 ||
@@ -83,8 +85,9 @@ inline uint64_t DifficultyCheckpointResolver::nextDifficulty<0>(uint8_t /* versi
   return DifficultyCheckpoint<0>::algorithm{}(timestamps, cumulativeDifficulties, DifficultyCheckpoint<0>::windowSize(),
                                               Xi::Config::Time::blockTimeSeconds());
 }
-template <uint8_t _Index>
-inline uint64_t DifficultyCheckpointResolver::nextDifficulty(uint8_t version, const std::vector<uint64_t> &timestamps,
+template <Blockchain::Block::Version::value_type _Index>
+inline uint64_t DifficultyCheckpointResolver::nextDifficulty(Blockchain::Block::Version version,
+                                                             const std::vector<uint64_t> &timestamps,
                                                              const std::vector<uint64_t> &cumulativeDifficulties) {
   if (version >= DifficultyCheckpoint<_Index>::version()) {
     if (timestamps.size() < DifficultyCheckpoint<_Index>::windowSize() + 1 ||
@@ -99,15 +102,15 @@ inline uint64_t DifficultyCheckpointResolver::nextDifficulty(uint8_t version, co
     return nextDifficulty<_Index - 1>(timestamps, cumulativeDifficulties);
 }
 
-inline uint32_t windowSize(uint8_t version) {
+inline uint32_t windowSize(Blockchain::Block::Version version) {
   return DifficultyCheckpointResolver::windowSize<CURRENT_DIFFICULTY_CHECKPOINT_INDEX>(version);
 }
 
-inline uint64_t initialValue(uint8_t version) {
+inline uint64_t initialValue(Blockchain::Block::Version version) {
   return DifficultyCheckpointResolver::windowSize<CURRENT_DIFFICULTY_CHECKPOINT_INDEX>(version);
 }
 
-inline uint64_t nextDifficulty(uint8_t version, const std::vector<uint64_t> &timestamps,
+inline uint64_t nextDifficulty(Blockchain::Block::Version version, const std::vector<uint64_t> &timestamps,
                                const std::vector<uint64_t> &cumulativeDifficulties) {
   return DifficultyCheckpointResolver::nextDifficulty<CURRENT_DIFFICULTY_CHECKPOINT_INDEX>(version, timestamps,
                                                                                            cumulativeDifficulties);

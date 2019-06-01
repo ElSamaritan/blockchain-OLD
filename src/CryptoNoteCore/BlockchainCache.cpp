@@ -992,7 +992,7 @@ uint64_t BlockchainCache::getDifficultyForNextBlock() const { return getDifficul
 
 uint64_t BlockchainCache::getDifficultyForNextBlock(uint32_t blockIndex) const {
   assert(blockIndex <= getTopBlockIndex());
-  const uint8_t nextBlockMajorVersion = getBlockMajorVersionForHeight(blockIndex + 1);
+  const auto nextBlockMajorVersion = getBlockMajorVersionForHeight(blockIndex + 1);
   const uint64_t blockWindow = currency.difficultyBlocksCountByVersion(nextBlockMajorVersion);
   auto timestamps = getLastTimestamps(blockWindow, blockIndex, skipGenesisBlock);
   auto commulativeDifficulties = getLastCumulativeDifficulties(blockWindow, blockIndex, skipGenesisBlock);
@@ -1066,7 +1066,7 @@ uint32_t BlockchainCache::getBlockIndexContainingTx(const Crypto::Hash& transact
   return it->blockIndex;
 }
 
-uint8_t BlockchainCache::getBlockMajorVersionForHeight(uint32_t height) const {
+BlockVersion BlockchainCache::getBlockMajorVersionForHeight(uint32_t height) const {
   // TODO this only changes during compile time
   UpgradeManager upgradeManager;
   for (auto version : Xi::Config::BlockVersion::versions())

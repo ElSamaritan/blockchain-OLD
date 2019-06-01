@@ -219,7 +219,7 @@ class DatabaseBlockchainCache : public CommonBlockchainCache {
                                      IBlockchainCache::GlobalOutputIndex boundary, uint32_t outputsCount);
   void requestRemoveTimestamp(BlockchainWriteBatch& batch, uint64_t timestamp, const Crypto::Hash& blockHash);
 
-  uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
+  BlockVersion getBlockMajorVersionForHeight(uint32_t height) const;
   uint64_t getCachedTransactionsCount() const;
 
   std::vector<CachedBlockInfo> getLastCachedUnits(uint32_t blockIndex, size_t count, UseGenesis useGenesis) const;

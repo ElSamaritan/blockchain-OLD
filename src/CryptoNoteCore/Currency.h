@@ -34,16 +34,16 @@ class Currency {
   XI_DELETE_COPY(Currency);
 
   size_t maxBlockBlobSize() const { return m_maxBlockBlobSize; }
-  size_t maxTxSize(uint8_t blockMajorVersion) const;
+  size_t maxTxSize(BlockVersion blockMajorVersion) const;
   uint8_t maxTxVersion() const;
   uint8_t minTxVersion() const;
   uint64_t publicAddressBase58Prefix() const { return m_publicAddressBase58Prefix; }
   uint32_t minedMoneyUnlockWindow() const { return m_minedMoneyUnlockWindow; }
 
-  uint8_t majorBlockVersionForIndex(uint32_t blockHeight) const;
+  BlockVersion majorBlockVersionForIndex(uint32_t blockHeight) const;
 
-  uint32_t timestampCheckWindow(uint32_t blockHeight, uint8_t majorVersion) const;
-  uint64_t blockFutureTimeLimit(uint32_t blockHeight, uint8_t majorVersion) const;
+  uint32_t timestampCheckWindow(BlockVersion majorVersion) const;
+  uint64_t blockFutureTimeLimit(BlockVersion majorVersion) const;
 
   uint32_t blockTimeTarget() const;
 
@@ -51,26 +51,23 @@ class Currency {
   unsigned int emissionSpeedFactor() const { return m_emissionSpeedFactor; }
   uint64_t genesisBlockReward() const { return m_genesisBlockReward; }
 
-  size_t rewardBlocksWindowByBlockVersion(uint8_t blockMajorVersion) const;
-  uint64_t rewardCutOffByBlockVersion(uint8_t blockMajorVersion) const;
-  size_t blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const;
+  size_t rewardBlocksWindowByBlockVersion(BlockVersion blockMajorVersion) const;
+  uint64_t rewardCutOffByBlockVersion(BlockVersion blockMajorVersion) const;
+  size_t blockGrantedFullRewardZoneByBlockVersion(BlockVersion blockMajorVersion) const;
   size_t minerTxBlobReservedSize() const { return m_minerTxBlobReservedSize; }
 
   size_t numberOfDecimalPlaces() const { return m_numberOfDecimalPlaces; }
   uint64_t coin() const { return m_coin; }
 
-  uint8_t minimumMixin(uint8_t blockMajorVersion) const;
-  uint8_t maximumMixin(uint8_t blockMajorVersion) const;
+  uint8_t minimumMixin(BlockVersion blockMajorVersion) const;
+  uint8_t maximumMixin(BlockVersion blockMajorVersion) const;
 
   uint64_t minimumFee() const { return m_mininumFee; }
-  uint64_t defaultDustThresholdForMajorVersion(uint8_t blockMajorVersion) const;
-  uint64_t defaultDustThreshold(uint32_t index) const;
-  uint64_t defaultFusionDustThreshold(uint32_t index) const;
 
-  uint32_t upgradeHeight(uint8_t majorVersion) const;
+  uint32_t upgradeHeight(BlockVersion majorVersion) const;
 
   uint64_t difficultyTarget() const { return m_difficultyTarget; }
-  size_t difficultyBlocksCountByVersion(uint8_t version) const;
+  size_t difficultyBlocksCountByVersion(BlockVersion version) const;
 
   size_t maxBlockSizeInitial() const { return m_maxBlockSizeInitial; }
   uint64_t maxBlockSizeGrowthSpeedNumerator() const { return m_maxBlockSizeGrowthSpeedNumerator; }
@@ -83,7 +80,7 @@ class Currency {
   uint64_t mempoolTxFromAltBlockLiveTime() const { return m_mempoolTxFromAltBlockLiveTime; }
   uint64_t numberOfPeriodsToForgetTxDeletedFromPool() const { return m_numberOfPeriodsToForgetTxDeletedFromPool; }
 
-  size_t fusionTxMaxSize(uint8_t blockMajorVersion) const;
+  size_t fusionTxMaxSize(BlockVersion blockMajorVersion) const;
   size_t fusionTxMinInputCount() const { return m_fusionTxMinInputCount; }
   size_t fusionTxMinInOutCountRatio() const { return m_fusionTxMinInOutCountRatio; }
 
@@ -99,20 +96,21 @@ class Currency {
   const Crypto::Hash& genesisBlockHash() const;
   uint64_t genesisTimestamp() const;
 
-  bool getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize,
+  bool getBlockReward(BlockVersion blockMajorVersion, size_t medianSize, size_t currentBlockSize,
                       uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward, int64_t& emissionChange) const;
   size_t maxBlockCumulativeSize(uint64_t height) const;
 
-  bool constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size_t medianSize, uint64_t alreadyGeneratedCoins,
-                        size_t currentBlockSize, uint64_t fee, const AccountPublicAddress& minerAddress,
-                        Transaction& tx, const BinaryArray& extraNonce, size_t maxOuts) const;
+  bool constructMinerTx(BlockVersion blockMajorVersion, uint32_t height, size_t medianSize,
+                        uint64_t alreadyGeneratedCoins, size_t currentBlockSize, uint64_t fee,
+                        const AccountPublicAddress& minerAddress, Transaction& tx, const BinaryArray& extraNonce,
+                        size_t maxOuts) const;
 
   // -------------------------------------------- Static Reward -------------------------------------------------------
-  bool isStaticRewardEnabledForBlockVersion(uint8_t blockMajorVersion) const;
-  uint64_t staticRewardAmountForBlockVersion(uint8_t blockMajorVersion) const;
-  std::string staticRewardAddressForBlockVersion(uint8_t blockMajorVersion) const;
+  bool isStaticRewardEnabledForBlockVersion(BlockVersion blockMajorVersion) const;
+  uint64_t staticRewardAmountForBlockVersion(BlockVersion blockMajorVersion) const;
+  std::string staticRewardAddressForBlockVersion(BlockVersion blockMajorVersion) const;
   Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const Crypto::Hash& previousBlockHash,
-                                                                    uint8_t blockMajorVersion,
+                                                                    BlockVersion blockMajorVersion,
                                                                     uint32_t blockIndex) const;
   Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const CachedBlock& block) const;
   Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const BlockTemplate& block) const;
@@ -129,9 +127,8 @@ class Currency {
   bool isFusionTransaction(const Transaction& transaction, size_t size, uint32_t height) const;
   bool isFusionTransaction(const std::vector<uint64_t>& inputsAmounts, const std::vector<uint64_t>& outputsAmounts,
                            size_t size, uint32_t height) const;
-  bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint32_t height) const;
-  bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t& amountPowerOfTen,
-                                                  uint32_t height) const;
+  bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold) const;
+  bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t& amountPowerOfTen) const;
 
   std::string accountAddressAsString(const AccountBase& account) const;
   std::string accountAddressAsString(const AccountPublicAddress& accountPublicAddress) const;
@@ -141,7 +138,7 @@ class Currency {
   std::string formatAmount(int64_t amount) const;
   [[nodiscard]] bool parseAmount(const std::string& str, uint64_t& amount) const;
 
-  uint64_t nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
+  uint64_t nextDifficulty(BlockVersion version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
                           std::vector<uint64_t> cumulativeDifficulties) const;
 
   bool checkProofOfWork(const CachedBlock& block, uint64_t currentDifficulty) const;

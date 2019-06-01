@@ -198,8 +198,8 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   IBlockchain& m_blockchain;                                     ///< The blockchain this pool operates on
   Tools::ObserverManager<ITransactionPoolObserver> m_observers;  ///< observers to notify about pool changes
   Xi::Concurrent::RecursiveLock m_access;                        ///< Mutex fron concurrent read single write access
-  mutable boost::optional<Crypto::Hash> m_stateHash;  ///< Lazy initialized and cached tree hash of all transactions
-  boost::optional<uint8_t> m_eligibleBlockVersion;    ///< Stores the block version all transactions are elgible for.
+  mutable boost::optional<Crypto::Hash> m_stateHash;     ///< Lazy initialized and cached tree hash of all transactions
+  boost::optional<BlockVersion> m_eligibleBlockVersion;  ///< Stores the block version all transactions are elgible for.
   Logging::LoggerRef m_logger;
 
   template <typename _KeyT, typename _ValueT>

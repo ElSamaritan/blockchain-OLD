@@ -303,7 +303,7 @@ class BlockchainCache : public CommonBlockchainCache {
 
   TransactionValidatorState fillOutputsSpentByBlock(uint32_t blockIndex) const;
 
-  uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
+  BlockVersion getBlockMajorVersionForHeight(uint32_t height) const;
   void fixChildrenParent(IBlockchainCache* p);
 
   void doPushBlock(const CachedBlock& cachedBlock, const std::vector<CachedTransaction>& cachedTransactions,

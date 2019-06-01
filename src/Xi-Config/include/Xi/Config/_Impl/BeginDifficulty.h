@@ -27,31 +27,34 @@
 #include <cinttypes>
 #include <chrono>
 
+#include <Xi/Blockchain/Block/Version.hpp>
+
 #include "CryptoNoteCore/Difficulty.h"
 #include "Xi/Config/BlockVersion.h"
 
 namespace Xi {
 namespace Config {
 namespace Difficulty {
-template <uint8_t _Index>
+template <Blockchain::Block::Version::value_type _Index>
 struct DifficultyCheckpoint;
 }
 }  // namespace Config
 }  // namespace Xi
 
-#define MakeDifficultyCheckpoint(_Index, _Version, _Window, _Initial, _Algorithm)                                \
-  namespace Xi {                                                                                                 \
-  namespace Config {                                                                                             \
-  namespace Difficulty {                                                                                         \
-  template <>                                                                                                    \
-  struct DifficultyCheckpoint<_Index> {                                                                          \
-    static inline constexpr uint8_t index() { return _Index; }                                                   \
-    static inline constexpr uint8_t version() { return _Version; }                                               \
-    static inline constexpr uint32_t windowSize() { return _Window; }                                            \
-    static inline constexpr uint64_t initialValue() { return _Initial; }                                         \
-    using algorithm = _Algorithm;                                                                                \
-    static_assert(::Xi::Config::BlockVersion::exists(_Version), "Non existing major block version referenced."); \
-  };                                                                                                             \
-  }                                                                                                              \
-  }                                                                                                              \
+#define MakeDifficultyCheckpoint(_Index, _Version, _Window, _Initial, _Algorithm)                                 \
+  namespace Xi {                                                                                                  \
+  namespace Config {                                                                                              \
+  namespace Difficulty {                                                                                          \
+  template <>                                                                                                     \
+  struct DifficultyCheckpoint<_Index> {                                                                           \
+    static inline constexpr uint8_t index() { return _Index; }                                                    \
+    static inline constexpr Blockchain::Block::Version version() { return Blockchain::Block::Version{_Version}; } \
+    static inline constexpr uint32_t windowSize() { return _Window; }                                             \
+    static inline constexpr uint64_t initialValue() { return _Initial; }                                          \
+    using algorithm = _Algorithm;                                                                                 \
+    static_assert(::Xi::Config::BlockVersion::exists(Blockchain::Block::Version{_Version}),                       \
+                  "Non existing major block version referenced.");                                                \
+  };                                                                                                              \
+  }                                                                                                               \
+  }                                                                                                               \
   }

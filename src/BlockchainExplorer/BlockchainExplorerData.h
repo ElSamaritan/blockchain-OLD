@@ -79,7 +79,7 @@ struct TransactionDetails {
 };
 
 struct BlockDetails {
-  uint8_t majorVersion = 0;
+  BlockVersion majorVersion{0};
   uint8_t minorVersion = 0;
   uint64_t timestamp = 0;
   Crypto::Hash prevBlockHash;

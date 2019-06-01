@@ -112,10 +112,21 @@ xi_make_library(
 )
 
 xi_make_library(
+  Xi-Blockchain
+
+  PUBLIC_LIBRARIES
+    Xi::Core
+    Xi::Crypto
+    Crypto
+    Serialization
+)
+
+xi_make_library(
   Xi-Config
 
   PUBLIC_LIBRARIES
-    Xi.Core
+    Xi::Core
+    Xi::Blockchain
 )
 
 xi_make_library(
@@ -131,16 +142,6 @@ xi_make_library(
     cxxopts
     Serialization
     Common
-)
-
-xi_make_library(
-  Xi-Blockchain
-
-  PUBLIC_LIBRARIES
-    Xi::Core
-    Xi::Crypto
-    Crypto
-    Serialization
 )
 
 if(XI_BUILD_BREAKPAD)

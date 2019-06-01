@@ -46,7 +46,7 @@ class TransactionValidator : public ITransactionValidator {
   XI_DELETE_MOVE(TransactionValidator);
 
  public:
-  TransactionValidator(uint8_t blockVersion, const IBlockchainCache& chain, const Currency& currency);
+  TransactionValidator(BlockVersion blockVersion, const IBlockchainCache& chain, const Currency& currency);
   ~TransactionValidator() override = default;
 
   /*!
@@ -59,7 +59,7 @@ class TransactionValidator : public ITransactionValidator {
    * for a fork to accept some transactions that are left in pool. For now once a fork happened all transactions should
    * be validated again with the new blockVersion and conditionally be deleted.
    */
-  uint8_t blockVersion() const;
+  BlockVersion blockVersion() const;
 
   /*!
    * \brief chain is the state of the blockchain the transaction will be validated against
@@ -118,7 +118,7 @@ class TransactionValidator : public ITransactionValidator {
   error::TransactionValidationError validateMixin(const CachedTransaction& transaction) const;
 
  private:
-  uint8_t m_blockVersion;
+  BlockVersion m_blockVersion;
   const IBlockchainCache& m_chain;
   const Currency& m_currency;
 };

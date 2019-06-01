@@ -32,8 +32,8 @@ class UpgradeManager : public IUpgradeManager {
   UpgradeManager();
   virtual ~UpgradeManager() override;
 
-  virtual void addMajorBlockVersion(uint8_t targetVersion, uint32_t upgradeHeight) override;
-  virtual uint8_t getBlockMajorVersion(uint32_t blockIndex) const override;
+  virtual void addMajorBlockVersion(Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeHeight) override;
+  virtual Xi::Blockchain::Block::Version getBlockMajorVersion(uint32_t blockIndex) const override;
 
  private:
   std::vector<std::unique_ptr<IUpgradeDetector>> m_upgradeDetectors;

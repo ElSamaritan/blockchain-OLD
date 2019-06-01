@@ -395,7 +395,7 @@ Xi::Result<void> TransactionPool::insertTransaction(CachedTransaction transactio
   auto mainChain = m_blockchain.mainChain();
   if (mainChain == nullptr) return Xi::make_error(Error::MAIN_CHAIN_MISSING);
   if (mainChain->hasTransaction(transaction.getTransactionHash())) return Xi::make_error(Error::ALREADY_MINED);
-  const uint8_t blockVersion = m_blockchain.upgradeManager().getBlockMajorVersion(mainChain->getTopBlockIndex() + 1);
+  const auto blockVersion = m_blockchain.upgradeManager().getBlockMajorVersion(mainChain->getTopBlockIndex() + 1);
   PoolTransactionValidator validator{*this, blockVersion, *mainChain, m_blockchain.currency()};
   auto validationResult = validator.validate(transaction);
   if (validationResult.isError()) {
@@ -453,7 +453,7 @@ void TransactionPool::evaluateBlockVersionUpgradeConstraints() {
   if (eligibleIndex.isError()) {
     m_logger(Logging::ERROR) << "Unable to retrieve eligible index: " << eligibleIndex.error().message();
   }
-  uint8_t version = m_blockchain.upgradeManager().getBlockMajorVersion(eligibleIndex.value().Height);
+  const auto version = m_blockchain.upgradeManager().getBlockMajorVersion(eligibleIndex.value().Height);
   if (m_eligibleBlockVersion.has_value() && m_eligibleBlockVersion.value() == version) {
     return;
   }

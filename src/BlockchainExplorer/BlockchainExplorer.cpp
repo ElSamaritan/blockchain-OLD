@@ -419,14 +419,14 @@ bool BlockchainExplorer::getPoolState(const std::vector<Hash>& knownPoolTransact
   return getTransactions(newTransactionsHashes, newTransactions);
 }
 
-uint64_t BlockchainExplorer::getRewardBlocksWindow(uint8_t majorVersion) {
+uint64_t BlockchainExplorer::getRewardBlocksWindow(BlockVersion majorVersion) {
   if (state.load() != INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
   return Xi::Config::MinerReward::window(majorVersion);
 }
 
-uint64_t BlockchainExplorer::getFullRewardMaxBlockSize(uint8_t majorVersion) {
+uint64_t BlockchainExplorer::getFullRewardMaxBlockSize(BlockVersion majorVersion) {
   if (state.load() != INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }

@@ -29,6 +29,8 @@
 
 #include <cinttypes>
 
+#include <Xi/Blockchain/Block/Version.hpp>
+
 #include "Xi/Config/Time.h"
 
 #undef MakeDifficultyCheckpoint
@@ -38,19 +40,19 @@ namespace Config {
 namespace Time {
 
 struct TimeCheckpointResolver {
-  template <uint8_t _Index>
-  static inline uint32_t pastWindowSize(uint8_t version);
+  template <Blockchain::Block::Version::value_type _Index>
+  static inline uint32_t pastWindowSize(Blockchain::Block::Version version);
 
-  template <uint8_t _Index>
-  static inline std::chrono::seconds futureTimeLimit(uint8_t version);
+  template <Blockchain::Block::Version::value_type _Index>
+  static inline std::chrono::seconds futureTimeLimit(Blockchain::Block::Version version);
 };
 
 template <>
-inline uint32_t TimeCheckpointResolver::pastWindowSize<0>(uint8_t) {
+inline uint32_t TimeCheckpointResolver::pastWindowSize<0>(Blockchain::Block::Version) {
   return TimeCheckpoint<0>::pastWindowSize();
 }
-template <uint8_t _Index>
-inline uint32_t TimeCheckpointResolver::pastWindowSize(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline uint32_t TimeCheckpointResolver::pastWindowSize(Blockchain::Block::Version version) {
   if (version >= TimeCheckpoint<_Index>::version())
     return TimeCheckpoint<_Index>::pastWindowSize();
   else
@@ -58,22 +60,22 @@ inline uint32_t TimeCheckpointResolver::pastWindowSize(uint8_t version) {
 }
 
 template <>
-inline std::chrono::seconds TimeCheckpointResolver::futureTimeLimit<0>(uint8_t) {
+inline std::chrono::seconds TimeCheckpointResolver::futureTimeLimit<0>(Blockchain::Block::Version) {
   return TimeCheckpoint<0>::futureTimeLimit();
 }
-template <uint8_t _Index>
-inline std::chrono::seconds TimeCheckpointResolver::futureTimeLimit(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline std::chrono::seconds TimeCheckpointResolver::futureTimeLimit(Blockchain::Block::Version version) {
   if (version >= TimeCheckpoint<_Index>::version())
     return TimeCheckpoint<_Index>::futureTimeLimit();
   else
     return futureTimeLimit<_Index - 1>(version);
 }
 
-inline uint32_t pastWindowSize(uint8_t version) {
+inline uint32_t pastWindowSize(Blockchain::Block::Version version) {
   return TimeCheckpointResolver::pastWindowSize<CURRENT_TIME_CHECKPOINT_INDEX>(version);
 }
 
-inline std::chrono::seconds futureTimeLimit(uint8_t version) {
+inline std::chrono::seconds futureTimeLimit(Blockchain::Block::Version version) {
   return TimeCheckpointResolver::futureTimeLimit<CURRENT_TIME_CHECKPOINT_INDEX>(version);
 }
 

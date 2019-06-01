@@ -272,7 +272,7 @@ class WalletGreen : public IWallet,
   std::vector<WalletTransfer> convertOrdersToTransfers(const std::vector<WalletOrder>& orders) const;
   uint64_t countNeededMoney(const std::vector<CryptoNote::WalletTransfer>& destinations, uint64_t fee) const;
   CryptoNote::AccountPublicAddress parseAccountAddressString(const std::string& addressString) const;
-  uint64_t pushDonationTransferIfPossible(const DonationSettings& donation, uint64_t freeAmount, uint64_t dustThreshold,
+  uint64_t pushDonationTransferIfPossible(const DonationSettings& donation, uint64_t freeAmount,
                                           std::vector<WalletTransfer>& destinations) const;
   void validateAddresses(const std::vector<std::string>& addresses) const;
   void validateOrders(const std::vector<WalletOrder>& orders) const;
@@ -289,12 +289,12 @@ class WalletGreen : public IWallet,
                      std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& mixinResult,
                      uint16_t mixIn, std::vector<InputInfo>& keysInfo);
 
-  uint64_t selectTransfers(uint64_t needeMoney, bool dust, uint64_t dustThreshold, std::vector<WalletOuts>&& wallets,
+  uint64_t selectTransfers(uint64_t needeMoney, std::vector<WalletOuts>&& wallets,
                            std::vector<OutputToTransfer>& selectedTransfers);
 
   std::vector<ReceiverAmounts> splitDestinations(const std::vector<WalletTransfer>& destinations,
                                                  const Currency& currency);
-  ReceiverAmounts splitAmount(uint64_t amount, const AccountPublicAddress& destination, uint64_t dustThreshold);
+  ReceiverAmounts splitAmount(uint64_t amount, const AccountPublicAddress& destination);
 
   std::unique_ptr<CryptoNote::ITransactionBuilder> makeTransaction(
       const std::vector<ReceiverAmounts>& decomposedOutputs, std::vector<InputInfo>& keysInfo, const std::string& extra,

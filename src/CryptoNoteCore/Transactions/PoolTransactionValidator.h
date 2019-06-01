@@ -30,7 +30,7 @@
 namespace CryptoNote {
 class PoolTransactionValidator : public TransactionValidator {
  public:
-  PoolTransactionValidator(const ITransactionPool& pool, uint8_t blockVersion, const IBlockchainCache& chain,
+  PoolTransactionValidator(const ITransactionPool& pool, BlockVersion blockVersion, const IBlockchainCache& chain,
                            const Currency& currency);
 
  protected:

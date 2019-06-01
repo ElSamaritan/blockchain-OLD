@@ -40,18 +40,20 @@ namespace Config {
 namespace Hashes {
 
 struct HashCheckpointResolver {
-  template <uint8_t>
-  static inline void compute(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash, uint8_t version);
+  template <Blockchain::Block::Version::value_type>
+  static inline void compute(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash,
+                             Blockchain::Block::Version version);
 };
 
 template <>
-inline void HashCheckpointResolver::compute<0>(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash, uint8_t) {
+inline void HashCheckpointResolver::compute<0>(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash,
+                                               Blockchain::Block::Version) {
   typename HashCheckpoint<0>::algorithm hashFn{};
   hashFn(block, hash);
 }
-template <uint8_t _Index>
+template <Blockchain::Block::Version::value_type _Index>
 inline void HashCheckpointResolver::compute(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash,
-                                            uint8_t version) {
+                                            Blockchain::Block::Version version) {
   if (version >= HashCheckpoint<_Index>::version()) {
     typename HashCheckpoint<_Index>::algorithm hashFn{};
     hashFn(block, hash);
@@ -59,7 +61,7 @@ inline void HashCheckpointResolver::compute(const CryptoNote::CachedBlock& block
     return compute<_Index - 1>(block, hash, version);
 }
 
-inline void compute(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash, uint8_t version) {
+inline void compute(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash, Blockchain::Block::Version version) {
   HashCheckpointResolver::compute<CURRENT_HASH_CHECKPOINT_INDEX>(block, hash, version);
 }
 

@@ -32,7 +32,6 @@
 #include "Xi/Config/Mixin.h"
 #include "Xi/Config/Difficulty.h"
 #include "Xi/Config/Database.h"
-#include "Xi/Config/Dust.h"
 #include "Xi/Config/MinerReward.h"
 #include "Xi/Config/StaticReward.h"
 #include "Xi/Config/Transaction.h"

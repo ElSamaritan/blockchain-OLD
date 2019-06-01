@@ -23,16 +23,17 @@
 
 #include "UpgradeDetector.h"
 
-CryptoNote::NoVotingUpgradeDetector::NoVotingUpgradeDetector(uint8_t targetVersion, uint32_t upgradeIndex)
+CryptoNote::NoVotingUpgradeDetector::NoVotingUpgradeDetector(Xi::Blockchain::Block::Version targetVersion,
+                                                             uint32_t upgradeIndex)
     : m_targetVersion(targetVersion), m_upgradeIndex(upgradeIndex) {}
 
 CryptoNote::NoVotingUpgradeDetector::~NoVotingUpgradeDetector() {}
 
-uint8_t CryptoNote::NoVotingUpgradeDetector::targetVersion() const { return m_targetVersion; }
+Xi::Blockchain::Block::Version CryptoNote::NoVotingUpgradeDetector::targetVersion() const { return m_targetVersion; }
 
 uint32_t CryptoNote::NoVotingUpgradeDetector::upgradeIndex() const { return m_upgradeIndex; }
 
-std::unique_ptr<CryptoNote::IUpgradeDetector> CryptoNote::makeUpgradeDetector(uint8_t targetVersion,
-                                                                              uint32_t upgradeIndex) {
+std::unique_ptr<CryptoNote::IUpgradeDetector> CryptoNote::makeUpgradeDetector(
+    Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeIndex) {
   return std::unique_ptr<NoVotingUpgradeDetector>(new NoVotingUpgradeDetector(targetVersion, upgradeIndex));
 }

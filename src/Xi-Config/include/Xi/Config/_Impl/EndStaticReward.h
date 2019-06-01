@@ -25,6 +25,8 @@
 
 #include <cinttypes>
 
+#include <Xi/Blockchain/Block/Version.hpp>
+
 #include "Xi/Config/StaticReward.h"
 
 #undef MakeStaticRewardCheckpoint
@@ -38,19 +40,19 @@ namespace Config {
 namespace StaticReward {
 
 struct StaticRewardCheckpointResolver {
-  template <uint8_t>
-  static inline uint64_t amount(uint8_t version);
+  template <Blockchain::Block::Version::value_type>
+  static inline uint64_t amount(Blockchain::Block::Version version);
 
-  template <uint8_t>
-  static inline std::string address(uint8_t version);
+  template <Blockchain::Block::Version::value_type>
+  static inline std::string address(Blockchain::Block::Version version);
 };
 
 template <>
-inline uint64_t StaticRewardCheckpointResolver::amount<0>(uint8_t) {
+inline uint64_t StaticRewardCheckpointResolver::amount<0>(Blockchain::Block::Version) {
   return StaticRewardCheckpoint<0>::amount();
 }
-template <uint8_t _Index>
-inline uint64_t StaticRewardCheckpointResolver::amount(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline uint64_t StaticRewardCheckpointResolver::amount(Blockchain::Block::Version version) {
   if (version >= StaticRewardCheckpoint<_Index>::version())
     return StaticRewardCheckpoint<_Index>::amount();
   else
@@ -58,26 +60,26 @@ inline uint64_t StaticRewardCheckpointResolver::amount(uint8_t version) {
 }
 
 template <>
-inline std::string StaticRewardCheckpointResolver::address<0>(uint8_t) {
+inline std::string StaticRewardCheckpointResolver::address<0>(Blockchain::Block::Version) {
   return StaticRewardCheckpoint<0>::address();
 }
-template <uint8_t _Index>
-inline std::string StaticRewardCheckpointResolver::address(uint8_t version) {
+template <Blockchain::Block::Version::value_type _Index>
+inline std::string StaticRewardCheckpointResolver::address(Blockchain::Block::Version version) {
   if (version >= StaticRewardCheckpoint<_Index>::version())
     return StaticRewardCheckpoint<_Index>::address();
   else
     return address<_Index - 1>(version);
 }
 
-inline uint64_t amount(uint8_t version) {
+inline uint64_t amount(Blockchain::Block::Version version) {
   return StaticRewardCheckpointResolver::amount<CURRENT_STATIC_REWARD_CHECKPOINT_INDEX>(version);
 }
 
-inline std::string address(uint8_t version) {
+inline std::string address(Blockchain::Block::Version version) {
   return StaticRewardCheckpointResolver::address<CURRENT_STATIC_REWARD_CHECKPOINT_INDEX>(version);
 }
 
-inline bool isEnabled(uint8_t version) { return !address(version).empty() && amount(version) > 0; }
+inline bool isEnabled(Blockchain::Block::Version version) { return !address(version).empty() && amount(version) > 0; }
 
 }  // namespace StaticReward
 }  // namespace Config

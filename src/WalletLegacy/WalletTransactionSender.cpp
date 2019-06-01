@@ -113,7 +113,7 @@ void WalletTransactionSender::validateTransfersAddresses(const std::vector<Walle
 
 std::shared_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(
     TransactionId& transactionId, std::deque<std::shared_ptr<WalletLegacyEvent>>& events,
-    const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, uint8_t majorBlockVersion,
+    const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, BlockVersion majorBlockVersion,
     const std::string& extra, uint64_t mixIn, uint64_t unlockTimestamp) {
   using namespace CryptoNote;
 
@@ -125,8 +125,7 @@ std::shared_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(
 
   std::shared_ptr<SendTransactionContext> context = std::make_shared<SendTransactionContext>();
 
-  context->foundMoney =
-      selectTransfersToSend(neededMoney, 0 == mixIn, context->dustPolicy.dustThreshold, context->selectedTransfers);
+  context->foundMoney = selectTransfersToSend(neededMoney, context->selectedTransfers);
   throwIf(context->foundMoney < neededMoney, error::WRONG_AMOUNT);
 
   transactionId = m_transactionsCache.addNewTransaction(neededMoney, fee, extra, transfers, unlockTimestamp);
@@ -203,8 +202,7 @@ std::shared_ptr<WalletRequest> WalletTransactionSender::doSendTransaction(
     createChangeDestinations(m_keys.address, totalAmount, context->foundMoney, changeDts);
 
     std::vector<TransactionDestinationEntry> splittedDests;
-    splitDestinations(transaction.firstTransferId, transaction.transferCount, changeDts, context->dustPolicy,
-                      splittedDests);
+    splitDestinations(transaction.firstTransferId, transaction.transferCount, changeDts, splittedDests);
 
     Transaction tx;
     constructTx(m_keys, sources, splittedDests, transaction.extra, transaction.unlockTime, m_upperTransactionSizeLimit,
@@ -244,25 +242,14 @@ void WalletTransactionSender::relayTransactionCallback(std::shared_ptr<SendTrans
 
 void WalletTransactionSender::splitDestinations(TransferId firstTransferId, size_t transfersCount,
                                                 const TransactionDestinationEntry& changeDts,
-                                                const TxDustPolicy& dustPolicy,
                                                 std::vector<TransactionDestinationEntry>& splittedDests) {
-  uint64_t dust = 0;
-
-  digitSplitStrategy(firstTransferId, transfersCount, changeDts, dustPolicy.dustThreshold, splittedDests, dust);
-
-  throwIf(dustPolicy.dustThreshold < dust, error::INTERNAL_WALLET_ERROR);
-  if (0 != dust && !dustPolicy.addToFee) {
-    splittedDests.push_back(TransactionDestinationEntry(dust, dustPolicy.addrForDust));
-  }
+  digitSplitStrategy(firstTransferId, transfersCount, changeDts, splittedDests);
 }
 
 void WalletTransactionSender::digitSplitStrategy(TransferId firstTransferId, size_t transfersCount,
-                                                 const TransactionDestinationEntry& change_dst, uint64_t dust_threshold,
-                                                 std::vector<TransactionDestinationEntry>& splitted_dsts,
-                                                 uint64_t& dust) {
+                                                 const TransactionDestinationEntry& change_dst,
+                                                 std::vector<TransactionDestinationEntry>& splitted_dsts) {
   splitted_dsts.clear();
-  dust = 0;
-
   for (TransferId idx = firstTransferId; idx < firstTransferId + transfersCount; ++idx) {
     WalletLegacyTransfer& de = m_transactionsCache.getTransfer(idx);
 
@@ -272,15 +259,12 @@ void WalletTransactionSender::digitSplitStrategy(TransferId firstTransferId, siz
     }
 
     decompose_amount_into_digits(
-        de.amount, dust_threshold,
-        [&](uint64_t chunk) { splitted_dsts.push_back(TransactionDestinationEntry(chunk, addr)); },
-        [&](uint64_t a_dust) { splitted_dsts.push_back(TransactionDestinationEntry(a_dust, addr)); });
+        de.amount, [&](uint64_t chunk) { splitted_dsts.push_back(TransactionDestinationEntry(chunk, addr)); });
   }
 
-  decompose_amount_into_digits(
-      change_dst.amount, dust_threshold,
-      [&](uint64_t chunk) { splitted_dsts.push_back(TransactionDestinationEntry(chunk, change_dst.addr)); },
-      [&](uint64_t a_dust) { dust = a_dust; });
+  decompose_amount_into_digits(change_dst.amount, [&](uint64_t chunk) {
+    splitted_dsts.push_back(TransactionDestinationEntry(chunk, change_dst.addr));
+  });
 }
 
 void WalletTransactionSender::prepareInputs(
@@ -365,38 +349,24 @@ T popRandomValue(URNG& randomGenerator, std::vector<T>& vec) {
 
 }  // namespace
 
-uint64_t WalletTransactionSender::selectTransfersToSend(uint64_t neededMoney, bool addDust, uint64_t dust,
+uint64_t WalletTransactionSender::selectTransfersToSend(uint64_t neededMoney,
                                                         std::list<TransactionOutputInformation>& selectedTransfers) {
   std::vector<size_t> unusedTransfers;
-  std::vector<size_t> unusedDust;
-
   std::vector<TransactionOutputInformation> outputs;
   m_transferDetails.getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
 
   for (size_t i = 0; i < outputs.size(); ++i) {
     const auto& out = outputs[i];
     if (!m_transactionsCache.isUsed(out)) {
-      if (dust < out.amount)
-        unusedTransfers.push_back(i);
-      else
-        unusedDust.push_back(i);
+      unusedTransfers.push_back(i);
     }
   }
 
   std::default_random_engine randomGenerator(Xi::Crypto::Random::generate<std::default_random_engine::result_type>());
-  bool selectOneDust = addDust && !unusedDust.empty();
   uint64_t foundMoney = 0;
 
-  while (foundMoney < neededMoney && (!unusedTransfers.empty() || !unusedDust.empty())) {
-    size_t idx;
-    if (selectOneDust) {
-      idx = popRandomValue(randomGenerator, unusedDust);
-      selectOneDust = false;
-    } else {
-      idx = !unusedTransfers.empty() ? popRandomValue(randomGenerator, unusedTransfers)
-                                     : popRandomValue(randomGenerator, unusedDust);
-    }
-
+  while (foundMoney < neededMoney && !unusedTransfers.empty()) {
+    const size_t idx = popRandomValue(randomGenerator, unusedTransfers);
     selectedTransfers.push_back(outputs[idx]);
     foundMoney += outputs[idx].amount;
   }

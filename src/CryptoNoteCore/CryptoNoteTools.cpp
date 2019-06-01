@@ -116,10 +116,8 @@ uint64_t CryptoNote::getOutputAmount(const Transaction& transaction) {
   return amount;
 }
 
-void CryptoNote::decomposeAmount(uint64_t amount, uint64_t dustThreshold, std::vector<uint64_t>& decomposedAmounts) {
-  decompose_amount_into_digits(
-      amount, dustThreshold, [&](uint64_t amount) { decomposedAmounts.push_back(amount); },
-      [&](uint64_t dust) { decomposedAmounts.push_back(dust); });
+void CryptoNote::decomposeAmount(uint64_t amount, std::vector<uint64_t>& decomposedAmounts) {
+  decompose_amount_into_digits(amount, [&](uint64_t amount) { decomposedAmounts.push_back(amount); });
 }
 
 size_t CryptoNote::countCanonicalDecomposition(const std::vector<uint64_t>& amounts) {

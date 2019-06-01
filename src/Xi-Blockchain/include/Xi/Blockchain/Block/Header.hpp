@@ -28,6 +28,7 @@
 #include <crypto/Types/Hash.h>
 
 #include "Xi/Blockchain/Block/Features.hpp"
+#include "Xi/Blockchain/Block/Version.hpp"
 #include "Xi/Blockchain/Block/Nonce.hpp"
 
 namespace Xi {
@@ -35,7 +36,7 @@ namespace Blockchain {
 namespace Block {
 
 struct Header {
-  uint8_t majorVersion;
+  Version majorVersion;
   uint8_t minorVersion;
   Features features;
   Nonce nonce;
