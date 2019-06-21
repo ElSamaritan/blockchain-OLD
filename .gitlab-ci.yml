@@ -57,38 +57,38 @@ variables:
 
 Ubuntu Bionic - Build:
   <<: *linux_build_definition
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:bionic
+  image: registry.gitlab.com/galaxia-project/environment/ubuntu:bionic
   variables:
     CI_TARGET_OS: "Ubuntu Bionic"
 
 Ubuntu Xenial - Build:
   <<: *linux_build_definition
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:xenial
+  image: registry.gitlab.com/galaxia-project/environment/ubuntu:xenial
   variables:
     CI_TARGET_OS: "Ubuntu Xenial"
 
 centOS 7 - Build:
   <<: *linux_build_definition
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/centos:7
+  image: registry.gitlab.com/galaxia-project/environment/centos:7
   variables:
     CI_TARGET_OS: "centOS 7"
   before_script: [". /opt/rh/devtoolset-8/enable"]
 
 debian 9 - Build:
   <<: *linux_build_definition
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/debian:9
+  image: registry.gitlab.com/galaxia-project/environment/debian:9
   variables:
     CI_TARGET_OS: "debian 9"
 
 fedora 29 - Build:
   <<: *linux_build_definition
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/fedora:29
+  image: registry.gitlab.com/galaxia-project/environment/fedora:29
   variables:
     CI_TARGET_OS: "fedora 29"
 
 openSuse Leap - Build:
   <<: *linux_build_definition
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/opensuse:leap
+  image: registry.gitlab.com/galaxia-project/environment/opensuse:leap
   variables:
     CI_TARGET_OS: "openSuse Leap"
 
@@ -98,11 +98,11 @@ Windows 10 - Build:
   variables:
     CI_TARGET_OS: "Windows 10"
 
-# macOS - Build:
-#   <<: *generic_build_definition
-#   tags: ["macOS", "four-cores"]
-#   variables:
-#     CI_TARGET_OS: "macOS"
+macOS - Build:
+  <<: *generic_build_definition
+  tags: ["macOS"]
+  variables:
+    CI_TARGET_OS: "macOS"
 
 # ================================================================================================================== #
 #                                                                                                                    #
@@ -112,7 +112,7 @@ Windows 10 - Build:
 
 CppCheck:
   stage: analyze
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/cppcheck:latest
+  image: registry.gitlab.com/galaxia-project/environment/cppcheck:latest
   tags: ["docker"]
   script: "/bin/bash ./scripts/ci/CppCheck.sh"
   dependencies: []
@@ -126,7 +126,7 @@ CppCheck:
 
 CppLint:
   stage: analyze
-  image: registry.gitlab.com/galaxia-project/blockchain/develop-environments/cpplint:latest
+  image: registry.gitlab.com/galaxia-project/environment/cpplint:latest
   tags: ["docker"]
   dependencies: []
   script: "/bin/bash ./scripts/ci/CppLint.sh"
@@ -155,7 +155,7 @@ Packages:
     - "fedora 29 - Build"
     - "openSuse Leap - Build"
     - "Windows 10 - Build"
-  #    - "macOS - Build"
+    - "macOS - Build"
   script:
     - pwsh -File ./scripts/ci/DeployPackages.ps1
     - pwsh -File ./scripts/ci/NotifyRelease.ps1

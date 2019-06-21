@@ -38,8 +38,9 @@ enum class TransactionValidationError {
   EXISTS_IN_POOL = 3,        ///< The transaction is already present in the pool.
   TOO_LARGE = 4,             ///< The binary size of the transaction is too large.
   TOO_LARGE_FOR_REWARD_ZONE =
-      35,            ///< The pool denied the transaction being to large to get a sufficient reward for mining it.
-  EMPTY_INPUTS = 5,  ///< The transaction has no inputs.
+      35,              ///< The pool denied the transaction being to large to get a sufficient reward for mining it.
+  EMPTY_INPUTS = 5,    ///< The transaction has no inputs.
+  EMPTY_OUTPUTS = 47,  ///< The transaction has no outputs.
   INPUT_UNKNOWN_TYPE = 6,
   INPUT_EMPTY_OUTPUT_USAGE = 7,        ///< One of the inputs has no outputs in the transaction and would disapper.
   INPUT_INVALID_DOMAIN_KEYIMAGES = 8,  ///< The identifier to protect double spending was computed using a wrong domain.
@@ -93,7 +94,7 @@ enum class TransactionValidationError {
   INPUT_MIXIN_TOO_HIGH = 33,
   INPUT_MIXIN_TOO_LOW = 34,
 
-  __NUM = 47  ///< The count of different enum values, if you add a new one use this as its value and increase this by
+  __NUM = 48  ///< The count of different enum values, if you add a new one use this as its value and increase this by
               ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation
               ///< and tickets aso.
 };
@@ -119,6 +120,8 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Failed to parse transaction blob";
       case TransactionValidationError::EMPTY_INPUTS:
         return "Transaction has no inputs";
+      case TransactionValidationError::EMPTY_OUTPUTS:
+        return "Transaction has no outputs";
       case TransactionValidationError::INPUT_UNKNOWN_TYPE:
         return "Transaction has input with unknown type";
       case TransactionValidationError::INPUT_EMPTY_OUTPUT_USAGE:

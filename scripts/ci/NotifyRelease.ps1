@@ -38,12 +38,12 @@ else
     Write-Log "Sending discord notification..."
 }
 
-$Icon = "https://releases.xiproject.io/_404/xi-logo-discord.png"
-$Url = "https://releases.xiproject.io/$($BuildEnvironment.Channel)/v$($BuildEnvironment.Version)"
+$Icon = "https://releases.galaxia-project.com/_404/images/ci-$($BuildEnvironment.Channel).png"
+$Url = "https://releases.galaxia-project.com/$($BuildEnvironment.Channel)/v$($BuildEnvironment.Version)"
 $Timestamp = "$(Get-Date -format s)Z"
 $TextInfo = (Get-Culture).TextInfo
 
-Invoke-WebRequest -Uri "https://releases.xiproject.io/packages.json" -OutFile packages.json
+Invoke-WebRequest -Uri "https://releases.galaxia-project.com/packages.json" -OutFile packages.json
 $Packages = Get-Content packages.json | Out-String | ConvertFrom-Json
 $Packages = $Packages | Where-Object { $_ -like "$($BuildEnvironment.Channel)/latest/*" }
 $Packages = $Packages -replace "$($BuildEnvironment.Channel)/latest/",""
@@ -58,12 +58,12 @@ Remove-Item packages.json
 
 $Payload="{
   ""username"": """",
-  ""avatar_url"": ""https://releases.xiproject.io/_404/xi-logo-discord.png"",
+  ""avatar_url"": ""$Icon"",
   ""embeds"": [ {
     ""color"": 4388052,
     ""author"": {
-      ""name"": ""XiProject - Releases"",
-      ""url"": ""https://releases.xiproject.io""
+      ""name"": ""Galaxia - Releases"",
+      ""url"": ""https://releases.galaxia-project.com""
     },
     ""title"": ""New $($TextInfo.ToTitleCase($BuildEnvironment.Channel)) Release v$($BuildEnvironment.Version)"",
     ""url"": ""$Url"",

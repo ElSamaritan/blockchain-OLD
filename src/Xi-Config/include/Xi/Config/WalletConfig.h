@@ -8,10 +8,10 @@
 /* Make sure everything in here is const - or it won't compile! */
 namespace WalletConfig {
 /* The prefix your coins address starts with */
-const std::string addressPrefix = "Xi";
+const std::string addressPrefix = ::Xi::Config::Coin::addressPrefix();
 
 /* Your coins 'Ticker', e.g. Monero = XMR, Bitcoin = BTC */
-const std::string ticker = "XIG";
+const std::string ticker = ::Xi::Config::Coin::ticker();
 
 /* The filename to output the CSV to in save_csv */
 const std::string csvFilename = "transactions.csv";
@@ -34,7 +34,7 @@ const std::string walletdName = "xi-pgservice";
 const std::string coinName = Xi::Config::Coin::name();
 
 /* Where can your users contact you for support? E.g. discord */
-const std::string contactLink = "http://chat.xiproject.io";
+const std::string contactLink = Xi::Config::Coin::contactUrl();
 
 /* The number of decimals your coin has */
 const int numDecimalPlaces = Xi::Config ::Coin::numberOfDecimalPoints();

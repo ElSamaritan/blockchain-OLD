@@ -32,8 +32,10 @@
 namespace Xi {
 namespace Config {
 namespace Coin {
-inline std::string name() { return "Xi"; }
-inline constexpr uint32_t addressBas58Prefix() { return 22583; }
+inline std::string name() { return "Galaxia"; }
+inline std::string ticker() { return "GLX"; }
+inline std::string addressPrefix() { return "XGL"; }
+inline constexpr uint32_t addressBas58Prefix() { return 0xc7834; }
 constexpr uint8_t numberOfDecimalPoints() { return 6; }
 constexpr uint64_t toAtomicUnits(uint64_t coins) { return coins * Xi::pow(10, numberOfDecimalPoints()); }
 constexpr uint64_t totalSupply() { return toAtomicUnits(55_M); }
@@ -41,8 +43,9 @@ constexpr uint64_t amountOfPremine() { return toAtomicUnits(500_k); }
 constexpr uint64_t minimumFee() { return 1000; }
 constexpr uint32_t emissionSpeed() { return 21; }
 
-inline std::string licenseUrl() { return "https://gitlab.com/galaxia-project/blockchain/xi/blob/develop/LICENSE"; }
-inline std::string downloadUrl() { return "https://releases.xiproject.io"; }
+inline std::string contactUrl() { return "http://chat.galaxia-project.com"; }
+inline std::string licenseUrl() { return "https://gitlab.com/galaxia-project/blockchain/blob/develop/LICENSE"; }
+inline std::string downloadUrl() { return "https://releases.galaxia-project.com"; }
 
 uint64_t genesisTimestamp(Xi::Config::Network::Type network);
 

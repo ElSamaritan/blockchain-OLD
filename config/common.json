@@ -2,9 +2,9 @@
     "name": "Xi",
 
     "info": {
-        "licenesUrl": "https://gitlab.com/galaxia-project/blockchain/xi/blob/develop/LICENSE",
-        "releasesUrl": "https://releases.xiproject.io",
-        "contactUrl": "https://support.xiproject.io"
+        "licenesUrl": "https://gitlab.com/galaxia-project/blockchain/blob/develop/LICENSE",
+        "releasesUrl": "https://releases.galaxia-project.com",
+        "contactUrl": "https://support.galaxia-project.com"
     },
 
     "coin": {

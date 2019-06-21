@@ -43,7 +43,7 @@ const std::string DevelpmentVersionHeader = R"(
    ! You are running a development version! The program may contain bugs or is not         !
    ! compatible with the main network. In case you accidentally ran into this version and  !
    ! do not want to use it to for testing purposes you should visit our GitLab page        !
-   !     https://gitlab.com/galaxia-project/blockchain/xi                                  !
+   !     https://gitlab.com/galaxia-project/blockchain                                     !
    ! . Or if you want to build xi yourself make sure you are building from the master      !
    ! branch.                                                                               !
    !                                                                                       !
@@ -100,7 +100,7 @@ std::string CommonCLI::insecureClientWarning() {
    !                                                                                       !
    ! Your client is not set up to be the most secure. To increase your security please     !
    ! read our tutorial on setting up SSL correctly.                                        !
-   !     https://doc.xiproject.io/ssl/                                                     !
+   !     https://doc.galaxia-project.com/ssl/                                                     !
    !                                                                                       !
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 )";
@@ -112,7 +112,7 @@ std::string CommonCLI::insecureServerWarning() {
    !                                                                                       !
    ! Your server is not set up to be the most secure. To increase your security please     !
    ! read our tutorial on setting up SSL correctly.                                        !
-   !     https://doc.xiproject.io/ssl/                                                     !
+   !     https://doc.galaxia-project.com/ssl/                                                     !
    !                                                                                       !
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 )";

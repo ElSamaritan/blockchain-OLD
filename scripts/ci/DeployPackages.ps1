@@ -34,7 +34,7 @@ if((Test-Path -Path $PackagesInfoPath))
 }
 
 Write-Log "Downloading current packages info..."
-Invoke-WebRequest -Uri "https://releases.xiproject.io/packages.json" -OutFile $PackagesInfoPath
+Invoke-WebRequest -Uri "https://releases.galaxia-project.com/packages.json" -OutFile $PackagesInfoPath
 $PackageInfo = Get-Content $PackagesInfoPath | Out-String | ConvertFrom-Json
 
 $NewPackages = (Get-ChildItem -Recurse -Path "$PackagesPath\$($PackageInfo.VersionPath)\*" -Filter info.json)

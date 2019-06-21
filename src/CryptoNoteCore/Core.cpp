@@ -1513,6 +1513,9 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
   if (transaction.inputs.empty()) {
     return error::TransactionValidationError::EMPTY_INPUTS;
   }
+  if (transaction.outputs.empty()) {
+    return error::TransactionValidationError::EMPTY_OUTPUTS;
+  }
   if (transaction.extra.size() > TX_EXTRA_MAX_SIZE) {
     return error::TransactionValidationError::EXTRA_NONCE_TOO_LARGE;
   }
