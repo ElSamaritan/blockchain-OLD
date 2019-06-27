@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -44,7 +44,7 @@ template <typename _ValueT, size_t _SizeV>
   for (size_t i = 0; i < _SizeV; ++i) {
     XI_RETURN_EC_IF_NOT(serializer(value[i], ""), false);
   }
-  serializer.endArray();
+  XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
 }
 
 template <typename _ValueT, size_t _SizeV>
@@ -53,7 +53,7 @@ template <typename _ValueT, size_t _SizeV>
   for (size_t i = 0; i < _SizeV; ++i) {
     XI_RETURN_EC_IF_NOT(serializer(value[i], ""), false);
   }
-  serializer.endArray();
+  XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
 }
 
 }  // namespace CryptoNote

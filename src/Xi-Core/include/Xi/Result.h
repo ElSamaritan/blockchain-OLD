@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -75,9 +75,10 @@ class [[nodiscard]] Result {
 
   const Error& error() const { return std::get<Error>(m_result); }
 
-  std::conditional_t<std::is_compound_v<value_t>, const value_t&, value_t> value() const {
-    return std::get<1>(m_result);
-  }
+  const value_t& value() const { return std::get<1>(m_result); }
+  const value_t& operator*() const { return std::get<1>(m_result); }
+  value_t& value() { return std::get<1>(m_result); }
+  value_t& operator*() { return std::get<1>(m_result); }
 
   value_t take() {
     static_assert(std::is_move_constructible<value_t>::value, "You can only take move constructible types.");
@@ -90,15 +91,22 @@ class [[nodiscard]] Result {
     }
   }
 
-  value_t valueOrThrow() {
+  value_t& valueOrThrow() {
     throwOnError();
-    return value();
+    return this->value();
+  }
+  const value_t& valueOrThrow() const {
+    throwOnError();
+    return this->value();
   }
 
   value_t takeOrThrow() {
     throwOnError();
-    return take();
+    return this->take();
   }
+
+  const value_t* operator->() const { return std::get_if<value_t>(&this->m_result); }
+  value_t* operator->() { return std::get_if<value_t>(&this->m_result); }
 };
 
 template <>

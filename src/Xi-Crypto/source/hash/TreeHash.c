@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -34,6 +34,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "Xi/Crypto/Hash/Keccak.hh"
+
 size_t xi_crypto_hash_tree_depth(size_t count)
 {
   size_t i;
@@ -56,7 +58,7 @@ int xi_crypto_hash_tree_hash(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE], 
     memcpy(rootHash, hashes, XI_HASH_FAST_HASH_SIZE);
     return XI_RETURN_CODE_SUCCESS;
   } else if (count == 2) {
-    ec = xi_crypto_hash_fast_hash((const xi_byte_t*)hashes, 2 * XI_HASH_FAST_HASH_SIZE, rootHash);
+    ec = xi_crypto_hash_keccak_256((const xi_byte_t*)hashes, 2 * XI_HASH_FAST_HASH_SIZE, rootHash);
     XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
     return XI_RETURN_CODE_SUCCESS;
   } else {
@@ -70,18 +72,18 @@ int xi_crypto_hash_tree_hash(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE], 
     ints = alloca(cnt * XI_HASH_FAST_HASH_SIZE);
     memcpy(ints, hashes, (2 * cnt - count) * XI_HASH_FAST_HASH_SIZE);
     for (i = 2 * cnt - count, j = 2 * cnt - count; j < cnt; i += 2, ++j) {
-      ec = xi_crypto_hash_fast_hash(hashes[i], 2 * XI_HASH_FAST_HASH_SIZE, ints[j]);
+      ec = xi_crypto_hash_keccak_256(hashes[i], 2 * XI_HASH_FAST_HASH_SIZE, ints[j]);
       XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
     }
     assert(i == count);
     while (cnt > 2) {
       cnt >>= 1;
       for (i = 0, j = 0; j < cnt; i += 2, ++j) {
-        ec = xi_crypto_hash_fast_hash(ints[i], 2 * XI_HASH_FAST_HASH_SIZE, ints[j]);
+        ec = xi_crypto_hash_keccak_256(ints[i], 2 * XI_HASH_FAST_HASH_SIZE, ints[j]);
         XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
       }
     }
-    ec = xi_crypto_hash_fast_hash(ints[0], 2 * XI_HASH_FAST_HASH_SIZE, rootHash);
+    ec = xi_crypto_hash_keccak_256(ints[0], 2 * XI_HASH_FAST_HASH_SIZE, rootHash);
     XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
     return XI_RETURN_CODE_SUCCESS;
   }
@@ -107,7 +109,7 @@ int xi_crypto_hash_tree_branch(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE]
   memcpy(ints, hashes + 1, (2 * cnt - count - 1) * XI_HASH_FAST_HASH_SIZE);
   int ec = XI_RETURN_CODE_SUCCESS;
   for (i = 2 * cnt - count, j = 2 * cnt - count - 1; j < cnt - 1; i += 2, ++j) {
-    ec = xi_crypto_hash_fast_hash(hashes[i], 2 * XI_HASH_FAST_HASH_SIZE, ints[j]);
+    ec = xi_crypto_hash_keccak_256(hashes[i], 2 * XI_HASH_FAST_HASH_SIZE, ints[j]);
     XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
   }
   XI_RETURN_EC_IF_NOT(i == count, XI_RETURN_CODE_NO_SUCCESS);
@@ -117,7 +119,7 @@ int xi_crypto_hash_tree_branch(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE]
     --depth;
     memcpy(branch[depth], ints[0], XI_HASH_FAST_HASH_SIZE);
     for (i = 1, j = 0; j < cnt - 1; i += 2, ++j) {
-      ec = xi_crypto_hash_fast_hash(ints[i], 2 * XI_HASH_FAST_HASH_SIZE, ints[j]);
+      ec = xi_crypto_hash_keccak_256(ints[i], 2 * XI_HASH_FAST_HASH_SIZE, ints[j]);
       XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
     }
   }
@@ -148,12 +150,12 @@ int xi_crypto_hashtree_hash_from_branch(const xi_byte_t (*branch)[XI_HASH_FAST_H
         memcpy(leaf_path, leaf, XI_HASH_FAST_HASH_SIZE);
         from_leaf = 0;
       } else {
-        ec = xi_crypto_hash_fast_hash((const xi_byte_t*)buffer, 2 * XI_HASH_FAST_HASH_SIZE, leaf_path);
+        ec = xi_crypto_hash_keccak_256((const xi_byte_t*)buffer, 2 * XI_HASH_FAST_HASH_SIZE, leaf_path);
         XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
       }
       memcpy(branch_path, branch[depth], XI_HASH_FAST_HASH_SIZE);
     }
-    ec = xi_crypto_hash_fast_hash((const xi_byte_t*)buffer, 2 * XI_HASH_FAST_HASH_SIZE, root_hash);
+    ec = xi_crypto_hash_keccak_256((const xi_byte_t*)buffer, 2 * XI_HASH_FAST_HASH_SIZE, root_hash);
     XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
     return XI_RETURN_CODE_SUCCESS;
   }

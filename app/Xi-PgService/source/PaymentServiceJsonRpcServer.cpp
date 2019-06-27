@@ -325,8 +325,8 @@ std::error_code PaymentServiceJsonRpcServer::handleGetAddresses(const GetAddress
 
 std::error_code PaymentServiceJsonRpcServer::handleSendFusionTransaction(const SendFusionTransaction::Request& request,
                                                                          SendFusionTransaction::Response& response) {
-  return service.sendFusionTransaction(request.threshold, request.anonymity, request.addresses,
-                                       request.destinationAddress, response.transactionHash);
+  return service.sendFusionTransaction(request.threshold, request.addresses, request.destinationAddress,
+                                       response.transactionHash);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleEstimateFusion(const EstimateFusion::Request& request,

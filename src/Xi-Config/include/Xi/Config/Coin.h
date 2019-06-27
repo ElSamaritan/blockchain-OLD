@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -34,8 +34,8 @@ namespace Config {
 namespace Coin {
 inline std::string name() { return "Galaxia"; }
 inline std::string ticker() { return "GLX"; }
-inline std::string addressPrefix() { return "XGL"; }
-inline constexpr uint32_t addressBas58Prefix() { return 0xc7834; }
+inline std::string addressPrefix() { return "gxi"; }
+inline constexpr uint32_t addressBas58Prefix() { return 0x1cf46e; }
 constexpr uint8_t numberOfDecimalPoints() { return 6; }
 constexpr uint64_t toAtomicUnits(uint64_t coins) { return coins * Xi::pow(10, numberOfDecimalPoints()); }
 constexpr uint64_t totalSupply() { return toAtomicUnits(55_M); }
@@ -43,7 +43,10 @@ constexpr uint64_t amountOfPremine() { return toAtomicUnits(500_k); }
 constexpr uint64_t minimumFee() { return 1000; }
 constexpr uint32_t emissionSpeed() { return 21; }
 
-inline std::string contactUrl() { return "http://chat.galaxia-project.com"; }
+inline std::string homepage() { return "https://galaixia-project.com"; }
+inline std::string description() { return "An evolving framework for blockchain-based applications."; }
+inline std::string copyright() { return "(c) 2018-2019 Xi Project Developers"; }
+inline std::string contactUrl() { return "https://chat.galaxia-project.com"; }
 inline std::string licenseUrl() { return "https://gitlab.com/galaxia-project/blockchain/blob/develop/LICENSE"; }
 inline std::string downloadUrl() { return "https://releases.galaxia-project.com"; }
 

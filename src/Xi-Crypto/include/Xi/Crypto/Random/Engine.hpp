@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -30,6 +30,7 @@
 
 #include <Xi/Global.hh>
 #include <Xi/Byte.hh>
+#include <Xi/Exceptions.hpp>
 
 #include "Xi/Crypto/Random/Random.hh"
 
@@ -37,52 +38,63 @@ namespace Xi {
 namespace Crypto {
 namespace Random {
 
-class Engine32 final {
+template <typename _ValueT>
+class Engine final {
+  static_assert(std::is_integral_v<_ValueT>, "random engine is only supported for integralt types.");
+
  public:
-  using result_type = std::uint_fast32_t;
+  using result_type = _ValueT;
   using seed_type = ConstByteSpan;
 
   static inline constexpr result_type min() { return std::numeric_limits<result_type>::min(); }
   static inline constexpr result_type max() { return std::numeric_limits<result_type>::max(); }
 
-  explicit Engine32();
-  explicit Engine32(seed_type seed);
-  XI_DELETE_COPY(Engine32);
-  XI_DEFAULT_MOVE(Engine32);
-  ~Engine32();
-
-  void seed();
-  void seed(seed_type seed);
-
-  result_type operator()();
-  void operator()(ByteSpan out);
-
  private:
   std::unique_ptr<xi_crypto_random_state, void (*)(xi_crypto_random_state*)> m_state;
-};
 
-class Engine64 final {
+  explicit Engine() : m_state{xi_crypto_random_state_create(), xi_crypto_random_state_destroy} {}
+
+  XI_DELETE_COPY(Engine);
+
  public:
-  using result_type = std::uint_fast64_t;
-  using seed_type = ConstByteSpan;
+  static Result<Engine> create() {
+    Engine reval{};
+    XI_RETURN_EC_IF(reval.m_state.get() == nullptr, failure(RandomError::Failed));
+    XI_RETURN_EC_IF(xi_crypto_random_state_init(reval.m_state.get()) != XI_RETURN_CODE_SUCCESS,
+                    failure(RandomError::Failed));
+    return success(std::move(reval));
+  }
 
-  static inline constexpr result_type min() { return std::numeric_limits<result_type>::min(); }
-  static inline constexpr result_type max() { return std::numeric_limits<result_type>::max(); }
+  XI_DEFAULT_MOVE(Engine);
+  ~Engine() = default;
 
-  explicit Engine64();
-  explicit Engine64(seed_type seed);
-  XI_DELETE_COPY(Engine64);
-  XI_DEFAULT_MOVE(Engine64);
-  ~Engine64();
+  RandomError seed() {
+    XI_RETURN_EC_IF(xi_crypto_random_state_init(this->m_state.get()) != XI_RETURN_CODE_SUCCESS, RandomError::Failed);
+    return RandomError::Success;
+  }
 
-  void seed();
-  void seed(seed_type seed);
+  RandomError seed(seed_type seed) {
+    XI_RETURN_EC_IF(xi_crypto_random_state_init_deterministic(this->m_state.get(), seed.data(), seed.size_bytes()) !=
+                        XI_RETURN_CODE_SUCCESS,
+                    RandomError::Failed);
+    return RandomError::Success;
+  }
 
-  result_type operator()();
-  void operator()(ByteSpan out);
+  result_type operator()() {
+    result_type reval;
+    exceptional_if<RuntimeError>(
+        xi_crypto_random_bytes_from_state_deterministic(reinterpret_cast<xi_byte_t*>(&reval), sizeof(reval),
+                                                        this->m_state.get()) != XI_RETURN_CODE_SUCCESS,
+        "runtime generation failed");
+    return reval;
+  }
 
- private:
-  std::unique_ptr<xi_crypto_random_state, void (*)(xi_crypto_random_state*)> m_state;
+  RandomError operator()(ByteSpan out) {
+    XI_RETURN_EC_IF(xi_crypto_random_bytes_from_state_deterministic(out.data(), out.size_bytes(),
+                                                                    this->m_state.get()) != XI_RETURN_CODE_SUCCESS,
+                    RandomError::Failed);
+    return RandomError::Success;
+  }
 };
 
 }  // namespace Random

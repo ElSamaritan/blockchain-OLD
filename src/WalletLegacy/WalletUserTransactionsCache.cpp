@@ -78,7 +78,7 @@ TransactionId WalletUserTransactionsCache::addNewTransaction(uint64_t amount, ui
   transaction.isCoinbase = false;
   transaction.timestamp = 0;
   transaction.extra = extra;
-  transaction.blockHeight = WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT;
+  transaction.blockHeight = BlockHeight::Null;
   transaction.state = WalletLegacyTransactionState::Sending;
   transaction.unlockTime = unlockTime;
 
@@ -163,7 +163,7 @@ std::shared_ptr<WalletLegacyEvent> WalletUserTransactionsCache::onTransactionDel
   std::shared_ptr<WalletLegacyEvent> event;
   if (id != CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID) {
     WalletLegacyTransaction& tr = getTransaction(id);
-    tr.blockHeight = WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT;
+    tr.blockHeight = BlockHeight::Null;
     tr.timestamp = 0;
     tr.state = WalletLegacyTransactionState::Deleted;
 
@@ -280,7 +280,7 @@ TransferId WalletUserTransactionsCache::insertTransfers(const std::vector<Wallet
 
 void WalletUserTransactionsCache::updateUnconfirmedTransactions() {
   for (TransactionId id = 0; id < m_transactions.size(); ++id) {
-    if (m_transactions[id].blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
+    if (m_transactions[id].blockHeight == BlockHeight::Null) {
       m_unconfirmedTransactions.updateTransactionId(m_transactions[id].hash, id);
     }
   }

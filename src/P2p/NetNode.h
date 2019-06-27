@@ -348,6 +348,13 @@ class NodeServer : public IP2pEndpoint {
   size_t unbanAllIps();
 
   /*!
+   * \brief isBlocked Checks if an ip is banned.
+   * \param ip The ip to check.
+   * \return True if the ip is blocked, otherwise false.
+   */
+  bool isBlocked(uint32_t ip) const;
+
+  /*!
    * \brief resetPenalties Deletes all penalties assigned to peers.
    * \return The count of removed peer penalties.
    *

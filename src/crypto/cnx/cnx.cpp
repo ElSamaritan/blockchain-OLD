@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -42,7 +42,7 @@ void Crypto::CNX::Hash_v1::operator()(const void *data, size_t length, Crypto::H
     return;
   }
 
-  for (std::size_t accumulatedScratchpad = 0; accumulatedScratchpad < 78_kB;) {
+  for (std::size_t accumulatedScratchpad = 0; accumulatedScratchpad < 128_kB;) {
     uint32_t softShellIndex = get_soft_shell_index(*reinterpret_cast<uint32_t *>(&hash));
     const uint32_t offset = offsetForHeight(softShellIndex);
     const uint32_t scratchpadSize = scratchpadSizeForOffset(offset);
@@ -52,7 +52,6 @@ void Crypto::CNX::Hash_v1::operator()(const void *data, size_t length, Crypto::H
     const cnx_hash_config config{scratchpadSize, scratchpadSize, hash.data(),
                                  static_cast<uint32_t>(Crypto::Hash::bytes()), flags};
     cnx_hash((const uint8_t *)data, length, &config, hash.data());
-
     accumulatedScratchpad += scratchpadSize;
   }
 }

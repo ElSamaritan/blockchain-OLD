@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -50,9 +50,9 @@ class TransactionValidator : public ITransactionValidator {
   ~TransactionValidator() override = default;
 
   /*!
-   * \brief blockVersion the actual or expected block major version for the block containing the transaction
+   * \brief blockVersion the actual or expected block version for the block containing the transaction
    *
-   * The block major version is used to query constraints setup on the currency that change over the evolution over the
+   * The block version is used to query constraints setup on the currency that change over the evolution over the
    * blockchain.
    *
    * \todo It would be reasonable to check for a range of heights and return eligible block versions. That could help

@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -28,8 +28,10 @@
 #include <limits>
 #include <type_traits>
 #include <string>
+#include <vector>
 
 #include <Xi/Global.hh>
+#include <Xi/Span.hpp>
 #include <Serialization/ISerializer.h>
 
 #include "Xi/Blockchain/Block/Offset.hpp"
@@ -83,6 +85,9 @@ class Height {
  private:
   uint32_t m_height;
 };
+
+using HeightVector = std::vector<Height>;
+XI_DECLARE_SPANS(Height)
 
 Offset operator-(const Height lhs, const Height rhs);
 Height operator-(const Height& lhs, const Offset rhs);

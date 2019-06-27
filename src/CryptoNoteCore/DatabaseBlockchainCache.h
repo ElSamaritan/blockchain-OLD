@@ -63,7 +63,7 @@ class DatabaseBlockchainCache : public CommonBlockchainCache {
    * is copied to new BlockchainCache. Unfortunately, implementation requires return value to be of
    * BlockchainCache type.
    */
-  std::unique_ptr<IBlockchainCache> split(uint32_t splitBlockIndex) override;
+  std::shared_ptr<IBlockchainCache> split(uint32_t splitBlockIndex) override;
   void pushBlock(const CachedBlock& cachedBlock, const std::vector<CachedTransaction>& cachedTransactions,
                  const TransactionValidatorState& validatorState, size_t blockSize, uint64_t generatedCoins,
                  uint64_t blockDifficulty, RawBlock&& rawBlock) override;
@@ -89,9 +89,11 @@ class DatabaseBlockchainCache : public CommonBlockchainCache {
 
   uint32_t getTopBlockIndex() const override;
   const Crypto::Hash& getTopBlockHash() const override;
+  BlockVersion getTopBlockVersion() const override;
   uint32_t getBlockCount() const override;
   bool hasBlock(const Crypto::Hash& blockHash) const override;
   uint32_t getBlockIndex(const Crypto::Hash& blockHash) const override;
+  BlockHeightVector getBlockHeights(ConstBlockHashSpan hashes) const override;
 
   bool hasTransaction(const Crypto::Hash& transactionHash) const override;
 
@@ -153,7 +155,13 @@ class DatabaseBlockchainCache : public CommonBlockchainCache {
   virtual std::vector<BinaryArray> getRawTransactions(const std::vector<Crypto::Hash>& transactions) const override;
   void getRawTransactions(const std::vector<Crypto::Hash>& transactions, std::vector<BinaryArray>& foundTransactions,
                           std::vector<Crypto::Hash>& missedTransactions) const override;
+
   virtual RawBlock getBlockByIndex(uint32_t index) const override;
+  virtual RawBlockVector getBlocks(ConstBlockHeightSpan heights) const override;
+  virtual CachedBlockInfoVector getBlockInfos(ConstBlockHeightSpan height) const override;
+  virtual CachedTransactionVector getTransactions(ConstTransactionHashSpan ids) const override;
+  virtual CachedTransactionInfoVector getTransactionInfos(ConstTransactionHashSpan ids) const override;
+
   virtual BinaryArray getRawTransaction(uint32_t blockIndex, uint32_t transactionIndex) const override;
   virtual std::vector<Crypto::Hash> getTransactionHashes() const override;
   virtual std::vector<uint32_t> getRandomOutsByAmount(uint64_t amount, size_t count,
@@ -164,7 +172,7 @@ class DatabaseBlockchainCache : public CommonBlockchainCache {
                                             uint32_t globalIndex)>
           pred) const override;
 
-  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
+  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const PaymentId& paymentId) const override;
   virtual std::vector<Crypto::Hash> getBlockHashesByTimestamps(uint64_t timestampBegin,
                                                                size_t secondsCount) const override;
 
@@ -174,6 +182,7 @@ class DatabaseBlockchainCache : public CommonBlockchainCache {
   IBlockchainCacheFactory& blockchainCacheFactory;
   mutable boost::optional<uint32_t> topBlockIndex;
   mutable boost::optional<Crypto::Hash> topBlockHash;
+  mutable boost::optional<BlockVersion> topBlockVersion;
   mutable boost::optional<uint64_t> transactionsCount;
   mutable boost::optional<uint32_t> keyOutputAmountsCount;
   mutable std::unordered_map<Amount, int32_t> keyOutputCountsForAmounts;
@@ -191,12 +200,12 @@ class DatabaseBlockchainCache : public CommonBlockchainCache {
 
   void addSpentKeyImage(const Crypto::KeyImage& keyImage, uint32_t blockIndex);
   void pushTransaction(const CachedTransaction& cachedTransaction, uint32_t blockIndex, uint16_t transactionBlockIndex,
-                       BlockchainWriteBatch& batch);
+                       BlockchainWriteBatch& batch, bool isGenerated);
 
   uint32_t insertKeyOutputToGlobalIndex(uint64_t amount,
                                         PackedOutIndex output);  // TODO not implemented. Should it be removed?
   uint32_t updateKeyOutputCount(Amount amount, int32_t diff) const;
-  void insertPaymentId(BlockchainWriteBatch& batch, const Crypto::Hash& transactionHash, const Crypto::Hash& paymentId);
+  void insertPaymentId(BlockchainWriteBatch& batch, const Crypto::Hash& transactionHash, const PaymentId& paymentId);
   void insertBlockTimestamp(BlockchainWriteBatch& batch, uint64_t timestamp, const Crypto::Hash& blockHash);
 
   void addGenesisBlock(CachedBlock&& genesisBlock);
@@ -211,7 +220,7 @@ class DatabaseBlockchainCache : public CommonBlockchainCache {
   std::vector<Crypto::Hash> requestTransactionHashesFromBlockIndex(uint32_t splitBlockIndex);
   void requestDeleteTransactions(BlockchainWriteBatch& writeBatch, const std::vector<Crypto::Hash>& transactionHashes);
   void requestDeletePaymentIds(BlockchainWriteBatch& writeBatch, const std::vector<Crypto::Hash>& transactionHashes);
-  void requestDeletePaymentId(BlockchainWriteBatch& writeBatch, const Crypto::Hash& paymentId, size_t toDelete);
+  void requestDeletePaymentId(BlockchainWriteBatch& writeBatch, const PaymentId& paymentId, size_t toDelete);
   void requestDeleteKeyOutputs(
       BlockchainWriteBatch& writeBatch,
       const std::map<IBlockchainCache::Amount, IBlockchainCache::GlobalOutputIndex>& boundaries);
@@ -219,7 +228,7 @@ class DatabaseBlockchainCache : public CommonBlockchainCache {
                                      IBlockchainCache::GlobalOutputIndex boundary, uint32_t outputsCount);
   void requestRemoveTimestamp(BlockchainWriteBatch& batch, uint64_t timestamp, const Crypto::Hash& blockHash);
 
-  BlockVersion getBlockMajorVersionForHeight(uint32_t height) const;
+  BlockVersion getBlockVersionForHeight(uint32_t height) const;
   uint64_t getCachedTransactionsCount() const;
 
   std::vector<CachedBlockInfo> getLastCachedUnits(uint32_t blockIndex, size_t count, UseGenesis useGenesis) const;

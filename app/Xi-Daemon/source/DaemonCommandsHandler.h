@@ -42,7 +42,7 @@ class DaemonCommandsHandler {
   CryptoNote::RpcServer* m_prpc_server;
 
   std::string get_commands_str();
-  bool print_block_by_height(uint32_t height);
+  bool print_block_by_height(CryptoNote::BlockHeight height);
   bool print_block_by_hash(const std::string& arg);
 
   bool exit(const std::vector<std::string>& args);

@@ -16,7 +16,9 @@
 using namespace Crypto;
 using namespace CryptoNote;
 
-CachedBlock::CachedBlock(const BlockTemplate& block) : block(block) {}
+CachedBlock::CachedBlock(const BlockTemplate& _block) : block(_block) {}
+
+CachedBlock::CachedBlock(BlockTemplate&& _block) : block(std::move(_block)) {}
 
 const BlockTemplate& CachedBlock::getBlock() const { return block; }
 
@@ -26,7 +28,7 @@ const Crypto::Hash& CachedBlock::getTransactionTreeHash() const {
     transactionHashes.reserve(block.transactionHashes.size() + 1);
     transactionHashes.push_back(getObjectHash(block.baseTransaction));
     if (block.staticRewardHash) {
-      transactionHashes.push_back(*block.staticRewardHash);
+      transactionHashes.push_back(Crypto::Hash::compute(block.staticRewardHash->span()).takeOrThrow());
     }
     transactionHashes.insert(transactionHashes.end(), block.transactionHashes.begin(), block.transactionHashes.end());
     transactionTreeHash = Crypto::Hash();
@@ -48,7 +50,7 @@ const Crypto::Hash& CachedBlock::getBlockHash() const {
 const Crypto::Hash& CachedBlock::getBlockLongHash() const {
   if (!blockLongHash.is_initialized()) {
     blockLongHash = Hash{};
-    Xi::Config::Hashes::compute(*this, blockLongHash.get(), block.majorVersion);
+    Xi::Config::Hashes::compute(*this, blockLongHash.get(), block.version);
   }
 
   return blockLongHash.get();
@@ -92,3 +94,14 @@ uint32_t CachedBlock::getBlockIndex() const {
 }
 
 uint32_t CachedBlock::getNonceOffset() const { return 2; }
+
+const CachedTransaction& CachedBlock::coinbase() const {
+  if (!baseTransaction.is_initialized()) {
+    baseTransaction = CachedTransaction{block.baseTransaction};
+  }
+  return *baseTransaction;
+}
+
+bool CachedBlock::hasStaticReward() const { return getBlock().staticRewardHash.has_value(); }
+
+BlockHeight CachedBlock::height() const { return BlockHeight::fromIndex(getBlockIndex()); }

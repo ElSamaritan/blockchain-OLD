@@ -68,7 +68,8 @@ template <class T>
     throw std::runtime_error("deserialization failed");
   }
   if (!stream.endOfStream()) {  // check that all data was consumed
-    throw std::runtime_error("failed to unpack type");
+    throw std::runtime_error(
+        "failed to unpack type: not all bytes have been processed (pos=" + std::to_string(stream.getPosition()) + ")");
   }
 
   return object;

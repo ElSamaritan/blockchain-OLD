@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -34,5 +34,7 @@ bool Xi::Blockchain::Block::serialize(Xi::Blockchain::Block::Version &version, C
 std::string Xi::Blockchain::Block::toString(const Xi::Blockchain::Block::Version version) {
   return std::string{"v"} + std::to_string(version.value);
 }
+
+Xi::Blockchain::Block::Version::Version() : EnableIntegralFromThis(Null) {}
 
 bool Xi::Blockchain::Block::Version::isNull() const { return *this == Null; }

@@ -197,10 +197,10 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string>& args) {
     std::cout << "height: " << header.height.native() << ", timestamp: " << header.timestamp
               << ", difficulty: " << header.difficulty << ", size: " << header.block_size
               << ", transactions: " << header.transactions_count << ENDL
-              << "major version: " << toString(header.major_version)
-              << ", minor version: " << unsigned(header.minor_version) << ENDL << "block id: " << header.hash
-              << ", previous block id: " << header.prev_hash << ENDL << "difficulty: " << header.difficulty
-              << ", nonce: " << toString(header.nonce) << ", reward: " << currency.formatAmount(header.reward) << ENDL;
+              << "version: " << toString(header.version) << ", upgrade vote: " << toString(header.upgrade_vote)
+              << ENDL << "block id: " << header.hash << ", previous block id: " << header.prev_hash << ENDL
+              << "difficulty: " << header.difficulty << ", nonce: " << toString(header.nonce)
+              << ", reward: " << currency.formatAmount(header.reward) << ENDL;
   }
 
   return true;
@@ -230,17 +230,13 @@ bool DaemonCommandsHandler::set_log(const std::vector<std::string>& args) {
 }
 
 //--------------------------------------------------------------------------------
-bool DaemonCommandsHandler::print_block_by_height(uint32_t height) {
-  if (height - 1 > m_core.getTopBlockIndex()) {
-    std::cout << "block wasn't found. Current block chain height: " << m_core.getTopBlockIndex() + 1
-              << ", requested: " << height << std::endl;
+bool DaemonCommandsHandler::print_block_by_height(CryptoNote::BlockHeight height) {
+  auto search = m_core.getBlockByIndex(height.toIndex());
+  if (!search) {
+    std::cout << "Block not found for height: " << std::to_string(height.native()) << std::endl;
     return false;
   }
-
-  auto hash = m_core.getBlockHashByIndex(height - 1);
-  std::cout << "block_id: " << hash << ENDL;
-  print_as_json(m_core.getBlockByIndex(height - 1));
-
+  print_as_json(search->block.block().getBlock());
   return true;
 }
 //--------------------------------------------------------------------------------
@@ -250,14 +246,14 @@ bool DaemonCommandsHandler::print_block_by_hash(const std::string& arg) {
     return false;
   }
 
-  if (m_core.hasBlock(block_hash)) {
-    print_as_json(m_core.getBlockByHash(block_hash));
-  } else {
-    std::cout << "block wasn't found: " << arg << std::endl;
+  auto search = m_core.getBlockByHash(block_hash);
+  if (!search) {
+    std::cout << "block not found: " << block_hash.toShortString() << std::endl;
     return false;
+  } else {
+    print_as_json(search->block.block().getBlock());
+    return true;
   }
-
-  return true;
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_block(const std::vector<std::string>& args) {
@@ -268,13 +264,16 @@ bool DaemonCommandsHandler::print_block(const std::vector<std::string>& args) {
 
   const std::string& arg = args.front();
   try {
-    uint32_t height = boost::lexical_cast<uint32_t>(arg);
-    print_block_by_height(height);
+    auto height = CryptoNote::BlockHeight::fromNative(boost::lexical_cast<uint32_t>(arg));
+    if (height.isNull()) {
+      std::cout << "invalid height: " << std::to_string(height.native());
+      return false;
+    } else {
+      return print_block_by_height(height);
+    }
   } catch (boost::bad_lexical_cast&) {
-    print_block_by_hash(arg);
+    return print_block_by_hash(arg);
   }
-
-  return true;
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_tx(const std::vector<std::string>& args) {

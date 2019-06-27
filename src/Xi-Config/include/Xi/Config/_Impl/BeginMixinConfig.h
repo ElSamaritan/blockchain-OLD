@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -36,7 +36,7 @@ struct MixinCheckpoint;
 }  // namespace Config
 }  // namespace Xi
 
-#define MakeMixinCheckpoint(_Index, _Version, _Min, _Max, _Default)                                               \
+#define MakeMixinCheckpoint(_Index, _Version, _Required)                                                          \
   namespace Xi {                                                                                                  \
   namespace Config {                                                                                              \
   namespace Mixin {                                                                                               \
@@ -44,11 +44,9 @@ struct MixinCheckpoint;
   struct MixinCheckpoint<_Index> {                                                                                \
     static inline constexpr uint8_t index() { return _Index; }                                                    \
     static inline constexpr Blockchain::Block::Version version() { return Blockchain::Block::Version{_Version}; } \
-    static inline constexpr uint8_t minimum() { return _Min; }                                                    \
-    static inline constexpr uint8_t maximum() { return _Max; }                                                    \
-    static inline constexpr uint8_t defaultValue() { return _Default; }                                           \
+    static inline constexpr uint8_t required() { return _Required; }                                              \
     static_assert(::Xi::Config::BlockVersion::exists(Blockchain::Block::Version{_Version}),                       \
-                  "Non existing major block version referenced.");                                                \
+                  "Non existing block version referenced.");                                                      \
   };                                                                                                              \
   }                                                                                                               \
   }                                                                                                               \

@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -25,6 +25,7 @@
 
 #include <vector>
 #include <cinttypes>
+#include <atomic>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -64,6 +65,8 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   void removeObserver(ITransactionPoolObserver* observer) override;
 
   std::size_t size() const override;
+  std::size_t cumulativeSize() const override;
+  std::size_t cumulativeFees() const override;
   Crypto::Hash stateHash() const override;
 
   size_t forceFlush() override;
@@ -190,7 +193,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
 
   /*!
    * \brief evaluateBlockVersionUpgradeConstraints reevaluates all transactions that may got invalid due to higher
-   * constraints after a major version upgrade
+   * constraints after a version upgrade
    */
   void evaluateBlockVersionUpgradeConstraints();
 
@@ -200,6 +203,8 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   Xi::Concurrent::RecursiveLock m_access;                        ///< Mutex fron concurrent read single write access
   mutable boost::optional<Crypto::Hash> m_stateHash;     ///< Lazy initialized and cached tree hash of all transactions
   boost::optional<BlockVersion> m_eligibleBlockVersion;  ///< Stores the block version all transactions are elgible for.
+  std::atomic<std::size_t> m_cumulativeSize{0};          /// Sum of all transaction blob sizes.
+  std::atomic<std::size_t> m_cumulativeFees{0};          /// Sum of all transaction blob sizes.
   Logging::LoggerRef m_logger;
 
   template <typename _KeyT, typename _ValueT>
@@ -208,7 +213,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
                                                                    ///< in the pool (KeyImage -> TransactionHash)
   _hash_map<Crypto::Hash, std::shared_ptr<PendingTransactionInfo>>
       m_transactions;  ///< general info about transactions in the pool (TransactionHash -> Info)
-  _hash_map<Crypto::Hash, std::vector<Crypto::Hash>>
+  _hash_map<PaymentId, std::vector<Crypto::Hash>>
       m_paymentIds;  ///< transactions using a payment id (PaymentId -> TransactionHash[])
 
   // Deprecated BEGIN
@@ -222,7 +227,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   std::vector<CachedTransaction> getPoolTransactions() const override;
 
   uint64_t getTransactionReceiveTime(const Crypto::Hash& hash) const override;
-  std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
+  std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const PaymentId& paymentId) const override;
 };
 
 }  // namespace CryptoNote

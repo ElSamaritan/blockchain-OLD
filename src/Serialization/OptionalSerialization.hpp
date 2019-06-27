@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -48,7 +48,7 @@ template <typename _ValueT>
   if (serializer.isInput()) {
     if (hasValue) {
       value.emplace();
-      return serializer(*value, "value");
+      return serializer(*value, name);
     } else {
       value = std::nullopt;
       return true;
@@ -56,7 +56,7 @@ template <typename _ValueT>
   } else {
     assert(serializer.isOutput());
     if (hasValue) {
-      return serializer(*value, "value");
+      return serializer(*value, name);
     } else {
       return true;
     }

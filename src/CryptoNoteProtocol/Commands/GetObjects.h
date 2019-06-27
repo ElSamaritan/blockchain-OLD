@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -30,11 +30,13 @@
 #include <Serialization/SerializationOverloads.h>
 #include <crypto/CryptoTypes.h>
 #include <CryptoNoteCore/CryptoNote.h>
+#include <CryptoNoteCore/Blockchain/RawBlock.h>
 
 #include "CryptoNoteProtocol/Commands/CryptoNoteProtocolCommand.h"
-#include "CryptoNoteProtocol/Structures/RawBlockLegacy.h"
 
 namespace CryptoNote {
+using RawBlockLegacy = RawBlock;
+
 struct NOTIFY_REQUEST_GET_OBJECTS_request {
   std::vector<Crypto::Hash> txs;
   std::vector<Crypto::Hash> blocks;

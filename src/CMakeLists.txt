@@ -1,12 +1,12 @@
 ﻿# ============================================================================================== #
 #                                                                                                #
-#                                       Xi Blockchain                                            #
+#                                     Galaxia Blockchain                                         #
 #                                                                                                #
 # ---------------------------------------------------------------------------------------------- #
-# This file is part of the Galaxia Project - Xi Blockchain                                       #
+# This file is part of the Xi framework.                                                         #
 # ---------------------------------------------------------------------------------------------- #
 #                                                                                                #
-# Copyright 2018-2019 Galaxia Project Developers                                                 #
+# Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               #
 #                                                                                                #
 # This program is free software: you can redistribute it and/or modify it under the terms of the #
 # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -98,11 +98,21 @@ xi_make_library(
     fmt::fmt-header-only
 )
 
+xi_make_library(Xi-Endianess)
+
+target_compile_definitions(
+    Xi.Endianess
+
+    INTERFACE
+        "XI_COMPILER_ENDIANESS_${XI_COMPILER_ENDIANESS}"
+)
+
 xi_make_library(
   Xi-Crypto
 
   PUBLIC_LIBRARIES
-    Xi.Core
+    Xi::Core
+    Xi::Endianess
 
     Serialization
 
@@ -111,23 +121,6 @@ xi_make_library(
     boost
 )
 
-xi_make_library(
-  Xi-Blockchain
-
-  PUBLIC_LIBRARIES
-    Xi::Core
-    Xi::Crypto
-    Crypto
-    Serialization
-)
-
-xi_make_library(
-  Xi-Config
-
-  PUBLIC_LIBRARIES
-    Xi::Core
-    Xi::Blockchain
-)
 
 xi_make_library(
   Xi-Http
@@ -142,6 +135,37 @@ xi_make_library(
     cxxopts
     Serialization
     Common
+)
+
+xi_make_library(
+  Xi-Rpc
+
+  PUBLIC_LIBRARIES
+    Xi::Core
+    Xi::Http
+    Serialization
+    Logging
+)
+
+xi_make_library(
+  Xi-Blockchain
+
+  PUBLIC_LIBRARIES
+    Xi::Core
+    Xi::Crypto
+    Xi::Rpc
+    Crypto
+    Serialization
+    Logging
+    CryptoNoteCore
+)
+
+xi_make_library(
+  Xi-Config
+
+  PUBLIC_LIBRARIES
+    Xi::Core
+    Xi::Blockchain
 )
 
 if(XI_BUILD_BREAKPAD)

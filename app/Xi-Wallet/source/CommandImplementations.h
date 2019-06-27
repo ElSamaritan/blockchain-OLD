@@ -51,4 +51,8 @@ void createIntegratedAddress();
 
 void help(std::shared_ptr<WalletInfo> wallet);
 
+void generatePaymentId();
+void proofPaymentIdOwnership();
+void checkPaymentIdOwnership();
+
 void advanced(std::shared_ptr<WalletInfo> wallet);

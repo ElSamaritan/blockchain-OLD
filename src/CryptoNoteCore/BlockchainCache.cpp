@@ -78,13 +78,16 @@ bool CachedTransactionInfo::serialize(ISerializer& s) {
   XI_RETURN_EC_IF_NOT(s(unlockTime, "unlock_time"), false);
   XI_RETURN_EC_IF_NOT(s(outputs, "outputs"), false);
   XI_RETURN_EC_IF_NOT(s(globalIndexes, "global_indexes"), false);
+  XI_RETURN_EC_IF_NOT(s(isDeterministicallyGenerated, "is_deterministically_generated"), false);
   return true;
 }
 
 bool CachedBlockInfo::serialize(ISerializer& s) {
   XI_RETURN_EC_IF_NOT(s(blockHash, "block_hash"), false);
+  XI_RETURN_EC_IF_NOT(s(version, "version"), false);
+  XI_RETURN_EC_IF_NOT(s(upgradeVote, "upgrade_vote"), false);
   XI_RETURN_EC_IF_NOT(s(timestamp, "timestamp"), false);
-  XI_RETURN_EC_IF_NOT(s(blockSize, "block_size"), false);
+  XI_RETURN_EC_IF_NOT(s(cumulativeSize, "cumulative_size"), false);
   XI_RETURN_EC_IF_NOT(s(cumulativeDifficulty, "cumulative_difficulty"), false);
   XI_RETURN_EC_IF_NOT(s(alreadyGeneratedCoins, "already_generated_coins"), false);
   XI_RETURN_EC_IF_NOT(s(alreadyGeneratedTransactions, "already_generated_transaction_count"), false);
@@ -168,6 +171,7 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
   assert(blockSize > 0);
   assert(blockDifficulty > 0);
 
+  uint64_t cumulativeSize = 0;
   uint64_t cumulativeDifficulty = 0;
   uint64_t alreadyGeneratedCoins = 0;
   uint64_t alreadyGeneratedTransactions = 0;
@@ -176,11 +180,15 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
 
   if (getBlockCount() == 0) {
     if (parent != nullptr) {
-      cumulativeDifficulty = parent->getCurrentCumulativeDifficulty(cachedBlock.getBlockIndex() - 1);
-      alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(cachedBlock.getBlockIndex() - 1);
-      alreadyGeneratedTransactions = parent->getAlreadyGeneratedTransactions(cachedBlock.getBlockIndex() - 1);
+      auto previousHeight = BlockHeight::fromIndex(cachedBlock.getBlockIndex() - 1);
+      const auto parentInfo = parent->getBlockInfos(Xi::makeSpan(previousHeight)).front();
+      cumulativeSize = parentInfo.cumulativeSize;
+      cumulativeDifficulty = parentInfo.cumulativeDifficulty;
+      alreadyGeneratedCoins = parentInfo.alreadyGeneratedCoins;
+      alreadyGeneratedTransactions = parentInfo.alreadyGeneratedTransactions;
     }
 
+    cumulativeSize += blockSize;
     cumulativeDifficulty += blockDifficulty;
     alreadyGeneratedCoins += generatedCoins;
     alreadyGeneratedTransactions += cachedTransactions.size() + 1;
@@ -190,6 +198,7 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
   } else {
     auto& lastBlockInfo = blockInfos.get<BlockIndexTag>().back();
 
+    cumulativeSize = lastBlockInfo.cumulativeSize + blockSize;
     cumulativeDifficulty = lastBlockInfo.cumulativeDifficulty + blockDifficulty;
     alreadyGeneratedCoins = lastBlockInfo.alreadyGeneratedCoins + generatedCoins;
     alreadyGeneratedTransactions = lastBlockInfo.alreadyGeneratedTransactions + cachedTransactions.size() + 1;
@@ -200,11 +209,13 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
 
   CachedBlockInfo blockInfo;
   blockInfo.blockHash = cachedBlock.getBlockHash();
+  blockInfo.version = cachedBlock.getBlock().version;
+  blockInfo.upgradeVote = cachedBlock.getBlock().upgradeVote;
+  blockInfo.timestamp = cachedBlock.getBlock().timestamp;
+  blockInfo.cumulativeSize = cumulativeSize;
+  blockInfo.cumulativeDifficulty = cumulativeDifficulty;
   blockInfo.alreadyGeneratedCoins = alreadyGeneratedCoins;
   blockInfo.alreadyGeneratedTransactions = alreadyGeneratedTransactions;
-  blockInfo.cumulativeDifficulty = cumulativeDifficulty;
-  blockInfo.blockSize = static_cast<uint32_t>(blockSize);
-  blockInfo.timestamp = cachedBlock.getBlock().timestamp;
 
   assert(!hasBlock(blockInfo.blockHash));
 
@@ -223,13 +234,13 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
 
   uint16_t transactionBlockIndex = 0;
   auto baseTransaction = cachedBlock.getBlock().baseTransaction;
-  pushTransaction(CachedTransaction(std::move(baseTransaction)), blockIndex, transactionBlockIndex++);
+  pushTransaction(CachedTransaction(std::move(baseTransaction)), blockIndex, transactionBlockIndex++, false);
   if (staticReward.has_value()) {
-    pushTransaction(CachedTransaction(std::move(*staticReward)), blockIndex, transactionBlockIndex++);
+    pushTransaction(CachedTransaction(std::move(*staticReward)), blockIndex, transactionBlockIndex++, true);
   }
 
   for (const auto& transaction : cachedTransactions) {
-    pushTransaction(transaction, blockIndex, transactionBlockIndex++);
+    pushTransaction(transaction, blockIndex, transactionBlockIndex++, false);
   }
 
   storage->pushBlock(std::move(rawBlock));
@@ -246,24 +257,25 @@ PushedBlockInfo BlockchainCache::getPushedBlockInfo(uint32_t blockIndex) const {
 
   PushedBlockInfo pushedBlockInfo;
   pushedBlockInfo.rawBlock = storage->getBlockByIndex(localIndex);
-  pushedBlockInfo.blockSize = cachedBlock.blockSize;
 
   if (blockIndex > startIndex) {
     const auto& previousBlock = blockInfos.get<BlockIndexTag>()[localIndex - 1];
     pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - previousBlock.cumulativeDifficulty;
     pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
+    pushedBlockInfo.blockSize = cachedBlock.cumulativeSize - previousBlock.cumulativeSize;
     pushedBlockInfo.timestamp = cachedBlock.timestamp;
   } else {
-    if (parent == nullptr) {
+    if (parent == nullptr || localIndex == 0) {
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty;
       pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins;
+      pushedBlockInfo.blockSize = cachedBlock.cumulativeSize;
       pushedBlockInfo.timestamp = cachedBlock.timestamp;
     } else {
-      uint64_t cumulativeDifficulty = parent->getLastCumulativeDifficulties(1, startIndex - 1, addGenesisBlock)[0];
-      uint64_t alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(startIndex - 1);
-
-      pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - cumulativeDifficulty;
-      pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - alreadyGeneratedCoins;
+      auto height = BlockHeight::fromIndex(localIndex - 1);
+      const auto& previousBlock = parent->getBlockInfos(Xi::makeSpan(height)).front();
+      pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - previousBlock.cumulativeDifficulty;
+      pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
+      pushedBlockInfo.blockSize = cachedBlock.cumulativeSize - previousBlock.cumulativeSize;
       pushedBlockInfo.timestamp = cachedBlock.timestamp;
     }
   }
@@ -277,7 +289,7 @@ PushedBlockInfo BlockchainCache::getPushedBlockInfo(uint32_t blockIndex) const {
 // All of indexes on blockIndex == splitBlockIndex belong to upper part
 // TODO: first move containers to new cache, then copy elements back. This can be much more effective, cause we usualy
 // split blockchain near its top.
-std::unique_ptr<IBlockchainCache> BlockchainCache::split(uint32_t splitBlockIndex) {
+std::shared_ptr<IBlockchainCache> BlockchainCache::split(uint32_t splitBlockIndex) {
   logger(Logging::DEBUGGING) << "Splitting at block index: " << splitBlockIndex
                              << ", top block index: " << getTopBlockIndex();
 
@@ -286,7 +298,7 @@ std::unique_ptr<IBlockchainCache> BlockchainCache::split(uint32_t splitBlockInde
 
   std::unique_ptr<BlockchainStorage> newStorage = storage->splitStorage(splitBlockIndex - startIndex);
 
-  std::unique_ptr<BlockchainCache> newCache(
+  std::shared_ptr<BlockchainCache> newCache(
       new BlockchainCache(filename, currency, logger.getLogger(), this, splitBlockIndex));
 
   newCache->storage = std::move(newStorage);
@@ -384,7 +396,7 @@ std::vector<Crypto::Hash> BlockchainCache::getTransactionHashes() const {
 }
 
 void BlockchainCache::pushTransaction(const CachedTransaction& cachedTransaction, uint32_t blockIndex,
-                                      uint16_t transactionInBlockIndex) {
+                                      uint16_t transactionInBlockIndex, bool generated) {
   logger(Logging::DEBUGGING) << "Adding transaction " << cachedTransaction.getTransactionHash() << " at block "
                              << blockIndex << ", index in block " << transactionInBlockIndex;
 
@@ -395,6 +407,7 @@ void BlockchainCache::pushTransaction(const CachedTransaction& cachedTransaction
   transactionCacheInfo.transactionIndex = transactionInBlockIndex;
   transactionCacheInfo.transactionHash = cachedTransaction.getTransactionHash();
   transactionCacheInfo.unlockTime = tx.unlockTime;
+  transactionCacheInfo.isDeterministicallyGenerated = generated;
 
   assert(tx.outputs.size() <= std::numeric_limits<uint16_t>::max());
 
@@ -479,6 +492,23 @@ uint32_t BlockchainCache::getBlockIndex(const Crypto::Hash& blockHash) const {
 
   const auto rndIt = blockInfos.project<BlockIndexTag>(hashIt);
   return static_cast<uint32_t>(std::distance(blockInfos.get<BlockIndexTag>().begin(), rndIt)) + startIndex;
+}
+
+BlockHeightVector BlockchainCache::getBlockHeights(ConstBlockHashSpan hashes) const {
+  BlockHeightVector reval{};
+  reval.resize(hashes.size(), BlockHeight::Null);
+  size_t i = 0;
+  for (const auto& hash : hashes) {
+    const auto it = blockInfos.get<BlockHashTag>().find(hash);
+    if (it == blockInfos.get<BlockHashTag>().end()) {
+      i += 1;
+      continue;
+    }
+    const auto indexIt = blockInfos.project<BlockIndexTag>(it);
+    const auto offset = static_cast<uint32_t>(std::distance(blockInfos.get<BlockIndexTag>().begin(), indexIt));
+    reval[i++] = BlockHeight::fromIndex(offset + startIndex);
+  }
+  return reval;
 }
 
 Crypto::Hash BlockchainCache::getBlockHash(uint32_t blockIndex) const {
@@ -595,13 +625,106 @@ RawBlock BlockchainCache::getBlockByIndex(uint32_t index) const {
   return index < startIndex ? parent->getBlockByIndex(index) : storage->getBlockByIndex(index - startIndex);
 }
 
+RawBlockVector BlockchainCache::getBlocks(ConstBlockHeightSpan heights) const {
+  using namespace Xi;
+
+  RawBlockVector reval{};
+  reval.reserve(heights.size());
+
+  for (const auto& height : heights) {
+    exceptional_if<InvalidArgumentError>(height.isNull(), "null height provided");
+    const auto index = height.toIndex();
+    exceptional_if<OutOfRangeError>(index < startIndex || index + 1 > startIndex + storage->getBlockCount(),
+                                    "height out of range");
+    reval.emplace_back(storage->getBlockByIndex(index - startIndex));
+  }
+
+  return reval;
+}
+
+CachedBlockInfoVector BlockchainCache::getBlockInfos(ConstBlockHeightSpan heights) const {
+  using namespace Xi;
+
+  CachedBlockInfoVector reval{};
+  reval.resize(heights.size());
+
+  const auto topBlockIndex = getTopBlockIndex();
+
+  size_t i = 0;
+  for (const auto& height : heights) {
+    exceptional_if<InvalidArgumentError>(height.isNull(), "null height provided");
+
+    const auto index = height.toIndex();
+    exceptional_if<OutOfRangeError>(index < startIndex || index > topBlockIndex, "height out of range");
+
+    reval[i++] = blockInfos.get<BlockIndexTag>().at(index - startIndex);
+  }
+
+  return reval;
+}
+
+CachedTransactionVector BlockchainCache::getTransactions(ConstTransactionHashSpan ids) const {
+  using namespace Xi;
+
+  CachedTransactionVector reval{};
+  reval.reserve(ids.size());
+
+  auto& index = transactions.get<TransactionHashTag>();
+  for (const auto& id : ids) {
+    auto it = index.find(id);
+    exceptional_if<NotFoundError>(it == index.end(), "transaction not contained by cache");
+    const auto blockIndex = it->blockIndex;
+    exceptional_if<OutOfRangeError>(blockIndex < startIndex || blockIndex >= getTopBlockIndex());
+    CachedRawBlock rawBlock{storage->getBlockByIndex(blockIndex - startIndex)};
+
+    const auto transactionIndex = it->transactionIndex;
+    if (transactionIndex == 0) {
+      reval.emplace_back(rawBlock.block().coinbase());
+      continue;
+    } else {
+      size_t transactionOffset = 1;
+      if (rawBlock.block().hasStaticReward()) {
+        transactionOffset += 1;
+        if (transactionIndex == 1) {
+          reval.emplace_back(*currency.constructStaticRewardTx(rawBlock.block()).takeOrThrow());
+          continue;
+        }
+      }
+      const auto internalIndex = transactionIndex - transactionOffset;
+      exceptional_if_not<OutOfRangeError>(internalIndex < rawBlock.transferCount());
+      reval.emplace_back(rawBlock[internalIndex]);
+      continue;
+    }
+  }
+
+  return reval;
+}
+
+CachedTransactionInfoVector BlockchainCache::getTransactionInfos(ConstTransactionHashSpan ids) const {
+  using namespace Xi;
+
+  CachedTransactionInfoVector reval{};
+  reval.resize(ids.size());
+
+  const auto& txByHash = transactions.get<TransactionHashTag>();
+
+  size_t i = 0;
+  for (const auto& id : ids) {
+    auto search = txByHash.find(id);
+    exceptional_if<NotFoundError>(search == txByHash.end(), "queried missing transaction hash");
+    reval[i++] = *search;
+  }
+
+  return reval;
+}
+
 BinaryArray BlockchainCache::getRawTransaction(uint32_t index, uint32_t transactionIndex) const {
   if (index < startIndex) {
     return parent->getRawTransaction(index, transactionIndex);
   } else {
     auto rawBlock = storage->getBlockByIndex(index - startIndex);
-    auto block = fromBinaryArray<BlockTemplate>(rawBlock.block);
-    const bool hasStaticReward = currency.isStaticRewardEnabledForBlockVersion(block.majorVersion);
+    auto block = fromBinaryArray<BlockTemplate>(rawBlock.blockTemplate);
+    const bool hasStaticReward = currency.isStaticRewardEnabledForBlockVersion(block.version);
     if (transactionIndex == 0) {
       return toBinaryArray(block.baseTransaction);
     } else if (transactionIndex == 1 && hasStaticReward) {
@@ -743,7 +866,7 @@ std::vector<uint32_t> BlockchainCache::getRandomOutsByAmount(Amount amount, size
              }).base();
   uint32_t dist = static_cast<uint32_t>(std::distance(outs.begin(), end));
   dist = std::min(static_cast<uint32_t>(count), dist);
-  ShuffleGenerator<uint32_t, Xi::Crypto::Random::Engine32> generator(dist);
+  ShuffleGenerator<uint32_t, Xi::Crypto::Random::Engine<uint32_t>> generator(dist);
   while (dist--) {
     auto offset = generator();
     auto& outIndex = it->second.outputs[offset];
@@ -878,7 +1001,7 @@ ExtractOutputKeysResult BlockchainCache::extractKeyOutputs(
   return ExtractOutputKeysResult::SUCCESS;
 }
 
-std::vector<Crypto::Hash> BlockchainCache::getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const {
+std::vector<Crypto::Hash> BlockchainCache::getTransactionHashesByPaymentId(const PaymentId& paymentId) const {
   std::vector<Crypto::Hash> transactionHashes;
 
   if (parent != nullptr) {
@@ -945,6 +1068,11 @@ const Crypto::Hash& BlockchainCache::getTopBlockHash() const {
   return blockInfos.get<BlockIndexTag>().back().blockHash;
 }
 
+BlockVersion BlockchainCache::getTopBlockVersion() const {
+  assert(!blockInfos.empty());
+  return blockInfos.get<BlockIndexTag>().back().version;
+}
+
 std::vector<uint64_t> BlockchainCache::getLastTimestamps(size_t count) const {
   return getLastTimestamps(count, getTopBlockIndex(), skipGenesisBlock);
 }
@@ -985,18 +1113,39 @@ std::vector<uint64_t> BlockchainCache::getLastUnits(size_t count, uint32_t block
 
 std::vector<uint64_t> BlockchainCache::getLastBlocksSizes(size_t count, uint32_t blockIndex,
                                                           UseGenesis useGenesis) const {
-  return getLastUnits(count, blockIndex, useGenesis, [](const CachedBlockInfo& cb) { return cb.blockSize; });
+  const bool needPrevious = blockIndex > 0;
+  if (needPrevious) {
+    blockIndex--;
+    count++;
+  }
+
+  std::vector<uint64_t> reval{};
+  reval.reserve(count);
+  getLastUnits(count, blockIndex, useGenesis, [&reval](const CachedBlockInfo& cb) mutable {
+    reval.push_back(cb.cumulativeSize);
+    return 0;
+  });
+  [[maybe_unused]] auto copy = reval;
+  XI_RETURN_EC_IF(reval.empty(), {});
+  for (size_t i = reval.size() - 1; i > 0; --i) {
+    reval[i] -= reval[i - 1];
+  }
+  if (needPrevious && reval.size() > count) {
+    reval.erase(begin(reval));
+  }
+
+  return reval;
 }
 
 uint64_t BlockchainCache::getDifficultyForNextBlock() const { return getDifficultyForNextBlock(getTopBlockIndex()); }
 
 uint64_t BlockchainCache::getDifficultyForNextBlock(uint32_t blockIndex) const {
   assert(blockIndex <= getTopBlockIndex());
-  const auto nextBlockMajorVersion = getBlockMajorVersionForHeight(blockIndex + 1);
-  const uint64_t blockWindow = currency.difficultyBlocksCountByVersion(nextBlockMajorVersion);
+  const auto nextBlockVersion = getBlockVersionForHeight(blockIndex + 1);
+  const uint64_t blockWindow = currency.difficultyBlocksCountByVersion(nextBlockVersion);
   auto timestamps = getLastTimestamps(blockWindow, blockIndex, skipGenesisBlock);
   auto commulativeDifficulties = getLastCumulativeDifficulties(blockWindow, blockIndex, skipGenesisBlock);
-  return currency.nextDifficulty(nextBlockMajorVersion, blockIndex, std::move(timestamps),
+  return currency.nextDifficulty(nextBlockVersion, blockIndex, std::move(timestamps),
                                  std::move(commulativeDifficulties));
 }
 
@@ -1066,12 +1215,12 @@ uint32_t BlockchainCache::getBlockIndexContainingTx(const Crypto::Hash& transact
   return it->blockIndex;
 }
 
-BlockVersion BlockchainCache::getBlockMajorVersionForHeight(uint32_t height) const {
+BlockVersion BlockchainCache::getBlockVersionForHeight(uint32_t height) const {
   // TODO this only changes during compile time
   UpgradeManager upgradeManager;
   for (auto version : Xi::Config::BlockVersion::versions())
-    upgradeManager.addMajorBlockVersion(version, currency.upgradeHeight(version));
-  return upgradeManager.getBlockMajorVersion(height);
+    upgradeManager.addBlockVersion(version, currency.upgradeHeight(version));
+  return upgradeManager.getBlockVersion(height);
 }
 
 void BlockchainCache::fixChildrenParent(IBlockchainCache* p) {

@@ -29,14 +29,14 @@ DatabaseBlockchainCacheFactory::DatabaseBlockchainCacheFactory(IDataBase& databa
 
 DatabaseBlockchainCacheFactory::~DatabaseBlockchainCacheFactory() {}
 
-std::unique_ptr<IBlockchainCache> DatabaseBlockchainCacheFactory::createRootBlockchainCache(const Currency& currency) {
-  return std::unique_ptr<IBlockchainCache>(new DatabaseBlockchainCache(currency, database, *this, logger));
+std::shared_ptr<IBlockchainCache> DatabaseBlockchainCacheFactory::createRootBlockchainCache(const Currency& currency) {
+  return std::shared_ptr<IBlockchainCache>(new DatabaseBlockchainCache(currency, database, *this, logger));
 }
 
-std::unique_ptr<IBlockchainCache> DatabaseBlockchainCacheFactory::createBlockchainCache(const Currency& currency,
+std::shared_ptr<IBlockchainCache> DatabaseBlockchainCacheFactory::createBlockchainCache(const Currency& currency,
                                                                                         IBlockchainCache* parent,
                                                                                         uint32_t startIndex) {
-  return std::unique_ptr<IBlockchainCache>(new BlockchainCache("", currency, logger, parent, startIndex));
+  return std::shared_ptr<IBlockchainCache>(new BlockchainCache("", currency, logger, parent, startIndex));
 }
 
 }  // namespace CryptoNote

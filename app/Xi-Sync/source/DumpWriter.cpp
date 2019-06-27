@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -78,11 +78,15 @@ Xi::Result<void> XiSync::DumpWriter::write(uint32_t startIndex, std::vector<Cryp
   {
     Common::VectorOutputStream intermediateStream{preSerializedRawBlocks};
     CryptoNote::BinaryOutputStreamSerializer rawBlockSerializer{intermediateStream};
-    rawBlockSerializer(batch.Blocks, "");
+    if (!rawBlockSerializer(batch.Blocks, "")) {
+      throw std::runtime_error{"block serialization failed"};
+    }
     batch.Info.BinarySize = preSerializedRawBlocks.size();
   }
 
-  m_serializer(batch.Info, "");
+  if (!m_serializer(batch.Info, "")) {
+    throw std::runtime_error{"block serialization failed"};
+  }
   m_stdStream.write(reinterpret_cast<char *>(preSerializedRawBlocks.data()),
                     static_cast<int64_t>(preSerializedRawBlocks.size()));
 
@@ -102,12 +106,14 @@ XiSync::DumpWriter::DumpWriter(const std::string &file)
     throw std::runtime_error{std::string{"unable to open dump file: "} + file};
   }
   DumpHeader header;
-  m_serializer(header, "");
+  if (!m_serializer(header, "")) {
+    throw std::runtime_error{"header serialization failed."};
+  }
 }
 
 Crypto::Hash XiSync::DumpWriter::checkBlock(const CryptoNote::RawBlock &block) const {
   CryptoNote::BlockTemplate bt;
-  if (!CryptoNote::fromBinaryArray(bt, block.block)) {
+  if (!CryptoNote::fromBinaryArray(bt, block.blockTemplate)) {
     Xi::exceptional<InvalidRawBlockError>();
   }
   CryptoNote::CachedBlock cb{bt};

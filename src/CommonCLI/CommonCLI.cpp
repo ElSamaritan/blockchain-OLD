@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -100,7 +100,7 @@ std::string CommonCLI::insecureClientWarning() {
    !                                                                                       !
    ! Your client is not set up to be the most secure. To increase your security please     !
    ! read our tutorial on setting up SSL correctly.                                        !
-   !     https://doc.galaxia-project.com/ssl/                                                     !
+   !     https://doc.galaxia-project.com/ssl/                                              !
    !                                                                                       !
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 )";
@@ -112,7 +112,7 @@ std::string CommonCLI::insecureServerWarning() {
    !                                                                                       !
    ! Your server is not set up to be the most secure. To increase your security please     !
    ! read our tutorial on setting up SSL correctly.                                        !
-   !     https://doc.galaxia-project.com/ssl/                                                     !
+   !     https://doc.galaxia-project.com/ssl/                                              !
    !                                                                                       !
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 )";

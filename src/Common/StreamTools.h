@@ -38,9 +38,14 @@ void read(IInputStream& in, uint32_t& value);
 void read(IInputStream& in, uint64_t& value);
 void read(IInputStream& in, std::vector<uint8_t>& data, size_t size);
 void read(IInputStream& in, std::string& data, size_t size);
+void readVarint(IInputStream& in, uint8_t& value);
 void readVarint(IInputStream& in, uint16_t& value);
 void readVarint(IInputStream& in, uint32_t& value);
 void readVarint(IInputStream& in, uint64_t& value);
+void readVarint(IInputStream& in, int8_t& value);
+void readVarint(IInputStream& in, int16_t& value);
+void readVarint(IInputStream& in, int32_t& value);
+void readVarint(IInputStream& in, int64_t& value);
 
 void write(IOutputStream& out, const void* data, size_t size);
 void write(IOutputStream& out, int8_t value);
@@ -53,7 +58,14 @@ void write(IOutputStream& out, uint32_t value);
 void write(IOutputStream& out, uint64_t value);
 void write(IOutputStream& out, const std::vector<uint8_t>& data);
 void write(IOutputStream& out, const std::string& data);
-void writeVarint(IOutputStream& out, uint64_t value);
+void writeVarint(IOutputStream& in, uint8_t value);
+void writeVarint(IOutputStream& in, uint16_t value);
+void writeVarint(IOutputStream& in, uint32_t value);
+void writeVarint(IOutputStream& in, uint64_t value);
+void writeVarint(IOutputStream& in, int8_t value);
+void writeVarint(IOutputStream& in, int16_t value);
+void writeVarint(IOutputStream& in, int32_t value);
+void writeVarint(IOutputStream& in, int64_t value);
 
 template <typename T>
 T read(IInputStream& in) {

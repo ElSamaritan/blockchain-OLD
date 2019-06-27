@@ -1,12 +1,12 @@
 ﻿# ============================================================================================== #
 #                                                                                                #
-#                                       Xi Blockchain                                            #
+#                                     Galaxia Blockchain                                         #
 #                                                                                                #
 # ---------------------------------------------------------------------------------------------- #
-# This file is part of the Galaxia Project - Xi Blockchain                                       #
+# This file is part of the Xi framework.                                                         #
 # ---------------------------------------------------------------------------------------------- #
 #                                                                                                #
-# Copyright 2018-2019 Galaxia Project Developers                                                 #
+# Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               #
 #                                                                                                #
 # This program is free software: you can redistribute it and/or modify it under the terms of the #
 # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -140,9 +140,7 @@ else() # NOT MSVC
 
   ## Setting up DEBUG flags
   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND NOT (CMAKE_C_COMPILER_VERSION VERSION_LESS 4.8))
-    set(DEBUG_FLAGS "-g3 -Og -gdwarf-4 -fvar-tracking -fvar-tracking-assignments -fno-inline -fno-omit-frame-pointer")
-  else()
-    set(DEBUG_FLAGS "-g3 -O0 -fno-omit-frame-pointer")
+    set(DEBUG_FLAGS "-Og -ggdb3 -fvar-tracking -fvar-tracking-assignments -fno-eliminate-unused-debug-symbols -ginline-points -fno-inline -fno-omit-frame-pointer")
   endif()
 
   ## Setting up RELEASE flags

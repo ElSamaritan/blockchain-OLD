@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -23,37 +23,42 @@
 
 #pragma once
 
-#include <cinttypes>
+#include <exception>
+#include <memory>
+#include <string_view>
 
-#include <Xi/TypeSafe/Flag.hpp>
-#include <Serialization/FlagSerialization.hpp>
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
+#include <Logging/ILogger.h>
+#include <Logging/LoggerRef.h>
+
+#include "Xi/Rpc/ServiceError.hpp"
 
 namespace Xi {
-namespace Blockchain {
-namespace Block {
+namespace Rpc {
 
-enum struct Features : uint8_t {
-  /// Serializes the static reward fields. If static rewards are enabled for the current major version this flag is
-  /// mandatory.
-  StaticReward = 1 << 0,
+class IServiceProvider {
+ protected:
+  IServiceProvider(Logging::ILogger& logger);
 
-  /// Serializes upgrade version, enabling voting to upgrade to a new major version accepting a new consensus algorithm.
-  UpgradeVoting = 1 << 1,
+ public:
+  virtual ~IServiceProvider() = default;
 
-  /// Changes PoW evaluation based on potentially different block headers, encoded in an extra merge mining hashes
-  /// field. The evaluation of the block header takes place by comparing an indexed merge mining hash to the provided
-  /// block header hash.
-  MergeMining = 1 << 2,
+  ServiceError operator()(std::string_view command, CryptoNote::ISerializer& input, CryptoNote::ISerializer& output);
+
+ protected:
+  [[nodiscard]] virtual ServiceError process(std::string_view command, CryptoNote::ISerializer& input,
+                                             CryptoNote::ISerializer& output) = 0;
+
+ private:
+  void logThrow(std::exception& e);
+
+ protected:
+  Logging::LoggerRef m_logger;
 };
 
-XI_TYPESAFE_FLAG_MAKE_OPERATIONS(Features)
-XI_SERIALIZATION_FLAG(Features)
+using SharedIServiceProvider = std::shared_ptr<IServiceProvider>;
+using WeakIServiceProvider = std::weak_ptr<IServiceProvider>;
 
-}  // namespace Block
-}  // namespace Blockchain
+}  // namespace Rpc
 }  // namespace Xi
-
-XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Block::Features, StaticReward, MergeMining)
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Features, StaticReward, "static_reward")
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Features, UpgradeVoting, "upgrade_voting")
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Features, MergeMining, "merge_mining")

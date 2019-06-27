@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -31,7 +31,7 @@ extern "C" {
 
 #include <stddef.h>
 
-void xi_memory_clear(xi_byte_t* data, size_t length);
+void xi_memory_secure_clear(xi_byte_t* data, size_t length);
 
 #if defined(__cplusplus)
 }
@@ -41,7 +41,7 @@ void xi_memory_clear(xi_byte_t* data, size_t length);
 namespace Xi {
 namespace Memory {
 
-void clear(ByteSpan data);
+void secureClear(ByteSpan data);
 
 }
 }  // namespace Xi

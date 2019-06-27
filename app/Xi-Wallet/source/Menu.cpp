@@ -223,8 +223,7 @@ void printCommands(const std::vector<T> &commands, int offset) {
   std::cout << std::endl;
 
   for (const auto &command : commands) {
-    std::cout << InformationMsg(" ") << InformationMsg(std::to_string(i)) << "\t"
-              << SuccessMsg(command.commandName, 25) /* Pad to 25 chars */
+    std::cout << InformationMsg(" ") << InformationMsg(std::to_string(i)) << "\t" << SuccessMsg(command.commandName, 30)
               << command.description << std::endl;
 
     i++;

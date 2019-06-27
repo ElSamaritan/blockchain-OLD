@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -34,26 +34,27 @@ TEST(XI_TEST_SUITE, Generate) {
   using namespace ::testing;
   using namespace Xi::Crypto::Random;
 
-  {
-    Xi::ByteArray<74> bytes;
-    generate(bytes);
+  for (size_t i = 0; i < 40; ++i) {
+    Xi::ByteArray<10> bytes;
+    ASSERT_EQ(generate(bytes), RandomError::Success);
     EXPECT_THAT(bytes, Contains(Ne(0)));
   }
 
   {
     Xi::ByteArray<0> bytes;
-    generate(bytes);
+    ASSERT_EQ(generate(bytes), RandomError::Success);
   }
 
   for (size_t i = 0; i < 16; ++i) {
     size_t count = 1ull << i;
     auto vecByte = generate(count);
-    EXPECT_EQ(vecByte.size(), count);
+    ASSERT_FALSE(vecByte.isError());
+    EXPECT_EQ(vecByte.value().size(), count);
   }
 
   {
     Xi::ByteArray<512> first, second;
-    auto generateArray = [](auto &buffer) { generate(buffer); };
+    auto generateArray = [](auto &buffer) { ASSERT_EQ(generate(buffer), Xi::Crypto::Random::RandomError::Success); };
     std::thread t1{std::bind(generateArray, std::ref(first))};
     std::thread t2{std::bind(generateArray, std::ref(second))};
     t1.join();
@@ -67,12 +68,14 @@ TEST(XI_TEST_SUITE, GenerateDetermenistic) {
   using namespace Xi::Crypto::Random;
 
   Xi::ByteArray<74> bytes;
-  generate(bytes);
+  ASSERT_EQ(generate(bytes), RandomError::Success);
   EXPECT_THAT(bytes, Contains(Ne(0)));
 
   Xi::ByteArray<512> first, second;
-  for (size_t i = 0; i < 10; ++i) {
-    auto generateArray = [&bytes](auto &buffer) { generate(buffer, bytes); };
+  for (size_t i = 0; i < 50; ++i) {
+    auto generateArray = [&bytes](auto &buffer) {
+      ASSERT_EQ(generate(buffer, bytes), Xi::Crypto::Random::RandomError::Success);
+    };
     std::thread t1{std::bind(generateArray, std::ref(first))};
     std::thread t2{std::bind(generateArray, std::ref(second))};
     t1.join();

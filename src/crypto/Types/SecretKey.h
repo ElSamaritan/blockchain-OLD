@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -49,6 +49,8 @@ struct SecretKey : Xi::ByteArray<32> {
   std::string toString() const;
   bool isNull() const;
 
+  bool isValid() const;
+
   Xi::ConstByteSpan span() const;
   Xi::ByteSpan span();
 
@@ -58,7 +60,7 @@ struct SecretKey : Xi::ByteArray<32> {
 XI_MAKE_GENERIC_HASH_FUNC(SecretKey)
 XI_MAKE_GENERIC_COMPARISON(SecretKey)
 
-[[nodiscard]]  bool serialize(SecretKey& secretKey, Common::StringView name, CryptoNote::ISerializer& serializer);
+[[nodiscard]] bool serialize(SecretKey& secretKey, Common::StringView name, CryptoNote::ISerializer& serializer);
 
 }  // namespace Crypto
 

@@ -56,7 +56,7 @@ Common::JsonValue storeToJsonValue(const T& v) {
   if (!serialize(const_cast<T&>(v), s)) {
     throw std::runtime_error("json serialization failed");
   }
-  return s.getValue();
+  return std::move(s.getValue());
 }
 
 template <typename T>
@@ -91,6 +91,11 @@ void loadFromJsonValue(T& v, const Common::JsonValue& js) {
   }
 }
 
+template <>
+inline void loadFromJsonValue<Null>(Null&, const Common::JsonValue&) {
+  /* */
+}
+
 template <typename T>
 void loadFromJsonValue(std::vector<T>& v, const Common::JsonValue& js) {
   for (size_t i = 0; i < js.size(); ++i) {
@@ -123,9 +128,6 @@ template <typename T>
 template <typename T>
 [[nodiscard]] bool loadFromJson(T& v, const std::string& buf) {
   try {
-    if (buf.empty()) {
-      return true;
-    }
     auto js = Common::JsonValue::fromString(buf);
     loadFromJsonValue(v, js);
   } catch (std::exception&) {

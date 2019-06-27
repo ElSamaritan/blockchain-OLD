@@ -9,9 +9,7 @@
 
 void addToAddressBook();
 
-void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::BlockHeight height,
-                         const CryptoNote::Currency& currency,
-                         std::optional<CryptoNote::FeeAddress> feeAddress = std::nullopt);
+void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::INode &node);
 
 void deleteFromAddressBook();
 

@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -33,7 +33,7 @@
 
 TEST(XI_TEST_SUITE, Consistent) {
   Xi::ByteArray<32> random;
-  Xi::Crypto::Random::generate(random);
+  ASSERT_EQ(Xi::Crypto::Random::generate(random), Xi::Crypto::Random::RandomError::Success);
 
   Xi::Crypto::Hash::Keccak::Hash256 previousHash;
   compute(random, previousHash);
@@ -48,7 +48,7 @@ TEST(XI_TEST_SUITE, Consistent) {
 TEST(XI_TEST_SUITE, ConsistentWithStreamedInterface) {
   for (size_t i = 0; i < 25; ++i) {
     Xi::ByteArray<1024> random;
-    Xi::Crypto::Random::generate(random);
+    ASSERT_EQ(Xi::Crypto::Random::generate(random), Xi::Crypto::Random::RandomError::Success);
 
     Xi::Crypto::Hash::Keccak::Hash256 singleComputation;
     compute(random, singleComputation);
@@ -82,7 +82,7 @@ TEST(XI_TEST_SUITE, ConsistentWithStreamedInterface) {
 TEST(XI_TEST_SUITE, ConsistentWithSha3) {
   for (size_t i = 0; i < 25; ++i) {
     Xi::ByteArray<1024> random;
-    Xi::Crypto::Random::generate(random);
+    ASSERT_EQ(Xi::Crypto::Random::generate(random), Xi::Crypto::Random::RandomError::Success);
 
     Xi::Crypto::Hash::Keccak::Hash256 keccak;
     compute(random, keccak);
@@ -99,7 +99,7 @@ TEST(XI_TEST_SUITE, ConsistentWithSha3) {
 TEST(XI_TEST_SUITE, ConsistentWithSha3StreamInterface) {
   for (size_t i = 0; i < 25; ++i) {
     Xi::ByteArray<1024> random;
-    Xi::Crypto::Random::generate(random);
+    ASSERT_EQ(Xi::Crypto::Random::generate(random), Xi::Crypto::Random::RandomError::Success);
 
     Xi::Crypto::Hash::Keccak::Hash256 singleComputation;
     compute(random, singleComputation);

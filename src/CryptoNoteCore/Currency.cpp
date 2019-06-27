@@ -94,16 +94,16 @@ bool Currency::generateGenesisBlock() {
   std::string genesisCoinbaseTxHex = Xi::Config::Coin::genesisTransactionBlob(network());
   BinaryArray minerTxBlob;
 
-  bool r = fromHex(genesisCoinbaseTxHex, minerTxBlob) &&
-           fromBinaryArray(m_genesisBlockTemplate.baseTransaction, minerTxBlob);
-
-  if (!r) {
-    logger(ERROR) << "failed to parse coinbase tx from hard coded blob";
+  try {
+    minerTxBlob = fromHex(genesisCoinbaseTxHex);
+    m_genesisBlockTemplate.baseTransaction = fromBinaryArray<Transaction>(minerTxBlob);
+  } catch (std::exception& e) {
+    logger(ERROR) << "failed to parse coinbase tx from hard coded blob: " << e.what();
     return false;
   }
 
-  m_genesisBlockTemplate.majorVersion = BlockVersion{Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version()};
-  m_genesisBlockTemplate.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
+  m_genesisBlockTemplate.version = BlockVersion{Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version()};
+  m_genesisBlockTemplate.upgradeVote = m_genesisBlockTemplate.version;
   m_genesisBlockTemplate.timestamp = Xi::Config::Coin::genesisTimestamp(network());
   m_genesisBlockTemplate.nonce.fill(0);
   m_genesisBlockTemplate.previousBlockHash.nullify();
@@ -116,9 +116,9 @@ bool Currency::generateGenesisBlock() {
     return false;
   }
 
-  if (isStaticRewardEnabledForBlockVersion(m_genesisBlockTemplate.majorVersion)) {
+  if (isStaticRewardEnabledForBlockVersion(m_genesisBlockTemplate.version)) {
     auto staticReward =
-        constructStaticRewardTx(m_genesisBlockTemplate.previousBlockHash, m_genesisBlockTemplate.majorVersion, 0);
+        constructStaticRewardTx(m_genesisBlockTemplate.previousBlockHash, m_genesisBlockTemplate.version, 0);
     if (staticReward.isError()) {
       logger(ERROR) << "Static reward construction failed: " << staticReward.error().message();
       return false;
@@ -127,7 +127,9 @@ bool Currency::generateGenesisBlock() {
       return false;
     }
     const CachedTransaction cStaticReward{*staticReward.takeOrThrow()};
-    m_genesisBlockTemplate.staticRewardHash = cStaticReward.getTransactionHash();
+    const auto txHash = cStaticReward.getTransactionHash();
+    m_genesisBlockTemplate.staticRewardHash = Xi::Crypto::Hash::Crc::Hash16::Null;
+    compute(txHash.span(), *m_genesisBlockTemplate.staticRewardHash);
   } else {
     m_genesisBlockTemplate.staticRewardHash = std::nullopt;
   }
@@ -146,16 +148,28 @@ size_t Currency::difficultyBlocksCountByVersion(BlockVersion version) const {
   return Xi::Config::Difficulty::windowSize(version) + 1;
 }
 
-size_t Currency::fusionTxMaxSize(BlockVersion blockMajorVersion) const {
-  const auto rewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
+size_t Currency::fusionTxMaxSize(BlockVersion blockVersion) const {
+  const auto rewardZone = blockGrantedFullRewardZoneByBlockVersion(blockVersion);
   const auto maxSize = std::min(rewardZone, m_fusionTxMaxSize);
   const auto reservedSize = minerTxBlobReservedSize();
   assert(maxSize > reservedSize);
   return maxSize - reservedSize;
 }
 
-size_t Currency::maxTxSize(BlockVersion blockMajorVersion) const {
-  const auto rewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
+std::string Currency::ticker() const { return Xi::Config::Coin::ticker(); }
+
+std::string Currency::addressPrefix() const { return Xi::Config::Coin::addressPrefix(); }
+
+std::string Currency::homepage() const { return Xi::Config::Coin::homepage(); }
+
+std::string Currency::description() const { return Xi::Config::Coin::description(); }
+
+std::string Currency::copyright() const { return Xi::Config::Coin::copyright(); }
+
+std::string Currency::name() const { return Xi::Config::Coin::name(); }
+
+size_t Currency::maxTxSize(BlockVersion blockVersion) const {
+  const auto rewardZone = blockGrantedFullRewardZoneByBlockVersion(blockVersion);
   const auto maxSize = std::min(rewardZone, m_maxTxSize);
   const auto reservedSize = minerTxBlobReservedSize();
   assert(maxSize > reservedSize);
@@ -163,45 +177,36 @@ size_t Currency::maxTxSize(BlockVersion blockMajorVersion) const {
 }
 
 uint8_t Currency::maxTxVersion() const { return Xi::Config::Transaction::maximumVersion(); }
-
 uint8_t Currency::minTxVersion() const { return Xi::Config::Transaction::minimumVersion(); }
 
-BlockVersion Currency::majorBlockVersionForIndex(uint32_t blockHeight) const {
-  return Xi::Config::BlockVersion::version(blockHeight);
+uint32_t Currency::timestampCheckWindow(BlockVersion version) const {
+  return static_cast<uint32_t>(std::chrono::seconds{Xi::Config::Time::pastWindowSize(version)}.count());
 }
 
-uint32_t Currency::timestampCheckWindow(BlockVersion majorVersion) const {
-  return static_cast<uint32_t>(std::chrono::seconds{Xi::Config::Time::pastWindowSize(majorVersion)}.count());
-}
-
-uint64_t Currency::blockFutureTimeLimit(BlockVersion majorVersion) const {
-  return static_cast<uint64_t>(std::chrono::seconds{Xi::Config::Time::futureTimeLimit(majorVersion)}.count());
+uint64_t Currency::blockFutureTimeLimit(BlockVersion version) const {
+  return static_cast<uint64_t>(std::chrono::seconds{Xi::Config::Time::futureTimeLimit(version)}.count());
 }
 
 uint32_t Currency::blockTimeTarget() const { return Xi::Config::Time::blockTimeSeconds(); }
 
-size_t Currency::rewardBlocksWindowByBlockVersion(BlockVersion blockMajorVersion) const {
-  return Xi::Config::MinerReward::window(blockMajorVersion);
+size_t Currency::rewardBlocksWindowByBlockVersion(BlockVersion blockVersion) const {
+  return Xi::Config::MinerReward::window(blockVersion);
 }
 
-uint64_t Currency::rewardCutOffByBlockVersion(BlockVersion blockMajorVersion) const {
-  return Xi::Config::MinerReward::cutOff(blockMajorVersion);
+uint64_t Currency::rewardCutOffByBlockVersion(BlockVersion blockVersion) const {
+  return Xi::Config::MinerReward::cutOff(blockVersion);
 }
 
-uint8_t Currency::minimumMixin(BlockVersion blockMajorVersion) const {
-  return Xi::Config::Mixin::minimum(blockMajorVersion);
+uint8_t Currency::requiredMixin(BlockVersion blockVersion) const {
+  return Xi::Config::Mixin::required(blockVersion);
 }
 
-uint8_t Currency::maximumMixin(BlockVersion blockMajorVersion) const {
-  return Xi::Config::Mixin::maximum(blockMajorVersion);
+size_t Currency::blockGrantedFullRewardZoneByBlockVersion(BlockVersion blockVersion) const {
+  return Xi::Config::MinerReward::fullRewardZone(blockVersion);
 }
 
-size_t Currency::blockGrantedFullRewardZoneByBlockVersion(BlockVersion blockMajorVersion) const {
-  return Xi::Config::MinerReward::fullRewardZone(blockMajorVersion);
-}
-
-uint32_t Currency::upgradeHeight(BlockVersion majorVersion) const {
-  return Xi::Config::BlockVersion::upgradeHeight(majorVersion);
+uint32_t Currency::upgradeHeight(BlockVersion version) const {
+  return Xi::Config::BlockVersion::upgradeHeight(version);
 }
 
 std::string Currency::blocksFileName() const { return m_blocksFileName + "." + Xi::to_lower(Xi::to_string(network())); }
@@ -228,7 +233,7 @@ const Crypto::Hash& Currency::genesisBlockHash() const {
 
 uint64_t Currency::genesisTimestamp() const { return Xi::Config::Coin::genesisTimestamp(network()); }
 
-bool Currency::getBlockReward(BlockVersion blockMajorVersion, size_t medianSize, size_t currentBlockSize,
+bool Currency::getBlockReward(BlockVersion blockVersion, size_t medianSize, size_t currentBlockSize,
                               uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward,
                               int64_t& emissionChange) const {
   assert(alreadyGeneratedCoins <= m_moneySupply);
@@ -240,7 +245,7 @@ bool Currency::getBlockReward(BlockVersion blockMajorVersion, size_t medianSize,
     logger(TRACE) << "Genesis block reward: " << baseReward;
   }
 
-  size_t blockGrantedFullRewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
+  size_t blockGrantedFullRewardZone = blockGrantedFullRewardZoneByBlockVersion(blockVersion);
   medianSize = std::max(medianSize, blockGrantedFullRewardZone);
   if (currentBlockSize > UINT64_C(2) * medianSize) {
     logger(TRACE) << "Block cumulative size is too big: " << currentBlockSize << ", expected less than "
@@ -249,11 +254,11 @@ bool Currency::getBlockReward(BlockVersion blockMajorVersion, size_t medianSize,
   }
 
   const uint64_t penalizedBaseReward = getPenalizedAmount(baseReward, medianSize, currentBlockSize);
-  const uint64_t penalizedFee = blockMajorVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()
+  const uint64_t penalizedFee = blockVersion >= Xi::Config::BlockVersion::BlockVersionCheckpoint<1>::version()
                                     ? getPenalizedAmount(fee, medianSize, currentBlockSize)
                                     : fee;
-  const uint64_t staticReward = staticRewardAmountForBlockVersion(blockMajorVersion);
-  const uint64_t cuttedReward = cutDigitsFromAmount(penalizedBaseReward, rewardCutOffByBlockVersion(blockMajorVersion));
+  const uint64_t staticReward = staticRewardAmountForBlockVersion(blockVersion);
+  const uint64_t cuttedReward = cutDigitsFromAmount(penalizedBaseReward, rewardCutOffByBlockVersion(blockVersion));
 
   emissionChange = cuttedReward + staticReward - (fee - penalizedFee);
   reward = cuttedReward + penalizedFee;
@@ -269,7 +274,7 @@ size_t Currency::maxBlockCumulativeSize(uint64_t height) const {
   return std::min(maxBlockBlobSize(), maxSize);
 }
 
-bool Currency::constructMinerTx(BlockVersion blockMajorVersion, uint32_t index, size_t medianSize,
+bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_t medianSize,
                                 uint64_t alreadyGeneratedCoins, size_t currentBlockSize, uint64_t fee,
                                 const AccountPublicAddress& minerAddress, Transaction& tx,
                                 const BinaryArray& extraNonce /* = BinaryArray()*/, size_t maxOuts /* = 1*/) const {
@@ -290,7 +295,7 @@ bool Currency::constructMinerTx(BlockVersion blockMajorVersion, uint32_t index, 
 
   uint64_t blockReward;
   int64_t emissionChange;
-  if (!getBlockReward(blockMajorVersion, medianSize, currentBlockSize, alreadyGeneratedCoins, fee, blockReward,
+  if (!getBlockReward(blockVersion, medianSize, currentBlockSize, alreadyGeneratedCoins, fee, blockReward,
                       emissionChange)) {
     logger(INFO) << "Block is too big";
     return false;
@@ -351,24 +356,24 @@ bool Currency::constructMinerTx(BlockVersion blockMajorVersion, uint32_t index, 
   return true;
 }
 
-bool Currency::isStaticRewardEnabledForBlockVersion(BlockVersion blockMajorVersion) const {
-  return Xi::Config::StaticReward::isEnabled(blockMajorVersion);
+bool Currency::isStaticRewardEnabledForBlockVersion(BlockVersion blockVersion) const {
+  return Xi::Config::StaticReward::isEnabled(blockVersion);
 }
 
-uint64_t Currency::staticRewardAmountForBlockVersion(BlockVersion blockMajorVersion) const {
-  return Xi::Config::StaticReward::amount(blockMajorVersion);
+uint64_t Currency::staticRewardAmountForBlockVersion(BlockVersion blockVersion) const {
+  return Xi::Config::StaticReward::amount(blockVersion);
 }
 
-std::string Currency::staticRewardAddressForBlockVersion(BlockVersion blockMajorVersion) const {
-  return Xi::Config::StaticReward::address(blockMajorVersion);
+std::string Currency::staticRewardAddressForBlockVersion(BlockVersion blockVersion) const {
+  return Xi::Config::StaticReward::address(blockVersion);
 }
 
 Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const Crypto::Hash& previousBlockHash,
-                                                                           BlockVersion blockMajorVersion,
+                                                                           BlockVersion blockVersion,
                                                                            uint32_t blockIndex) const {
   XI_ERROR_TRY();
-  const auto rewardAmount = staticRewardAmountForBlockVersion(blockMajorVersion);
-  const auto rewardAddress = staticRewardAddressForBlockVersion(blockMajorVersion);
+  const auto rewardAmount = staticRewardAmountForBlockVersion(blockVersion);
+  const auto rewardAddress = staticRewardAddressForBlockVersion(blockVersion);
   if (rewardAddress.empty() || rewardAmount == 0) {
     if (!rewardAddress.empty()) {
       logger(ERROR) << "Static reward address set but amount is zero, consider deleting the static reward address.";
@@ -441,7 +446,7 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const
 }
 
 Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const CachedBlock& block) const {
-  return constructStaticRewardTx(block.getBlock().previousBlockHash, block.getBlock().majorVersion,
+  return constructStaticRewardTx(block.getBlock().previousBlockHash, block.getBlock().version,
                                  block.getBlockIndex());
 }
 
@@ -481,8 +486,9 @@ uint32_t Currency::estimateUnlockIndex(uint64_t unlock) const {
 }
 
 bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts,
-                                   const std::vector<uint64_t>& outputsAmounts, size_t size, uint32_t height) const {
-  if (size > fusionTxMaxSize(majorBlockVersionForIndex(height))) {
+                                   const std::vector<uint64_t>& outputsAmounts, size_t size,
+                                   BlockVersion version) const {
+  if (size > fusionTxMaxSize(version)) {
     return false;
   }
 
@@ -507,7 +513,7 @@ bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts,
   return expectedOutputsAmounts == outputsAmounts;
 }
 
-bool Currency::isFusionTransaction(const Transaction& transaction, size_t size, uint32_t height) const {
+bool Currency::isFusionTransaction(const Transaction& transaction, size_t size, BlockVersion version) const {
   assert(getObjectBinarySize(transaction) == size);
 
   std::vector<uint64_t> outputsAmounts;
@@ -516,11 +522,11 @@ bool Currency::isFusionTransaction(const Transaction& transaction, size_t size, 
     outputsAmounts.push_back(output.amount);
   }
 
-  return isFusionTransaction(getInputsAmounts(transaction), outputsAmounts, size, height);
+  return isFusionTransaction(getInputsAmounts(transaction), outputsAmounts, size, version);
 }
 
-bool Currency::isFusionTransaction(const Transaction& transaction, uint32_t height) const {
-  return isFusionTransaction(transaction, getObjectBinarySize(transaction), height);
+bool Currency::isFusionTransaction(const Transaction& transaction, BlockVersion version) const {
+  return isFusionTransaction(transaction, getObjectBinarySize(transaction), version);
 }
 
 bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold) const {
@@ -741,9 +747,7 @@ Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<Accoun
   assert(!targets.empty());
 
   CryptoNote::Transaction tx;
-  tx.inputs.clear();
-  tx.outputs.clear();
-  tx.extra.clear();
+  tx.nullify();
   tx.version = Xi::Config::Transaction::version();
   tx.unlockTime = m_currency.m_minedMoneyUnlockWindow;
   KeyPair txkey = generateKeyPair();

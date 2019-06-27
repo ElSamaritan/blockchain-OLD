@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -60,10 +60,12 @@ class CachedTransaction {
   const std::vector<Crypto::KeyImage>& getKeyImages() const;
   const Crypto::KeyImageSet& getKeyImagesSet() const;
   const std::vector<Crypto::PublicKey>& getOutputKeys() const;
-  const boost::optional<Crypto::Hash>& getPaymentId() const;
+  const Crypto::PublicKey& getPublicKey() const;
+  const boost::optional<PaymentId>& getPaymentId() const;
   uint64_t getInputAmount() const;
   uint64_t getOutputAmount() const;
   uint64_t getTransactionFee() const;
+  bool isCoinbase() const;
 
  private:
   Transaction transaction;
@@ -73,11 +75,16 @@ class CachedTransaction {
   mutable boost::optional<std::vector<Crypto::KeyImage>> keyImages;
   mutable boost::optional<Crypto::KeyImageSet> keyImagesSet;
   mutable boost::optional<std::vector<Crypto::PublicKey>> outputKeys;
+  mutable boost::optional<Crypto::PublicKey> publicKey;
   mutable bool paymentIdEvaluated;  ///< using optional<optional<<>> seems not to be a good idea
-  mutable boost::optional<Crypto::Hash> paymentId;
+  mutable boost::optional<PaymentId> paymentId;
   mutable boost::optional<uint64_t> inputAmount;
   mutable boost::optional<uint64_t> outputAmount;
   mutable boost::optional<uint64_t> transactionFee;
 };
+
+CachedTransaction cache(Transaction transaction);
+
+using CachedTransactionVector = std::vector<CachedTransaction>;
 
 }  // namespace CryptoNote

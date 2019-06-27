@@ -20,6 +20,7 @@
 #include <string>
 
 #include <CryptoNoteCore/CryptoNote.h>
+#include <CryptoNoteCore/Blockchain/RawBlock.h>
 
 namespace CryptoNote {
 

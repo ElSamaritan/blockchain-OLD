@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -39,7 +39,7 @@ TEST(UT_Xi_Crypto_Seed_Key_Generation, Consistent) {
   std::unordered_set<Crypto::SecretKey> secKeys;
   for (uint32_t i = 0; i < 4; ++i) {
     Crypto::Hash seed;
-    Xi::Crypto::Random::generate(seed.span());
+    ASSERT_EQ(Xi::Crypto::Random::generate(seed.span()), Xi::Crypto::Random::RandomError::Success);
 
     const auto keyPair = CryptoNote::generateDeterministicKeyPair(seed);
     for (uint32_t j = 0; j < 3; ++j) {

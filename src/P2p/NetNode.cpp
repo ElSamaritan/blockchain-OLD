@@ -56,7 +56,10 @@ namespace {
 size_t get_random_index_with_fixed_probability(size_t max_index) {
   // divide by zero workaround
   if (!max_index) return 0;
-  size_t x = Xi::Crypto::Random::generate<size_t>() % (max_index + 1);
+  size_t x = 0;
+  XI_RETURN_EC_IF_NOT(
+      Xi::Crypto::Random::generate(Xi::asByteSpan(&x, sizeof(size_t))) == Xi::Crypto::Random::RandomError::Success, 0);
+  x = x % (max_index + 1);
   return (x * x * x) / (max_index * max_index);  // parabola \/
 }
 
@@ -414,7 +417,9 @@ bool NodeServer::is_ip_address_blocked(const uint32_t ip) { return evaluate_bloc
 
 //-----------------------------------------------------------------------------------
 bool NodeServer::make_default_config() {
-  m_config.m_peer_id = Xi::Crypto::Random::generate<uint64_t>();
+  XI_RETURN_EC_IF_NOT(Xi::Crypto::Random::generate(Xi::asByteSpan(&m_config.m_peer_id, sizeof(PeerIdType))) ==
+                          Xi::Crypto::Random::RandomError::Success,
+                      false);
   logger(INFO) << "Generated new peer ID: " << m_config.m_peer_id;
   return true;
 }
@@ -431,7 +436,9 @@ bool NodeServer::handle_command_line(const boost::program_options::variables_map
     std::vector<std::string> perrs = command_line::get_arg(vm, arg_p2p_add_peer);
     for (const std::string& pr_str : perrs) {
       PeerlistEntry pe = boost::value_initialized<PeerlistEntry>();
-      pe.id = Xi::Crypto::Random::generate<uint64_t>();
+      XI_RETURN_EC_IF_NOT(Xi::Crypto::Random::generate(Xi::asByteSpan(&pe.id, sizeof(PeerIdType))) ==
+                              Xi::Crypto::Random::RandomError::Success,
+                          false);
       bool r = parse_peer_from_string(pe.address, pr_str);
       if (!(r)) {
         logger(ERROR) << "Failed to parse address from string: " << pr_str;
@@ -935,10 +942,17 @@ bool NodeServer::connections_maker() {
 
   if (!m_peerlist.get_white_peers_count() && m_seed_nodes.size()) {
     size_t try_count = 0;
-    size_t current_index = Xi::Crypto::Random::generate<size_t>() % m_seed_nodes.size();
+
+    size_t current_index = 0;
+    XI_RETURN_EC_IF_NOT(Xi::Crypto::Random::generate(Xi::asByteSpan(&current_index, sizeof(size_t))) ==
+                            Xi::Crypto::Random::RandomError::Success,
+                        false);
+    current_index = current_index % m_seed_nodes.size();
 
     while (true) {
-      if (try_to_connect_and_handshake_with_new_peer(m_seed_nodes[current_index], true)) break;
+      if (!isBlocked(m_seed_nodes[current_index].ip) &&
+          try_to_connect_and_handshake_with_new_peer(m_seed_nodes[current_index], true))
+        break;
 
       if (++try_count > m_seed_nodes.size()) {
         logger(ERROR) << "Failed to connect to any of seed peers, continuing without seeds";
@@ -1363,7 +1377,7 @@ bool NodeServer::is_priority_node(const NetworkAddress& na) {
 
 bool NodeServer::connect_to_peerlist(const std::vector<NetworkAddress>& peers) {
   for (const auto& na : peers) {
-    if (!is_addr_connected(na)) {
+    if (!is_addr_connected(na) && !isBlocked(na.ip)) {
       try_to_connect_and_handshake_with_new_peer(na);
     }
   }
@@ -1400,12 +1414,16 @@ void NodeServer::acceptLoop() {
       ctx.m_remote_ip = hostToNetwork(addressAndPort.first.getValue());
       ctx.m_remote_port = addressAndPort.second;
 
-      auto iter = m_connections.emplace(ctx.m_connection_id, std::move(ctx)).first;
-      const boost::uuids::uuid& connectionId = iter->first;
-      P2pConnectionContext& connection = iter->second;
+      if (!isBlocked(ctx.m_remote_ip)) {
+        auto iter = m_connections.emplace(ctx.m_connection_id, std::move(ctx)).first;
+        const boost::uuids::uuid& connectionId = iter->first;
+        P2pConnectionContext& connection = iter->second;
 
-      m_workingContextGroup.spawn(
-          std::bind(&NodeServer::connectionHandler, this, std::cref(connectionId), std::ref(connection)));
+        m_workingContextGroup.spawn(
+            std::bind(&NodeServer::connectionHandler, this, std::cref(connectionId), std::ref(connection)));
+      } else {
+        logger(DEBUGGING) << ctx << " tried to connect but is banned.";
+      }
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << "acceptLoop() is interrupted";
       break;
@@ -1597,6 +1615,16 @@ size_t NodeServer::unbanAllIps() {
     unblock_host(m_blocked_hosts.begin()->first);
   }
   return count;
+}
+
+bool NodeServer::isBlocked(uint32_t ip) const {
+  XI_CONCURRENT_RLOCK(m_block_access);
+  auto search = m_blocked_hosts.find(ip);
+  if (search != m_blocked_hosts.end()) {
+    return search->second > time(nullptr);
+  } else {
+    return false;
+  }
 }
 
 size_t NodeServer::resetPenalties() {

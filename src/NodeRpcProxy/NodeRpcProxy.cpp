@@ -10,6 +10,7 @@
 #include <ctime>
 #include <system_error>
 #include <thread>
+#include <iostream>
 
 #include <System/ContextGroup.h>
 #include <System/Dispatcher.h>
@@ -60,6 +61,7 @@ NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort,
       m_pullInterval(5000),
       m_peerCount(0),
       m_networkHeight(BlockHeight::Null),
+      m_networkVersion(BlockVersion::Null.native()),
       m_nodeHeight(BlockHeight::Null),
       m_connected(true) {
   resetInternalState();
@@ -78,9 +80,10 @@ void NodeRpcProxy::resetInternalState() {
   m_stop = false;
   m_peerCount.store(0, std::memory_order_relaxed);
   m_networkHeight.store(BlockHeight::Null, std::memory_order_relaxed);
+  m_networkVersion.store(BlockVersion::Null.native(), std::memory_order_release);
   lastLocalBlockHeaderInfo.height = BlockHeight::Null;
-  lastLocalBlockHeaderInfo.majorVersion = BlockVersion::Null;
-  lastLocalBlockHeaderInfo.minorVersion = 0;
+  lastLocalBlockHeaderInfo.version = BlockVersion::Null;
+  lastLocalBlockHeaderInfo.upgradeVote = BlockVersion::Null;
   lastLocalBlockHeaderInfo.timestamp = 0;
   lastLocalBlockHeaderInfo.hash = Crypto::Hash::Null;
   lastLocalBlockHeaderInfo.prevHash = Crypto::Hash::Null;
@@ -247,8 +250,8 @@ void NodeRpcProxy::updateBlockchainStatus() {
     auto blockHeight = rsp.block_header.height;
     if (blockHash != lastLocalBlockHeaderInfo.hash) {
       lastLocalBlockHeaderInfo.height = blockHeight;
-      lastLocalBlockHeaderInfo.majorVersion = rsp.block_header.major_version;
-      lastLocalBlockHeaderInfo.minorVersion = rsp.block_header.minor_version;
+      lastLocalBlockHeaderInfo.version = rsp.block_header.version;
+      lastLocalBlockHeaderInfo.upgradeVote = rsp.block_header.upgrade_vote;
       lastLocalBlockHeaderInfo.timestamp = rsp.block_header.timestamp;
       lastLocalBlockHeaderInfo.hash = blockHash;
       lastLocalBlockHeaderInfo.prevHash = prevBlockHash;
@@ -274,6 +277,7 @@ void NodeRpcProxy::updateBlockchainStatus() {
     lock.unlock();
     if (m_networkHeight.load(std::memory_order_relaxed) != lastKnownBlockHeight) {
       m_networkHeight.store(lastKnownBlockHeight, std::memory_order_relaxed);
+      m_networkVersion.store(getInfoResp.version.native(), std::memory_order_release);
       m_observerManager.notify(&INodeObserver::lastKnownBlockHeightUpdated,
                                m_networkHeight.load(std::memory_order_relaxed));
     }
@@ -322,8 +326,8 @@ std::error_code NodeRpcProxy::doGetLastBlockHeaderInfo(BlockHeaderInfo& info) {
     Crypto::Hash prevBlockHash = rsp.block_header.prev_hash;
 
     info.height = rsp.block_header.height;
-    info.majorVersion = rsp.block_header.major_version;
-    info.minorVersion = rsp.block_header.minor_version;
+    info.version = rsp.block_header.version;
+    info.upgradeVote = rsp.block_header.upgrade_vote;
     info.timestamp = rsp.block_header.timestamp;
     info.hash = blockHash;
     info.prevHash = prevBlockHash;
@@ -410,6 +414,10 @@ bool NodeRpcProxy::removeObserver(CryptoNote::INodeRpcProxyObserver* observer) {
 
 size_t NodeRpcProxy::getPeerCount() const { return m_peerCount.load(std::memory_order_relaxed); }
 
+BlockVersion NodeRpcProxy::getLastKnownBlockVersion() const {
+  return BlockVersion{m_networkVersion.load(std::memory_order_consume)};
+}
+
 BlockHeight NodeRpcProxy::getLastLocalBlockHeight() const {
   std::lock_guard<std::mutex> lock(m_mutex);
   return lastLocalBlockHeaderInfo.height;
@@ -449,7 +457,7 @@ void NodeRpcProxy::getBlockHashesByTimestamps(uint64_t timestampBegin, size_t se
       callback);
 }
 
-void NodeRpcProxy::getTransactionHashesByPaymentId(const Crypto::Hash& paymentId,
+void NodeRpcProxy::getTransactionHashesByPaymentId(const PaymentId& paymentId,
                                                    std::vector<Crypto::Hash>& transactionHashes,
                                                    const INode::Callback& callback) {
   std::lock_guard<std::mutex> lock(m_mutex);
@@ -636,7 +644,8 @@ std::error_code NodeRpcProxy::doRelayTransaction(const CryptoNote::Transaction& 
   COMMAND_RPC_SEND_RAW_TX::response rsp;
   req.transaction = transaction;
   m_logger(TRACE) << "NodeRpcProxy::doRelayTransaction";
-  return jsonCommand("/sendrawtransaction", req, rsp);
+  auto ec = jsonCommand("/sendrawtransaction", req, rsp);
+  return ec;
 }
 
 std::error_code NodeRpcProxy::doGetRandomOutsByAmounts(
@@ -826,7 +835,7 @@ std::error_code NodeRpcProxy::doGetRawBlocksByRange(BlockHeight height, uint32_t
   blocks.reserve(blocksOffset + resp.blocks.size());
   for (const auto& block : resp.blocks) {
     RawBlock iRawBlock{};
-    iRawBlock.block = toBinaryArray(block);
+    iRawBlock.blockTemplate = toBinaryArray(block);
     blocks.emplace_back(std::move(iRawBlock));
   }
 
@@ -850,7 +859,7 @@ std::error_code NodeRpcProxy::doGetBlock(const BlockHeight blockHeight, BlockDet
   return ec;
 }
 
-std::error_code NodeRpcProxy::doGetTransactionHashesByPaymentId(const Crypto::Hash& paymentId,
+std::error_code NodeRpcProxy::doGetTransactionHashesByPaymentId(const PaymentId& paymentId,
                                                                 std::vector<Crypto::Hash>& transactionHashes) {
   COMMAND_RPC_GET_TRANSACTION_HASHES_BY_PAYMENT_ID::request req = AUTO_VAL_INIT(req);
   COMMAND_RPC_GET_TRANSACTION_HASHES_BY_PAYMENT_ID::response resp = AUTO_VAL_INIT(resp);
@@ -933,13 +942,20 @@ template <typename Request, typename Response>
 void invokeJsonCommand(HttpClient& client, const std::string& url, const Request& req, Response& res) {
   using namespace ::Xi::Http;
 
-  const auto response = client.postSync(url, Xi::Http::ContentType::Json, storeToJson(req));
+  std::string body{""};
+  if constexpr (!std::is_same_v<Request, CryptoNote::Null>) {
+    body = storeToJson(req);
+  }
+
+  const auto response = client.postSync(url, Xi::Http::ContentType::Json, std::move(body));
   if (response.status() != StatusCode::Ok) {
     throw std::runtime_error("HTTP status: " + Xi::to_string(response.status()));
   }
 
-  if (!loadFromJson(res, response.body())) {
-    throw std::runtime_error("Failed to parse JSON response");
+  if constexpr (!std::is_same_v<Response, CryptoNote::Null>) {
+    if (!loadFromJson(res, response.body())) {
+      throw std::runtime_error("Failed to parse JSON response");
+    }
   }
 }
 }  // namespace
@@ -952,7 +968,8 @@ std::error_code NodeRpcProxy::jsonCommand(const std::string& url, const Request&
     m_logger(TRACE) << "Send " << url << " JSON request";
     invokeJsonCommand(*m_httpClient, url, req, res);
     ec = interpretResponseStatus(res.status);
-  } catch (const std::exception&) {
+  } catch (const std::exception& e) {
+    m_logger(ERROR) << url << " JSON response deserialization failed: " << e.what();
     ec = make_error_code(error::NETWORK_ERROR);
   }
 

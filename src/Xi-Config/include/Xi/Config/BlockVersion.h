@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -26,15 +26,6 @@
 #include <cinttypes>
 
 #include "Xi/Config/_Impl/BeginBlockVersion.h"
-
-namespace Xi {
-namespace Config {
-namespace BlockVersion {
-inline constexpr uint8_t expectedMinorVersion() { return 0; }
-inline constexpr bool validateMinorVersion(uint8_t minorVersion) { return minorVersion == expectedMinorVersion(); }
-}  // namespace BlockVersion
-}  // namespace Config
-}  // namespace Xi
 
 // clang-format off
 //                        (_Index,    _Height,  _Version,  _IsFork)

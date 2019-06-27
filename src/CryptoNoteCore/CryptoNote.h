@@ -26,6 +26,8 @@
 #include <boost/optional.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Byte.hh>
+#include <Xi/Crypto/Hash/Crc.hpp>
 #include <Xi/Blockchain/Block/Header.hpp>
 #include <Xi/Blockchain/Block/Version.hpp>
 #include <Xi/Blockchain/Block/Height.hpp>
@@ -40,14 +42,30 @@
 namespace CryptoNote {
 
 using BlockVersion = Xi::Blockchain::Block::Version;
+
 using BlockHeight = Xi::Blockchain::Block::Height;
+using BlockHeightVector = std::vector<BlockHeight>;
+XI_DECLARE_SPANS(BlockHeight)
+
 using BlockOffset = Xi::Blockchain::Block::Offset;
 using BlockNonce = Xi::Blockchain::Block::Nonce;
 using BlockHeader = Xi::Blockchain::Block::Header;
 
+using BlockHash = Crypto::Hash;
+using BlockHashVector = std::vector<BlockHash>;
+XI_DECLARE_SPANS(BlockHash)
+
+using TransactionHash = Crypto::Hash;
+XI_DECLARE_SPANS(TransactionHash)
+
+using PaymentId = Crypto::PublicKey;
+
+using GlobalOutputIndex = uint32_t;
+using GlobalOutputIndexVector = std::vector<GlobalOutputIndex>;
+
 struct BlockTemplate : public BlockHeader {
   Transaction baseTransaction;
-  std::optional<Crypto::Hash> staticRewardHash;
+  std::optional<Xi::Crypto::Hash::Crc::Hash16> staticRewardHash;
   std::vector<Crypto::Hash> transactionHashes;
 };
 
@@ -77,12 +95,7 @@ struct KeyPair {
   Crypto::SecretKey secretKey;
 };
 
-using BinaryArray = std::vector<uint8_t>;
-
-struct RawBlock {
-  BinaryArray block;  // BlockTemplate
-  std::vector<BinaryArray> transactions;
-};
+using BinaryArray = Xi::ByteVector;
 
 /*!
  * \brief The FullBlock struct is a type safe alternative to RawBlock where members are serialized by their type rather

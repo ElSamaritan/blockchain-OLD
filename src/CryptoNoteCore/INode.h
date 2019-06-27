@@ -62,8 +62,8 @@ struct BlockShortEntry {
 
 struct BlockHeaderInfo {
   BlockHeight height;
-  BlockVersion majorVersion;
-  uint8_t minorVersion;
+  BlockVersion version;
+  BlockVersion upgradeVote;
   uint64_t timestamp;
   Crypto::Hash hash;
   Crypto::Hash prevHash;
@@ -91,6 +91,7 @@ class INode {
   virtual size_t getPeerCount() const = 0;
   virtual BlockHeight getLastLocalBlockHeight() const = 0;
   virtual BlockHeight getLastKnownBlockHeight() const = 0;
+  virtual BlockVersion getLastKnownBlockVersion() const = 0;
   virtual uint32_t getLocalBlockCount() const = 0;
   virtual uint32_t getKnownBlockCount() const = 0;
   virtual uint64_t getLastLocalBlockTimestamp() const = 0;
@@ -108,8 +109,7 @@ class INode {
 
   virtual void getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount,
                                           std::vector<Crypto::Hash>& blockHashes, const Callback& callback) = 0;
-  virtual void getTransactionHashesByPaymentId(const Crypto::Hash& paymentId,
-                                               std::vector<Crypto::Hash>& transactionHashes,
+  virtual void getTransactionHashesByPaymentId(const PaymentId& paymentId, std::vector<Crypto::Hash>& transactionHashes,
                                                const Callback& callback) = 0;
 
   virtual BlockHeaderInfo getLastLocalBlockHeaderInfo() const = 0;

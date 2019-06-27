@@ -33,17 +33,23 @@ class Currency {
  public:
   XI_DELETE_COPY(Currency);
 
+  std::string name() const;
+  std::string ticker() const;
+  std::string addressPrefix() const;
+
+  std::string homepage() const;
+  std::string description() const;
+  std::string copyright() const;
+
   size_t maxBlockBlobSize() const { return m_maxBlockBlobSize; }
-  size_t maxTxSize(BlockVersion blockMajorVersion) const;
+  size_t maxTxSize(BlockVersion blockVersion) const;
   uint8_t maxTxVersion() const;
   uint8_t minTxVersion() const;
   uint64_t publicAddressBase58Prefix() const { return m_publicAddressBase58Prefix; }
   uint32_t minedMoneyUnlockWindow() const { return m_minedMoneyUnlockWindow; }
 
-  BlockVersion majorBlockVersionForIndex(uint32_t blockHeight) const;
-
-  uint32_t timestampCheckWindow(BlockVersion majorVersion) const;
-  uint64_t blockFutureTimeLimit(BlockVersion majorVersion) const;
+  uint32_t timestampCheckWindow(BlockVersion version) const;
+  uint64_t blockFutureTimeLimit(BlockVersion version) const;
 
   uint32_t blockTimeTarget() const;
 
@@ -51,20 +57,22 @@ class Currency {
   unsigned int emissionSpeedFactor() const { return m_emissionSpeedFactor; }
   uint64_t genesisBlockReward() const { return m_genesisBlockReward; }
 
-  size_t rewardBlocksWindowByBlockVersion(BlockVersion blockMajorVersion) const;
-  uint64_t rewardCutOffByBlockVersion(BlockVersion blockMajorVersion) const;
-  size_t blockGrantedFullRewardZoneByBlockVersion(BlockVersion blockMajorVersion) const;
+  size_t rewardBlocksWindowByBlockVersion(BlockVersion blockVersion) const;
+  uint64_t rewardCutOffByBlockVersion(BlockVersion blockVersion) const;
+  size_t blockGrantedFullRewardZoneByBlockVersion(BlockVersion blockVersion) const;
   size_t minerTxBlobReservedSize() const { return m_minerTxBlobReservedSize; }
 
   size_t numberOfDecimalPlaces() const { return m_numberOfDecimalPlaces; }
   uint64_t coin() const { return m_coin; }
 
-  uint8_t minimumMixin(BlockVersion blockMajorVersion) const;
-  uint8_t maximumMixin(BlockVersion blockMajorVersion) const;
+  uint8_t requiredMixin(BlockVersion blockVersion) const;
 
-  uint64_t minimumFee() const { return m_mininumFee; }
+  uint64_t minimumFee(BlockVersion version) const {
+    (void)version;
+    return m_mininumFee;
+  }
 
-  uint32_t upgradeHeight(BlockVersion majorVersion) const;
+  uint32_t upgradeHeight(BlockVersion version) const;
 
   uint64_t difficultyTarget() const { return m_difficultyTarget; }
   size_t difficultyBlocksCountByVersion(BlockVersion version) const;
@@ -80,7 +88,7 @@ class Currency {
   uint64_t mempoolTxFromAltBlockLiveTime() const { return m_mempoolTxFromAltBlockLiveTime; }
   uint64_t numberOfPeriodsToForgetTxDeletedFromPool() const { return m_numberOfPeriodsToForgetTxDeletedFromPool; }
 
-  size_t fusionTxMaxSize(BlockVersion blockMajorVersion) const;
+  size_t fusionTxMaxSize(BlockVersion blockVersion) const;
   size_t fusionTxMinInputCount() const { return m_fusionTxMinInputCount; }
   size_t fusionTxMinInOutCountRatio() const { return m_fusionTxMinInOutCountRatio; }
 
@@ -96,21 +104,21 @@ class Currency {
   const Crypto::Hash& genesisBlockHash() const;
   uint64_t genesisTimestamp() const;
 
-  bool getBlockReward(BlockVersion blockMajorVersion, size_t medianSize, size_t currentBlockSize,
+  bool getBlockReward(BlockVersion blockVersion, size_t medianSize, size_t currentBlockSize,
                       uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward, int64_t& emissionChange) const;
   size_t maxBlockCumulativeSize(uint64_t height) const;
 
-  bool constructMinerTx(BlockVersion blockMajorVersion, uint32_t height, size_t medianSize,
+  bool constructMinerTx(BlockVersion blockVersion, uint32_t height, size_t medianSize,
                         uint64_t alreadyGeneratedCoins, size_t currentBlockSize, uint64_t fee,
                         const AccountPublicAddress& minerAddress, Transaction& tx, const BinaryArray& extraNonce,
                         size_t maxOuts) const;
 
   // -------------------------------------------- Static Reward -------------------------------------------------------
-  bool isStaticRewardEnabledForBlockVersion(BlockVersion blockMajorVersion) const;
-  uint64_t staticRewardAmountForBlockVersion(BlockVersion blockMajorVersion) const;
-  std::string staticRewardAddressForBlockVersion(BlockVersion blockMajorVersion) const;
+  bool isStaticRewardEnabledForBlockVersion(BlockVersion blockVersion) const;
+  uint64_t staticRewardAmountForBlockVersion(BlockVersion blockVersion) const;
+  std::string staticRewardAddressForBlockVersion(BlockVersion blockVersion) const;
   Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const Crypto::Hash& previousBlockHash,
-                                                                    BlockVersion blockMajorVersion,
+                                                                    BlockVersion blockVersion,
                                                                     uint32_t blockIndex) const;
   Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const CachedBlock& block) const;
   Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const BlockTemplate& block) const;
@@ -123,10 +131,10 @@ class Currency {
   uint32_t estimateUnlockIndex(uint64_t unlock) const;
   // ----------------------------------------------- Locking ----------------------------------------------------------
 
-  bool isFusionTransaction(const Transaction& transaction, uint32_t height) const;
-  bool isFusionTransaction(const Transaction& transaction, size_t size, uint32_t height) const;
+  bool isFusionTransaction(const Transaction& transaction, BlockVersion version) const;
+  bool isFusionTransaction(const Transaction& transaction, size_t size, BlockVersion version) const;
   bool isFusionTransaction(const std::vector<uint64_t>& inputsAmounts, const std::vector<uint64_t>& outputsAmounts,
-                           size_t size, uint32_t height) const;
+                           size_t size, BlockVersion version) const;
   bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold) const;
   bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t& amountPowerOfTen) const;
 

@@ -7,8 +7,10 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 
 #include <Xi/Result.h>
+#include <Xi/Concurrent/RecursiveLock.h>
 
 #include "CryptoNoteCore/CryptoNote.h"
 
@@ -23,25 +25,62 @@
 #include "ICoreDefinitions.h"
 #include "MessageQueue.h"
 
+#include "CryptoNoteCore/Blockchain/IBlockchain.h"
+#include "CryptoNoteCore/Blockchain/RawBlock.h"
+
 namespace CryptoNote {
 
 enum class CoreEvent { POOL_UPDATED, BLOCKHAIN_UPDATED };
 
-class ICore {
+enum struct BlockSource {
+  AlternativeChain,
+  MainChain,
+};
+
+struct CoreBlockInfo {
+  BlockSource source;
+  BlockHeight height;
+  CachedRawBlock block;
+
+  CoreBlockInfo(BlockSource _source, uint32_t index, RawBlock _block)
+      : source{_source}, height{BlockHeight::fromIndex(index)}, block{std::move(_block)} {
+    /* */
+  }
+};
+
+template <typename _IdentifierT>
+struct SegmentReference {
+  std::shared_ptr<const IBlockchainCache> segment;
+  BlockSource source;
+  std::vector<_IdentifierT> content;
+
+  explicit SegmentReference(std::shared_ptr<const IBlockchainCache> _segment, BlockSource _source)
+      : segment{_segment}, source{_source}, content{} {
+    /* */
+  }
+};
+
+template <typename _IdentifierT>
+using SegmentReferenceVector = std::vector<SegmentReference<_IdentifierT>>;
+
+class ICore : public IBlockchain {
  public:
   virtual ~ICore() {}
+
+  virtual Xi::Concurrent::RecursiveLock::lock_t lock() const = 0;
 
   virtual bool addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) = 0;
   virtual bool removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) = 0;
 
   virtual uint32_t getTopBlockIndex() const = 0;
   virtual Crypto::Hash getTopBlockHash() const = 0;
+  virtual BlockVersion getTopBlockVersion() const = 0;
   virtual Crypto::Hash getBlockHashByIndex(uint32_t blockIndex) const = 0;
   virtual uint64_t getBlockTimestampByIndex(uint32_t blockIndex) const = 0;
 
-  virtual bool hasBlock(const Crypto::Hash& blockHash) const = 0;
-  virtual BlockTemplate getBlockByIndex(uint32_t index) const = 0;
-  virtual BlockTemplate getBlockByHash(const Crypto::Hash& blockHash) const = 0;
+  virtual std::optional<BlockSource> hasBlock(const Crypto::Hash& blockHash) const = 0;
+  virtual std::optional<CoreBlockInfo> getBlockByIndex(uint32_t index) const = 0;
+  virtual std::optional<CoreBlockInfo> getBlockByHash(const Crypto::Hash& blockHash) const = 0;
 
   virtual std::vector<Crypto::Hash> buildSparseChain() const = 0;
   virtual Xi::Result<std::vector<Crypto::Hash>> findBlockchainSupplement(
@@ -51,6 +90,11 @@ class ICore {
   virtual std::vector<RawBlock> getBlocks(uint32_t startIndex, uint32_t count) const = 0;
   virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<RawBlock>& blocks,
                          std::vector<Crypto::Hash>& missedHashes) const = 0;
+
+  virtual SegmentReferenceVector<BlockHash> queryBlockSegments(ConstBlockHashSpan hashes) const = 0;
+  virtual SegmentReferenceVector<BlockHeight> queryBlockSegments(ConstBlockHeightSpan hashes) const = 0;
+  virtual SegmentReferenceVector<BlockHash> queryTransactionSegments(ConstBlockHashSpan hashes) const = 0;
+
   virtual bool queryBlocks(const std::vector<Crypto::Hash>& blockHashes, uint64_t timestamp, uint32_t& startIndex,
                            uint32_t& currentIndex, uint32_t& fullOffset, std::vector<BlockFullInfo>& entries) const = 0;
   virtual bool queryBlocksLite(const std::vector<Crypto::Hash>& knownBlockHashes, uint64_t timestamp,
@@ -111,10 +155,10 @@ class ICore {
   [[nodiscard]] virtual bool save() = 0;
   [[nodiscard]] virtual bool load() = 0;
 
-  virtual BlockDetails getBlockDetails(const Crypto::Hash& blockHash) const = 0;
+  virtual std::optional<BlockDetails> getBlockDetails(const Crypto::Hash& blockHash) const = 0;
   virtual TransactionDetails getTransactionDetails(const Crypto::Hash& transactionHash) const = 0;
   virtual std::vector<Crypto::Hash> getAlternativeBlockHashesByIndex(uint32_t blockIndex) const = 0;
   virtual std::vector<Crypto::Hash> getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount) const = 0;
-  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const = 0;
+  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const PaymentId& paymentId) const = 0;
 };
 }  // namespace CryptoNote

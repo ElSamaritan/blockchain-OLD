@@ -93,12 +93,12 @@ BlockchainReadBatch& BlockchainReadBatch::requestKeyOutputAmount(uint32_t index)
   return *this;
 }
 
-BlockchainReadBatch& BlockchainReadBatch::requestTransactionCountByPaymentId(const Crypto::Hash& paymentId) {
+BlockchainReadBatch& BlockchainReadBatch::requestTransactionCountByPaymentId(const PaymentId& paymentId) {
   state.transactionCountsByPaymentIds.emplace(paymentId, 0);
   return *this;
 }
 
-BlockchainReadBatch& BlockchainReadBatch::requestTransactionHashByPaymentId(const Crypto::Hash& paymentId,
+BlockchainReadBatch& BlockchainReadBatch::requestTransactionHashByPaymentId(const PaymentId& paymentId,
                                                                             uint32_t transactionIndexWithinPaymentId) {
   state.transactionHashesByPaymentIds.emplace(std::make_pair(paymentId, transactionIndexWithinPaymentId),
                                               Crypto::Hash::Null);
@@ -221,11 +221,11 @@ const std::unordered_map<uint32_t, IBlockchainCache::Amount>& BlockchainReadResu
   return state.keyOutputAmounts;
 }
 
-const std::unordered_map<Crypto::Hash, uint32_t>& BlockchainReadResult::getTransactionCountByPaymentIds() const {
+const std::unordered_map<PaymentId, uint32_t>& BlockchainReadResult::getTransactionCountByPaymentIds() const {
   return state.transactionCountsByPaymentIds;
 }
 
-const std::unordered_map<std::pair<Crypto::Hash, uint32_t>, Crypto::Hash>&
+const std::unordered_map<std::pair<PaymentId, uint32_t>, Crypto::Hash>&
 BlockchainReadResult::getTransactionHashesByPaymentIds() const {
   return state.transactionHashesByPaymentIds;
 }

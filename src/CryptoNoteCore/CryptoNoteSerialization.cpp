@@ -81,10 +81,11 @@ namespace CryptoNote {
 
 [[nodiscard]] bool serialize(TransactionPrefix& txP, ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(txP.version, "version"), false);
+  XI_RETURN_EC_IF(txP.version == 0, true);
   XI_RETURN_EC_IF_NOT(serializer(txP.unlockTime, "unlock_time"), false);
-  XI_RETURN_EC_IF_NOT(serializer(txP.inputs, "vin"), false);
-  XI_RETURN_EC_IF_NOT(serializer(txP.outputs, "vout"), false);
-  XI_RETURN_EC_IF_NOT(serializeAsBinary(txP.extra, "extra", serializer), false);
+  XI_RETURN_EC_IF_NOT(serializer(txP.inputs, "inputs"), false);
+  XI_RETURN_EC_IF_NOT(serializer(txP.outputs, "outputs"), false);
+  XI_RETURN_EC_IF_NOT(serializer.binary(txP.extra, "extra"), false);
   return true;
 }
 
@@ -93,13 +94,55 @@ namespace CryptoNote {
   XI_RETURN_EC_IF_NOT(serializer(tx.unlockTime, "unlock_time"), false);
   XI_RETURN_EC_IF_NOT(serializer(tx.inputs, "inputs"), false);
   XI_RETURN_EC_IF_NOT(serializer(tx.outputs, "outputs"), false);
-  XI_RETURN_EC_IF_NOT(serializeAsBinary(tx.extra, "extra", serializer), false);
+  XI_RETURN_EC_IF_NOT(serializer.binary(tx.extra, "extra"), false);
   return true;
 }
 
 [[nodiscard]] bool serialize(Transaction& tx, ISerializer& serializer) {
-  XI_UNUSED(tx, serializer);
-  return false;
+  XI_RETURN_EC_IF_NOT(serialize(static_cast<TransactionPrefix&>(tx), serializer), false);
+  if (tx.version == 0) {
+    if (serializer.isInput()) {
+      tx.nullify();
+      return true;
+    } else {
+      assert(serializer.isOutput());
+      XI_RETURN_EC_IF_NOT(tx.unlockTime == 0, false);
+      XI_RETURN_EC_IF_NOT(tx.extra.empty(), false);
+      XI_RETURN_EC_IF_NOT(tx.signatures.empty(), false);
+      XI_RETURN_EC_IF_NOT(tx.inputs.empty(), false);
+      XI_RETURN_EC_IF_NOT(tx.outputs.empty(), false);
+      return true;
+    }
+  }
+  XI_RETURN_EC_IF(tx.inputs.empty(), false);
+  if (std::holds_alternative<BaseInput>(tx.inputs.front())) {
+    XI_RETURN_EC_IF(serializer.isOutput() && !tx.signatures.empty(), false);
+    tx.signatures.clear();
+    return true;
+  }
+
+  const size_t outerSignaturesCount = tx.inputs.size();
+  XI_RETURN_EC_IF_NOT(serializer.beginStaticArray(outerSignaturesCount, "signatures"), false);
+
+  XI_RETURN_EC_IF_NOT(outerSignaturesCount == tx.inputs.size(), false);
+  if (serializer.isInput()) {
+    tx.signatures.resize(outerSignaturesCount, {});
+  }
+  for (size_t i = 0; i < outerSignaturesCount; ++i) {
+    XI_RETURN_EC_IF_NOT(std::holds_alternative<KeyInput>(tx.inputs[i]), false);
+    const auto& iInput = std::get<KeyInput>(tx.inputs[i]);
+    const size_t innerSignaturesCount = iInput.outputIndices.size();
+    XI_RETURN_EC_IF_NOT(serializer.beginStaticArray(innerSignaturesCount, ""), false);
+    if (serializer.isInput()) {
+      tx.signatures[i].resize(innerSignaturesCount, Crypto::Signature::Null);
+    }
+    XI_RETURN_EC_IF_NOT(serializer(tx.signatures[i], ""), false);
+    XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
+  }
+
+  XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
+
+  return true;
 }
 
 [[nodiscard]] bool serialize(BaseInput& gen, ISerializer& serializer) {
@@ -140,9 +183,9 @@ namespace CryptoNote {
 }
 
 [[nodiscard]] bool serialize(AccountKeys& keys, ISerializer& s) {
-  XI_RETURN_EC_IF_NOT(s(keys.address, "m_account_address"), false);
-  XI_RETURN_EC_IF_NOT(s(keys.spendSecretKey, "m_spend_secret_key"), false);
-  XI_RETURN_EC_IF_NOT(s(keys.viewSecretKey, "m_view_secret_key"), false);
+  XI_RETURN_EC_IF_NOT(s(keys.address, "account_address"), false);
+  XI_RETURN_EC_IF_NOT(s(keys.spendSecretKey, "spend_secret_key"), false);
+  XI_RETURN_EC_IF_NOT(s(keys.viewSecretKey, "view_secret_key"), false);
   return true;
 }
 
@@ -152,10 +195,15 @@ namespace CryptoNote {
   return true;
 }
 
-// unpack to strings to maintain protocol compatibility with older versions
 [[nodiscard]] bool serialize(RawBlock& rawBlock, ISerializer& serializer) {
-  XI_RETURN_EC_IF_NOT(serializer(rawBlock.block, "binary_block_template"), false);
-  XI_RETURN_EC_IF_NOT(serializer(rawBlock.transactions, "binary_block_transactions"), false);
+  XI_RETURN_EC_IF_NOT(serializer.binary(rawBlock.blockTemplate, "binary_block_template"), false);
+  size_t count = rawBlock.transactions.size();
+  XI_RETURN_EC_IF_NOT(serializer.beginArray(count, "binary_block_transactions"), false);
+  rawBlock.transactions.resize(count);
+  for (auto& itx : rawBlock.transactions) {
+    XI_RETURN_EC_IF_NOT(serializer.binary(itx, ""), false);
+  }
+  XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
   return true;
 }
 
@@ -179,7 +227,7 @@ namespace CryptoNote {
   for (auto& iTransaction : block.transactions) {
     XI_RETURN_EC_IF_NOT(serializer(iTransaction, ""), false);
   }
-  serializer.endArray();
+  XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
   return true;
 }
 

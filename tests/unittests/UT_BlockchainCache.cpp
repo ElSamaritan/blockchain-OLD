@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -59,6 +59,7 @@ class CryptoNote_BlockchainCache : public ::testing::Test {
 
 TEST_F(CryptoNote_BlockchainCache, TransactionHashConsistency) {
   using namespace CryptoNote;
+  using namespace Xi::Crypto::Hash;
 
   CachedBlock genesisBlock{currency->genesisBlock()};
   CachedTransaction genesisTransaction{cache->getRawTransaction(0, 0)};
@@ -68,6 +69,6 @@ TEST_F(CryptoNote_BlockchainCache, TransactionHashConsistency) {
   EXPECT_EQ(genesisHash.toString(), genesisBlock.getBlockHash().toString());
   EXPECT_EQ(genesisTransaction.getTransactionHash().toString(),
             CachedTransaction{genesisBlock.getBlock().baseTransaction}.getTransactionHash().toString());
-  EXPECT_EQ(staticRewardTransaction.getTransactionHash().toString(),
-            genesisBlock.getBlock().staticRewardHash->toString());
+  EXPECT_EQ(crc16(staticRewardTransaction.getTransactionHash().span()).toString(),
+            crc16(genesisBlock.getBlock().staticRewardHash->span()).toString());
 }

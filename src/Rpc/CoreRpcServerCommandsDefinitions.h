@@ -31,11 +31,6 @@ namespace CryptoNote {
 #define CORE_RPC_STATUS_OK "OK"
 #define CORE_RPC_STATUS_BUSY "BUSY"
 
-struct EMPTY_STRUCT {
-  KV_BEGIN_SERIALIZATION XI_UNUSED(s);
-  KV_END_SERIALIZATION
-};
-
 struct STATUS_STRUCT {
   std::string status;
 
@@ -45,7 +40,7 @@ struct STATUS_STRUCT {
 };
 
 struct COMMAND_RPC_GET_HEIGHT {
-  typedef EMPTY_STRUCT request;
+  typedef Null request;
 
   struct response {
     BlockHeight height;
@@ -263,7 +258,7 @@ struct COMMAND_RPC_START_MINING {
 };
 //-----------------------------------------------
 struct COMMAND_RPC_GET_INFO {
-  typedef EMPTY_STRUCT request;
+  typedef Null request;
 
   struct response {
     std::string status;
@@ -283,9 +278,8 @@ struct COMMAND_RPC_GET_INFO {
     std::vector<BlockHeight> upgrade_heights;
     BlockHeight supported_height;
     uint32_t hashrate;
-    BlockVersion major_version;
-    uint8_t minor_version;
-    std::string version;
+    BlockVersion version;
+    std::string softwareVersion;
     uint64_t start_time;
     bool synced;
     std::string network;
@@ -308,31 +302,30 @@ struct COMMAND_RPC_GET_INFO {
     KV_MEMBER(upgrade_heights)
     KV_MEMBER(supported_height)
     KV_MEMBER(hashrate)
-    KV_MEMBER(major_version)
-    KV_MEMBER(minor_version)
+    KV_MEMBER(version)
     KV_MEMBER(start_time)
     KV_MEMBER(synced)
     KV_MEMBER(network)
-    KV_MEMBER(version)
+    KV_MEMBER(softwareVersion)
     KV_END_SERIALIZATION
   };
 };
 
 //-----------------------------------------------
 struct COMMAND_RPC_STOP_MINING {
-  typedef EMPTY_STRUCT request;
+  typedef Null request;
   typedef STATUS_STRUCT response;
 };
 
 //-----------------------------------------------
 struct COMMAND_RPC_STOP_DAEMON {
-  typedef EMPTY_STRUCT request;
+  typedef Null request;
   typedef STATUS_STRUCT response;
 };
 
 //
 struct COMMAND_RPC_GETBLOCKCOUNT {
-  typedef EMPTY_STRUCT request;
+  typedef Null request;
 
   struct response {
     uint64_t count;
@@ -364,7 +357,7 @@ struct COMMAND_RPC_GETBLOCKHASH {
 };
 
 struct COMMAND_RPC_GETBLOCKTEMPLATE_STATE {
-  using request = EMPTY_STRUCT;
+  using request = Null;
   struct response {
     Crypto::Hash
         template_state;  ///< Hash unique to a previous call, iff a new requested block template would not change.
@@ -409,7 +402,7 @@ struct COMMAND_RPC_GETBLOCKTEMPLATE {
 };
 
 struct COMMAND_RPC_GET_CURRENCY_ID {
-  typedef EMPTY_STRUCT request;
+  typedef Null request;
 
   struct response {
     std::string currency_id_blob;
@@ -424,8 +417,8 @@ struct COMMAND_RPC_SUBMITBLOCK {
 };
 
 struct block_header_response {
-  BlockVersion major_version;
-  uint8_t minor_version;
+  BlockVersion version;
+  BlockVersion upgrade_vote;
   uint64_t timestamp;
   Crypto::Hash prev_hash;
   BlockNonce nonce;
@@ -436,12 +429,12 @@ struct block_header_response {
   uint64_t difficulty;
   uint64_t reward;
   uint64_t static_reward;
-  uint32_t transactions_count;
+  uint64_t transactions_count;
   uint64_t block_size;
 
   KV_BEGIN_SERIALIZATION
-  KV_MEMBER(major_version)
-  KV_MEMBER(minor_version)
+  KV_MEMBER(version)
+  KV_MEMBER(upgrade_vote)
   KV_MEMBER(timestamp)
   KV_MEMBER(prev_hash)
   KV_MEMBER(nonce)
@@ -508,7 +501,7 @@ struct f_transaction_short_response {
 struct f_transaction_details_response {
   Crypto::Hash hash;
   size_t size;
-  Crypto::Hash payment_id;
+  PaymentId payment_id;
   uint64_t mixin;
   uint64_t fee;
   uint64_t amount_out;
@@ -537,20 +530,17 @@ struct f_block_short_response {
   KV_MEMBER(height)
   KV_MEMBER(hash)
   KV_MEMBER(cumulative_size)
-  KV_MEMBER(transactions_count) KV_END_SERIALIZATION
+  KV_MEMBER(transactions_count)
+  KV_END_SERIALIZATION
 };
 
-struct f_block_details_response {
-  BlockVersion major_version;
-  uint8_t minor_version;
-  uint64_t timestamp;
+struct f_block_details_response : f_block_short_response {
+  BlockVersion version;
+  BlockVersion upgrade_vote;
   Crypto::Hash previous_hash;
   BlockNonce nonce;
   bool orphan_status;
-  BlockHeight height;
   uint64_t depth;
-  Crypto::Hash hash;
-  uint64_t difficulty;
   uint64_t reward;
   uint64_t static_reward;
   uint64_t block_size;
@@ -565,8 +555,8 @@ struct f_block_details_response {
   std::vector<f_transaction_short_response> transactions;
 
   KV_BEGIN_SERIALIZATION
-  KV_MEMBER(major_version)
-  KV_MEMBER(minor_version)
+  KV_MEMBER(version)
+  KV_MEMBER(upgrade_vote)
   KV_MEMBER(timestamp)
   KV_MEMBER(previous_hash)
   KV_MEMBER(nonce)
@@ -586,10 +576,11 @@ struct f_block_details_response {
   KV_MEMBER(base_reward)
   KV_MEMBER(penalty)
   KV_MEMBER(transactions)
-  KV_MEMBER(total_fee_amount) KV_END_SERIALIZATION
+  KV_MEMBER(total_fee_amount)
+  KV_END_SERIALIZATION
 };
 struct COMMAND_RPC_GET_LAST_BLOCK_HEADER {
-  typedef EMPTY_STRUCT request;
+  typedef Null request;
   typedef BLOCK_HEADER_RESPONSE response;
 };
 
@@ -691,7 +682,7 @@ struct F_COMMAND_RPC_GET_TRANSACTION_DETAILS {
 };
 
 struct F_COMMAND_RPC_GET_POOL {
-  typedef EMPTY_STRUCT request;
+  typedef Null request;
 
   struct response {
     Crypto::Hash state;  ///< Tree hash of all transactions of the pool. Only query the pool if this has changed.
@@ -717,7 +708,7 @@ struct F_P2P_BAN_INFO {
 };
 
 struct F_COMMAND_RPC_GET_P2P_BAN_INFO {
-  typedef EMPTY_STRUCT request;
+  typedef Null request;
 
   struct response {
     std::vector<F_P2P_BAN_INFO> peers_ban_info;
@@ -776,7 +767,8 @@ struct COMMAND_RPC_QUERY_BLOCKS_LITE {
     KV_MEMBER(start_height)
     KV_MEMBER(current_height)
     KV_MEMBER(full_offset)
-    KV_MEMBER(blocks) KV_END_SERIALIZATION
+    KV_MEMBER(blocks)
+    KV_END_SERIALIZATION
   };
 };
 
@@ -881,7 +873,7 @@ struct COMMAND_RPC_GET_BLOCKS_HASHES_BY_TIMESTAMPS {
 
 struct COMMAND_RPC_GET_TRANSACTION_HASHES_BY_PAYMENT_ID {
   struct request {
-    Crypto::Hash payment_id;
+    PaymentId payment_id;
 
     KV_BEGIN_SERIALIZATION KV_MEMBER(payment_id) KV_END_SERIALIZATION
   };
@@ -916,7 +908,7 @@ struct COMMAND_RPC_GET_TRANSACTION_DETAILS_BY_HASHES {
 
 struct COMMAND_RPC_GET_PEERS {
   // TODO useful to add option to get gray peers ?
-  typedef EMPTY_STRUCT request;
+  typedef Null request;
 
   struct response {
     std::string status;
@@ -932,7 +924,7 @@ struct COMMAND_RPC_GET_PEERS {
 };
 
 struct COMMAND_RPC_GET_FEE_ADDRESS {
-  typedef EMPTY_STRUCT request;
+  typedef Null request;
 
   struct response {
     std::optional<FeeAddress> fee;

@@ -27,8 +27,8 @@ class IUpgradeManager {
  public:
   virtual ~IUpgradeManager() {}
 
-  virtual void addMajorBlockVersion(Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeHeight) = 0;
-  virtual Xi::Blockchain::Block::Version getBlockMajorVersion(uint32_t blockIndex) const = 0;
+  virtual void addBlockVersion(Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeHeight) = 0;
+  virtual Xi::Blockchain::Block::Version getBlockVersion(uint32_t blockIndex) const = 0;
 };
 
 }  // namespace CryptoNote

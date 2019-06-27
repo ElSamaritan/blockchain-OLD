@@ -64,15 +64,15 @@ class BlockchainExplorer : public IBlockchainExplorer, public INodeObserver {
 
   virtual bool getTransactions(const std::vector<Crypto::Hash>& transactionHashes,
                                std::vector<TransactionDetails>& transactions) override;
-  virtual bool getTransactionsByPaymentId(const Crypto::Hash& paymentId,
+  virtual bool getTransactionsByPaymentId(const PaymentId& paymentId,
                                           std::vector<TransactionDetails>& transactions) override;
   virtual bool getPoolState(const std::vector<Crypto::Hash>& knownPoolTransactionHashes,
                             Crypto::Hash knownBlockchainTop, bool& isBlockchainActual,
                             std::vector<TransactionDetails>& newTransactions,
                             std::vector<Crypto::Hash>& removedTransactions) override;
 
-  virtual uint64_t getRewardBlocksWindow(BlockVersion majorVersion) override;
-  virtual uint64_t getFullRewardMaxBlockSize(BlockVersion majorVersion) override;
+  virtual uint64_t getRewardBlocksWindow(BlockVersion version) override;
+  virtual uint64_t getFullRewardMaxBlockSize(BlockVersion version) override;
 
   virtual bool isSynchronized() override;
 

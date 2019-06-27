@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -22,6 +22,8 @@
  * ============================================================================================== */
 
 #include "Xi/Blockchain/Block/Offset.hpp"
+
+#include "Xi/Blockchain/Block/Height.hpp"
 
 Xi::Blockchain::Block::Offset::Offset(Xi::Blockchain::Block::Offset::value_type value) : m_native{value} {}
 
@@ -75,4 +77,21 @@ Xi::Blockchain::Block::Offset Xi::Blockchain::Block::operator-(const Xi::Blockch
 Xi::Blockchain::Block::Offset& Xi::Blockchain::Block::operator-=(Xi::Blockchain::Block::Offset& lhs,
                                                                  const Xi::Blockchain::Block::Offset rhs) {
   return lhs = Offset::fromNative(lhs.native() - rhs.native());
+}
+
+bool Xi::Blockchain::Block::serialize(Xi::Blockchain::Block::Offset& value, Common::StringView name,
+                                      CryptoNote::ISerializer& serializer) {
+  if (serializer.isOutput()) {
+    XI_RETURN_EC_IF(value.native() < -static_cast<int64_t>(Height::max().native()), false);
+    XI_RETURN_EC_IF(value.native() >= static_cast<int64_t>(Height::max().native()), false);
+  }
+
+  XI_RETURN_EC_IF_NOT(serializer(value.m_native, name), false);
+
+  if (serializer.isInput()) {
+    XI_RETURN_EC_IF(value.native() < -static_cast<int64_t>(Height::max().native()), false);
+    XI_RETURN_EC_IF(value.native() >= static_cast<int64_t>(Height::max().native()), false);
+  }
+
+  return true;
 }

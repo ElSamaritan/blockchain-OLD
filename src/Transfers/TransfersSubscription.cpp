@@ -47,7 +47,7 @@ void TransfersSubscription::onBlockchainDetach(BlockHeight height) {
 }
 
 void TransfersSubscription::onError(const std::error_code& ec, BlockHeight height) {
-  if (height != WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
+  if (height != BlockHeight::Null) {
     transfers.detach(height);
   }
   m_observerManager.notify(&ITransfersObserver::onError, this, height, ec);

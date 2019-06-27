@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -38,8 +38,8 @@
  */
 
 // clang-format off
-//                 (_Index, _Version, _Min, _Max, _Default)
-MakeMixinCheckpoint(     0,        1,    0,    0,        0)
+//                 (_Index, _Version, _Required)
+MakeMixinCheckpoint(     0,        1,         0)
 // clang-format on
 
 #define CURRENT_MIXIN_CHECKPOINT_INDEX 0

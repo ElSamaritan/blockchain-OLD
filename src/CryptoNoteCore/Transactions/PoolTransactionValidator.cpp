@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -51,10 +51,10 @@ bool CryptoNote::PoolTransactionValidator::isFeeInsufficient(const CachedTransac
   const uint64_t fee = transaction.getTransactionFee();
   const bool isFusionTransaction =
       fee == 0 && currency().isFusionTransaction(transaction.getTransaction(), transaction.getBlobSize(),
-                                                 chain().getTopBlockIndex() + 1);
+                                                 chain().getTopBlockVersion());
   if (!isFusionTransaction) {
     const size_t canonicalBuckets = countCanonicalDecomposition(transaction.getTransaction());
-    const auto minimumFee = currency().minimumFee() * (canonicalBuckets > 3 ? (canonicalBuckets - 3) : 1);
+    const auto minimumFee = currency().minimumFee(blockVersion()) * (canonicalBuckets > 3 ? (canonicalBuckets - 3) : 1);
     if (fee < minimumFee) {
       return true;
     } else {

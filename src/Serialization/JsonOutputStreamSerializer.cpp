@@ -57,42 +57,51 @@ bool JsonOutputStreamSerializer::beginObject(Common::StringView name) {
   XI_RETURN_EC_IF(chain.empty(), false);
   JsonValue& parent = *chain.back();
   JsonValue obj(JsonValue::OBJECT);
-
   if (parent.isObject()) {
     chain.push_back(&parent.insert(std::string(name), obj));
   } else {
     chain.push_back(&parent.pushBack(obj));
   }
-
   return true;
 }
 
-void JsonOutputStreamSerializer::endObject() {
+bool JsonOutputStreamSerializer::endObject() {
   assert(!chain.empty());
+  XI_RETURN_EC_IF(chain.empty(), false);
+  XI_RETURN_EC_IF_NOT(chain.back()->isObject(), false);
   chain.pop_back();
+  return true;
 }
 
 bool JsonOutputStreamSerializer::beginArray(size_t& size, Common::StringView name) {
   XI_UNUSED(size);
   XI_RETURN_EC_IF(chain.empty(), false);
   JsonValue val(JsonValue::ARRAY);
-  JsonValue& res = chain.back()->insert(std::string(name), val);
-  chain.push_back(&res);
-  return true;
+  auto& parent = chain.back();
+  if (parent->isArray()) {
+    JsonValue& res = parent->pushBack(val);
+    chain.push_back(&res);
+    return true;
+  } else if (parent->isObject()) {
+    JsonValue& res = parent->insert(std::string(name), val);
+    chain.push_back(&res);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool JsonOutputStreamSerializer::beginStaticArray(const size_t size, Common::StringView name) {
   XI_UNUSED(size);
-  XI_RETURN_EC_IF(chain.empty(), false);
-  JsonValue val(JsonValue::ARRAY);
-  JsonValue& res = chain.back()->insert(std::string(name), val);
-  chain.push_back(&res);
-  return true;
+  auto _size = size;
+  return beginArray(_size, name);
 }
 
-void JsonOutputStreamSerializer::endArray() {
+bool JsonOutputStreamSerializer::endArray() {
   assert(!chain.empty());
+  XI_RETURN_EC_IF(chain.empty(), false);
   chain.pop_back();
+  return true;
 }
 
 bool JsonOutputStreamSerializer::operator()(uint64_t& value, Common::StringView name) {
@@ -156,7 +165,11 @@ bool JsonOutputStreamSerializer::binary(void* value, size_t size, Common::String
 }
 
 bool JsonOutputStreamSerializer::binary(std::string& value, Common::StringView name) {
-  return binary(const_cast<char*>(value.data()), value.size(), name);
+  return binary(value.data(), value.size(), name);
+}
+
+bool JsonOutputStreamSerializer::binary(Xi::ByteVector& value, Common::StringView name) {
+  return binary(value.data(), value.size(), name);
 }
 
 bool JsonOutputStreamSerializer::maybe(bool& value, Common::StringView name) {
@@ -184,7 +197,7 @@ bool JsonOutputStreamSerializer::flag(std::vector<TypeTag>& flag, Common::String
     for (size_t i = 0; i < count; ++i) {
       XI_RETURN_EC_IF_NOT(typeTag(flag[i], ""), false);
     }
-    endArray();
+    XI_RETURN_EC_IF_NOT(endArray(), false);
     return true;
   }
 }

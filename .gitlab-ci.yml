@@ -1,12 +1,12 @@
 # ============================================================================================== #
 #                                                                                                #
-#                                       Xi Blockchain                                            #
+#                                     Galaxia Blockchain                                         #
 #                                                                                                #
 # ---------------------------------------------------------------------------------------------- #
-# This file is part of the Galaxia Project - Xi Blockchain                                       #
+# This file is part of the Xi framework.                                                         #
 # ---------------------------------------------------------------------------------------------- #
 #                                                                                                #
-# Copyright 2018-2019 Galaxia Project Developers                                                 #
+# Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               #
 #                                                                                                #
 # This program is free software: you can redistribute it and/or modify it under the terms of the #
 # GNU General Public License as published by the Free Software Foundation, either version 3 of   #
@@ -92,17 +92,17 @@ openSuse Leap - Build:
   variables:
     CI_TARGET_OS: "openSuse Leap"
 
-Windows 10 - Build:
-  <<: *generic_build_definition
-  tags: ["windows"]
-  variables:
-    CI_TARGET_OS: "Windows 10"
+# Windows 10 - Build:
+#   <<: *generic_build_definition
+#   tags: ["windows"]
+#   variables:
+#     CI_TARGET_OS: "Windows 10"
 
-macOS - Build:
-  <<: *generic_build_definition
-  tags: ["macOS"]
-  variables:
-    CI_TARGET_OS: "macOS"
+# macOS - Build:
+#   <<: *generic_build_definition
+#   tags: ["macOS"]
+#   variables:
+#     CI_TARGET_OS: "macOS"
 
 # ================================================================================================================== #
 #                                                                                                                    #
@@ -154,8 +154,8 @@ Packages:
     - "debian 9 - Build"
     - "fedora 29 - Build"
     - "openSuse Leap - Build"
-    - "Windows 10 - Build"
-    - "macOS - Build"
+    # - "Windows 10 - Build"
+    # - "macOS - Build"
   script:
     - pwsh -File ./scripts/ci/DeployPackages.ps1
     - pwsh -File ./scripts/ci/NotifyRelease.ps1

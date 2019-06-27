@@ -157,7 +157,7 @@ std::string get_status_string(const CryptoNote::COMMAND_RPC_GET_INFO::response& 
      << get_sync_percentage(iresp.height, iresp.network_height) << "%) "
      << "on " << iresp.network << (iresp.synced ? " synced, " : " syncing, ") << "net hash "
      << get_mining_speed(iresp.hashrate) << ", "
-     << "v" << toString(iresp.major_version) << ","
+     << "v" << toString(iresp.version) << ","
      << get_update_status(forkStatus, iresp.network_height, iresp.upgrade_heights) << ", "
      << iresp.outgoing_connections_count << "(out)+" << iresp.incoming_connections_count << "(in) connections, "
      << "uptime " << (unsigned int)floor(uptime / 60.0 / 60.0 / 24.0) << "d "

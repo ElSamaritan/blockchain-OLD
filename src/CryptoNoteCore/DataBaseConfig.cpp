@@ -108,15 +108,15 @@ void toString(const CryptoNote::DataBaseConfig::Compression &compression, std::s
 }
 }  // namespace Common
 
-[[nodiscard]]  bool serialize(DataBaseConfig::Compression &compression, ISerializer &s) {
+[[nodiscard]] bool serialize(DataBaseConfig::Compression &compression, ISerializer &s) {
   if (s.type() == ISerializer::INPUT) {
     std::string str;
-    XI_RETURN_EC_IF_NOT(s.binary(str, ""), false);
+    XI_RETURN_EC_IF_NOT(s(str, "compression"), false);
     return DataBaseConfig::parseCompression(str, compression);
   } else {
     assert(s.type() == ISerializer::OUTPUT);
     std::string str;
     Common::toString(compression, str);
-    return s.binary(str, "");
+    return s(str, "compression");
   }
 }

@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -31,7 +31,7 @@
  * \section Reward
  *
  * Index  : Chronological order of introduced checkpoints
- * Version: The block major version introducing the checkpoint
+ * Version: The block version introducing the checkpoint
  * Window : Number of previous blocks for median size calculation, blocks with used to calculate penalities for larger
  *            blocks.
  * Zone   : Size in bytes until block penalties will be introduced. If a block is mined larger than the zone

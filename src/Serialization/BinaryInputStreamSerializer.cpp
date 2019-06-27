@@ -33,25 +33,33 @@ namespace CryptoNote {
 
 namespace {
 
-template <typename StorageType, typename T>
-void readVarintAs(IInputStream& s, T& i) {
-  i = static_cast<T>(readVarint<StorageType>(s));
+template <typename T>
+void readInteger(IInputStream& s, T& i, bool useVarint) {
+  if (useVarint) {
+    Common::readVarint(s, i);
+  } else {
+    Common::read(s, i);
+  }
 }
 
 }  // namespace
 
 ISerializer::SerializerType BinaryInputStreamSerializer::type() const { return ISerializer::INPUT; }
 
+bool BinaryInputStreamSerializer::useVarInt() { return m_varintUse; }
+
+void BinaryInputStreamSerializer::setUseVarInt(bool use) { m_varintUse = use; }
+
 bool BinaryInputStreamSerializer::beginObject(Common::StringView name) {
   XI_UNUSED(name);
   return true;
 }
 
-void BinaryInputStreamSerializer::endObject() {}
+bool BinaryInputStreamSerializer::endObject() { return true; }
 
 bool BinaryInputStreamSerializer::beginArray(size_t& size, Common::StringView name) {
   XI_UNUSED(name);
-  readVarintAs<uint64_t>(stream, size);
+  readInteger(stream, size, useVarInt());
   return true;
 }
 
@@ -60,53 +68,54 @@ bool BinaryInputStreamSerializer::beginStaticArray(const size_t size, StringView
   return true;
 }
 
-void BinaryInputStreamSerializer::endArray() {}
+bool BinaryInputStreamSerializer::endArray() { return true; }
 
 bool BinaryInputStreamSerializer::operator()(uint8_t& value, Common::StringView name) {
   XI_UNUSED(name);
-  read(stream, value);
+  readInteger(stream, value, false);
   return true;
 }
 
 bool BinaryInputStreamSerializer::operator()(uint16_t& value, Common::StringView name) {
   XI_UNUSED(name);
-  readVarint(stream, value);
+  readInteger(stream, value, useVarInt());
   return true;
 }
 
 bool BinaryInputStreamSerializer::operator()(int16_t& value, Common::StringView name) {
   XI_UNUSED(name);
-  readVarintAs<uint16_t>(stream, value);
+  readInteger(stream, value, useVarInt());
   return true;
 }
 
 bool BinaryInputStreamSerializer::operator()(uint32_t& value, Common::StringView name) {
   XI_UNUSED(name);
-  readVarint(stream, value);
+  readInteger(stream, value, useVarInt());
   return true;
 }
 
 bool BinaryInputStreamSerializer::operator()(int32_t& value, Common::StringView name) {
   XI_UNUSED(name);
-  readVarintAs<uint32_t>(stream, value);
+  readInteger(stream, value, useVarInt());
   return true;
 }
 
 bool BinaryInputStreamSerializer::operator()(int64_t& value, Common::StringView name) {
   XI_UNUSED(name);
-  readVarintAs<uint64_t>(stream, value);
+  readInteger(stream, value, useVarInt());
   return true;
 }
 
 bool BinaryInputStreamSerializer::operator()(uint64_t& value, Common::StringView name) {
   XI_UNUSED(name);
-  readVarint(stream, value);
+  readInteger(stream, value, useVarInt());
   return true;
 }
 
 bool BinaryInputStreamSerializer::operator()(bool& value, Common::StringView name) {
+  XI_UNUSED(name);
   uint8_t byte;
-  XI_RETURN_EC_IF_NOT(this->operator()(byte, name), false);
+  readInteger(stream, byte, false);
   if (byte == 0b01010101) {
     value = true;
     return true;
@@ -121,7 +130,7 @@ bool BinaryInputStreamSerializer::operator()(bool& value, Common::StringView nam
 bool BinaryInputStreamSerializer::operator()(std::string& value, Common::StringView name) {
   XI_UNUSED(name);
   uint64_t size;
-  readVarint(stream, size);
+  readInteger(stream, size, useVarInt());
 
   if (size > 0) {
     std::vector<char> temp;
@@ -143,6 +152,18 @@ bool BinaryInputStreamSerializer::binary(void* value, size_t size, Common::Strin
 }
 
 bool BinaryInputStreamSerializer::binary(std::string& value, Common::StringView name) { return (*this)(value, name); }
+
+bool BinaryInputStreamSerializer::binary(Xi::ByteVector& value, StringView name) {
+  size_t size = 0;
+  readInteger(stream, size, useVarInt());
+  if (size > 0) {
+    value.resize(size);
+    return this->binary(value.data(), value.size(), name);
+  } else {
+    value.clear();
+    return true;
+  }
+}
 
 bool BinaryInputStreamSerializer::maybe(bool& value, Common::StringView name) { return this->operator()(value, name); }
 

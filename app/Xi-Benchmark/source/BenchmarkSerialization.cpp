@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -105,7 +105,7 @@ bool XiBenchmark::serialize_cpu_features(const cpu_features::X86Features &featur
 bool XiBenchmark::serialize_cpu_info(const cpu_features::X86Info &info, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.beginObject("features"), false);
   XI_RETURN_EC_IF_NOT(serialize_cpu_features(info.features, serializer), false);
-  serializer.endObject();
+  XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
   int family = info.family;
   XI_RETURN_EC_IF_NOT(serializer(family, "family"), false);
   int model = info.model;
@@ -153,9 +153,9 @@ bool XiBenchmark::serialize_benchmark_result(const XiBenchmark::BenchmarkResult 
     XI_RETURN_EC_IF_NOT(serializer(duration, "duration"), false);
     double hashrate = to_hashrate(iThreadResult.Duration, result.Blocks);
     XI_RETURN_EC_IF_NOT(serializer(hashrate, "hashrate"), false);
-    serializer.endObject();
+    XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
   }
-  serializer.endArray();
+  XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
   return true;
 }
 
@@ -163,7 +163,7 @@ bool XiBenchmark::serialize_benchmark_summary(const XiBenchmark::BencharkSummary
                                               CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.beginObject("cpu_info"), false);
   XI_RETURN_EC_IF_NOT(serialize_cpu_info(summary.CPUInfo, serializer), false);
-  serializer.endObject();
+  XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
   std::string arch = summary.Architecture;
   XI_RETURN_EC_IF_NOT(serializer(arch, "architecture"), false);
 
@@ -172,8 +172,8 @@ bool XiBenchmark::serialize_benchmark_summary(const XiBenchmark::BencharkSummary
   for (const auto &benchmark : summary.Benchmarks) {
     XI_RETURN_EC_IF_NOT(serializer.beginObject(""), false);
     XI_RETURN_EC_IF_NOT(serialize_benchmark_result(benchmark, serializer), false);
-    serializer.endObject();
+    XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
   }
-  serializer.endArray();
+  XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
   return true;
 }

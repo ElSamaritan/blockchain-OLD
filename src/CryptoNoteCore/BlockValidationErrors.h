@@ -25,8 +25,8 @@ namespace error {
 
 enum class BlockValidationError {
   VALIDATION_SUCCESS = 0,
-  WRONG_MAJOR_VERSION = 1,
-  WRONG_MINOR_VERSION = 2,
+  WRONG_VERSION = 1,
+  WRONG_UPGRADE_VOTE = 2,
   PARENT_BLOCK_SIZE_TOO_BIG = 3,
   PARENT_BLOCK_WRONG_VERSION = 4,
   TIMESTAMP_TOO_FAR_IN_FUTURE = 5,
@@ -66,10 +66,10 @@ class BlockValidationErrorCategory : public std::error_category {
     switch (code) {
       case BlockValidationError::VALIDATION_SUCCESS:
         return "Block validated successfully";
-      case BlockValidationError::WRONG_MAJOR_VERSION:
-        return "Wrong block major version";
-      case BlockValidationError::WRONG_MINOR_VERSION:
-        return "Wrong block minor version";
+      case BlockValidationError::WRONG_VERSION:
+        return "Wrong block version";
+      case BlockValidationError::WRONG_UPGRADE_VOTE:
+        return "Wrong block upgrade vote";
       case BlockValidationError::PARENT_BLOCK_SIZE_TOO_BIG:
         return "Parent block size is too big";
       case BlockValidationError::PARENT_BLOCK_WRONG_VERSION:

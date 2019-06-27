@@ -53,6 +53,9 @@ std::vector<AdvancedCommand> allCommands() {
       AdvancedCommand("save", "Save your wallet state", true, true),
       AdvancedCommand("save_csv", "Save all wallet transactions to a CSV file", true, true),
       AdvancedCommand("send_all", "Send all your balance to someone", false, true),
+      AdvancedCommand("generate_payment_id", "Generates a new payment id", true, true),
+      AdvancedCommand("proof_payment_id_ownership", "creates a proof of payment id ownership", true, true),
+      AdvancedCommand("check_payment_id_ownership", "Checks a user provided proof of payment id ownership", true, true),
       AdvancedCommand("status", "Display sync status and network hashrate", true, true),
   };
 }

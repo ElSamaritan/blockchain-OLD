@@ -19,6 +19,7 @@
 
 #include <vector>
 #include <CryptoNoteCore/CryptoNote.h>
+#include <CryptoNoteCore/Blockchain/RawBlock.h>
 #include <crypto/CryptoTypes.h>
 //#include <Serialization/ISerializer.h>
 

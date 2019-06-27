@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <vector>
 
 #include "CryptoNoteCore/CryptoNote.h"
@@ -40,7 +41,7 @@ struct TransactionInformation {
   uint64_t totalAmountIn;
   uint64_t totalAmountOut;
   std::vector<uint8_t> extra;
-  Crypto::Hash paymentId;
+  std::optional<PaymentId> paymentId;
 };
 
 struct TransactionOutputInformation {

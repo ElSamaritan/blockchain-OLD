@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -37,15 +37,21 @@ extern "C" {
 
 #define XI_RETURN_EC_IF(COND, EC) \
   do {                            \
-    if (COND) return EC;          \
+    if (COND) {                   \
+      return EC;                  \
+    }                             \
   } while (XI_FALSE)
 
 #define XI_RETURN_EC_IF_NOT(COND, EC) \
   do {                                \
-    if (!(COND)) return EC;           \
+    if (!(COND)) {                    \
+      return EC;                      \
+    }                                 \
   } while (XI_FALSE)
 
 #if defined(__cplusplus)
+
+#include <array>
 
 namespace Xi {
 /*!
@@ -64,9 +70,7 @@ inline void Unreferenced(Ts&&...) {}
 /*!
  * \def XI_UNUSED_REVAL Marks a return value as intentionally unused. Mainly used for RAII objects.
  */
-#define XI_UNUSED_REVAL(X)            \
-  auto __UNUSED_REVAL_##__LINE__ = X; \
-  XI_UNUSED(__UNUSED_REVAL_##__LINE__)
+#define XI_UNUSED_REVAL(X) [[maybe_unused]] auto __UNUSED_REVAL_##__LINE__ = X;
 
 /*!
  * \def XI_DELETE_COPY(CLASS_NAME) deletes any possible default generated copy constructor/assignment for CLASS_NAME
@@ -95,5 +99,7 @@ inline void Unreferenced(Ts&&...) {}
 #define XI_DEFAULT_MOVE(CLASS_NAME)   \
   CLASS_NAME(CLASS_NAME&&) = default; \
   CLASS_NAME& operator=(CLASS_NAME&&) = default
+
+#define XI_PADDING(BYTES) std::array<unsigned char, BYTES> _padding;
 
 #endif

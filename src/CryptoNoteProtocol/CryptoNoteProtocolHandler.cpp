@@ -52,54 +52,7 @@ void relay_post_notify(IP2pEndpoint& p2p, typename t_parametr::request& arg,
   p2p.externalRelayNotifyToAll(t_parametr::ID, LevinProtocol::encode(arg), excludeConnection);
 }
 
-std::vector<RawBlockLegacy> convertRawBlocksToRawBlocksLegacy(const std::vector<RawBlock>& rawBlocks) {
-  std::vector<RawBlockLegacy> legacy;
-  legacy.reserve(rawBlocks.size());
-
-  for (const auto& rawBlock : rawBlocks) {
-    legacy.emplace_back(RawBlockLegacy{rawBlock.block, rawBlock.transactions});
-  }
-
-  return legacy;
-}
-
-std::vector<RawBlock> convertRawBlocksLegacyToRawBlocks(const std::vector<RawBlockLegacy>& legacy) {
-  std::vector<RawBlock> rawBlocks;
-  rawBlocks.reserve(legacy.size());
-
-  for (const auto& legacyBlock : legacy) {
-    rawBlocks.emplace_back(RawBlock{legacyBlock.blockTemplate, legacyBlock.transactions});
-  }
-
-  return rawBlocks;
-}
-
 }  // namespace
-
-// unpack to strings to maintain protocol compatibility with older versions
-[[nodiscard]] static inline bool serialize(RawBlockLegacy& rawBlock, ISerializer& serializer) {
-  std::string block;
-  std::vector<std::string> transactions;
-  if (serializer.type() == ISerializer::INPUT) {
-    XI_RETURN_EC_IF_NOT(serializer(block, "block"), false);
-    XI_RETURN_EC_IF_NOT(serializer(transactions, "txs"), false);
-    rawBlock.blockTemplate.reserve(block.size());
-    rawBlock.transactions.reserve(transactions.size());
-    std::copy(block.begin(), block.end(), std::back_inserter(rawBlock.blockTemplate));
-    std::transform(transactions.begin(), transactions.end(), std::back_inserter(rawBlock.transactions),
-                   [](const std::string& s) { return BinaryArray(s.begin(), s.end()); });
-    return true;
-  } else {
-    block.reserve(rawBlock.blockTemplate.size());
-    transactions.reserve(rawBlock.transactions.size());
-    std::copy(rawBlock.blockTemplate.begin(), rawBlock.blockTemplate.end(), std::back_inserter(block));
-    std::transform(rawBlock.transactions.begin(), rawBlock.transactions.end(), std::back_inserter(transactions),
-                   [](BinaryArray& s) { return std::string(s.begin(), s.end()); });
-    XI_RETURN_EC_IF_NOT(serializer(block, "block"), false);
-    XI_RETURN_EC_IF_NOT(serializer(transactions, "txs"), false);
-    return true;
-  }
-}
 
 [[nodiscard]] static inline bool serialize(NOTIFY_NEW_TRANSACTIONS_request& request, ISerializer& s) {
   std::vector<std::string> transactions;
@@ -466,7 +419,7 @@ int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_RE
   std::vector<RawBlock> rawBlocks;
   m_core.getBlocks(arg.blocks, rawBlocks, rsp.missed_ids);
 
-  rsp.blocks = convertRawBlocksToRawBlocksLegacy(rawBlocks);
+  rsp.blocks = std::move(rawBlocks);
 
   m_logger(Logging::TRACE) << context << "-->>NOTIFY_RESPONSE_GET_OBJECTS: blocks.size()=" << rsp.blocks.size()
                            << ", txs.size()=" << rsp.transactions.size()
@@ -508,12 +461,12 @@ int CryptoNoteProtocolHandler::handle_response_get_objects(int command, NOTIFY_R
   blockTemplates.resize(arg.blocks.size());
   cachedBlocks.reserve(arg.blocks.size());
 
-  std::vector<RawBlock> rawBlocks = convertRawBlocksLegacyToRawBlocks(arg.blocks);
+  std::vector<RawBlock> rawBlocks = std::move(arg.blocks);
 
   for (size_t index = 0; index < rawBlocks.size(); ++index) {
-    if (!fromBinaryArray(blockTemplates[index], rawBlocks[index].block)) {
+    if (!fromBinaryArray(blockTemplates[index], rawBlocks[index].blockTemplate)) {
       m_logger(Logging::ERROR) << context << "sent wrong block: failed to parse and validate block: \r\n"
-                               << toHex(rawBlocks[index].block) << "\r\n dropping connection";
+                               << toHex(rawBlocks[index].blockTemplate) << "\r\n dropping connection";
       m_p2p->report_failure(context.m_remote_ip, P2pPenalty::InvalidResponse);
       context.m_state = CryptoNoteConnectionContext::state_shutdown;
       return 1;

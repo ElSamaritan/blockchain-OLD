@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -23,11 +23,26 @@
 
 #pragma once
 
-#include <CryptoNoteCore/CryptoNote.h>
+#include <vector>
 
-namespace CryptoNote {
-struct RawBlockLegacy {
-  BinaryArray blockTemplate;
-  std::vector<BinaryArray> transactions;
-};
-}  // namespace CryptoNote
+#include <Xi/Global.hh>
+
+#include "Xi/Blockchain/Block/Nonce.hpp"
+#include "Xi/Blockchain/Block/Offset.hpp"
+#include "Xi/Blockchain/Block/Header.hpp"
+#include "Xi/Blockchain/Block/Height.hpp"
+#include "Xi/Blockchain/Block/Version.hpp"
+
+#include <crypto/Types/Hash.h>
+
+namespace Xi {
+namespace Blockchain {
+namespace Block {
+
+using Hash = ::Crypto::Hash;
+using HashVector = std::vector<Hash>;
+XI_DECLARE_SPANS(Hash)
+
+}  // namespace Block
+}  // namespace Blockchain
+}  // namespace Xi

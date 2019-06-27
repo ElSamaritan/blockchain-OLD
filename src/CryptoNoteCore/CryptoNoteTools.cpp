@@ -65,7 +65,7 @@ bool CryptoNote::toBinaryArray(const BinaryArray& object, BinaryArray& binaryArr
     Common::VectorOutputStream stream(binaryArray);
     BinaryOutputStreamSerializer serializer(stream);
     std::string oldBlob = Common::asString(object);
-    serializer(oldBlob, "");
+    XI_RETURN_EC_IF_NOT(serializer(oldBlob, ""), false);
   } catch (std::exception&) {
     return false;
   }

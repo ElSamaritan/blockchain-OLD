@@ -38,6 +38,8 @@ class TransactionPoolCleanWrapper : public ITransactionPool {
   void removeObserver(ITransactionPoolObserver* observer) override;
 
   std::size_t size() const override;
+  std::size_t cumulativeSize() const override;
+  std::size_t cumulativeFees() const override;
   Crypto::Hash stateHash() const override;
   size_t forceFlush() override;
   bool forceErasure(const Crypto::Hash& hash) override;
@@ -60,7 +62,7 @@ class TransactionPoolCleanWrapper : public ITransactionPool {
   std::vector<CachedTransaction> getPoolTransactions() const override;
 
   uint64_t getTransactionReceiveTime(const Crypto::Hash& hash) const override;
-  std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
+  std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const PaymentId& paymentId) const override;
 
   std::vector<Crypto::Hash> clean();
 

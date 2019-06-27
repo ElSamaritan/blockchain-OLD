@@ -24,10 +24,6 @@
 
 namespace CryptoNote {
 
-uint16_t getDefaultMixinByIndex(const uint32_t height) {
-  return Xi::Config::Mixin::defaultValue(Xi::Config::BlockVersion::version(height));
-}
-
 void throwIfKeysMismatch(const Crypto::SecretKey& secretKey, const Crypto::PublicKey& expectedPublicKey,
                          const std::string& message) {
   Crypto::PublicKey pub;

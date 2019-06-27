@@ -64,15 +64,15 @@ class IBlockchainExplorer {
 
   virtual bool getTransactions(const std::vector<Crypto::Hash>& transactionHashes,
                                std::vector<TransactionDetails>& transactions) = 0;
-  virtual bool getTransactionsByPaymentId(const Crypto::Hash& paymentId,
+  virtual bool getTransactionsByPaymentId(const PaymentId& paymentId,
                                           std::vector<TransactionDetails>& transactions) = 0;
   virtual bool getPoolState(const std::vector<Crypto::Hash>& knownPoolTransactionHashes,
                             Crypto::Hash knownBlockchainTop, bool& isBlockchainActual,
                             std::vector<TransactionDetails>& newTransactions,
                             std::vector<Crypto::Hash>& removedTransactions) = 0;
 
-  virtual uint64_t getRewardBlocksWindow(BlockVersion majorVersion) = 0;
-  virtual uint64_t getFullRewardMaxBlockSize(BlockVersion majorVersion) = 0;
+  virtual uint64_t getRewardBlocksWindow(BlockVersion version) = 0;
+  virtual uint64_t getFullRewardMaxBlockSize(BlockVersion version) = 0;
 
   virtual bool isSynchronized() = 0;
 };

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The BBSCoin Developers
 // Copyright (c) 2018, The Karbo Developers
 // Copyright (c) 2018, The TurtleCoin Developers
@@ -163,8 +163,8 @@ bool TransfersSyncronizer::save(std::ostream& os) {
   XI_RETURN_EC_IF_NOT(s.beginArray(subscriptionCount, "consumers"), false);
 
   for (const auto& consumer : m_consumers) {
-    s.beginObject("");
-    s(const_cast<PublicKey&>(consumer.first), "view_key");
+    XI_RETURN_EC_IF_NOT(s.beginObject(""), false);
+    XI_RETURN_EC_IF_NOT(s(const_cast<PublicKey&>(consumer.first), "view_key"), false);
 
     std::stringstream consumerState;
     // synchronization state
@@ -192,12 +192,12 @@ bool TransfersSyncronizer::save(std::ostream& os) {
         XI_RETURN_EC_IF_NOT(s(addr, "address"), false);
         XI_RETURN_EC_IF_NOT(s(innerBlob, "state"), false);
 
-        s.endObject();
+        XI_RETURN_EC_IF_NOT(s.endObject(), false);
       }
     }
 
-    s.endArray();
-    s.endObject();
+    XI_RETURN_EC_IF_NOT(s.endArray(), false);
+    XI_RETURN_EC_IF_NOT(s.endObject(), false);
   }
   return true;
 }
@@ -264,7 +264,7 @@ bool TransfersSyncronizer::load(std::istream& is) {
         XI_RETURN_EC_IF_NOT(s.beginArray(subCount, "subscriptions"), false);
 
         while (subCount--) {
-          s.beginObject("");
+          XI_RETURN_EC_IF_NOT(s.beginObject(""), false);
 
           AccountPublicAddress acc;
           std::string state;
@@ -282,18 +282,18 @@ bool TransfersSyncronizer::load(std::istream& is) {
             m_logger(Logging::DEBUGGING) << "Subscription not found: " << m_currency.accountAddressAsString(acc);
           }
 
-          s.endObject();
+          XI_RETURN_EC_IF_NOT(s.endObject(), false);
         }
 
-        s.endArray();
+        XI_RETURN_EC_IF_NOT(s.endArray(), false);
       } else {
         m_logger(Logging::DEBUGGING) << "Consumer not found: " << viewKey;
       }
 
-      s.endObject();
+      XI_RETURN_EC_IF_NOT(s.endObject(), false);
     }
 
-    s.endArray();
+    XI_RETURN_EC_IF_NOT(s.endArray(), false);
 
     return true;
   } catch (...) {

@@ -74,12 +74,12 @@ bool writeTransactionExtra(std::vector<uint8_t>& tx_extra, const std::vector<Tra
 Crypto::PublicKey getTransactionPublicKeyFromExtra(const std::vector<uint8_t>& tx_extra);
 bool addTransactionPublicKeyToExtra(std::vector<uint8_t>& tx_extra, const Crypto::PublicKey& tx_pub_key);
 bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const BinaryArray& extra_nonce);
-void setPaymentIdToTransactionExtraNonce(BinaryArray& extra_nonce, const Crypto::Hash& payment_id);
-bool getPaymentIdFromTransactionExtraNonce(const BinaryArray& extra_nonce, Crypto::Hash& payment_id);
+void setPaymentIdToTransactionExtraNonce(BinaryArray& extra_nonce, const PaymentId& payment_id);
+bool getPaymentIdFromTransactionExtraNonce(const BinaryArray& extra_nonce, PaymentId& payment_id);
 
 bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<uint8_t>& extra);
 // returns false if payment id is not found or parse error
-bool getPaymentIdFromTxExtra(const std::vector<uint8_t>& extra, Crypto::Hash& paymentId);
-bool parsePaymentId(const std::string& paymentIdString, Crypto::Hash& paymentId);
+bool getPaymentIdFromTxExtra(const std::vector<uint8_t>& extra, PaymentId& paymentId);
+bool parsePaymentId(const std::string& paymentIdString, PaymentId& paymentId);
 
 }  // namespace CryptoNote

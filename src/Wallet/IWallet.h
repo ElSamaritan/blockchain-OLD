@@ -26,7 +26,6 @@ namespace CryptoNote {
 
 const size_t WALLET_INVALID_TRANSACTION_ID = std::numeric_limits<size_t>::max();
 const size_t WALLET_INVALID_TRANSFER_ID = std::numeric_limits<size_t>::max();
-const BlockHeight WALLET_UNCONFIRMED_TRANSACTION_HEIGHT = BlockHeight::Null;
 
 enum class WalletTransactionState : uint8_t { SUCCEEDED = 0, FAILED, CANCELLED, CREATED, DELETED };
 

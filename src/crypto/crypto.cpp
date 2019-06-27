@@ -14,6 +14,7 @@
 #include <memory>
 #include <mutex>
 
+#include <Xi/Exceptions.hpp>
 #include <Xi/Crypto/Random/Random.hh>
 #include <Xi/Crypto/Random/Engine.hpp>
 
@@ -36,20 +37,33 @@ using std::lock_guard;
 using std::mutex;
 
 static inline void random_scalar(EllipticCurveScalar &res) {
-  Xi::ByteSpan out{res.data, 32};
+  int ec = XI_RETURN_CODE_SUCCESS;
   do {
-    Xi::Crypto::Random::generate(out);
-  } while (!sc_isnonzero(out.data()) && !sc_less_32(out.data(), CurveOrder));
+    ec = xi_crypto_random_bytes(res.data, sizeof(res.data));
+    Xi::exceptional_if_not<Xi::RuntimeError>(ec == XI_RETURN_CODE_SUCCESS,
+                                             "random number generator failed in scalar generation");
+  } while (!sc_isnonzero(res.data) && !sc_less_32(res.data, CurveOrder));
   sc_reduce32(res.data);
 }
 
 static inline void random_scalar(EllipticCurveScalar &res, Xi::ConstByteSpan seed) {
-  Xi::ByteSpan out{res.data, 32};
-  Xi::Crypto::Random::Engine32 engine{seed};
+  xi_crypto_random_state *rng = xi_crypto_random_state_create();
+  Xi::exceptional_if<Xi::RuntimeError>(rng == NULL, "random number generator failed in scalar generation");
+  int ec = xi_crypto_random_state_init_deterministic(rng, seed.data(), seed.size_bytes());
+  if (ec != XI_RETURN_CODE_SUCCESS) {
+    xi_crypto_random_state_destroy(rng);
+    Xi::exceptional<Xi::RuntimeError>("random number generator failed in scalar generation");
+  }
+
   do {
-    engine(out);
-  } while (!sc_isnonzero(out.data()) && !sc_less_32(out.data(), CurveOrder));
+    ec = xi_crypto_random_bytes_from_state_deterministic(res.data, sizeof(res.data), rng);
+    if (ec != XI_RETURN_CODE_SUCCESS) {
+      xi_crypto_random_state_destroy(rng);
+      Xi::exceptional<Xi::RuntimeError>("random number generator failed in scalar generation");
+    }
+  } while (!sc_isnonzero(res.data) && !sc_less_32(res.data, CurveOrder));
   sc_reduce32(res.data);
+  xi_crypto_random_state_destroy(rng);
 }
 
 static inline void hash_to_scalar(const void *data, size_t length, EllipticCurveScalar &res) {
@@ -338,7 +352,9 @@ KeyImage crypto_ops::scalarmultKey(const KeyImage &P, const KeyImage &a) {
   ge_p3 A;
   ge_p2 R;
   // maybe use assert instead?
-  ge_frombytes_vartime(&A, reinterpret_cast<const unsigned char *>(&P));
+  if (ge_frombytes_vartime(&A, reinterpret_cast<const unsigned char *>(&P)) != 0) {
+    throw std::runtime_error{"scalarmultKey: invalid point provided as keyImage"};
+  }
   ge_scalarmult(&R, reinterpret_cast<const unsigned char *>(&a), &A);
   KeyImage aP;
   ge_tobytes(reinterpret_cast<unsigned char *>(&aP), &R);

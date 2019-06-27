@@ -142,26 +142,41 @@ bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const Binar
   return true;
 }
 
-void setPaymentIdToTransactionExtraNonce(std::vector<uint8_t>& extra_nonce, const Hash& payment_id) {
+void setPaymentIdToTransactionExtraNonce(std::vector<uint8_t>& extra_nonce, const PaymentId& payment_id) {
   extra_nonce.clear();
   extra_nonce.push_back(TX_EXTRA_NONCE_PAYMENT_ID);
-  const uint8_t* payment_id_ptr = reinterpret_cast<const uint8_t*>(&payment_id);
+  const uint8_t* payment_id_ptr = payment_id.data();
   std::copy(payment_id_ptr, payment_id_ptr + payment_id.size(), std::back_inserter(extra_nonce));
 }
 
-bool getPaymentIdFromTransactionExtraNonce(const std::vector<uint8_t>& extra_nonce, Hash& payment_id) {
-  if (sizeof(Hash) + 1 != extra_nonce.size()) return false;
+bool getPaymentIdFromTransactionExtraNonce(const std::vector<uint8_t>& extra_nonce, PaymentId& payment_id) {
+  if (PublicKey::bytes() + 1 != extra_nonce.size()) return false;
   if (TX_EXTRA_NONCE_PAYMENT_ID != extra_nonce[0]) return false;
-  payment_id = *reinterpret_cast<const Hash*>(extra_nonce.data() + 1);
-  return true;
+  payment_id = PaymentId::Null;
+  std::memcpy(payment_id.data(), extra_nonce.data() + 1, PublicKey::bytes());
+  if (!payment_id.isValid()) {
+    payment_id.nullify();
+    return false;
+  } else {
+    return true;
+  }
 }
 
-bool parsePaymentId(const std::string& paymentIdString, Hash& paymentId) {
-  return Common::podFromHex(paymentIdString, paymentId);
+bool parsePaymentId(const std::string& paymentIdString, PaymentId& paymentId) {
+  if (auto pid = PaymentId::fromString(paymentIdString); pid.isError()) {
+    return false;
+  } else {
+    if (!pid->isValid()) {
+      return false;
+    } else {
+      paymentId = pid.take();
+      return true;
+    }
+  }
 }
 
 bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<uint8_t>& extra) {
-  Hash paymentIdBin;
+  PaymentId paymentIdBin;
 
   if (!parsePaymentId(paymentIdString, paymentIdBin)) {
     return false;
@@ -177,7 +192,7 @@ bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<
   return true;
 }
 
-bool getPaymentIdFromTxExtra(const std::vector<uint8_t>& extra, Hash& paymentId) {
+bool getPaymentIdFromTxExtra(const std::vector<uint8_t>& extra, PaymentId& paymentId) {
   std::vector<TransactionExtraField> tx_extra_fields;
   if (!parseTransactionExtra(extra, tx_extra_fields)) {
     return false;

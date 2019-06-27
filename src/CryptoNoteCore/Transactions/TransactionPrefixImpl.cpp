@@ -44,7 +44,7 @@ class TransactionPrefixImpl : public ITransactionReader {
   virtual uint64_t getUnlockTime() const override;
 
   // extra
-  virtual bool getPaymentId(Hash& paymentId) const override;
+  virtual bool getPaymentId(PaymentId& paymentId) const override;
   virtual bool getExtraNonce(BinaryArray& nonce) const override;
   virtual BinaryArray getExtra() const override;
 
@@ -102,13 +102,13 @@ PublicKey TransactionPrefixImpl::getTransactionPublicKey() const {
 
 uint64_t TransactionPrefixImpl::getUnlockTime() const { return m_txPrefix.unlockTime; }
 
-bool TransactionPrefixImpl::getPaymentId(Hash& hash) const {
+bool TransactionPrefixImpl::getPaymentId(PaymentId& hash) const {
   BinaryArray nonce;
 
   if (getExtraNonce(nonce)) {
-    Crypto::Hash paymentId;
+    PaymentId paymentId;
     if (getPaymentIdFromTransactionExtraNonce(nonce, paymentId)) {
-      hash = reinterpret_cast<const Hash&>(paymentId);
+      hash = paymentId;
       return true;
     }
   }

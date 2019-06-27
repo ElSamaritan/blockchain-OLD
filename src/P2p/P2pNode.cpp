@@ -61,7 +61,11 @@ class PeerIndexGenerator {
       return 0;
     }
 
-    size_t x = Xi::Crypto::Random::generate<uint64_t>() % (maxIndex + 1);
+    size_t x = 0;
+    XI_RETURN_EC_IF_NOT(
+        Xi::Crypto::Random::generate(Xi::asByteSpan(&x, sizeof(size_t))) == Xi::Crypto::Random::RandomError::Success,
+        0);
+    x = x % (maxIndex + 1);
     return (x * x * x) / (maxIndex * maxIndex);
   }
 

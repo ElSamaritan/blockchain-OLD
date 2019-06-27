@@ -53,6 +53,16 @@ class ITransactionPool {
   virtual std::size_t size() const = 0;
 
   /*!
+   * \brief cumulativeSize Sum of all transactions blob sized contained.
+   */
+  virtual std::size_t cumulativeSize() const = 0;
+
+  /*!
+   * \brief cumulativeFees Sum of all transaction fees blob sized contained.
+   */
+  virtual std::size_t cumulativeFees() const = 0;
+
+  /*!
    * \brief stateHash Returns a hash of the state of the pool. If the pool returns the same hash multiple times the
    * state is unchanged.
    */
@@ -120,7 +130,7 @@ class ITransactionPool {
   virtual std::vector<CachedTransaction> getPoolTransactions() const = 0;
 
   virtual uint64_t getTransactionReceiveTime(const Crypto::Hash& hash) const = 0;
-  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const = 0;
+  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const PaymentId& paymentId) const = 0;
 };
 
 }  // namespace CryptoNote

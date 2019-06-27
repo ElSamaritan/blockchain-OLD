@@ -165,7 +165,9 @@ struct WalletTransferDto {
 std::string readCipher(Common::IInputStream& source, const std::string& name) {
   std::string cipher;
   CryptoNote::BinaryInputStreamSerializer s(source);
-  s(cipher, name);
+  if (!s(cipher, name)) {
+    throw std::runtime_error{"cipher deserialization failed"};
+  }
 
   return cipher;
 }
@@ -182,7 +184,12 @@ template <typename Object>
 void deserialize(Object& obj, const std::string& name, const std::string& plain) {
   MemoryInputStream stream(plain.data(), plain.size());
   CryptoNote::BinaryInputStreamSerializer s(stream);
-  s(obj, Common::StringView(name));
+  if (!s(obj, Common::StringView(name))) {
+    throw std::runtime_error{"object deserialization failed"};
+  }
+  if (!stream.endOfStream()) {
+    throw std::runtime_error{"object deserialized but not all bytes read"};
+  }
 }
 
 template <typename Object>
@@ -252,7 +259,9 @@ WalletSerializerV1::WalletSerializerV1(ITransfersObserver& transfersObserver, Cr
 
 void WalletSerializerV1::load(const Crypto::chacha8_key& key, Common::IInputStream& source) {
   CryptoNote::BinaryInputStreamSerializer s(source);
-  s.beginObject("wallet");
+  if (!s.beginObject("wallet")) {
+    throw std::runtime_error{"wallet serialization failed"};
+  }
 
   uint32_t version = loadVersion(source);
 
@@ -264,7 +273,9 @@ void WalletSerializerV1::load(const Crypto::chacha8_key& key, Common::IInputStre
     loadWalletV1(source, key);
   }
 
-  s.endObject();
+  if (!s.endObject()) {
+    throw std::runtime_error{"wallet serialization failed"};
+  }
 }
 
 void WalletSerializerV1::loadWallet(Common::IInputStream& source, const Crypto::chacha8_key& key, uint32_t version) {
@@ -324,11 +335,15 @@ void WalletSerializerV1::loadWalletV1(Common::IInputStream& source, const Crypto
 
   CryptoNote::BinaryInputStreamSerializer encrypted(source);
 
-  encrypted(cryptoContext.iv, "iv");
+  if (!encrypted(cryptoContext.iv, "iv")) {
+    throw std::runtime_error{"iv serialization failed"};
+  }
   cryptoContext.key = key;
 
   std::string cipher;
-  encrypted(cipher, "data");
+  if (!encrypted(cipher, "data")) {
+    throw std::runtime_error{"wallet data serialization failed"};
+  }
 
   std::string plain = decrypt(cipher, cryptoContext);
 
@@ -349,7 +364,9 @@ void WalletSerializerV1::loadWalletV1(Common::IInputStream& source, const Crypto
   subscribeWallets();
 
   bool detailsSaved;
-  serializer(detailsSaved, "has_details");
+  if (!serializer(detailsSaved, "has_details")) {
+    throw std::runtime_error{"details serialization failed"};
+  }
 
   if (detailsSaved) {
     loadWalletV1Details(serializer);
@@ -392,7 +409,9 @@ uint32_t WalletSerializerV1::loadVersion(Common::IInputStream& source) {
   CryptoNote::BinaryInputStreamSerializer s(source);
 
   uint32_t version = std::numeric_limits<uint32_t>::max();
-  s(version, "version");
+  if (!s(version, "version")) {
+    throw std::runtime_error{"version deserialization failed"};
+  }
 
   return version;
 }
@@ -400,7 +419,9 @@ uint32_t WalletSerializerV1::loadVersion(Common::IInputStream& source) {
 void WalletSerializerV1::loadIv(Common::IInputStream& source, Crypto::chacha8_iv& iv) {
   CryptoNote::BinaryInputStreamSerializer s(source);
 
-  s.binary(static_cast<void*>(&iv.data), sizeof(iv.data), "chacha_iv");
+  if (!s.binary(static_cast<void*>(&iv.data), sizeof(iv.data), "chacha_iv")) {
+    throw std::runtime_error{"block serialization failed"};
+  }
 }
 
 void WalletSerializerV1::loadKeys(Common::IInputStream& source, CryptoContext& cryptoContext) {

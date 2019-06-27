@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -67,6 +67,10 @@ std::size_t TransactionPool::size() const {
   XI_CONCURRENT_RLOCK(m_access);
   return m_transactions.size();
 }
+
+std::size_t TransactionPool::cumulativeSize() const { return m_cumulativeSize.load(std::memory_order_consume); }
+
+std::size_t TransactionPool::cumulativeFees() const { return m_cumulativeFees.load(std::memory_order_consume); }
 
 Crypto::Hash TransactionPool::stateHash() const {
   XI_CONCURRENT_RLOCK(m_access);
@@ -353,6 +357,8 @@ bool TransactionPool::removeTransaction(const Crypto::Hash& hash, ITransactionPo
           }
         }
       }
+      m_cumulativeSize -= nfo.transaction().getBlobSize();
+      m_cumulativeFees -= nfo.transaction().getTransactionFee();
     }
     m_transactions.erase(search);
     invalidateStateHash();
@@ -395,7 +401,7 @@ Xi::Result<void> TransactionPool::insertTransaction(CachedTransaction transactio
   auto mainChain = m_blockchain.mainChain();
   if (mainChain == nullptr) return Xi::make_error(Error::MAIN_CHAIN_MISSING);
   if (mainChain->hasTransaction(transaction.getTransactionHash())) return Xi::make_error(Error::ALREADY_MINED);
-  const auto blockVersion = m_blockchain.upgradeManager().getBlockMajorVersion(mainChain->getTopBlockIndex() + 1);
+  const auto blockVersion = m_blockchain.upgradeManager().getBlockVersion(mainChain->getTopBlockIndex() + 1);
   PoolTransactionValidator validator{*this, blockVersion, *mainChain, m_blockchain.currency()};
   auto validationResult = validator.validate(transaction);
   if (validationResult.isError()) {
@@ -423,6 +429,8 @@ Xi::Result<void> TransactionPool::insertTransaction(CachedTransaction transactio
     if (reason != ITransactionPoolObserver::AdditionReason::SkipNotification) {
       m_observers.notify(&ITransactionPoolObserver::transactionAddedToPool, std::cref(transactionHash), reason);
     }
+    m_cumulativeSize += transaction.getBlobSize();
+    m_cumulativeFees += transaction.getTransactionFee();
     return Xi::success();
   }
 }
@@ -453,7 +461,7 @@ void TransactionPool::evaluateBlockVersionUpgradeConstraints() {
   if (eligibleIndex.isError()) {
     m_logger(Logging::ERROR) << "Unable to retrieve eligible index: " << eligibleIndex.error().message();
   }
-  const auto version = m_blockchain.upgradeManager().getBlockMajorVersion(eligibleIndex.value().Height);
+  const auto version = m_blockchain.upgradeManager().getBlockVersion(eligibleIndex.value().Height);
   if (m_eligibleBlockVersion.has_value() && m_eligibleBlockVersion.value() == version) {
     return;
   }
@@ -478,7 +486,7 @@ void TransactionPool::evaluateBlockVersionUpgradeConstraints() {
     }
   }
   for (const auto& hash : transactionOutdated) {
-    removeTransaction(hash, Deletion::BlockMajorVersionUpgrade);
+    removeTransaction(hash, Deletion::BlockVersionUpgrade);
   }
 
   m_eligibleBlockVersion = version;
@@ -528,7 +536,7 @@ uint64_t TransactionPool::getTransactionReceiveTime(const Crypto::Hash& hash) co
   return it->receiveTime();
 }
 
-std::vector<Crypto::Hash> TransactionPool::getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const {
+std::vector<Crypto::Hash> TransactionPool::getTransactionHashesByPaymentId(const PaymentId& paymentId) const {
   XI_CONCURRENT_RLOCK(m_access);
   auto search = m_paymentIds.find(paymentId);
   if (search == m_paymentIds.end()) {

@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -130,9 +130,16 @@ const std::vector<PublicKey>& CachedTransaction::getOutputKeys() const {
   return outputKeys.get();
 }
 
-const boost::optional<Hash>& CachedTransaction::getPaymentId() const {
+const PublicKey& CachedTransaction::getPublicKey() const {
+  if (!publicKey.is_initialized()) {
+    publicKey = getTransactionPublicKeyFromExtra(transaction.extra);
+  }
+  return *publicKey;
+}
+
+const boost::optional<PaymentId>& CachedTransaction::getPaymentId() const {
   if (!paymentIdEvaluated) {
-    Crypto::Hash pid{};
+    PaymentId pid{};
     if (getPaymentIdFromTxExtra(getTransaction().extra, pid)) {
       paymentId = pid;
     }
@@ -161,3 +168,7 @@ uint64_t CachedTransaction::getTransactionFee() const {
   }
   return transactionFee.get();
 }
+
+bool CachedTransaction::isCoinbase() const { return getInputAmount() == 0; }
+
+CachedTransaction CryptoNote::cache(Transaction transaction) { return CachedTransaction{std::move(transaction)}; }

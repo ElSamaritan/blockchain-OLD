@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -37,6 +37,9 @@
 
 namespace CryptoNote {
 
+using Amount = uint64_t;
+using AmountVector = std::vector<uint64_t>;
+
 struct BaseInput {
   /// Index of the block generating coins.
   Xi::Blockchain::Block::Height height;
@@ -62,6 +65,8 @@ typedef std::variant<BaseInput, KeyInput> TransactionInput;
 typedef std::variant<KeyOutput> TransactionOutputTarget;
 
 struct TransactionOutput {
+  using GlobalIndex = uint64_t;
+
   uint64_t amount;
   TransactionOutputTarget target;
 };

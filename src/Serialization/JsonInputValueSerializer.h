@@ -31,31 +31,32 @@ class JsonInputValueSerializer : public ISerializer {
 
   SerializerType type() const override;
 
-  virtual bool beginObject(Common::StringView name) override;
-  virtual void endObject() override;
+  [[nodiscard]] virtual bool beginObject(Common::StringView name) override;
+  [[nodiscard]] virtual bool endObject() override;
 
-  virtual bool beginArray(size_t& size, Common::StringView name) override;
-  virtual bool beginStaticArray(const size_t size, Common::StringView name) override;
-  virtual void endArray() override;
+  [[nodiscard]] virtual bool beginArray(size_t& size, Common::StringView name) override;
+  [[nodiscard]] virtual bool beginStaticArray(const size_t size, Common::StringView name) override;
+  [[nodiscard]] virtual bool endArray() override;
 
-  virtual bool operator()(uint8_t& value, Common::StringView name) override;
-  virtual bool operator()(int16_t& value, Common::StringView name) override;
-  virtual bool operator()(uint16_t& value, Common::StringView name) override;
-  virtual bool operator()(int32_t& value, Common::StringView name) override;
-  virtual bool operator()(uint32_t& value, Common::StringView name) override;
-  virtual bool operator()(int64_t& value, Common::StringView name) override;
-  virtual bool operator()(uint64_t& value, Common::StringView name) override;
-  virtual bool operator()(double& value, Common::StringView name) override;
-  virtual bool operator()(bool& value, Common::StringView name) override;
-  virtual bool operator()(std::string& value, Common::StringView name) override;
-  virtual bool binary(void* value, size_t size, Common::StringView name) override;
-  virtual bool binary(std::string& value, Common::StringView name) override;
-  virtual bool maybe(bool& value, Common::StringView name) override;
-  virtual bool typeTag(TypeTag& tag, Common::StringView name) override;
-  virtual bool flag(std::vector<TypeTag>& flag, Common::StringView name) override;
+  [[nodiscard]] virtual bool operator()(uint8_t& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool operator()(int16_t& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool operator()(uint16_t& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool operator()(int32_t& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool operator()(uint32_t& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool operator()(int64_t& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool operator()(uint64_t& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool operator()(double& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool operator()(bool& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool operator()(std::string& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool binary(void* value, size_t size, Common::StringView name) override;
+  [[nodiscard]] virtual bool binary(std::string& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool binary(Xi::ByteVector& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool maybe(bool& value, Common::StringView name) override;
+  [[nodiscard]] virtual bool typeTag(TypeTag& tag, Common::StringView name) override;
+  [[nodiscard]] virtual bool flag(std::vector<TypeTag>& flag, Common::StringView name) override;
 
   template <typename T>
-  bool operator()(T& value, Common::StringView name) {
+  [[nodiscard]] bool operator()(T& value, Common::StringView name) {
     return ISerializer::operator()(value, name);
   }
 

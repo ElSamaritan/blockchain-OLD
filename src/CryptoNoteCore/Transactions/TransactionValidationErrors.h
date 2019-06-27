@@ -50,8 +50,9 @@ enum class TransactionValidationError {
   INPUT_IDENTICAL_OUTPUT_INDEXES = 10,
   INPUT_KEYIMAGE_ALREADY_SPENT = 11,
   INPUT_INVALID_GLOBAL_INDEX = 12,  ///< The input used could not be found.
-  INPUT_SPEND_LOCKED_OUT =
-      13,  ///< An input used for the transaction is an output of a transaction that is still locked.
+  INPUT_SPEND_LOCKED_OUT = 13,      ///< Transaction contains duplicate global output indices in its input.
+  INPUT_DUPLICATE_GLOBAL_INDEX =
+      48,  ///< An input used for the transaction is an output of a transaction that is still locked.
   EXTRA_MISSING_PUBLIC_KEY = 41,  ///< Every transaction must have at least one embedded public key.
   EXTRA_INVALID_PUBLIC_KEY = 42,  ///< A transaction extra encoded public key must be a valid ecc point.
   EXTRA_INVALID_NONCE = 46,  ///< A transaction extra nonce, may encode a single playment id or custom data indicated by
@@ -94,7 +95,7 @@ enum class TransactionValidationError {
   INPUT_MIXIN_TOO_HIGH = 33,
   INPUT_MIXIN_TOO_LOW = 34,
 
-  __NUM = 48  ///< The count of different enum values, if you add a new one use this as its value and increase this by
+  __NUM = 49  ///< The count of different enum values, if you add a new one use this as its value and increase this by
               ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation
               ///< and tickets aso.
 };
@@ -138,6 +139,8 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Transaction has input with invalid global index";
       case TransactionValidationError::INPUT_SPEND_LOCKED_OUT:
         return "Transaction uses locked input";
+      case TransactionValidationError::INPUT_DUPLICATE_GLOBAL_INDEX:
+        return "Transaction contains global index duplicates";
       case TransactionValidationError::INPUT_INVALID_SIGNATURES:
         return "Transaction has input with invalid signature";
       case TransactionValidationError::INPUT_WRONG_SIGNATURES_COUNT:

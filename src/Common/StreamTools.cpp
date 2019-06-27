@@ -24,6 +24,8 @@
 #include <boost/endian/conversion.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Encoding/VarInt.hh>
+
 namespace Common {
 
 void read(IInputStream& in, void* data, size_t size) {
@@ -37,6 +39,32 @@ void read(IInputStream& in, void* data, size_t size) {
     size -= readSize;
   }
 }
+
+namespace {
+template <typename _IntegerT>
+void genericReadVarint(Common::IInputStream& in, _IntegerT& value) {
+  using namespace Xi;
+  std::array<Byte, Encoding::VarInt::maximumEncodingSize<_IntegerT>()> buffer;
+  size_t i = 0;
+  Common::read(in, buffer[i++]);
+  while (Encoding::VarInt::hasSuccessor(buffer[i - 1])) {
+    const size_t index = i++;
+    if (!(index < buffer.size())) {
+      throw std::runtime_error{"varint buffer overflow."};
+    }
+    Common::read(in, buffer[index]);
+  }
+  Encoding::VarInt::decode(asByteSpan(buffer.data(), i), value).throwOnError();
+}
+
+template <typename _IntegerT>
+void genericWriteVarint(Common::IOutputStream& out, _IntegerT value) {
+  using namespace Xi;
+  std::array<Byte, Encoding::VarInt::maximumEncodingSize<_IntegerT>()> buffer;
+  const auto written = Encoding::VarInt::encode(value, buffer).valueOrThrow();
+  Common::write(out, buffer.data(), written);
+}
+}  // namespace
 
 void read(IInputStream& in, int8_t& value) {
   read(in, &value, sizeof(value));
@@ -84,72 +112,6 @@ void read(IInputStream& in, std::string& data, size_t size) {
   std::vector<char> temp(size);
   read(in, temp.data(), size);
   data.assign(temp.data(), size);
-}
-
-void readVarint(IInputStream& in, uint16_t& value) {
-  uint16_t temp = 0;
-  for (uint8_t shift = 0;; shift += 7) {
-    uint8_t piece;
-    read(in, piece);
-    if (shift >= sizeof(temp) * 8 - 7 && piece >= 1 << (sizeof(temp) * 8 - shift)) {
-      throw std::runtime_error("readVarint, value overflow");
-    }
-
-    temp |= static_cast<size_t>(piece & 0x7f) << shift;
-    if ((piece & 0x80) == 0) {
-      if (piece == 0 && shift != 0) {
-        throw std::runtime_error("readVarint, invalid value representation");
-      }
-
-      break;
-    }
-  }
-
-  value = temp;
-}
-
-void readVarint(IInputStream& in, uint32_t& value) {
-  uint32_t temp = 0;
-  for (uint8_t shift = 0;; shift += 7) {
-    uint8_t piece;
-    read(in, piece);
-    if (shift >= sizeof(temp) * 8 - 7 && piece >= 1 << (sizeof(temp) * 8 - shift)) {
-      throw std::runtime_error("readVarint, value overflow");
-    }
-
-    temp |= static_cast<size_t>(piece & 0x7f) << shift;
-    if ((piece & 0x80) == 0) {
-      if (piece == 0 && shift != 0) {
-        throw std::runtime_error("readVarint, invalid value representation");
-      }
-
-      break;
-    }
-  }
-
-  value = temp;
-}
-
-void readVarint(IInputStream& in, uint64_t& value) {
-  uint64_t temp = 0;
-  for (uint8_t shift = 0;; shift += 7) {
-    uint8_t piece;
-    read(in, piece);
-    if (shift >= sizeof(temp) * 8 - 7 && piece >= 1 << (sizeof(temp) * 8 - shift)) {
-      throw std::runtime_error("readVarint, value overflow");
-    }
-
-    temp |= static_cast<uint64_t>(piece & 0x7f) << shift;
-    if ((piece & 0x80) == 0) {
-      if (piece == 0 && shift != 0) {
-        throw std::runtime_error("readVarint, invalid value representation");
-      }
-
-      break;
-    }
-  }
-
-  value = temp;
 }
 
 void write(IOutputStream& out, const void* data, size_t size) {
@@ -205,22 +167,21 @@ void write(IOutputStream& out, const std::vector<uint8_t>& data) { write(out, da
 
 void write(IOutputStream& out, const std::string& data) { write(out, data.data(), data.size()); }
 
-void writeVarint(IOutputStream& out, uint32_t value) {
-  while (value >= 0x80) {
-    write(out, static_cast<uint8_t>(value | 0x80));
-    value >>= 7;
-  }
-
-  write(out, static_cast<uint8_t>(value));
-}
-
-void writeVarint(IOutputStream& out, uint64_t value) {
-  while (value >= 0x80) {
-    write(out, static_cast<uint8_t>(value | 0x80));
-    value >>= 7;
-  }
-
-  write(out, static_cast<uint8_t>(value));
-}
+void readVarint(IInputStream& in, uint8_t& value) { genericReadVarint(in, value); }
+void readVarint(IInputStream& in, uint16_t& value) { genericReadVarint(in, value); }
+void readVarint(IInputStream& in, uint32_t& value) { genericReadVarint(in, value); }
+void readVarint(IInputStream& in, uint64_t& value) { genericReadVarint(in, value); }
+void readVarint(IInputStream& in, int8_t& value) { genericReadVarint(in, value); }
+void readVarint(IInputStream& in, int16_t& value) { genericReadVarint(in, value); }
+void readVarint(IInputStream& in, int32_t& value) { genericReadVarint(in, value); }
+void readVarint(IInputStream& in, int64_t& value) { genericReadVarint(in, value); }
+void writeVarint(IOutputStream& out, uint8_t value) { genericWriteVarint(out, value); }
+void writeVarint(IOutputStream& out, uint16_t value) { genericWriteVarint(out, value); }
+void writeVarint(IOutputStream& out, uint32_t value) { genericWriteVarint(out, value); }
+void writeVarint(IOutputStream& out, uint64_t value) { genericWriteVarint(out, value); }
+void writeVarint(IOutputStream& out, int8_t value) { genericWriteVarint(out, value); }
+void writeVarint(IOutputStream& out, int16_t value) { genericWriteVarint(out, value); }
+void writeVarint(IOutputStream& out, int32_t value) { genericWriteVarint(out, value); }
+void writeVarint(IOutputStream& out, int64_t value) { genericWriteVarint(out, value); }
 
 }  // namespace Common

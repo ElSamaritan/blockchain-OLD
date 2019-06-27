@@ -136,8 +136,7 @@ const Maybe<const AddressBookEntry> getAddressBookEntry(AddressBook addressBook)
   }
 }
 
-void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::BlockHeight height,
-                         const CryptoNote::Currency& currency, std::optional<CryptoNote::FeeAddress> feeAddress) {
+void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::INode& node) {
   auto addressBook = getAddressBook();
 
   if (isAddressBookEmpty(addressBook)) {
@@ -176,9 +175,9 @@ void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::Blo
   auto originalAddress = addressBookEntry.address;
   auto address = originalAddress;
   auto amount = maybeAmount.x;
-  auto fee = currency.minimumFee();
+  auto fee = node.currency().minimumFee(node.getLastKnownBlockVersion());
   auto extra = getExtraFromPaymentID(addressBookEntry.paymentID);
-  auto mixin = CryptoNote::getDefaultMixinByIndex(height.toIndex());
+  auto mixin = node.currency().requiredMixin(node.getLastKnownBlockVersion());
   auto integrated = addressBookEntry.integratedAddress;
 
   if (integrated) {
@@ -186,8 +185,8 @@ void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::Blo
     address = addrPaymentIDPair.x.first;
     extra = getExtraFromPaymentID(addrPaymentIDPair.x.second);
   }
-  doTransfer(address, amount, fee, extra, walletInfo, height, integrated, mixin, feeAddress, originalAddress,
-             unlockTimestamp, currency);
+  doTransfer(address, amount, fee, extra, walletInfo, integrated, mixin, node.feeAddress(), originalAddress,
+             unlockTimestamp, node.currency());
 }
 
 bool isAddressBookEmpty(AddressBook addressBook) {

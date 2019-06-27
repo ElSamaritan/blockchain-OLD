@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -42,7 +42,7 @@ struct BlockVersionCheckpointResolver {
   static inline Blockchain::Block::Version version(uint32_t height);
 
   template <Blockchain::Block::Version::value_type _Index>
-  static inline constexpr bool exists(Blockchain::Block::Version majorVersion);
+  static inline constexpr bool exists(Blockchain::Block::Version version);
 
   template <Blockchain::Block::Version::value_type>
   static inline void versions(std::vector<Blockchain::Block::Version>& versions);
@@ -51,7 +51,7 @@ struct BlockVersionCheckpointResolver {
   static inline Blockchain::Block::Version maximum();
 
   template <Blockchain::Block::Version::value_type _UpgradeHeight>
-  static inline uint32_t upgradeHeight(Blockchain::Block::Version majorVersion);
+  static inline uint32_t upgradeHeight(Blockchain::Block::Version version);
 
   template <Blockchain::Block::Version::value_type>
   static inline void upgradeHeights(std::vector<uint32_t>& heights);
@@ -73,13 +73,13 @@ inline Blockchain::Block::Version BlockVersionCheckpointResolver::version(uint32
 }
 
 template <>
-inline constexpr bool BlockVersionCheckpointResolver::exists<0>(Blockchain::Block::Version majorVersion) {
-  return BlockVersionCheckpoint<0>::version() == majorVersion;
+inline constexpr bool BlockVersionCheckpointResolver::exists<0>(Blockchain::Block::Version version) {
+  return BlockVersionCheckpoint<0>::version() == version;
 }
 
 template <uint8_t _Version>
-inline constexpr bool BlockVersionCheckpointResolver::exists(Blockchain::Block::Version majorVersion) {
-  return BlockVersionCheckpoint<_Version>::version() == majorVersion || exists<_Version - 1>(majorVersion);
+inline constexpr bool BlockVersionCheckpointResolver::exists(Blockchain::Block::Version version) {
+  return BlockVersionCheckpoint<_Version>::version() == version || exists<_Version - 1>(version);
 }
 
 template <>
@@ -102,18 +102,18 @@ inline Blockchain::Block::Version BlockVersionCheckpointResolver::maximum() {
 }
 
 template <>
-inline uint32_t BlockVersionCheckpointResolver::upgradeHeight<0>(Blockchain::Block::Version majorVersion) {
-  if (majorVersion != BlockVersionCheckpoint<0>::version())
+inline uint32_t BlockVersionCheckpointResolver::upgradeHeight<0>(Blockchain::Block::Version version) {
+  if (version != BlockVersionCheckpoint<0>::version())
     return static_cast<uint32_t>(-1);
   else
     return BlockVersionCheckpoint<0>::height();
 }
 template <uint8_t _Index>
-inline uint32_t BlockVersionCheckpointResolver::upgradeHeight(Blockchain::Block::Version majorVersion) {
-  if (majorVersion == BlockVersionCheckpoint<_Index>::version())
+inline uint32_t BlockVersionCheckpointResolver::upgradeHeight(Blockchain::Block::Version version) {
+  if (version == BlockVersionCheckpoint<_Index>::version())
     return BlockVersionCheckpoint<_Index>::height();
   else
-    return upgradeHeight<_Index - 1>(majorVersion);
+    return upgradeHeight<_Index - 1>(version);
 }
 
 template <>
@@ -144,8 +144,8 @@ inline Blockchain::Block::Version version(uint32_t height) {
   return BlockVersionCheckpointResolver::version<CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX>(height);
 }
 
-inline constexpr bool exists(Blockchain::Block::Version majorVersion) {
-  return BlockVersionCheckpointResolver::exists<CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX>(majorVersion);
+inline constexpr bool exists(Blockchain::Block::Version version) {
+  return BlockVersionCheckpointResolver::exists<CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX>(version);
 }
 
 inline std::vector<Blockchain::Block::Version> versions() {
@@ -158,8 +158,8 @@ inline Blockchain::Block::Version maximum() {
   return BlockVersionCheckpointResolver::maximum<CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX>();
 }
 
-inline uint32_t upgradeHeight(Blockchain::Block::Version majorVersion) {
-  return BlockVersionCheckpointResolver::upgradeHeight<CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX>(majorVersion);
+inline uint32_t upgradeHeight(Blockchain::Block::Version version) {
+  return BlockVersionCheckpointResolver::upgradeHeight<CURRENT_BLOCK_VERSION_CHECKPOINT_INDEX>(version);
 }
 
 inline std::vector<uint32_t> upgradeHeights() {

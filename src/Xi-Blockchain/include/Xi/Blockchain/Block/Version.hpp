@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -26,6 +26,7 @@
 #include <cinttypes>
 #include <string>
 
+#include <Xi/Global.hh>
 #include <Serialization/ISerializer.h>
 #include <Xi/TypeSafe/Integral.hpp>
 
@@ -46,6 +47,9 @@ namespace Block {
  */
 struct Version : TypeSafe::EnableIntegralFromThis<uint8_t, Version> {
   using EnableIntegralFromThis::EnableIntegralFromThis;
+
+  Version();
+  XI_DEFAULT_COPY(Version);
 
   /*!
    * \brief Null Well defined optional state, the null value is interpreted as no value given.

@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -42,8 +42,8 @@ class NoVotingUpgradeDetector : public IUpgradeDetector {
 
 /*!
  * \brief makeUpgradeDetector creates a new upgrade detector for the target version and height
- * \param targetVersion The major block version to upgrade to
- * \param upgradeIndex The height of the blockchain when the new major version should be applied
+ * \param targetVersion The block version to upgrade to
+ * \param upgradeIndex The height of the blockchain when the new version should be applied
  * \return An upgrade detector managing the upgrade by a version dependent strategy voting/no voting
  */
 std::unique_ptr<IUpgradeDetector> makeUpgradeDetector(Xi::Blockchain::Block::Version targetVersion,

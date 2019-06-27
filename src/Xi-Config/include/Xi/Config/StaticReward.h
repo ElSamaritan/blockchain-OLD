@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -51,7 +51,7 @@ namespace StaticReward {}
 
 // clang-format off
 //                        (_Index, _Version,                _Amount,  _Address...
-MakeStaticRewardCheckpoint(     0,        1, Coin::toAtomicUnits(1),  "Xizwu63fgj8bS4DWvFAkwT55jU4W94JUR7YTszAyUNua4R8ZueBnxchH9pFBxUj9nd5Ver5CbE7wCTpaKzLuSpds8nitKP6v5B")
+MakeStaticRewardCheckpoint(     0,        1, Coin::toAtomicUnits(1),  "gxi1Umur5nMKLUtwEiLmXKQUovncmq1z5bFZqfsEbKmcUfYJp1N426hFWjDvrMpCBne29B9GbXgB31H4ohQbGUrr1HRyHpefVP")
 // clang-format on
 
 #define CURRENT_STATIC_REWARD_CHECKPOINT_INDEX 0

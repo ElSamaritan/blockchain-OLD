@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -36,9 +36,11 @@ typedef struct xi_crypto_random_state xi_crypto_random_state;
 xi_crypto_random_state *xi_crypto_random_state_create(void);
 
 int xi_crypto_random_state_init(xi_crypto_random_state *state);
-int xi_crypto_random_state_init_determentistic(xi_crypto_random_state *state, const xi_byte_t *seed, size_t seedLength);
+int xi_crypto_random_state_init_deterministic(xi_crypto_random_state *state, const xi_byte_t *seed, size_t seedLength);
 void xi_crypto_random_state_permutation(xi_crypto_random_state *state);
+void xi_crypto_random_state_permutation_deterministic(xi_crypto_random_state *state);
 int xi_crypto_random_bytes_from_state(xi_byte_t *out, size_t count, xi_crypto_random_state *state);
+int xi_crypto_random_bytes_from_state_deterministic(xi_byte_t *out, size_t count, xi_crypto_random_state *state);
 void xi_crypto_random_state_destroy(xi_crypto_random_state *state);
 
 int xi_crypto_random_system_bytes(xi_byte_t *out, size_t count);
@@ -53,35 +55,21 @@ int xi_crypto_random_bytes_determenistic(xi_byte_t *out, size_t count, const xi_
 
 #include <type_traits>
 
+#include <Xi/Result.h>
 #include <Xi/Exceptional.hpp>
+
+#include "Xi/Crypto/Random/RandomError.hpp"
+#include "Xi/Crypto/Random/Engine.hpp"
 
 namespace Xi {
 namespace Crypto {
 namespace Random {
-XI_DECLARE_EXCEPTIONAL_CATEGORY(Random)
-XI_DECLARE_EXCEPTIONAL_INSTANCE(Generation, "failed to generate random bytes", Random)
 
-ByteVector generate(size_t count);
-ByteVector generate(size_t count, ConstByteSpan seed);
+Result<ByteVector> generate(size_t count);
+Result<ByteVector> generate(size_t count, ConstByteSpan seed);
 
-void generate(ByteSpan out);
-void generate(ByteSpan out, ConstByteSpan seed);
-
-template <typename _ValueT>
-typename std::enable_if_t<std::is_standard_layout_v<_ValueT>, _ValueT> generate() {
-  using value_type = std::remove_cv_t<_ValueT>;
-  value_type reval{};
-  generate(Xi::ByteSpan{reinterpret_cast<Xi::Byte *>(&reval), sizeof(value_type)});
-  return reval;
-}
-
-template <typename _ValueT>
-typename std::enable_if_t<std::is_standard_layout_v<_ValueT>, _ValueT> generate(ConstByteSpan seed) {
-  using value_type = std::remove_cv_t<_ValueT>;
-  value_type reval{};
-  generate(Xi::ByteSpan{reinterpret_cast<Xi::Byte *>(&reval), sizeof(value_type)}, seed);
-  return reval;
-}
+RandomError generate(ByteSpan out);
+RandomError generate(ByteSpan out, ConstByteSpan seed);
 
 }  // namespace Random
 }  // namespace Crypto

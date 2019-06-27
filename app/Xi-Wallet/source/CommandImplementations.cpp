@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include <Xi/Algorithm/String.h>
 #include <Common/FormatTools.h>
 #include <Common/StringTools.h>
 
@@ -469,5 +470,117 @@ void advanced(std::shared_ptr<WalletInfo> wallet) {
     printCommands(advancedViewWalletCommands(), static_cast<int>(basicViewWalletCommands().size()));
   } else {
     printCommands(advancedCommands(), static_cast<int>(basicCommands().size()));
+  }
+}
+
+void generatePaymentId() {
+  try {
+    CryptoNote::PaymentId pid{};
+    Crypto::SecretKey key{};
+    Crypto::generate_keys(pid, key);
+    std::cout << InformationMsg("PaymentId: ") << SuccessMsg(pid.toString()) << std::endl
+              << std::endl
+              << SuggestionMsg("You can proof your ownership of this payment id using the following secret key:")
+              << std::endl
+              << std::endl
+              << SuccessMsg(key.toString()) << std::endl
+              << std::endl
+              << WarningMsg(
+                     "Do not share your proof of ownership. If you are asked to proof your ownership use the "
+                     "poof_payment_id_ownership command and provide the previous key.")
+              << std::endl;
+  } catch (std::exception &e) {
+    std::cout << ErrorMsg() << "Failed to generate payment id: " << e.what() << std::endl;
+  }
+}
+
+void proofPaymentIdOwnership() {
+  try {
+    while (true) {
+    PROOF_PAYMENT_ID_OWNSERSHIP:
+      std::cout << "Please provide the payment id key: " << std::endl;
+
+      std::string line;
+      std::getline(std::cin, line);
+      if (line == "cancel") {
+        break;
+      }
+      auto key = Crypto::SecretKey::fromString(Xi::trim(line));
+      if (key.isError()) {
+        std::cout << ErrorMsg(std::string{"Invalid key: "} + key.error().message()) << std::endl;
+        goto PROOF_PAYMENT_ID_OWNSERSHIP;
+      }
+      ::Crypto::PublicKey pb{};
+      if (!::Crypto::secret_key_to_public_key(*key, pb)) {
+        std::cout << ErrorMsg("Invalid key: public key derivation failed.") << std::endl;
+        goto PROOF_PAYMENT_ID_OWNSERSHIP;
+      }
+
+      std::cout << "Please provide a user provided string: " << std::endl;
+      std::getline(std::cin, line);
+      if (line == "cancel") {
+        break;
+      }
+
+      line = Xi::trim(line);
+      auto hash = ::Crypto::Hash::compute(Xi::asByteSpan(line)).takeOrThrow();
+      ::Crypto::Signature sig{};
+      ::Crypto::generate_signature(hash, pb, *key, sig);
+      std::cout << InformationMsg("Signature generation succeeded:") << std::endl
+                << SuccessMsg(sig.toString()) << std::endl
+                << std::endl
+                << InformationMsg("You can now securely send this proof to the user asking.") << std::endl;
+      break;
+    }
+  } catch (std::exception &e) {
+    std::cout << ErrorMsg(std::string{"Failed to proof payment id ownership: "} + e.what()) << std::endl;
+  }
+}
+
+void checkPaymentIdOwnership() {
+  try {
+    while (true) {
+    CHECK_PAYMENT_ID_OWNSERSHIP_ASK_FOR_PAYMENT_ID:
+      std::cout << "Please provide the payment id: " << std::endl;
+      std::string line;
+      std::getline(std::cin, line);
+      if (line == "cancel") {
+        break;
+      }
+
+      auto pid = CryptoNote::PaymentId::fromString(Xi::trim(line));
+      if (pid.isError()) {
+        std::cout << ErrorMsg("Invalid payment id: " + pid.error().message()) << std::endl;
+        goto CHECK_PAYMENT_ID_OWNSERSHIP_ASK_FOR_PAYMENT_ID;
+      }
+
+      std::cout << "Please provide your signing request: " << std::endl;
+      std::getline(std::cin, line);
+      if (line == "cancel") {
+        break;
+      }
+      auto hash = ::Crypto::Hash::compute(Xi::asByteSpan(line)).takeOrThrow();
+
+    CHECK_PAYMENT_ID_OWNSERSHIP_ASK_FOR_SIGNAUTRE:
+      std::cout << "Please provide the signature returned: " << std::endl;
+      std::getline(std::cin, line);
+      if (line == "cancel") {
+        break;
+      }
+      auto signature = ::Crypto::Signature::fromString(Xi::trim(line));
+      if (signature.isError()) {
+        std::cout << ErrorMsg("Invalid Signature: " + signature.error().message()) << std::endl;
+        goto CHECK_PAYMENT_ID_OWNSERSHIP_ASK_FOR_SIGNAUTRE;
+      }
+
+      if (::Crypto::check_signature(hash, *pid, *signature)) {
+        std::cout << SuccessMsg("VALID") << std::endl;
+      } else {
+        std::cout << ErrorMsg("INVALID") << std::endl;
+      }
+      break;
+    }
+  } catch (std::exception &e) {
+    std::cout << ErrorMsg("Failed to check payment ownership: " + std::string{e.what()}) << std::endl;
   }
 }

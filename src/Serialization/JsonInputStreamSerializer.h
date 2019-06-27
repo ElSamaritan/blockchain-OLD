@@ -26,7 +26,7 @@
 namespace CryptoNote {
 
 // deserialization
-class JsonInputStreamSerializer : public JsonInputValueSerializer {
+class JsonInputStreamSerializer final : public JsonInputValueSerializer {
  public:
   JsonInputStreamSerializer(std::istream& stream);
   virtual ~JsonInputStreamSerializer();

@@ -55,6 +55,7 @@ class NodeRpcProxy : public CryptoNote::INode {
   virtual bool shutdown() override;
 
   virtual size_t getPeerCount() const override;
+  virtual BlockVersion getLastKnownBlockVersion() const override;
   virtual BlockHeight getLastLocalBlockHeight() const override;
   virtual BlockHeight getLastKnownBlockHeight() const override;
   virtual uint32_t getLocalBlockCount() const override;
@@ -70,8 +71,7 @@ class NodeRpcProxy : public CryptoNote::INode {
 
   virtual void getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount,
                                           std::vector<Crypto::Hash>& blockHashes, const Callback& callback) override;
-  virtual void getTransactionHashesByPaymentId(const Crypto::Hash& paymentId,
-                                               std::vector<Crypto::Hash>& transactionHashes,
+  virtual void getTransactionHashesByPaymentId(const PaymentId& paymentId, std::vector<Crypto::Hash>& transactionHashes,
                                                const Callback& callback) override;
 
   virtual BlockHeaderInfo getLastLocalBlockHeaderInfo() const override;
@@ -145,7 +145,7 @@ class NodeRpcProxy : public CryptoNote::INode {
   std::error_code doGetBlocksByHash(const std::vector<Crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks);
   std::error_code doGetRawBlocksByRange(BlockHeight height, uint32_t count, std::vector<RawBlock>& blocks);
   std::error_code doGetBlock(const BlockHeight blockHeight, BlockDetails& block);
-  std::error_code doGetTransactionHashesByPaymentId(const Crypto::Hash& paymentId,
+  std::error_code doGetTransactionHashesByPaymentId(const PaymentId& paymentId,
                                                     std::vector<Crypto::Hash>& transactionHashes);
   std::error_code doGetTransactions(const std::vector<Crypto::Hash>& transactionHashes,
                                     std::vector<TransactionDetails>& transactions);
@@ -185,6 +185,7 @@ class NodeRpcProxy : public CryptoNote::INode {
   std::atomic_bool m_pollUpdates{true};
   std::atomic<size_t> m_peerCount;
   std::atomic<BlockHeight> m_networkHeight;
+  std::atomic<BlockVersion::value_type> m_networkVersion;
   std::atomic<BlockHeight> m_nodeHeight;
 
   BlockHeaderInfo lastLocalBlockHeaderInfo;

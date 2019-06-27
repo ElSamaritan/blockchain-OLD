@@ -27,9 +27,9 @@ std::string serialize(const RawBlock& value, const std::string& name) {
   CryptoNote::BinaryOutputStreamSerializer serializer(stream);
 
   Xi::exceptional_if_not<SerializationError>(serializer.beginObject(name));
-  Xi::exceptional_if_not<SerializationError>(serializer(const_cast<RawBlock&>(value).block, "raw_block"));
+  Xi::exceptional_if_not<SerializationError>(serializer(const_cast<RawBlock&>(value).blockTemplate, "raw_block"));
   Xi::exceptional_if_not<SerializationError>(serializer(const_cast<RawBlock&>(value).transactions, "raw_transactions"));
-  serializer.endObject();
+  Xi::exceptional_if_not<SerializationError>(serializer.endObject());
 
   return ss.str();
 }
@@ -39,9 +39,9 @@ void deserialize(const std::string& serialized, RawBlock& value, const std::stri
   Common::StdInputStream stream(ss);
   CryptoNote::BinaryInputStreamSerializer serializer(stream);
   Xi::exceptional_if_not<DeserializationError>(serializer.beginObject(name));
-  Xi::exceptional_if_not<DeserializationError>(serializer(value.block, "raw_block"));
+  Xi::exceptional_if_not<DeserializationError>(serializer(value.blockTemplate, "raw_block"));
   Xi::exceptional_if_not<DeserializationError>(serializer(value.transactions, "raw_transactions"));
-  serializer.endObject();
+  Xi::exceptional_if_not<SerializationError>(serializer.endObject());
 }
 }  // namespace DB
 }  // namespace CryptoNote

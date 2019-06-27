@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -26,6 +26,7 @@
 
 #include <Common/StringTools.h>
 
+#include "crypto/crypto-ops.h"
 #include "crypto/Types/Signature.h"
 
 const Crypto::Signature Crypto::Signature::Null{};
@@ -33,8 +34,14 @@ const Crypto::Signature Crypto::Signature::Null{};
 Xi::Result<Crypto::Signature> Crypto::Signature::fromString(const std::string &hex) {
   XI_ERROR_TRY();
   Signature reval;
+  if (Signature::bytes() * 2 != hex.size()) {
+    throw std::runtime_error{"wrong hex size"};
+  }
   if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
     throw std::runtime_error{"invalid hex string"};
+  }
+  if (!reval.isValid()) {
+    throw std::runtime_error{"signature is invalid"};
   }
   return success(std::move(reval));
   XI_ERROR_CATCH();
@@ -48,6 +55,10 @@ Crypto::Signature::~Signature() {}
 
 std::string Crypto::Signature::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
 
+bool Crypto::Signature::isValid() const { return sc_check(data()) == 0 && sc_check(data() + 32) == 0; }
+
+bool Crypto::Signature::isNull() const { return (*this) == Null; }
+
 Xi::ConstByteSpan Crypto::Signature::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
 
 Xi::ByteSpan Crypto::Signature::span() { return Xi::ByteSpan{data(), bytes()}; }
@@ -55,5 +66,7 @@ Xi::ByteSpan Crypto::Signature::span() { return Xi::ByteSpan{data(), bytes()}; }
 void Crypto::Signature::nullify() { fill(0); }
 
 bool Crypto::serialize(Crypto::Signature &signature, Common::StringView name, CryptoNote::ISerializer &serializer) {
-  return serializer.binary(signature.data(), Signature::bytes(), name);
+  XI_RETURN_EC_IF_NOT(serializer.binary(signature.data(), Signature::bytes(), name), false);
+  XI_RETURN_EC_IF_NOT(signature.isValid(), false);
+  return true;
 }

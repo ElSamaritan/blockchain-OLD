@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace Common {
@@ -51,6 +52,7 @@ class JsonValue {
   explicit JsonValue(const Object& value);
   explicit JsonValue(Object&& value);
   explicit JsonValue(Real value);
+  explicit JsonValue(std::string_view value);
   explicit JsonValue(const String& value);
   explicit JsonValue(String&& value);
   template <size_t size>

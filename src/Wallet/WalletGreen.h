@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -125,8 +125,7 @@ class WalletGreen : public IWallet,
   virtual void stop() override;
   virtual WalletEvent getEvent() override;
 
-  virtual size_t createFusionTransaction(uint64_t threshold, uint16_t mixin,
-                                         const std::vector<std::string>& sourceAddresses = {},
+  virtual size_t createFusionTransaction(uint64_t threshold, const std::vector<std::string>& sourceAddresses = {},
                                          const std::string& destinationAddress = "") override;
   virtual bool isFusionTransaction(size_t transactionId) const override;
   virtual IFusionManager::EstimateResult estimate(uint64_t threshold,

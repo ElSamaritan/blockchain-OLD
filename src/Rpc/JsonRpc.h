@@ -102,13 +102,26 @@ class JsonRpcRequest {
 
   template <typename T>
   bool loadParams(T& v) const {
-    loadFromJsonValue(v, psReq.contains("params") ? psReq("params") : Common::JsonValue(Common::JsonValue::NIL));
+    JsonValue params{JsonValue::OBJECT};
+    if (psReq.contains("params")) {
+      params.set("", psReq("params"));
+    } else {
+      params.set("", JsonValue{JsonValue::NIL});
+    }
+    JsonInputValueSerializer input{std::move(params)};
+    XI_RETURN_EC_IF_NOT(input(v, ""), false);
     return true;
   }
 
   template <typename T>
   bool setParams(const T& v) {
-    psReq.set("params", storeToJsonValue(v));
+    JsonOutputStreamSerializer output{};
+    XI_RETURN_EC_IF_NOT(output(const_cast<T&>(v), ""), false);
+    JsonValue params{JsonValue::NIL};
+    if (output.getValue().contains("")) {
+      params = std::move(output.getValue()(""));
+    }
+    psReq.set("params", std::move(params));
     return true;
   }
 
@@ -172,17 +185,27 @@ class JsonRpcResponse {
 
   template <typename T>
   bool setResult(const T& v) {
-    psResp.set("result", storeToJsonValue(v));
+    JsonOutputStreamSerializer output{};
+    XI_RETURN_EC_IF_NOT(output(const_cast<T&>(v), ""), false);
+    JsonValue result{JsonValue::NIL};
+    if (output.getValue().contains("")) {
+      result = std::move(output.getValue()(""));
+    }
+    psResp.set("result", std::move(result));
     return true;
   }
 
   template <typename T>
   bool getResult(T& v) const {
-    if (!psResp.contains("result")) {
-      return false;
+    JsonValue result{JsonValue::OBJECT};
+    if (psResp.contains("result")) {
+      result.set("", psResp("result"));
+    } else {
+      result.set("", JsonValue{JsonValue::NIL});
     }
 
-    loadFromJsonValue(v, psResp("result"));
+    JsonInputValueSerializer input{std::move(result)};
+    XI_RETURN_EC_IF_NOT(input(v, ""), false);
     return true;
   }
 
@@ -210,17 +233,8 @@ bool invokeMethod(const JsonRpcRequest& jsReq, JsonRpcResponse& jsRes, Handler h
   Request req;
   Response res;
 
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4127)
-#endif
-  if (!std::is_same<Request, CryptoNote::EMPTY_STRUCT>::value) {
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
-    if (!jsReq.loadParams(req)) {
-      throw JsonRpcError(JsonRpc::errInvalidParams);
-    }
+  if (!jsReq.loadParams(req)) {
+    throw JsonRpcError(JsonRpc::errInvalidParams);
   }
 
   bool result = handler(req, res);

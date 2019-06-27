@@ -359,7 +359,7 @@ bool BlockchainExplorer::getTransactions(const std::vector<Hash>& transactionHas
   return true;
 }
 
-bool BlockchainExplorer::getTransactionsByPaymentId(const Hash& paymentId,
+bool BlockchainExplorer::getTransactionsByPaymentId(const PaymentId& paymentId,
                                                     std::vector<TransactionDetails>& transactions) {
   if (state.load() != INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
@@ -419,18 +419,18 @@ bool BlockchainExplorer::getPoolState(const std::vector<Hash>& knownPoolTransact
   return getTransactions(newTransactionsHashes, newTransactions);
 }
 
-uint64_t BlockchainExplorer::getRewardBlocksWindow(BlockVersion majorVersion) {
+uint64_t BlockchainExplorer::getRewardBlocksWindow(BlockVersion version) {
   if (state.load() != INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
-  return Xi::Config::MinerReward::window(majorVersion);
+  return Xi::Config::MinerReward::window(version);
 }
 
-uint64_t BlockchainExplorer::getFullRewardMaxBlockSize(BlockVersion majorVersion) {
+uint64_t BlockchainExplorer::getFullRewardMaxBlockSize(BlockVersion version) {
   if (state.load() != INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
-  return Xi::Config::MinerReward::fullRewardZone(majorVersion);
+  return Xi::Config::MinerReward::fullRewardZone(version);
 }
 
 bool BlockchainExplorer::isSynchronized() {

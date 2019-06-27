@@ -20,28 +20,26 @@
 #include <cassert>
 #include <stdexcept>
 #include <unordered_set>
+#include <cstring>
 
 #include <Xi/Global.hh>
+#include <Xi/Exceptions.hpp>
 
 #include "Common/StringTools.h"
 
 using Common::JsonValue;
 using namespace CryptoNote;
 
-JsonInputValueSerializer::JsonInputValueSerializer(const Common::JsonValue& _value) {
-  if (!_value.isObject()) {
-    throw std::runtime_error("Serializer doesn't support this type of serialization: Object expected.");
-  }
-
-  chain.push_back(&_value);
+JsonInputValueSerializer::JsonInputValueSerializer(const Common::JsonValue& _value) : value(_value) {
+  Xi::exceptional_if_not<Xi::InvalidArgumentError>(value.isArray() || value.isObject(),
+                                                   "root json entity must be an object or array.");
+  chain.push_back(&value);
 }
 
 JsonInputValueSerializer::JsonInputValueSerializer(Common::JsonValue&& _value) : value(std::move(_value)) {
-  if (!this->value.isObject()) {
-    throw std::runtime_error("Serializer doesn't support this type of serialization: Object expected.");
-  }
-
-  chain.push_back(&this->value);
+  Xi::exceptional_if_not<Xi::InvalidArgumentError>(value.isArray() || value.isObject(),
+                                                   "root json entity must be an object or array.");
+  chain.push_back(&value);
 }
 
 JsonInputValueSerializer::~JsonInputValueSerializer() {}
@@ -49,16 +47,21 @@ JsonInputValueSerializer::~JsonInputValueSerializer() {}
 ISerializer::SerializerType JsonInputValueSerializer::type() const { return ISerializer::INPUT; }
 
 bool JsonInputValueSerializer::beginObject(Common::StringView name) {
+  XI_RETURN_EC_IF(chain.empty(), false);
   const JsonValue* parent = chain.back();
 
   if (parent->isArray()) {
+    XI_RETURN_EC_IF(idxs.empty(), false);
+    XI_RETURN_EC_IF_NOT(idxs.back() < parent->size(), false);
     const JsonValue& v = (*parent)[idxs.back()++];
+    XI_RETURN_EC_IF_NOT(v.isObject(), false);
     chain.push_back(&v);
     return true;
   }
 
   if (parent->contains(std::string(name))) {
     const JsonValue& v = (*parent)(std::string(name));
+    XI_RETURN_EC_IF_NOT(v.isObject(), false);
     chain.push_back(&v);
     return true;
   }
@@ -66,25 +69,40 @@ bool JsonInputValueSerializer::beginObject(Common::StringView name) {
   return false;
 }
 
-void JsonInputValueSerializer::endObject() {
-  assert(!chain.empty());
+bool JsonInputValueSerializer::endObject() {
+  XI_RETURN_EC_IF(chain.empty(), false);
+  XI_RETURN_EC_IF_NOT(chain.back()->isObject(), false);
   chain.pop_back();
+  return true;
 }
 
 bool JsonInputValueSerializer::beginArray(size_t& size, Common::StringView name) {
+  XI_RETURN_EC_IF(chain.empty(), false);
   const JsonValue* parent = chain.back();
   std::string strName(name);
 
-  if (parent->contains(strName)) {
-    const JsonValue& arr = (*parent)(strName);
-    size = arr.size();
-    chain.push_back(&arr);
+  if (parent->isArray()) {
+    XI_RETURN_EC_IF_NOT(idxs.back() < parent->size(), false);
+    const JsonValue& v = (*parent)[idxs.back()++];
+    XI_RETURN_EC_IF_NOT(v.isArray(), false);
+    size = v.size();
+    chain.push_back(&v);
     idxs.push_back(0);
     return true;
+  } else {
+    XI_RETURN_EC_IF_NOT(parent->isObject(), false);
+    if (parent->contains(strName)) {
+      const JsonValue& arr = (*parent)(strName);
+      XI_RETURN_EC_IF_NOT(arr.isArray(), false);
+      size = arr.size();
+      chain.push_back(&arr);
+      idxs.push_back(0);
+      return true;
+    } else {
+      size = 0;
+      return true;
+    }
   }
-
-  size = 0;
-  return false;
 }
 
 bool JsonInputValueSerializer::beginStaticArray(const size_t size, Common::StringView name) {
@@ -94,12 +112,18 @@ bool JsonInputValueSerializer::beginStaticArray(const size_t size, Common::Strin
   return true;
 }
 
-void JsonInputValueSerializer::endArray() {
+bool JsonInputValueSerializer::endArray() {
   assert(!chain.empty());
   assert(!idxs.empty());
 
+  XI_RETURN_EC_IF(chain.empty(), false);
+  XI_RETURN_EC_IF(idxs.empty(), false);
+  XI_RETURN_EC_IF_NOT(chain.back()->isArray(), false);
+
   chain.pop_back();
   idxs.pop_back();
+
+  return true;
 }
 
 bool JsonInputValueSerializer::operator()(uint16_t& _value, Common::StringView name) { return getNumber(name, _value); }
@@ -120,42 +144,51 @@ bool JsonInputValueSerializer::operator()(uint8_t& _value, Common::StringView na
 
 bool JsonInputValueSerializer::operator()(std::string& _value, Common::StringView name) {
   auto ptr = getValue(name);
-  if (ptr == nullptr) {
-    return false;
-  }
+  XI_RETURN_EC_IF(ptr == nullptr, false);
+  XI_RETURN_EC_IF_NOT(ptr->isString(), false);
   _value = ptr->getString();
   return true;
 }
 
 bool JsonInputValueSerializer::operator()(bool& _value, Common::StringView name) {
   auto ptr = getValue(name);
-  if (ptr == nullptr) {
-    return false;
-  }
+  XI_RETURN_EC_IF(ptr == nullptr, false);
+  XI_RETURN_EC_IF_NOT(ptr->isBool(), false);
   _value = ptr->getBool();
   return true;
 }
 
 bool JsonInputValueSerializer::binary(void* _value, size_t size, Common::StringView name) {
   auto ptr = getValue(name);
-  if (ptr == nullptr) {
-    return false;
-  }
-
-  Common::fromHex(ptr->getString(), _value, size);
-  return true;
+  XI_RETURN_EC_IF(ptr == nullptr, false);
+  XI_RETURN_EC_IF_NOT(ptr->isString(), false);
+  const auto readSize = Common::fromHex(ptr->getString(), _value, size);
+  return readSize == size;
 }
 
 bool JsonInputValueSerializer::binary(std::string& _value, Common::StringView name) {
   auto ptr = getValue(name);
   if (ptr == nullptr) {
-    return false;
+    _value = "";
+    return true;
   }
-
+  XI_RETURN_EC_IF_NOT(ptr->isString(), false);
   std::string valueHex = ptr->getString();
   _value = Common::asString(Common::fromHex(valueHex));
 
   return true;
+}
+
+bool JsonInputValueSerializer::binary(Xi::ByteVector& _value, Common::StringView name) {
+  std::string blob{};
+  XI_RETURN_EC_IF_NOT(binary(blob, name), false);
+  if (!blob.empty()) {
+    _value.resize(blob.size());
+    std::memcpy(_value.data(), blob.data(), _value.size());
+    return true;
+  } else {
+    return true;
+  }
 }
 
 bool JsonInputValueSerializer::maybe(bool& _value, Common::StringView name) {
@@ -189,13 +222,16 @@ bool JsonInputValueSerializer::flag(std::vector<TypeTag>& flag, Common::StringVi
     XI_RETURN_EC_IF_NOT(processedFlags.insert(iTag.text()).second, false);
     flag.push_back(iTag);
   }
-  endArray();
+  XI_RETURN_EC_IF_NOT(endArray(), false);
   return true;
 }
 
 const JsonValue* JsonInputValueSerializer::getValue(Common::StringView name) {
+  XI_RETURN_EC_IF(chain.empty(), nullptr);
   const JsonValue& val = *chain.back();
   if (val.isArray()) {
+    XI_RETURN_EC_IF(idxs.empty(), nullptr);
+    XI_RETURN_EC_IF_NOT(idxs.back() < val.size(), nullptr);
     return &val[idxs.back()++];
   }
 

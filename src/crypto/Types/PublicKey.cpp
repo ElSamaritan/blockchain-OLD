@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -34,8 +34,14 @@ const Crypto::PublicKey Crypto::PublicKey::Null{};
 Xi::Result<Crypto::PublicKey> Crypto::PublicKey::fromString(const std::string &hex) {
   XI_ERROR_TRY();
   PublicKey reval;
+  if (PublicKey::bytes() * 2 != hex.size()) {
+    throw std::runtime_error{"wrong hex size"};
+  }
   if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
     throw std::runtime_error{"invalid hex string"};
+  }
+  if (!reval.isValid()) {
+    throw std::runtime_error{"public key is invalid"};
   }
   return success(std::move(reval));
   XI_ERROR_CATCH();
@@ -60,5 +66,7 @@ bool Crypto::PublicKey::isValid() const { return check_key(*this); }
 void Crypto::PublicKey::nullify() { fill(0); }
 
 bool Crypto::serialize(Crypto::PublicKey &publicKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
-  return serializer.binary(publicKey.data(), PublicKey::bytes(), name);
+  XI_RETURN_EC_IF_NOT(serializer.binary(publicKey.data(), PublicKey::bytes(), name), false);
+  XI_RETURN_EC_IF_NOT(publicKey.isValid(), false);
+  return true;
 }

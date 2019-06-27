@@ -113,14 +113,14 @@ void WalletTransactionSender::validateTransfersAddresses(const std::vector<Walle
 
 std::shared_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(
     TransactionId& transactionId, std::deque<std::shared_ptr<WalletLegacyEvent>>& events,
-    const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, BlockVersion majorBlockVersion,
+    const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, BlockVersion blockVersion,
     const std::string& extra, uint64_t mixIn, uint64_t unlockTimestamp) {
   using namespace CryptoNote;
 
   throwIf(transfers.empty(), error::ZERO_DESTINATION);
   validateTransfersAddresses(transfers);
   m_upperTransactionSizeLimit =
-      Xi::Config::MinerReward::fullRewardZone(majorBlockVersion) - m_currency.minerTxBlobReservedSize();
+      Xi::Config::MinerReward::fullRewardZone(blockVersion) - m_currency.minerTxBlobReservedSize();
   uint64_t neededMoney = countNeededMoney(fee, transfers);
 
   std::shared_ptr<SendTransactionContext> context = std::make_shared<SendTransactionContext>();
@@ -362,7 +362,7 @@ uint64_t WalletTransactionSender::selectTransfersToSend(uint64_t neededMoney,
     }
   }
 
-  std::default_random_engine randomGenerator(Xi::Crypto::Random::generate<std::default_random_engine::result_type>());
+  auto randomGenerator = Xi::Crypto::Random::Engine<uint64_t>::create().takeOrThrow();
   uint64_t foundMoney = 0;
 
   while (foundMoney < neededMoney && !unusedTransfers.empty()) {

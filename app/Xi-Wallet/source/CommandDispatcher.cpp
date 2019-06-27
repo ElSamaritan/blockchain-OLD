@@ -30,7 +30,7 @@ bool handleCommand(const std::string command, std::shared_ptr<WalletInfo> wallet
   } else if (command == "help") {
     help(walletInfo);
   } else if (command == "transfer") {
-    transfer(walletInfo, node.getLastKnownBlockHeight(), node.currency(), false, node.feeAddress());
+    transfer(walletInfo, false, node);
   }
   /* Advanced commands */
   else if (command == "ab_add") {
@@ -40,7 +40,7 @@ bool handleCommand(const std::string command, std::shared_ptr<WalletInfo> wallet
   } else if (command == "ab_list") {
     listAddressBook();
   } else if (command == "ab_send") {
-    sendFromAddressBook(walletInfo, node.getLastKnownBlockHeight(), node.currency(), node.feeAddress());
+    sendFromAddressBook(walletInfo, node);
   } else if (command == "change_password") {
     changePassword(walletInfo);
   } else if (command == "make_integrated_address") {
@@ -50,7 +50,7 @@ bool handleCommand(const std::string command, std::shared_ptr<WalletInfo> wallet
   } else if (command == "list_transfers") {
     listTransfers(true, true, walletInfo->wallet, node);
   } else if (command == "optimize") {
-    fullOptimize(walletInfo->wallet, node.getLastKnownBlockHeight());
+    fullOptimize(walletInfo->wallet);
   } else if (command == "outgoing_transfers") {
     listTransfers(false, true, walletInfo->wallet, node);
   } else if (command == "reset") {
@@ -60,7 +60,13 @@ bool handleCommand(const std::string command, std::shared_ptr<WalletInfo> wallet
   } else if (command == "save_csv") {
     saveCSV(walletInfo->wallet, node);
   } else if (command == "send_all") {
-    transfer(walletInfo, node.getLastKnownBlockHeight(), node.currency(), true, node.feeAddress());
+    transfer(walletInfo, true, node);
+  } else if (command == "generate_payment_id") {
+    generatePaymentId();
+  } else if (command == "proof_payment_id_ownership") {
+    proofPaymentIdOwnership();
+  } else if (command == "check_payment_id_ownership") {
+    checkPaymentIdOwnership();
   } else if (command == "status") {
     status(node, walletInfo->wallet);
   }

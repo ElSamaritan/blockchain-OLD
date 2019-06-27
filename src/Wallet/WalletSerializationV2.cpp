@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -138,7 +138,7 @@ bool WalletSerializerV2::load(Common::IInputStream& source, uint8_t version) {
   CryptoNote::BinaryInputStreamSerializer s(source);
 
   uint8_t saveLevelValue;
-  s(saveLevelValue, "saveLevel");
+  XI_RETURN_EC_IF_NOT(s(saveLevelValue, "saveLevel"), false);
   WalletSaveLevel saveLevel = static_cast<WalletSaveLevel>(saveLevelValue);
 
   XI_RETURN_EC_IF_NOT(loadKeyListAndBalances(s, saveLevel == WalletSaveLevel::SAVE_ALL), false);
@@ -162,7 +162,7 @@ bool WalletSerializerV2::save(Common::IOutputStream& destination, WalletSaveLeve
   CryptoNote::BinaryOutputStreamSerializer s(destination);
 
   uint8_t saveLevelValue = static_cast<uint8_t>(saveLevel);
-  s(saveLevelValue, "saveLevel");
+  XI_RETURN_EC_IF_NOT(s(saveLevelValue, "saveLevel"), false);
 
   XI_RETURN_EC_IF_NOT(saveKeyListAndBalances(s, saveLevel == WalletSaveLevel::SAVE_ALL), false);
 

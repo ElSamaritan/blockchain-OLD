@@ -12,7 +12,6 @@
 #include <System/Timer.h>
 
 #include "CryptoNoteCore/Core.h"
-#include "CryptoNoteCore/Transactions/Mixins.h"
 
 namespace CryptoNote {
 
@@ -37,6 +36,10 @@ void TransactionPoolCleanWrapper::removeObserver(ITransactionPoolObserver* obser
 }
 
 std::size_t TransactionPoolCleanWrapper::size() const { return transactionPool->size(); }
+
+std::size_t TransactionPoolCleanWrapper::cumulativeSize() const { return transactionPool->cumulativeSize(); }
+
+std::size_t TransactionPoolCleanWrapper::cumulativeFees() const { return transactionPool->cumulativeFees(); }
 
 Crypto::Hash TransactionPoolCleanWrapper::stateHash() const { return transactionPool->stateHash(); }
 
@@ -103,7 +106,7 @@ uint64_t TransactionPoolCleanWrapper::getTransactionReceiveTime(const Crypto::Ha
 }
 
 std::vector<Crypto::Hash> TransactionPoolCleanWrapper::getTransactionHashesByPaymentId(
-    const Crypto::Hash& paymentId) const {
+    const PaymentId& paymentId) const {
   return transactionPool->getTransactionHashesByPaymentId(paymentId);
 }
 

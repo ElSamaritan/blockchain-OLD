@@ -41,57 +41,6 @@
 
 namespace CryptoNote {
 
-class ISerializer;
-
-struct SpentKeyImage {
-  uint32_t blockIndex;
-  Crypto::KeyImage keyImage;
-
-  [[nodiscard]] bool serialize(ISerializer& s);
-};
-
-struct CachedTransactionInfo {
-  uint32_t blockIndex;
-  uint32_t transactionIndex;
-  Crypto::Hash transactionHash;
-  uint64_t unlockTime;
-  std::vector<TransactionOutputTarget> outputs;
-  // needed for getTransactionGlobalIndexes query
-  std::vector<uint32_t> globalIndexes;
-
-  [[nodiscard]] bool serialize(ISerializer& s);
-};
-
-struct CachedBlockInfo {
-  Crypto::Hash blockHash;
-  uint64_t timestamp;
-  uint64_t cumulativeDifficulty;
-  uint64_t alreadyGeneratedCoins;
-  uint64_t alreadyGeneratedTransactions;
-  uint32_t blockSize;
-
-  [[nodiscard]] bool serialize(ISerializer& s);
-};
-
-struct OutputGlobalIndexesForAmount {
-  uint32_t startIndex = 0;
-
-  // 1. This container must be sorted by PackedOutIndex::blockIndex and PackedOutIndex::transactionIndex
-  // 2. GlobalOutputIndex for particular output is calculated as following: startIndex + index in vector
-  std::vector<PackedOutIndex> outputs;
-
-  [[nodiscard]] bool serialize(ISerializer& s);
-};
-
-struct PaymentIdTransactionHashPair {
-  Crypto::Hash paymentId;
-  Crypto::Hash transactionHash;
-
-  [[nodiscard]] bool serialize(ISerializer& s);
-};
-
-[[nodiscard]] bool serialize(PackedOutIndex& value, Common::StringView name, CryptoNote::ISerializer& serializer);
-
 class DatabaseBlockchainCache;
 
 class BlockchainCache : public CommonBlockchainCache {
@@ -102,7 +51,7 @@ class BlockchainCache : public CommonBlockchainCache {
 
   // Returns upper part of segment. [this] remains lower part.
   // All of indexes on blockIndex == splitBlockIndex belong to upper part
-  std::unique_ptr<IBlockchainCache> split(uint32_t splitBlockIndex) override;
+  std::shared_ptr<IBlockchainCache> split(uint32_t splitBlockIndex) override;
   virtual void pushBlock(const CachedBlock& cachedBlock, const std::vector<CachedTransaction>& cachedTransactions,
                          const TransactionValidatorState& validatorState, size_t blockSize, uint64_t generatedCoins,
                          uint64_t blockDifficulty, RawBlock&& rawBlock) override;
@@ -129,9 +78,11 @@ class BlockchainCache : public CommonBlockchainCache {
 
   uint32_t getTopBlockIndex() const override;
   const Crypto::Hash& getTopBlockHash() const override;
+  BlockVersion getTopBlockVersion() const override;
   uint32_t getBlockCount() const override;
   bool hasBlock(const Crypto::Hash& blockHash) const override;
   uint32_t getBlockIndex(const Crypto::Hash& blockHash) const override;
+  BlockHeightVector getBlockHeights(ConstBlockHashSpan hashes) const override;
 
   bool hasTransaction(const Crypto::Hash& transactionHash) const override;
 
@@ -195,6 +146,11 @@ class BlockchainCache : public CommonBlockchainCache {
                           std::vector<Crypto::Hash>& missedTransactions) const override;
 
   virtual RawBlock getBlockByIndex(uint32_t index) const override;
+  virtual RawBlockVector getBlocks(ConstBlockHeightSpan heights) const override;
+  virtual CachedBlockInfoVector getBlockInfos(ConstBlockHeightSpan height) const override;
+  virtual CachedTransactionVector getTransactions(ConstTransactionHashSpan ids) const override;
+  virtual CachedTransactionInfoVector getTransactionInfos(ConstTransactionHashSpan ids) const override;
+
   virtual BinaryArray getRawTransaction(uint32_t blockIndex, uint32_t transactionIndex) const override;
   virtual std::vector<Crypto::Hash> getTransactionHashes() const override;
   virtual std::vector<uint32_t> getRandomOutsByAmount(uint64_t amount, size_t count,
@@ -205,7 +161,7 @@ class BlockchainCache : public CommonBlockchainCache {
                                             uint32_t globalIndex)>
           pred) const override;
 
-  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
+  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const PaymentId& paymentId) const override;
   virtual std::vector<Crypto::Hash> getBlockHashesByTimestamps(uint64_t timestampBegin,
                                                                size_t secondsCount) const override;
 
@@ -258,7 +214,7 @@ class BlockchainCache : public CommonBlockchainCache {
       PaymentIdTransactionHashPair,
       boost::multi_index::indexed_by<
           boost::multi_index::hashed_non_unique<boost::multi_index::tag<PaymentIdTag>,
-                                                BOOST_MULTI_INDEX_MEMBER(PaymentIdTransactionHashPair, Crypto::Hash,
+                                                BOOST_MULTI_INDEX_MEMBER(PaymentIdTransactionHashPair, PaymentId,
                                                                          paymentId)>,
           boost::multi_index::hashed_unique<boost::multi_index::tag<TransactionHashTag>,
                                             BOOST_MULTI_INDEX_MEMBER(PaymentIdTransactionHashPair, Crypto::Hash,
@@ -289,7 +245,8 @@ class BlockchainCache : public CommonBlockchainCache {
   [[nodiscard]] bool serialize(ISerializer& s);
 
   void addSpentKeyImage(const Crypto::KeyImage& keyImage, uint32_t blockIndex);
-  void pushTransaction(const CachedTransaction& tx, uint32_t blockIndex, uint16_t transactionBlockIndex);
+  void pushTransaction(const CachedTransaction& tx, uint32_t blockIndex, uint16_t transactionBlockIndex,
+                       bool generated);
 
   void splitSpentKeyImages(BlockchainCache& newCache, uint32_t splitBlockIndex);
   void splitTransactions(BlockchainCache& newCache, uint32_t splitBlockIndex);
@@ -303,7 +260,7 @@ class BlockchainCache : public CommonBlockchainCache {
 
   TransactionValidatorState fillOutputsSpentByBlock(uint32_t blockIndex) const;
 
-  BlockVersion getBlockMajorVersionForHeight(uint32_t height) const;
+  BlockVersion getBlockVersionForHeight(uint32_t height) const;
   void fixChildrenParent(IBlockchainCache* p);
 
   void doPushBlock(const CachedBlock& cachedBlock, const std::vector<CachedTransaction>& cachedTransactions,

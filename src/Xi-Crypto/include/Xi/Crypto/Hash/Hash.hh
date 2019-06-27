@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -70,6 +70,9 @@ typedef xi_byte_t xi_crypto_hash_1600[XI_HASH_1600_SIZE];
 #include <Xi/Global.hh>
 #include <Xi/Blob.hpp>
 
+#include <Common/StringTools.h>
+#include <Serialization/ISerializer.h>
+
 namespace Xi {
 namespace Crypto {
 namespace Hash {
@@ -101,13 +104,19 @@ struct enable_hash_from_this : enable_blob_from_this<_T, _Bits / 8> {
 
   inline void nullify() { this->fill(0); }
   inline bool isNull() const { return *this == Null; }
+
+  inline std::string toString() const { return Common::toHex(this->data(), this->size()); }
 };
 
-#define XI_CRYPTO_HASH_DECLARE_HASH_TYPE(NAME, BITS)                    \
-  struct NAME : ::Xi::Crypto::Hash::enable_hash_from_this<NAME, BITS> { \
-    using enable_hash_from_this::enable_hash_from_this;                 \
-    XI_DEFAULT_COPY(NAME);                                              \
-    XI_DEFAULT_MOVE(NAME);                                              \
+#define XI_CRYPTO_HASH_DECLARE_HASH_TYPE(NAME, BITS)                                \
+  struct NAME : ::Xi::Crypto::Hash::enable_hash_from_this<NAME, BITS> {             \
+    using enable_hash_from_this::enable_hash_from_this;                             \
+    XI_DEFAULT_COPY(NAME);                                                          \
+    XI_DEFAULT_MOVE(NAME);                                                          \
+  };                                                                                \
+  [[nodiscard]] static inline bool serialize(NAME& value, Common::StringView name,  \
+                                             CryptoNote::ISerializer& serializer) { \
+    return serializer.binary(value.data(), value.size(), name);                     \
   }
 
 #define XI_CRYPTO_HASH_DECLARE_HASH_IMPLEMENTATION(CLASS, BITS) \

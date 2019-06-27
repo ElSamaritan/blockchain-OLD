@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -43,7 +43,7 @@ class ITransactionPoolObserver {
     KeyImageUsedInMainChain,   ///< A block was added to the main chain that uses the same input as one of the
                                ///< transactions in the pool. The pool transaction is now invalid as it would perform
                                ///< double spending once added to the main chain.
-    BlockMajorVersionUpgrade,  ///< The major version in the blockchain upgraded introducing new constraints the
+    BlockVersionUpgrade,  ///< The version in the blockchain upgraded introducing new constraints the
                                ///< transaction does not satisfy anymore
     PoolCleanupProcedure,      ///< Transaction was in pool but got outdated or invalid while remaining there.
     Forced,                    ///< The user forced the deletion of the transaction

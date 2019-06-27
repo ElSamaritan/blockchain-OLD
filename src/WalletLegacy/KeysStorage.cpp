@@ -37,7 +37,7 @@ bool KeysStorage::serialize(ISerializer& serializer, const std::string& name) {
   XI_RETURN_EC_IF_NOT(serializer(viewPublicKey, "view_public_key"), false);
   XI_RETURN_EC_IF_NOT(serializer(viewSecretKey, "view_secret_key"), false);
 
-  serializer.endObject();
+  XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
 
   return true;
 }

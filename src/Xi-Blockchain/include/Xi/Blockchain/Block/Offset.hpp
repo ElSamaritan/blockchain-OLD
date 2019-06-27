@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -27,6 +27,7 @@
 #include <functional>
 
 #include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
 
 namespace Xi {
 namespace Blockchain {
@@ -56,6 +57,8 @@ class Offset final {
  private:
   explicit Offset(value_type value);
 
+  friend bool serialize(Offset&, Common::StringView, CryptoNote::ISerializer&);
+
  private:
   value_type m_native;
 };
@@ -64,6 +67,8 @@ Offset operator+(const Offset lhs, const Offset rhs);
 Offset& operator+=(Offset& lhs, const Offset rhs);
 Offset operator-(const Offset lhs, const Offset rhs);
 Offset& operator-=(Offset& lhs, const Offset rhs);
+
+[[nodiscard]] bool serialize(Offset& value, Common::StringView name, CryptoNote::ISerializer& serializer);
 
 }  // namespace Block
 }  // namespace Blockchain

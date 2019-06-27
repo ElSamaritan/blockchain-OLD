@@ -42,12 +42,12 @@ struct hash<std::pair<CryptoNote::IBlockchainCache::Amount, uint32_t>> {
 };
 
 template <>
-struct hash<std::pair<Crypto::Hash, uint32_t>> {
-  using argment_type = std::pair<Crypto::Hash, uint32_t>;
+struct hash<std::pair<CryptoNote::PaymentId, uint32_t>> {
+  using argment_type = std::pair<CryptoNote::PaymentId, uint32_t>;
   using result_type = size_t;
 
   result_type operator()(const argment_type& arg) const {
-    size_t hashValue = std::hash<Crypto::Hash>{}(arg.first);
+    size_t hashValue = std::hash<CryptoNote::PaymentId>{}(arg.first);
     boost::hash_combine(hashValue, arg.second);
     return hashValue;
   }
@@ -71,8 +71,8 @@ struct BlockchainReadState {
   std::unordered_map<uint32_t, RawBlock> rawBlocks;
   std::unordered_map<uint64_t, uint32_t> closestTimestampBlockIndex;
   std::unordered_map<uint32_t, IBlockchainCache::Amount> keyOutputAmounts;
-  std::unordered_map<Crypto::Hash, uint32_t> transactionCountsByPaymentIds;
-  std::unordered_map<std::pair<Crypto::Hash, uint32_t>, Crypto::Hash> transactionHashesByPaymentIds;
+  std::unordered_map<PaymentId, uint32_t> transactionCountsByPaymentIds;
+  std::unordered_map<std::pair<PaymentId, uint32_t>, Crypto::Hash> transactionHashesByPaymentIds;
   std::unordered_map<uint64_t, std::vector<Crypto::Hash>> blockHashesByTimestamp;
   KeyOutputKeyResult keyOutputKeys;
 
@@ -108,8 +108,8 @@ class BlockchainReadResult {
   const std::unordered_map<uint64_t, uint32_t>& getClosestTimestampBlockIndex() const;
   uint32_t getKeyOutputAmountsCount() const;
   const std::unordered_map<uint32_t, IBlockchainCache::Amount>& getKeyOutputAmounts() const;
-  const std::unordered_map<Crypto::Hash, uint32_t>& getTransactionCountByPaymentIds() const;
-  const std::unordered_map<std::pair<Crypto::Hash, uint32_t>, Crypto::Hash>& getTransactionHashesByPaymentIds() const;
+  const std::unordered_map<PaymentId, uint32_t>& getTransactionCountByPaymentIds() const;
+  const std::unordered_map<std::pair<PaymentId, uint32_t>, Crypto::Hash>& getTransactionHashesByPaymentIds() const;
   const std::unordered_map<uint64_t, std::vector<Crypto::Hash>>& getBlockHashesByTimestamp() const;
   const std::pair<uint64_t, bool>& getTransactionsCount() const;
   const KeyOutputKeyResult& getKeyOutputInfo() const;
@@ -137,8 +137,8 @@ class BlockchainReadBatch : public IReadBatch {
   BlockchainReadBatch& requestClosestTimestampBlockIndex(uint64_t timestamp);
   BlockchainReadBatch& requestKeyOutputAmountsCount();
   BlockchainReadBatch& requestKeyOutputAmount(uint32_t index);
-  BlockchainReadBatch& requestTransactionCountByPaymentId(const Crypto::Hash& paymentId);
-  BlockchainReadBatch& requestTransactionHashByPaymentId(const Crypto::Hash& paymentId,
+  BlockchainReadBatch& requestTransactionCountByPaymentId(const PaymentId& paymentId);
+  BlockchainReadBatch& requestTransactionHashByPaymentId(const PaymentId& paymentId,
                                                          uint32_t transactionIndexWithinPaymentId);
   BlockchainReadBatch& requestBlockHashesByTimestamp(uint64_t timestamp);
   BlockchainReadBatch& requestTransactionsCount();

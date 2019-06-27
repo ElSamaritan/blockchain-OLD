@@ -29,7 +29,6 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Transactions/TransactionExtra.h"
 #include "CryptoNoteCore/Account.h"
-#include "CryptoNoteCore/Transactions/Mixins.h"
 
 #include <System/EventLock.h>
 #include <System/RemoteContext.h>
@@ -71,26 +70,19 @@ bool checkPaymentId(const std::string& paymentId) {
   });
 }
 
-Crypto::Hash parsePaymentId(const std::string& paymentIdStr) {
+CryptoNote::PaymentId parsePaymentId(const std::string& paymentIdStr) {
   if (!checkPaymentId(paymentIdStr)) {
     throw std::system_error(make_error_code(CryptoNote::error::WalletServiceErrorCode::WRONG_PAYMENT_ID_FORMAT));
   }
-
-  Crypto::Hash paymentId;
-  bool r = Common::podFromHex(paymentIdStr, paymentId);
-  if (r) {
-  }
-  assert(r);
-
-  return paymentId;
+  return CryptoNote::PaymentId::fromString(paymentIdStr).takeOrThrow();
 }
 
-bool getPaymentIdFromExtra(const std::string& binaryString, Crypto::Hash& paymentId) {
+bool getPaymentIdFromExtra(const std::string& binaryString, CryptoNote::PaymentId& paymentId) {
   return CryptoNote::getPaymentIdFromTxExtra(Common::asBinaryArray(binaryString), paymentId);
 }
 
 std::string getPaymentIdStringFromExtra(const std::string& binaryString) {
-  Crypto::Hash paymentId;
+  CryptoNote::PaymentId paymentId;
 
   try {
     if (!getPaymentIdFromExtra(binaryString, paymentId)) {
@@ -119,7 +111,7 @@ struct TransactionsInBlockInfoFilter {
 
   bool checkTransaction(const CryptoNote::WalletTransactionWithTransfers& transaction) const {
     if (havePaymentId) {
-      Crypto::Hash transactionPaymentId;
+      CryptoNote::PaymentId transactionPaymentId;
       if (!getPaymentIdFromExtra(transaction.transaction.extra, transactionPaymentId)) {
         return false;
       }
@@ -146,7 +138,7 @@ struct TransactionsInBlockInfoFilter {
 
   std::unordered_set<std::string> addresses;
   bool havePaymentId = false;
-  Crypto::Hash paymentId;
+  CryptoNote::PaymentId paymentId;
 };
 
 namespace {
@@ -1058,17 +1050,8 @@ std::error_code WalletService::sendTransaction(SendTransaction::Request& request
       validateAddresses({request.changeAddress}, currency, logger);
     }
 
-    bool success;
     std::string error;
     std::error_code error_code;
-
-    std::tie(success, error, error_code) =
-        CryptoNote::Mixins::validate(request.anonymity, node.getLastKnownBlockHeight().toIndex());
-
-    if (!success) {
-      logger(Logging::WARNING) << error;
-      throw std::system_error(error_code);
-    }
 
     CryptoNote::TransactionParameters sendParams;
     if (!request.paymentId.empty()) {
@@ -1316,8 +1299,7 @@ std::error_code WalletService::getStatus(BlockHeight& blockCount, BlockHeight& k
   return std::error_code();
 }
 
-std::error_code WalletService::sendFusionTransaction(uint64_t threshold, uint16_t anonymity,
-                                                     const std::vector<std::string>& addresses,
+std::error_code WalletService::sendFusionTransaction(uint64_t threshold, const std::vector<std::string>& addresses,
                                                      const std::string& destinationAddress,
                                                      std::string& transactionHash) {
   try {
@@ -1328,7 +1310,7 @@ std::error_code WalletService::sendFusionTransaction(uint64_t threshold, uint16_
       validateAddresses({destinationAddress}, currency, logger);
     }
 
-    size_t transactionId = fusionManager.createFusionTransaction(threshold, anonymity, addresses, destinationAddress);
+    size_t transactionId = fusionManager.createFusionTransaction(threshold, addresses, destinationAddress);
     if (transactionId == CryptoNote::WALLET_INVALID_TRANSACTION_ID) {
       throw std::runtime_error{"fusion transaction creation failed"};
     }
@@ -1407,10 +1389,6 @@ std::error_code WalletService::getFeeInfo(std::string& address, uint64_t& amount
   amount = m_node_fee;
 
   return std::error_code();
-}
-
-uint16_t WalletService::getDefaultMixin() const {
-  return CryptoNote::getDefaultMixinByIndex(node.getLastKnownBlockHeight().toIndex());
 }
 
 void WalletService::refresh() {

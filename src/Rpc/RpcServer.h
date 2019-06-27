@@ -13,14 +13,22 @@
 #include <string>
 
 #include <Xi/Concurrent/RecursiveLock.h>
+#include <Xi/TypeSafe/Flag.hpp>
 #include <Xi/Http/RequestHandler.h>
 #include <Xi/Http/Server.h>
+#include <Xi/Http/Router.h>
+#include <Xi/Rpc/ServiceProviderCollection.hpp>
+#include <Xi/Rpc/ServiceRouter.hpp>
+#include <Xi/Rpc/JsonProviderEndpoint.hpp>
+#include <Xi/Blockchain/Explorer/IExplorer.hpp>
+#include <Xi/Blockchain/Services/BlockExplorer/BlockExplorer.hpp>
 
 #include <Logging/LoggerRef.h>
 #include <CryptoNoteCore/Currency.h>
 #include "Common/Math.h"
 #include "CoreRpcServerCommandsDefinitions.h"
 #include "JsonRpc.h"
+
 #include "Rpc/Commands/Commands.h"
 
 namespace CryptoNote {
@@ -28,6 +36,12 @@ namespace CryptoNote {
 class Core;
 class NodeServer;
 struct ICryptoNoteProtocolHandler;
+
+/// Encodes a specific service being responsible to process a request
+enum struct RpcServiceType {
+  BlockExplorer = 1 << 0,
+};
+XI_TYPESAFE_FLAG_MAKE_OPERATIONS(RpcServiceType)
 
 class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   using HttpRequest = Xi::Http::Request;
@@ -156,6 +170,10 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
                          F_COMMAND_RPC_GET_P2P_BAN_INFO::response& res);
   bool f_getMixin(const Transaction& transaction, uint64_t& mixin);
 
+ private:
+  void checkService(RpcServiceType type) const;
+  void notFound(const std::string& resource, const std::string& id) const;
+
   Logging::LoggerRef logger;
   Core& m_core;
   NodeServer& m_p2p;
@@ -166,6 +184,10 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   bool m_isBlockexplorer;
   bool m_isBlockexplorerOnly;
   Xi::Concurrent::RecursiveLock m_submissionAccess;
+
+  std::shared_ptr<Xi::Blockchain::Explorer::IExplorer> m_explorer;
+  std::shared_ptr<Xi::Blockchain::Services::BlockExplorer::BlockExplorer> m_explorerService;
+  std::shared_ptr<Xi::Rpc::JsonProviderEndpoint> m_explorerEndpoint;
 };
 
 }  // namespace CryptoNote

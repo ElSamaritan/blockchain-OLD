@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The BBSCoin Developers
 // Copyright (c) 2018, The Karbo Developers
 // Copyright (c) 2018, The TurtleCoin Developers
@@ -343,7 +343,7 @@ std::error_code TransfersConsumer::onPoolUpdated(
     const std::vector<Hash>& deletedTransactions) {
   TransactionBlockInfo unconfirmedBlockInfo;
   unconfirmedBlockInfo.timestamp = 0;
-  unconfirmedBlockInfo.height = WALLET_UNCONFIRMED_TRANSACTION_HEIGHT;
+  unconfirmedBlockInfo.height = BlockHeight::Null;
 
   std::error_code processingError;
   for (auto& cryptonoteTransaction : addedTransactions) {
@@ -351,7 +351,7 @@ std::error_code TransfersConsumer::onPoolUpdated(
     processingError = processTransaction(unconfirmedBlockInfo, *cryptonoteTransaction.get());
     if (processingError) {
       for (auto& sub : m_subscriptions) {
-        sub.second->onError(processingError, WALLET_UNCONFIRMED_TRANSACTION_HEIGHT);
+        sub.second->onError(processingError, BlockHeight::Null);
       }
 
       return processingError;
@@ -376,7 +376,7 @@ const std::unordered_set<Crypto::Hash>& TransfersConsumer::getKnownPoolTxIds() c
 
 std::error_code TransfersConsumer::addUnconfirmedTransaction(const ITransactionReader& transaction) {
   TransactionBlockInfo unconfirmedBlockInfo;
-  unconfirmedBlockInfo.height = WALLET_UNCONFIRMED_TRANSACTION_HEIGHT;
+  unconfirmedBlockInfo.height = BlockHeight::Null;
   unconfirmedBlockInfo.timestamp = 0;
   unconfirmedBlockInfo.transactionIndex = 0;
 
@@ -423,9 +423,8 @@ std::error_code createTransfers(const AccountKeys& account, const TransactionBlo
     info.type = outType;
     info.transactionPublicKey = txPubKey;
     info.outputInTransaction = idx;
-    info.globalOutputIndex = (blockInfo.height == WALLET_UNCONFIRMED_TRANSACTION_HEIGHT)
-                                 ? UNCONFIRMED_TRANSACTION_GLOBAL_OUTPUT_INDEX
-                                 : globalIdxs[idx];
+    info.globalOutputIndex =
+        (blockInfo.height == BlockHeight::Null) ? UNCONFIRMED_TRANSACTION_GLOBAL_OUTPUT_INDEX : globalIdxs[idx];
 
     if (outType == TransactionTypes::OutputType::Key) {
       uint64_t amount;
@@ -478,7 +477,7 @@ std::error_code TransfersConsumer::preprocessOutputs(const TransactionBlockInfo&
 
   std::error_code errorCode;
   auto txHash = tx.getTransactionHash();
-  if (blockInfo.height != WALLET_UNCONFIRMED_TRANSACTION_HEIGHT) {
+  if (blockInfo.height != BlockHeight::Null) {
     errorCode = getGlobalIndices(reinterpret_cast<const Hash&>(txHash), info.globalIdxs);
     if (errorCode) {
       return errorCode;
@@ -552,8 +551,7 @@ void TransfersConsumer::processOutputs(const TransactionBlockInfo& blockInfo, Tr
   updated = false;
 
   if (contains) {
-    if (subscribtionTxInfo.blockHeight == WALLET_UNCONFIRMED_TRANSACTION_HEIGHT &&
-        blockInfo.height != WALLET_UNCONFIRMED_TRANSACTION_HEIGHT) {
+    if (subscribtionTxInfo.blockHeight == BlockHeight::Null && blockInfo.height != BlockHeight::Null) {
       try {
         // pool->blockchain
         sub.markTransactionConfirmed(blockInfo, tx.getTransactionHash(), globalIdxs);

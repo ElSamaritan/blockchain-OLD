@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -28,8 +28,8 @@
 
 #include <crypto/crypto.h>
 
+#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/IBlockchainCache.h"
-#include "CryptoNoteCore/Transactions/Mixins.h"
 #include "CryptoNoteCore/Transactions/TransactionApi.h"
 #include "CryptoNoteCore/Transactions/TransactionUtils.h"
 #include "CryptoNoteCore/Transactions/TransactionExtra.h"
@@ -238,8 +238,17 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validate
   size_t inputIndex = 0;
   uint32_t minHeight = 0;
   uint64_t minTimestamp = 0;
+
+  std::map<Amount, std::set<uint32_t>> usedGlobalIndices;
   for (const auto &input : transaction.getTransaction().inputs) {
     if (auto keyInput = std::get_if<KeyInput>(&input)) {
+      const auto globalIndices = relativeOutputOffsetsToAbsolute(keyInput->outputIndices);
+      for (auto globalIndex : globalIndices) {
+        if (!usedGlobalIndices[keyInput->amount].insert(globalIndex).second) {
+          return Xi::failure(Error::INPUT_DUPLICATE_GLOBAL_INDEX);
+        }
+      }
+
       const auto keyInputValidation = validateKeyInput(*keyInput, inputIndex, transaction);
       if (keyInputValidation.isError())
         return keyInputValidation.error();
@@ -259,11 +268,7 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validate
 
 CryptoNote::error::TransactionValidationError CryptoNote::TransactionValidator::validateMixin(
     const CryptoNote::CachedTransaction &transaction) const {
-  const uint8_t minMixin = currency().minimumMixin(blockVersion());
-  const uint8_t maxMixin = currency().maximumMixin(blockVersion());
-
-  uint64_t ringSize = 1;
-
+  const uint8_t requiredRingSize = currency().requiredMixin(blockVersion()) + 1;
   const auto tx = createTransaction(transaction.getTransaction());
 
   for (size_t i = 0; i < tx->getInputCount(); ++i) {
@@ -273,19 +278,12 @@ CryptoNote::error::TransactionValidationError CryptoNote::TransactionValidator::
 
     KeyInput input;
     tx->getInput(i, input);
-    const uint64_t currentRingSize = input.outputIndices.size();
-    if (currentRingSize > ringSize) {
-      ringSize = currentRingSize;
+    const uint64_t ringSize = input.outputIndices.size();
+    if (ringSize > requiredRingSize) {
+      return Error::INPUT_MIXIN_TOO_HIGH;
+    } else if (ringSize < requiredRingSize) {
+      return Error::INPUT_MIXIN_TOO_LOW;
     }
   }
-
-  const uint64_t mixin = ringSize - 1;
-
-  if (mixin > maxMixin) {
-    return Error::INPUT_MIXIN_TOO_HIGH;
-  } else if (mixin < minMixin) {
-    return Error::INPUT_MIXIN_TOO_LOW;
-  } else {
-    return Error::VALIDATION_SUCCESS;
-  }
+  return Error::VALIDATION_SUCCESS;
 }

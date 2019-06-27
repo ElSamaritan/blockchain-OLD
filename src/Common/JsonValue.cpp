@@ -129,6 +129,11 @@ JsonValue::JsonValue(Object&& value) {
 
 JsonValue::JsonValue(Real value) : type(REAL), valueReal(value) {}
 
+JsonValue::JsonValue(std::string_view value) {
+  new (valueString) String(value);
+  type = STRING;
+}
+
 JsonValue::JsonValue(const String& value) {
   new (valueString) String(value);
   type = STRING;

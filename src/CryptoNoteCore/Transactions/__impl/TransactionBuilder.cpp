@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -212,19 +212,22 @@ std::vector<Signature>& TransactionBuilder::getSignatures(size_t input) {
 
 BinaryArray TransactionBuilder::getTransactionData() const { return toBinaryArray(transaction); }
 
-void TransactionBuilder::setPaymentId(const Hash& hash) {
+void TransactionBuilder::setPaymentId(const PaymentId& pid) {
   checkIfSigning();
+  if (!pid.isValid()) {
+    throw std::runtime_error{"invalid payment id"};
+  }
   BinaryArray paymentIdBlob;
-  setPaymentIdToTransactionExtraNonce(paymentIdBlob, reinterpret_cast<const Hash&>(hash));
+  setPaymentIdToTransactionExtraNonce(paymentIdBlob, pid);
   setExtraNonce(paymentIdBlob);
 }
 
-bool TransactionBuilder::getPaymentId(Hash& hash) const {
+bool TransactionBuilder::getPaymentId(PaymentId& pid) const {
   BinaryArray nonce;
   if (getExtraNonce(nonce)) {
-    Hash paymentId;
+    PaymentId paymentId;
     if (getPaymentIdFromTransactionExtraNonce(nonce, paymentId)) {
-      hash = reinterpret_cast<const Hash&>(paymentId);
+      pid = paymentId;
       return true;
     }
   }

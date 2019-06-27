@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -41,6 +41,7 @@
 
 #include <Xi/Global.hh>
 #include <Xi/Runtime.hh>
+#include <Xi/Endianess/Endianess.hh>
 #include <Xi/Memory/Clear.hh>
 
 #include "Xi/Crypto/Hash/Keccak.hh"
@@ -124,11 +125,11 @@ int xi_crypto_random_state_init(xi_crypto_random_state *state)
   int ec = XI_RETURN_CODE_SUCCESS;
   ec = xi_crypto_random_system_bytes((xi_byte_t*)state->bytes, XI_HASH_1600_SIZE);
   XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
-  state->left = XI_HASH_1600_SIZE;
+  xi_crypto_random_state_permutation(state);
   return XI_RETURN_CODE_SUCCESS;
 }
 
-int xi_crypto_random_state_init_determentistic(xi_crypto_random_state *state, const xi_byte_t *seed, size_t seedLength)
+int xi_crypto_random_state_init_deterministic(xi_crypto_random_state *state, const xi_byte_t *seed, size_t seedLength)
 {
   memset(state->bytes, 0, XI_HASH_1600_SIZE);
   int ec = XI_RETURN_CODE_SUCCESS;
@@ -141,7 +142,7 @@ int xi_crypto_random_state_init_determentistic(xi_crypto_random_state *state, co
 
 void xi_crypto_random_state_destroy(xi_crypto_random_state *state)
 {
-  xi_memory_clear((xi_byte_t*)state->bytes, XI_HASH_1600_SIZE);
+  xi_memory_secure_clear((xi_byte_t*)state->bytes, XI_HASH_1600_SIZE);
   free(state);
 }
 
@@ -160,7 +161,30 @@ int xi_crypto_random_bytes_from_state(xi_byte_t *out, size_t count, xi_crypto_ra
 
       const size_t nLeft = count - generated;
       const size_t nCopy = state->left < nLeft ? state->left : nLeft;
-      memcpy(out + generated, state->bytes + (XI_HASH_1600_SIZE - state->left), nCopy);
+      memcpy(out + generated, ((xi_byte_t*)state->bytes) + (XI_HASH_1600_SIZE - state->left), nCopy);
+      state->left -= nCopy;
+      generated += nCopy;
+    } while(generated < count);
+    return XI_RETURN_CODE_SUCCESS;
+  }
+}
+
+int xi_crypto_random_bytes_from_state_deterministic(xi_byte_t *out, size_t count, xi_crypto_random_state *state)
+{
+  if(state == NULL) {
+    return XI_RETURN_CODE_NO_SUCCESS;
+  } else if(count == 0) {
+    return XI_RETURN_CODE_SUCCESS;
+  } else {
+    size_t generated = 0;
+    do {
+      if(state->left == 0) {
+        xi_crypto_random_state_permutation_deterministic(state);
+      }
+
+      const size_t nLeft = count - generated;
+      const size_t nCopy = state->left < nLeft ? state->left : nLeft;
+      memcpy(out + generated, ((xi_byte_t*)state->bytes) + (XI_HASH_1600_SIZE - state->left), nCopy);
       state->left -= nCopy;
       generated += nCopy;
     } while(generated < count);
@@ -172,6 +196,21 @@ void xi_crypto_random_state_permutation(xi_crypto_random_state *state)
 {
   xi_crypto_hash_keccakf(state->bytes, 24U);
   state->left = XI_HASH_1600_SIZE;
+}
+
+void xi_crypto_random_state_permutation_deterministic(xi_crypto_random_state *state)
+{
+#if !defined (XI_COMPILER_ENDIANESS_LITTLE)
+  for(size_t i = 0; i < XI_HASH_1600_SIZE / sizeof (uint64_t); ++i) {
+    state->bytes[i] = xi_endianess_little_u64(state->bytes[i]);
+  }
+#endif
+  xi_crypto_random_state_permutation(state);
+#if ! defined (XI_COMPILER_ENDIANESS_LITTLE)
+  for(size_t i = 0; i < XI_HASH_1600_SIZE / sizeof (uint64_t); ++i) {
+    state->bytes[i] = xi_endianess_little_u64(state->bytes[i]);
+  }
+#endif
 }
 
 int xi_crypto_random_bytes(xi_byte_t *out, size_t count)
@@ -195,19 +234,16 @@ int xi_crypto_random_bytes(xi_byte_t *out, size_t count)
 
 int xi_crypto_random_bytes_determenistic(xi_byte_t *out, size_t count, const xi_byte_t *seed, size_t seedLength)
 {
+  xi_crypto_random_state* state = xi_crypto_random_state_create();
+  XI_RETURN_EC_IF(state == NULL, XI_RETURN_CODE_NO_SUCCESS);
   int ec = XI_RETURN_CODE_SUCCESS;
-  if(xi_crypto_random_state_instance == NULL) {
-    xi_crypto_random_state_instance = xi_crypto_random_state_create();
-    XI_RETURN_EC_IF(xi_crypto_random_state_instance == NULL, XI_RETURN_CODE_NO_SUCCESS);
-    ec = xi_crypto_random_state_init_determentistic(xi_crypto_random_state_instance, seed, seedLength);
-    if(ec != XI_RETURN_CODE_SUCCESS) {
-      xi_crypto_random_state_destroy(xi_crypto_random_state_instance);
-      xi_crypto_random_state_instance = NULL;
-      return ec;
-    }
+  ec = xi_crypto_random_state_init_deterministic(state, seed, seedLength);
+  if(ec != XI_RETURN_CODE_SUCCESS) {
+    xi_crypto_random_state_destroy(state);
+    return ec;
   }
-
-  ec = xi_crypto_random_bytes_from_state(out, count, xi_crypto_random_state_instance);
+  ec = xi_crypto_random_bytes_from_state_deterministic(out, count, state);
+  xi_crypto_random_state_destroy(state);
   XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
   return XI_RETURN_CODE_SUCCESS;
 }

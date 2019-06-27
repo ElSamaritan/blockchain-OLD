@@ -31,7 +31,6 @@
 #include "CryptoNoteCore/Transactions/TransactionPool.h"
 #include "CryptoNoteCore/Transactions/TransactionPoolCleaner.h"
 #include "CryptoNoteCore/Transactions/TransactionApi.h"
-#include "CryptoNoteCore/Transactions/Mixins.h"
 #include "CryptoNoteCore/UpgradeManager.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandlerCommon.h"
 
@@ -80,7 +79,7 @@ inline IBlockchainCache* findIndexInChain(IBlockchainCache* blockSegment, uint32
 
 BlockTemplate extractBlockTemplate(const RawBlock& block) {
   BlockTemplate blockTemplate;
-  if (!fromBinaryArray(blockTemplate, block.block)) {
+  if (!fromBinaryArray(blockTemplate, block.blockTemplate)) {
     throw std::system_error(make_error_code(error::AddBlockErrorCode::DESERIALIZATION_FAILED));
   }
 
@@ -124,13 +123,13 @@ int64_t getEmissionChange(const Currency& currency, IBlockchainCache& segment, u
                           const CachedBlock& cachedBlock, uint64_t cumulativeSize, uint64_t cumulativeFee) {
   uint64_t reward = 0;
   int64_t emissionChange = 0;
-  const auto majorVersion = cachedBlock.getBlock().majorVersion;
+  const auto version = cachedBlock.getBlock().version;
   auto alreadyGeneratedCoins = segment.getAlreadyGeneratedCoins(previousBlockIndex);
-  auto lastBlocksSizes = segment.getLastBlocksSizes(currency.rewardBlocksWindowByBlockVersion(majorVersion),
+  auto lastBlocksSizes = segment.getLastBlocksSizes(currency.rewardBlocksWindowByBlockVersion(version),
                                                     previousBlockIndex, addGenesisBlock);
   auto blocksSizeMedian = Common::medianValue(lastBlocksSizes);
-  if (!currency.getBlockReward(majorVersion, blocksSizeMedian, cumulativeSize, alreadyGeneratedCoins, cumulativeFee,
-                               reward, emissionChange)) {
+  if (!currency.getBlockReward(version, blocksSizeMedian, cumulativeSize, alreadyGeneratedCoins, cumulativeFee, reward,
+                               emissionChange)) {
     throw std::system_error(make_error_code(error::BlockValidationError::CUMULATIVE_BLOCK_SIZE_TOO_BIG));
   }
 
@@ -185,7 +184,7 @@ Core::Core(const Currency& currency, Logging::ILogger& logger, Checkpoints& chec
       initialized(false),
       m_access{} {
   for (auto version : Xi::Config::BlockVersion::versions())
-    m_upgradeManager->addMajorBlockVersion(version, currency.upgradeHeight(version));
+    m_upgradeManager->addBlockVersion(version, currency.upgradeHeight(version));
   m_transactionPool = std::make_unique<TransactionPoolCleanWrapper>(
       std::unique_ptr<ITransactionPool>(new TransactionPool(*this, logger)),
       std::unique_ptr<ITimeProvider>(new LocalRealTimeProvider()), logger, currency.mempoolTxLiveTime());
@@ -197,6 +196,8 @@ Core::~Core() {
   contextGroup.interrupt();
   contextGroup.wait();
 }
+
+Xi::Concurrent::RecursiveLock::lock_t Core::lock() const { return Xi::Concurrent::RecursiveLock::lock_t{m_access}; }
 
 bool Core::addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) { return queueList.insert(messageQueue); }
 
@@ -223,7 +224,7 @@ void Core::transactionDeletedFromPool(const Hash& hash, ITransactionPoolObserver
   switch (reason) {
     case Reason::KeyImageUsedInMainChain:
     case Reason::PoolCleanupProcedure:
-    case Reason::BlockMajorVersionUpgrade:
+    case Reason::BlockVersionUpgrade:
     case Reason::Forced:
       notifyObservers(makeDelTransactionMessage({hash}, Messages::DeleteTransaction::Reason::NotActual));
       break;
@@ -282,6 +283,16 @@ Crypto::Hash Core::getTopBlockHash() const {
   return chainsLeaves[0]->getTopBlockHash();
 }
 
+BlockVersion Core::getTopBlockVersion() const {
+  assert(!chainsStorage.empty());
+  assert(!chainsLeaves.empty());
+
+  throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
+
+  return chainsLeaves[0]->getTopBlockVersion();
+}
+
 Crypto::Hash Core::getBlockHashByIndex(uint32_t blockIndex) const {
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
@@ -305,13 +316,18 @@ uint64_t Core::getBlockTimestampByIndex(uint32_t blockIndex) const {
   return timestamps[0];
 }
 
-bool Core::hasBlock(const Crypto::Hash& blockHash) const {
+std::optional<BlockSource> Core::hasBlock(const Crypto::Hash& blockHash) const {
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
-  return findSegmentContainingBlock(blockHash) != nullptr;
+  bool isMainChain = false;
+  if (findSegmentContainingBlock(blockHash, &isMainChain) == nullptr) {
+    return std::nullopt;
+  } else {
+    return isMainChain ? BlockSource::MainChain : BlockSource::AlternativeChain;
+  }
 }
 
-BlockTemplate Core::getBlockByIndex(uint32_t index) const {
+std::optional<CoreBlockInfo> Core::getBlockByIndex(uint32_t index) const {
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
   assert(index <= getTopBlockIndex());
@@ -321,24 +337,28 @@ BlockTemplate Core::getBlockByIndex(uint32_t index) const {
   IBlockchainCache* segment = findMainChainSegmentContainingBlock(index);
   assert(segment != nullptr);
 
-  return restoreBlockTemplate(segment, index);
+  if (segment == nullptr) {
+    return std::nullopt;
+  } else {
+    return std::make_optional<CoreBlockInfo>(BlockSource::MainChain, index, segment->getBlockByIndex(index));
+  }
 }
 
-BlockTemplate Core::getBlockByHash(const Crypto::Hash& blockHash) const {
+std::optional<CoreBlockInfo> Core::getBlockByHash(const Crypto::Hash& blockHash) const {
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
 
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
-  IBlockchainCache* segment =
-      findMainChainSegmentContainingBlock(blockHash);  // TODO should it be requested from the main chain?
+  bool isMainChain = false;
+  IBlockchainCache* segment = findSegmentContainingBlock(blockHash, &isMainChain);
   if (segment == nullptr) {
-    throw std::runtime_error("Requested hash wasn't found in main blockchain");
+    return std::nullopt;
+  } else {
+    auto source = isMainChain ? BlockSource::MainChain : BlockSource::AlternativeChain;
+    const uint32_t index = segment->getBlockIndex(blockHash);
+    return std::make_optional<CoreBlockInfo>(source, index, segment->getBlockByIndex(index));
   }
-
-  uint32_t blockIndex = segment->getBlockIndex(blockHash);
-
-  return restoreBlockTemplate(segment, blockIndex);
 }
 
 std::vector<Crypto::Hash> Core::buildSparseChain() const {
@@ -531,7 +551,10 @@ bool Core::queryBlocksDetailed(const std::vector<Crypto::Hash>& knownBlockHashes
       return true;
     }
 
-    fillQueryBlockDetails(fullOffset, currentIndex, Xi::Config::Network::blocksSynchronizationBatchSize(), entries);
+    if (!fillQueryBlockDetails(fullOffset, currentIndex, Xi::Config::Network::blocksSynchronizationBatchSize(),
+                               entries)) {
+      return false;
+    }
 
     return true;
   } catch (std::exception& e) {
@@ -617,15 +640,15 @@ uint64_t Core::getDifficultyForNextBlock() const {
 
   uint32_t topBlockIndex = mainChain->getTopBlockIndex();
 
-  auto nextBlockMajorVersion = getBlockMajorVersionForIndex(topBlockIndex);
+  auto nextBlockVersion = getBlockVersionForIndex(topBlockIndex);
 
   size_t blocksCount =
-      std::min(static_cast<size_t>(topBlockIndex), m_currency.difficultyBlocksCountByVersion(nextBlockMajorVersion));
+      std::min(static_cast<size_t>(topBlockIndex), m_currency.difficultyBlocksCountByVersion(nextBlockVersion));
 
   auto timestamps = mainChain->getLastTimestamps(blocksCount);
   auto difficulties = mainChain->getLastCumulativeDifficulties(blocksCount);
 
-  return m_currency.nextDifficulty(nextBlockMajorVersion, topBlockIndex, timestamps, difficulties);
+  return m_currency.nextDifficulty(nextBlockVersion, topBlockIndex, timestamps, difficulties);
 }
 
 Xi::Result<std::vector<Crypto::Hash>> Core::findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds,
@@ -685,7 +708,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
 
   std::vector<CachedTransaction> transactions;
   uint64_t cumulativeSize = 0;
-  if (!extractTransactions(rawBlock.transactions, transactions, cumulativeSize, blockTemplate.majorVersion)) {
+  if (!extractTransactions(rawBlock.transactions, transactions, cumulativeSize, blockTemplate.version)) {
     logger(Logging::DEBUGGING) << "Couldn't deserialize raw block transactions in block " << blockStr;
     return error::AddBlockErrorCode::DESERIALIZATION_FAILED;
   }
@@ -742,21 +765,13 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     }
   }
 
-  bool success;
-  std::string error;
-  std::tie(success, error) = Mixins::validate(transactions, blockIndex);
-  if (!success) {
-    logger(Logging::DEBUGGING) << error;
-    return error::TransactionValidationError::INVALID_MIXIN;
-  }
-
   TransactionValidatorState validatorState;
   uint64_t cumulativeFee = 0;
   for (const auto& transaction : transactions) {
     uint64_t fee = 0;
     auto transactionValidationResult =
-        validateTransaction(transaction, validatorState, cache, fee, previousBlockIndex,
-                            cachedBlock.getBlock().majorVersion, cachedBlock.getBlock().timestamp);
+        validateTransaction(transaction, validatorState, cache, fee, previousBlockIndex, cachedBlock.getBlock().version,
+                            cachedBlock.getBlock().timestamp);
     if (transactionValidationResult) {
       logger(Logging::DEBUGGING) << "Failed to validate transaction " << transaction.getTransactionHash() << ": "
                                  << transactionValidationResult.message();
@@ -769,12 +784,11 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   uint64_t reward = 0;
   int64_t emissionChange = 0;
   auto alreadyGeneratedCoins = cache->getAlreadyGeneratedCoins(previousBlockIndex);
-  auto lastBlocksSizes =
-      cache->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(cachedBlock.getBlock().majorVersion),
-                                previousBlockIndex, addGenesisBlock);
+  auto lastBlocksSizes = cache->getLastBlocksSizes(
+      m_currency.rewardBlocksWindowByBlockVersion(cachedBlock.getBlock().version), previousBlockIndex, addGenesisBlock);
   auto blocksSizeMedian = Common::medianValue(lastBlocksSizes);
 
-  if (!m_currency.getBlockReward(cachedBlock.getBlock().majorVersion, blocksSizeMedian, cumulativeBlockSize,
+  if (!m_currency.getBlockReward(cachedBlock.getBlock().version, blocksSizeMedian, cumulativeBlockSize,
                                  alreadyGeneratedCoins, cumulativeFee, reward, emissionChange)) {
     logger(Logging::DEBUGGING) << "Block " << blockStr << " has too big cumulative size";
     return error::BlockValidationError::CUMULATIVE_BLOCK_SIZE_TOO_BIG;
@@ -946,7 +960,7 @@ std::error_code Core::addBlock(RawBlock&& rawBlock) {
   throwIfNotInitialized();
 
   BlockTemplate blockTemplate;
-  bool result = fromBinaryArray(blockTemplate, rawBlock.block);
+  bool result = fromBinaryArray(blockTemplate, rawBlock.blockTemplate);
   if (!result) {
     return error::AddBlockErrorCode::DESERIALIZATION_FAILED;
   }
@@ -975,7 +989,7 @@ Xi::Result<std::vector<Crypto::Hash>> Core::addBlock(LiteBlock block, std::vecto
   }
 
   RawBlock filledRawBlock;
-  filledRawBlock.block = toBinaryArray(blockTemplate);
+  filledRawBlock.blockTemplate = toBinaryArray(blockTemplate);
   filledRawBlock.transactions.reserve(blockTemplate.transactionHashes.size());
   std::set<Crypto::Hash> providedTxs;
   std::transform(txs.begin(), txs.end(), std::inserter(providedTxs, providedTxs.begin()),
@@ -1030,7 +1044,7 @@ std::error_code Core::submitBlock(BinaryArray&& rawBlockTemplate) {
   }
 
   RawBlock rawBlock;
-  rawBlock.block = std::move(rawBlockTemplate);
+  rawBlock.blockTemplate = std::move(rawBlockTemplate);
 
   rawBlock.transactions.reserve(blockTemplate.transactionHashes.size());
   for (const auto& transactionHash : blockTemplate.transactionHashes) {
@@ -1188,18 +1202,20 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   }
 
   b = boost::value_initialized<BlockTemplate>();
-  b.majorVersion = BlockVersion{getBlockMajorVersionForIndex(index)};
-  b.minorVersion = Xi::Config::BlockVersion::expectedMinorVersion();
+  b.version = BlockVersion{getBlockVersionForIndex(index)};
+  b.upgradeVote = b.version;
   b.previousBlockHash = getTopBlockHash();
 
-  if (m_currency.isStaticRewardEnabledForBlockVersion(b.majorVersion)) {
-    auto staticReward = m_currency.constructStaticRewardTx(b.previousBlockHash, b.majorVersion, index);
+  if (m_currency.isStaticRewardEnabledForBlockVersion(b.version)) {
+    auto staticReward = m_currency.constructStaticRewardTx(b.previousBlockHash, b.version, index);
     if (staticReward.isError() || !staticReward.value().has_value()) {
       logger(Logging::ERROR) << "expected static reward but consturation failed";
       return false;
     }
     CachedTransaction cStaticReward{std::move(staticReward.take().value())};
-    b.staticRewardHash = cStaticReward.getTransactionHash();
+    auto txHash = cStaticReward.getTransactionHash();
+    b.staticRewardHash = Xi::Crypto::Hash::Crc::Hash16::Null;
+    compute(txHash.span(), *b.staticRewardHash);
   } else {
     b.staticRewardHash = std::nullopt;
   }
@@ -1230,7 +1246,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
      https://github.com/loki-project/loki/pull/26 */
 
   /* How many blocks we look in the past to calculate the median timestamp */
-  uint32_t blockchain_timestamp_check_window = m_currency.timestampCheckWindow(b.majorVersion);
+  uint32_t blockchain_timestamp_check_window = m_currency.timestampCheckWindow(b.version);
 
   /* Skip the first N blocks, we don't have enough blocks to calculate a
      proper median yet */
@@ -1267,8 +1283,8 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
      expected block size
   */
   // make blocks coin-base tx looks close to real coinbase tx to get truthful blob size
-  bool r = m_currency.constructMinerTx(b.majorVersion, index, medianSize, alreadyGeneratedCoins, transactionsSize, fee,
-                                       adr, b.baseTransaction, extraNonce, 20);
+  bool r = m_currency.constructMinerTx(b.version, index, medianSize, alreadyGeneratedCoins, transactionsSize, fee, adr,
+                                       b.baseTransaction, extraNonce, 20);
   if (!r) {
     logger(Logging::ERROR) << "Failed to construct miner tx, first chance";
     return false;
@@ -1277,7 +1293,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   size_t cumulativeSize = transactionsSize + getObjectBinarySize(b.baseTransaction);
   const size_t TRIES_COUNT = 10;
   for (size_t tryCount = 0; tryCount < TRIES_COUNT; ++tryCount) {
-    r = m_currency.constructMinerTx(b.majorVersion, index, medianSize, alreadyGeneratedCoins, cumulativeSize, fee, adr,
+    r = m_currency.constructMinerTx(b.version, index, medianSize, alreadyGeneratedCoins, cumulativeSize, fee, adr,
                                     b.baseTransaction, extraNonce, 20);
     if (!r) {
       logger(Logging::ERROR) << "Failed to construct miner tx, second chance";
@@ -1379,7 +1395,7 @@ std::vector<BlockTemplate> Core::getAlternativeBlocks() const {
     if (mainChainSet.count(cache.get())) continue;
     for (auto index = cache->getStartBlockIndex(); index <= cache->getTopBlockIndex(); ++index) {
       // TODO: optimize
-      alternativeBlocks.push_back(fromBinaryArray<BlockTemplate>(cache->getBlockByIndex(index).block));
+      alternativeBlocks.push_back(fromBinaryArray<BlockTemplate>(cache->getBlockByIndex(index).blockTemplate));
     }
   }
 
@@ -1398,10 +1414,10 @@ std::vector<Transaction> Core::getPoolTransactions() const {
 
 bool Core::extractTransactions(const std::vector<BinaryArray>& rawTransactions,
                                std::vector<CachedTransaction>& transactions, uint64_t& cumulativeSize,
-                               BlockVersion blockMajorVersion) {
+                               BlockVersion blockVersion) {
   try {
     for (const auto& rawTransaction : rawTransactions) {
-      if (rawTransaction.size() > m_currency.maxTxSize(blockMajorVersion)) {
+      if (rawTransaction.size() > m_currency.maxTxSize(blockVersion)) {
         logger(Logging::INFO) << "Raw transaction size " << rawTransaction.size() << " is too big.";
         return false;
       }
@@ -1419,9 +1435,9 @@ bool Core::extractTransactions(const std::vector<BinaryArray>& rawTransactions,
 
 std::error_code Core::validateTransaction(const CachedTransaction& cachedTransaction, TransactionValidatorState& state,
                                           IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex,
-                                          BlockVersion blockMajorVersion, uint64_t blockTimestamp) {
+                                          BlockVersion blockVersion, uint64_t blockTimestamp) {
   // TransactionValidatorState currentState;
-  if (cachedTransaction.getTransactionBinaryArray().size() > currency().maxTxSize(blockMajorVersion)) {
+  if (cachedTransaction.getTransactionBinaryArray().size() > currency().maxTxSize(blockVersion)) {
     return error::TransactionValidationError::TOO_LARGE;
   }
 
@@ -1439,9 +1455,9 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
     return error::TransactionValidationError::OUTPUTS_NOT_CANONCIAL;
   }
 
-  if (!(fee == 0 && currency().isFusionTransaction(transaction, cachedTransaction.getBlobSize(), blockIndex))) {
+  if (!(fee == 0 && currency().isFusionTransaction(transaction, cachedTransaction.getBlobSize(), blockVersion))) {
     const size_t canonicalBuckets = countCanonicalDecomposition(transaction);
-    const auto minimumFee = currency().minimumFee() * (canonicalBuckets > 3 ? (canonicalBuckets - 3) : 1);
+    const auto minimumFee = currency().minimumFee(blockVersion) * (canonicalBuckets > 3 ? (canonicalBuckets - 3) : 1);
     if (fee < minimumFee) {
       return error::TransactionValidationError::FEE_INSUFFICIENT;
     }
@@ -1452,11 +1468,21 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
     return error;
   }
 
+  const size_t requiredRingSize = m_currency.requiredMixin(blockVersion) + 1;
+  std::map<Amount, std::set<uint32_t>> usedGlobalIndices;
+
   size_t inputIndex = 0;
   for (const auto& input : transaction.inputs) {
     if (auto keyInput = std::get_if<KeyInput>(&input)) {
       if (!state.spentKeyImages.insert(keyInput->keyImage).second) {
         return error::TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT;
+      }
+
+      const auto ringSize = keyInput->outputIndices.size();
+      if (ringSize < requiredRingSize) {
+        return error::TransactionValidationError::INPUT_MIXIN_TOO_LOW;
+      } else if (ringSize > requiredRingSize) {
+        return error::TransactionValidationError::INPUT_MIXIN_TOO_HIGH;
       }
 
       if (!checkpoints.isInCheckpointZone(blockIndex + 1)) {
@@ -1467,10 +1493,11 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
         std::vector<PublicKey> outputKeys;
         assert(!keyInput->outputIndices.empty());
 
-        std::vector<uint32_t> globalIndexes(keyInput->outputIndices.size());
-        globalIndexes[0] = keyInput->outputIndices[0];
-        for (size_t i = 1; i < keyInput->outputIndices.size(); ++i) {
-          globalIndexes[i] = globalIndexes[i - 1] + keyInput->outputIndices[i];
+        std::vector<uint32_t> globalIndexes = relativeOutputOffsetsToAbsolute(keyInput->outputIndices);
+        for (auto globalIndex : globalIndexes) {
+          if (!usedGlobalIndices[keyInput->amount].insert(globalIndex).second) {
+            return error::TransactionValidationError::INPUT_DUPLICATE_GLOBAL_INDEX;
+          }
         }
 
         auto result = cache->extractKeyOutputKeys(
@@ -1614,20 +1641,20 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
 
   minerReward = 0;
 
-  if (m_upgradeManager->getBlockMajorVersion(cachedBlock.getBlockIndex()) != block.majorVersion) {
-    return error::BlockValidationError::WRONG_MAJOR_VERSION;
+  if (m_upgradeManager->getBlockVersion(cachedBlock.getBlockIndex()) != block.version) {
+    return error::BlockValidationError::WRONG_VERSION;
   }
-  if (!Xi::Config::BlockVersion::validateMinorVersion(block.minorVersion)) {
-    return error::BlockValidationError::WRONG_MINOR_VERSION;
+  if (block.upgradeVote < block.version || block.upgradeVote.native() > block.version.native() + 1) {
+    return error::BlockValidationError::WRONG_UPGRADE_VOTE;
   }
 
-  if (block.timestamp > getAdjustedTime() + m_currency.blockFutureTimeLimit(block.majorVersion)) {
+  if (block.timestamp > getAdjustedTime() + m_currency.blockFutureTimeLimit(block.version)) {
     return error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_FUTURE;
   }
 
-  auto timestamps = cache->getLastTimestamps(m_currency.timestampCheckWindow(block.majorVersion), previousBlockIndex,
-                                             addGenesisBlock);
-  if (timestamps.size() >= m_currency.timestampCheckWindow(block.majorVersion)) {
+  auto timestamps =
+      cache->getLastTimestamps(m_currency.timestampCheckWindow(block.version), previousBlockIndex, addGenesisBlock);
+  if (timestamps.size() >= m_currency.timestampCheckWindow(block.version)) {
     auto median_ts = Common::medianValue(timestamps);
     if (block.timestamp < median_ts) {
       return error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_PAST;
@@ -1701,12 +1728,12 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
 
   // BEGIN: Static Reward Hash Validation ----------------------------------------------------------------------------
   const auto& b = cachedBlock.getBlock();
-  if (m_currency.isStaticRewardEnabledForBlockVersion(b.majorVersion)) {
+  if (m_currency.isStaticRewardEnabledForBlockVersion(b.version)) {
     if (!b.staticRewardHash.has_value()) {
       return error::BlockValidationError::STATIC_REWARD_MISMATCH;
     }
 
-    auto staticReward = m_currency.constructStaticRewardTx(b.previousBlockHash, b.majorVersion, previousBlockIndex + 1);
+    auto staticReward = m_currency.constructStaticRewardTx(b.previousBlockHash, b.version, previousBlockIndex + 1);
     if (staticReward.isError() || !staticReward.value().has_value()) {
       logger(Logging::ERROR) << "expected static reward but consturation failed while validating block";
       return error::BlockValidationError::STATIC_REWARD_MISMATCH;
@@ -1714,7 +1741,9 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     }
     CachedTransaction cStaticReward{std::move(staticReward.take().value())};
     const auto expectedStaticRewardHash = cStaticReward.getTransactionHash();
-    if (*b.staticRewardHash != expectedStaticRewardHash) {
+    Xi::Crypto::Hash::Crc::Hash16 crc{};
+    compute(expectedStaticRewardHash.span(), crc);
+    if (std::memcmp(b.staticRewardHash->data(), crc.data(), crc.size()) != 0) {
       return error::BlockValidationError::STATIC_REWARD_MISMATCH;
     }
   } else if (b.staticRewardHash.has_value()) {
@@ -1795,7 +1824,7 @@ bool Core::load() {
 }
 
 bool Core::initRootSegment() {
-  std::unique_ptr<IBlockchainCache> cache = this->blockchainCacheFactory->createRootBlockchainCache(m_currency);
+  auto cache = this->blockchainCacheFactory->createRootBlockchainCache(m_currency);
 
   mainChainSet.emplace(cache.get());
 
@@ -1834,7 +1863,7 @@ bool Core::importBlocksFromStorage() {
 
     std::vector<CachedTransaction> transactions;
     uint64_t cumulativeSize = 0;
-    if (!extractTransactions(rawBlock.transactions, transactions, cumulativeSize, blockTemplate.majorVersion)) {
+    if (!extractTransactions(rawBlock.transactions, transactions, cumulativeSize, blockTemplate.version)) {
       logger(Logging::ERROR) << "Couldn't deserialize raw block transactions in block " << cachedBlock.getBlockHash();
       throw std::system_error(make_error_code(error::AddBlockErrorCode::DESERIALIZATION_FAILED));
     }
@@ -1884,29 +1913,41 @@ void Core::updateMainChainSet() {
   } while (chainPtr != nullptr);
 }
 
-IBlockchainCache* Core::findSegmentContainingBlock(const Crypto::Hash& blockHash) const {
+IBlockchainCache* Core::findSegmentContainingBlock(const Crypto::Hash& blockHash, bool* isMainChain) const {
   assert(chainsLeaves.size() > 0);
 
   // first search in main chain
   auto blockSegment = findMainChainSegmentContainingBlock(blockHash);
   if (blockSegment != nullptr) {
+    if (isMainChain != nullptr) {
+      *isMainChain = true;
+    }
     return blockSegment;
   }
 
   // than search in alternative chains
+  if (isMainChain != nullptr) {
+    *isMainChain = false;
+  }
   return findAlternativeSegmentContainingBlock(blockHash);
 }
 
-IBlockchainCache* Core::findSegmentContainingBlock(uint32_t blockHeight) const {
+IBlockchainCache* Core::findSegmentContainingBlock(uint32_t blockHeight, bool* isMainChain) const {
   assert(chainsLeaves.size() > 0);
 
   // first search in main chain
   auto blockSegment = findMainChainSegmentContainingBlock(blockHeight);
   if (blockSegment != nullptr) {
+    if (isMainChain != nullptr) {
+      *isMainChain = true;
+    }
     return blockSegment;
   }
 
   // than search in alternative chains
+  if (isMainChain != nullptr) {
+    *isMainChain = false;
+  }
   return findAlternativeSegmentContainingBlock(blockHeight);
 }
 
@@ -1942,7 +1983,7 @@ BlockTemplate Core::restoreBlockTemplate(IBlockchainCache* blockchainCache, uint
   RawBlock rawBlock = blockchainCache->getBlockByIndex(blockIndex);
 
   BlockTemplate block;
-  if (!fromBinaryArray(block, rawBlock.block)) {
+  if (!fromBinaryArray(block, rawBlock.blockTemplate)) {
     throw std::runtime_error("Coulnd't deserialize BlockTemplate");
   }
 
@@ -2074,7 +2115,7 @@ void Core::fillQueryBlockShortInfo(uint32_t fullOffset, uint32_t currentIndex, s
     RawBlock rawBlock = getRawBlock(segment, blockIndex);
 
     BlockShortInfo blockShortInfo;
-    blockShortInfo.block = std::move(rawBlock.block);
+    blockShortInfo.block = std::move(rawBlock.blockTemplate);
     blockShortInfo.block_hash = segment->getBlockHash(blockIndex);
 
     blockShortInfo.transaction_prefixes.reserve(rawBlock.transactions.size());
@@ -2097,7 +2138,7 @@ void Core::fillQueryBlockShortInfo(uint32_t fullOffset, uint32_t currentIndex, s
   }
 }
 
-void Core::fillQueryBlockDetails(uint32_t fullOffset, uint32_t currentIndex, size_t maxItemsCount,
+bool Core::fillQueryBlockDetails(uint32_t fullOffset, uint32_t currentIndex, size_t maxItemsCount,
                                  std::vector<BlockDetails>& entries) const {
   assert(currentIndex >= fullOffset);
 
@@ -2107,10 +2148,13 @@ void Core::fillQueryBlockDetails(uint32_t fullOffset, uint32_t currentIndex, siz
 
   for (uint32_t blockIndex = fullOffset; blockIndex < fullOffset + fullBlocksCount; ++blockIndex) {
     IBlockchainCache* segment = findMainChainSegmentContainingBlock(blockIndex);
+    XI_RETURN_EC_IF(segment == nullptr, false);
     Crypto::Hash blockHash = segment->getBlockHash(blockIndex);
-    BlockDetails block = getBlockDetails(blockHash);
-    entries.emplace_back(std::move(block));
+    auto block = getBlockDetails(blockHash);
+    XI_RETURN_EC_IF_NOT(block, false);
+    entries.emplace_back(std::move(*block));
   }
+  return true;
 }
 
 void Core::getTransactionPoolDifference(const std::vector<Crypto::Hash>& knownHashes,
@@ -2136,18 +2180,16 @@ void Core::getTransactionPoolDifference(const std::vector<Crypto::Hash>& knownHa
   deletedTransactions.assign(knownTransactions.begin(), knownTransactions.end());
 }
 
-BlockVersion Core::getBlockMajorVersionForIndex(uint32_t height) const {
-  return m_upgradeManager->getBlockMajorVersion(height);
-}
+BlockVersion Core::getBlockVersionForIndex(uint32_t height) const { return m_upgradeManager->getBlockVersion(height); }
 
 size_t Core::calculateCumulativeBlocksizeLimit(uint32_t height) const {
-  const auto nextBlockMajorVersion = getBlockMajorVersionForIndex(height);
-  size_t nextBlockGrantedFullRewardZone = m_currency.blockGrantedFullRewardZoneByBlockVersion(nextBlockMajorVersion);
+  const auto nextBlockVersion = getBlockVersionForIndex(height);
+  size_t nextBlockGrantedFullRewardZone = m_currency.blockGrantedFullRewardZoneByBlockVersion(nextBlockVersion);
 
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
   // FIXME: skip gensis here?
-  auto sizes = chainsLeaves[0]->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(nextBlockMajorVersion));
+  auto sizes = chainsLeaves[0]->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(nextBlockVersion));
   uint64_t median = Common::medianValue(sizes);
   if (median <= nextBlockGrantedFullRewardZone) {
     median = nextBlockGrantedFullRewardZone;
@@ -2166,7 +2208,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, uint32_t index, size_t fullRe
   const auto generatedCoins = chainsLeaves[0]->getAlreadyGeneratedCoins(index - 1);
   int64_t emissionChange = 0;
   uint64_t currentReward = 0;
-  m_currency.getBlockReward(block.majorVersion, fullRewardZone, 0, generatedCoins, fee, currentReward, emissionChange);
+  m_currency.getBlockReward(block.version, fullRewardZone, 0, generatedCoins, fee, currentReward, emissionChange);
 
   size_t cumulativeSize = m_currency.minerTxBlobReservedSize();
 
@@ -2190,7 +2232,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, uint32_t index, size_t fullRe
       }
 
       uint64_t newReward = 0;
-      m_currency.getBlockReward(block.majorVersion, fullRewardZone, cumulativeSize + iSize, generatedCoins, fee + iFee,
+      m_currency.getBlockReward(block.version, fullRewardZone, cumulativeSize + iSize, generatedCoins, fee + iFee,
                                 newReward, emissionChange);
       if (newReward < currentReward) {
         break;
@@ -2226,7 +2268,7 @@ void Core::deleteLeaf(size_t leafIndex) {
 
   auto segmentIt =
       std::find_if(chainsStorage.begin(), chainsStorage.end(),
-                   [&leaf](const std::unique_ptr<IBlockchainCache>& segment) { return segment.get() == leaf; });
+                   [&leaf](const std::shared_ptr<IBlockchainCache>& segment) { return segment.get() == leaf; });
 
   assert(segmentIt != chainsStorage.end());
 
@@ -2265,7 +2307,7 @@ void Core::mergeMainChainSegments() {
 
   auto rootIt = std::find_if(
       chainsStorage.begin(), chainsStorage.end(),
-      [&rootSegment](const std::unique_ptr<IBlockchainCache>& segment) { return segment.get() == rootSegment; });
+      [&rootSegment](const std::shared_ptr<IBlockchainCache>& segment) { return segment.get() == rootSegment; });
 
   assert(rootIt != chainsStorage.end());
 
@@ -2287,7 +2329,7 @@ void Core::mergeSegments(IBlockchainCache* acceptingSegment, IBlockchainCache* s
     PushedBlockInfo info = segment->getPushedBlockInfo(blockIndex);
 
     BlockTemplate block;
-    if (!fromBinaryArray(block, info.rawBlock.block)) {
+    if (!fromBinaryArray(block, info.rawBlock.blockTemplate)) {
       logger(Logging::WARNING) << "mergeSegments error: Couldn't deserialize block";
       throw std::runtime_error("Couldn't deserialize block");
     }
@@ -2303,33 +2345,33 @@ void Core::mergeSegments(IBlockchainCache* acceptingSegment, IBlockchainCache* s
   }
 }
 
-BlockDetails Core::getBlockDetails(const uint32_t blockHeight) const {
+std::optional<BlockDetails> Core::getBlockDetails(const uint32_t blockHeight) const {
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
 
   IBlockchainCache* segment = findSegmentContainingBlock(blockHeight);
   if (segment == nullptr) {
-    throw std::runtime_error("Requested block height wasn't found in blockchain.");
+    return std::nullopt;
   }
 
   return getBlockDetails(segment->getBlockHash(blockHeight));
 }
 
-BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
+std::optional<BlockDetails> Core::getBlockDetails(const Crypto::Hash& blockHash) const {
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
 
   IBlockchainCache* segment = findSegmentContainingBlock(blockHash);
   if (segment == nullptr) {
-    throw std::runtime_error("Requested hash wasn't found in blockchain.");
+    return std::nullopt;
   }
 
   uint32_t blockIndex = segment->getBlockIndex(blockHash);
   BlockTemplate blockTemplate = restoreBlockTemplate(segment, blockIndex);
 
   BlockDetails blockDetails;
-  blockDetails.majorVersion = blockTemplate.majorVersion;
-  blockDetails.minorVersion = blockTemplate.minorVersion;
+  blockDetails.version = blockTemplate.version;
+  blockDetails.upgradeVote = blockTemplate.upgradeVote;
   blockDetails.timestamp = blockTemplate.timestamp;
   blockDetails.prevBlockHash = blockTemplate.previousBlockHash;
   blockDetails.nonce = blockTemplate.nonce;
@@ -2339,7 +2381,7 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
   for (const TransactionOutput& out : blockTemplate.baseTransaction.outputs) {
     blockDetails.reward += out.amount;
   }
-  blockDetails.staticReward = m_currency.staticRewardAmountForBlockVersion(blockDetails.majorVersion);
+  blockDetails.staticReward = m_currency.staticRewardAmountForBlockVersion(blockDetails.version);
 
   blockDetails.height = BlockHeight::fromIndex(blockIndex);
   blockDetails.isAlternative = mainChainSet.count(segment) == 0;
@@ -2359,22 +2401,22 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
 
   uint64_t prevBlockGeneratedCoins = 0;
   blockDetails.sizeMedian = 0;
-  auto lastBlocksSizes = segment->getLastBlocksSizes(
-      m_currency.rewardBlocksWindowByBlockVersion(blockDetails.majorVersion), blockIndex, addGenesisBlock);
+  auto lastBlocksSizes = segment->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(blockDetails.version),
+                                                     blockIndex, addGenesisBlock);
   blockDetails.sizeMedian = Common::medianValue(lastBlocksSizes);
   prevBlockGeneratedCoins = segment->getAlreadyGeneratedCoins(blockIndex);
 
   int64_t emissionChange = 0;
-  bool result = m_currency.getBlockReward(blockDetails.majorVersion, blockDetails.sizeMedian, 0,
-                                          prevBlockGeneratedCoins, 0, blockDetails.baseReward, emissionChange);
+  bool result = m_currency.getBlockReward(blockDetails.version, blockDetails.sizeMedian, 0, prevBlockGeneratedCoins, 0,
+                                          blockDetails.baseReward, emissionChange);
   if (result) {
   }
   assert(result);
 
   uint64_t currentReward = 0;
-  result = m_currency.getBlockReward(blockDetails.majorVersion, blockDetails.sizeMedian,
-                                     blockDetails.transactionsCumulativeSize, prevBlockGeneratedCoins, 0, currentReward,
-                                     emissionChange);
+  result =
+      m_currency.getBlockReward(blockDetails.version, blockDetails.sizeMedian, blockDetails.transactionsCumulativeSize,
+                                prevBlockGeneratedCoins, 0, currentReward, emissionChange);
   assert(result);
 
   if (blockDetails.baseReward == 0 && currentReward == 0) {
@@ -2405,7 +2447,7 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
     blockDetails.totalFeeAmount += blockDetails.transactions.back().fee;
   }
 
-  return blockDetails;
+  return std::make_optional<BlockDetails>(std::move(blockDetails));
 }
 
 TransactionDetails Core::getTransactionDetails(const Crypto::Hash& transactionHash) const {
@@ -2498,7 +2540,7 @@ TransactionDetails Core::getTransactionDetails(const Crypto::Hash& transactionHa
     }
   }
 
-  transactionDetails.paymentId = boost::value_initialized<Crypto::Hash>();
+  transactionDetails.paymentId = boost::value_initialized<PaymentId>();
   if (transaction->getPaymentId(transactionDetails.paymentId)) {
     transactionDetails.hasPaymentId = true;
   }
@@ -2599,7 +2641,7 @@ std::vector<Crypto::Hash> Core::getBlockHashesByTimestamps(uint64_t timestampBeg
   return mainChain->getBlockHashesByTimestamps(timestampBegin, secondsCount);
 }
 
-std::vector<Crypto::Hash> Core::getTransactionHashesByPaymentId(const Hash& paymentId) const {
+std::vector<Crypto::Hash> Core::getTransactionHashesByPaymentId(const PaymentId& paymentId) const {
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
 
@@ -2616,13 +2658,124 @@ std::vector<Crypto::Hash> Core::getTransactionHashesByPaymentId(const Hash& paym
   return hashes;
 }
 
+SegmentReferenceVector<BlockHash> Core::queryBlockSegments(ConstBlockHashSpan hashes) const {
+  using segment_reference = SegmentReference<BlockHash>;
+
+  throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
+
+  std::map<const IBlockchainCache*, segment_reference> references{};
+  std::set<BlockHash> processed{};
+  for (const auto& blockHash : hashes) {
+    if (!processed.insert(blockHash).second) {
+      continue;
+    }
+    bool isMainChain = false;
+    const auto segment = findSegmentContainingBlock(blockHash, &isMainChain);
+    if (segment != nullptr) {
+      auto search = references.find(segment);
+      if (search == references.end()) {
+        search =
+            references
+                .emplace(std::piecewise_construct, std::forward_as_tuple(segment),
+                         std::forward_as_tuple(segment->shared_from_this(),
+                                               isMainChain ? BlockSource::MainChain : BlockSource::AlternativeChain))
+                .first;
+      }
+      search->second.content.push_back(blockHash);
+    }
+  }
+
+  SegmentReferenceVector<BlockHash> reval{};
+  reval.reserve(references.size());
+  for (auto& ref : references) {
+    reval.emplace_back(std::move(ref.second));
+  }
+  return reval;
+}
+
+SegmentReferenceVector<BlockHeight> Core::queryBlockSegments(ConstBlockHeightSpan heights) const {
+  using segment_reference = SegmentReference<BlockHeight>;
+
+  throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
+
+  std::map<const IBlockchainCache*, segment_reference> references{};
+  std::set<BlockHeight> processed{};
+  for (const auto& blockHeight : heights) {
+    if (blockHeight.isNull()) {
+      continue;
+    } else if (!processed.insert(blockHeight).second) {
+      continue;
+    }
+
+    bool isMainChain = false;
+    const auto segment = findSegmentContainingBlock(blockHeight.toIndex(), &isMainChain);
+    if (segment != nullptr) {
+      auto search = references.find(segment);
+      if (search == references.end()) {
+        search =
+            references
+                .emplace(std::piecewise_construct, std::forward_as_tuple(segment),
+                         std::forward_as_tuple(segment->shared_from_this(),
+                                               isMainChain ? BlockSource::MainChain : BlockSource::AlternativeChain))
+                .first;
+      }
+      search->second.content.push_back(blockHeight);
+    }
+  }
+
+  SegmentReferenceVector<BlockHeight> reval{};
+  reval.reserve(references.size());
+  for (auto& ref : references) {
+    reval.emplace_back(std::move(ref.second));
+  }
+  return reval;
+}
+
+SegmentReferenceVector<TransactionHash> Core::queryTransactionSegments(ConstTransactionHashSpan hashes) const {
+  using segment_reference = SegmentReference<TransactionHash>;
+
+  throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
+
+  std::map<const IBlockchainCache*, segment_reference> references{};
+  std::set<BlockHash> processed{};
+  for (const auto& blockHash : hashes) {
+    if (!processed.insert(blockHash).second) {
+      continue;
+    }
+    bool isMainChain = false;
+    const auto segment = findSegmentContainingTransaction(blockHash, &isMainChain);
+    if (segment != nullptr) {
+      auto search = references.find(segment);
+      if (search == references.end()) {
+        search =
+            references
+                .emplace(std::piecewise_construct, std::forward_as_tuple(segment),
+                         std::forward_as_tuple(segment->shared_from_this(),
+                                               isMainChain ? BlockSource::MainChain : BlockSource::AlternativeChain))
+                .first;
+      }
+      search->second.content.push_back(blockHash);
+    }
+  }
+
+  SegmentReferenceVector<BlockHash> reval{};
+  reval.reserve(references.size());
+  for (auto& ref : references) {
+    reval.emplace_back(std::move(ref.second));
+  }
+  return reval;
+}
+
 void Core::throwIfNotInitialized() const {
   if (!initialized) {
     throw std::system_error(make_error_code(error::CoreErrorCode::NOT_INITIALIZED));
   }
 }
 
-IBlockchainCache* Core::findSegmentContainingTransaction(const Crypto::Hash& transactionHash) const {
+IBlockchainCache* Core::findSegmentContainingTransaction(const Crypto::Hash& transactionHash, bool* isMainChain) const {
   assert(!chainsLeaves.empty());
   assert(!chainsStorage.empty());
 
@@ -2632,6 +2785,9 @@ IBlockchainCache* Core::findSegmentContainingTransaction(const Crypto::Hash& tra
   // find in main chain
   do {
     if (segment->hasTransaction(transactionHash)) {
+      if (isMainChain != nullptr) {
+        *isMainChain = true;
+      }
       return segment;
     }
 
@@ -2644,6 +2800,9 @@ IBlockchainCache* Core::findSegmentContainingTransaction(const Crypto::Hash& tra
 
     while (mainChainSet.count(segment) == 0) {
       if (segment->hasTransaction(transactionHash)) {
+        if (isMainChain != nullptr) {
+          *isMainChain = false;
+        }
         return segment;
       }
 
@@ -2684,10 +2843,10 @@ void Core::updateBlockMedianSize() {
   auto mainChain = chainsLeaves[0];
 
   size_t nextBlockGrantedFullRewardZone = m_currency.blockGrantedFullRewardZoneByBlockVersion(
-      m_upgradeManager->getBlockMajorVersion(mainChain->getTopBlockIndex() + 1));
+      m_upgradeManager->getBlockVersion(mainChain->getTopBlockIndex() + 1));
 
   auto lastBlockSizes = mainChain->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(
-      m_upgradeManager->getBlockMajorVersion(mainChain->getTopBlockIndex() + 1)));
+      m_upgradeManager->getBlockVersion(mainChain->getTopBlockIndex() + 1)));
 
   blockMedianSize =
       std::max(Common::medianValue(lastBlockSizes), static_cast<uint64_t>(nextBlockGrantedFullRewardZone));

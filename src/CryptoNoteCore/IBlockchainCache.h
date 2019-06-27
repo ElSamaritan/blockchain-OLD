@@ -25,6 +25,7 @@
 
 #include "CryptoNoteCore/CryptoNote.h"
 #include "CryptoNoteCore/CachedBlock.h"
+#include "CryptoNoteCore/Blockchain/RawBlock.h"
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"
 #include "CryptoNoteCore/Transactions/TransactionValidatiorState.h"
 
@@ -56,6 +57,62 @@ struct PushedBlockInfo {
   uint64_t timestamp;
 };
 
+class ISerializer;
+
+struct SpentKeyImage {
+  uint32_t blockIndex;
+  Crypto::KeyImage keyImage;
+
+  [[nodiscard]] bool serialize(ISerializer& s);
+};
+
+struct CachedTransactionInfo {
+  uint32_t blockIndex;
+  uint32_t transactionIndex;
+  Crypto::Hash transactionHash;
+  uint64_t unlockTime;
+  std::vector<TransactionOutputTarget> outputs;
+  // needed for getTransactionGlobalIndexes query
+  std::vector<uint32_t> globalIndexes;
+  bool isDeterministicallyGenerated;
+
+  [[nodiscard]] bool serialize(ISerializer& s);
+};
+using CachedTransactionInfoVector = std::vector<CachedTransactionInfo>;
+
+struct CachedBlockInfo {
+  Crypto::Hash blockHash{Crypto::Hash::Null};
+  BlockVersion version{BlockVersion::Null};
+  BlockVersion upgradeVote{BlockVersion::Null};
+  uint64_t timestamp;
+  uint64_t cumulativeDifficulty;
+  uint64_t cumulativeSize;
+  uint64_t alreadyGeneratedCoins;
+  uint64_t alreadyGeneratedTransactions;
+
+  [[nodiscard]] bool serialize(ISerializer& s);
+};
+using CachedBlockInfoVector = std::vector<CachedBlockInfo>;
+
+struct OutputGlobalIndexesForAmount {
+  uint32_t startIndex = 0;
+
+  // 1. This container must be sorted by PackedOutIndex::blockIndex and PackedOutIndex::transactionIndex
+  // 2. GlobalOutputIndex for particular output is calculated as following: startIndex + index in vector
+  std::vector<PackedOutIndex> outputs;
+
+  [[nodiscard]] bool serialize(ISerializer& s);
+};
+
+struct PaymentIdTransactionHashPair {
+  PaymentId paymentId;
+  Crypto::Hash transactionHash;
+
+  [[nodiscard]] bool serialize(ISerializer& s);
+};
+
+[[nodiscard]] bool serialize(PackedOutIndex& value, Common::StringView name, CryptoNote::ISerializer& serializer);
+
 class UseGenesis {
  public:
   explicit UseGenesis(bool u) : use(u) {}
@@ -69,7 +126,7 @@ class UseGenesis {
 struct CachedBlockInfo;
 struct CachedTransactionInfo;
 
-class IBlockchainCache {
+class IBlockchainCache : public std::enable_shared_from_this<IBlockchainCache> {
  public:
   using BlockIndex = uint32_t;
   using GlobalOutputIndex = uint32_t;
@@ -79,7 +136,7 @@ class IBlockchainCache {
 
   virtual RawBlock getBlockByIndex(uint32_t index) const = 0;
   virtual BinaryArray getRawTransaction(uint32_t blockIndex, uint32_t transactionIndex) const = 0;
-  virtual std::unique_ptr<IBlockchainCache> split(uint32_t splitBlockIndex) = 0;
+  virtual std::shared_ptr<IBlockchainCache> split(uint32_t splitBlockIndex) = 0;
   virtual void pushBlock(const CachedBlock& cachedBlock, const std::vector<CachedTransaction>& cachedTransactions,
                          const TransactionValidatorState& validatorState, size_t blockSize, uint64_t generatedCoins,
                          uint64_t blockDifficulty, RawBlock&& rawBlock) = 0;
@@ -155,9 +212,16 @@ class IBlockchainCache {
 
   virtual uint32_t getTopBlockIndex() const = 0;
   virtual const Crypto::Hash& getTopBlockHash() const = 0;
+  virtual BlockVersion getTopBlockVersion() const = 0;
   virtual uint32_t getBlockCount() const = 0;
   virtual bool hasBlock(const Crypto::Hash& blockHash) const = 0;
   virtual uint32_t getBlockIndex(const Crypto::Hash& blockHash) const = 0;
+
+  virtual BlockHeightVector getBlockHeights(ConstBlockHashSpan hashes) const = 0;
+  virtual RawBlockVector getBlocks(ConstBlockHeightSpan heights) const = 0;
+  virtual CachedBlockInfoVector getBlockInfos(ConstBlockHeightSpan height) const = 0;
+  virtual CachedTransactionVector getTransactions(ConstTransactionHashSpan ids) const = 0;
+  virtual CachedTransactionInfoVector getTransactionInfos(ConstTransactionHashSpan ids) const = 0;
 
   virtual bool hasTransaction(const Crypto::Hash& transactionHash) const = 0;
 
@@ -219,10 +283,13 @@ class IBlockchainCache {
                                              std::function<uint64_t(const CachedBlockInfo&)> pred) const = 0;
   virtual std::vector<Crypto::Hash> getTransactionHashes() const = 0;
 
-  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const = 0;
+  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const PaymentId& paymentId) const = 0;
   virtual std::vector<Crypto::Hash> getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount) const = 0;
 
   virtual std::vector<uint32_t> getRandomOutsByAmount(uint64_t amount, size_t count, uint32_t blockIndex) const = 0;
 };
+
+using WeakIBlockchainCache = std::weak_ptr<IBlockchainCache>;
+using SharedIBlockchainCache = std::shared_ptr<IBlockchainCache>;
 
 }  // namespace CryptoNote

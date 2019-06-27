@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -58,8 +58,8 @@ namespace Xi {
 namespace Crypto {
 namespace Hash {
 namespace Shake {
-XI_CRYPTO_HASH_DECLARE_HASH_TYPE(Hash128, 128);
-XI_CRYPTO_HASH_DECLARE_HASH_TYPE(Hash256, 256);
+XI_CRYPTO_HASH_DECLARE_HASH_TYPE(Hash128, 128)
+XI_CRYPTO_HASH_DECLARE_HASH_TYPE(Hash256, 256)
 
 void compute(ConstByteSpan data, Hash128 &out);
 void compute(ConstByteSpan data, Hash256 &out);

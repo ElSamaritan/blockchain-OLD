@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -32,9 +32,9 @@ namespace Xi {
 namespace Blockchain {
 namespace Block {
 
-struct Nonce : Xi::enable_blob_from_this<Nonce, 4> {
+struct Nonce : Xi::enable_blob_from_this<Nonce, 8> {
   using enable_blob_from_this::enable_blob_from_this;
-  using integer_type = uint32_t;
+  using integer_type = uint64_t;
   using signed_integer_type = std::make_signed_t<integer_type>;
 
   static const Nonce Null;

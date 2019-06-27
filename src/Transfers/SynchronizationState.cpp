@@ -19,7 +19,6 @@
 
 #include <Xi/Global.hh>
 
-
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
@@ -130,7 +129,7 @@ bool SynchronizationState::load(std::istream& in) {
 bool SynchronizationState::serialize(CryptoNote::ISerializer& s, const std::string& name) {
   XI_RETURN_EC_IF_NOT(s.beginObject(name), false);
   XI_RETURN_EC_IF_NOT(s(m_blockchain, "blockchain"), false);
-  s.endObject();
+  XI_RETURN_EC_IF_NOT(s.endObject(), false);
   return true;
 }
 

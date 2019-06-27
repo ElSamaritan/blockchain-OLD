@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -44,7 +44,7 @@ BlockchainWriteBatch& BlockchainWriteBatch::insertCachedTransaction(const Extend
 }
 
 BlockchainWriteBatch& BlockchainWriteBatch::insertPaymentId(const Crypto::Hash& transactionHash,
-                                                            const Crypto::Hash paymentId,
+                                                            const PaymentId& paymentId,
                                                             uint32_t totalTxsCountForPaymentId) {
   rawDataToInsert.emplace_back(DB::serialize(DB::PAYMENT_ID_TO_TX_HASH_PREFIX, paymentId, totalTxsCountForPaymentId));
   rawDataToInsert.emplace_back(DB::serialize(
@@ -135,7 +135,7 @@ BlockchainWriteBatch& BlockchainWriteBatch::removeCachedTransaction(const Crypto
   return *this;
 }
 
-BlockchainWriteBatch& BlockchainWriteBatch::removePaymentId(const Crypto::Hash paymentId,
+BlockchainWriteBatch& BlockchainWriteBatch::removePaymentId(const PaymentId paymentId,
                                                             uint32_t totalTxsCountForPaymentId) {
   rawDataToInsert.emplace_back(DB::serialize(DB::PAYMENT_ID_TO_TX_HASH_PREFIX, paymentId, totalTxsCountForPaymentId));
   rawKeysToRemove.emplace_back(

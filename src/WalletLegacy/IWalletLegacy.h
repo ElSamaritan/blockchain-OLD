@@ -40,7 +40,6 @@ struct WalletLegacyTransfer {
 
 const TransactionId WALLET_LEGACY_INVALID_TRANSACTION_ID = std::numeric_limits<TransactionId>::max();
 const TransferId WALLET_LEGACY_INVALID_TRANSFER_ID = std::numeric_limits<TransferId>::max();
-const BlockHeight WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT = BlockHeight::Null;
 
 enum class WalletLegacyTransactionState : uint8_t {
   Active,   // --> {Deleted}

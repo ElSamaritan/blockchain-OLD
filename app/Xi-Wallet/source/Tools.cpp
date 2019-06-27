@@ -152,7 +152,7 @@ std::string getPaymentIDFromExtra(const std::string &extra) {
       vecExtra.push_back(static_cast<uint8_t>(it));
     }
 
-    Crypto::Hash paymentIdHash;
+    CryptoNote::PaymentId paymentIdHash;
 
     if (CryptoNote::getPaymentIdFromTxExtra(vecExtra, paymentIdHash)) {
       return Common::podToHex(paymentIdHash);

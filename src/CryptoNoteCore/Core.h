@@ -37,19 +37,18 @@
 #include "CryptoNoteCore/Transactions/ITransactionPoolObserver.h"
 #include "CryptoNoteCore/Transactions/ITransactionPoolCleaner.h"
 #include "CryptoNoteCore/Transactions/TransactionValidatiorState.h"
+#include "Xi/Blockchain/Explorer/Data/Data.hpp"
 
 namespace CryptoNote {
 
-class Core : public ICore,
-             public ICoreInformation,
-             public IBlockchain, /* TODO move to Blockchain class */
-             ITransactionPoolObserver {
+class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
  public:
   Core(const Currency& currency, Logging::ILogger& logger, Checkpoints& checkpoints, System::Dispatcher& dispatcher,
        std::unique_ptr<IBlockchainCacheFactory>&& blockchainCacheFactory,
        std::unique_ptr<IMainChainStorage>&& mainChainStorage);
   virtual ~Core() override;
 
+  virtual Xi::Concurrent::RecursiveLock::lock_t lock() const override;
   virtual bool addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) override;
   virtual bool removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) override;
 
@@ -74,12 +73,13 @@ class Core : public ICore,
  public:
   virtual uint32_t getTopBlockIndex() const override;
   virtual Crypto::Hash getTopBlockHash() const override;
+  virtual BlockVersion getTopBlockVersion() const override;
   virtual Crypto::Hash getBlockHashByIndex(uint32_t blockIndex) const override;
   virtual uint64_t getBlockTimestampByIndex(uint32_t blockIndex) const override;
 
-  virtual bool hasBlock(const Crypto::Hash& blockHash) const override;
-  virtual BlockTemplate getBlockByIndex(uint32_t index) const override;
-  virtual BlockTemplate getBlockByHash(const Crypto::Hash& blockHash) const override;
+  virtual std::optional<BlockSource> hasBlock(const Crypto::Hash& blockHash) const override;
+  virtual std::optional<CoreBlockInfo> getBlockByIndex(uint32_t index) const override;
+  virtual std::optional<CoreBlockInfo> getBlockByHash(const Crypto::Hash& blockHash) const override;
 
   virtual std::vector<Crypto::Hash> buildSparseChain() const override;
   virtual Xi::Result<std::vector<Crypto::Hash>> findBlockchainSupplement(
@@ -152,13 +152,17 @@ class Core : public ICore,
   [[nodiscard]] virtual bool save() override;
   [[nodiscard]] virtual bool load() override;
 
-  virtual BlockDetails getBlockDetails(const Crypto::Hash& blockHash) const override;
-  BlockDetails getBlockDetails(const uint32_t blockHeight) const;
+  virtual std::optional<BlockDetails> getBlockDetails(const Crypto::Hash& blockHash) const override;
+  std::optional<BlockDetails> getBlockDetails(const uint32_t blockHeight) const;
   virtual TransactionDetails getTransactionDetails(const Crypto::Hash& transactionHash) const override;
   virtual std::vector<Crypto::Hash> getAlternativeBlockHashesByIndex(uint32_t blockIndex) const override;
   virtual std::vector<Crypto::Hash> getBlockHashesByTimestamps(uint64_t timestampBegin,
                                                                size_t secondsCount) const override;
-  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const override;
+  virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const PaymentId& paymentId) const override;
+
+  virtual SegmentReferenceVector<BlockHash> queryBlockSegments(ConstBlockHashSpan hashes) const override;
+  virtual SegmentReferenceVector<BlockHeight> queryBlockSegments(ConstBlockHeightSpan heights) const override;
+  virtual SegmentReferenceVector<BlockHash> queryTransactionSegments(ConstBlockHashSpan hashes) const override;
 
   virtual BlockHeight get_current_blockchain_height() const;
 
@@ -169,7 +173,7 @@ class Core : public ICore,
   Logging::LoggerRef logger;
   Checkpoints& checkpoints;
   std::unique_ptr<IUpgradeManager> m_upgradeManager;
-  std::vector<std::unique_ptr<IBlockchainCache>> chainsStorage;
+  std::vector<std::shared_ptr<IBlockchainCache>> chainsStorage;
   std::vector<IBlockchainCache*> chainsLeaves;
   std::unique_ptr<ITransactionPool> m_transactionPool;
   std::unordered_set<IBlockchainCache*> mainChainSet;
@@ -191,12 +195,12 @@ class Core : public ICore,
 
   bool extractTransactions(const std::vector<BinaryArray>& rawTransactions,
                            std::vector<CachedTransaction>& transactions, uint64_t& cumulativeSize,
-                           BlockVersion blockMajorVersion);
+                           BlockVersion blockVersion);
 
   std::error_code validateSemantic(const Transaction& transaction, uint64_t& fee, uint32_t blockIndex);
   std::error_code validateTransaction(const CachedTransaction& transaction, TransactionValidatorState& state,
                                       IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex,
-                                      BlockVersion blockMajorVersion, uint64_t blockTimestamp);
+                                      BlockVersion blockVersion, uint64_t blockTimestamp);
 
   Xi::Result<uint32_t> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds) const;
   std::vector<Crypto::Hash> getBlockHashes(uint32_t startBlockIndex, uint32_t maxCount) const;
@@ -205,15 +209,16 @@ class Core : public ICore,
 
   uint64_t getAdjustedTime() const;
   void updateMainChainSet();
-  IBlockchainCache* findSegmentContainingBlock(const Crypto::Hash& blockHash) const;
-  IBlockchainCache* findSegmentContainingBlock(uint32_t blockHeight) const;
+  IBlockchainCache* findSegmentContainingBlock(const Crypto::Hash& blockHash, bool* isMainChain = nullptr) const;
+  IBlockchainCache* findSegmentContainingBlock(uint32_t blockHeight, bool* isMainChain = nullptr) const;
   IBlockchainCache* findMainChainSegmentContainingBlock(const Crypto::Hash& blockHash) const;
   IBlockchainCache* findAlternativeSegmentContainingBlock(const Crypto::Hash& blockHash) const;
 
   IBlockchainCache* findMainChainSegmentContainingBlock(uint32_t blockIndex) const;
   IBlockchainCache* findAlternativeSegmentContainingBlock(uint32_t blockIndex) const;
 
-  IBlockchainCache* findSegmentContainingTransaction(const Crypto::Hash& transactionHash) const;
+  IBlockchainCache* findSegmentContainingTransaction(const Crypto::Hash& transactionHash,
+                                                     bool* isMainChain = nullptr) const;
 
   BlockTemplate restoreBlockTemplate(IBlockchainCache* blockchainCache, uint32_t blockIndex) const;
   std::vector<Crypto::Hash> doBuildSparseChain(const Crypto::Hash& blockHash) const;
@@ -231,14 +236,14 @@ class Core : public ICore,
                               std::vector<BlockFullInfo>& entries) const;
   void fillQueryBlockShortInfo(uint32_t fullOffset, uint32_t currentIndex, size_t maxItemsCount,
                                std::vector<BlockShortInfo>& entries) const;
-  void fillQueryBlockDetails(uint32_t fullOffset, uint32_t currentIndex, size_t maxItemsCount,
+  bool fillQueryBlockDetails(uint32_t fullOffset, uint32_t currentIndex, size_t maxItemsCount,
                              std::vector<BlockDetails>& entries) const;
 
   void getTransactionPoolDifference(const std::vector<Crypto::Hash>& knownHashes,
                                     std::vector<Crypto::Hash>& newTransactions,
                                     std::vector<Crypto::Hash>& deletedTransactions) const;
 
-  BlockVersion getBlockMajorVersionForIndex(uint32_t height) const;
+  BlockVersion getBlockVersionForIndex(uint32_t height) const;
   size_t calculateCumulativeBlocksizeLimit(uint32_t height) const;
 
   /*!

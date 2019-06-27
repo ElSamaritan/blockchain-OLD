@@ -67,7 +67,7 @@ template <typename T>
 [[nodiscard]] bool serialize(TransactionExtraDetails& extra, ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializePod(extra.publicKey, "public_key", serializer), false);
   XI_RETURN_EC_IF_NOT(serializer(extra.nonce, "nonce"), false);
-  XI_RETURN_EC_IF_NOT(serializeAsBinary(extra.raw, "raw", serializer), false);
+  XI_RETURN_EC_IF_NOT(serializer.binary(extra.raw, "raw"), false);
   return true;
 }
 
@@ -119,8 +119,8 @@ template <typename T>
 }
 
 [[nodiscard]] bool serialize(BlockDetails& block, ISerializer& serializer) {
-  XI_RETURN_EC_IF_NOT(serializer(block.majorVersion, "majorVersion"), false);
-  XI_RETURN_EC_IF_NOT(serializer(block.minorVersion, "minorVersion"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.version, "version"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.upgradeVote, "upgrade_vote"), false);
   XI_RETURN_EC_IF_NOT(serializer(block.timestamp, "timestamp"), false);
   XI_RETURN_EC_IF_NOT(serializePod(block.prevBlockHash, "prevBlockHash", serializer), false);
   XI_RETURN_EC_IF_NOT(serializer(block.nonce, "nonce"), false);

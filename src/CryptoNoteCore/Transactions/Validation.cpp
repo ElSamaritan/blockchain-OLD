@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -83,8 +83,10 @@ bool CryptoNote::validateExtraNonce(const CryptoNote::TransactionExtraNonce &non
   XI_RETURN_EC_IF(nonce.nonce.size() > TX_EXTRA_NONCE_MAX_COUNT, false);
 
   if (nonce.nonce[0] == TX_EXTRA_NONCE_PAYMENT_ID) {
-    XI_RETURN_EC_IF_NOT(nonce.nonce.size() == 1 + Crypto::Hash::bytes(), false);
-    XI_RETURN_EC_IF(std::memcmp(&nonce.nonce[1], Crypto::Hash::Null.data(), Crypto::Hash::bytes()) == 0, false);
+    XI_RETURN_EC_IF_NOT(nonce.nonce.size() == 1 + Crypto::PublicKey::bytes(), false);
+    Crypto::PublicKey paymentId{};
+    std::memcpy(paymentId.data(), &nonce.nonce[1], Crypto::PublicKey::bytes());
+    XI_RETURN_EC_IF_NOT(paymentId.isValid(), false);
   } else {
     XI_RETURN_EC_IF_NOT(nonce.nonce[0] == TX_EXTRA_NONCE_CUSTOM_ID, false);
   }

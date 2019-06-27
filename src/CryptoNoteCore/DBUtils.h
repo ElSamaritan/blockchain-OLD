@@ -91,6 +91,7 @@ std::string serializeKey(const KeyPrefix& cprefix, const _KeyT& ckey) {
   std::stringstream builder{};
   Common::StdOutputStream stream{builder};
   BinaryOutputStreamSerializer serializer{stream};
+  serializer.setUseVarInt(false);
 
   exceptional_if_not<SerializationError>(serializer.binary(prefix.Prefix.data(), prefix.Prefix.size(), "prefix"),
                                          "database prefix serialization failed");
@@ -133,17 +134,6 @@ void deserialize(const std::string& serialized, _ValueT& value, const _KeyT& exp
   Common::ByteSpanInputStream stream{Xi::asConstByteSpan(serialized)};
   CryptoNote::BinaryInputStreamSerializer serializer(stream);
 
-  //  KeyPrefix actualPrefix{0};
-  //  _KeyT actualKey{};
-
-  //  exceptional_if_not<DeserializationError>(
-  //      serializer.binary(actualPrefix.Prefix.data(), actualPrefix.Prefix.size(), "prefix"),
-  //      "database prefix deserialization failed");
-  //  exceptional_if_not<DeserializationError>(actualKey == expectedKey,
-  //                                           "database deserialized prefix and expected prefix missmatch");
-  //  exceptional_if_not<DeserializationError>(serializer(actualKey, "key"), "database key deserialization failed");
-  //  exceptional_if_not<DeserializationError>(actualKey == expectedKey,
-  //                                           "database deserialized key and exptected key missmatch");
   exceptional_if_not<DeserializationError>(serializer(value, "value"), "database value deserialization failed");
   exceptional_if_not<DeserializationError>(stream.isEndOfStream(), "database deserialization has left overs");
 }

@@ -32,8 +32,8 @@ class MemoryBlockchainCacheFactory : public IBlockchainCacheFactory {
   MemoryBlockchainCacheFactory(const std::string& filename, Logging::ILogger& logger);
   virtual ~MemoryBlockchainCacheFactory() override;
 
-  std::unique_ptr<IBlockchainCache> createRootBlockchainCache(const Currency& currency) override;
-  std::unique_ptr<IBlockchainCache> createBlockchainCache(const Currency& currency, IBlockchainCache* parent,
+  std::shared_ptr<IBlockchainCache> createRootBlockchainCache(const Currency& currency) override;
+  std::shared_ptr<IBlockchainCache> createBlockchainCache(const Currency& currency, IBlockchainCache* parent,
                                                           uint32_t startIndex = 0) override;
 
  private:

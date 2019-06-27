@@ -40,7 +40,8 @@ bool parsePeersAndAddToPeerListContainer(const std::vector<std::string> peerList
                                          std::vector<PeerlistEntry>& container) {
   for (const std::string& peer : peerList) {
     PeerlistEntry peerListEntry = PeerlistEntry();
-    peerListEntry.id = Xi::Crypto::Random::generate<uint64_t>();
+    auto ec = Xi::Crypto::Random::generate(Xi::asByteSpan(&peerListEntry.id, sizeof(PeerIdType)));
+    XI_RETURN_EC_IF_NOT(ec == Xi::Crypto::Random::RandomError::Success, false);
     if (!parsePeerFromString(peerListEntry.address, peer)) {
       return false;
     }

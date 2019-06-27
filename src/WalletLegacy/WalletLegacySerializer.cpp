@@ -58,7 +58,7 @@ bool WalletLegacySerializer::serialize(std::ostream& stream, const std::string& 
   XI_RETURN_EC_IF_NOT(s(version, "version"), false);
   XI_RETURN_EC_IF_NOT(s(iv, "iv"), false);
   XI_RETURN_EC_IF_NOT(s(cipher, "data"), false);
-  s.endObject();
+  XI_RETURN_EC_IF_NOT(s.endObject(), false);
 
   stream.flush();
   return true;
@@ -84,7 +84,9 @@ Crypto::chacha8_iv WalletLegacySerializer::encrypt(const std::string& plain, con
 
   cipher.resize(plain.size());
 
-  Crypto::chacha8_iv iv = Xi::Crypto::Random::generate<Crypto::chacha8_iv>();
+  Crypto::chacha8_iv iv;
+  Xi::exceptional_if_not<Xi::RuntimeError>(Xi::Crypto::Random::generate(Xi::ByteSpan{iv.data}) ==
+                                           Xi::Crypto::Random::RandomError::Success);
   Crypto::chacha8(plain.data(), plain.size(), key, iv, &cipher[0]);
 
   return iv;
@@ -105,7 +107,7 @@ bool WalletLegacySerializer::deserialize(std::istream& stream, const std::string
   std::string cipher;
   XI_RETURN_EC_IF_NOT(serializerEncrypted(cipher, "data"), false);
 
-  serializerEncrypted.endObject();
+  XI_RETURN_EC_IF_NOT(serializerEncrypted.endObject(), false);
 
   std::string plain;
   decrypt(cipher, plain, iv, password);

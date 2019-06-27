@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -34,8 +34,14 @@ const Crypto::KeyImage Crypto::KeyImage::Null{};
 Xi::Result<Crypto::KeyImage> Crypto::KeyImage::fromString(const std::string &hex) {
   XI_ERROR_TRY();
   KeyImage reval;
+  if (KeyImage::bytes() * 2 != hex.size()) {
+    throw std::runtime_error{"wrong hex size"};
+  }
   if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
     throw std::runtime_error{"invalid hex string"};
+  }
+  if (!reval.isValid()) {
+    throw std::runtime_error{"key image is invalid"};
   }
   return success(std::move(reval));
   XI_ERROR_CATCH();
@@ -63,8 +69,12 @@ bool Crypto::KeyImage::isValid() const {
   return scalarmultKey(*this, L) == I;
 }
 
+bool Crypto::KeyImage::isNull() const { return (*this) == Null; }
+
 void Crypto::KeyImage::nullify() { fill(0); }
 
 bool Crypto::serialize(Crypto::KeyImage &keyImage, Common::StringView name, CryptoNote::ISerializer &serializer) {
-  return serializer.binary(keyImage.data(), KeyImage::bytes(), name);
+  XI_RETURN_EC_IF_NOT(serializer.binary(keyImage.data(), KeyImage::bytes(), name), false);
+  XI_RETURN_EC_IF_NOT(keyImage.isValid(), false);
+  return true;
 }

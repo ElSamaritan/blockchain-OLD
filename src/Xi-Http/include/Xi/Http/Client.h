@@ -1,12 +1,12 @@
 ﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -26,6 +26,7 @@
 #include <cinttypes>
 #include <string>
 #include <vector>
+#include <utility>
 #include <future>
 
 #include <System/Dispatcher.h>
@@ -61,14 +62,14 @@ class Client {
    * \throws std::runtime_error if the session pool is exhausted
    */
   std::future<Response> send(Request&& request);
-  std::future<Response> send(const std::string& url, Method method, ContentType type, const std::string& body = "");
+  std::future<Response> send(const std::string& url, Method method, ContentType type, std::string body = "");
 
-#define MAKE_METHOD_ALIAS(NAME, METHOD)                                                                       \
-  inline std::future<Response> NAME(const std::string& url, ContentType type, const std::string& body = "") { \
-    return send(url, Method::METHOD, type, body);                                                             \
-  }                                                                                                           \
-  inline Response NAME##Sync(const std::string& url, ContentType type, const std::string& body = "") {        \
-    return send(url, Method::METHOD, type, body).get();                                                       \
+#define MAKE_METHOD_ALIAS(NAME, METHOD)                                                                \
+  inline std::future<Response> NAME(const std::string& url, ContentType type, std::string body = "") { \
+    return send(url, Method::METHOD, type, move(body));                                                \
+  }                                                                                                    \
+  inline Response NAME##Sync(const std::string& url, ContentType type, std::string body = "") {        \
+    return send(url, Method::METHOD, type, move(body)).get();                                          \
   }
 
   MAKE_METHOD_ALIAS(get, Get)

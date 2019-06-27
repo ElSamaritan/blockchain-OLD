@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -23,28 +23,37 @@
 
 #include "Xi/Crypto/Random/Random.hh"
 
+#include <utility>
+
 #include <Xi/Global.hh>
 #include <Xi/Exceptions.hpp>
 
-Xi::ByteVector Xi::Crypto::Random::generate(size_t count) {
+Xi::Result<Xi::ByteVector> Xi::Crypto::Random::generate(size_t count) {
   Xi::ByteVector reval;
   reval.resize(count);
-  generate(ByteSpan{reval.data(), count});
-  return reval;
+  if (const auto ec = generate(ByteSpan{reval.data(), count}); ec != RandomError::Success) {
+    return failure(ec);
+  }
+  return success(std::move(reval));
 }
 
-void Xi::Crypto::Random::generate(Xi::ByteSpan out) {
-  exceptional_if<GenerationError>(xi_crypto_random_bytes(out.data(), out.size()) != XI_RETURN_CODE_SUCCESS);
+Xi::Crypto::Random::RandomError Xi::Crypto::Random::generate(Xi::ByteSpan out) {
+  XI_RETURN_EC_IF(xi_crypto_random_bytes(out.data(), out.size()) != XI_RETURN_CODE_SUCCESS, RandomError::Failed);
+  return RandomError::Success;
 }
 
-Xi::ByteVector Xi::Crypto::Random::generate(size_t count, ConstByteSpan seed) {
+Xi::Result<Xi::ByteVector> Xi::Crypto::Random::generate(size_t count, ConstByteSpan seed) {
   Xi::ByteVector reval;
   reval.resize(count);
-  generate(ByteSpan{reval.data(), count}, seed);
-  return reval;
+  if (const auto ec = generate(ByteSpan{reval.data(), count}, seed); ec != RandomError::Success) {
+    return failure(ec);
+  }
+  return success(std::move(reval));
 }
 
-void Xi::Crypto::Random::generate(ByteSpan out, ConstByteSpan seed) {
-  exceptional_if<GenerationError>(
-      xi_crypto_random_bytes_determenistic(out.data(), out.size(), seed.data(), seed.size()) != XI_RETURN_CODE_SUCCESS);
+Xi::Crypto::Random::RandomError Xi::Crypto::Random::generate(ByteSpan out, ConstByteSpan seed) {
+  XI_RETURN_EC_IF(
+      xi_crypto_random_bytes_determenistic(out.data(), out.size(), seed.data(), seed.size()) != XI_RETURN_CODE_SUCCESS,
+      RandomError::Failed);
+  return RandomError::Success;
 }

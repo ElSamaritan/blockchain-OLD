@@ -33,6 +33,7 @@
 #include <unordered_set>
 
 #include <Xi/Global.hh>
+#include <Xi/Byte.hh>
 
 #include <Xi/ExternalIncludePush.h>
 #include <boost/optional.hpp>
@@ -46,56 +47,6 @@
 #include "Serialization/FlagSerialization.hpp"
 
 namespace CryptoNote {
-
-template <typename T>
-[[nodiscard]] bool serializeAsBinary(std::vector<T>& value, Common::StringView name,
-                                     CryptoNote::ISerializer& serializer) {
-  static_assert(std::is_pod_v<T>, "only pods can be serialized as raw binaries");
-  std::string blob;
-  if (serializer.type() == ISerializer::INPUT) {
-    XI_RETURN_EC_IF_NOT(serializer.binary(blob, name), false);
-    value.resize(blob.size() / sizeof(T));
-    if (blob.size()) {
-      memcpy(&value[0], blob.data(), blob.size());
-    }
-    return true;
-  } else {
-    if (!value.empty()) {
-      blob.assign(reinterpret_cast<const char*>(&value[0]), value.size() * sizeof(T));
-    }
-    XI_RETURN_EC_IF_NOT(serializer.binary(blob, name), false);
-    return true;
-  }
-}
-
-template <typename T>
-[[nodiscard]] bool serializeAsBinary(std::list<T>& value, Common::StringView name,
-                                     CryptoNote::ISerializer& serializer) {
-  static_assert(std::is_pod_v<T>, "only pods can be serialized as raw binaries");
-  std::string blob;
-  if (serializer.type() == ISerializer::INPUT) {
-    XI_RETURN_EC_IF_NOT(serializer.binary(blob, name), false);
-
-    size_t count = blob.size() / sizeof(T);
-    const T* ptr = reinterpret_cast<const T*>(blob.data());
-
-    while (count--) {
-      value.push_back(*ptr++);
-    }
-    return true;
-  } else {
-    if (!value.empty()) {
-      blob.resize(value.size() * sizeof(T));
-      T* ptr = reinterpret_cast<T*>(&blob[0]);
-
-      for (const auto& item : value) {
-        *ptr++ = item;
-      }
-    }
-    XI_RETURN_EC_IF_NOT(serializer.binary(blob, name), false);
-    return true;
-  }
-}
 
 template <typename Cont>
 [[nodiscard]] bool serializeContainer(Cont& value, Common::StringView name, CryptoNote::ISerializer& serializer) {
@@ -114,7 +65,7 @@ template <typename Cont>
     XI_RETURN_EC_IF_NOT(serializer(const_cast<typename Cont::value_type&>(item), ""), false);
   }
 
-  serializer.endArray();
+  XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
   return true;
 }
 
@@ -151,7 +102,7 @@ template <typename MapT, typename ReserveOp>
       XI_RETURN_EC_IF_NOT(serializer.beginObject(""), false);
       XI_RETURN_EC_IF_NOT(serializer(key, "key"), false);
       XI_RETURN_EC_IF_NOT(serializer(v, "value"), false);
-      serializer.endObject();
+      XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
 
       value.insert(std::make_pair(std::move(key), std::move(v)));
     }
@@ -160,11 +111,11 @@ template <typename MapT, typename ReserveOp>
       XI_RETURN_EC_IF_NOT(serializer.beginObject(""), false);
       XI_RETURN_EC_IF_NOT(serializer(const_cast<typename MapT::key_type&>(kv.first), "key"), false);
       XI_RETURN_EC_IF_NOT(serializer(kv.second, "value"), false);
-      serializer.endObject();
+      XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
     }
   }
 
-  serializer.endArray();
+  XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
   return true;
 }
 
@@ -192,7 +143,7 @@ template <typename SetT>
     }
   }
 
-  serializer.endArray();
+  XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
   return true;
 }
 
@@ -245,7 +196,7 @@ template <typename Element, typename Iterator>
   for (Iterator i = begin; i != end; ++i) {
     XI_RETURN_EC_IF_NOT(s(const_cast<Element&>(*i), ""), false);
   }
-  s.endArray();
+  XI_RETURN_EC_IF_NOT(s.endArray(), false);
   return true;
 }
 
@@ -263,7 +214,7 @@ template <typename Element, typename Iterator>
     *outputIterator++ = std::move(e);
   }
 
-  s.endArray();
+  XI_RETURN_EC_IF_NOT(s.endArray(), false);
   return true;
 }
 

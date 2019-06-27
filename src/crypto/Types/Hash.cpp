@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -35,7 +35,10 @@ const Crypto::Hash Crypto::Hash::Null{};
 Xi::Result<Crypto::Hash> Crypto::Hash::fromString(const std::string &hex) {
   XI_ERROR_TRY();
   Hash reval;
-  if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
+  if (Hash::bytes() * 2 != hex.size()) {
+    throw std::runtime_error{"wrong hex size"};
+  }
+  if (Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type)) != reval.size() * sizeof(value_type)) {
     throw std::runtime_error{"invalid hex string"};
   }
   return success(std::move(reval));
@@ -104,7 +107,7 @@ Crypto::Hash::~Hash() {}
 
 bool Crypto::Hash::isNull() const { return *this == Hash::Null; }
 
-std::string Crypto::Hash::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+std::string Crypto::Hash::toString() const { return Common::toHex(data(), size()); }
 
 std::string Crypto::Hash::toShortString() const {
   std::string res = toString();

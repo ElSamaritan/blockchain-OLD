@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -26,6 +26,8 @@
 #include <variant>
 #include <cassert>
 
+#include <iostream>
+
 #include <Xi/Global.hh>
 
 #include "Serialization/ISerializer.h"
@@ -38,7 +40,7 @@ namespace Impl {
 template <typename _VariantT, size_t _Index>
 inline TypeTag getVariantTypeTag();
 
-template <size_t _Index, typename... _Ts>
+template <size_t _Index, typename _InvariantT, typename... _Ts>
 [[nodiscard]] inline bool serializeVariantInput(std::variant<_Ts...> &value, const TypeTag &tag,
                                                 ISerializer &serializer) {
   assert(serializer.isInput());
@@ -47,18 +49,18 @@ template <size_t _Index, typename... _Ts>
     return false;
   } else {
     using native_t = std::variant_alternative_t<_Index, std::variant<_Ts...>>;
-    if (tag == getVariantTypeTag<std::variant<_Ts...>, _Index>()) {
+    if (tag == getVariantTypeTag<_InvariantT, _Index>()) {
       native_t nativeValue;
-      XI_RETURN_EC_IF_NOT(serialize(nativeValue, "value", serializer), false);
+      XI_RETURN_EC_IF_NOT(serializer(nativeValue, "value"), false);
       value = std::move(nativeValue);
       return true;
     } else {
-      return serializeVariantInput<_Index + 1, _Ts...>(value, tag, serializer);
+      return serializeVariantInput<_Index + 1, _InvariantT, _Ts...>(value, tag, serializer);
     }
   }
 }
 
-template <size_t _Index, typename... _Ts>
+template <size_t _Index, typename _InvariantT, typename... _Ts>
 [[nodiscard]] inline bool serializeVariantOutput(std::variant<_Ts...> &value, ISerializer &serializer) {
   assert(serializer.isOutput());
   if constexpr (_Index == sizeof...(_Ts)) {
@@ -67,42 +69,61 @@ template <size_t _Index, typename... _Ts>
   } else {
     if (value.index() == _Index) {
       auto &varValue = std::get<_Index>(value);
-      TypeTag tag{getVariantTypeTag<std::variant<_Ts...>, _Index>()};
+      TypeTag tag{getVariantTypeTag<_InvariantT, _Index>()};
       XI_RETURN_EC_IF_NOT(serializer.typeTag(tag, "type"), false);
-      XI_RETURN_EC_IF_NOT(serialize<std::remove_cv_t<decltype(varValue)>>(varValue, "value", serializer), false);
+      XI_RETURN_EC_IF_NOT(serializer(varValue, "value"), false);
       return true;
     } else {
-      return serializeVariantOutput<_Index + 1, _Ts...>(value, serializer);
+      return serializeVariantOutput<_Index + 1, _InvariantT, _Ts...>(value, serializer);
     }
   }
 }
 
 }  // namespace Impl
 
-template <typename... _Ts>
-[[nodiscard]] inline bool serialize(std::variant<_Ts...> &value, Common::StringView name, ISerializer &serializer) {
+template <typename _InvariantT, typename... _Ts>
+[[nodiscard]] inline bool serializeVariant(std::variant<_Ts...> &value, Common::StringView name,
+                                           ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.beginObject(name), false);
   if (serializer.isInput()) {
     TypeTag tag{TypeTag::NoBinaryTag, TypeTag::NoTextTag};
     XI_RETURN_EC_IF_NOT(serializer.typeTag(tag, "type"), false);
     XI_RETURN_EC_IF(tag.isNull(), false);
-    if (!CryptoNote::Impl::serializeVariantInput<0, _Ts...>(value, tag, serializer)) {
+    if (!CryptoNote::Impl::serializeVariantInput<0, _InvariantT, _Ts...>(value, tag, serializer)) {
+      std::cout << "jimmy im dead: " << tag.text() << std::endl;
       return false;
     }
   } else {
     assert(serializer.isOutput());
-    if (!CryptoNote::Impl::serializeVariantOutput<0, _Ts...>(value, serializer)) {
+    if (!CryptoNote::Impl::serializeVariantOutput<0, _InvariantT, _Ts...>(value, serializer)) {
       return false;
     }
   }
-  serializer.endObject();
+  XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
   return true;
+}
+
+template <typename... _Ts>
+[[nodiscard]] inline bool serialize(std::variant<_Ts...> &value, Common::StringView name, ISerializer &serializer) {
+  return serializeVariant<std::variant<_Ts...>>(value, name, serializer);
 }
 
 }  // namespace CryptoNote
 
-#define XI_SERIALIZATION_VARIANT_TAG(VARIANT_TYPE, VALUE_INDEX, BINARY, TEXT)                   \
-  template <>                                                                                   \
-  inline CryptoNote::TypeTag CryptoNote::Impl::getVariantTypeTag<VARIANT_TYPE, VALUE_INDEX>() { \
-    return CryptoNote::TypeTag{BINARY, TEXT};                                                   \
+#define XI_SERIALIZATION_VARIANT_TAG(VARIANT_TYPE, VALUE_INDEX, BINARY, TEXT) \
+  namespace CryptoNote {                                                      \
+  namespace Impl {                                                            \
+  template <>                                                                 \
+  inline TypeTag getVariantTypeTag<VARIANT_TYPE, VALUE_INDEX>() {             \
+    return TypeTag{BINARY, TEXT};                                             \
+  }                                                                           \
+  }                                                                           \
+  }
+
+#define XI_SERIALIZATION_VARIANT_INVARIANT(VARIANT_TYPE, ...)                                                  \
+  struct VARIANT_TYPE : std::variant<__VA_ARGS__> {};                                                          \
+  [[nodiscard]] inline bool serialize(VARIANT_TYPE &value, ::Common::StringView name,                          \
+                                      ::CryptoNote::ISerializer &serializer) {                                 \
+    return ::CryptoNote::serializeVariant<VARIANT_TYPE>(static_cast<std::variant<__VA_ARGS__> &>(value), name, \
+                                                        serializer);                                           \
   }

@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include <Xi/Blockchain/Explorer/Data/Data.hpp>
 #include <crypto/CryptoTypes.h>
 #include <Serialization/VariantSerialization.hpp>
 #include <CryptoNoteCore/CryptoNote.h>
@@ -67,7 +68,7 @@ struct TransactionDetails {
   uint64_t mixin = 0;
   uint64_t unlockTime = 0;
   uint64_t timestamp = 0;
-  Crypto::Hash paymentId;
+  PaymentId paymentId;
   bool hasPaymentId = false;
   bool inBlockchain = false;
   Crypto::Hash blockHash;
@@ -79,8 +80,8 @@ struct TransactionDetails {
 };
 
 struct BlockDetails {
-  BlockVersion majorVersion{0};
-  uint8_t minorVersion = 0;
+  BlockVersion version{0};
+  BlockVersion upgradeVote{0};
   uint64_t timestamp = 0;
   Crypto::Hash prevBlockHash;
   BlockNonce nonce = BlockNonce::Null;

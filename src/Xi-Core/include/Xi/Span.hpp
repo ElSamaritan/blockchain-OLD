@@ -1,12 +1,12 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
- *                                       Xi Blockchain                                            *
+ *                                     Galaxia Blockchain                                         *
  *                                                                                                *
  * ---------------------------------------------------------------------------------------------- *
- * This file is part of the Galaxia Project - Xi Blockchain                                       *
+ * This file is part of the Xi framework.                                                         *
  * ---------------------------------------------------------------------------------------------- *
  *                                                                                                *
- * Copyright 2018-2019 Galaxia Project Developers                                                 *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
  *                                                                                                *
  * This program is free software: you can redistribute it and/or modify it under the terms of the *
  * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
@@ -119,6 +119,26 @@ class Span {
 
 template <typename _ValueT>
 using ConstSpan = Span<const _ValueT>;
+
+template <typename _ValueT>
+inline Span<_ValueT> makeSpan(_ValueT &value) {
+  return Span<_ValueT>{std::addressof(value), 1};
+}
+
+template <typename _ValueT>
+inline Span<_ValueT> makeSpan(_ValueT *value, size_t count) {
+  return Span<_ValueT>{value, count};
+}
+
+template <typename _ValueT>
+inline ConstSpan<_ValueT> makeSpan(const _ValueT &value) {
+  return ConstSpan<_ValueT>{std::addressof(value), 1};
+}
+
+template <typename _ValueT>
+inline ConstSpan<_ValueT> makeSpan(const _ValueT *value, size_t count) {
+  return ConstSpan<_ValueT>{value, count};
+}
 
 }  // namespace Xi
 

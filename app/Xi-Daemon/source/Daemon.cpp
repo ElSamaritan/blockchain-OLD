@@ -20,6 +20,7 @@
 
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Core.h"
+#include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteCore/DatabaseBlockchainCache.h"
 #include "CryptoNoteCore/DatabaseBlockchainCacheFactory.h"
@@ -54,11 +55,11 @@ void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, Logger
   std::vector<CryptoNote::AccountPublicAddress> rewardTargets;
   CryptoNote::CurrencyBuilder currencyBuilder(logManager);
 
-  CryptoNote::Currency currency = currencyBuilder.currency();
-
   for (const auto& rewardAddress : rewardAddresses) {
     CryptoNote::AccountPublicAddress address;
-    if (!currency.parseAccountAddressString(rewardAddress, address)) {
+    uint64_t prefix = 0;
+    if (!parseAccountAddressString(prefix, address, rewardAddress) ||
+        prefix != Xi::Config::Coin::addressBas58Prefix()) {
       std::cout << "Failed to parse genesis reward address: " << rewardAddress << std::endl;
       return;
     }
@@ -74,7 +75,8 @@ void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, Logger
   } else {
     transaction = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction(rewardTargets);
   }
-  std::string transactionHex = Common::toHex(CryptoNote::toBinaryArray(transaction));
+  auto transactionBlob = CryptoNote::toBinaryArray(transaction);
+  std::string transactionHex = Common::toHex(transactionBlob);
   std::cout << CommonCLI::header() << std::endl
             << std::endl
             << "Replace the current genesisTransactionHash line in src/Xi/Config/Coin.h with this one:" << std::endl
