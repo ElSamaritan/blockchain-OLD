@@ -197,9 +197,7 @@ uint64_t Currency::rewardCutOffByBlockVersion(BlockVersion blockVersion) const {
   return Xi::Config::MinerReward::cutOff(blockVersion);
 }
 
-uint8_t Currency::requiredMixin(BlockVersion blockVersion) const {
-  return Xi::Config::Mixin::required(blockVersion);
-}
+uint8_t Currency::requiredMixin(BlockVersion blockVersion) const { return Xi::Config::Mixin::required(blockVersion); }
 
 size_t Currency::blockGrantedFullRewardZoneByBlockVersion(BlockVersion blockVersion) const {
   return Xi::Config::MinerReward::fullRewardZone(blockVersion);
@@ -446,8 +444,7 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const
 }
 
 Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const CachedBlock& block) const {
-  return constructStaticRewardTx(block.getBlock().previousBlockHash, block.getBlock().version,
-                                 block.getBlockIndex());
+  return constructStaticRewardTx(block.getBlock().previousBlockHash, block.getBlock().version, block.getBlockIndex());
 }
 
 Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const BlockTemplate& block) const {
@@ -632,7 +629,9 @@ uint64_t Currency::nextDifficulty(BlockVersion version, uint32_t blockIndex, std
 }
 
 bool Currency::checkProofOfWork(const CachedBlock& block, uint64_t currentDiffic) const {
-  return check_hash(block.getBlockLongHash(), currentDiffic);
+  Crypto::Hash hash{};
+  Xi::Config::Hashes::compute(block, hash, block.getBlock().version);
+  return check_hash(hash, currentDiffic);
 }
 
 size_t Currency::getApproximateMaximumInputCount(size_t transactionSize, size_t outputCount, size_t mixinCount) const {

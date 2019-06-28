@@ -47,15 +47,6 @@ const Crypto::Hash& CachedBlock::getBlockHash() const {
   return blockHash.get();
 }
 
-const Crypto::Hash& CachedBlock::getBlockLongHash() const {
-  if (!blockLongHash.is_initialized()) {
-    blockLongHash = Hash{};
-    Xi::Config::Hashes::compute(*this, blockLongHash.get(), block.version);
-  }
-
-  return blockLongHash.get();
-}
-
 const BinaryArray& CachedBlock::getBlockHashingBinaryArray() const {
   if (!blockHashingBinaryArray.is_initialized()) {
     blockHashingBinaryArray = BinaryArray();
