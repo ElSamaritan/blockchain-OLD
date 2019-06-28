@@ -70,5 +70,5 @@ TEST_F(CryptoNote_BlockchainCache, TransactionHashConsistency) {
   EXPECT_EQ(genesisTransaction.getTransactionHash().toString(),
             CachedTransaction{genesisBlock.getBlock().baseTransaction}.getTransactionHash().toString());
   EXPECT_EQ(crc16(staticRewardTransaction.getTransactionHash().span()).toString(),
-            crc16(genesisBlock.getBlock().staticRewardHash->span()).toString());
+            genesisBlock.getBlock().staticRewardHash->toString());
 }
