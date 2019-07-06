@@ -79,7 +79,7 @@ const Transaction& CachedTransaction::getTransaction() const { return transactio
 
 const Crypto::Hash& CachedTransaction::getTransactionHash() const {
   if (!transactionHash.is_initialized()) {
-    transactionHash = getBinaryArrayHash(getTransactionBinaryArray());
+    transactionHash = getTransaction().hash();
   }
 
   return transactionHash.get();
@@ -87,7 +87,7 @@ const Crypto::Hash& CachedTransaction::getTransactionHash() const {
 
 const Crypto::Hash& CachedTransaction::getTransactionPrefixHash() const {
   if (!transactionPrefixHash.is_initialized()) {
-    transactionPrefixHash = getObjectHash(static_cast<const TransactionPrefix&>(transaction));
+    transactionPrefixHash = getTransaction().prefixHash();
   }
 
   return transactionPrefixHash.get();
@@ -170,5 +170,11 @@ uint64_t CachedTransaction::getTransactionFee() const {
 }
 
 bool CachedTransaction::isCoinbase() const { return getInputAmount() == 0; }
+
+void CachedTransaction::prune() {
+  getTransaction();
+  transaction.prune();
+  transactionBinaryArray = boost::none;
+}
 
 CachedTransaction CryptoNote::cache(Transaction transaction) { return CachedTransaction{std::move(transaction)}; }

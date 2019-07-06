@@ -23,12 +23,14 @@
 
 #pragma once
 
+#include <Xi/Byte.hh>
+
 #include "CryptoNoteCore/CachedBlock.h"
 
 namespace CryptoNote {
 namespace Hashes {
 struct CNX_v1 {
-  void operator()(const CachedBlock& block, Crypto::Hash& hash) const;
+  void operator()(Xi::ConstByteSpan blob, Crypto::Hash& hash) const;
 };
 }  // namespace Hashes
 }  // namespace CryptoNote

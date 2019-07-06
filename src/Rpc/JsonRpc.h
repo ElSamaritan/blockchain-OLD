@@ -102,26 +102,30 @@ class JsonRpcRequest {
 
   template <typename T>
   bool loadParams(T& v) const {
-    JsonValue params{JsonValue::OBJECT};
-    if (psReq.contains("params")) {
-      params.set("", psReq("params"));
-    } else {
-      params.set("", JsonValue{JsonValue::NIL});
+    if constexpr (!std::is_same_v<T, CryptoNote::Null>) {
+      JsonValue params{JsonValue::OBJECT};
+      if (psReq.contains("params")) {
+        params.set("", psReq("params"));
+      } else {
+        params.set("", JsonValue{JsonValue::NIL});
+      }
+      JsonInputValueSerializer input{std::move(params)};
+      XI_RETURN_EC_IF_NOT(input(v, ""), false);
     }
-    JsonInputValueSerializer input{std::move(params)};
-    XI_RETURN_EC_IF_NOT(input(v, ""), false);
     return true;
   }
 
   template <typename T>
   bool setParams(const T& v) {
-    JsonOutputStreamSerializer output{};
-    XI_RETURN_EC_IF_NOT(output(const_cast<T&>(v), ""), false);
-    JsonValue params{JsonValue::NIL};
-    if (output.getValue().contains("")) {
-      params = std::move(output.getValue()(""));
+    if constexpr (!std::is_same_v<T, CryptoNote::Null>) {
+      JsonOutputStreamSerializer output{};
+      XI_RETURN_EC_IF_NOT(output(const_cast<T&>(v), ""), false);
+      JsonValue params{JsonValue::NIL};
+      if (output.getValue().contains("")) {
+        params = std::move(output.getValue()(""));
+      }
+      psReq.set("params", std::move(params));
     }
-    psReq.set("params", std::move(params));
     return true;
   }
 

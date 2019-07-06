@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -112,8 +112,7 @@ Xi::Result<XiMiner::MinerBlockTemplate> XiMiner::UpdateMonitor::getBlockTemplate
   CryptoNote::CachedBlock block{reval.Template};
   reval.Difficutly = response.difficulty;
   reval.TemplateState = response.template_state;
-  reval.HashArray = block.getBlockHashingBinaryArray();
-  reval.NonceOffset = block.getNonceOffset();
+  reval.ProofOfWork = block.getProofOfWorkBlob();
   return success(std::move(reval));
   XI_ERROR_CATCH();
 }

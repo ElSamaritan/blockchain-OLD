@@ -18,6 +18,7 @@
 
 #include "Wallet/IWallet.h"
 #include "CryptoNoteCore/INode.h"
+#include "Wallet/WalletErrors.h"
 #include <future>
 
 using namespace Crypto;

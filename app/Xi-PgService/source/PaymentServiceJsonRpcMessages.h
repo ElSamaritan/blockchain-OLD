@@ -10,8 +10,11 @@
 #include <limits>
 #include <vector>
 #include <string>
+#include <optional>
 
 #include "Serialization/ISerializer.h"
+#include <Serialization/VariantSerialization.hpp>
+#include <CryptoNoteCore/Transactions/Transaction.h>
 #include <CryptoNoteCore/CryptoNote.h>
 
 namespace PaymentService {
@@ -182,7 +185,7 @@ struct GetSpendKeys {
 
 struct GetBalance {
   struct Request {
-    std::string address;
+    std::optional<std::string> address;
 
     bool serialize(CryptoNote::ISerializer& serializer);
   };
@@ -323,12 +326,12 @@ struct SendTransaction {
   struct Request {
     std::vector<std::string> sourceAddresses;
     std::vector<WalletRpcOrder> transfers;
-    std::string changeAddress;
-    uint64_t fee = 0;
-    uint16_t anonymity;
-    std::string extra;
-    std::string paymentId;
-    uint64_t unlockTime = 0;
+    std::optional<std::string> changeAddress;
+    std::optional<uint64_t> fee = 0;
+    std::optional<uint16_t> anonymity;
+    std::optional<std::string> extra;
+    std::optional<std::string> paymentId;
+    std::optional<uint64_t> unlockTime = 0;
 
     bool serialize(CryptoNote::ISerializer& serializer);
   };
@@ -344,7 +347,7 @@ struct CreateDelayedTransaction {
   struct Request {
     std::vector<std::string> addresses;
     std::vector<WalletRpcOrder> transfers;
-    std::string changeAddress;
+    std::optional<std::string> changeAddress;
     uint64_t fee = 0;
     uint16_t anonymity;
     std::string extra;
@@ -400,9 +403,9 @@ struct SendDelayedTransaction {
 struct SendFusionTransaction {
   struct Request {
     uint64_t threshold;
-    uint16_t anonymity;
+    std::optional<uint16_t> anonymity;
     std::vector<std::string> addresses;
-    std::string destinationAddress;
+    std::optional<std::string> destinationAddress;
 
     bool serialize(CryptoNote::ISerializer& serializer);
   };

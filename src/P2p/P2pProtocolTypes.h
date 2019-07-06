@@ -45,11 +45,13 @@ struct PeerlistEntry {
   NetworkAddress address;
   PeerIdType id;
   uint64_t last_seen;
+  bool is_light_node;
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(address)
   KV_MEMBER(id)
   KV_MEMBER(last_seen)
+  KV_MEMBER(is_light_node)
   KV_END_SERIALIZATION
 };
 

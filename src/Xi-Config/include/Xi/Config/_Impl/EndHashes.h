@@ -25,6 +25,7 @@
 
 #include <cinttypes>
 
+#include <Xi/Byte.hh>
 #include <crypto/CryptoTypes.h>
 
 #include "Xi/Config/Hashes.h"
@@ -41,28 +42,27 @@ namespace Hashes {
 
 struct HashCheckpointResolver {
   template <Blockchain::Block::Version::value_type>
-  static inline void compute(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash,
-                             Blockchain::Block::Version version);
+  static inline void compute(Xi::ConstByteSpan blob, ::Crypto::Hash& hash, Blockchain::Block::Version version);
 };
 
 template <>
-inline void HashCheckpointResolver::compute<0>(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash,
+inline void HashCheckpointResolver::compute<0>(Xi::ConstByteSpan blob, ::Crypto::Hash& hash,
                                                Blockchain::Block::Version) {
   typename HashCheckpoint<0>::algorithm hashFn{};
-  hashFn(block, hash);
+  hashFn(blob, hash);
 }
 template <Blockchain::Block::Version::value_type _Index>
-inline void HashCheckpointResolver::compute(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash,
+inline void HashCheckpointResolver::compute(Xi::ConstByteSpan blob, ::Crypto::Hash& hash,
                                             Blockchain::Block::Version version) {
   if (version >= HashCheckpoint<_Index>::version()) {
     typename HashCheckpoint<_Index>::algorithm hashFn{};
-    hashFn(block, hash);
+    hashFn(blob, hash);
   } else
-    return compute<_Index - 1>(block, hash, version);
+    return compute<_Index - 1>(blob, hash, version);
 }
 
-inline void compute(const CryptoNote::CachedBlock& block, ::Crypto::Hash& hash, Blockchain::Block::Version version) {
-  HashCheckpointResolver::compute<CURRENT_HASH_CHECKPOINT_INDEX>(block, hash, version);
+inline void compute(Xi::ConstByteSpan blob, ::Crypto::Hash& hash, Blockchain::Block::Version version) {
+  HashCheckpointResolver::compute<CURRENT_HASH_CHECKPOINT_INDEX>(blob, hash, version);
 }
 
 }  // namespace Hashes

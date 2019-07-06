@@ -96,16 +96,14 @@ class INode {
   virtual uint32_t getKnownBlockCount() const = 0;
   virtual uint64_t getLastLocalBlockTimestamp() const = 0;
   virtual BlockHeight getNodeHeight() const = 0;
-
-  virtual std::string getInfo() = 0;
   virtual void getFeeInfo() = 0;
   virtual const Currency& currency() const = 0;
 
   /*!
    * \brief ping sends a getFeeInfo request to the server checking if the connection can be established
-   * \return true, if the connection to the node could be established, otherwise false.
+   * \return and error code if not connected otherwise a ddefault initialized error code.
    */
-  virtual bool ping() = 0;
+  virtual std::error_code ping() = 0;
 
   virtual void getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount,
                                           std::vector<Crypto::Hash>& blockHashes, const Callback& callback) = 0;

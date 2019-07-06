@@ -73,16 +73,6 @@ bool CryptoNote::toBinaryArray(const BinaryArray& object, BinaryArray& binaryArr
   return true;
 }
 
-void CryptoNote::getBinaryArrayHash(const BinaryArray& binaryArray, Crypto::Hash& hash) {
-  Crypto::Hash::compute(binaryArray, hash).throwOnError();
-}
-
-Crypto::Hash CryptoNote::getBinaryArrayHash(const BinaryArray& binaryArray) {
-  Crypto::Hash hash;
-  getBinaryArrayHash(binaryArray, hash);
-  return hash;
-}
-
 uint64_t CryptoNote::getInputAmount(const Transaction& transaction) {
   uint64_t amount = 0;
   for (const auto& input : transaction.inputs) {
@@ -153,10 +143,7 @@ uint64_t CryptoNote::cutDigitsFromAmount(uint64_t amount, const size_t count) {
   } else if (count >= std::numeric_limits<uint64_t>::digits10) {
     return 0;
   } else {
-    for (size_t i = 0; i < count; ++i) {
-      uint64_t decimal = Xi::pow64(10, i + 1);
-      amount = amount - (amount % decimal);
-    }
-    return amount;
+    uint64_t decimal = Xi::pow64(10, count);
+    return amount - (amount % decimal);
   }
 }

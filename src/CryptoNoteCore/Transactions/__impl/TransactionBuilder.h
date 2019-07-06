@@ -108,7 +108,7 @@ class TransactionBuilder : public ITransactionBuilder {
   }
 
   void checkIfSigning() const {
-    if (!transaction.signatures.empty()) {
+    if (!std::get<TransactionSignatureCollection>(transaction.signatures).empty()) {
       throw std::runtime_error("Cannot perform requested operation, since it will invalidate transaction signatures");
     }
   }
@@ -116,6 +116,7 @@ class TransactionBuilder : public ITransactionBuilder {
   CryptoNote::Transaction transaction;
   boost::optional<Crypto::SecretKey> secretKey;
   mutable boost::optional<Crypto::Hash> transactionHash;
+  mutable boost::optional<Crypto::Hash> transactionPrefixHash;
   TransactionExtra extra;
 };
 }  // namespace CryptoNote

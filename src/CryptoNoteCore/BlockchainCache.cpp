@@ -265,13 +265,14 @@ PushedBlockInfo BlockchainCache::getPushedBlockInfo(uint32_t blockIndex) const {
     pushedBlockInfo.blockSize = cachedBlock.cumulativeSize - previousBlock.cumulativeSize;
     pushedBlockInfo.timestamp = cachedBlock.timestamp;
   } else {
-    if (parent == nullptr || localIndex == 0) {
+    if (parent == nullptr) {
+      assert(blockIndex == 0);
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty;
       pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins;
       pushedBlockInfo.blockSize = cachedBlock.cumulativeSize;
       pushedBlockInfo.timestamp = cachedBlock.timestamp;
     } else {
-      auto height = BlockHeight::fromIndex(localIndex - 1);
+      auto height = BlockHeight::fromIndex(blockIndex - 1);
       const auto& previousBlock = parent->getBlockInfos(Xi::makeSpan(height)).front();
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - previousBlock.cumulativeDifficulty;
       pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
@@ -1083,12 +1084,12 @@ std::vector<uint64_t> BlockchainCache::getLastTimestamps(size_t count, uint32_t 
 }
 
 std::vector<uint64_t> BlockchainCache::getLastBlocksSizes(size_t count) const {
-  return getLastBlocksSizes(count, getTopBlockIndex(), skipGenesisBlock);
+  return getLastBlocksSizes(count, getTopBlockIndex(), UseGenesis{true});
 }
 
 std::vector<uint64_t> BlockchainCache::getLastUnits(size_t count, uint32_t blockIndex, UseGenesis useGenesis,
                                                     std::function<uint64_t(const CachedBlockInfo&)> pred) const {
-  assert(blockIndex <= getTopBlockIndex());
+  XI_RETURN_EC_IF(blockIndex > getTopBlockIndex(), {});
 
   size_t to = blockIndex < startIndex ? 0 : blockIndex - startIndex + 1;
   auto realCount = std::min(count, to);
@@ -1113,24 +1114,23 @@ std::vector<uint64_t> BlockchainCache::getLastUnits(size_t count, uint32_t block
 
 std::vector<uint64_t> BlockchainCache::getLastBlocksSizes(size_t count, uint32_t blockIndex,
                                                           UseGenesis useGenesis) const {
-  const bool needPrevious = blockIndex > 0;
-  if (needPrevious) {
-    blockIndex--;
-    count++;
+  XI_RETURN_SC_IF(count == 0, {});
+
+  if (count + 1 >= blockIndex) {
+    useGenesis = UseGenesis{true};
   }
 
   std::vector<uint64_t> reval{};
   reval.reserve(count);
-  getLastUnits(count, blockIndex, useGenesis, [&reval](const CachedBlockInfo& cb) mutable {
+  getLastUnits(count + 1, blockIndex, useGenesis, [&reval](const CachedBlockInfo& cb) mutable {
     reval.push_back(cb.cumulativeSize);
     return 0;
   });
-  [[maybe_unused]] auto copy = reval;
   XI_RETURN_EC_IF(reval.empty(), {});
   for (size_t i = reval.size() - 1; i > 0; --i) {
     reval[i] -= reval[i - 1];
   }
-  if (needPrevious && reval.size() > count) {
+  if (reval.size() > count) {
     reval.erase(begin(reval));
   }
 

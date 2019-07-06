@@ -71,7 +71,7 @@ bool CryptoNote::validateExtraCumulativePadding(const std::vector<CryptoNote::Tr
 bool CryptoNote::validateExtraNonce(const std::vector<TransactionExtraField> &fields) {
   const auto isExtraNonce = [](const auto &field) { return field.type() == typeid(TransactionExtraNonce); };
   auto search = std::find_if(fields.begin(), fields.end(), isExtraNonce);
-  XI_RETURN_EC_IF(search == fields.end(), true);
+  XI_RETURN_SC_IF(search == fields.end(), true);
   const auto &nonceField = boost::get<TransactionExtraNonce>(*search);
   XI_RETURN_EC_IF_NOT(validateExtraNonce(nonceField), false);
   auto another = std::find_if(std::next(search), fields.end(), isExtraNonce);

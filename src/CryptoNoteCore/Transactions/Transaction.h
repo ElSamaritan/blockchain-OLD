@@ -77,17 +77,25 @@ struct TransactionPrefix {
   std::vector<TransactionInput> inputs;
   std::vector<TransactionOutput> outputs;
   std::vector<uint8_t> extra;
+
+  Crypto::Hash prefixHash() const;
 };
+
+using TransactionSignatureCollection = std::vector<std::vector<Crypto::Signature>>;
+using TransactionSignatures = std::variant<TransactionSignatureCollection, Crypto::Hash>;
 
 struct Transaction : public TransactionPrefix {
   static const Transaction Null;
 
-  std::vector<std::vector<Crypto::Signature>> signatures;
+  TransactionSignatures signatures;
 
   Transaction();
 
+  Crypto::Hash hash() const;
+
   bool isNull() const;
   void nullify();
+  void prune();
 };
 
 struct BaseTransaction : public TransactionPrefix {};
@@ -97,3 +105,6 @@ XI_SERIALIZATION_VARIANT_TAG(CryptoNote::TransactionInput, 0, 0x01, "base_input"
 XI_SERIALIZATION_VARIANT_TAG(CryptoNote::TransactionInput, 1, 0x02, "key_input")
 
 XI_SERIALIZATION_VARIANT_TAG(CryptoNote::TransactionOutputTarget, 0, 0x01, "key_output")
+
+XI_SERIALIZATION_VARIANT_TAG(CryptoNote::TransactionSignatures, 0, 0x01, "collection")
+XI_SERIALIZATION_VARIANT_TAG(CryptoNote::TransactionSignatures, 1, 0x02, "pruned")

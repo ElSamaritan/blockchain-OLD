@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -34,17 +34,12 @@
 #include <CryptoNoteCore/CryptoNoteTools.h>
 
 XiMiner::MinerManager::MinerManager(const CryptoNote::RpcRemoteConfiguration remote, Logging::ILogger& logger)
-    : m_http{remote.Host, remote.Port, remote.Ssl},
-      m_logger{logger, "MinerManager"},
-      m_nonceDist{0, std::numeric_limits<uint32_t>::max()} {}
+    : m_http{remote.Host, remote.Port, remote.Ssl}, m_logger{logger, "MinerManager"} {}
 
 void XiMiner::MinerManager::onTemplateChanged(MinerBlockTemplate newTemplate) {
   m_logger(Logging::TRACE) << "template updated";
-  uint32_t nonce = m_nonceDist(m_randomEngine);
   for (uint32_t i = 0; i < m_worker.size(); ++i) {
     auto iWorker = m_worker[i];
-    iWorker->setInitialNonce(nonce + i);
-    iWorker->setNonceStep(m_threads);
     iWorker->setTemplate(newTemplate);
   }
   m_observer.notify(&MinerManager::Observer::onBlockTemplateChanged, newTemplate.Template.previousBlockHash);
@@ -68,18 +63,17 @@ void XiMiner::MinerManager::onBlockFound(CryptoNote::BlockTemplate block) {
   }
 }
 
+void XiMiner::MinerManager::onError(std::string what) { m_logger(Logging::ERROR) << "miner worker error: " << what; }
+
 void XiMiner::MinerManager::run() {
   m_logger(Logging::INFO) << "starting miner manager";
   m_running.store(true);
   m_shutdownRequest.store(false);
 
   m_worker.reserve(std::thread::hardware_concurrency());
-  uint32_t nonce = m_nonceDist(m_randomEngine);
   for (uint32_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
     auto iWorker = std::make_shared<MinerWorker>();
     iWorker->addObserver(this);
-    iWorker->setInitialNonce(nonce + i);
-    iWorker->setNonceStep(m_threads);
     if (i >= m_threads) {
       iWorker->pause();
     }
@@ -115,11 +109,8 @@ void XiMiner::MinerManager::addObserver(XiMiner::MinerManager::Observer* observe
 void XiMiner::MinerManager::removeObserver(XiMiner::MinerManager::Observer* observer) { m_observer.remove(observer); }
 
 void XiMiner::MinerManager::setThreads(uint32_t threadCount) {
-  const uint32_t nonce = m_nonceDist(m_randomEngine);
   m_threads = threadCount;
   for (uint32_t i = 0; i < std::thread::hardware_concurrency() && i < m_worker.size(); ++i) {
-    m_worker[i]->setInitialNonce(nonce + i);
-    m_worker[i]->setNonceStep(m_threads);
     if (i >= m_threads) {
       m_worker[i]->pause();
     } else {

@@ -167,6 +167,7 @@ bool PeerlistManager::set_peer_just_seen(PeerIdType peer, const NetworkAddress& 
     ple.address = addr;
     ple.id = peer;
     ple.last_seen = time(NULL);
+    ple.is_light_node = true;
     return append_with_peer_white(ple);
   } catch (std::exception&) {
   }

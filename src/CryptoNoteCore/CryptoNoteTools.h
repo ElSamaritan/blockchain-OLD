@@ -112,54 +112,6 @@ template <class T>
   return size;
 }
 
-template <class T>
-[[nodiscard]] bool getObjectHash(const T& object, Crypto::Hash& hash) {
-  try {
-    BinaryArray ba;
-    if (!toBinaryArray(object, ba)) {
-      hash = ::Crypto::Hash::Null;
-      return false;
-    }
-
-    hash = getBinaryArrayHash(ba);
-    return true;
-  } catch (...) {
-    hash.nullify();
-    return false;
-  }
-}
-
-template <class T>
-[[nodiscard]] bool getObjectHash(const T& object, Crypto::Hash& hash, size_t& size) {
-  try {
-    BinaryArray ba;
-    if (!toBinaryArray(object, ba)) {
-      hash = ::Crypto::Hash::Null;
-      size = (std::numeric_limits<size_t>::max)();
-      return false;
-    }
-
-    size = ba.size();
-    hash = getBinaryArrayHash(ba);
-    return true;
-  } catch (...) {
-    hash.nullify();
-    size = (std::numeric_limits<size_t>::max)();
-    return false;
-  }
-}
-
-template <class T>
-[[nodiscard]] Crypto::Hash getObjectHash(const T& object) {
-  Crypto::Hash hash;
-  if (!getObjectHash(object, hash)) {
-    throw std::runtime_error("object hash computation failed");
-  }
-  return hash;
-}
-
-inline bool getBaseTransactionHash(const BaseTransaction& tx, Crypto::Hash& hash) { return getObjectHash(tx, hash); }
-
 uint64_t getInputAmount(const Transaction& transaction);
 std::vector<uint64_t> getInputsAmounts(const Transaction& transaction);
 uint64_t getOutputAmount(const Transaction& transaction);

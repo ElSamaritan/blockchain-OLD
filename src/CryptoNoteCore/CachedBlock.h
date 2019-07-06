@@ -18,9 +18,10 @@ class CachedBlock {
   explicit CachedBlock(const BlockTemplate& block);
   explicit CachedBlock(BlockTemplate&& block);
   const BlockTemplate& getBlock() const;
+  const BlockProofOfWork& getProofOfWorkBlob() const;
   const Crypto::Hash& getTransactionTreeHash() const;
   const Crypto::Hash& getBlockHash() const;
-  const BinaryArray& getBlockHashingBinaryArray() const;
+  const Crypto::Hash& getBlockProofOfWorkHash() const;
   uint32_t getBlockIndex() const;
   uint32_t getNonceOffset() const;
 
@@ -34,6 +35,8 @@ class CachedBlock {
   mutable boost::optional<uint32_t> blockIndex;
   mutable boost::optional<Crypto::Hash> transactionTreeHash;
   mutable boost::optional<Crypto::Hash> blockHash;
+  mutable boost::optional<Crypto::Hash> blockProofOfWorkHash;
+  mutable boost::optional<BlockProofOfWork> blockProofOfWork;
   mutable boost::optional<CachedTransaction> baseTransaction;
 };
 

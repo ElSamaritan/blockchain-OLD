@@ -745,7 +745,7 @@ void WalletGreen::initTransactionPool() {
   std::unordered_set<Crypto::Hash> uncommitedTransactionsSet;
   std::transform(m_uncommitedTransactions.begin(), m_uncommitedTransactions.end(),
                  std::inserter(uncommitedTransactionsSet, uncommitedTransactionsSet.end()),
-                 [](const UncommitedTransactions::value_type& pair) { return getObjectHash(pair.second); });
+                 [](const UncommitedTransactions::value_type& pair) { return pair.second.hash(); });
   m_synchronizer.initTransactionPool(uncommitedTransactionsSet);
 }
 
@@ -1931,7 +1931,7 @@ void WalletGreen::rollbackUncommitedTransaction(size_t transactionId) {
     throw std::system_error(make_error_code(error::TX_CANCEL_IMPOSSIBLE));
   }
 
-  removeUnconfirmedTransaction(getObjectHash(m_uncommitedTransactions[transactionId]));
+  removeUnconfirmedTransaction(m_uncommitedTransactions[transactionId].hash());
   m_uncommitedTransactions.erase(transactionId);
 
   m_logger(INFO) << "Delayed transaction rolled back, ID " << transactionId << ", hash "
@@ -2342,7 +2342,7 @@ void WalletGreen::sendTransaction(const CryptoNote::Transaction& cryptoNoteTrans
 
   if (ec) {
     m_logger(ERROR) << "Failed to relay transaction: " << ec << ", " << ec.message() << ". Transaction hash "
-                    << getObjectHash(cryptoNoteTransaction);
+                    << cryptoNoteTransaction.hash();
     throw std::system_error(ec);
   }
 }
@@ -3011,7 +3011,7 @@ void WalletGreen::transactionDeleted(ITransfersSubscription* object, const Hash&
 
   if (updated) {
     auto transactionId = getTransactionId(transactionHash);
-    auto tx = m_transactions[transactionId];
+    const auto& tx = m_transactions[transactionId];
     m_logger(INFO) << "Transaction deleted, ID " << transactionId << ", hash " << transactionHash << ", state "
                    << tx.state << ", block " << tx.blockHeight.native() << ", totalAmount "
                    << m_currency.formatAmount(tx.totalAmount) << ", fee " << m_currency.formatAmount(tx.fee);

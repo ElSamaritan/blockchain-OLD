@@ -210,6 +210,14 @@ CryptoNote::TransactionValidator::extractOutputKeys(uint64_t amount, const std::
 Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validateKeyInput(
     const CryptoNote::KeyInput &keyInput, size_t inputIndex, const CryptoNote::CachedTransaction &transaction) const {
   if (keyInput.outputIndices.empty()) return Xi::failure(Error::INPUT_EMPTY_OUTPUT_USAGE);
+  if (!std::holds_alternative<TransactionSignatureCollection>(transaction.getTransaction().signatures)) {
+    return Xi::failure(Error::INVALID_SIGNATURE_TYPE);
+  }
+  const auto &ringSignatures = std::get<TransactionSignatureCollection>(transaction.getTransaction().signatures);
+  if (!(inputIndex < ringSignatures.size())) {
+    return Xi::failure(Error::INPUT_INVALID_SIGNATURES_COUNT);
+  }
+  const auto &ringSignature = ringSignatures[inputIndex];
 
   const auto globalIndexes = getTransactionInputIndices(keyInput);
   auto extractionResult = extractOutputKeys(keyInput.amount, globalIndexes);
@@ -217,7 +225,7 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validate
   std::vector<Crypto::PublicKey> outputKeys{};
   EligibleIndex index;
   std::tie(outputKeys, index) = extractionResult.take();
-  if (outputKeys.size() != transaction.getTransaction().signatures[inputIndex].size()) {
+  if (outputKeys.size() != ringSignature.size()) {
     return Xi::failure(Error::INPUT_INVALID_SIGNATURES_COUNT);
   }
 
@@ -226,8 +234,7 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::validate
   std::for_each(outputKeys.begin(), outputKeys.end(),
                 [&outputKeyPointers](const Crypto::PublicKey &key) { outputKeyPointers.push_back(&key); });
   if (!Crypto::check_ring_signature(transaction.getTransactionPrefixHash(), keyInput.keyImage, outputKeyPointers.data(),
-                                    outputKeyPointers.size(),
-                                    transaction.getTransaction().signatures[inputIndex].data(), true)) {
+                                    outputKeyPointers.size(), ringSignature.data(), true)) {
     return Xi::failure(Error::INPUT_INVALID_SIGNATURES);
   }
   return Xi::success(index);

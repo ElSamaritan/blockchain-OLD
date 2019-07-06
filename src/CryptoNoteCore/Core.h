@@ -44,7 +44,7 @@ namespace CryptoNote {
 class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
  public:
   Core(const Currency& currency, Logging::ILogger& logger, Checkpoints& checkpoints, System::Dispatcher& dispatcher,
-       std::unique_ptr<IBlockchainCacheFactory>&& blockchainCacheFactory,
+       bool isLightNode, std::unique_ptr<IBlockchainCacheFactory>&& blockchainCacheFactory,
        std::unique_ptr<IMainChainStorage>&& mainChainStorage);
   virtual ~Core() override;
 
@@ -134,6 +134,7 @@ class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
                                 uint64_t& difficulty, uint32_t& index) const override;
 
   virtual CoreStatistics getCoreStatistics() const override;
+  virtual bool isPruned() const override;
 
   virtual std::time_t getStartTime() const;
 
@@ -179,6 +180,7 @@ class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
   std::unordered_set<IBlockchainCache*> mainChainSet;
 
   std::string dataFolder;
+  bool m_isLightNode = false;
   Tools::ObserverManager<IBlockchainObserver> m_blockchainObservers;
   std::unique_ptr<ITimeProvider> m_timeProvider;
 

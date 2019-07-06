@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -26,6 +26,7 @@
 #include <atomic>
 #include <thread>
 #include <mutex>
+#include <string>
 #include <chrono>
 #include <future>
 
@@ -46,6 +47,7 @@ class MinerWorker {
     virtual ~Observer() = default;
 
     virtual void onBlockFound(CryptoNote::BlockTemplate block) = 0;
+    virtual void onError(std::string what) = 0;
   };
 
  public:
@@ -57,8 +59,6 @@ class MinerWorker {
   void addObserver(Observer* observer);
   void removeObserver(Observer* observer);
 
-  void setInitialNonce(uint32_t nonce);
-  void setNonceStep(uint32_t nonceStep);
   void setTemplate(MinerBlockTemplate block);
 
   void run();
@@ -82,8 +82,6 @@ class MinerWorker {
   std::atomic<uint32_t> m_hashCount{0};
   std::promise<void> m_shutdown;
 
-  uint32_t m_initialNonce = 0;
-  uint32_t m_nonceStep = 1;
   std::atomic_bool m_swapTemplate{false};
   std::mutex m_blockBufferAccess;
   MinerBlockTemplate m_blockBuffer;

@@ -75,8 +75,8 @@ struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
   ~_Listener() override {
     try {
       keepRunning = false;
-      for (auto& thread : runner) thread.join();
       io.stop();
+      for (auto& thread : runner) thread.join();
     } catch (...) {
       /* */
     }

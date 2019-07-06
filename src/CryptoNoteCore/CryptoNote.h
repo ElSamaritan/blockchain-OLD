@@ -27,6 +27,7 @@
 #include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Byte.hh>
+#include <Xi/Blob.hpp>
 #include <Xi/Crypto/Hash/Crc.hpp>
 #include <Xi/Blockchain/Block/Header.hpp>
 #include <Xi/Blockchain/Block/Version.hpp>
@@ -67,6 +68,17 @@ struct BlockTemplate : public BlockHeader {
   Transaction baseTransaction;
   std::optional<Xi::Crypto::Hash::Crc::Hash16> staticRewardHash;
   std::vector<Crypto::Hash> transactionHashes;
+};
+
+struct BlockProofOfWork : Xi::enable_blob_from_this<BlockProofOfWork, BlockNonce::bytes() + BlockHash::bytes()> {
+  using enable_blob_from_this::enable_blob_from_this;
+
+  const Xi::Byte* nonceData() const { return this->data(); }
+  Xi::Byte* nonceData() { return this->data(); }
+  Xi::ByteSpan nonceSpan() { return Xi::makeSpan(nonceData(), BlockNonce::bytes()); }
+
+  const Xi::Byte* hashData() const { return this->data() + BlockNonce::bytes(); }
+  Xi::Byte* hashData() { return this->data() + BlockNonce::bytes(); }
 };
 
 struct AccountPublicAddress {

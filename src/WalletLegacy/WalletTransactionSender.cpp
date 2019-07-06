@@ -208,7 +208,7 @@ std::shared_ptr<WalletRequest> WalletTransactionSender::doSendTransaction(
     constructTx(m_keys, sources, splittedDests, transaction.extra, transaction.unlockTime, m_upperTransactionSizeLimit,
                 tx);
 
-    transaction.hash = getObjectHash(tx);
+    transaction.hash = tx.hash();
 
     m_transactionsCache.updateTransaction(context->transactionId, tx, totalAmount, context->selectedTransfers);
 

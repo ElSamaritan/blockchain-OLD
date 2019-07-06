@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -38,6 +38,7 @@ struct CryptoNoteConnectionContext {
   uint32_t m_remote_ip = 0;
   uint16_t m_remote_port = 0;
   bool m_is_income = false;
+  bool m_is_light_node = false;
   time_t m_started = 0;
 
   enum state {

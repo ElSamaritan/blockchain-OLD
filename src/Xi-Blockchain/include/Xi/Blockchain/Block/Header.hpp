@@ -42,6 +42,12 @@ struct Header {
   ::Crypto::Hash previousBlockHash;
 
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
+
+  ::Crypto::Hash headerHash() const;
+  ::Crypto::Hash proofOfWorkPrefix() const;
+
+ private:
+  [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer, bool isPoWPrefix);
 };
 
 }  // namespace Block

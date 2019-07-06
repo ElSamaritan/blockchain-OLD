@@ -87,35 +87,8 @@ template <typename T>
   XI_RETURN_EC_IF_NOT(serializer(transaction.extra, "extra"), false);
   XI_RETURN_EC_IF_NOT(serializer(transaction.inputs, "inputs"), false);
   XI_RETURN_EC_IF_NOT(serializer(transaction.outputs, "outputs"), false);
-
-  // serializer(transaction.signatures, "signatures");
-  if (serializer.type() == ISerializer::OUTPUT) {
-    std::vector<std::pair<size_t, Crypto::Signature>> signaturesForSerialization;
-    signaturesForSerialization.reserve(transaction.signatures.size());
-    size_t ctr = 0;
-    for (const auto& signaturesV : transaction.signatures) {
-      for (auto signature : signaturesV) {
-        signaturesForSerialization.emplace_back(ctr, std::move(signature));
-      }
-      ++ctr;
-    }
-    size_t size = transaction.signatures.size();
-    XI_RETURN_EC_IF_NOT(serializer(size, "signaturesSize"), false);
-    XI_RETURN_EC_IF_NOT(serializer(signaturesForSerialization, "signatures"), false);
-    return true;
-  } else {
-    size_t size = 0;
-    XI_RETURN_EC_IF_NOT(serializer(size, "signaturesSize"), false);
-    transaction.signatures.resize(size);
-
-    std::vector<std::pair<size_t, Crypto::Signature>> signaturesForSerialization;
-    XI_RETURN_EC_IF_NOT(serializer(signaturesForSerialization, "signatures"), false);
-
-    for (const auto& signatureWithIndex : signaturesForSerialization) {
-      transaction.signatures[signatureWithIndex.first].push_back(signatureWithIndex.second);
-    }
-    return true;
-  }
+  XI_RETURN_EC_IF_NOT(serializer(transaction.signatures, "signatures"), false);
+  XI_RETURN_SC(true);
 }
 
 [[nodiscard]] bool serialize(BlockDetails& block, ISerializer& serializer) {

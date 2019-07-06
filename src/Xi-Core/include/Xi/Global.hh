@@ -25,8 +25,18 @@
 
 #if defined(__cplusplus)
 extern "C" {
+#endif
+
 #include <inttypes.h>
-}
+#include <stdlib.h>
+
+#if !defined(NDEBUG)
+#include <stdio.h>
+#define XI_PRINT_EC(...) \
+  printf(__VA_ARGS__);   \
+  fflush(stdout)
+#else
+#define XI_PRINT_EC(...)
 #endif
 
 #define XI_TRUE 1
@@ -35,23 +45,55 @@ extern "C" {
 #define XI_RETURN_CODE_NO_SUCCESS 1
 #define XI_RETURN_CODE_SUCCESS 0
 
-#define XI_RETURN_EC_IF(COND, EC) \
+#define XI_RETURN_EC(EC)                                                 \
+  do {                                                                   \
+    XI_PRINT_EC("[%s:%i] returns error: %s\n", __FILE__, __LINE__, #EC); \
+    return EC;                                                           \
+  } while (XI_FALSE)
+
+#define XI_RETURN_EC_IF(COND, EC)                                                                         \
+  do {                                                                                                    \
+    if (COND) {                                                                                           \
+      XI_PRINT_EC("[%s:%i] condition (%s) failed returning error: %s\n", __FILE__, __LINE__, #COND, #EC); \
+      return EC;                                                                                          \
+    }                                                                                                     \
+  } while (XI_FALSE)
+
+#define XI_RETURN_EC_IF_NOT(COND, EC)                                                                        \
+  do {                                                                                                       \
+    if (!(COND)) {                                                                                           \
+      XI_PRINT_EC("[%s:%i] condition (!(%s)) failed returning error: %s\n", __FILE__, __LINE__, #COND, #EC); \
+      return EC;                                                                                             \
+    }                                                                                                        \
+  } while (XI_FALSE)
+
+#define XI_RETURN_SC(SC) \
+  do {                   \
+    return SC;           \
+  } while (XI_FALSE)
+
+#define XI_RETURN_SC_IF(COND, SC) \
   do {                            \
     if (COND) {                   \
-      return EC;                  \
+      return SC;                  \
     }                             \
   } while (XI_FALSE)
 
-#define XI_RETURN_EC_IF_NOT(COND, EC) \
+#define XI_RETURN_SC_IF_NOT(COND, SC) \
   do {                                \
     if (!(COND)) {                    \
-      return EC;                      \
+      return SC;                      \
     }                                 \
   } while (XI_FALSE)
 
 #if defined(__cplusplus)
+}
+#endif
+
+#if defined(__cplusplus)
 
 #include <array>
+#include <memory>
 
 namespace Xi {
 /*!
@@ -59,6 +101,10 @@ namespace Xi {
  */
 template <typename... Ts>
 inline void Unreferenced(Ts&&...) {}
+
+struct Null {};
+constexpr Null null = Null{};
+
 }  // namespace Xi
 
 /*!
@@ -100,6 +146,37 @@ inline void Unreferenced(Ts&&...) {}
   CLASS_NAME(CLASS_NAME&&) = default; \
   CLASS_NAME& operator=(CLASS_NAME&&) = default
 
+#define XI_DECLARE_SMART_POINTER(TYPE)                   \
+  using Unique##TYPE = std::unique_ptr<TYPE>;            \
+  using Shared##TYPE = std::shared_ptr<TYPE>;            \
+  using Weak##TYPE = std::weak_ptr<TYPE>;                \
+  using SharedConst##TYPE = std::shared_ptr<const TYPE>; \
+  using WeakConst##TYPE = std::weak_ptr<const TYPE>;
+
+#define XI_DECLARE_SMART_POINTER_CLASS(TYPE) \
+  class TYPE;                                \
+  XI_DECLARE_SMART_POINTER(TYPE)
+
+#define XI_DECLARE_SMART_POINTER_STRUCT(TYPE) \
+  struct TYPE;                                \
+  XI_DECLARE_SMART_POINTER(TYPE)
+
+#define XI_PROPERTY(TYPE, NAME, ...)                         \
+ private:                                                    \
+  TYPE m_##NAME{__VA_ARGS__};                                \
+                                                             \
+ public:                                                     \
+  inline const TYPE& NAME() const { return this->m_##NAME; } \
+  inline TYPE& NAME() { return this->m_##NAME; }             \
+  inline auto& NAME(const TYPE& _) {                         \
+    this->m_##NAME = _;                                      \
+    return *this;                                            \
+  }
+
 #define XI_PADDING(BYTES) std::array<unsigned char, BYTES> _padding;
+
+#define may_throw
+#define not_threadsafe
+#define threadsafe
 
 #endif

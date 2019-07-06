@@ -164,9 +164,9 @@ bool optimize(CryptoNote::WalletGreen &wallet, uint64_t threshold) {
             "confirmed.");
       }
 
-      std::cout << std::endl << SuccessMsg("Will try again in 15 seconds...") << std::endl;
+      std::cout << std::endl << SuccessMsg("Will try again in 5 seconds...") << std::endl;
 
-      std::this_thread::sleep_for(std::chrono::seconds(15));
+      std::this_thread::sleep_for(std::chrono::seconds(5));
 
       wallet.updateInternalCache();
     } else {

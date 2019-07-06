@@ -269,6 +269,6 @@ target_link_libraries(Logging PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARI
 target_link_libraries(Mnemonics PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(NodeRpcProxy PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(P2P PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
-target_link_libraries(Serialization PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
+target_link_libraries(Serialization PUBLIC boost json linenoise rang::rang yaml::yaml-cpp ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Transfers PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(JsonRpcServer PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})

@@ -227,8 +227,8 @@ std::error_code PaymentServiceJsonRpcServer::handleGetSpendKeys(const GetSpendKe
 
 std::error_code PaymentServiceJsonRpcServer::handleGetBalance(const GetBalance::Request& request,
                                                               GetBalance::Response& response) {
-  if (!request.address.empty()) {
-    return service.getBalance(request.address, response.availableBalance, response.lockedAmount);
+  if (request.address.has_value()) {
+    return service.getBalance(*request.address, response.availableBalance, response.lockedAmount);
   } else {
     return service.getBalance(response.availableBalance, response.lockedAmount);
   }
@@ -325,7 +325,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGetAddresses(const GetAddress
 
 std::error_code PaymentServiceJsonRpcServer::handleSendFusionTransaction(const SendFusionTransaction::Request& request,
                                                                          SendFusionTransaction::Response& response) {
-  return service.sendFusionTransaction(request.threshold, request.addresses, request.destinationAddress,
+  return service.sendFusionTransaction(request.threshold, request.addresses, request.destinationAddress.value_or(""),
                                        response.transactionHash);
 }
 

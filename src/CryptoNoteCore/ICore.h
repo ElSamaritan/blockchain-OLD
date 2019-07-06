@@ -151,6 +151,7 @@ class ICore : public IBlockchain {
                                 uint64_t& difficulty, uint32_t& height) const = 0;
 
   virtual CoreStatistics getCoreStatistics() const = 0;
+  virtual bool isPruned() const = 0;
 
   [[nodiscard]] virtual bool save() = 0;
   [[nodiscard]] virtual bool load() = 0;

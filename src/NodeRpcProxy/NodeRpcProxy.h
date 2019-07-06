@@ -63,11 +63,10 @@ class NodeRpcProxy : public CryptoNote::INode {
   virtual uint64_t getLastLocalBlockTimestamp() const override;
   virtual BlockHeight getNodeHeight() const override;
 
-  virtual std::string getInfo() override;
   virtual void getFeeInfo() override;
   virtual const Currency& currency() const override;
 
-  virtual bool ping() override;
+  virtual std::error_code ping() override;
 
   virtual void getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount,
                                           std::vector<Crypto::Hash>& blockHashes, const Callback& callback) override;
@@ -117,7 +116,7 @@ class NodeRpcProxy : public CryptoNote::INode {
   std::vector<Crypto::Hash> getKnownTxsVector() const;
   void pullNodeStatusAndScheduleTheNext();
   void updateNodeStatus();
-  void updateBlockchainStatus();
+  std::error_code updateBlockchainStatus();
   bool updatePoolStatus();
   void updatePeerCount(size_t peerCount);
   void updatePoolState(const std::vector<std::unique_ptr<ITransactionReader>>& addedTxs,

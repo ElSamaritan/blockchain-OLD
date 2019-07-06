@@ -146,6 +146,8 @@ void CryptoNoteProtocolHandler::set_p2p_endpoint(IP2pEndpoint* p2p) {
     m_p2p = &m_p2p_stub;
 }
 
+bool CryptoNoteProtocolHandler::isLightNode() const { return m_core.isPruned(); }
+
 void CryptoNoteProtocolHandler::onConnectionOpened(CryptoNoteConnectionContext& context) { XI_UNUSED(context); }
 
 void CryptoNoteProtocolHandler::onConnectionClosed(CryptoNoteConnectionContext& context) {
@@ -217,6 +219,7 @@ BlockHeight CryptoNoteProtocolHandler::get_current_blockchain_height() {
 bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& hshd,
                                                           CryptoNoteConnectionContext& context, bool is_initial) {
   if (context.m_state == CryptoNoteConnectionContext::state_befor_handshake && !is_initial) return true;
+  context.m_is_light_node = hshd.is_light_node;
 
   if (context.m_state == CryptoNoteConnectionContext::state_synchronizing) {
   } else if (m_core.hasBlock(hshd.top_id)) {
@@ -226,6 +229,8 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
     } else {
       context.m_state = CryptoNoteConnectionContext::state_normal;
     }
+  } else if (context.m_is_light_node) {
+    m_logger(Logging::DEBUGGING) << context << " LightNode connected, will not sync.";
   } else {
     const auto currentHeight = get_current_blockchain_height();
     const auto remoteHeight = hshd.current_height;
@@ -286,6 +291,7 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
 bool CryptoNoteProtocolHandler::get_payload_sync_data(CORE_SYNC_DATA& hshd) {
   hshd.top_id = m_core.getTopBlockHash();
   hshd.current_height = BlockHeight::fromIndex(m_core.getTopBlockIndex());
+  hshd.is_light_node = m_core.isPruned();
   return true;
 }
 
@@ -391,6 +397,13 @@ int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_RE
   m_logger(Logging::TRACE) << context << "NOTIFY_REQUEST_GET_OBJECTS";
 
   NOTIFY_RESPONSE_GET_OBJECTS::request rsp;
+  if (isLightNode()) {
+    m_logger(Logging::DEBUGGING) << context << "NOTIFY_RESPONSE_GET_OBJECTS: This node is light node.";
+    m_p2p->report_failure(context.m_remote_ip, P2pPenalty::InvalidRequest);
+    context.m_state = CryptoNoteConnectionContext::state_shutdown;
+    return 1;
+  }
+
   if (!arg.txs.empty()) {
     m_logger(Logging::DEBUGGING) << context
                                  << "NOTIFY_RESPONSE_GET_OBJECTS: request.txs.empty() != true, dropping connection";
@@ -454,8 +467,8 @@ int CryptoNoteProtocolHandler::handle_response_get_objects(int command, NOTIFY_R
     return 1;
   }
 
-  updateObservedHeight(arg.current_blockchain_height, context);
   context.m_remote_blockchain_height = arg.current_blockchain_height;
+  updateObservedHeight(arg.current_blockchain_height, context);
   std::vector<BlockTemplate> blockTemplates;
   std::vector<CachedBlock> cachedBlocks;
   blockTemplates.resize(arg.blocks.size());
@@ -658,8 +671,8 @@ int CryptoNoteProtocolHandler::handle_request_chain(int command, NOTIFY_REQUEST_
   }
 
   NOTIFY_RESPONSE_CHAIN_ENTRY::request r;
-  auto totalIndex = r.total_height.toIndex();
-  auto startIndex = r.start_height.toIndex();
+  BlockHeight::value_type totalIndex = 0;
+  BlockHeight::value_type startIndex = 0;
   auto idQueryResult = m_core.findBlockchainSupplement(
       arg.block_hashes, Xi::Config::Network::blockIdentifiersSynchronizationBatchSize(), totalIndex, startIndex);
   if (idQueryResult.isError()) {
@@ -671,6 +684,8 @@ int CryptoNoteProtocolHandler::handle_request_chain(int command, NOTIFY_REQUEST_
     return 1;
   }
   r.block_hashes = idQueryResult.take();
+  r.total_height = BlockHeight::fromIndex(totalIndex);
+  r.start_height = BlockHeight::fromIndex(startIndex);
 
   m_logger(Logging::TRACE) << context << "-->>NOTIFY_RESPONSE_CHAIN_ENTRY: m_start_height=" << r.start_height.native()
                            << ", m_total_height=" << r.total_height.native()
@@ -713,8 +728,8 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
     m_logger(Logging::TRACE) << context << "-->>NOTIFY_REQUEST_CHAIN: m_block_ids.size()=" << r.block_hashes.size();
     post_notify<NOTIFY_REQUEST_CHAIN>(*m_p2p, r, context);
   } else {
-    if (!(context.m_last_response_height == context.m_remote_blockchain_height - BlockOffset::fromNative(1) &&
-          !context.m_needed_objects.size() && !context.m_requested_objects.size())) {
+    if (!(context.m_last_response_height == context.m_remote_blockchain_height && !context.m_needed_objects.size() &&
+          !context.m_requested_objects.size())) {
       m_logger(Logging::ERROR) << "request_missing_blocks final condition failed!"
                                << "\r\nm_last_response_height=" << context.m_last_response_height.native()
                                << "\r\nm_remote_blockchain_height=" << context.m_remote_blockchain_height.native()

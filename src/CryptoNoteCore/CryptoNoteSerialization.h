@@ -38,7 +38,6 @@ struct AccountKeys;
 
 [[nodiscard]] bool serialize(TransactionPrefix& txP, ISerializer& serializer);
 [[nodiscard]] bool serialize(Transaction& tx, ISerializer& serializer);
-[[nodiscard]] bool serialize(BaseTransaction& tx, ISerializer& serializer);
 [[nodiscard]] bool serialize(TransactionOutput& in, ISerializer& serializer);
 
 [[nodiscard]] bool serialize(BaseInput& gen, ISerializer& serializer);

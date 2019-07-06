@@ -30,6 +30,10 @@
 using Common::JsonValue;
 using namespace CryptoNote;
 
+namespace {
+static const JsonValue EmptyArray{JsonValue::ARRAY};
+}
+
 JsonInputValueSerializer::JsonInputValueSerializer(const Common::JsonValue& _value) : value(_value) {
   Xi::exceptional_if_not<Xi::InvalidArgumentError>(value.isArray() || value.isObject(),
                                                    "root json entity must be an object or array.");
@@ -100,6 +104,8 @@ bool JsonInputValueSerializer::beginArray(size_t& size, Common::StringView name)
       return true;
     } else {
       size = 0;
+      chain.push_back(std::addressof(EmptyArray));
+      idxs.push_back(0);
       return true;
     }
   }

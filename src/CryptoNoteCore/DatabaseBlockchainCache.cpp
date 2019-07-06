@@ -1212,24 +1212,23 @@ std::vector<uint64_t> DatabaseBlockchainCache::getLastBlocksSizes(size_t count) 
 
 std::vector<uint64_t> DatabaseBlockchainCache::getLastBlocksSizes(size_t count, uint32_t blockIndex,
                                                                   UseGenesis useGenesis) const {
-  const bool needPrevious = blockIndex > 0;
-  if (needPrevious) {
-    blockIndex--;
-    count++;
+  XI_RETURN_SC_IF(count == 0, {});
+
+  if (count + 1 >= blockIndex) {
+    useGenesis = UseGenesis{true};
   }
 
   std::vector<uint64_t> reval{};
   reval.reserve(count);
-  getLastUnits(count, blockIndex, useGenesis, [&reval](const CachedBlockInfo& cb) mutable {
+  getLastUnits(count + 1, blockIndex, useGenesis, [&reval](const CachedBlockInfo& cb) mutable {
     reval.push_back(cb.cumulativeSize);
     return 0;
   });
-  [[maybe_unused]] auto copy = reval;
   XI_RETURN_EC_IF(reval.empty(), {});
   for (size_t i = reval.size() - 1; i > 0; --i) {
     reval[i] -= reval[i - 1];
   }
-  if (needPrevious && reval.size() > count) {
+  if (reval.size() > count) {
     reval.erase(begin(reval));
   }
 
@@ -1361,6 +1360,8 @@ std::vector<CachedBlockInfo> DatabaseBlockchainCache::getLastDbUnits(uint32_t bl
 std::vector<uint64_t> DatabaseBlockchainCache::getLastUnits(
     size_t count, uint32_t blockIndex, UseGenesis useGenesis,
     std::function<uint64_t(const CachedBlockInfo&)> pred) const {
+  XI_RETURN_EC_IF(blockIndex > getTopBlockIndex(), {});
+
   assert(count <= std::numeric_limits<uint32_t>::max());
 
   auto cachedUnits = getLastCachedUnits(blockIndex, count, useGenesis);

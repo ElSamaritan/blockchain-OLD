@@ -36,6 +36,7 @@ class ICryptoNoteProtocolQuery {
   virtual BlockHeight getBlockchainHeight() const = 0;
   virtual size_t getPeerCount() const = 0;
   virtual bool isSynchronized() const = 0;
+  virtual bool isLightNode() const = 0;
 };
 
 }  // namespace CryptoNote

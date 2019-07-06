@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -25,14 +25,14 @@
 
 #include <cinttypes>
 #include <string>
+#include <optional>
 
 #include <CryptoNoteCore/CryptoNote.h>
 
 namespace XiMiner {
 struct MinerBlockTemplate {
-  uint32_t NonceOffset;
   uint64_t Difficutly;
-  CryptoNote::BinaryArray HashArray;
+  std::optional<CryptoNote::BlockProofOfWork> ProofOfWork{std::nullopt};
   CryptoNote::BlockTemplate Template;
   std::string TemplateState;
 };

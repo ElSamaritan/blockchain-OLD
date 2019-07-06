@@ -143,7 +143,7 @@ std::tuple<bool, std::shared_ptr<WalletInfo>> selectionScreen(Config &config, Cr
 }
 
 bool checkNodeStatus(CryptoNote::INode &node) {
-  while (!node.ping()) {
+  while (node.ping()) {
     std::stringstream msg;
 
     msg << "It looks like " << WalletConfig::daemonName << " isn't open!" << std::endl

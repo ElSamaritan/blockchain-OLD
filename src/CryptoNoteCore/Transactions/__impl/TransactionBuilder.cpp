@@ -57,6 +57,7 @@ TransactionBuilder::TransactionBuilder() {
   transaction.version = Xi::Config::Transaction::version();
   transaction.unlockTime = 0;
   transaction.extra = extra.serialize();
+  transaction.signatures = TransactionSignatureCollection{};
 
   secretKey = txKeys.secretKey;
 }
@@ -67,7 +68,6 @@ TransactionBuilder::TransactionBuilder(const BinaryArray& ba) {
   }
 
   extra.parse(transaction.extra);
-  transactionHash = getBinaryArrayHash(ba);  // avoid serialization if we already have blob
 }
 
 TransactionBuilder::TransactionBuilder(const CryptoNote::Transaction& tx) : transaction(tx) {
@@ -78,18 +78,24 @@ void TransactionBuilder::invalidateHash() {
   if (transactionHash.is_initialized()) {
     transactionHash = decltype(transactionHash)();
   }
+  if (transactionPrefixHash.is_initialized()) {
+    transactionPrefixHash = decltype(transactionPrefixHash)();
+  }
 }
 
 Hash TransactionBuilder::getTransactionHash() const {
   if (!transactionHash.is_initialized()) {
-    transactionHash = getObjectHash(transaction);
+    transactionHash = transaction.hash();
   }
 
   return transactionHash.get();
 }
 
 Hash TransactionBuilder::getTransactionPrefixHash() const {
-  return getObjectHash(*static_cast<const TransactionPrefix*>(&transaction));
+  if (!transactionPrefixHash.is_initialized()) {
+    transactionPrefixHash = transaction.prefixHash();
+  }
+  return transactionPrefixHash.get();
 }
 
 PublicKey TransactionBuilder::getTransactionPublicKey() const {
@@ -198,16 +204,20 @@ void TransactionBuilder::signInputKey(size_t index, const TransactionTypes::Inpu
 }
 
 std::vector<Signature>& TransactionBuilder::getSignatures(size_t input) {
+  if (!std::holds_alternative<TransactionSignatureCollection>(transaction.signatures)) {
+    throw std::runtime_error{"invalid signature type"};
+  }
+  auto& signatures = std::get<TransactionSignatureCollection>(transaction.signatures);
   // update signatures container size if needed
-  if (transaction.signatures.size() < transaction.inputs.size()) {
-    transaction.signatures.resize(transaction.inputs.size());
+  if (signatures.size() < transaction.inputs.size()) {
+    signatures.resize(transaction.inputs.size());
   }
   // check range
-  if (input >= transaction.signatures.size()) {
+  if (input >= signatures.size()) {
     throw std::runtime_error("Invalid input index");
   }
 
-  return transaction.signatures[input];
+  return signatures[input];
 }
 
 BinaryArray TransactionBuilder::getTransactionData() const { return toBinaryArray(transaction); }
@@ -309,12 +319,16 @@ bool TransactionBuilder::validateOutputs() const {
 }
 
 bool TransactionBuilder::validateSignatures() const {
-  if (transaction.signatures.size() < transaction.inputs.size()) {
+  if (!std::holds_alternative<TransactionSignatureCollection>(transaction.signatures)) {
+    return false;
+  }
+  const auto& ringSignatures = std::get<TransactionSignatureCollection>(transaction.signatures);
+  if (ringSignatures.size() < transaction.inputs.size()) {
     return false;
   }
 
   for (size_t i = 0; i < transaction.inputs.size(); ++i) {
-    if (getRequiredSignaturesCount(i) > transaction.signatures[i].size()) {
+    if (getRequiredSignaturesCount(i) > ringSignatures[i].size()) {
       return false;
     }
   }

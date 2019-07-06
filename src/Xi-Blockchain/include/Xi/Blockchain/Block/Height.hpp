@@ -29,6 +29,7 @@
 #include <type_traits>
 #include <string>
 #include <vector>
+#include <ostream>
 
 #include <Xi/Global.hh>
 #include <Xi/Span.hpp>
@@ -97,6 +98,8 @@ Height& operator+=(Height& lhs, const Offset rhs);
 
 std::string toString(const Height height);
 [[nodiscard]] bool serialize(Height& height, Common::StringView name, CryptoNote::ISerializer& serializer);
+
+std::ostream& operator<<(std::ostream& stream, const Height& height);
 
 }  // namespace Block
 }  // namespace Blockchain

@@ -61,10 +61,12 @@ struct basic_node_data {
 struct CORE_SYNC_DATA {
   BlockHeight current_height;
   Crypto::Hash top_id;
+  bool is_light_node;
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(current_height)
   KV_MEMBER(top_id)
+  KV_MEMBER(is_light_node)
   KV_END_SERIALIZATION
 };
 

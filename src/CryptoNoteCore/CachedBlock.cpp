@@ -6,6 +6,8 @@
 
 #include "CachedBlock.h"
 
+#include <cstring>
+
 #include <Xi/Config.h>
 #include <Common/Varint.h>
 
@@ -22,11 +24,22 @@ CachedBlock::CachedBlock(BlockTemplate&& _block) : block(std::move(_block)) {}
 
 const BlockTemplate& CachedBlock::getBlock() const { return block; }
 
+const BlockProofOfWork& CachedBlock::getProofOfWorkBlob() const {
+  if (!blockProofOfWork.is_initialized()) {
+    blockProofOfWork = BlockProofOfWork{};
+    std::memcpy(blockProofOfWork->nonceData(), block.nonce.data(), BlockNonce::bytes());
+    const auto& powHash = getBlockProofOfWorkHash();
+    std::memcpy(blockProofOfWork->hashData(), powHash.data(), BlockHash::bytes());
+  }
+
+  return blockProofOfWork.get();
+}
+
 const Crypto::Hash& CachedBlock::getTransactionTreeHash() const {
   if (!transactionTreeHash.is_initialized()) {
     std::vector<Crypto::Hash> transactionHashes;
     transactionHashes.reserve(block.transactionHashes.size() + 1);
-    transactionHashes.push_back(getObjectHash(block.baseTransaction));
+    transactionHashes.push_back(block.baseTransaction.hash());
     if (block.staticRewardHash) {
       transactionHashes.push_back(Crypto::Hash::compute(block.staticRewardHash->span()).takeOrThrow());
     }
@@ -40,31 +53,24 @@ const Crypto::Hash& CachedBlock::getTransactionTreeHash() const {
 
 const Crypto::Hash& CachedBlock::getBlockHash() const {
   if (!blockHash.is_initialized()) {
-    BinaryArray blockBinaryArray = getBlockHashingBinaryArray();
-    blockHash = getObjectHash(blockBinaryArray);
+    std::array<Crypto::Hash, 2> hashes{};
+    hashes[0] = block.headerHash();
+    hashes[1] = getTransactionTreeHash();
+    blockHash = Crypto::Hash::computeMerkleTree(hashes).takeOrThrow();
   }
 
   return blockHash.get();
 }
 
-const BinaryArray& CachedBlock::getBlockHashingBinaryArray() const {
-  if (!blockHashingBinaryArray.is_initialized()) {
-    blockHashingBinaryArray = BinaryArray();
-    auto& result = blockHashingBinaryArray.get();
-    if (!toBinaryArray(static_cast<const BlockHeader&>(block), result)) {
-      blockHashingBinaryArray.reset();
-      throw std::runtime_error("Can't serialize BlockHeader");
-    }
-
-    const auto& treeHash = getTransactionTreeHash();
-    result.insert(result.end(), treeHash.begin(), treeHash.end());
-    size_t hardCodedTransactions = block.staticRewardHash ? 2 : 1;
-    auto transactionCount =
-        Common::asBinaryArray(Tools::get_varint_data(block.transactionHashes.size() + hardCodedTransactions));
-    result.insert(result.end(), transactionCount.begin(), transactionCount.end());
+const Hash& CachedBlock::getBlockProofOfWorkHash() const {
+  if (!blockProofOfWorkHash.is_initialized()) {
+    std::array<Crypto::Hash, 2> hashes{};
+    hashes[0] = block.proofOfWorkPrefix();
+    hashes[1] = getTransactionTreeHash();
+    blockProofOfWorkHash = Crypto::Hash::computeMerkleTree(hashes).takeOrThrow();
   }
 
-  return blockHashingBinaryArray.get();
+  return blockProofOfWorkHash.get();
 }
 
 uint32_t CachedBlock::getBlockIndex() const {
@@ -84,7 +90,7 @@ uint32_t CachedBlock::getBlockIndex() const {
   return blockIndex.get();
 }
 
-uint32_t CachedBlock::getNonceOffset() const { return 2; }
+uint32_t CachedBlock::getNonceOffset() const { return 0; }
 
 const CachedTransaction& CachedBlock::coinbase() const {
   if (!baseTransaction.is_initialized()) {

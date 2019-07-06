@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -631,7 +631,7 @@ BlockchainSynchronizer::UpdateConsumersResult BlockchainSynchronizer::updateCons
 
   if (!lastBlockHeight.isNull()) {
     assert(lastBlockHeight.native() <= blocks.size());
-    lastBlockId = blocks[lastBlockHeight.toIndex()].blockHash;
+    m_lastBlockId = blocks[lastBlockHeight.toIndex()].blockHash;
   }
 
   if (hasErrors) {
@@ -655,7 +655,7 @@ void BlockchainSynchronizer::removeOutdatedTransactions() {
 
   GetPoolRequest request;
   request.knownTxIds.assign(unionPoolHistory.begin(), unionPoolHistory.end());
-  request.lastKnownBlock = lastBlockId;
+  request.lastKnownBlock = m_lastBlockId;
 
   GetPoolResponse response;
   response.isLastKnownBlockActual = false;
@@ -704,7 +704,7 @@ void BlockchainSynchronizer::startPoolSync() {
 
   GetPoolRequest unionRequest;
   unionRequest.knownTxIds.assign(unionPoolHistory.begin(), unionPoolHistory.end());
-  unionRequest.lastKnownBlock = lastBlockId;
+  unionRequest.lastKnownBlock = m_lastBlockId;
 
   GetPoolResponse unionResponse;
   unionResponse.isLastKnownBlockActual = false;
@@ -729,7 +729,7 @@ void BlockchainSynchronizer::startPoolSync() {
       } else {
         GetPoolRequest intersectionRequest;
         intersectionRequest.knownTxIds.assign(intersectedPoolHistory.begin(), intersectedPoolHistory.end());
-        intersectionRequest.lastKnownBlock = lastBlockId;
+        intersectionRequest.lastKnownBlock = m_lastBlockId;
 
         GetPoolResponse intersectionResponse;
         intersectionResponse.isLastKnownBlockActual = false;

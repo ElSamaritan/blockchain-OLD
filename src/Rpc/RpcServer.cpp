@@ -811,15 +811,15 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
 
   validateCoinbaseTransaction(blk.baseTransaction);
 
-  block_header_response block_header;
-  fill_block_header_response(blk, false, res.block.height, req.hash, block_header);
-
   res.block.cumulative_size = blkDetails.blockSize;
-  res.block.timestamp = block_header.timestamp;
   res.block.height = std::get<BaseInput>(blk.baseTransaction.inputs.front()).height;
   res.block.hash = req.hash;
   res.block.difficulty = m_core.getBlockDifficulty(res.block.height.toIndex());
 
+  block_header_response block_header;
+  fill_block_header_response(blk, false, res.block.height, req.hash, block_header);
+
+  res.block.timestamp = block_header.timestamp;
   res.block.version = block_header.version;
   res.block.upgrade_vote = block_header.upgrade_vote;
   res.block.previous_hash = block_header.prev_hash;
@@ -843,7 +843,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
 
   // Base transaction adding
   f_transaction_short_response transaction_short;
-  transaction_short.hash = getObjectHash(blk.baseTransaction);
+  transaction_short.hash = blk.baseTransaction.hash();
   transaction_short.fee = 0;
   transaction_short.amount_out = getOutputAmount(blk.baseTransaction);
   transaction_short.size = getObjectBinarySize(blk.baseTransaction);
@@ -854,7 +854,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
     // Static reward adding
     const auto& static_reward_tx = *staticReward;
     f_transaction_short_response short_static_reward_info;
-    short_static_reward_info.hash = getObjectHash(static_reward_tx);
+    short_static_reward_info.hash = static_reward_tx.hash();
     short_static_reward_info.fee = 0;
     short_static_reward_info.amount_out = getOutputAmount(static_reward_tx);
     short_static_reward_info.size = getObjectBinarySize(static_reward_tx);
@@ -876,7 +876,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
     uint64_t amount_in = getInputAmount(tx);
     uint64_t amount_out = getOutputAmount(tx);
 
-    i_transaction_short.hash = getObjectHash(tx);
+    i_transaction_short.hash = tx.hash();
     i_transaction_short.fee = amount_in - amount_out;
     i_transaction_short.amount_out = amount_out;
     i_transaction_short.size = getObjectBinarySize(tx);
@@ -972,12 +972,14 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
     block_short.difficulty = blkDetails.difficulty;
     block_short.transactions_count = blk.transactionHashes.size() + 1;
     res.block = block_short;
+  } else {
+    res.block = std::nullopt;
   }
 
   uint64_t amount_in = getInputAmount(res.transaction);
   uint64_t amount_out = getOutputAmount(res.transaction);
 
-  res.transaction_details.hash = getObjectHash(res.transaction);
+  res.transaction_details.hash = res.transaction.hash();
   res.transaction_details.fee = amount_in - amount_out;
   if (amount_in == 0) res.transaction_details.fee = 0;
   res.transaction_details.amount_out = amount_out;
@@ -993,7 +995,7 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
   if (CryptoNote::getPaymentIdFromTxExtra(res.transaction.extra, paymentId)) {
     res.transaction_details.payment_id = paymentId;
   } else {
-    res.transaction_details.payment_id.nullify();
+    res.transaction_details.payment_id = std::nullopt;
   }
 
   res.status = CORE_RPC_STATUS_OK;
@@ -1015,7 +1017,7 @@ bool RpcServer::f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::reques
     uint64_t amount_in = getInputAmount(tx);
     uint64_t amount_out = getOutputAmount(tx);
 
-    transaction_short.hash = getObjectHash(tx);
+    transaction_short.hash = tx.hash();
     transaction_short.fee = amount_in - amount_out;
     transaction_short.amount_out = amount_out;
     transaction_short.size = getObjectBinarySize(tx);

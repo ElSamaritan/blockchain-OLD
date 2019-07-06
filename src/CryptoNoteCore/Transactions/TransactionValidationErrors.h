@@ -60,6 +60,7 @@ enum class TransactionValidationError {
   INPUT_INVALID_SIGNATURES = 14,  ///< The signing signature of the input is invalid. Its likely that a user tried to
                                   ///< use coins he does not own.
   INPUT_WRONG_SIGNATURES_COUNT = 15,
+  INVALID_SIGNATURE_TYPE = 49,         ///< Signature type is unknown or pruned.
   INPUTS_AMOUNT_OVERFLOW = 16,         ///< The sum of all amounts of the transaction input caused a memory overflow
   BASE_INPUT_WRONG_COUNT = 17,         ///< The miner reward transaction has an invalid amount of inputs
   BASE_INPUT_WRONG_BLOCK_INDEX = 18,   ///< The encoded block index of the miner reward input is wrong.
@@ -95,7 +96,7 @@ enum class TransactionValidationError {
   INPUT_MIXIN_TOO_HIGH = 33,
   INPUT_MIXIN_TOO_LOW = 34,
 
-  __NUM = 49  ///< The count of different enum values, if you add a new one use this as its value and increase this by
+  __NUM = 50  ///< The count of different enum values, if you add a new one use this as its value and increase this by
               ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation
               ///< and tickets aso.
 };
@@ -143,6 +144,8 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Transaction contains global index duplicates";
       case TransactionValidationError::INPUT_INVALID_SIGNATURES:
         return "Transaction has input with invalid signature";
+      case TransactionValidationError::INVALID_SIGNATURE_TYPE:
+        return "Transaction signature is pruned or has an invalid type.";
       case TransactionValidationError::INPUT_WRONG_SIGNATURES_COUNT:
         return "Transaction has input with wrong signatures count";
       case TransactionValidationError::INPUTS_AMOUNT_OVERFLOW:

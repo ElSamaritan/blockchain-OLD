@@ -629,8 +629,9 @@ uint64_t Currency::nextDifficulty(BlockVersion version, uint32_t blockIndex, std
 }
 
 bool Currency::checkProofOfWork(const CachedBlock& block, uint64_t currentDiffic) const {
+  const auto& powBlob = block.getProofOfWorkBlob();
   Crypto::Hash hash{};
-  Xi::Config::Hashes::compute(block, hash, block.getBlock().version);
+  Xi::Config::Hashes::compute(powBlob.span(), hash, block.getBlock().version);
   return check_hash(hash, currentDiffic);
 }
 

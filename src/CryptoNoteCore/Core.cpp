@@ -171,7 +171,7 @@ const std::chrono::seconds OUTDATED_TRANSACTION_POLLING_INTERVAL = std::chrono::
 }  // namespace
 
 Core::Core(const Currency& currency, Logging::ILogger& logger, Checkpoints& checkpoints, System::Dispatcher& dispatcher,
-           std::unique_ptr<IBlockchainCacheFactory>&& blockchainCacheFactory,
+           bool isLightNode, std::unique_ptr<IBlockchainCacheFactory>&& blockchainCacheFactory,
            std::unique_ptr<IMainChainStorage>&& mainchainStorage)
     : m_currency(currency),
       dispatcher(dispatcher),
@@ -179,6 +179,7 @@ Core::Core(const Currency& currency, Logging::ILogger& logger, Checkpoints& chec
       logger(logger, "Core"),
       checkpoints(checkpoints),
       m_upgradeManager(new UpgradeManager()),
+      m_isLightNode{isLightNode},
       blockchainCacheFactory(std::move(blockchainCacheFactory)),
       mainChainStorage(std::move(mainchainStorage)),
       initialized(false),
@@ -812,6 +813,15 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
 
   auto ret = error::AddBlockErrorCode::ADDED_TO_ALTERNATIVE;
 
+  if (m_isLightNode) {
+    rawBlock.transactions.clear();
+    rawBlock.transactions.reserve(transactions.size());
+    for (auto& transaction : transactions) {
+      transaction.prune();
+      rawBlock.transactions.emplace_back(transaction.getTransactionBinaryArray());
+    }
+  }
+
   if (addOnTop) {
     if (cache->getChildCount() == 0) {
       // add block on top of leaf segment.
@@ -1361,6 +1371,8 @@ CoreStatistics Core::getCoreStatistics() const {
   return result;
 }
 
+bool Core::isPruned() const { return m_isLightNode; }
+
 size_t Core::getBlockchainTransactionCount() const {
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
@@ -1471,8 +1483,17 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
   const size_t requiredRingSize = m_currency.requiredMixin(blockVersion) + 1;
   std::map<Amount, std::set<uint32_t>> usedGlobalIndices;
 
+  if (!std::holds_alternative<TransactionSignatureCollection>(transaction.signatures)) {
+    return error::TransactionValidationError::INVALID_SIGNATURE_TYPE;
+  }
+  const auto& ringSignatures = std::get<TransactionSignatureCollection>(transaction.signatures);
+
   size_t inputIndex = 0;
   for (const auto& input : transaction.inputs) {
+    if (inputIndex >= ringSignatures.size()) {
+      return error::TransactionValidationError::INPUT_WRONG_SIGNATURES_COUNT;
+    }
+
     if (auto keyInput = std::get_if<KeyInput>(&input)) {
       if (!state.spentKeyImages.insert(keyInput->keyImage).second) {
         return error::TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT;
@@ -1510,7 +1531,7 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
           return error::TransactionValidationError::INPUT_SPEND_LOCKED_OUT;
         }
 
-        if (outputKeys.size() != cachedTransaction.getTransaction().signatures[inputIndex].size()) {
+        if (outputKeys.size() != ringSignatures[inputIndex].size()) {
           return error::TransactionValidationError::INPUT_INVALID_SIGNATURES_COUNT;
         }
 
@@ -1518,9 +1539,12 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
         outputKeyPointers.reserve(outputKeys.size());
         std::for_each(outputKeys.begin(), outputKeys.end(),
                       [&outputKeyPointers](const Crypto::PublicKey& key) { outputKeyPointers.push_back(&key); });
+        if (outputKeyPointers.size() != ringSignatures[inputIndex].size()) {
+          return error::TransactionValidationError::INPUT_INVALID_SIGNATURES_COUNT;
+        }
         if (!Crypto::check_ring_signature(cachedTransaction.getTransactionPrefixHash(), keyInput->keyImage,
                                           outputKeyPointers.data(), outputKeyPointers.size(),
-                                          transaction.signatures[inputIndex].data(), true)) {
+                                          ringSignatures[inputIndex].data(), true)) {
           return error::TransactionValidationError::INPUT_INVALID_SIGNATURES;
         }
       }
@@ -1609,7 +1633,6 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
     return error::TransactionValidationError::INPUT_AMOUNT_INSUFFICIENT;
   }
 
-  assert(transaction.signatures.size() == transaction.inputs.size());
   fee = summaryInputAmount - summaryOutputAmount;
   return error::TransactionValidationError::VALIDATION_SUCCESS;
 }
@@ -1690,7 +1713,12 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     return error::TransactionValidationError::BASE_TRANSACTION_WRONG_UNLOCK_TIME;
   }
 
-  if (!block.baseTransaction.signatures.empty()) {
+  if (!std::holds_alternative<TransactionSignatureCollection>(block.baseTransaction.signatures)) {
+    return error::TransactionValidationError::INVALID_SIGNATURE_TYPE;
+  }
+  const auto& ringSignatures = std::get<TransactionSignatureCollection>(block.baseTransaction.signatures);
+
+  if (!ringSignatures.empty()) {
     return error::TransactionValidationError::BASE_INVALID_SIGNATURES_COUNT;
   }
 
@@ -2120,16 +2148,10 @@ void Core::fillQueryBlockShortInfo(uint32_t fullOffset, uint32_t currentIndex, s
 
     blockShortInfo.transaction_prefixes.reserve(rawBlock.transactions.size());
     for (auto& rawTransaction : rawBlock.transactions) {
+      auto transaction = fromBinaryArray<Transaction>(rawTransaction);
       TransactionPrefixInfo prefixInfo;
-      prefixInfo.hash =
-          getBinaryArrayHash(rawTransaction);  // TODO: is there faster way to get hash without calculation?
-
-      Transaction transaction;
-      if (!fromBinaryArray(transaction, rawTransaction)) {
-        // TODO: log it
-        throw std::runtime_error("Couldn't deserialize transaction");
-      }
-
+      // TODO: is there faster way to get hash without calculation?
+      prefixInfo.hash = transaction.hash();
       prefixInfo.prefix = std::move(static_cast<TransactionPrefix&>(transaction));
       blockShortInfo.transaction_prefixes.emplace_back(std::move(prefixInfo));
     }
@@ -2188,8 +2210,8 @@ size_t Core::calculateCumulativeBlocksizeLimit(uint32_t height) const {
 
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
-  // FIXME: skip gensis here?
-  auto sizes = chainsLeaves[0]->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(nextBlockVersion));
+  auto sizes = chainsLeaves[0]->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(nextBlockVersion),
+                                                   height - 1, UseGenesis{true});
   uint64_t median = Common::medianValue(sizes);
   if (median <= nextBlockGrantedFullRewardZone) {
     median = nextBlockGrantedFullRewardZone;

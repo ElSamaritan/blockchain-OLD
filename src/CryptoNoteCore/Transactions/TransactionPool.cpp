@@ -422,6 +422,8 @@ Xi::Result<void> TransactionPool::insertTransaction(CachedTransaction transactio
     for (const auto& keyImage : transaction.getKeyImages()) {
       m_keyImageReferences.insert(std::make_pair(keyImage, transactionHash));
     }
+    m_cumulativeSize += transaction.getBlobSize();
+    m_cumulativeFees += transaction.getTransactionFee();
     auto nfo =
         std::make_shared<PendingTransactionInfo>(std::move(transaction), validation.eligibleIndex(), receiveTime);
     m_transactions.insert(std::make_pair(transactionHash, nfo));
@@ -429,8 +431,6 @@ Xi::Result<void> TransactionPool::insertTransaction(CachedTransaction transactio
     if (reason != ITransactionPoolObserver::AdditionReason::SkipNotification) {
       m_observers.notify(&ITransactionPoolObserver::transactionAddedToPool, std::cref(transactionHash), reason);
     }
-    m_cumulativeSize += transaction.getBlobSize();
-    m_cumulativeFees += transaction.getTransactionFee();
     return Xi::success();
   }
 }

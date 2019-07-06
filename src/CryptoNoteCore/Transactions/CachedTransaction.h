@@ -66,6 +66,7 @@ class CachedTransaction {
   uint64_t getOutputAmount() const;
   uint64_t getTransactionFee() const;
   bool isCoinbase() const;
+  void prune();
 
  private:
   Transaction transaction;

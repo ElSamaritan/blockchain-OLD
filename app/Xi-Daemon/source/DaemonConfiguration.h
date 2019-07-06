@@ -49,6 +49,7 @@ struct DaemonConfiguration {
 
   int logLevel;
   int feeAmount;
+  bool lightNode = false;
   ::Xi::Config::Network::Type network;
   uint16_t p2pPort;
   uint16_t p2pExternalPort;
@@ -87,6 +88,7 @@ DaemonConfiguration initConfiguration() {
   DaemonConfiguration config;
 
   config.dataDirectory = Tools::getDefaultDataDirectory();
+  config.lightNode = false;
   config.checkPoints = "default";
   config.logFile = "xi-daemon.log";
   config.logLevel = Logging::WARNING;
@@ -136,6 +138,7 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
   options.add_options("Daemon")
     ("c,config-file", "Specify the <path> to a configuration file", cxxopts::value<std::string>(), "<path>")
     ("data-dir", "Specify the <path> to the Blockchain data directory", cxxopts::value<std::string>()->default_value(config.dataDirectory), "<path>")
+    ("light-node", "Heavily reduces blockchain size using pruning.", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
     ("dump-config", "Prints the current configuration to the screen", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
     ("load-checkpoints", "Specify a file <path> containing a CSV of Blockchain checkpoints for faster sync. A value of 'default' uses the built-in checkpoints.",
       cxxopts::value<std::string>()->default_value(config.checkPoints)->implicit_value("default"), "<path>")
@@ -209,6 +212,10 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
 
     if (cli.count("data-dir") > 0) {
       config.dataDirectory = cli["data-dir"].as<std::string>();
+    }
+
+    if (cli.count("light-node") > 0) {
+      config.lightNode = cli["light-node"].as<bool>();
     }
 
     if (cli.count("load-checkpoints") > 0) {
@@ -337,6 +344,10 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
 
   if (j.find("data-dir") != j.end()) {
     config.dataDirectory = j["data-dir"].get<std::string>();
+  }
+
+  if (j.find("light-node") != j.end()) {
+    config.lightNode = j["light-node"].get<bool>();
   }
 
   if (j.find("load-checkpoints") != j.end()) {
@@ -470,6 +481,7 @@ json asJSON(const DaemonConfiguration& config) {
   Common::toString(config.dbCompression, compressionString);
 
   json j = json{{"data-dir", config.dataDirectory},
+                {"light-node", config.lightNode},
                 {"load-checkpoints", config.checkPoints},
                 {"log-file", config.logFile},
                 {"log-level", config.logLevel},

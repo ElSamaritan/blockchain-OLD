@@ -61,12 +61,12 @@ Xi::ConstByteSpan Crypto::PublicKey::span() const { return Xi::ConstByteSpan{dat
 
 Xi::ByteSpan Crypto::PublicKey::span() { return Xi::ByteSpan{data(), bytes()}; }
 
-bool Crypto::PublicKey::isValid() const { return check_key(*this); }
+bool Crypto::PublicKey::isValid() const { return check_key(*this) && !isNull(); }
 
 void Crypto::PublicKey::nullify() { fill(0); }
 
 bool Crypto::serialize(Crypto::PublicKey &publicKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(publicKey.data(), PublicKey::bytes(), name), false);
   XI_RETURN_EC_IF_NOT(publicKey.isValid(), false);
-  return true;
+  XI_RETURN_SC(true);
 }

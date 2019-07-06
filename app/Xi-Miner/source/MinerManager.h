@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -25,7 +25,6 @@
 
 #include <atomic>
 #include <vector>
-#include <random>
 #include <thread>
 
 #include <Xi/Global.hh>
@@ -60,6 +59,7 @@ class MinerManager : public UpdateMonitor::Observer, MinerWorker::Observer {
 
   void onTemplateChanged(MinerBlockTemplate newTemplate) override;
   void onBlockFound(CryptoNote::BlockTemplate block) override;
+  void onError(std::string what) override;
 
   void run();
   void shutdown();
@@ -81,7 +81,5 @@ class MinerManager : public UpdateMonitor::Observer, MinerWorker::Observer {
   std::atomic_bool m_running{false};
   std::atomic_bool m_shutdownRequest{false};
   std::vector<std::shared_ptr<MinerWorker>> m_worker;
-  std::default_random_engine m_randomEngine;
-  std::uniform_int_distribution<uint32_t> m_nonceDist;
 };
 }  // namespace XiMiner

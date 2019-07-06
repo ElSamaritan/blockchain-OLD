@@ -27,7 +27,7 @@
 
 #include <Xi/Exceptions.hpp>
 
-const Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::Null{0};
+const Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::Null{std::numeric_limits<value_type>::max()};
 const Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::Genesis{1};
 
 Xi::Blockchain::Block::Height::Height(Xi::Blockchain::Block::Height::value_type height) : m_height{height} {}
@@ -227,4 +227,12 @@ bool Xi::Blockchain::Block::serialize(Xi::Blockchain::Block::Height &height, Com
   }
 
   return true;
+}
+
+std::ostream &Xi::Blockchain::Block::operator<<(std::ostream &stream, const Xi::Blockchain::Block::Height &height) {
+#if !defined(NDEBUG)
+  return stream << "[HEIGHT:" << height.native() << "]";
+#else
+  return stream << height.native();
+#endif
 }

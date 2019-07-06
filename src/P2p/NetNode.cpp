@@ -828,6 +828,7 @@ bool NodeServer::try_to_connect_and_handshake_with_new_peer(const NetworkAddress
     ctx.m_remote_ip = na.ip;
     ctx.m_remote_port = na.port;
     ctx.m_is_income = false;
+    ctx.m_is_light_node = true;
     ctx.m_started = time(nullptr);
 
     try {
@@ -861,6 +862,7 @@ bool NodeServer::try_to_connect_and_handshake_with_new_peer(const NetworkAddress
     pe_local.address = na;
     pe_local.id = ctx.peerId;
     pe_local.last_seen = time(nullptr);
+    pe_local.is_light_node = ctx.m_is_light_node;
     m_peerlist.append_with_peer_white(pe_local);
 
     if (m_stop) {
@@ -1305,6 +1307,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
       pe.address.ip = context.m_remote_ip;
       pe.address.port = port_l;
       pe.last_seen = time(nullptr);
+      pe.is_light_node = context.m_is_light_node;
       pe.id = peer_id_l;
       m_peerlist.append_with_peer_white(pe);
 
@@ -1413,6 +1416,7 @@ void NodeServer::acceptLoop() {
       auto addressAndPort = ctx.connection.getPeerAddressAndPort();
       ctx.m_remote_ip = hostToNetwork(addressAndPort.first.getValue());
       ctx.m_remote_port = addressAndPort.second;
+      ctx.m_is_light_node = true;
 
       if (!isBlocked(ctx.m_remote_ip)) {
         auto iter = m_connections.emplace(ctx.m_connection_id, std::move(ctx)).first;

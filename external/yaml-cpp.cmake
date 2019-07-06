@@ -21,27 +21,18 @@
 #                                                                                                #
 # ============================================================================================== #
 
-include(ExternalProject)
-
-# Contained in buildsystem using submodules
-include(fmtlib-fmt.cmake)
-include(lz4-lz4.cmake)
-include(facebook-rocksdb.cmake)
-include(google-sparsehash-c11.cmake)
-include(miniupnp-miniupnpc.cmake)
-include(nlohmann-json.cmake)
-include(yhirose-cpp-linenoise.cmake)
-include(jarro2783-cxxopts.cmake)
-include(rang.cmake)
-include(yaml-cpp.cmake)
-include(ruslo-leathers.cmake)
-include(google-cpu-features.cmake)
-
-if(XI_BUILD_BREAKPAD)
-  include(google-breakpad.cmake)
+if(DEFINED XI_CMAKE_EXTERNAL_YAML_CPP)
+  return()
 endif()
 
-if(XI_BUILD_TESTSUITE)
-  include(google-test.cmake)
-  include(google-benchmark.cmake)
-endif()
+set(XI_CMAKE_EXTERNAL_YAML_CPP ON)
+
+set(YAML_CPP_BUILD_TESTS OFF CACHE INTERNAL "Enable testing")
+set(YAML_CPP_BUILD_TOOLS OFF CACHE INTERNAL "Enable parse tools")
+set(YAML_CPP_BUILD_CONTRIB OFF CACHE INTERNAL "Enable contrib stuff in library")
+set(YAML_CPP_INSTALL OFF CACHE INTERNAL "Enable generation of install target")
+set(MSVC_SHARED_RT OFF CACHE INTERNAL "MSVC: Build with shared runtime libs (/MD)")
+set(MSVC_STHREADED_RT OFF CACHE INTERNAL "MSVC: Build with single-threaded static runtime libs (/ML until VS .NET 2003)")
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/yaml-cpp)
+add_library(yaml::yaml-cpp ALIAS yaml-cpp)

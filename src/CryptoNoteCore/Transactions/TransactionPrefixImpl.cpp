@@ -92,7 +92,7 @@ TransactionPrefixImpl::TransactionPrefixImpl(const TransactionPrefix& prefix, co
 
 Hash TransactionPrefixImpl::getTransactionHash() const { return m_txHash; }
 
-Hash TransactionPrefixImpl::getTransactionPrefixHash() const { return getObjectHash(m_txPrefix); }
+Hash TransactionPrefixImpl::getTransactionPrefixHash() const { return m_txPrefix.prefixHash(); }
 
 PublicKey TransactionPrefixImpl::getTransactionPublicKey() const {
   Crypto::PublicKey pk(PublicKey::Null);
@@ -197,8 +197,7 @@ std::unique_ptr<ITransactionReader> createTransactionPrefix(const TransactionPre
 }
 
 std::unique_ptr<ITransactionReader> createTransactionPrefix(const Transaction& fullTransaction) {
-  return std::unique_ptr<ITransactionReader>(
-      new TransactionPrefixImpl(fullTransaction, getObjectHash(fullTransaction)));
+  return std::unique_ptr<ITransactionReader>(new TransactionPrefixImpl(fullTransaction, fullTransaction.prefixHash()));
 }
 
 }  // namespace CryptoNote

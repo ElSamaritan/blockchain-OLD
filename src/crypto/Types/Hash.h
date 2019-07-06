@@ -31,8 +31,11 @@
 #include <Xi/Result.h>
 #include <Xi/Byte.hh>
 #include <Xi/Span.hpp>
+#include <Xi/Exceptions.hpp>
 #include <Xi/Crypto/Hash/FastHash.hh>
+#include <Common/VectorOutputStream.h>
 #include <Serialization/ISerializer.h>
+#include <Serialization/BinaryOutputStreamSerializer.h>
 #include <Xi/Algorithm/GenericHash.h>
 #include <Xi/Algorithm/GenericComparison.h>
 
@@ -55,6 +58,18 @@ struct Hash : Xi::ByteArray<XI_HASH_FAST_HASH_SIZE> {
 
   static Xi::Result<Hash> computeMerkleTree(ConstHashSpan data);
   static Xi::Result<void> computeMerkleTree(ConstHashSpan data, Hash& out);
+
+  template <typename _ValueT>
+  static inline Xi::Result<Hash> computeObjectHash(const _ValueT& value) {
+    XI_ERROR_TRY();
+    Xi::ByteVector blob{};
+    Common::VectorOutputStream stream{blob};
+    CryptoNote::BinaryOutputStreamSerializer serializer{stream};
+    Xi::exceptional_if_not<Xi::RuntimeError>(serializer(const_cast<_ValueT&>(value), ""),
+                                             "object serialization failed for hash computation");
+    return Hash::compute(blob);
+    XI_ERROR_CATCH();
+  }
 
   Hash();
   explicit Hash(array_type raw);

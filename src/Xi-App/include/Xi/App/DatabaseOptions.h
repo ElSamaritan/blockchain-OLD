@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -49,6 +49,7 @@ struct DatabaseOptions : public IOptions {
   uint64_t WriteBufferSize = 32_MB;
   uint64_t ReadCacheSize = 128_MB;
   CryptoNote::DataBaseConfig::Compression Compression = CryptoNote::DataBaseConfig::Compression::LZ4;
+  bool LightNode = false;
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(DataDirectory)
@@ -57,6 +58,7 @@ struct DatabaseOptions : public IOptions {
   KV_MEMBER(WriteBufferSize)
   KV_MEMBER(ReadCacheSize)
   KV_MEMBER(Compression)
+  KV_MEMBER(LightNode)
   KV_END_SERIALIZATION
 
   void emplaceOptions(cxxopts::Options& options) override;

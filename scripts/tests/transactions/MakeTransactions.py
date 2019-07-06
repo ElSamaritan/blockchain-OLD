@@ -75,7 +75,7 @@ class PGService:
             'transfers': transfers,
             'anonymity': transaction.Anonymity,
             'fee': transaction.Fee,
-            'unlockTime': transaction.UnlockTime
+            'unlock_time': transaction.UnlockTime
             })
 
     def sendFusionTransaction(self, transaction: FusionTransaction):
@@ -93,12 +93,15 @@ class PGService:
             'params': params
         }
         endpoint = 'http://' + self.Host + ':' + str(self.Port) + '/json_rpc'
+        # print(endpoint)
+        # print(json.dumps(payload))
         response = requests.post(
             endpoint, 
             data = json.dumps(payload), 
             headers = {
                 'Content-Type': 'application/json'
             }).json()
+        # print(response)
         if 'error' in response:
             raise ValueError(response['error'])
         return response
@@ -127,18 +130,18 @@ class Wallet:
     def updateBalance(self):
         jsonResult = self.Api.getBalance()
         self.Balance = Balance(
-            jsonResult['result']['availableBalance'], 
-            jsonResult['result']['lockedAmount'])
+            jsonResult['result']['available_balance'], 
+            jsonResult['result']['locked_amount'])
 
     def sendTransaction(self, transaction: Transaction):
         print("\nSending transaction from %s...%s" % (self.Address, transaction))
         jsonResult = self.Api.sendTransaction(transaction)
-        print("Transaction sent: %s" % jsonResult['result']['transactionHash'])
+        print("Transaction sent: %s" % jsonResult['result']['transaction_hash'])
 
     def sendFusionTransaction(self, transaction: FusionTransaction):
         print("\nSending fusion transaction from %s...%s" % (self.Address, transaction))
         jsonResult = self.Api.sendFusionTransaction(transaction)
-        print("Fusion Transaction sent: %s" % jsonResult['result']['transactionHash'])
+        print("Fusion Transaction sent: %s" % jsonResult['result']['transaction_hash'])
 
     def initialize(self, reset: bool):
         self.Address = self.Api.getAddress()['result']['addresses'][0]

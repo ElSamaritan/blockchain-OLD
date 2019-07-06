@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -29,6 +29,7 @@
 #include <boost/endian/conversion.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Crypto/Random/Random.hh>
 #include <crypto/cnx/cnx.h>
 #include <CryptoNoteCore/CheckDifficulty.h>
 
@@ -43,16 +44,6 @@ XiMiner::MinerWorker::~MinerWorker() {
 void XiMiner::MinerWorker::addObserver(XiMiner::MinerWorker::Observer *observer) { m_observer.add(observer); }
 
 void XiMiner::MinerWorker::removeObserver(XiMiner::MinerWorker::Observer *observer) { m_observer.remove(observer); }
-
-void XiMiner::MinerWorker::setInitialNonce(uint32_t nonce) {
-  m_initialNonce = nonce;
-  m_swapTemplate.store(true);
-}
-
-void XiMiner::MinerWorker::setNonceStep(uint32_t nonceStep) {
-  m_nonceStep = nonceStep;
-  m_swapTemplate.store(true);
-}
 
 void XiMiner::MinerWorker::setTemplate(XiMiner::MinerBlockTemplate block) {
   std::lock_guard<std::mutex> lck{m_blockBufferAccess};
@@ -99,8 +90,7 @@ XiMiner::HashrateSummary XiMiner::MinerWorker::resetHashrateSummary() {
 void XiMiner::MinerWorker::mineLoop() {
   resetHashrateSummary();
   auto block = acquireTemplate();
-  uint32_t currentNonce = m_initialNonce;
-  uint32_t nonceStep = m_nonceStep;
+
   while (!m_shutdownRequest.load()) {
     if (m_paused.load()) {
       std::this_thread::sleep_for(std::chrono::milliseconds{500});
@@ -109,27 +99,29 @@ void XiMiner::MinerWorker::mineLoop() {
 
     if (m_swapTemplate.load()) {
       block = acquireTemplate();
-      currentNonce = m_initialNonce;
-      nonceStep = m_nonceStep;
     }
 
-    if (block.HashArray.empty()) {
+    if (!block.ProofOfWork.has_value()) {
       std::this_thread::sleep_for(std::chrono::milliseconds{500});
       continue;
     }
 
     const uint32_t batchSize = 10;
     for (uint32_t i = 0; i < batchSize; ++i) {
-      *reinterpret_cast<uint32_t *>(block.HashArray.data() + block.NonceOffset) =
-          boost::endian::native_to_little(currentNonce);
+      auto ec = Xi::Crypto::Random::generate(block.ProofOfWork->nonceSpan());
+      if (ec != Xi::Crypto::Random::RandomError::Success) {
+        m_observer.notify(&Observer::onError, "random generation failed.");
+        std::this_thread::sleep_for(std::chrono::milliseconds{100});
+        break;
+      }
 
       Crypto::Hash h;
-      Crypto::CNX::Hash_v1{}(block.HashArray.data(), block.HashArray.size(), h);
+      Crypto::CNX::Hash_v1{}(block.ProofOfWork->data(), block.ProofOfWork->size(), h);
       if (CryptoNote::check_hash(h, block.Difficutly)) {
-        block.Template.nonce.setAsInteger(currentNonce);
+        std::memcpy(block.Template.nonce.data(), block.ProofOfWork->nonceSpan().data(),
+                    CryptoNote::BlockNonce::bytes());
         m_observer.notify(&Observer::onBlockFound, block.Template);
       }
-      currentNonce += nonceStep;
     }
 
     m_hashCount += batchSize;

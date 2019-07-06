@@ -501,7 +501,7 @@ struct f_transaction_short_response {
 struct f_transaction_details_response {
   Crypto::Hash hash;
   size_t size;
-  PaymentId payment_id;
+  std::optional<PaymentId> payment_id;
   uint64_t mixin;
   uint64_t fee;
   uint64_t amount_out;
@@ -670,7 +670,7 @@ struct F_COMMAND_RPC_GET_TRANSACTION_DETAILS {
   struct response {
     Transaction transaction;
     f_transaction_details_response transaction_details;
-    f_block_short_response block;
+    std::optional<f_block_short_response> block;
     std::string status;
 
     KV_BEGIN_SERIALIZATION

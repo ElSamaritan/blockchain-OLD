@@ -1,4 +1,4 @@
-# ============================================================================================== #
+﻿# ============================================================================================== #
 #                                                                                                #
 #                                     Galaxia Blockchain                                         #
 #                                                                                                #
@@ -24,5 +24,7 @@
 set(FMT_INSTALL OFF CACHE INTERNAL "")
 set(FMT_TEST OFF CACHE INTERNAL "")
 set(FMT_DOC OFF CACHE INTERNAL "")
+set(FMT_PEDANTIC OFF CACHE INTERNAL "")
+set(FMT_WERROR OFF CACHE INTERNAL "")
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/fmtlib EXCLUDE_FROM_ALL)

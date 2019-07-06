@@ -12,6 +12,7 @@
 #include <thread>
 #include <iostream>
 
+#include <Xi/Global.hh>
 #include <System/ContextGroup.h>
 #include <System/Dispatcher.h>
 #include <System/Event.h>
@@ -35,6 +36,12 @@ using namespace Crypto;
 using namespace Common;
 using namespace Logging;
 using namespace System;
+
+#define XI_TRY_RPC_COMMAND(COMMAND)                                             \
+  if (const auto ec = COMMAND; ec) {                                            \
+    XI_PRINT_EC("[%s:%i] RPC call failed: %s\n", __FILE__, __LINE__, #COMMAND); \
+    return ec;                                                                  \
+  }
 
 namespace CryptoNote {
 
@@ -138,7 +145,7 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
     m_httpEvent = &httpEvent;
     m_httpEvent->set();
 
-    if (!ping()) {
+    if (ping()) {
       initialized_callback(make_error_code(error::CONNECT_ERROR));
     } else {
       m_connected = true;
@@ -205,8 +212,19 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
 void NodeRpcProxy::updateNodeStatus() {
   bool updateBlockchain = true;
   while (pollUpdatesEnabled() && updateBlockchain && !m_stop) {
-    updateBlockchainStatus();
-    updateBlockchain = !updatePoolStatus();
+    if (const auto ec = updateBlockchainStatus(); ec) {
+      m_logger(ERROR) << "Error updating blockchain status: " << ec.message();
+      if (m_connected) {
+        m_connected = false;
+        m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
+      }
+    } else {
+      if (!m_connected) {
+        m_connected = true;
+        m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
+      }
+      updateBlockchain = !updatePoolStatus();
+    }
   }
 }
 
@@ -236,16 +254,16 @@ bool NodeRpcProxy::updatePoolStatus() {
   return true;
 }
 
-void NodeRpcProxy::updateBlockchainStatus() {
+std::error_code NodeRpcProxy::updateBlockchainStatus() {
   CryptoNote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::request req = AUTO_VAL_INIT(req);
   CryptoNote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::response rsp = AUTO_VAL_INIT(rsp);
 
-  std::error_code ec = jsonRpcCommand("getlastblockheader", req, rsp);
+  XI_TRY_RPC_COMMAND(jsonRpcCommand("getlastblockheader", req, rsp));
 
-  if (!ec) {
-    Crypto::Hash blockHash = rsp.block_header.hash;
-    Crypto::Hash prevBlockHash = rsp.block_header.prev_hash;
+  Crypto::Hash blockHash = rsp.block_header.hash;
+  Crypto::Hash prevBlockHash = rsp.block_header.prev_hash;
 
+  {
     std::unique_lock<std::mutex> lock(m_mutex);
     auto blockHeight = rsp.block_header.height;
     if (blockHash != lastLocalBlockHeaderInfo.hash) {
@@ -268,32 +286,25 @@ void NodeRpcProxy::updateBlockchainStatus() {
   CryptoNote::COMMAND_RPC_GET_INFO::request getInfoReq = AUTO_VAL_INIT(getInfoReq);
   CryptoNote::COMMAND_RPC_GET_INFO::response getInfoResp = AUTO_VAL_INIT(getInfoResp);
 
-  ec = jsonCommand("/getinfo", getInfoReq, getInfoResp);
-  if (!ec) {
-    // a quirk to let wallets work with previous versions daemons.
-    // Previous daemons didn't have the 'last_known_block_index' parameter in RPC so it may have zero value.
-    std::unique_lock<std::mutex> lock(m_mutex);
-    auto lastKnownBlockHeight = std::max(getInfoResp.last_known_block_height, lastLocalBlockHeaderInfo.height);
-    lock.unlock();
-    if (m_networkHeight.load(std::memory_order_relaxed) != lastKnownBlockHeight) {
-      m_networkHeight.store(lastKnownBlockHeight, std::memory_order_relaxed);
-      m_networkVersion.store(getInfoResp.version.native(), std::memory_order_release);
-      m_observerManager.notify(&INodeObserver::lastKnownBlockHeightUpdated,
-                               m_networkHeight.load(std::memory_order_relaxed));
-    }
+  XI_TRY_RPC_COMMAND(jsonCommand("/getinfo", getInfoReq, getInfoResp));
+  // a quirk to let wallets work with previous versions daemons.
+  // Previous daemons didn't have the 'last_known_block_index' parameter in RPC so it may have zero value.
+  auto lastKnownBlockHeight = std::max(getInfoResp.last_known_block_height, lastLocalBlockHeaderInfo.height);
 
-    m_nodeHeight.store(getInfoResp.height, std::memory_order_relaxed);
-
-    updatePeerCount(getInfoResp.incoming_connections_count + getInfoResp.outgoing_connections_count);
-
-    if (!m_connected) {
-      m_connected = true;
-      m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
-    }
-  } else if (m_connected) {
-    m_connected = false;
-    m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
+  if (m_networkHeight.load(std::memory_order_relaxed) != lastKnownBlockHeight) {
+    m_networkHeight.store(lastKnownBlockHeight, std::memory_order_relaxed);
+    m_networkVersion.store(getInfoResp.version.native(), std::memory_order_release);
+    m_observerManager.notify(&INodeObserver::lastKnownBlockHeightUpdated,
+                             m_networkHeight.load(std::memory_order_relaxed));
   }
+
+  m_nodeHeight.store(getInfoResp.height, std::memory_order_relaxed);
+
+  {
+    std::unique_lock<std::mutex> lock(m_mutex);
+    updatePeerCount(getInfoResp.incoming_connections_count + getInfoResp.outgoing_connections_count);
+  }
+  return std::error_code{};
 }
 
 void NodeRpcProxy::updatePeerCount(size_t peerCount) {
@@ -319,25 +330,24 @@ std::error_code NodeRpcProxy::doGetLastBlockHeaderInfo(BlockHeaderInfo& info) {
   CryptoNote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::request req = AUTO_VAL_INIT(req);
   CryptoNote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::response rsp = AUTO_VAL_INIT(rsp);
 
-  std::error_code ec = jsonRpcCommand("getlastblockheader", req, rsp);
+  XI_TRY_RPC_COMMAND(jsonRpcCommand("getlastblockheader", req, rsp));
 
-  if (!ec) {
-    Crypto::Hash blockHash = rsp.block_header.hash;
-    Crypto::Hash prevBlockHash = rsp.block_header.prev_hash;
+  Crypto::Hash blockHash = rsp.block_header.hash;
+  Crypto::Hash prevBlockHash = rsp.block_header.prev_hash;
 
-    info.height = rsp.block_header.height;
-    info.version = rsp.block_header.version;
-    info.upgradeVote = rsp.block_header.upgrade_vote;
-    info.timestamp = rsp.block_header.timestamp;
-    info.hash = blockHash;
-    info.prevHash = prevBlockHash;
-    info.nonce = rsp.block_header.nonce;
-    info.isAlternative = rsp.block_header.orphan_status;
-    info.depth = rsp.block_header.depth;
-    info.difficulty = rsp.block_header.difficulty;
-    info.reward = rsp.block_header.reward;
-  }
-  return ec;
+  info.height = rsp.block_header.height;
+  info.version = rsp.block_header.version;
+  info.upgradeVote = rsp.block_header.upgrade_vote;
+  info.timestamp = rsp.block_header.timestamp;
+  info.hash = blockHash;
+  info.prevHash = prevBlockHash;
+  info.nonce = rsp.block_header.nonce;
+  info.isAlternative = rsp.block_header.orphan_status;
+  info.depth = rsp.block_header.depth;
+  info.difficulty = rsp.block_header.difficulty;
+  info.reward = rsp.block_header.reward;
+
+  return std::error_code{};
 }
 
 void NodeRpcProxy::getFeeInfo() {
@@ -361,19 +371,15 @@ void NodeRpcProxy::getFeeInfo() {
 
 const Currency& NodeRpcProxy::currency() const { return m_currency; }
 
-bool NodeRpcProxy::ping() {
+std::error_code NodeRpcProxy::ping() {
   try {
     CryptoNote::COMMAND_RPC_GET_FEE_ADDRESS::request ireq = AUTO_VAL_INIT(ireq);
     CryptoNote::COMMAND_RPC_GET_FEE_ADDRESS::response iresp = AUTO_VAL_INIT(iresp);
 
-    std::error_code ec = jsonCommand("/feeinfo", ireq, iresp);
-
-    if (ec || iresp.status != CORE_RPC_STATUS_OK) {
-      return false;
-    }
-    return true;
+    XI_TRY_RPC_COMMAND(jsonCommand("/feeinfo", ireq, iresp));
+    return std::error_code{};
   } catch (...) {
-    return false;
+    return make_error_code(error::NETWORK_ERROR);
   }
 }
 
@@ -382,19 +388,6 @@ std::optional<FeeAddress> NodeRpcProxy::feeAddress() const { return m_fee; }
 void NodeRpcProxy::setPollUpdatesEnabled(bool enabled) { m_pollUpdates.store(enabled); }
 
 bool NodeRpcProxy::pollUpdatesEnabled() const { return m_pollUpdates.load(); }
-
-std::string NodeRpcProxy::getInfo() {
-  CryptoNote::COMMAND_RPC_GET_INFO::request ireq;
-  CryptoNote::COMMAND_RPC_GET_INFO::response iresp;
-
-  std::error_code ec = jsonCommand("/getinfo", ireq, iresp);
-
-  if (ec || iresp.status != CORE_RPC_STATUS_OK) {
-    return std::string("Problem retrieving information from RPC server.");
-  }
-
-  return Common::get_status_string(iresp);
-}
 
 std::vector<Crypto::Hash> NodeRpcProxy::getKnownTxsVector() const {
   return std::vector<Crypto::Hash>(m_knownTxs.begin(), m_knownTxs.end());
@@ -479,12 +472,9 @@ std::error_code NodeRpcProxy::doGetBlockHashesByTimestamps(uint64_t timestampBeg
   req.timestamp_begin = timestampBegin;
   req.timestamp_end = secondsCount;
 
-  std::error_code ec = jsonCommand("/get_blocks_hashes_by_timestamps", req, rsp);
-  if (!ec) {
-    blockHashes = std::move(rsp.block_hashes);
-  }
-
-  return ec;
+  XI_TRY_RPC_COMMAND(jsonCommand("/get_blocks_hashes_by_timestamps", req, rsp));
+  blockHashes = std::move(rsp.block_hashes);
+  return std::error_code{};
 }
 
 void NodeRpcProxy::relayTransaction(const CryptoNote::Transaction& transaction, const Callback& callback) {
@@ -644,8 +634,8 @@ std::error_code NodeRpcProxy::doRelayTransaction(const CryptoNote::Transaction& 
   COMMAND_RPC_SEND_RAW_TX::response rsp;
   req.transaction = transaction;
   m_logger(TRACE) << "NodeRpcProxy::doRelayTransaction";
-  auto ec = jsonCommand("/sendrawtransaction", req, rsp);
-  return ec;
+  XI_TRY_RPC_COMMAND(jsonCommand("/sendrawtransaction", req, rsp));
+  return std::error_code{};
 }
 
 std::error_code NodeRpcProxy::doGetRandomOutsByAmounts(
@@ -657,15 +647,9 @@ std::error_code NodeRpcProxy::doGetRandomOutsByAmounts(
   req.outs_count = outsCount;
 
   m_logger(TRACE) << "Send getrandom_outs request";
-  std::error_code ec = jsonCommand("/getrandom_outs", req, rsp);
-  if (!ec) {
-    m_logger(TRACE) << "getrandom_outs complete";
-    outs = std::move(rsp.outs);
-  } else {
-    m_logger(TRACE) << "getrandom_outs failed: " << ec << ", " << ec.message();
-  }
-
-  return ec;
+  XI_TRY_RPC_COMMAND(jsonCommand("/getrandom_outs", req, rsp));
+  outs = std::move(rsp.outs);
+  return std::error_code{};
 }
 
 std::error_code NodeRpcProxy::doGetNewBlocks(std::vector<Crypto::Hash>& knownBlockIds,
@@ -675,17 +659,12 @@ std::error_code NodeRpcProxy::doGetNewBlocks(std::vector<Crypto::Hash>& knownBlo
   req.block_hashes = std::move(knownBlockIds);
 
   m_logger(TRACE) << "Send getblocks request";
-  std::error_code ec = jsonCommand("/getblocks", req, rsp);
-  if (!ec) {
-    m_logger(TRACE) << "getblocks complete, start_height " << rsp.start_height.native() << ", block count "
-                    << rsp.blocks.size();
-    newBlocks = std::move(rsp.blocks);
-    startHeight = rsp.start_height;
-  } else {
-    m_logger(TRACE) << "getblocks failed: " << ec << ", " << ec.message();
-  }
-
-  return ec;
+  XI_TRY_RPC_COMMAND(jsonCommand("/getblocks", req, rsp));
+  m_logger(TRACE) << "getblocks complete, start_height " << rsp.start_height.native() << ", block count "
+                  << rsp.blocks.size();
+  newBlocks = std::move(rsp.blocks);
+  startHeight = rsp.start_height;
+  return std::error_code{};
 }
 
 std::error_code NodeRpcProxy::doGetTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,
@@ -695,18 +674,13 @@ std::error_code NodeRpcProxy::doGetTransactionOutsGlobalIndices(const Crypto::Ha
   req.transaction_hash = transactionHash;
 
   m_logger(TRACE) << "Send get_o_indexes request, transaction " << req.transaction_hash;
-  std::error_code ec = jsonCommand("/get_o_indexes", req, rsp);
-  if (!ec) {
-    m_logger(TRACE) << "get_o_indexes complete";
-    outsGlobalIndices.clear();
-    for (auto idx : rsp.output_indices) {
-      outsGlobalIndices.push_back(static_cast<uint32_t>(idx));
-    }
-  } else {
-    m_logger(TRACE) << "get_o_indexes failed: " << ec << ", " << ec.message();
+  XI_TRY_RPC_COMMAND(jsonCommand("/get_o_indexes", req, rsp));
+  m_logger(TRACE) << "get_o_indexes complete";
+  outsGlobalIndices.clear();
+  for (auto idx : rsp.output_indices) {
+    outsGlobalIndices.push_back(static_cast<uint32_t>(idx));
   }
-
-  return ec;
+  return std::error_code{};
 }
 
 std::error_code NodeRpcProxy::doQueryBlocksLite(const std::vector<Crypto::Hash>& knownBlockIds, uint64_t timestamp,
@@ -719,11 +693,7 @@ std::error_code NodeRpcProxy::doQueryBlocksLite(const std::vector<Crypto::Hash>&
   req.timestamp = timestamp;
 
   m_logger(TRACE) << "Send queryblockslite request, timestamp " << req.timestamp;
-  std::error_code ec = jsonCommand("/queryblockslite", req, rsp);
-  if (ec) {
-    m_logger(TRACE) << "queryblockslite failed: " << ec << ", " << ec.message();
-    return ec;
-  }
+  XI_TRY_RPC_COMMAND(jsonCommand("/queryblockslite", req, rsp));
 
   m_logger(TRACE) << "queryblockslite complete, startHeight " << rsp.start_height.native() << ", block count "
                   << rsp.blocks.size();
@@ -766,12 +736,7 @@ std::error_code NodeRpcProxy::doGetPoolSymmetricDifference(std::vector<Crypto::H
   req.known_transaction_hashes = knownPoolTxIds;
 
   m_logger(TRACE) << "Send get_pool_changes_lite request, tailBlockId " << req.tail_block_hash;
-  std::error_code ec = jsonCommand("/get_pool_changes_lite", req, rsp);
-
-  if (ec) {
-    m_logger(TRACE) << "get_pool_changes_lite failed: " << ec << ", " << ec.message();
-    return ec;
-  }
+  XI_TRY_RPC_COMMAND(jsonCommand("/get_pool_changes_lite", req, rsp));
 
   m_logger(TRACE) << "get_pool_changes_lite complete, isTailBlockActual " << rsp.is_current_tail_block;
   isBcActual = rsp.is_current_tail_block;
@@ -782,7 +747,7 @@ std::error_code NodeRpcProxy::doGetPoolSymmetricDifference(std::vector<Crypto::H
     newTxs.push_back(createTransactionPrefix(tpi.prefix, tpi.hash));
   }
 
-  return ec;
+  return std::error_code{};
 }
 
 std::error_code NodeRpcProxy::doGetBlocksByHeight(const std::vector<BlockHeight>& blockHeights,
@@ -791,16 +756,10 @@ std::error_code NodeRpcProxy::doGetBlocksByHeight(const std::vector<BlockHeight>
   COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HEIGHTS::response resp = AUTO_VAL_INIT(resp);
 
   req.block_heights = blockHeights;
-
-  std::error_code ec = jsonCommand("/get_blocks_details_by_heights", req, resp);
-  if (ec) {
-    return ec;
-  }
-
+  XI_TRY_RPC_COMMAND(jsonCommand("/get_blocks_details_by_heights", req, resp));
   auto tmp = std::move(resp.blocks);
   blocks.push_back(tmp);
-
-  return ec;
+  return std::error_code{};
 }
 
 std::error_code NodeRpcProxy::doGetBlocksByHash(const std::vector<Crypto::Hash>& blockHashes,
@@ -810,13 +769,9 @@ std::error_code NodeRpcProxy::doGetBlocksByHash(const std::vector<Crypto::Hash>&
 
   req.block_hashes = blockHashes;
 
-  std::error_code ec = jsonCommand("/get_blocks_details_by_hashes", req, resp);
-  if (ec) {
-    return ec;
-  }
-
+  XI_TRY_RPC_COMMAND(jsonCommand("/get_blocks_details_by_hashes", req, resp));
   blocks = std::move(resp.blocks);
-  return ec;
+  return std::error_code{};
 }
 
 std::error_code NodeRpcProxy::doGetRawBlocksByRange(BlockHeight height, uint32_t count, std::vector<RawBlock>& blocks) {
@@ -826,10 +781,7 @@ std::error_code NodeRpcProxy::doGetRawBlocksByRange(BlockHeight height, uint32_t
   req.height = height;
   req.count = count;
 
-  std::error_code ec = jsonRpcCommand("f_blocks_list_raw", req, resp);
-  if (ec) {
-    return ec;
-  }
+  XI_TRY_RPC_COMMAND(jsonRpcCommand("f_blocks_list_raw", req, resp));
 
   size_t blocksOffset = blocks.size();
   blocks.reserve(blocksOffset + resp.blocks.size());
@@ -839,7 +791,7 @@ std::error_code NodeRpcProxy::doGetRawBlocksByRange(BlockHeight height, uint32_t
     blocks.emplace_back(std::move(iRawBlock));
   }
 
-  return ec;
+  return std::error_code{};
 }
 
 std::error_code NodeRpcProxy::doGetBlock(const BlockHeight blockHeight, BlockDetails& block) {
@@ -848,15 +800,10 @@ std::error_code NodeRpcProxy::doGetBlock(const BlockHeight blockHeight, BlockDet
 
   req.block_height = blockHeight;
 
-  std::error_code ec = jsonCommand("/get_block_details_by_height", req, resp);
-
-  if (ec) {
-    return ec;
-  }
-
+  XI_TRY_RPC_COMMAND(jsonCommand("/get_block_details_by_height", req, resp));
   block = std::move(resp.block);
 
-  return ec;
+  return std::error_code{};
 }
 
 std::error_code NodeRpcProxy::doGetTransactionHashesByPaymentId(const PaymentId& paymentId,
@@ -865,13 +812,10 @@ std::error_code NodeRpcProxy::doGetTransactionHashesByPaymentId(const PaymentId&
   COMMAND_RPC_GET_TRANSACTION_HASHES_BY_PAYMENT_ID::response resp = AUTO_VAL_INIT(resp);
 
   req.payment_id = paymentId;
-  std::error_code ec = jsonCommand("/get_transaction_hashes_by_payment_id", req, resp);
-  if (ec) {
-    return ec;
-  }
+  XI_TRY_RPC_COMMAND(jsonCommand("/get_transaction_hashes_by_payment_id", req, resp));
 
   transactionHashes = std::move(resp.transactionHashes);
-  return ec;
+  return std::error_code{};
 }
 
 std::error_code NodeRpcProxy::doGetTransactions(const std::vector<Crypto::Hash>& transactionHashes,
@@ -880,13 +824,9 @@ std::error_code NodeRpcProxy::doGetTransactions(const std::vector<Crypto::Hash>&
   COMMAND_RPC_GET_TRANSACTION_DETAILS_BY_HASHES::response resp = AUTO_VAL_INIT(resp);
 
   req.transaction_hashes = transactionHashes;
-  std::error_code ec = jsonCommand("/get_transaction_details_by_hashes", req, resp);
-  if (ec) {
-    return ec;
-  }
-
+  XI_TRY_RPC_COMMAND(jsonCommand("/get_transaction_details_by_hashes", req, resp));
   transactions = std::move(resp.transactions);
-  return ec;
+  return std::error_code{};
 }
 
 void NodeRpcProxy::scheduleRequest(std::function<std::error_code()>&& procedure, const Callback& callback) {
@@ -991,9 +931,8 @@ std::error_code NodeRpcProxy::jsonRpcCommand(const std::string& method, const Re
     m_logger(TRACE) << "Send " << method << " JSON RPC request";
 
     JsonRpc::JsonRpcRequest jsReq;
-
     jsReq.setMethod(method);
-    jsReq.setParams(req);
+    XI_RETURN_EC_IF_NOT(jsReq.setParams(req), make_error_code(error::REQUEST_ERROR));
 
     const auto httpRes = m_httpClient->postSync("/json_rpc", ContentType::Json, jsReq.getBody());
 

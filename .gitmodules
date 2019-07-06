@@ -37,3 +37,9 @@
 [submodule "external/fmtlib"]
 	path = external/fmtlib
 	url = https://gitlab.com/galaxia-project/extern/fmtlib.git
+[submodule "external/rang"]
+	path = external/rang
+	url = ../extern/rang.git
+[submodule "external/yaml-cpp"]
+	path = external/yaml-cpp
+	url = ../extern/yaml-cpp.git

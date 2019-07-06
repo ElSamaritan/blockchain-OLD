@@ -1000,8 +1000,10 @@ std::error_code WalletService::sendTransaction(SendTransaction::Request& request
     /* Integrated address payment ID's are uppercase - lets convert the input
        payment ID to upper so we can compare with more ease */
     const std::locale loc{};
-    std::transform(request.paymentId.begin(), request.paymentId.end(), request.paymentId.begin(),
-                   [&loc](char c) { return std::toupper(c, loc); });
+    if (request.paymentId) {
+      std::transform(request.paymentId->begin(), request.paymentId->end(), request.paymentId->begin(),
+                     [&loc](char c) { return std::toupper(c, loc); });
+    }
 
     std::vector<std::string> paymentIDs;
 
@@ -1046,26 +1048,26 @@ std::error_code WalletService::sendTransaction(SendTransaction::Request& request
 
     validateAddresses(request.sourceAddresses, currency, logger);
     validateAddresses(collectDestinationAddresses(request.transfers), currency, logger);
-    if (!request.changeAddress.empty()) {
-      validateAddresses({request.changeAddress}, currency, logger);
+    if (request.changeAddress.has_value()) {
+      validateAddresses({*request.changeAddress}, currency, logger);
     }
 
     std::string error;
     std::error_code error_code;
 
     CryptoNote::TransactionParameters sendParams;
-    if (!request.paymentId.empty()) {
-      addPaymentIdToExtra(request.paymentId, sendParams.extra);
+    if (request.paymentId) {
+      addPaymentIdToExtra(*request.paymentId, sendParams.extra);
     } else {
-      sendParams.extra = getValidatedTransactionExtraString(request.extra);
+      sendParams.extra = getValidatedTransactionExtraString(request.extra.value_or(""));
     }
 
     sendParams.sourceAddresses = request.sourceAddresses;
     sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers, m_node_address, m_node_fee);
-    sendParams.fee = request.fee;
-    sendParams.mixIn = request.anonymity;
-    sendParams.unlockTimestamp = request.unlockTime;
-    sendParams.changeDestination = request.changeAddress;
+    sendParams.fee = request.fee.value_or(currency.minimumFee(node.getLastKnownBlockVersion()));
+    sendParams.mixIn = request.anonymity.value_or(currency.requiredMixin(node.getLastKnownBlockVersion()));
+    sendParams.unlockTimestamp = request.unlockTime.value_or(0);
+    sendParams.changeDestination = request.changeAddress.value_or("");
 
     size_t transactionId = wallet.transfer(sendParams);
     transactionHash = Common::podToHex(wallet.getTransaction(transactionId).hash);
@@ -1134,8 +1136,8 @@ std::error_code WalletService::createDelayedTransaction(CreateDelayedTransaction
 
     validateAddresses(request.addresses, currency, logger);
     validateAddresses(collectDestinationAddresses(request.transfers), currency, logger);
-    if (!request.changeAddress.empty()) {
-      validateAddresses({request.changeAddress}, currency, logger);
+    if (request.changeAddress.has_value()) {
+      validateAddresses({*request.changeAddress}, currency, logger);
     }
 
     CryptoNote::TransactionParameters sendParams;
@@ -1150,7 +1152,7 @@ std::error_code WalletService::createDelayedTransaction(CreateDelayedTransaction
     sendParams.fee = request.fee;
     sendParams.mixIn = request.anonymity;
     sendParams.unlockTimestamp = request.unlockTime;
-    sendParams.changeDestination = request.changeAddress;
+    sendParams.changeDestination = request.changeAddress.value_or("");
 
     size_t transactionId = wallet.makeTransaction(sendParams);
     transactionHash = Common::podToHex(wallet.getTransaction(transactionId).hash);

@@ -116,132 +116,136 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
                           const std::vector<TransactionDestinationEntry>& destinations, std::vector<uint8_t> extra,
                           Transaction& tx, uint64_t unlock_time, Logging::ILogger& log) {
   LoggerRef logger(log, "construct_tx");
+  try {
+    tx.inputs.clear();
+    tx.outputs.clear();
+    tx.signatures = TransactionSignatureCollection{};
+    auto& signatures = std::get<TransactionSignatureCollection>(tx.signatures);
 
-  tx.inputs.clear();
-  tx.outputs.clear();
-  tx.signatures.clear();
+    tx.version = Xi::Config::Transaction::version();
+    tx.unlockTime = unlock_time;
 
-  tx.version = Xi::Config::Transaction::version();
-  tx.unlockTime = unlock_time;
+    tx.extra = extra;
+    KeyPair txkey = generateKeyPair();
+    addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
 
-  tx.extra = extra;
-  KeyPair txkey = generateKeyPair();
-  addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
+    struct input_generation_context_data {
+      KeyPair in_ephemeral;
+    };
 
-  struct input_generation_context_data {
-    KeyPair in_ephemeral;
-  };
+    std::vector<input_generation_context_data> in_contexts;
+    uint64_t summary_inputs_money = 0;
+    // fill inputs
+    for (const TransactionSourceEntry& src_entr : sources) {
+      if (src_entr.realOutput >= src_entr.outputs.size()) {
+        logger(ERROR) << "real_output index (" << src_entr.realOutput
+                      << ")bigger than output_keys.size()=" << src_entr.outputs.size();
+        return false;
+      }
+      summary_inputs_money += src_entr.amount;
 
-  std::vector<input_generation_context_data> in_contexts;
-  uint64_t summary_inputs_money = 0;
-  // fill inputs
-  for (const TransactionSourceEntry& src_entr : sources) {
-    if (src_entr.realOutput >= src_entr.outputs.size()) {
-      logger(ERROR) << "real_output index (" << src_entr.realOutput
-                    << ")bigger than output_keys.size()=" << src_entr.outputs.size();
-      return false;
-    }
-    summary_inputs_money += src_entr.amount;
+      // KeyDerivation recv_derivation;
+      in_contexts.push_back(input_generation_context_data());
+      KeyPair& in_ephemeral = in_contexts.back().in_ephemeral;
+      KeyImage img;
+      if (!generate_key_image_helper(sender_account_keys, src_entr.realTransactionPublicKey,
+                                     src_entr.realOutputIndexInTransaction, in_ephemeral, img))
+        return false;
 
-    // KeyDerivation recv_derivation;
-    in_contexts.push_back(input_generation_context_data());
-    KeyPair& in_ephemeral = in_contexts.back().in_ephemeral;
-    KeyImage img;
-    if (!generate_key_image_helper(sender_account_keys, src_entr.realTransactionPublicKey,
-                                   src_entr.realOutputIndexInTransaction, in_ephemeral, img))
-      return false;
+      // check that derived key is equal with real output key
+      if (!(in_ephemeral.publicKey == src_entr.outputs[src_entr.realOutput].second)) {
+        logger(ERROR) << "derived public key mismatch with output public key! " << ENDL
+                      << "derived_key:" << Common::podToHex(in_ephemeral.publicKey) << ENDL
+                      << "real output_public_key:" << Common::podToHex(src_entr.outputs[src_entr.realOutput].second);
+        return false;
+      }
 
-    // check that derived key is equal with real output key
-    if (!(in_ephemeral.publicKey == src_entr.outputs[src_entr.realOutput].second)) {
-      logger(ERROR) << "derived public key mismatch with output public key! " << ENDL
-                    << "derived_key:" << Common::podToHex(in_ephemeral.publicKey) << ENDL
-                    << "real output_public_key:" << Common::podToHex(src_entr.outputs[src_entr.realOutput].second);
-      return false;
-    }
+      // put key image into tx input
+      KeyInput input_to_key;
+      input_to_key.amount = src_entr.amount;
+      input_to_key.keyImage = img;
 
-    // put key image into tx input
-    KeyInput input_to_key;
-    input_to_key.amount = src_entr.amount;
-    input_to_key.keyImage = img;
+      // fill outputs array and use relative offsets
+      for (const TransactionSourceEntry::OutputEntry& out_entry : src_entr.outputs) {
+        input_to_key.outputIndices.push_back(out_entry.first);
+      }
 
-    // fill outputs array and use relative offsets
-    for (const TransactionSourceEntry::OutputEntry& out_entry : src_entr.outputs) {
-      input_to_key.outputIndices.push_back(out_entry.first);
-    }
-
-    input_to_key.outputIndices = absolute_output_offsets_to_relative(input_to_key.outputIndices);
-    tx.inputs.push_back(input_to_key);
-  }
-
-  // "Shuffle" outs
-  std::vector<TransactionDestinationEntry> shuffled_dsts(destinations);
-  std::sort(shuffled_dsts.begin(), shuffled_dsts.end(),
-            [](const TransactionDestinationEntry& de1, const TransactionDestinationEntry& de2) {
-              return de1.amount < de2.amount;
-            });
-
-  uint64_t summary_outs_money = 0;
-  // fill outputs
-  size_t output_index = 0;
-  for (const TransactionDestinationEntry& dst_entr : shuffled_dsts) {
-    if (!(dst_entr.amount > 0)) {
-      logger(ERROR) << "Destination with wrong amount: " << dst_entr.amount;
-      return false;
-    }
-    KeyDerivation derivation;
-    PublicKey out_eph_public_key;
-    bool r = generate_key_derivation(dst_entr.addr.viewPublicKey, txkey.secretKey, derivation);
-
-    if (!(r)) {
-      logger(ERROR) << "at creation outs: failed to generate_key_derivation(" << dst_entr.addr.viewPublicKey << ", "
-                    << txkey.secretKey << ")";
-      return false;
+      input_to_key.outputIndices = absolute_output_offsets_to_relative(input_to_key.outputIndices);
+      tx.inputs.push_back(input_to_key);
     }
 
-    r = derive_public_key(derivation, output_index, dst_entr.addr.spendPublicKey, out_eph_public_key);
-    if (!(r)) {
-      logger(ERROR) << "at creation outs: failed to derive_public_key(" << derivation << ", " << output_index << ", "
-                    << dst_entr.addr.spendPublicKey << ")";
+    // "Shuffle" outs
+    std::vector<TransactionDestinationEntry> shuffled_dsts(destinations);
+    std::sort(shuffled_dsts.begin(), shuffled_dsts.end(),
+              [](const TransactionDestinationEntry& de1, const TransactionDestinationEntry& de2) {
+                return de1.amount < de2.amount;
+              });
+
+    uint64_t summary_outs_money = 0;
+    // fill outputs
+    size_t output_index = 0;
+    for (const TransactionDestinationEntry& dst_entr : shuffled_dsts) {
+      if (!(dst_entr.amount > 0)) {
+        logger(ERROR) << "Destination with wrong amount: " << dst_entr.amount;
+        return false;
+      }
+      KeyDerivation derivation;
+      PublicKey out_eph_public_key;
+      bool r = generate_key_derivation(dst_entr.addr.viewPublicKey, txkey.secretKey, derivation);
+
+      if (!(r)) {
+        logger(ERROR) << "at creation outs: failed to generate_key_derivation(" << dst_entr.addr.viewPublicKey << ", "
+                      << txkey.secretKey << ")";
+        return false;
+      }
+
+      r = derive_public_key(derivation, output_index, dst_entr.addr.spendPublicKey, out_eph_public_key);
+      if (!(r)) {
+        logger(ERROR) << "at creation outs: failed to derive_public_key(" << derivation << ", " << output_index << ", "
+                      << dst_entr.addr.spendPublicKey << ")";
+        return false;
+      }
+
+      TransactionOutput out;
+      out.amount = dst_entr.amount;
+      KeyOutput tk;
+      tk.key = out_eph_public_key;
+      out.target = tk;
+      tx.outputs.push_back(out);
+      output_index++;
+      summary_outs_money += dst_entr.amount;
+    }
+
+    // check money
+    if (summary_outs_money > summary_inputs_money) {
+      logger(ERROR) << "Transaction inputs money (" << summary_inputs_money << ") less than outputs money ("
+                    << summary_outs_money << ")";
       return false;
     }
 
-    TransactionOutput out;
-    out.amount = dst_entr.amount;
-    KeyOutput tk;
-    tk.key = out_eph_public_key;
-    out.target = tk;
-    tx.outputs.push_back(out);
-    output_index++;
-    summary_outs_money += dst_entr.amount;
-  }
+    // generate ring signatures
+    Hash tx_prefix_hash = tx.prefixHash();
 
-  // check money
-  if (summary_outs_money > summary_inputs_money) {
-    logger(ERROR) << "Transaction inputs money (" << summary_inputs_money << ") less than outputs money ("
-                  << summary_outs_money << ")";
+    size_t i = 0;
+    for (const TransactionSourceEntry& src_entr : sources) {
+      std::vector<const PublicKey*> keys_ptrs;
+      for (const TransactionSourceEntry::OutputEntry& o : src_entr.outputs) {
+        keys_ptrs.push_back(&o.second);
+      }
+
+      signatures.push_back(std::vector<Signature>());
+      std::vector<Signature>& sigs = signatures.back();
+      sigs.resize(src_entr.outputs.size());
+      generate_ring_signature(tx_prefix_hash, std::get<KeyInput>(tx.inputs[i]).keyImage, keys_ptrs,
+                              in_contexts[i].in_ephemeral.secretKey, src_entr.realOutput, sigs.data());
+      i++;
+    }
+
+    return true;
+  } catch (std::exception& e) {
+    logger(Logging::FATAL) << "unable to create transaction (EXCEPTIONAL): " << e.what();
     return false;
   }
-
-  // generate ring signatures
-  Hash tx_prefix_hash;
-  XI_RETURN_EC_IF_NOT(getObjectHash(*static_cast<TransactionPrefix*>(&tx), tx_prefix_hash), false);
-
-  size_t i = 0;
-  for (const TransactionSourceEntry& src_entr : sources) {
-    std::vector<const PublicKey*> keys_ptrs;
-    for (const TransactionSourceEntry::OutputEntry& o : src_entr.outputs) {
-      keys_ptrs.push_back(&o.second);
-    }
-
-    tx.signatures.push_back(std::vector<Signature>());
-    std::vector<Signature>& sigs = tx.signatures.back();
-    sigs.resize(src_entr.outputs.size());
-    generate_ring_signature(tx_prefix_hash, std::get<KeyInput>(tx.inputs[i]).keyImage, keys_ptrs,
-                            in_contexts[i].in_ephemeral.secretKey, src_entr.realOutput, sigs.data());
-    i++;
-  }
-
-  return true;
 }
 
 bool getInputsMoneyAmount(const Transaction& tx, uint64_t& money) {

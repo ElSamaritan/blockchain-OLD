@@ -12,6 +12,7 @@
 #include <Xi/Exceptions.hpp>
 
 #include "NodeRpcProxy/NodeRpcProxy.h"
+#include "NodeRpcProxy/NodeErrors.h"
 
 namespace PaymentService {
 
@@ -39,10 +40,9 @@ class NodeRpcStub final : public CryptoNote::INode {
   uint64_t getLastLocalBlockTimestamp() const override { return 0; }
   CryptoNote::BlockHeight getNodeHeight() const override { return CryptoNote::BlockHeight::Null; }
 
-  std::string getInfo() override { return std::string(); }
   void getFeeInfo() override {}
   const CryptoNote::Currency& currency() const override { Xi::exceptional<Xi::NotInitializedError>(); }
-  bool ping() override { return false; }
+  std::error_code ping() override { return make_error_code(CryptoNote::error::NOT_INITIALIZED); }
 
   void getLastBlockHeaderInfo(CryptoNote::BlockHeaderInfo& info, const Callback& callback) override {
     XI_UNUSED(info);

@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -287,7 +287,7 @@ void Xi::App::Application::initializeCurrency() {
 
 void Xi::App::Application::initializeCore() {
   m_core = std::make_unique<CryptoNote::Core>(
-      *currency(), logger(), *checkpoints(), dispatcher(),
+      *currency(), logger(), *checkpoints(), dispatcher(), m_dbOptions->LightNode,
       std::make_unique<CryptoNote::DatabaseBlockchainCacheFactory>(*database(), logger()),
       CryptoNote::createSwappedMainChainStorage(m_dbOptions->DataDirectory, *currency()));
   if (!m_core->load()) {
