@@ -1296,6 +1296,7 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
   }
   // associate peer_id with this connection
   context.peerId = arg.node_data.peer_id;
+  context.m_is_light_node = arg.payload_data.is_light_node;
 
   if (arg.node_data.peer_id != m_config.m_peer_id && arg.node_data.my_port) {
     PeerIdType peer_id_l = arg.node_data.peer_id;
