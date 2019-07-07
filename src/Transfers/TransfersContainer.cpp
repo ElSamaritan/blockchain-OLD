@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -202,9 +202,9 @@ void TransfersContainer::addTransaction(const TransactionBlockInfo& block, const
 
   PaymentId pid{};
   if (!tx.getPaymentId(pid)) {
-    txInfo.paymentId = std::move(pid);
-  } else {
     txInfo.paymentId = std::nullopt;
+  } else {
+    txInfo.paymentId = std::move(pid);
   }
 
   auto result = m_transactions.emplace(std::move(txInfo));

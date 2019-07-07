@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 //
@@ -108,10 +108,9 @@ class Currency {
                       uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward, int64_t& emissionChange) const;
   size_t maxBlockCumulativeSize(uint64_t height) const;
 
-  bool constructMinerTx(BlockVersion blockVersion, uint32_t height, size_t medianSize,
-                        uint64_t alreadyGeneratedCoins, size_t currentBlockSize, uint64_t fee,
-                        const AccountPublicAddress& minerAddress, Transaction& tx, const BinaryArray& extraNonce,
-                        size_t maxOuts) const;
+  bool constructMinerTx(BlockVersion blockVersion, uint32_t height, size_t medianSize, uint64_t alreadyGeneratedCoins,
+                        size_t currentBlockSize, uint64_t fee, const AccountPublicAddress& minerAddress,
+                        Transaction& tx, const BinaryArray& extraNonce, size_t maxOuts) const;
 
   // -------------------------------------------- Static Reward -------------------------------------------------------
   bool isStaticRewardEnabledForBlockVersion(BlockVersion blockVersion) const;
