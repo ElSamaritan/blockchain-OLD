@@ -176,14 +176,13 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
   uint64_t alreadyGeneratedTransactions = 0;
 
   boost::optional<Transaction> staticReward = currency.constructStaticRewardTx(cachedBlock).takeOrThrow();
+  const auto index = cachedBlock.getBlockIndex();
 
   if (getBlockCount() == 0) {
-    if (parent != nullptr) {
-      auto previousHeight = BlockHeight::fromIndex(cachedBlock.getBlockIndex() - 1);
-      const auto parentInfo = parent->getBlockInfos(Xi::makeSpan(previousHeight)).front();
-      cumulativeDifficulty = parentInfo.cumulativeDifficulty;
-      alreadyGeneratedCoins = parentInfo.alreadyGeneratedCoins;
-      alreadyGeneratedTransactions = parentInfo.alreadyGeneratedTransactions;
+    if (parent != nullptr && index > 0) {
+      cumulativeDifficulty = parent->getCurrentCumulativeDifficulty(index - 1);
+      alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(index - 1);
+      alreadyGeneratedTransactions = parent->getAlreadyGeneratedTransactions(index - 1);
     }
 
     cumulativeDifficulty += blockDifficulty;
@@ -253,27 +252,24 @@ PushedBlockInfo BlockchainCache::getPushedBlockInfo(uint32_t blockIndex) const {
 
   PushedBlockInfo pushedBlockInfo;
   pushedBlockInfo.rawBlock = storage->getBlockByIndex(localIndex);
+  pushedBlockInfo.blockSize = cachedBlock.blobSize;
+  pushedBlockInfo.timestamp = cachedBlock.timestamp;
 
   if (blockIndex > startIndex) {
     const auto& previousBlock = blockInfos.get<BlockIndexTag>()[localIndex - 1];
     pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - previousBlock.cumulativeDifficulty;
     pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
-    pushedBlockInfo.blockSize = cachedBlock.blobSize;
-    pushedBlockInfo.timestamp = cachedBlock.timestamp;
   } else {
-    if (parent == nullptr) {
+    if (parent == nullptr || blockIndex == 0) {
       assert(blockIndex == 0);
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty;
       pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins;
-      pushedBlockInfo.blockSize = cachedBlock.blobSize;
-      pushedBlockInfo.timestamp = cachedBlock.timestamp;
     } else {
-      auto height = BlockHeight::fromIndex(blockIndex - 1);
-      const auto& previousBlock = parent->getBlockInfos(Xi::makeSpan(height)).front();
-      pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - previousBlock.cumulativeDifficulty;
-      pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
-      pushedBlockInfo.blockSize = cachedBlock.blobSize;
-      pushedBlockInfo.timestamp = cachedBlock.timestamp;
+      uint64_t cumulativeDifficulty = parent->getLastCumulativeDifficulties(1, blockIndex - 1, addGenesisBlock)[0];
+      uint64_t alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(blockIndex - 1);
+
+      pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - cumulativeDifficulty;
+      pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - alreadyGeneratedCoins;
     }
   }
 

@@ -36,7 +36,7 @@ namespace CryptoNote {
 namespace {
 
 const uint32_t ONE_DAY_SECONDS = 60 * 60 * 24;
-const CachedBlockInfo NULL_CACHED_BLOCK_INFO{Crypto::Hash::Null, BlockVersion::Null, BlockVersion::Null, 0, 0, 0, 0};
+const CachedBlockInfo NULL_CACHED_BLOCK_INFO{Crypto::Hash::Null, BlockVersion::Null, BlockVersion::Null, 0, 0, 0, 0, 0};
 
 bool requestPackedOutputs(IBlockchainCache::Amount amount, Common::ArrayView<uint32_t> globalIndexes,
                           IDataBase& database, std::vector<PackedOutIndex>& result) {
@@ -909,7 +909,10 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
                              << cachedTransactions.size() + 1 << " transactions";  //+1 for base transaction
 
   // TODO: cache top block difficulty, size, timestamp, coins; use it here
-  auto lastBlockInfo = getCachedBlockInfo(getTopBlockIndex());
+  const auto index = cachedBlock.getBlockIndex();
+  assert(index > 0);
+  assert(index == getTopBlockIndex() + 1);
+  auto lastBlockInfo = getCachedBlockInfo(index - 1);
   auto cumulativeDifficulty = lastBlockInfo.cumulativeDifficulty + blockDifficulty;
   auto alreadyGeneratedCoins = lastBlockInfo.alreadyGeneratedCoins + generatedCoins;
   auto alreadyGeneratedTransactions = lastBlockInfo.alreadyGeneratedTransactions + cachedTransactions.size() + 1;
@@ -935,7 +938,7 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   blockInfo.alreadyGeneratedCoins = alreadyGeneratedCoins;
   blockInfo.alreadyGeneratedTransactions = alreadyGeneratedTransactions;
 
-  batch.insertSpentKeyImages(getTopBlockIndex() + 1, validatorState.spentKeyImages);
+  batch.insertSpentKeyImages(index, validatorState.spentKeyImages);
 
   auto txHashes = cachedBlock.getBlock().transactionHashes;
   auto baseTransaction = cachedBlock.getBlock().baseTransaction;
@@ -948,19 +951,18 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   // base transaction's hash is always the first one in index for this block
   txHashes.insert(txHashes.begin(), cachedBaseTransaction.getTransactionHash());
 
-  batch.insertCachedBlock(blockInfo, getTopBlockIndex() + 1, txHashes);
+  batch.insertCachedBlock(blockInfo, index, txHashes);
 
-  batch.insertRawBlock(getTopBlockIndex() + 1, std::move(rawBlock));
+  batch.insertRawBlock(index, std::move(rawBlock));
 
   uint16_t transactionIndex = 0;
-  pushTransaction(cachedBaseTransaction, getTopBlockIndex() + 1, transactionIndex++, batch, false);
+  pushTransaction(cachedBaseTransaction, index, transactionIndex++, batch, false);
   if (staticRewardTransaction.has_value()) {
-    pushTransaction(std::move(staticRewardTransaction.value()), getTopBlockIndex() + 1, transactionIndex++, batch,
-                    true);
+    pushTransaction(std::move(staticRewardTransaction.value()), index, transactionIndex++, batch, true);
   }
 
   for (const auto& transaction : cachedTransactions) {
-    pushTransaction(transaction, getTopBlockIndex() + 1, transactionIndex++, batch, false);
+    pushTransaction(transaction, index, transactionIndex++, batch, false);
   }
 
   auto closestBlockIndexDb =
@@ -972,7 +974,7 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   }
 
   if (!closestBlockIndexDb.first) {
-    batch.insertClosestTimestampBlockIndex(roundToMidnight(cachedBlock.getBlock().timestamp), getTopBlockIndex() + 1);
+    batch.insertClosestTimestampBlockIndex(roundToMidnight(cachedBlock.getBlock().timestamp), index);
   }
 
   insertBlockTimestamp(batch, cachedBlock.getBlock().timestamp, cachedBlock.getBlockHash());
@@ -1549,7 +1551,7 @@ CachedBlockInfoVector DatabaseBlockchainCache::getBlockInfos(ConstBlockHeightSpa
       cacheMisses[index] = i++;
       batch.requestCachedBlock(index);
     } else {
-      reval[i++] = unitsCache[index - cacheStartIndex + 1];
+      reval[i++] = unitsCache[index - cacheStartIndex];
     }
   }
 
@@ -1635,7 +1637,21 @@ CachedTransactionInfoVector DatabaseBlockchainCache::getTransactionInfos(ConstTr
 }
 
 BinaryArray DatabaseBlockchainCache::getRawTransaction(uint32_t blockIndex, uint32_t transactionIndex) const {
-  return getBlockByIndex(blockIndex).transactions.at(transactionIndex);
+  const auto block = getBlockByIndex(blockIndex);
+  const auto blockTemplate = fromBinaryArray<BlockTemplate>(block.blockTemplate);
+  uint64_t txOffset = 1;
+  if (transactionIndex == 0) {
+    return toBinaryArray(blockTemplate.baseTransaction);
+  }
+  if (blockTemplate.staticRewardHash) {
+    txOffset += 1;
+    if (transactionIndex == 1) {
+      return toBinaryArray(*currency.constructStaticRewardTx(blockTemplate).takeOrThrow());
+    }
+  }
+  const auto txIndex = transactionIndex - txOffset;
+  Xi::exceptional_if_not<Xi::NotFoundError>(txIndex < block.transactions.size());
+  return block.transactions[txIndex];
 }
 
 std::vector<Crypto::Hash> DatabaseBlockchainCache::getTransactionHashes() const {
@@ -1892,7 +1908,7 @@ void DatabaseBlockchainCache::addGenesisBlock(CachedBlock&& genesisBlock) {
   batch.insertRawBlock(0, {toBinaryArray(genesisBlock.getBlock()), {}});
   batch.insertClosestTimestampBlockIndex(roundToMidnight(genesisBlock.getBlock().timestamp), 0);
 
-  auto res = database.write(batch);
+  auto res = database.writeSync(batch);
   if (res) {
     logger(Logging::ERROR) << "addGenesisBlock failed: failed to write to database, " << res.message();
     throw std::runtime_error(res.message());

@@ -126,7 +126,7 @@ int64_t getEmissionChange(const Currency& currency, IBlockchainCache& segment, u
   const auto version = cachedBlock.getBlock().version;
   auto alreadyGeneratedCoins = segment.getAlreadyGeneratedCoins(previousBlockIndex);
   auto lastBlocksSizes = segment.getLastBlocksSizes(currency.rewardBlocksWindowByBlockVersion(version),
-                                                    previousBlockIndex, addGenesisBlock);
+                                                    previousBlockIndex, UseGenesis{false});
   auto blocksSizeMedian = Common::medianValue(lastBlocksSizes);
   if (!currency.getBlockReward(version, blocksSizeMedian, cumulativeSize, alreadyGeneratedCoins, cumulativeFee, reward,
                                emissionChange)) {
@@ -771,8 +771,9 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   uint64_t reward = 0;
   int64_t emissionChange = 0;
   auto alreadyGeneratedCoins = cache->getAlreadyGeneratedCoins(previousBlockIndex);
-  auto lastBlocksSizes = cache->getLastBlocksSizes(
-      m_currency.rewardBlocksWindowByBlockVersion(cachedBlock.getBlock().version), previousBlockIndex, addGenesisBlock);
+  auto lastBlocksSizes =
+      cache->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(cachedBlock.getBlock().version),
+                                previousBlockIndex, UseGenesis{false});
   auto blocksSizeMedian = Common::medianValue(lastBlocksSizes);
 
   if (!m_currency.getBlockReward(cachedBlock.getBlock().version, blocksSizeMedian, cumulativeBlockSize,
@@ -908,6 +909,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
 }
 
 void Core::switchMainChainStorage(uint32_t splitBlockIndex, IBlockchainCache& newChain) {
+  XI_CONCURRENT_RLOCK(m_access);
   assert(mainChainStorage->getBlockCount() > splitBlockIndex);
 
   auto blocksToPop = mainChainStorage->getBlockCount() - splitBlockIndex;
@@ -922,6 +924,7 @@ void Core::switchMainChainStorage(uint32_t splitBlockIndex, IBlockchainCache& ne
 
 void Core::notifyOnSuccess(error::AddBlockErrorCode opResult, uint32_t previousBlockIndex,
                            const CachedBlock& cachedBlock, const IBlockchainCache& cache) {
+  XI_CONCURRENT_RLOCK(m_access);
   switch (opResult) {
     case error::AddBlockErrorCode::ADDED_TO_MAIN:
       notifyObservers(makeNewBlockMessage(previousBlockIndex + 1, cachedBlock.getBlockHash()));
@@ -2196,7 +2199,7 @@ size_t Core::calculateCumulativeBlocksizeLimit(uint32_t height) const {
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
   auto sizes = chainsLeaves[0]->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(nextBlockVersion),
-                                                   height - 1, UseGenesis{true});
+                                                   height - 1, UseGenesis{false});
   uint64_t median = Common::medianValue(sizes);
   if (median <= nextBlockGrantedFullRewardZone) {
     median = nextBlockGrantedFullRewardZone;
@@ -2395,7 +2398,7 @@ std::optional<BlockDetails> Core::getBlockDetails(const Crypto::Hash& blockHash)
 
   blockDetails.difficulty = getBlockDifficulty(blockIndex);
 
-  std::vector<uint64_t> sizes = segment->getLastBlocksSizes(1, blockIndex, addGenesisBlock);
+  std::vector<uint64_t> sizes = segment->getLastBlocksSizes(1, blockIndex, UseGenesis{false});
   assert(sizes.size() == 1);
   blockDetails.transactionsCumulativeSize = sizes.front();
 
@@ -2409,7 +2412,7 @@ std::optional<BlockDetails> Core::getBlockDetails(const Crypto::Hash& blockHash)
   uint64_t prevBlockGeneratedCoins = 0;
   blockDetails.sizeMedian = 0;
   auto lastBlocksSizes = segment->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(blockDetails.version),
-                                                     blockIndex, addGenesisBlock);
+                                                     blockIndex, UseGenesis{false});
   blockDetails.sizeMedian = Common::medianValue(lastBlocksSizes);
   prevBlockGeneratedCoins = segment->getAlreadyGeneratedCoins(blockIndex);
 
