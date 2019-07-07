@@ -33,8 +33,8 @@
 namespace Xi {
 namespace Config {
 namespace Time {
-constexpr std::chrono::seconds blockTime() { return 1_m; }
-constexpr std::chrono::seconds minerRewardUnlockTime() { return 10_m; }
+constexpr std::chrono::seconds blockTime() { return 1_s; }
+constexpr std::chrono::seconds minerRewardUnlockTime() { return 1_s; }
 
 constexpr uint32_t minerRewardUnlockBlocksCount() {
   return static_cast<uint32_t>(std::chrono::seconds{minerRewardUnlockTime()}.count() /
@@ -61,7 +61,7 @@ static_assert(minerRewardUnlockBlocksCount() > 0,
 
 // clang-format off
 //                (_Index, _Version, _PastWindow, _FutureLimit)
-MakeTimeCheckpoint(     0,        1,          64,         10_m)
+MakeTimeCheckpoint(     0,        1,        2048,          1_s)
 // clang-format on
 
 #define CURRENT_TIME_CHECKPOINT_INDEX 0
