@@ -79,10 +79,22 @@ struct TransactionPrefix {
   std::vector<uint8_t> extra;
 
   Crypto::Hash prefixHash() const;
+  uint64_t prefixBinarySize() const;
 };
 
 using TransactionSignatureCollection = std::vector<std::vector<Crypto::Signature>>;
-using TransactionSignatures = std::variant<TransactionSignatureCollection, Crypto::Hash>;
+
+struct TransactionSignaturePruned {
+  Crypto::Hash signaturesHash;
+  uint64_t signaturesBinarySize;
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(signaturesHash, "hash")
+  KV_MEMBER_RENAME(signaturesBinarySize, "binary_size")
+  KV_END_SERIALIZATION
+};
+
+using TransactionSignatures = std::variant<TransactionSignatureCollection, TransactionSignaturePruned>;
 
 struct Transaction : public TransactionPrefix {
   static const Transaction Null;
@@ -92,6 +104,8 @@ struct Transaction : public TransactionPrefix {
   Transaction();
 
   Crypto::Hash hash() const;
+  uint64_t binarySize() const;
+  uint64_t signaturesBinarySize() const;
 
   bool isNull() const;
   void nullify();

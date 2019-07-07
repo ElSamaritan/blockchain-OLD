@@ -101,8 +101,8 @@ class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
 
   virtual bool hasTransaction(const Crypto::Hash& transactionHash) const override;
   virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes,
-                               std::vector<BinaryArray>& transactions,
-                               std::vector<Crypto::Hash>& missedHashes) const override;
+                               std::vector<BinaryArray>& transactions, std::vector<Crypto::Hash>& missedHashes,
+                               bool poolOnly = false) const override;
 
   virtual uint64_t getBlockDifficulty(uint32_t blockIndex) const override;
   virtual uint64_t getDifficultyForNextBlock() const override;

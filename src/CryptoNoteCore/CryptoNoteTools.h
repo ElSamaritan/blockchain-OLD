@@ -64,7 +64,7 @@ template <class T>
   T object;
   Common::MemoryInputStream stream(binaryArray.data(), binaryArray.size());
   BinaryInputStreamSerializer serializer(stream);
-  if (!serialize(object, serializer)) {
+  if (!serializer(object, "")) {
     throw std::runtime_error("deserialization failed");
   }
   if (!stream.endOfStream()) {  // check that all data was consumed
@@ -84,32 +84,6 @@ template <class T>
   }
 
   return true;
-}
-
-template <class T>
-[[nodiscard]] bool getObjectBinarySize(const T& object, size_t& size) {
-  try {
-    BinaryArray ba;
-    if (!toBinaryArray(object, ba)) {
-      size = (std::numeric_limits<size_t>::max)();
-      return false;
-    }
-
-    size = ba.size();
-    return true;
-  } catch (...) {
-    size = 0;
-    return false;
-  }
-}
-
-template <class T>
-[[nodiscard]] size_t getObjectBinarySize(const T& object) {
-  size_t size;
-  if (!getObjectBinarySize(object, size)) {
-    throw std::runtime_error("unable to compute object binary size");
-  }
-  return size;
 }
 
 uint64_t getInputAmount(const Transaction& transaction);

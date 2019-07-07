@@ -85,25 +85,6 @@ class BlockchainCache : public CommonBlockchainCache {
   BlockHeightVector getBlockHeights(ConstBlockHashSpan hashes) const override;
 
   bool hasTransaction(const Crypto::Hash& transactionHash) const override;
-
-  std::vector<uint64_t> getLastTimestamps(size_t count) const override;
-  std::vector<uint64_t> getLastTimestamps(size_t count, uint32_t blockIndex, UseGenesis) const override;
-
-  std::vector<uint64_t> getLastBlocksSizes(size_t count) const override;
-  std::vector<uint64_t> getLastBlocksSizes(size_t count, uint32_t blockIndex, UseGenesis) const override;
-
-  std::vector<uint64_t> getLastCumulativeDifficulties(size_t count, uint32_t blockIndex, UseGenesis) const override;
-  std::vector<uint64_t> getLastCumulativeDifficulties(size_t count) const override;
-
-  uint64_t getDifficultyForNextBlock() const override;
-  uint64_t getDifficultyForNextBlock(uint32_t blockIndex) const override;
-
-  virtual uint64_t getCurrentCumulativeDifficulty() const override;
-  virtual uint64_t getCurrentCumulativeDifficulty(uint32_t blockIndex) const override;
-
-  uint64_t getAlreadyGeneratedCoins() const override;
-  uint64_t getAlreadyGeneratedCoins(uint32_t blockIndex) const override;
-  uint64_t getAlreadyGeneratedTransactions(uint32_t blockIndex) const override;
   std::vector<uint64_t> getLastUnits(size_t count, uint32_t blockIndex, UseGenesis use,
                                      std::function<uint64_t(const CachedBlockInfo&)> pred) const override;
 

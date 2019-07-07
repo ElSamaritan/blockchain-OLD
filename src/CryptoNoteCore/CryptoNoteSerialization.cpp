@@ -116,17 +116,17 @@ namespace CryptoNote {
     return true;
   }
 
-  bool isPruned = std::holds_alternative<Crypto::Hash>(tx.signatures);
+  bool isPruned = std::holds_alternative<TransactionSignaturePruned>(tx.signatures);
   XI_RETURN_EC_IF_NOT(serializer(isPruned, "pruned"), false);
   if (serializer.isInput()) {
     if (isPruned) {
-      tx.signatures = Crypto::Hash::Null;
+      tx.signatures = TransactionSignaturePruned{};
     } else {
       tx.signatures = TransactionSignatureCollection{};
     }
   }
 
-  if (auto pruned = std::get_if<Crypto::Hash>(std::addressof(tx.signatures))) {
+  if (auto pruned = std::get_if<TransactionSignaturePruned>(std::addressof(tx.signatures))) {
     XI_RETURN_EC_IF_NOT(serializer(*pruned, "signatures"), false);
   } else if (auto raw = std::get_if<TransactionSignatureCollection>(std::addressof(tx.signatures))) {
     auto& signatures = *raw;

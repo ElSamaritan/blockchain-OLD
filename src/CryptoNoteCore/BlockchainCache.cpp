@@ -87,7 +87,7 @@ bool CachedBlockInfo::serialize(ISerializer& s) {
   XI_RETURN_EC_IF_NOT(s(version, "version"), false);
   XI_RETURN_EC_IF_NOT(s(upgradeVote, "upgrade_vote"), false);
   XI_RETURN_EC_IF_NOT(s(timestamp, "timestamp"), false);
-  XI_RETURN_EC_IF_NOT(s(cumulativeSize, "cumulative_size"), false);
+  XI_RETURN_EC_IF_NOT(s(blobSize, "blob_size"), false);
   XI_RETURN_EC_IF_NOT(s(cumulativeDifficulty, "cumulative_difficulty"), false);
   XI_RETURN_EC_IF_NOT(s(alreadyGeneratedCoins, "already_generated_coins"), false);
   XI_RETURN_EC_IF_NOT(s(alreadyGeneratedTransactions, "already_generated_transaction_count"), false);
@@ -138,7 +138,7 @@ BlockchainCache::BlockchainCache(const std::string& filename, const Currency& cu
 
     assert(genesisGeneratedCoins > 0);
 
-    uint64_t genesisBlockSize = getObjectBinarySize(genesisBlock.getBlock().baseTransaction);
+    uint64_t genesisBlockSize = genesisBlock.getBlock().baseTransaction.binarySize();
     assert(genesisBlockSize < std::numeric_limits<uint64_t>::max());
 
     std::vector<CachedTransaction> cachedTransactions;
@@ -171,7 +171,6 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
   assert(blockSize > 0);
   assert(blockDifficulty > 0);
 
-  uint64_t cumulativeSize = 0;
   uint64_t cumulativeDifficulty = 0;
   uint64_t alreadyGeneratedCoins = 0;
   uint64_t alreadyGeneratedTransactions = 0;
@@ -182,13 +181,11 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
     if (parent != nullptr) {
       auto previousHeight = BlockHeight::fromIndex(cachedBlock.getBlockIndex() - 1);
       const auto parentInfo = parent->getBlockInfos(Xi::makeSpan(previousHeight)).front();
-      cumulativeSize = parentInfo.cumulativeSize;
       cumulativeDifficulty = parentInfo.cumulativeDifficulty;
       alreadyGeneratedCoins = parentInfo.alreadyGeneratedCoins;
       alreadyGeneratedTransactions = parentInfo.alreadyGeneratedTransactions;
     }
 
-    cumulativeSize += blockSize;
     cumulativeDifficulty += blockDifficulty;
     alreadyGeneratedCoins += generatedCoins;
     alreadyGeneratedTransactions += cachedTransactions.size() + 1;
@@ -198,7 +195,6 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
   } else {
     auto& lastBlockInfo = blockInfos.get<BlockIndexTag>().back();
 
-    cumulativeSize = lastBlockInfo.cumulativeSize + blockSize;
     cumulativeDifficulty = lastBlockInfo.cumulativeDifficulty + blockDifficulty;
     alreadyGeneratedCoins = lastBlockInfo.alreadyGeneratedCoins + generatedCoins;
     alreadyGeneratedTransactions = lastBlockInfo.alreadyGeneratedTransactions + cachedTransactions.size() + 1;
@@ -212,7 +208,7 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
   blockInfo.version = cachedBlock.getBlock().version;
   blockInfo.upgradeVote = cachedBlock.getBlock().upgradeVote;
   blockInfo.timestamp = cachedBlock.getBlock().timestamp;
-  blockInfo.cumulativeSize = cumulativeSize;
+  blockInfo.blobSize = blockSize;
   blockInfo.cumulativeDifficulty = cumulativeDifficulty;
   blockInfo.alreadyGeneratedCoins = alreadyGeneratedCoins;
   blockInfo.alreadyGeneratedTransactions = alreadyGeneratedTransactions;
@@ -262,21 +258,21 @@ PushedBlockInfo BlockchainCache::getPushedBlockInfo(uint32_t blockIndex) const {
     const auto& previousBlock = blockInfos.get<BlockIndexTag>()[localIndex - 1];
     pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - previousBlock.cumulativeDifficulty;
     pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
-    pushedBlockInfo.blockSize = cachedBlock.cumulativeSize - previousBlock.cumulativeSize;
+    pushedBlockInfo.blockSize = cachedBlock.blobSize;
     pushedBlockInfo.timestamp = cachedBlock.timestamp;
   } else {
     if (parent == nullptr) {
       assert(blockIndex == 0);
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty;
       pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins;
-      pushedBlockInfo.blockSize = cachedBlock.cumulativeSize;
+      pushedBlockInfo.blockSize = cachedBlock.blobSize;
       pushedBlockInfo.timestamp = cachedBlock.timestamp;
     } else {
       auto height = BlockHeight::fromIndex(blockIndex - 1);
       const auto& previousBlock = parent->getBlockInfos(Xi::makeSpan(height)).front();
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - previousBlock.cumulativeDifficulty;
       pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
-      pushedBlockInfo.blockSize = cachedBlock.cumulativeSize - previousBlock.cumulativeSize;
+      pushedBlockInfo.blockSize = cachedBlock.blobSize;
       pushedBlockInfo.timestamp = cachedBlock.timestamp;
     }
   }
@@ -675,7 +671,7 @@ CachedTransactionVector BlockchainCache::getTransactions(ConstTransactionHashSpa
     auto it = index.find(id);
     exceptional_if<NotFoundError>(it == index.end(), "transaction not contained by cache");
     const auto blockIndex = it->blockIndex;
-    exceptional_if<OutOfRangeError>(blockIndex < startIndex || blockIndex >= getTopBlockIndex());
+    exceptional_if<OutOfRangeError>(blockIndex < startIndex || blockIndex > getTopBlockIndex());
     CachedRawBlock rawBlock{storage->getBlockByIndex(blockIndex - startIndex)};
 
     const auto transactionIndex = it->transactionIndex;
@@ -1074,19 +1070,6 @@ BlockVersion BlockchainCache::getTopBlockVersion() const {
   return blockInfos.get<BlockIndexTag>().back().version;
 }
 
-std::vector<uint64_t> BlockchainCache::getLastTimestamps(size_t count) const {
-  return getLastTimestamps(count, getTopBlockIndex(), skipGenesisBlock);
-}
-
-std::vector<uint64_t> BlockchainCache::getLastTimestamps(size_t count, uint32_t blockIndex,
-                                                         UseGenesis useGenesis) const {
-  return getLastUnits(count, blockIndex, useGenesis, [](const CachedBlockInfo& inf) { return inf.timestamp; });
-}
-
-std::vector<uint64_t> BlockchainCache::getLastBlocksSizes(size_t count) const {
-  return getLastBlocksSizes(count, getTopBlockIndex(), UseGenesis{true});
-}
-
 std::vector<uint64_t> BlockchainCache::getLastUnits(size_t count, uint32_t blockIndex, UseGenesis useGenesis,
                                                     std::function<uint64_t(const CachedBlockInfo&)> pred) const {
   XI_RETURN_EC_IF(blockIndex > getTopBlockIndex(), {});
@@ -1110,84 +1093,6 @@ std::vector<uint64_t> BlockchainCache::getLastUnits(size_t count, uint32_t block
   std::transform(std::next(blocksIndex.begin(), from), std::next(blocksIndex.begin(), to), std::back_inserter(result),
                  std::move(pred));
   return result;
-}
-
-std::vector<uint64_t> BlockchainCache::getLastBlocksSizes(size_t count, uint32_t blockIndex,
-                                                          UseGenesis useGenesis) const {
-  XI_RETURN_SC_IF(count == 0, {});
-
-  if (count + 1 >= blockIndex) {
-    useGenesis = UseGenesis{true};
-  }
-
-  std::vector<uint64_t> reval{};
-  reval.reserve(count);
-  getLastUnits(count + 1, blockIndex, useGenesis, [&reval](const CachedBlockInfo& cb) mutable {
-    reval.push_back(cb.cumulativeSize);
-    return 0;
-  });
-  XI_RETURN_EC_IF(reval.empty(), {});
-  for (size_t i = reval.size() - 1; i > 0; --i) {
-    reval[i] -= reval[i - 1];
-  }
-  if (reval.size() > count) {
-    reval.erase(begin(reval));
-  }
-
-  return reval;
-}
-
-uint64_t BlockchainCache::getDifficultyForNextBlock() const { return getDifficultyForNextBlock(getTopBlockIndex()); }
-
-uint64_t BlockchainCache::getDifficultyForNextBlock(uint32_t blockIndex) const {
-  assert(blockIndex <= getTopBlockIndex());
-  const auto nextBlockVersion = getBlockVersionForHeight(blockIndex + 1);
-  const uint64_t blockWindow = currency.difficultyBlocksCountByVersion(nextBlockVersion);
-  auto timestamps = getLastTimestamps(blockWindow, blockIndex, skipGenesisBlock);
-  auto commulativeDifficulties = getLastCumulativeDifficulties(blockWindow, blockIndex, skipGenesisBlock);
-  return currency.nextDifficulty(nextBlockVersion, blockIndex, std::move(timestamps),
-                                 std::move(commulativeDifficulties));
-}
-
-uint64_t BlockchainCache::getCurrentCumulativeDifficulty() const {
-  assert(!blockInfos.empty());
-  return blockInfos.get<BlockIndexTag>().back().cumulativeDifficulty;
-}
-
-uint64_t BlockchainCache::getCurrentCumulativeDifficulty(uint32_t blockIndex) const {
-  assert(!blockInfos.empty());
-  assert(blockIndex <= getTopBlockIndex());
-  return blockInfos.get<BlockIndexTag>().at(blockIndex - startIndex).cumulativeDifficulty;
-}
-
-uint64_t BlockchainCache::getAlreadyGeneratedCoins() const { return getAlreadyGeneratedCoins(getTopBlockIndex()); }
-
-uint64_t BlockchainCache::getAlreadyGeneratedCoins(uint32_t blockIndex) const {
-  if (blockIndex < startIndex) {
-    assert(parent != nullptr);
-    return parent->getAlreadyGeneratedCoins(blockIndex);
-  }
-
-  return blockInfos.get<BlockIndexTag>().at(blockIndex - startIndex).alreadyGeneratedCoins;
-}
-
-uint64_t BlockchainCache::getAlreadyGeneratedTransactions(uint32_t blockIndex) const {
-  if (blockIndex < startIndex) {
-    assert(parent != nullptr);
-    return parent->getAlreadyGeneratedTransactions(blockIndex);
-  }
-
-  return blockInfos.get<BlockIndexTag>().at(blockIndex - startIndex).alreadyGeneratedTransactions;
-}
-
-std::vector<uint64_t> BlockchainCache::getLastCumulativeDifficulties(size_t count, uint32_t blockIndex,
-                                                                     UseGenesis useGenesis) const {
-  return getLastUnits(count, blockIndex, useGenesis,
-                      [](const CachedBlockInfo& info) { return info.cumulativeDifficulty; });
-}
-
-std::vector<uint64_t> BlockchainCache::getLastCumulativeDifficulties(size_t count) const {
-  return getLastCumulativeDifficulties(count, getTopBlockIndex(), skipGenesisBlock);
 }
 
 TransactionValidatorState BlockchainCache::fillOutputsSpentByBlock(uint32_t blockIndex) const {

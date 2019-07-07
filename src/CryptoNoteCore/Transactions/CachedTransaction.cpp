@@ -101,7 +101,12 @@ const BinaryArray& CachedTransaction::getTransactionBinaryArray() const {
   return transactionBinaryArray.get();
 }
 
-size_t CachedTransaction::getBlobSize() const { return getTransactionBinaryArray().size(); }
+size_t CachedTransaction::getBlobSize() const {
+  if (!transactionBlobSize.is_initialized()) {
+    transactionBlobSize = getTransaction().binarySize();
+  }
+  return transactionBlobSize.get();
+}
 
 const std::vector<KeyImage>& CachedTransaction::getKeyImages() const {
   if (!keyImages.is_initialized()) {

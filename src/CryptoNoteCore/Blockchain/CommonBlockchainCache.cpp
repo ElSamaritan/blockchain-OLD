@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -26,9 +26,12 @@
 #include <ctime>
 #include <cassert>
 
+#include <Xi/Exceptions.hpp>
+
+using namespace Xi;
 using Logging::Level;
 
-CryptoNote::CommonBlockchainCache::CommonBlockchainCache(Logging::ILogger &logger, const Currency &currency)
+CryptoNote::CommonBlockchainCache::CommonBlockchainCache(Logging::ILogger& logger, const Currency& currency)
     : m_logger(logger, "CommonBlockchainCache"), m_currency(currency) {}
 
 bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime) const {
@@ -46,6 +49,83 @@ bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t 
 bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex,
                                                                        uint64_t timestamp) const {
   return m_currency.isUnlockSatisfied(unlockTime, blockIndex, timestamp);
+}
+
+std::vector<uint64_t> CryptoNote::CommonBlockchainCache::getLastTimestamps(size_t count, uint32_t blockIndex,
+                                                                           UseGenesis _) const {
+  return getLastUnits(count, blockIndex, _, [](const CachedBlockInfo& info) { return info.timestamp; });
+}
+
+std::vector<uint64_t> CryptoNote::CommonBlockchainCache::getLastBlocksSizes(size_t count, uint32_t blockIndex,
+                                                                            UseGenesis _) const {
+  return getLastUnits(count, blockIndex, _, [](const auto& info) { return info.blobSize; });
+}
+
+std::vector<uint64_t> CryptoNote::CommonBlockchainCache::getLastCumulativeDifficulties(size_t count,
+                                                                                       uint32_t blockIndex,
+                                                                                       UseGenesis _) const {
+  return getLastUnits(count, blockIndex, _, [](const CachedBlockInfo& info) { return info.cumulativeDifficulty; });
+}
+
+std::vector<uint64_t> CryptoNote::CommonBlockchainCache::getLastTimestamps(size_t count) const {
+  return getLastTimestamps(count, getTopBlockIndex(), UseGenesis{false});
+}
+
+std::vector<uint64_t> CryptoNote::CommonBlockchainCache::getLastBlocksSizes(size_t count) const {
+  return getLastBlocksSizes(count, getTopBlockIndex(), UseGenesis{false});
+}
+
+std::vector<uint64_t> CryptoNote::CommonBlockchainCache::getLastCumulativeDifficulties(size_t count) const {
+  return getLastCumulativeDifficulties(count, getTopBlockIndex(), UseGenesis{false});
+}
+
+uint64_t CryptoNote::CommonBlockchainCache::getCurrentCumulativeDifficulty() const {
+  return getCurrentCumulativeDifficulty(getTopBlockIndex());
+}
+
+uint64_t CryptoNote::CommonBlockchainCache::getCurrentCumulativeDifficulty(uint32_t blockIndex) const {
+  auto diffs = getLastCumulativeDifficulties(1, blockIndex, UseGenesis{true});
+  exceptional_if<NotFoundError>(diffs.empty());
+  return diffs.back();
+}
+
+uint64_t CryptoNote::CommonBlockchainCache::getDifficultyForNextBlock(BlockVersion version) const {
+  return getDifficultyForNextBlock(version, getTopBlockIndex());
+}
+uint64_t CryptoNote::CommonBlockchainCache::getDifficultyForNextBlock(BlockVersion version, uint32_t blockIndex) const {
+  exceptional_if<InvalidArgumentError>(blockIndex > getTopBlockIndex());
+  const uint64_t blockWindow = m_currency.difficultyBlocksCountByVersion(version);
+  auto timestamps = getLastTimestamps(blockWindow, blockIndex, UseGenesis{false});
+  auto commulativeDifficulties = getLastCumulativeDifficulties(blockWindow, blockIndex, UseGenesis{false});
+  return m_currency.nextDifficulty(version, blockIndex, std::move(timestamps), std::move(commulativeDifficulties));
+}
+
+uint64_t CryptoNote::CommonBlockchainCache::getAlreadyGeneratedCoins() const {
+  return getAlreadyGeneratedCoins(getTopBlockIndex());
+}
+
+uint64_t CryptoNote::CommonBlockchainCache::getAlreadyGeneratedCoins(uint32_t blockIndex) const {
+  auto coins =
+      getLastUnits(1, blockIndex, UseGenesis{true}, [](const auto& info) { return info.alreadyGeneratedCoins; });
+  exceptional_if<NotFoundError>(coins.empty());
+  return coins.back();
+}
+
+uint64_t CryptoNote::CommonBlockchainCache::getAlreadyGeneratedTransactions(uint32_t blockIndex) const {
+  auto transactions =
+      getLastUnits(1, blockIndex, UseGenesis{true}, [](const auto& info) { return info.alreadyGeneratedTransactions; });
+  exceptional_if<NotFoundError>(transactions.empty());
+  return transactions.back();
+}
+
+uint64_t CryptoNote::CommonBlockchainCache::getCurrentBlockSize() const {
+  return getCurrentBlockSize(getTopBlockIndex());
+}
+
+uint64_t CryptoNote::CommonBlockchainCache::getCurrentBlockSize(uint32_t blockIndex) const {
+  const auto sizes = getLastBlocksSizes(1, blockIndex, UseGenesis{true});
+  exceptional_if<NotFoundError>(sizes.empty());
+  return sizes.back();
 }
 
 bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlockedByBlockIndex(uint64_t unlockTime,

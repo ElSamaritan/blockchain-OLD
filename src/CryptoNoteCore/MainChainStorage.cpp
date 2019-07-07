@@ -33,7 +33,9 @@ MainChainStorage::MainChainStorage(const std::string& blocksFilename, const std:
 
 MainChainStorage::~MainChainStorage() { storage.close(); }
 
-void MainChainStorage::pushBlock(const RawBlock& rawBlock) { storage.push_back(rawBlock); }
+void MainChainStorage::pushBlock(const RawBlock& rawBlock, const uint64_t blobSize) {
+  storage.push_back(Entity{rawBlock, blobSize});
+}
 
 void MainChainStorage::popBlock() { storage.pop_back(); }
 
@@ -43,7 +45,16 @@ RawBlock MainChainStorage::getBlockByIndex(uint32_t index) const {
                             " is out of range. Blocks count: " + std::to_string(storage.size()));
   }
 
-  return storage[index];
+  return storage[index].block;
+}
+
+uint64_t MainChainStorage::getBlobSizeByIndex(uint32_t index) const {
+  if (index >= storage.size()) {
+    throw std::out_of_range("Block index " + std::to_string(index) +
+                            " is out of range. Blocks count: " + std::to_string(storage.size()));
+  }
+
+  return storage[index].blobSize;
 }
 
 uint32_t MainChainStorage::getBlockCount() const { return static_cast<uint32_t>(storage.size()); }
@@ -58,7 +69,7 @@ std::unique_ptr<IMainChainStorage> createSwappedMainChainStorage(const std::stri
   if (storage->getBlockCount() == 0) {
     RawBlock genesis;
     genesis.blockTemplate = toBinaryArray(currency.genesisBlock());
-    storage->pushBlock(genesis);
+    storage->pushBlock(genesis, currency.genesisBlock().baseTransaction.binarySize());
   }
 
   return storage;

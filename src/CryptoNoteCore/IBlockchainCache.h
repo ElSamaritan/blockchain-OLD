@@ -85,8 +85,8 @@ struct CachedBlockInfo {
   BlockVersion version{BlockVersion::Null};
   BlockVersion upgradeVote{BlockVersion::Null};
   uint64_t timestamp;
+  uint64_t blobSize;
   uint64_t cumulativeDifficulty;
-  uint64_t cumulativeSize;
   uint64_t alreadyGeneratedCoins;
   uint64_t alreadyGeneratedTransactions;
 
@@ -234,8 +234,11 @@ class IBlockchainCache : public std::enable_shared_from_this<IBlockchainCache> {
   virtual std::vector<uint64_t> getLastCumulativeDifficulties(size_t count, uint32_t blockIndex, UseGenesis) const = 0;
   virtual std::vector<uint64_t> getLastCumulativeDifficulties(size_t count) const = 0;
 
-  virtual uint64_t getDifficultyForNextBlock() const = 0;
-  virtual uint64_t getDifficultyForNextBlock(uint32_t blockIndex) const = 0;
+  [[nodiscard]] virtual uint64_t getCurrentBlockSize() const = 0;
+  [[nodiscard]] virtual uint64_t getCurrentBlockSize(uint32_t blockIndex) const = 0;
+
+  virtual uint64_t getDifficultyForNextBlock(BlockVersion version) const = 0;
+  virtual uint64_t getDifficultyForNextBlock(BlockVersion version, uint32_t blockIndex) const = 0;
 
   virtual uint64_t getCurrentCumulativeDifficulty() const = 0;
   virtual uint64_t getCurrentCumulativeDifficulty(uint32_t blockIndex) const = 0;

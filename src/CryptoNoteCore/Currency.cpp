@@ -511,7 +511,7 @@ bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts,
 }
 
 bool Currency::isFusionTransaction(const Transaction& transaction, size_t size, BlockVersion version) const {
-  assert(getObjectBinarySize(transaction) == size);
+  assert(transaction.binarySize() == size);
 
   std::vector<uint64_t> outputsAmounts;
   outputsAmounts.reserve(transaction.outputs.size());
@@ -523,7 +523,7 @@ bool Currency::isFusionTransaction(const Transaction& transaction, size_t size, 
 }
 
 bool Currency::isFusionTransaction(const Transaction& transaction, BlockVersion version) const {
-  return isFusionTransaction(transaction, getObjectBinarySize(transaction), version);
+  return isFusionTransaction(transaction, transaction.binarySize(), version);
 }
 
 bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold) const {

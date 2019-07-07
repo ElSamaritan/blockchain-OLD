@@ -51,11 +51,13 @@ struct ShortBlockInfo {
   uint64_t timestamp;
   /// The chain source type
   BlockSource chain;
+  /// size of this block
+  uint64_t blob_size;
+  Block::Version version;
+  Block::Version upgrade_vote;
 
   /// cumulative proof of work based on this block and all prefious blocks
   uint64_t cumulative_difficulty;
-  /// size of this block + size of all previous blocks
-  uint64_t cumulative_size;
   /// sum of all coins generated so far - sum of coins burned
   uint64_t cumulative_supply;
   /// transactions count + transactions count of all previous blocks
@@ -67,9 +69,11 @@ struct ShortBlockInfo {
   KV_MEMBER(height)
   KV_MEMBER(timestamp)
   KV_MEMBER(chain)
+  KV_MEMBER(blob_size)
+  KV_MEMBER(version)
+  KV_MEMBER(upgrade_vote)
 
   KV_MEMBER(cumulative_difficulty)
-  KV_MEMBER(cumulative_size)
   KV_MEMBER(cumulative_supply)
   KV_MEMBER(cumulative_transactions_count)
 

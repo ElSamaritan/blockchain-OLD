@@ -846,7 +846,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   transaction_short.hash = blk.baseTransaction.hash();
   transaction_short.fee = 0;
   transaction_short.amount_out = getOutputAmount(blk.baseTransaction);
-  transaction_short.size = getObjectBinarySize(blk.baseTransaction);
+  transaction_short.size = blk.baseTransaction.binarySize();
   res.block.transactions.push_back(transaction_short);
 
   auto staticReward = m_core.currency().constructStaticRewardTx(blk).takeOrThrow();
@@ -857,7 +857,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
     short_static_reward_info.hash = static_reward_tx.hash();
     short_static_reward_info.fee = 0;
     short_static_reward_info.amount_out = getOutputAmount(static_reward_tx);
-    short_static_reward_info.size = getObjectBinarySize(static_reward_tx);
+    short_static_reward_info.size = static_reward_tx.binarySize();
     res.block.transactions.push_back(short_static_reward_info);
   }
 
@@ -879,7 +879,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
     i_transaction_short.hash = tx.hash();
     i_transaction_short.fee = amount_in - amount_out;
     i_transaction_short.amount_out = amount_out;
-    i_transaction_short.size = getObjectBinarySize(tx);
+    i_transaction_short.size = tx.binarySize();
     res.block.transactions.push_back(i_transaction_short);
 
     res.block.total_fee_amount += i_transaction_short.fee;
@@ -983,7 +983,7 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
   res.transaction_details.fee = amount_in - amount_out;
   if (amount_in == 0) res.transaction_details.fee = 0;
   res.transaction_details.amount_out = amount_out;
-  res.transaction_details.size = getObjectBinarySize(res.transaction);
+  res.transaction_details.size = res.transaction.binarySize();
 
   uint64_t mixin;
   if (!f_getMixin(res.transaction, mixin)) {
@@ -1020,7 +1020,7 @@ bool RpcServer::f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::reques
     transaction_short.hash = tx.hash();
     transaction_short.fee = amount_in - amount_out;
     transaction_short.amount_out = amount_out;
-    transaction_short.size = getObjectBinarySize(tx);
+    transaction_short.size = tx.binarySize();
     res.transactions.push_back(transaction_short);
   }
 

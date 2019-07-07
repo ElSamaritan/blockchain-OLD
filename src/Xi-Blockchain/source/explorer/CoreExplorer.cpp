@@ -368,8 +368,10 @@ ShortBlockInfo CoreExplorer::fromCore(const CryptoNote::CachedBlockInfo &info, c
   reval.height = height;
   reval.timestamp = info.timestamp;
   reval.chain = isAlternative ? BlockSource::AlternativeChain : BlockSource::MainChain;
+  reval.blob_size = info.blobSize;
+  reval.version = info.version;
+  reval.upgrade_vote = info.upgradeVote;
   reval.cumulative_difficulty = info.cumulativeDifficulty;
-  reval.cumulative_size = info.cumulativeSize;
   reval.cumulative_supply = info.alreadyGeneratedCoins;
   reval.cumulative_transactions_count = info.alreadyGeneratedTransactions;
   return reval;
@@ -383,8 +385,6 @@ BlockInfo CoreExplorer::fromCore(const CryptoNote::CachedRawBlock &raw, const Cr
   const auto transactionContainer =
       isAlternative ? TransactionContainer::AlternativeChain : TransactionContainer::MainChain;
 
-  reval.version = raw.block().getBlock().version;
-  reval.upgrade_vote = raw.block().getBlock().upgradeVote;
   reval.nonce = raw.block().getBlock().nonce;
   reval.previous_hash = raw.block().getBlock().previousBlockHash;
   reval.blob_size = raw.blobSize();

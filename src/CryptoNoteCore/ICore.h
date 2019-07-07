@@ -107,8 +107,8 @@ class ICore : public IBlockchain {
 
   virtual bool hasTransaction(const Crypto::Hash& transactionHash) const = 0;
   virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes,
-                               std::vector<BinaryArray>& transactions,
-                               std::vector<Crypto::Hash>& missedHashes) const = 0;
+                               std::vector<BinaryArray>& transactions, std::vector<Crypto::Hash>& missedHashes,
+                               bool poolOnly = false) const = 0;
 
   virtual uint64_t getBlockDifficulty(uint32_t blockIndex) const = 0;
   virtual uint64_t getDifficultyForNextBlock() const = 0;

@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -46,6 +46,28 @@ class CommonBlockchainCache : public IBlockchainCache {
   [[nodiscard]] bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex) const override;
   [[nodiscard]] bool isTransactionSpendTimeUnlocked(uint64_t unlockTime, uint32_t blockIndex,
                                                     uint64_t timestamp) const override;
+
+  [[nodiscard]] std::vector<uint64_t> getLastTimestamps(size_t count, uint32_t blockIndex, UseGenesis) const override;
+  [[nodiscard]] std::vector<uint64_t> getLastBlocksSizes(size_t count, uint32_t blockIndex, UseGenesis) const override;
+  [[nodiscard]] std::vector<uint64_t> getLastCumulativeDifficulties(size_t count, uint32_t blockIndex,
+                                                                    UseGenesis) const override;
+
+  [[nodiscard]] std::vector<uint64_t> getLastTimestamps(size_t count) const override;
+  [[nodiscard]] std::vector<uint64_t> getLastBlocksSizes(size_t count) const override;
+  [[nodiscard]] std::vector<uint64_t> getLastCumulativeDifficulties(size_t count) const override;
+
+  [[nodiscard]] uint64_t getCurrentBlockSize() const override;
+  [[nodiscard]] uint64_t getCurrentBlockSize(uint32_t blockIndex) const override;
+
+  [[nodiscard]] uint64_t getCurrentCumulativeDifficulty() const override;
+  [[nodiscard]] uint64_t getCurrentCumulativeDifficulty(uint32_t blockIndex) const override;
+
+  [[nodiscard]] uint64_t getDifficultyForNextBlock(BlockVersion version) const override;
+  [[nodiscard]] uint64_t getDifficultyForNextBlock(BlockVersion version, uint32_t blockIndex) const override;
+
+  [[nodiscard]] uint64_t getAlreadyGeneratedCoins() const override;
+  [[nodiscard]] uint64_t getAlreadyGeneratedCoins(uint32_t blockIndex) const override;
+  [[nodiscard]] uint64_t getAlreadyGeneratedTransactions(uint32_t blockIndex) const override;
   // ------------------------------------------ IBlockchainCache ------------------------------------------------------
 
  private:

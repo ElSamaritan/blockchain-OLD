@@ -623,15 +623,11 @@ std::shared_ptr<IBlockchainCache> DatabaseBlockchainCache::split(uint32_t splitB
 Crypto::Hash DatabaseBlockchainCache::pushBlockToAnotherCache(IBlockchainCache& segment,
                                                               PushedBlockInfo&& pushedBlockInfo) {
   BlockTemplate block;
-  bool br = fromBinaryArray(block, pushedBlockInfo.rawBlock.blockTemplate);
-  if (br) {
-  }
+  [[maybe_unused]] bool br = fromBinaryArray(block, pushedBlockInfo.rawBlock.blockTemplate);
   assert(br);
 
   std::vector<CachedTransaction> transactions;
-  bool tr = Utils::restoreCachedTransactions(pushedBlockInfo.rawBlock.transactions, transactions);
-  if (tr) {
-  }
+  [[maybe_unused]] bool tr = Utils::restoreCachedTransactions(pushedBlockInfo.rawBlock.transactions, transactions);
   assert(tr);
 
   CachedBlock cachedBlock(block);
@@ -914,7 +910,6 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
 
   // TODO: cache top block difficulty, size, timestamp, coins; use it here
   auto lastBlockInfo = getCachedBlockInfo(getTopBlockIndex());
-  auto cumulativeSize = lastBlockInfo.cumulativeSize + static_cast<uint32_t>(blockSize);
   auto cumulativeDifficulty = lastBlockInfo.cumulativeDifficulty + blockDifficulty;
   auto alreadyGeneratedCoins = lastBlockInfo.alreadyGeneratedCoins + generatedCoins;
   auto alreadyGeneratedTransactions = lastBlockInfo.alreadyGeneratedTransactions + cachedTransactions.size() + 1;
@@ -935,7 +930,7 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   blockInfo.version = cachedBlock.getBlock().version;
   blockInfo.upgradeVote = cachedBlock.getBlock().upgradeVote;
   blockInfo.timestamp = cachedBlock.getBlock().timestamp;
-  blockInfo.cumulativeSize = cumulativeSize;
+  blockInfo.blobSize = blockSize;
   blockInfo.cumulativeDifficulty = cumulativeDifficulty;
   blockInfo.alreadyGeneratedCoins = alreadyGeneratedCoins;
   blockInfo.alreadyGeneratedTransactions = alreadyGeneratedTransactions;
@@ -1198,92 +1193,10 @@ bool DatabaseBlockchainCache::hasTransaction(const Crypto::Hash& transactionHash
   return !result && batch.extractResult().getCachedTransactions().count(transactionHash);
 }
 
-std::vector<uint64_t> DatabaseBlockchainCache::getLastTimestamps(size_t count) const {
-  return getLastTimestamps(count, getTopBlockIndex(), UseGenesis{true});
-}
-std::vector<uint64_t> DatabaseBlockchainCache::getLastTimestamps(size_t count, uint32_t blockIndex,
-                                                                 UseGenesis useGenesis) const {
-  return getLastUnits(count, blockIndex, useGenesis, [](const CachedBlockInfo& inf) { return inf.timestamp; });
-}
-
-std::vector<uint64_t> DatabaseBlockchainCache::getLastBlocksSizes(size_t count) const {
-  return getLastBlocksSizes(count, getTopBlockIndex(), UseGenesis{true});
-}
-
-std::vector<uint64_t> DatabaseBlockchainCache::getLastBlocksSizes(size_t count, uint32_t blockIndex,
-                                                                  UseGenesis useGenesis) const {
-  XI_RETURN_SC_IF(count == 0, {});
-
-  if (count + 1 >= blockIndex) {
-    useGenesis = UseGenesis{true};
-  }
-
-  std::vector<uint64_t> reval{};
-  reval.reserve(count);
-  getLastUnits(count + 1, blockIndex, useGenesis, [&reval](const CachedBlockInfo& cb) mutable {
-    reval.push_back(cb.cumulativeSize);
-    return 0;
-  });
-  XI_RETURN_EC_IF(reval.empty(), {});
-  for (size_t i = reval.size() - 1; i > 0; --i) {
-    reval[i] -= reval[i - 1];
-  }
-  if (reval.size() > count) {
-    reval.erase(begin(reval));
-  }
-
-  return reval;
-}
-
-std::vector<uint64_t> DatabaseBlockchainCache::getLastCumulativeDifficulties(size_t count, uint32_t blockIndex,
-                                                                             UseGenesis useGenesis) const {
-  return getLastUnits(count, blockIndex, useGenesis,
-                      [](const CachedBlockInfo& info) { return info.cumulativeDifficulty; });
-}
-std::vector<uint64_t> DatabaseBlockchainCache::getLastCumulativeDifficulties(size_t count) const {
-  return getLastCumulativeDifficulties(count, getTopBlockIndex(), UseGenesis{true});
-}
-
-uint64_t DatabaseBlockchainCache::getDifficultyForNextBlock() const {
-  return getDifficultyForNextBlock(getTopBlockIndex());
-}
-
-uint64_t DatabaseBlockchainCache::getDifficultyForNextBlock(uint32_t blockIndex) const {
-  assert(blockIndex <= getTopBlockIndex());
-  const auto nextBlockVersion = getBlockVersionForHeight(blockIndex + 1);
-  auto timestamps =
-      getLastTimestamps(currency.difficultyBlocksCountByVersion(nextBlockVersion), blockIndex, UseGenesis{false});
-  auto commulativeDifficulties = getLastCumulativeDifficulties(
-      currency.difficultyBlocksCountByVersion(nextBlockVersion), blockIndex, UseGenesis{false});
-  return currency.nextDifficulty(nextBlockVersion, blockIndex, std::move(timestamps),
-                                 std::move(commulativeDifficulties));
-}
-
-uint64_t DatabaseBlockchainCache::getCurrentCumulativeDifficulty() const {
-  return getCachedBlockInfo(getTopBlockIndex()).cumulativeDifficulty;
-}
-
-uint64_t DatabaseBlockchainCache::getCurrentCumulativeDifficulty(uint32_t blockIndex) const {
-  assert(blockIndex <= getTopBlockIndex());
-  return getCachedBlockInfo(blockIndex).cumulativeDifficulty;
-}
-
 CachedBlockInfo DatabaseBlockchainCache::getCachedBlockInfo(uint32_t index) const {
   auto batch = BlockchainReadBatch().requestCachedBlock(index);
   auto result = readDatabase(batch);
   return result.getCachedBlocks().at(index);
-}
-
-uint64_t DatabaseBlockchainCache::getAlreadyGeneratedCoins() const {
-  return getAlreadyGeneratedCoins(getTopBlockIndex());
-}
-
-uint64_t DatabaseBlockchainCache::getAlreadyGeneratedCoins(uint32_t blockIndex) const {
-  return getCachedBlockInfo(blockIndex).alreadyGeneratedCoins;
-}
-
-uint64_t DatabaseBlockchainCache::getAlreadyGeneratedTransactions(uint32_t blockIndex) const {
-  return getCachedBlockInfo(blockIndex).alreadyGeneratedTransactions;
 }
 
 std::vector<CachedBlockInfo> DatabaseBlockchainCache::getLastCachedUnits(uint32_t blockIndex, size_t count,
@@ -1892,7 +1805,7 @@ DatabaseBlockchainCache::ExtendedPushedBlockInfo DatabaseBlockchainCache::getExt
   ExtendedPushedBlockInfo extendedInfo;
 
   extendedInfo.pushedBlockInfo.rawBlock = dbResult.getRawBlocks().at(blockIndex);
-  extendedInfo.pushedBlockInfo.blockSize = blockInfo.cumulativeSize - previousBlockInfo.cumulativeSize;
+  extendedInfo.pushedBlockInfo.blockSize = blockInfo.blobSize;
   extendedInfo.pushedBlockInfo.blockDifficulty =
       blockInfo.cumulativeDifficulty - previousBlockInfo.cumulativeDifficulty;
   extendedInfo.pushedBlockInfo.generatedCoins =
@@ -1948,7 +1861,7 @@ void DatabaseBlockchainCache::addGenesisBlock(CachedBlock&& genesisBlock) {
     }
   }
 
-  uint64_t genesisTransactionsSize = getObjectBinarySize(genesisBlock.getBlock().baseTransaction);
+  uint64_t genesisTransactionsSize = genesisBlock.getBlock().baseTransaction.binarySize();
   assert(genesisTransactionsSize < std::numeric_limits<uint32_t>::max());
   assert(genesisBlock.getBlock().transactionHashes.empty());
 
@@ -1960,7 +1873,7 @@ void DatabaseBlockchainCache::addGenesisBlock(CachedBlock&& genesisBlock) {
   blockInfo.upgradeVote = genesisBlock.getBlock().upgradeVote;
   blockInfo.timestamp = genesisBlock.getBlock().timestamp;
   blockInfo.cumulativeDifficulty = 1;
-  blockInfo.cumulativeSize = genesisTransactionsSize;
+  blockInfo.blobSize = genesisTransactionsSize;
   blockInfo.alreadyGeneratedCoins = genesisGeneratedCoins;
   blockInfo.alreadyGeneratedTransactions = staticReward.has_value() ? 2 : 1;
 

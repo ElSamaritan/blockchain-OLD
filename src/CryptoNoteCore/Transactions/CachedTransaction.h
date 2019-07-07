@@ -82,6 +82,7 @@ class CachedTransaction {
   mutable boost::optional<uint64_t> inputAmount;
   mutable boost::optional<uint64_t> outputAmount;
   mutable boost::optional<uint64_t> transactionFee;
+  mutable boost::optional<uint64_t> transactionBlobSize;
 };
 
 CachedTransaction cache(Transaction transaction);

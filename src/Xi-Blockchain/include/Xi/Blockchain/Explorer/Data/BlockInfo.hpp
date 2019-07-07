@@ -40,15 +40,11 @@ namespace Blockchain {
 namespace Explorer {
 
 struct BlockInfo : ShortBlockInfo {
-  Block::Version version;
-  Block::Version upgrade_vote;
   /// Nonce used to fullfill the proof of work requirement
   Block::Nonce nonce;
   /// The previous block hash this block is based on.
   Block::Hash previous_hash;
 
-  /// Binary size of this block, everything included.
-  uint64_t blob_size;
   /// Number of transactions included in this block (Including miner reward and static reward)
   uint64_t transactions_count;
 
@@ -65,12 +61,8 @@ struct BlockInfo : ShortBlockInfo {
   KV_BEGIN_SERIALIZATION
   KV_BASE(ShortBlockInfo)
 
-  KV_MEMBER(version)
-  KV_MEMBER(upgrade_vote)
   KV_MEMBER(nonce)
   KV_MEMBER(previous_hash)
-
-  KV_MEMBER(blob_size)
   KV_MEMBER(transactions_count)
 
   KV_MEMBER(miner_reward)
