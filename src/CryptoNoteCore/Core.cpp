@@ -688,23 +688,21 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     logger(Logging::DEBUGGING) << "Block index=" << cachedBlock.getBlockIndex() << " is genesis block index";
     return error::AddBlockErrorCode::REJECTED_AS_ORPHANED;
   }
+  const auto& blockTemplate = cachedBlock.getBlock();
+  const auto& previousBlockHash = blockTemplate.previousBlockHash;
+  auto cache = findSegmentContainingBlock(previousBlockHash);
+  if (cache == nullptr) {
+    logger(Logging::DEBUGGING) << "Block " << blockStr << " rejected as orphaned";
+    return error::AddBlockErrorCode::REJECTED_AS_ORPHANED;
+  }
 
   if (hasBlock(cachedBlock.getBlockHash())) {
     logger(Logging::DEBUGGING) << "Block " << blockStr << " already exists";
     return error::AddBlockErrorCode::ALREADY_EXISTS;
   }
 
-  const auto& blockTemplate = cachedBlock.getBlock();
-  const auto& previousBlockHash = blockTemplate.previousBlockHash;
-
   if (rawBlock.transactions.size() != blockTemplate.transactionHashes.size()) {
     return error::BlockValidationError::TRANSACTION_INCONSISTENCY;
-  }
-
-  auto cache = findSegmentContainingBlock(previousBlockHash);
-  if (cache == nullptr) {
-    logger(Logging::DEBUGGING) << "Block " << blockStr << " rejected as orphaned";
-    return error::AddBlockErrorCode::REJECTED_AS_ORPHANED;
   }
 
   std::vector<CachedTransaction> transactions;
