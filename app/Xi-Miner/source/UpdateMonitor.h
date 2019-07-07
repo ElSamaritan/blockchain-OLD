@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -88,6 +88,7 @@ class UpdateMonitor {
   std::thread m_pollThread;
   std::atomic<uint64_t> m_pollInterval{1000};
   std::chrono::high_resolution_clock::time_point m_lastPoll{std::chrono::high_resolution_clock::time_point::min()};
+  std::chrono::high_resolution_clock::time_point m_lastUpdate{std::chrono::high_resolution_clock::time_point::min()};
   std::string m_blockTemplateState{""};
   std::atomic_bool m_keepRunning{true};
   Xi::Http::Client m_http;

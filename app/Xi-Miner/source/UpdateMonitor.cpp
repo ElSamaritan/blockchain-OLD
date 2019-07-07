@@ -125,16 +125,19 @@ void XiMiner::UpdateMonitor::updateLoop() {
         std::this_thread::sleep_for((now + pollInterval()) - m_lastPoll);
         continue;
       }
-      const auto nodeState = getBlockTemplateState().takeOrThrow();
-      if (nodeState == m_blockTemplateState) {
-        m_lastPoll = std::chrono::high_resolution_clock::now();
-        continue;
+      if (now < m_lastUpdate + 10 * pollInterval()) {
+        const auto nodeState = getBlockTemplateState().takeOrThrow();
+        if (nodeState == m_blockTemplateState) {
+          m_lastPoll = std::chrono::high_resolution_clock::now();
+          continue;
+        }
       }
       m_logger(Logging::DEBUGGING) << "template updated, polling...";
       auto block = getBlockTemplate().takeOrThrow();
       m_observer.notify(&Observer::onTemplateChanged, block);
       m_blockTemplateState = block.TemplateState;
       m_lastPoll = std::chrono::high_resolution_clock::now();
+      m_lastUpdate = std::chrono::high_resolution_clock::now();
     } catch (std::exception &e) {
       m_logger(Logging::ERROR) << "update loop failed: " << e.what();
     } catch (...) {
