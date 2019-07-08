@@ -56,6 +56,11 @@ using BlockHash = Crypto::Hash;
 using BlockHashVector = std::vector<BlockHash>;
 XI_DECLARE_SPANS(BlockHash)
 
+using NoMergeMiningTag = Xi::Blockchain::Block::NoMergeMiningTag;
+using MergeMiningTag = Xi::Blockchain::Block::MergeMiningTag;
+using PrunedMergeMiningTag = Xi::Blockchain::Block::PrunedMergeMiningTag;
+using PrunableMergeMiningTag = Xi::Blockchain::Block::PrunableMergeMiningTag;
+
 using TransactionHash = Crypto::Hash;
 XI_DECLARE_SPANS(TransactionHash)
 

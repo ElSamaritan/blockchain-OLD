@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 //
@@ -76,6 +76,8 @@ class Currency {
 
   uint64_t difficultyTarget() const { return m_difficultyTarget; }
   size_t difficultyBlocksCountByVersion(BlockVersion version) const;
+
+  uint64_t maximumMergeMiningSize(BlockVersion version) const;
 
   size_t maxBlockSizeInitial() const { return m_maxBlockSizeInitial; }
   uint64_t maxBlockSizeGrowthSpeedNumerator() const { return m_maxBlockSizeGrowthSpeedNumerator; }

@@ -9,6 +9,7 @@
 #include <cstring>
 
 #include <Xi/Config.h>
+#include <Xi/Exceptions.hpp>
 #include <Common/Varint.h>
 
 #include "CryptoNoteTools.h"
@@ -28,7 +29,25 @@ const BlockProofOfWork& CachedBlock::getProofOfWorkBlob() const {
   if (!blockProofOfWork.is_initialized()) {
     blockProofOfWork = BlockProofOfWork{};
     std::memcpy(blockProofOfWork->nonceData(), block.nonce.data(), BlockNonce::bytes());
-    const auto& powHash = getBlockProofOfWorkHash();
+    ::Crypto::Hash powHash;
+
+    if (std::holds_alternative<NoMergeMiningTag>(block.mergeMiningTag)) {
+      powHash = getBlockProofOfWorkHash();
+    } else if (std::holds_alternative<MergeMiningTag>(block.mergeMiningTag)) {
+      const auto& mmt = std::get<MergeMiningTag>(block.mergeMiningTag);
+      ::Crypto::HashVector hashes{};
+      hashes.reserve(mmt.prefix.size() + 1 + mmt.postfix.size());
+      std::copy(mmt.prefix.begin(), mmt.prefix.end(), std::back_inserter(hashes));
+      hashes.emplace_back(getBlockProofOfWorkHash());
+      std::copy(mmt.postfix.begin(), mmt.postfix.end(), std::back_inserter(hashes));
+      powHash = ::Crypto::Hash::computeMerkleTree(hashes).takeOrThrow();
+    } else if (std::holds_alternative<PrunedMergeMiningTag>(block.mergeMiningTag)) {
+      const auto& pmmt = std::get<PrunedMergeMiningTag>(block.mergeMiningTag);
+      powHash = pmmt.proofOfWorkPrefix;
+    } else {
+      Xi::exceptional<Xi::InvalidVariantTypeError>("invalid merge mining tag variant");
+    }
+
     std::memcpy(blockProofOfWork->hashData(), powHash.data(), BlockHash::bytes());
   }
 
@@ -64,10 +83,7 @@ const Crypto::Hash& CachedBlock::getBlockHash() const {
 
 const Hash& CachedBlock::getBlockProofOfWorkHash() const {
   if (!blockProofOfWorkHash.is_initialized()) {
-    std::array<Crypto::Hash, 2> hashes{};
-    hashes[0] = block.proofOfWorkPrefix();
-    hashes[1] = getTransactionTreeHash();
-    blockProofOfWorkHash = Crypto::Hash::computeMerkleTree(hashes).takeOrThrow();
+    blockProofOfWorkHash = getBlock().proofOfWorkHash(getTransactionTreeHash());
   }
 
   return blockProofOfWorkHash.get();
@@ -102,3 +118,22 @@ const CachedTransaction& CachedBlock::coinbase() const {
 bool CachedBlock::hasStaticReward() const { return getBlock().staticRewardHash.has_value(); }
 
 BlockHeight CachedBlock::height() const { return BlockHeight::fromIndex(getBlockIndex()); }
+
+void CachedBlock::prune() {
+  if (std::holds_alternative<NoMergeMiningTag>(block.mergeMiningTag)) {
+    /* No need */
+  } else if (std::holds_alternative<MergeMiningTag>(block.mergeMiningTag)) {
+    const auto& mmt = std::get<MergeMiningTag>(block.mergeMiningTag);
+    ::Crypto::HashVector hashes{};
+    hashes.reserve(mmt.prefix.size() + 1 + mmt.postfix.size());
+    std::copy(mmt.prefix.begin(), mmt.prefix.end(), std::back_inserter(hashes));
+    hashes.emplace_back(getBlockProofOfWorkHash());
+    std::copy(mmt.postfix.begin(), mmt.postfix.end(), std::back_inserter(hashes));
+    const auto powHash = ::Crypto::Hash::computeMerkleTree(hashes).takeOrThrow();
+    block.mergeMiningTag = PrunedMergeMiningTag{powHash, mmt.binarySize()};
+  } else if (std::holds_alternative<PrunedMergeMiningTag>(block.mergeMiningTag)) {
+    /* Already pruned */
+  } else {
+    Xi::exceptional<Xi::InvalidVariantTypeError>("invalid merge mining tag variant");
+  }
+}

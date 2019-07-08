@@ -113,6 +113,7 @@ Xi::Result<XiMiner::MinerBlockTemplate> XiMiner::UpdateMonitor::getBlockTemplate
   reval.Difficutly = response.difficulty;
   reval.TemplateState = response.template_state;
   reval.ProofOfWork = block.getProofOfWorkBlob();
+
   return success(std::move(reval));
   XI_ERROR_CATCH();
 }

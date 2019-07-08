@@ -46,7 +46,13 @@ enum class BlockValidationError {
   TRANSACTION_INCONSISTENCY = 14,
   UNEXPECTED_STATIC_REWARD = 15,
 
-  __NUM = 17
+  MERGE_MINING_TAG_DISABLED = 17,
+  MERGE_MINING_TAG_EMPTY = 18,
+  MERGE_MINING_TAG_TOO_LARGE = 19,
+  MERGE_MINING_TAG_INVALID_TYPE = 20,
+  MERGE_MINING_TAG_PRUNED = 21,
+
+  __NUM = 22,
 };
 
 // custom category:
@@ -98,6 +104,18 @@ class BlockValidationErrorCategory : public std::error_category {
         return "Block template and raw block have inconsistent transactions";
       case BlockValidationError::UNEXPECTED_STATIC_REWARD:
         return "Block template contains a static reward but static rewards are disabled for the current block version";
+
+      case BlockValidationError::MERGE_MINING_TAG_DISABLED:
+        return "Block template contains a merge mining tag but merge mining is disabled.";
+      case BlockValidationError::MERGE_MINING_TAG_EMPTY:
+        return "Block template contains a merge mining tag wihtout any hashes.";
+      case BlockValidationError::MERGE_MINING_TAG_TOO_LARGE:
+        return "Block template contains a too may merged mining tags.";
+      case BlockValidationError::MERGE_MINING_TAG_INVALID_TYPE:
+        return "Block template contains an unknown/invalid merge mining tag type.";
+      case BlockValidationError::MERGE_MINING_TAG_PRUNED:
+        return "Block template contains a pruned merge mining tag.";
+
       default:
         return "Unknown error";
     }

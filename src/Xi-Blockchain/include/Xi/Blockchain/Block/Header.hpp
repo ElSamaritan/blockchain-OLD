@@ -24,11 +24,13 @@
 #pragma once
 
 #include <cinttypes>
+#include <optional>
 
 #include <crypto/Types/Hash.h>
 
 #include "Xi/Blockchain/Block/Version.hpp"
 #include "Xi/Blockchain/Block/Nonce.hpp"
+#include "Xi/Blockchain/Block/MergeMiningTag.hpp"
 
 namespace Xi {
 namespace Blockchain {
@@ -40,11 +42,13 @@ struct Header {
   Nonce nonce;
   uint64_t timestamp;
   ::Crypto::Hash previousBlockHash;
+  PrunableMergeMiningTag mergeMiningTag;
 
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
 
   ::Crypto::Hash headerHash() const;
   ::Crypto::Hash proofOfWorkPrefix() const;
+  ::Crypto::Hash proofOfWorkHash(const ::Crypto::Hash& transactionTreeHash) const;
 
  private:
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer, bool isPoWPrefix);

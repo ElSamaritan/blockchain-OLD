@@ -21,53 +21,53 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Blockchain/Block/Header.hpp"
+#pragma once
 
-#include <algorithm>
+#include <Xi/Global.hh>
+#include <crypto/Types/Hash.h>
+#include <Serialization/ISerializer.h>
+#include <Serialization/SerializationOverloads.h>
+#include <Serialization/VariantSerialization.hpp>
 
-#include <Xi/Exceptions.hpp>
-#include <Common/VectorOutputStream.h>
-#include <Serialization/BinaryOutputStreamSerializer.h>
-#include <Serialization/OptionalSerialization.hpp>
+namespace Xi {
+namespace Blockchain {
+namespace Block {
 
-bool Xi::Blockchain::Block::Header::serialize(CryptoNote::ISerializer &serializer) {
-  return serialize(serializer, false);
-}
+struct NoMergeMiningTag {
+  KV_BEGIN_SERIALIZATION
+  XI_UNUSED(s)
+  KV_END_SERIALIZATION
+};
 
-Crypto::Hash Xi::Blockchain::Block::Header::headerHash() const {
-  return ::Crypto::Hash::computeObjectHash(*this).takeOrThrow();
-}
+struct MergeMiningTag {
+  ::Crypto::HashVector prefix;
+  ::Crypto::HashVector postfix;
 
-Crypto::Hash Xi::Blockchain::Block::Header::proofOfWorkPrefix() const {
-  ByteVector buffer{};
-  buffer.reserve(64);
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(prefix)
+  KV_MEMBER(postfix)
+  KV_END_SERIALIZATION
 
-  {
-    Common::VectorOutputStream stream{buffer};
-    CryptoNote::BinaryOutputStreamSerializer serializer{stream};
-    if (!const_cast<Header *>(this)->serialize(serializer, true)) {
-      exceptional<RuntimeError>("unable to compute hash due to serialization failure");
-    }
-  }
+  uint64_t size() const;
+  uint64_t binarySize() const;
+};
 
-  return ::Crypto::Hash::compute(buffer).takeOrThrow();
-}
+struct PrunedMergeMiningTag {
+  ::Crypto::Hash proofOfWorkPrefix;
+  uint64_t binarySize;
 
-Crypto::Hash Xi::Blockchain::Block::Header::proofOfWorkHash(const ::Crypto::Hash &transactionTreeHash) const {
-  std::array<::Crypto::Hash, 2> hashes{{proofOfWorkPrefix(), transactionTreeHash}};
-  return ::Crypto::Hash::computeMerkleTree(hashes).takeOrThrow();
-}
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(proofOfWorkPrefix, proof_of_work_prefix)
+  KV_MEMBER_RENAME(binarySize, binary_size)
+  KV_END_SERIALIZATION
+};
 
-bool Xi::Blockchain::Block::Header::serialize(CryptoNote::ISerializer &serializer, bool isPoWPrefix) {
-  XI_RETURN_EC_IF_NOT(serializer(version, "version"), false);
-  XI_RETURN_EC_IF_NOT(serializer(upgradeVote, "upgrade_vote"), false);
-  if (!isPoWPrefix) {
-    XI_RETURN_EC_IF_NOT(serializer(nonce, "nonce"), false);
-  }
-  XI_RETURN_EC_IF_NOT(serializer(timestamp, "timestamp"), false);
-  XI_RETURN_EC_IF_NOT(serializer(previousBlockHash, "previous_block_hash"), false);
-  if (!isPoWPrefix) {
-    XI_RETURN_EC_IF_NOT(serializer(mergeMiningTag, "merge_mining_tag"), false);
-  }
-  return true;
-}
+using PrunableMergeMiningTag = std::variant<NoMergeMiningTag, MergeMiningTag, PrunedMergeMiningTag>;
+
+}  // namespace Block
+}  // namespace Blockchain
+}  // namespace Xi
+
+XI_SERIALIZATION_VARIANT_TAG(Xi::Blockchain::Block::PrunableMergeMiningTag, 0, 0x0001, "none")
+XI_SERIALIZATION_VARIANT_TAG(Xi::Blockchain::Block::PrunableMergeMiningTag, 1, 0x0002, "raw")
+XI_SERIALIZATION_VARIANT_TAG(Xi::Blockchain::Block::PrunableMergeMiningTag, 2, 0x0003, "pruned")

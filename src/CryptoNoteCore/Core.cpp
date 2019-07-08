@@ -729,9 +729,30 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
       logger(Logging::WARNING) << "Checkpoint block hash mismatch for block " << blockStr;
       return error::BlockValidationError::CHECKPOINT_BLOCK_HASH_MISMATCH;
     }
-  } else if (!m_currency.checkProofOfWork(cachedBlock, currentDifficulty)) {
-    logger(Logging::WARNING) << "Proof of work too weak for block " << blockStr;
-    return error::BlockValidationError::PROOF_OF_WORK_TOO_WEAK;
+  } else {
+    using BlockError = error::BlockValidationError;
+    const auto& block = cachedBlock.getBlock();
+    if (!std::holds_alternative<NoMergeMiningTag>(block.mergeMiningTag)) {
+      if (const auto mmt = std::get_if<MergeMiningTag>(std::addressof(block.mergeMiningTag))) {
+        const auto maxMergeMiningSize = currency().maximumMergeMiningSize(block.version);
+        XI_RETURN_EC_IF(maxMergeMiningSize == 0, BlockError::MERGE_MINING_TAG_DISABLED);
+        XI_RETURN_EC_IF(mmt->prefix.size() > maxMergeMiningSize, BlockError::MERGE_MINING_TAG_TOO_LARGE);
+        XI_RETURN_EC_IF(mmt->postfix.size() > maxMergeMiningSize, BlockError::MERGE_MINING_TAG_TOO_LARGE);
+        const auto mergeMiningSize = mmt->size();
+        XI_RETURN_EC_IF(mergeMiningSize == 0, BlockError::MERGE_MINING_TAG_EMPTY);
+        XI_RETURN_EC_IF(mergeMiningSize > maxMergeMiningSize, BlockError::MERGE_MINING_TAG_TOO_LARGE);
+      } else if (const auto pmmt = std::get_if<PrunedMergeMiningTag>(std::addressof(block.mergeMiningTag))) {
+        XI_UNUSED(pmmt)
+        XI_RETURN_EC(BlockError::MERGE_MINING_TAG_PRUNED);
+      } else {
+        XI_RETURN_EC(BlockError::MERGE_MINING_TAG_INVALID_TYPE);
+      }
+    }
+
+    if (!m_currency.checkProofOfWork(cachedBlock, currentDifficulty)) {
+      logger(Logging::WARNING) << "Proof of work too weak for block " << blockStr;
+      return error::BlockValidationError::PROOF_OF_WORK_TOO_WEAK;
+    }
   }
 
   {
@@ -791,6 +812,9 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   auto ret = error::AddBlockErrorCode::ADDED_TO_ALTERNATIVE;
 
   if (m_isLightNode) {
+    CachedBlock prunedBlockTemplate{fromBinaryArray<BlockTemplate>(rawBlock.blockTemplate)};
+    prunedBlockTemplate.prune();
+    rawBlock.blockTemplate = toBinaryArray(prunedBlockTemplate.getBlock());
     rawBlock.transactions.clear();
     rawBlock.transactions.reserve(transactions.size());
     for (auto& transaction : transactions) {
@@ -1449,8 +1473,9 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
 
   if (!(fee == 0 && currency().isFusionTransaction(transaction, cachedTransaction.getBlobSize(), blockVersion))) {
     const size_t canonicalBuckets = countCanonicalDecomposition(transaction);
-    const auto minimumFee = currency().minimumFee(blockVersion) * (canonicalBuckets > 3 ? (canonicalBuckets - 3) : 1);
-    if (fee < minimumFee) {
+    const auto minimumFee = currency().minimumFee(blockVersion);
+    const auto penalizedMinimumFee = minimumFee + (canonicalBuckets / 4) * minimumFee;
+    if (fee < penalizedMinimumFee) {
       return error::TransactionValidationError::FEE_INSUFFICIENT;
     }
   }
@@ -2199,7 +2224,7 @@ size_t Core::calculateCumulativeBlocksizeLimit(uint32_t height) const {
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
   auto sizes = chainsLeaves[0]->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(nextBlockVersion),
-                                                   height - 1, UseGenesis{false});
+                                                   height - 1, UseGenesis{true});
   uint64_t median = Common::medianValue(sizes);
   if (median <= nextBlockGrantedFullRewardZone) {
     median = nextBlockGrantedFullRewardZone;
@@ -2398,7 +2423,7 @@ std::optional<BlockDetails> Core::getBlockDetails(const Crypto::Hash& blockHash)
 
   blockDetails.difficulty = getBlockDifficulty(blockIndex);
 
-  std::vector<uint64_t> sizes = segment->getLastBlocksSizes(1, blockIndex, UseGenesis{false});
+  std::vector<uint64_t> sizes = segment->getLastBlocksSizes(1, blockIndex, UseGenesis{true});
   assert(sizes.size() == 1);
   blockDetails.transactionsCumulativeSize = sizes.front();
 
@@ -2412,7 +2437,7 @@ std::optional<BlockDetails> Core::getBlockDetails(const Crypto::Hash& blockHash)
   uint64_t prevBlockGeneratedCoins = 0;
   blockDetails.sizeMedian = 0;
   auto lastBlocksSizes = segment->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(blockDetails.version),
-                                                     blockIndex, UseGenesis{false});
+                                                     blockIndex, UseGenesis{true});
   blockDetails.sizeMedian = Common::medianValue(lastBlocksSizes);
   prevBlockGeneratedCoins = segment->getAlreadyGeneratedCoins(blockIndex);
 

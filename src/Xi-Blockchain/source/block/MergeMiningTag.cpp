@@ -21,53 +21,16 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Blockchain/Block/Header.hpp"
+#include "Xi/Blockchain/Block/MergeMiningTag.hpp"
 
-#include <algorithm>
+namespace Xi {
+namespace Blockchain {
+namespace Block {
 
-#include <Xi/Exceptions.hpp>
-#include <Common/VectorOutputStream.h>
-#include <Serialization/BinaryOutputStreamSerializer.h>
-#include <Serialization/OptionalSerialization.hpp>
+uint64_t MergeMiningTag::size() const { return prefix.size() + postfix.size(); }
 
-bool Xi::Blockchain::Block::Header::serialize(CryptoNote::ISerializer &serializer) {
-  return serialize(serializer, false);
-}
+uint64_t MergeMiningTag::binarySize() const { return size() * ::Crypto::Hash::bytes(); }
 
-Crypto::Hash Xi::Blockchain::Block::Header::headerHash() const {
-  return ::Crypto::Hash::computeObjectHash(*this).takeOrThrow();
-}
-
-Crypto::Hash Xi::Blockchain::Block::Header::proofOfWorkPrefix() const {
-  ByteVector buffer{};
-  buffer.reserve(64);
-
-  {
-    Common::VectorOutputStream stream{buffer};
-    CryptoNote::BinaryOutputStreamSerializer serializer{stream};
-    if (!const_cast<Header *>(this)->serialize(serializer, true)) {
-      exceptional<RuntimeError>("unable to compute hash due to serialization failure");
-    }
-  }
-
-  return ::Crypto::Hash::compute(buffer).takeOrThrow();
-}
-
-Crypto::Hash Xi::Blockchain::Block::Header::proofOfWorkHash(const ::Crypto::Hash &transactionTreeHash) const {
-  std::array<::Crypto::Hash, 2> hashes{{proofOfWorkPrefix(), transactionTreeHash}};
-  return ::Crypto::Hash::computeMerkleTree(hashes).takeOrThrow();
-}
-
-bool Xi::Blockchain::Block::Header::serialize(CryptoNote::ISerializer &serializer, bool isPoWPrefix) {
-  XI_RETURN_EC_IF_NOT(serializer(version, "version"), false);
-  XI_RETURN_EC_IF_NOT(serializer(upgradeVote, "upgrade_vote"), false);
-  if (!isPoWPrefix) {
-    XI_RETURN_EC_IF_NOT(serializer(nonce, "nonce"), false);
-  }
-  XI_RETURN_EC_IF_NOT(serializer(timestamp, "timestamp"), false);
-  XI_RETURN_EC_IF_NOT(serializer(previousBlockHash, "previous_block_hash"), false);
-  if (!isPoWPrefix) {
-    XI_RETURN_EC_IF_NOT(serializer(mergeMiningTag, "merge_mining_tag"), false);
-  }
-  return true;
-}
+}  // namespace Block
+}  // namespace Blockchain
+}  // namespace Xi

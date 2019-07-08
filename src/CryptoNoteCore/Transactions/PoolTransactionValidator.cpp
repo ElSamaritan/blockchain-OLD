@@ -54,8 +54,9 @@ bool CryptoNote::PoolTransactionValidator::isFeeInsufficient(const CachedTransac
                                                  chain().getTopBlockVersion());
   if (!isFusionTransaction) {
     const size_t canonicalBuckets = countCanonicalDecomposition(transaction.getTransaction());
-    const auto minimumFee = currency().minimumFee(blockVersion()) * (canonicalBuckets > 3 ? (canonicalBuckets - 3) : 1);
-    if (fee < minimumFee) {
+    const auto minimumFee = currency().minimumFee(blockVersion());
+    const auto penalizedMinimumFee = minimumFee + (canonicalBuckets / 4) * minimumFee;
+    if (fee < penalizedMinimumFee) {
       return true;
     } else {
       return false;

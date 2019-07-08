@@ -29,9 +29,10 @@ class CachedBlock {
   bool hasStaticReward() const;
   BlockHeight height() const;
 
+  void prune();
+
  private:
-  const BlockTemplate block;
-  mutable boost::optional<BinaryArray> blockHashingBinaryArray;
+  BlockTemplate block;
   mutable boost::optional<uint32_t> blockIndex;
   mutable boost::optional<Crypto::Hash> transactionTreeHash;
   mutable boost::optional<Crypto::Hash> blockHash;

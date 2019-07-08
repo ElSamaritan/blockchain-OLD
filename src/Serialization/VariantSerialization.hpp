@@ -26,8 +26,6 @@
 #include <variant>
 #include <cassert>
 
-#include <iostream>
-
 #include <Xi/Global.hh>
 
 #include "Serialization/ISerializer.h"
@@ -90,7 +88,6 @@ template <typename _InvariantT, typename... _Ts>
     XI_RETURN_EC_IF_NOT(serializer.typeTag(tag, "type"), false);
     XI_RETURN_EC_IF(tag.isNull(), false);
     if (!CryptoNote::Impl::serializeVariantInput<0, _InvariantT, _Ts...>(value, tag, serializer)) {
-      std::cout << "jimmy im dead: " << tag.text() << std::endl;
       return false;
     }
   } else {

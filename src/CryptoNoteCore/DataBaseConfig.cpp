@@ -82,7 +82,6 @@ void DataBaseConfig::setWriteBufferSize(uint64_t _writeBufferSize) { this->write
 
 void DataBaseConfig::setReadCacheSize(uint64_t _readCacheSize) { this->readCacheSize = _readCacheSize; }
 
-// WARNING(mainnet)
 void DataBaseConfig::setNetwork(Xi::Config::Network::Type network) { this->m_network = network; }
 
 void DataBaseConfig::setCompression(DataBaseConfig::Compression _compression) { compression = _compression; }

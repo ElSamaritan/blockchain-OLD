@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Calex Developers
@@ -146,6 +146,11 @@ bool Currency::generateGenesisBlock() {
 
 size_t Currency::difficultyBlocksCountByVersion(BlockVersion version) const {
   return Xi::Config::Difficulty::windowSize(version) + 1;
+}
+
+uint64_t Currency::maximumMergeMiningSize(BlockVersion version) const {
+  (void)version;
+  return 4;
 }
 
 size_t Currency::fusionTxMaxSize(BlockVersion blockVersion) const {
