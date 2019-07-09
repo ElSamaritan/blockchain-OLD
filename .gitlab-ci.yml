@@ -67,12 +67,12 @@ Ubuntu Xenial - Build:
   variables:
     CI_TARGET_OS: "Ubuntu Xenial"
 
-centOS 7 - Build:
-  <<: *linux_build_definition
-  image: registry.gitlab.com/galaxia-project/environment/centos:7
-  variables:
-    CI_TARGET_OS: "centOS 7"
-  before_script: [". /opt/rh/devtoolset-8/enable"]
+# centOS 7 - Build:
+#   <<: *linux_build_definition
+#   image: registry.gitlab.com/galaxia-project/environment/centos:7
+#   variables:
+#     CI_TARGET_OS: "centOS 7"
+#   before_script: [". /opt/rh/devtoolset-8/enable"]
 
 debian 9 - Build:
   <<: *linux_build_definition
@@ -86,11 +86,11 @@ fedora 29 - Build:
   variables:
     CI_TARGET_OS: "fedora 29"
 
-openSuse Leap - Build:
-  <<: *linux_build_definition
-  image: registry.gitlab.com/galaxia-project/environment/opensuse:leap
-  variables:
-    CI_TARGET_OS: "openSuse Leap"
+# openSuse Leap - Build:
+#   <<: *linux_build_definition
+#   image: registry.gitlab.com/galaxia-project/environment/opensuse:leap
+#   variables:
+#     CI_TARGET_OS: "openSuse Leap"
 
 # Windows 10 - Build:
 #   <<: *generic_build_definition
@@ -150,10 +150,10 @@ Packages:
   dependencies:
     - "Ubuntu Bionic - Build"
     - "Ubuntu Xenial - Build"
-    - "centOS 7 - Build"
+    # - "centOS 7 - Build"
     - "debian 9 - Build"
     - "fedora 29 - Build"
-    - "openSuse Leap - Build"
+    # - "openSuse Leap - Build"
     # - "Windows 10 - Build"
     # - "macOS - Build"
   script:

@@ -63,18 +63,13 @@ class Currency {
   size_t minerTxBlobReservedSize() const { return m_minerTxBlobReservedSize; }
 
   size_t numberOfDecimalPlaces() const { return m_numberOfDecimalPlaces; }
-  uint64_t coin() const { return m_coin; }
+  uint64_t coin() const;
 
   uint8_t requiredMixin(BlockVersion blockVersion) const;
   uint64_t requiredMixinUpgradeWindow(BlockVersion blockVersion) const;
   uint64_t requiredMixinThreshold(BlockVersion blockVersion) const;
-  uint8_t minimumMixin(BlockVersion blockVersion, uint64_t mixableCount);
-  uint8_t maximumMixin(BlockVersion blockVersion, uint64_t mixableCount);
 
-  uint64_t minimumFee(BlockVersion version) const {
-    (void)version;
-    return m_mininumFee;
-  }
+  uint64_t minimumFee(BlockVersion version) const;
 
   uint32_t upgradeHeight(BlockVersion version) const;
 

@@ -222,13 +222,16 @@ uint64_t Currency::requiredMixinThreshold(BlockVersion blockVersion) const {
   return requiredMixinUpgradeWindow(blockVersion) * maxMixin;
 }
 
-uint8_t Currency::minimumMixin(BlockVersion blockVersion, uint64_t mixableCount) {}
-
-uint8_t Currency::maximumMixin(BlockVersion blockVersion, uint64_t mixableCount) {}
+uint64_t Currency::minimumFee(BlockVersion version) const {
+  (void)version;
+  return m_mininumFee;
+}
 
 size_t Currency::blockGrantedFullRewardZoneByBlockVersion(BlockVersion blockVersion) const {
   return Xi::Config::MinerReward::fullRewardZone(blockVersion);
 }
+
+uint64_t Currency::coin() const { return m_coin; }
 
 uint32_t Currency::upgradeHeight(BlockVersion version) const {
   return Xi::Config::BlockVersion::upgradeHeight(version);

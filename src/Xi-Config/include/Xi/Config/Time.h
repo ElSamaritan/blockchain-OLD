@@ -33,8 +33,8 @@
 namespace Xi {
 namespace Config {
 namespace Time {
-constexpr std::chrono::seconds blockTime() { return 1_s; }
-constexpr std::chrono::seconds minerRewardUnlockTime() { return 1_s; }
+constexpr std::chrono::seconds blockTime() { return 20_s; }
+constexpr std::chrono::seconds minerRewardUnlockTime() { return 60_s; }
 
 constexpr uint32_t minerRewardUnlockBlocksCount() {
   return static_cast<uint32_t>(std::chrono::seconds{minerRewardUnlockTime()}.count() /
