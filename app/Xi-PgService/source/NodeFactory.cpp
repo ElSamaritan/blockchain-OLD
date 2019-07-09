@@ -69,10 +69,10 @@ class NodeRpcStub final : public CryptoNote::INode {
     callback(std::error_code());
   }
   void getRandomOutsByAmounts(
-      std::vector<uint64_t>&& amounts, uint16_t outsCount,
+      std::map<uint64_t, uint64_t>&& amounts,
       std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result,
       const Callback& callback) override {
-    XI_UNUSED(amounts, outsCount, result, callback);
+    XI_UNUSED(amounts, result, callback);
   }
   void getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
                     CryptoNote::BlockHeight& startHeight, const Callback& callback) override {

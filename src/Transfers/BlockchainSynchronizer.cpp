@@ -218,7 +218,7 @@ bool BlockchainSynchronizer::load(std::istream& in) {
   if (genesisBlockHash != m_genesisBlockHash) {
     auto message = "Failed to load: genesis block hash does not match stored state";
     m_logger(ERROR) << message << ", read " << genesisBlockHash << ", expected " << m_genesisBlockHash;
-    return false;
+    XI_RETURN_EC(false);
   }
 
   m_logger(INFO) << "Loaded";

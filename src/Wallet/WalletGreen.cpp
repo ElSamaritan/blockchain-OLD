@@ -2436,10 +2436,14 @@ void WalletGreen::requestMixinOuts(
 
   m_logger(DEBUGGING) << "Requesting random outputs";
   System::RemoteContext<void> getOutputsContext(
-      m_dispatcher, [this, amounts, requestMixinCount, &mixinResult, &requestFinished, &mixinError]() mutable {
+      m_dispatcher,
+      [this, amounts, requestMixinCount, &mixinResult, &requestFinished, &mixinError, &selectedTransfers]() mutable {
+        std::map<uint64_t, uint64_t> meowmounts{};
+        for (const auto& transfer : selectedTransfers) {
+          meowmounts[transfer.out.amount] += requestMixinCount;
+        }
         m_node.getRandomOutsByAmounts(
-            std::move(amounts), requestMixinCount, mixinResult,
-            [&requestFinished, &mixinError, this](std::error_code ec) mutable {
+            std::move(meowmounts), mixinResult, [&requestFinished, &mixinError, this](std::error_code ec) mutable {
               mixinError = ec;
               m_dispatcher.remoteSpawn(std::bind(asyncRequestCompletion, std::ref(requestFinished)));
             });
@@ -2447,7 +2451,7 @@ void WalletGreen::requestMixinOuts(
   getOutputsContext.get();
   requestFinished.wait();
 
-  checkIfEnoughMixins(mixinResult, requestMixinCount);
+  // checkIfEnoughMixins(mixinResult, requestMixinCount);
 
   if (mixinError) {
     m_logger(ERROR) << "Failed to get random outputs: " << mixinError << ", " << mixinError.message();
@@ -2552,6 +2556,27 @@ void WalletGreen::prepareInputs(
     std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& mixinResult, uint16_t mixIn,
     std::vector<InputInfo>& keysInfo) {
   typedef CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::out_entry out_entry;
+
+  // Gather Real Outputs Used As Input
+  std::set<uint64_t> globalRealOutputIndices{};
+  std::transform(selectedTransfers.begin(), selectedTransfers.end(),
+                 std::inserter(globalRealOutputIndices, globalRealOutputIndices.begin()),
+                 [](const auto& transfer) { return transfer.out.globalOutputIndex; });
+  // Transform Mixins To Lookup Friendly Structure
+  std::map<uint64_t, std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_out_entry>> mixinLookup{};
+  std::transform(mixinResult.begin(), mixinResult.end(), std::inserter(mixinLookup, mixinLookup.begin()),
+                 [](auto& iMixinResult) { return std::make_pair(iMixinResult.amount, std::move(iMixinResult.outs)); });
+
+  // Erase Mixins That Are Actually Used By This Transfer
+  for (auto& iMixinLookup : mixinLookup) {
+    iMixinLookup.second.erase(std::remove_if(
+        iMixinLookup.second.begin(), iMixinLookup.second.end(), [&globalRealOutputIndices](const auto& iMixin) {
+          return globalRealOutputIndices.find(iMixin.global_amount_index) != globalRealOutputIndices.end();
+        }));
+  }
+
+  std::vector<std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_out_entry>> mixinDistribution{};
+  mixinDistribution.resize(selectedTransfers.size());
 
   size_t i = 0;
   for (const auto& input : selectedTransfers) {

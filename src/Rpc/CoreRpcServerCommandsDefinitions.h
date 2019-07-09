@@ -171,13 +171,21 @@ struct COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES {
   };
 };
 //-----------------------------------------------
+struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request_entry {
+  uint64_t amount;
+  uint64_t count;
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(amount)
+  KV_MEMBER(count)
+  KV_END_SERIALIZATION
+};
+
 struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request {
-  std::vector<uint64_t> amounts;
-  uint16_t outs_count;
+  std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request_entry> amounts;
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(amounts)
-  KV_MEMBER(outs_count)
   KV_END_SERIALIZATION
 };
 

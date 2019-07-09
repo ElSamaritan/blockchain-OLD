@@ -488,7 +488,7 @@ void NodeRpcProxy::relayTransaction(const CryptoNote::Transaction& transaction, 
 }
 
 void NodeRpcProxy::getRandomOutsByAmounts(
-    std::vector<uint64_t>&& amounts, uint16_t outsCount,
+    std::map<uint64_t, uint64_t>&& amounts,
     std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& outs, const Callback& callback) {
   std::lock_guard<std::mutex> lock(m_mutex);
   if (m_state != STATE_INITIALIZED) {
@@ -496,9 +496,8 @@ void NodeRpcProxy::getRandomOutsByAmounts(
     return;
   }
 
-  scheduleRequest(
-      std::bind(&NodeRpcProxy::doGetRandomOutsByAmounts, this, std::move(amounts), outsCount, std::ref(outs)),
-      callback);
+  scheduleRequest(std::bind(&NodeRpcProxy::doGetRandomOutsByAmounts, this, std::move(amounts), std::ref(outs)),
+                  callback);
 }
 
 void NodeRpcProxy::getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
@@ -639,12 +638,15 @@ std::error_code NodeRpcProxy::doRelayTransaction(const CryptoNote::Transaction& 
 }
 
 std::error_code NodeRpcProxy::doGetRandomOutsByAmounts(
-    std::vector<uint64_t>& amounts, uint16_t outsCount,
+    std::map<uint64_t, uint64_t>& amounts,
     std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& outs) {
   COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::request req = AUTO_VAL_INIT(req);
   COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response rsp = AUTO_VAL_INIT(rsp);
-  req.amounts = std::move(amounts);
-  req.outs_count = outsCount;
+
+  req.amounts.reserve(amounts.size());
+  for (const auto& amount : amounts) {
+    req.amounts.emplace_back(COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request_entry{amount.first, amount.second});
+  }
 
   m_logger(TRACE) << "Send getrandom_outs request";
   XI_TRY_RPC_COMMAND(jsonCommand("/getrandom_outs", req, rsp));

@@ -50,7 +50,10 @@ class WalletGetRandomOutsByAmountsRequest : public WalletRequest {
   virtual ~WalletGetRandomOutsByAmountsRequest() override {}
 
   virtual void perform(INode& node, std::function<void(WalletRequest::Callback, std::error_code)> cb) override {
-    node.getRandomOutsByAmounts(std::move(m_amounts), static_cast<uint16_t>(m_outsCount), std::ref(m_context->outs),
+    std::map<uint64_t, uint64_t> amounts{};
+    std::transform(m_amounts.begin(), m_amounts.end(), std::inserter(amounts, amounts.begin()),
+                   [count = m_outsCount](const auto iAmount) { return std::make_pair(iAmount, count); });
+    node.getRandomOutsByAmounts(std::move(amounts), std::ref(m_context->outs),
                                 std::bind(cb, m_cb, std::placeholders::_1));
   }
 

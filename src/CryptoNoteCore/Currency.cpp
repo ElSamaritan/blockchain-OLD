@@ -153,6 +153,11 @@ uint64_t Currency::maximumMergeMiningSize(BlockVersion version) const {
   return 4;
 }
 
+uint64_t Currency::maximumCoinbaseSize(BlockVersion version) const {
+  (void)version;
+  return Xi::Config::Limits::blockBlobCoinbaseReservedSize();
+}
+
 size_t Currency::fusionTxMaxSize(BlockVersion blockVersion) const {
   const auto rewardZone = blockGrantedFullRewardZoneByBlockVersion(blockVersion);
   const auto maxSize = std::min(rewardZone, m_fusionTxMaxSize);
@@ -203,6 +208,23 @@ uint64_t Currency::rewardCutOffByBlockVersion(BlockVersion blockVersion) const {
 }
 
 uint8_t Currency::requiredMixin(BlockVersion blockVersion) const { return Xi::Config::Mixin::required(blockVersion); }
+
+uint64_t Currency::requiredMixinUpgradeWindow(BlockVersion blockVersion) const {
+  (void)blockVersion;
+  return 4;
+}
+
+uint64_t Currency::requiredMixinThreshold(BlockVersion blockVersion) const {
+  const auto minMixin = 2;
+  const auto maxMixin = requiredMixin(blockVersion);
+  XI_RETURN_SC_IF(maxMixin == 0, 0);
+  XI_RETURN_SC_IF(maxMixin < minMixin, 0);
+  return requiredMixinUpgradeWindow(blockVersion) * maxMixin;
+}
+
+uint8_t Currency::minimumMixin(BlockVersion blockVersion, uint64_t mixableCount) {}
+
+uint8_t Currency::maximumMixin(BlockVersion blockVersion, uint64_t mixableCount) {}
 
 size_t Currency::blockGrantedFullRewardZoneByBlockVersion(BlockVersion blockVersion) const {
   return Xi::Config::MinerReward::fullRewardZone(blockVersion);

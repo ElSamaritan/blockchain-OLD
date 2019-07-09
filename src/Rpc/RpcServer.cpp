@@ -413,36 +413,53 @@ bool RpcServer::on_get_random_outs(const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOU
                                    COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::response& res) {
   res.status = "Failed";
 
-  for (uint64_t amount : req.amounts) {
+  if (req.amounts.empty()) {
+    res.status = CORE_RPC_ERROR_CODE_WRONG_PARAM;
+    return true;
+  }
+
+  size_t totalCount = 0;
+  std::map<uint64_t, COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount> reval{};
+  for (const auto& amount : req.amounts) {
+    if (amount.count < 1 || amount.count > 512) {
+      res.status = CORE_RPC_ERROR_CODE_WRONG_PARAM;
+      return true;
+    }
+    totalCount += amount.count;
+    if (totalCount > 8192) {
+      res.status = CORE_RPC_ERROR_CODE_WRONG_PARAM;
+      return true;
+    }
+    if (reval.find(amount.amount) != reval.end()) {
+      res.status = CORE_RPC_ERROR_CODE_WRONG_PARAM;
+      return true;
+    }
+    if (!isCanonicalAmount(amount.amount)) {
+      res.status = CORE_RPC_ERROR_CODE_WRONG_PARAM;
+      return true;
+    }
+    reval[amount.amount] = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount{amount.amount, {}};
+  }
+
+  for (const auto& amount : req.amounts) {
     std::vector<uint32_t> globalIndexes;
     std::vector<Crypto::PublicKey> publicKeys;
-    if (!m_core.getRandomOutputs(amount, static_cast<uint16_t>(req.outs_count), globalIndexes, publicKeys)) {
+    if (!m_core.getRandomOutputs(amount.amount, static_cast<uint16_t>(amount.count), globalIndexes, publicKeys)) {
+      res.status = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
       return true;
     }
 
-    assert(globalIndexes.size() == publicKeys.size());
-    res.outs.emplace_back(COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount{amount, {}});
-    for (size_t i = 0; i < globalIndexes.size(); ++i) {
-      res.outs.back().outs.push_back({globalIndexes[i], publicKeys[i]});
+    auto& iReval = reval[amount.amount];
+    iReval.outs.reserve(globalIndexes.size());
+    for (size_t i = 0; i < globalIndexes.size() && i < publicKeys.size(); ++i) {
+      iReval.outs.emplace_back(COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_out_entry{globalIndexes[i], publicKeys[i]});
     }
   }
 
-  res.status = CORE_RPC_STATUS_OK;
+  for (auto& iReval : reval) {
+    res.outs.emplace_back(std::move(iReval.second));
+  }
 
-  std::stringstream ss;
-  typedef COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount outs_for_amount;
-  typedef COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::out_entry out_entry;
-
-  std::for_each(res.outs.begin(), res.outs.end(), [&](outs_for_amount& ofa) {
-    ss << "[" << ofa.amount << "]:";
-
-    assert(ofa.outs.size() && "internal error: ofa.outs.size() is empty");
-
-    std::for_each(ofa.outs.begin(), ofa.outs.end(), [&](out_entry& oe) { ss << oe.global_amount_index << " "; });
-    ss << ENDL;
-  });
-  std::string s = ss.str();
-  logger(TRACE) << "COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS: " << ENDL << s;
   res.status = CORE_RPC_STATUS_OK;
   return true;
 }

@@ -66,6 +66,10 @@ class Currency {
   uint64_t coin() const { return m_coin; }
 
   uint8_t requiredMixin(BlockVersion blockVersion) const;
+  uint64_t requiredMixinUpgradeWindow(BlockVersion blockVersion) const;
+  uint64_t requiredMixinThreshold(BlockVersion blockVersion) const;
+  uint8_t minimumMixin(BlockVersion blockVersion, uint64_t mixableCount);
+  uint8_t maximumMixin(BlockVersion blockVersion, uint64_t mixableCount);
 
   uint64_t minimumFee(BlockVersion version) const {
     (void)version;
@@ -78,6 +82,7 @@ class Currency {
   size_t difficultyBlocksCountByVersion(BlockVersion version) const;
 
   uint64_t maximumMergeMiningSize(BlockVersion version) const;
+  uint64_t maximumCoinbaseSize(BlockVersion version) const;
 
   size_t maxBlockSizeInitial() const { return m_maxBlockSizeInitial; }
   uint64_t maxBlockSizeGrowthSpeedNumerator() const { return m_maxBlockSizeGrowthSpeedNumerator; }

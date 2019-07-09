@@ -76,7 +76,7 @@ class NodeRpcProxy : public CryptoNote::INode {
   virtual BlockHeaderInfo getLastLocalBlockHeaderInfo() const override;
 
   virtual void relayTransaction(const CryptoNote::Transaction& transaction, const Callback& callback) override;
-  virtual void getRandomOutsByAmounts(std::vector<uint64_t>&& amounts, uint16_t outsCount,
+  virtual void getRandomOutsByAmounts(std::map<uint64_t, uint64_t>&& amounts,
                                       std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result,
                                       const Callback& callback) override;
   virtual void getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
@@ -127,7 +127,7 @@ class NodeRpcProxy : public CryptoNote::INode {
                                                std::vector<Crypto::Hash>& blockHashes);
   std::error_code doRelayTransaction(const CryptoNote::Transaction& transaction);
   std::error_code doGetRandomOutsByAmounts(
-      std::vector<uint64_t>& amounts, uint16_t outsCount,
+      std::map<uint64_t, uint64_t>& amounts,
       std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result);
   std::error_code doGetNewBlocks(std::vector<Crypto::Hash>& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
                                  BlockHeight& startHeight);
