@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -72,6 +72,9 @@ class BlockchainCache : public CommonBlockchainCache {
 
   ExtractOutputKeysResult extractKeyOtputIndexes(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
                                                  std::vector<PackedOutIndex>& outIndexes) const override;
+
+  [[nodiscard]] uint64_t getAvailableMixinsCount(Amount amount, uint32_t blockIndex, uint64_t threshold) const override;
+
   ExtractOutputKeysResult extractKeyOtputReferences(
       uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
       std::vector<std::pair<Crypto::Hash, size_t>>& outputReferences) const override;

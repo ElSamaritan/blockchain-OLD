@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -143,6 +143,8 @@ class IBlockchainCache : public std::enable_shared_from_this<IBlockchainCache> {
   virtual PushedBlockInfo getPushedBlockInfo(uint32_t index) const = 0;
   [[nodiscard]] virtual bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) const = 0;
   [[nodiscard]] virtual bool checkIfSpent(const Crypto::KeyImage& keyImage) const = 0;
+  [[nodiscard]] virtual uint64_t getAvailableMixinsCount(Amount amount, uint32_t blockIndex,
+                                                         uint64_t threshold) const = 0;
 
   /*!
    * \brief isTransactionSpendTimeUnlocked Validates if the output of a transaction is unlocked, eligible to

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -146,6 +146,15 @@ class DatabaseBlockchainCache : public CommonBlockchainCache {
 
   virtual BinaryArray getRawTransaction(uint32_t blockIndex, uint32_t transactionIndex) const override;
   virtual std::vector<Crypto::Hash> getTransactionHashes() const override;
+
+ public:
+  [[nodiscard]] uint64_t getAvailableMixinsCount(Amount amount, uint32_t blockIndex, uint64_t threshold) const override;
+
+ private:
+  [[nodiscard]] uint64_t availableMixinsCountSearch(Amount amount, uint32_t blockIndex, uint32_t leftIndex,
+                                                    uint32_t rightIndex, uint64_t threshold) const;
+
+ public:
   virtual std::vector<uint32_t> getRandomOutsByAmount(uint64_t amount, size_t count,
                                                       uint32_t blockIndex) const override;
   virtual ExtractOutputKeysResult extractKeyOutputs(

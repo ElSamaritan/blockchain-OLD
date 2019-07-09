@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 //
@@ -1049,6 +1049,26 @@ ExtractOutputKeysResult BlockchainCache::extractKeyOtputIndexes(uint64_t amount,
         outIndexes.push_back(index);
         return ExtractOutputKeysResult::SUCCESS;
       });
+}
+
+uint64_t BlockchainCache::getAvailableMixinsCount(IBlockchainCache::Amount amount, uint32_t blockIndex,
+                                                  uint64_t threshold) const {
+  std::vector<uint32_t> offs;
+  auto it = keyOutputsGlobalIndexes.find(amount);
+  if (it == keyOutputsGlobalIndexes.end()) {
+    return parent != nullptr ? parent->getAvailableMixinsCount(amount, blockIndex, threshold) : 0;
+  }
+
+  auto& outs = it->second.outputs;
+  auto end = std::find_if(outs.rbegin(), outs.rend(), [&](PackedOutIndex index) {
+               return index.data.blockIndex <= blockIndex - currency.minedMoneyUnlockWindow();
+             }).base();
+  uint64_t dist = static_cast<uint64_t>(std::distance(outs.begin(), end));
+  if (dist >= threshold) {
+    return dist;
+  } else {
+    return parent != nullptr ? dist + parent->getAvailableMixinsCount(amount, blockIndex, threshold - dist) : dist;
+  }
 }
 
 uint32_t BlockchainCache::getTopBlockIndex() const {

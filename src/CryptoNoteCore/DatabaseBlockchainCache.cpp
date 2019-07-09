@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 //
@@ -49,7 +49,8 @@ bool requestPackedOutputs(IBlockchainCache::Amount amount, Common::ArrayView<uin
 
   auto dbResult = database.read(readBatch);
   if (dbResult) {
-    return false;
+    XI_PRINT_EC("[%s:%i] Packed Outputs request failed: %s\n", __FILE__, __LINE__, dbResult.message().c_str());
+    XI_RETURN_EC(false);
   }
 
   try {
@@ -58,11 +59,13 @@ bool requestPackedOutputs(IBlockchainCache::Amount amount, Common::ArrayView<uin
     for (auto globalIndex : globalIndexes) {
       result.push_back(packedOutsMap.at(std::make_pair(amount, globalIndex)));
     }
-  } catch (std::exception&) {
-    return false;
+  } catch (std::exception& e) {
+    (void)e;
+    XI_PRINT_EC("[%s:%i] Packed Outputs request failed: %s\n", __FILE__, __LINE__, e.what());
+    XI_RETURN_EC(false);
   }
 
-  return true;
+  XI_RETURN_SC(true);
 }
 
 bool requestTransactionHashesForGlobalOutputIndexes(const std::vector<PackedOutIndex>& packedOuts, IDataBase& database,
@@ -1658,6 +1661,63 @@ std::vector<Crypto::Hash> DatabaseBlockchainCache::getTransactionHashes() const 
   assert(false);
   // TODO (njamnjam)
   return {};
+}
+
+uint64_t DatabaseBlockchainCache::getAvailableMixinsCount(DatabaseBlockchainCache::Amount amount, uint32_t blockIndex,
+                                                          uint64_t threshold) const {
+  auto batch = BlockchainReadBatch().requestKeyOutputGlobalIndexesCountForAmount(amount);
+  auto result = readDatabase(batch);
+
+  // std::unordered_map<IBlockchainCache::Amount, uint32_t>
+  auto outputsCount = result.getKeyOutputGlobalIndexesCountForAmounts();
+  auto outputsToCount = outputsCount[amount];
+
+  XI_RETURN_SC_IF(outputsToCount == 0, 0);
+  XI_RETURN_SC_IF(blockIndex >= getTopBlockIndex(), outputsToCount);
+
+  uint32_t count =
+      static_cast<uint32_t>(availableMixinsCountSearch(amount, blockIndex, 0, outputsToCount - 1, threshold));
+
+#if !defined(NDEBUG)
+  if (count < outputsToCount) {
+    uint32_t nextIndex = count;
+    std::vector<PackedOutIndex> nextPackedIndices{};
+    if (!requestPackedOutputs(amount, Common::ArrayView<uint32_t>{std::addressof(nextIndex), 1}, database,
+                              nextPackedIndices)) {
+      throw std::runtime_error{"key output extraction failed"};
+    }
+    assert(nextPackedIndices.size() == 1);
+    assert(nextPackedIndices.front().data.blockIndex > blockIndex);
+  }
+#endif
+
+  return count;
+}
+
+uint64_t DatabaseBlockchainCache::availableMixinsCountSearch(DatabaseBlockchainCache::Amount amount,
+                                                             uint32_t blockIndex, uint32_t leftIndex,
+                                                             uint32_t rightIndex, uint64_t threshold) const {
+  XI_RETURN_SC_IF(leftIndex == rightIndex, true);
+  const uint32_t midIndex = leftIndex + (rightIndex - leftIndex) / 2;
+  std::array<uint32_t, 3> boundaryIndices{{leftIndex, midIndex, rightIndex}};
+  std::vector<PackedOutIndex> boundaryPackedIndices{};
+  if (!requestPackedOutputs(amount, Common::ArrayView<uint32_t>{boundaryIndices.data(), boundaryIndices.size()},
+                            database, boundaryPackedIndices)) {
+    throw std::runtime_error{"key output extraction failed"};
+  }
+  assert(boundaryIndices.size() == 3);
+  XI_RETURN_SC_IF(boundaryPackedIndices.front().data.blockIndex > blockIndex, leftIndex);
+  XI_RETURN_SC_IF(boundaryPackedIndices.back().data.blockIndex <= blockIndex, rightIndex + 1);
+  const auto mid = boundaryPackedIndices.at(1);
+
+  if (mid.data.blockIndex > blockIndex) {
+    XI_RETURN_SC_IF(midIndex == 0, 0);
+    return availableMixinsCountSearch(amount, blockIndex, leftIndex, midIndex - 1, threshold);
+  } else if (midIndex + 1 >= threshold) {
+    return midIndex + 1;
+  } else {
+    return availableMixinsCountSearch(amount, blockIndex, midIndex + 1, rightIndex, threshold);
+  }
 }
 
 std::vector<uint32_t> DatabaseBlockchainCache::getRandomOutsByAmount(uint64_t amount, size_t count,
