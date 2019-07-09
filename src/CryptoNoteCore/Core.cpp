@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Calex Developers
@@ -698,9 +698,12 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     }
   }
 
-  auto coinbaseTransactionSize = blockTemplate.baseTransaction.binarySize();
-  assert(coinbaseTransactionSize < std::numeric_limits<decltype(coinbaseTransactionSize)>::max());
-  auto cumulativeBlockSize = coinbaseTransactionSize + cumulativeSize;
+  if (blockTemplate.baseTransaction.binarySize() > currency().maximumCoinbaseSize(blockTemplate.version)) {
+    logger(Logging::DEBUGGING) << "Coinbase transaction exceeds limits " << blockTemplate.baseTransaction.binarySize()
+                               << " > " << currency().maximumCoinbaseSize(blockTemplate.version);
+    return error::BlockValidationError::COINBASE_TOO_LARGE;
+  }
+  auto cumulativeBlockSize = cumulativeSize + blockTemplate.baseTransaction.binarySize();
 
   auto previousBlockIndex = cache->getBlockIndex(previousBlockHash);
 
@@ -775,6 +778,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
 
   TransactionValidatorState validatorState;
   uint64_t cumulativeFee = 0;
+
   for (const auto& transaction : transactions) {
     uint64_t fee = 0;
     auto transactionValidationResult =
@@ -797,7 +801,8 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
                                 previousBlockIndex, UseGenesis{false});
   auto blocksSizeMedian = Common::medianValue(lastBlocksSizes);
 
-  if (!m_currency.getBlockReward(cachedBlock.getBlock().version, blocksSizeMedian, cumulativeBlockSize,
+  if (!m_currency.getBlockReward(cachedBlock.getBlock().version, blocksSizeMedian,
+                                 cumulativeBlockSize - blockTemplate.baseTransaction.binarySize(),
                                  alreadyGeneratedCoins, cumulativeFee, reward, emissionChange)) {
     logger(Logging::DEBUGGING) << "Block " << blockStr << " has too big cumulative size";
     return error::BlockValidationError::CUMULATIVE_BLOCK_SIZE_TOO_BIG;
@@ -1288,78 +1293,17 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   uint64_t alreadyGeneratedCoins = chainsLeaves[0]->getAlreadyGeneratedCoins();
 
   size_t transactionsSize;
-  uint64_t fee;
+  uint64_t fee = 0;
   fillBlockTemplate(b, index, medianSize, maxBlockSize, transactionsSize, fee);
 
-  /*
-     two-phase miner transaction generation: we don't know exact block size until we prepare block, but we don't know
-     reward until we know
-     block size, so first miner transaction generated with fake amount of money, and with phase we know think we know
-     expected block size
-  */
-  // make blocks coin-base tx looks close to real coinbase tx to get truthful blob size
-  bool r = m_currency.constructMinerTx(b.version, index, medianSize, alreadyGeneratedCoins, transactionsSize, fee, adr,
-                                       b.baseTransaction, extraNonce, 20);
-  if (!r) {
+  b.baseTransaction.extra.clear();
+  if (auto ec = m_currency.constructMinerTx(b.version, index, medianSize, alreadyGeneratedCoins, transactionsSize, fee,
+                                            adr, b.baseTransaction, extraNonce, 20);
+      !ec) {
     logger(Logging::ERROR) << "Failed to construct miner tx, first chance";
-    return false;
+    XI_RETURN_EC(false);
   }
-
-  size_t cumulativeSize = transactionsSize + b.baseTransaction.binarySize();
-  const size_t TRIES_COUNT = 10;
-  for (size_t tryCount = 0; tryCount < TRIES_COUNT; ++tryCount) {
-    r = m_currency.constructMinerTx(b.version, index, medianSize, alreadyGeneratedCoins, cumulativeSize, fee, adr,
-                                    b.baseTransaction, extraNonce, 20);
-    if (!r) {
-      logger(Logging::ERROR) << "Failed to construct miner tx, second chance";
-      return false;
-    }
-
-    size_t coinbaseBlobSize = b.baseTransaction.binarySize();
-    if (coinbaseBlobSize > cumulativeSize - transactionsSize) {
-      cumulativeSize = transactionsSize + coinbaseBlobSize;
-      continue;
-    }
-
-    if (coinbaseBlobSize < cumulativeSize - transactionsSize) {
-      size_t delta = cumulativeSize - transactionsSize - coinbaseBlobSize;
-      b.baseTransaction.extra.insert(b.baseTransaction.extra.end(), delta, 0);
-      // here  could be 1 byte difference, because of extra field counter is varint, and it can become from 1-byte len
-      // to 2-bytes len.
-      if (cumulativeSize != transactionsSize + b.baseTransaction.binarySize()) {
-        if (!(cumulativeSize + 1 == transactionsSize + b.baseTransaction.binarySize())) {
-          logger(Logging::ERROR) << "unexpected case: cumulative_size=" << cumulativeSize
-                                 << " + 1 is not equal txs_cumulative_size=" << transactionsSize
-                                 << " + get_object_blobsize(b.baseTransaction)=" << b.baseTransaction.binarySize();
-          return false;
-        }
-
-        b.baseTransaction.extra.resize(b.baseTransaction.extra.size() - 1);
-        if (cumulativeSize != transactionsSize + b.baseTransaction.binarySize()) {
-          // not lucky, -1 makes varint-counter size smaller, in that case we continue to grow with
-          // cumulative_size
-          logger(Logging::TRACE, Logging::BRIGHT_RED)
-              << "Miner tx creation have no luck with delta_extra size = " << delta << " and " << delta - 1;
-          cumulativeSize += delta - 1;
-          continue;
-        }
-
-        logger(Logging::DEBUGGING, Logging::BRIGHT_BLUE)
-            << "Setting extra for block: " << b.baseTransaction.extra.size() << ", try_count=" << tryCount;
-      }
-    }
-    if (!(cumulativeSize == transactionsSize + b.baseTransaction.binarySize())) {
-      logger(Logging::ERROR) << "unexpected case: cumulative_size=" << cumulativeSize
-                             << " is not equal txs_cumulative_size=" << transactionsSize
-                             << " + get_object_blobsize(b.baseTransaction)=" << b.baseTransaction.binarySize();
-      return false;
-    }
-
-    return true;
-  }
-
-  logger(Logging::ERROR) << "Failed to create_block_template with " << TRIES_COUNT << " tries";
-  return false;
+  XI_RETURN_SC(true);
 }
 
 CoreStatistics Core::getCoreStatistics() const {

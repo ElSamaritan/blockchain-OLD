@@ -46,13 +46,15 @@ enum class BlockValidationError {
   TRANSACTION_INCONSISTENCY = 14,
   UNEXPECTED_STATIC_REWARD = 15,
 
+  COINBASE_TOO_LARGE = 22,
+
   MERGE_MINING_TAG_DISABLED = 17,
   MERGE_MINING_TAG_EMPTY = 18,
   MERGE_MINING_TAG_TOO_LARGE = 19,
   MERGE_MINING_TAG_INVALID_TYPE = 20,
   MERGE_MINING_TAG_PRUNED = 21,
 
-  __NUM = 22,
+  __NUM = 23,
 };
 
 // custom category:
@@ -104,6 +106,9 @@ class BlockValidationErrorCategory : public std::error_category {
         return "Block template and raw block have inconsistent transactions";
       case BlockValidationError::UNEXPECTED_STATIC_REWARD:
         return "Block template contains a static reward but static rewards are disabled for the current block version";
+
+      case BlockValidationError::COINBASE_TOO_LARGE:
+        return "Block template coinbase transaction is too large.";
 
       case BlockValidationError::MERGE_MINING_TAG_DISABLED:
         return "Block template contains a merge mining tag but merge mining is disabled.";
