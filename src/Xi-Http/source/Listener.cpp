@@ -60,6 +60,23 @@ void Xi::Http::Listener::run() {
   doAccept();
 }
 
+void Xi::Http::Listener::stop() {
+  {
+    boost::system::error_code ec{};
+    m_acceptor.cancel(ec);
+    if (ec) {
+      onError(ec, "acceptor.cancel");
+    }
+  }
+  {
+    boost::system::error_code ec{};
+    m_acceptor.close(ec);
+    if (ec) {
+      onError(ec, "acceptor.close");
+    }
+  }
+}
+
 void Xi::Http::Listener::doAccept() {
   m_acceptor.async_accept(m_socket, std::bind(&Listener::onAccept, shared_from_this(), std::placeholders::_1));
 }

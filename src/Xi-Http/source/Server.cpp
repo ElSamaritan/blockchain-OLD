@@ -40,12 +40,21 @@
 #include "HttpServerSession.h"
 #include "HttpsServerSession.h"
 
+namespace {
+
+struct LoopGuard : public boost::asio::io_context::work {
+  using work::work;
+};
+
+}  // namespace
+
 struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
+  std::shared_ptr<LoopGuard> loopGuard;  ///< Ensures the io context keeps idling.
+
   std::vector<std::thread> runner;
   boost::asio::ssl::context ctx{boost::asio::ssl::context::sslv23};
   std::shared_ptr<RequestHandler> handler;
   Xi::Concurrent::IDispatcher& dispatcher;
-  std::atomic_bool keepRunning{true};
 
   _Listener(const std::string& address, uint16_t port, std::shared_ptr<RequestHandler> _handler,
             Concurrent::IDispatcher& _dispatcher)
@@ -54,36 +63,37 @@ struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
         dispatcher{_dispatcher} {}
 
   void run(uint16_t numThreads) {
-    Listener::run();
+    loopGuard = std::make_shared<LoopGuard>(io);
     runner.reserve(numThreads);
     for (std::size_t i = 0; i < numThreads; ++i) {
       runner.emplace_back(std::thread{[&] {
-        while (keepRunning) {
-          try {
-            boost::system::error_code ec;
-            const auto tasksHandled = io.run(ec);
-            io.reset();
-            if (tasksHandled == 0) std::this_thread::sleep_for(std::chrono::milliseconds{20});
-          } catch (...) {
-            // TODO Logging
-          }
+        try {
+          boost::system::error_code ec;
+          io.run(ec);
+          // TODO Logging
+        } catch (...) {
+          // TODO Logging
         }
       }});
     }
+    Listener::run();
   }
 
-  ~_Listener() override {
+  void stop() override {
     try {
-      keepRunning = false;
+      loopGuard.reset();
+      Listener::stop();
       io.stop();
-      for (auto& thread : runner) thread.join();
+      for (auto& thread : runner) {
+        thread.join();
+      }
     } catch (...) {
       /* */
     }
   }
 
   void doOnAccept(boost::asio::ip::tcp::socket socket) override {
-    if (!keepRunning) {
+    if (!loopGuard) {
       return;
     } else {
       try {
@@ -121,7 +131,12 @@ void Xi::Http::Server::start(const std::string& address, uint16_t port) {
   m_listener->run(1);
 }
 
-void Xi::Http::Server::stop() { m_listener.reset(); }
+void Xi::Http::Server::stop() {
+  if (m_listener) {
+    m_listener->stop();
+    m_listener.reset();
+  }
+}
 
 const std::string& Xi::Http::Server::host() const { return m_host; }
 

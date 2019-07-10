@@ -60,6 +60,11 @@ class Listener : public std::enable_shared_from_this<Listener> {
   virtual void run();
 
   /*!
+   * \brief stop stops the listender discarding every new incoming request.
+   */
+  virtual void stop();
+
+  /*!
    * \brief doAccept queries an incoming connection and forwards it to onAccept
    */
   void doAccept();
