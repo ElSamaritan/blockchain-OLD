@@ -51,7 +51,7 @@ namespace StaticReward {}
 
 // clang-format off
 //                        (_Index, _Version,                _Amount,  _Address...
-MakeStaticRewardCheckpoint(     0,        1, Coin::toAtomicUnits(1),  "gxi1Umur5nMKLUtwEiLmXKQUovncmq1z5bFZqfsEbKmcUfYJp1N426hFWjDvrMpCBne29B9GbXgB31H4ohQbGUrr1HRyHpefVP")
+MakeStaticRewardCheckpoint(     0,        1, Coin::toAtomicUnits(1),  "gxi1D8NCRbEVtADk1AjdHz4AJLkicPwPhddn2VotETtjVw6cDkdP5WHCq5Gr5d7Tm68iQDHhs5bfyTPXK3y2YZMe69FCQXiLNZ")
 // clang-format on
 
 #define CURRENT_STATIC_REWARD_CHECKPOINT_INDEX 0

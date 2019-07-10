@@ -7,7 +7,7 @@ std::string Xi::Config::Coin::genesisTransactionBlob(Network::Type network) {
     case Network::Type::TestNet:
     case Network::Type::StageNet:
     case Network::Type::MainNet:
-      return "010a010101018090cad2c60e01bc6ad371bba99ff013493a859e5cb2e4d3e9737ab4dee629c630c582c531b4ed2101170dea227bd20c6630036dcff07eeb7095991fc6ac67a15d68594d67e69593ae";
+      return "010a0101010180f0efe8812001f0d5cfd8dd80412a15b95e38d5956f95b3beee7c36a799306e43de4db6f7c387210118b94aa5be09d291adbe9362c2bac77a4289e06c8107d29721800aed49868f8c";
       // clang-format on
   }
   throw std::runtime_error{"unexpected network type, cannot provide genesis transaction hash."};
