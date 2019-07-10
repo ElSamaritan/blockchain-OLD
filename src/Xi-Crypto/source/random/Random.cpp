@@ -32,7 +32,7 @@ Xi::Result<Xi::ByteVector> Xi::Crypto::Random::generate(size_t count) {
   Xi::ByteVector reval;
   reval.resize(count);
   if (const auto ec = generate(ByteSpan{reval.data(), count}); ec != RandomError::Success) {
-    return failure(ec);
+    return makeError(ec);
   }
   return success(std::move(reval));
 }
@@ -46,7 +46,7 @@ Xi::Result<Xi::ByteVector> Xi::Crypto::Random::generate(size_t count, ConstByteS
   Xi::ByteVector reval;
   reval.resize(count);
   if (const auto ec = generate(ByteSpan{reval.data(), count}, seed); ec != RandomError::Success) {
-    return failure(ec);
+    return makeError(ec);
   }
   return success(std::move(reval));
 }

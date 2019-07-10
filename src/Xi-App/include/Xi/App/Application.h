@@ -90,7 +90,7 @@ class Application {
   // ---------------------------------------------- Helper ----------------------------------------------------
  protected:
   // TODO: Move to module interface and require modules definied by the library implementing the feature.
-  void useLogging(Logging::Level defaultLevel = Logging::INFO);
+  void useLogging(Logging::Level defaultLevel = Logging::Info);
   void useDatabase();
   void useRemoteRpc();
   void useNetwork();

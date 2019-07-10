@@ -240,7 +240,7 @@ bool DaemonCommandsHandler::set_log(const std::vector<std::string>& args) {
 
   ++l;
 
-  if (l > Logging::TRACE) {
+  if (l > Logging::Trace) {
     std::cout << "wrong number range, use: set_log <log_level_number_0-4>" << ENDL;
     return true;
   }

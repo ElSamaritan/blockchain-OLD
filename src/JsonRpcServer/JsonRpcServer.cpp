@@ -45,7 +45,7 @@ void JsonRpcServer::start(const std::string& bindAddress, uint16_t bindPort) {
 
 Xi::Http::Response JsonRpcServer::doHandleRequest(const Xi::Http::Request& request) {
   try {
-    logger(Logging::TRACE) << "HTTP request came: \n" << request.body();
+    logger(Logging::Trace) << "HTTP request came: \n" << request.body();
 
     if (request.target() == "/json_rpc") {
       if (request.method() == Xi::Http::Method::Options) {
@@ -63,7 +63,7 @@ Xi::Http::Response JsonRpcServer::doHandleRequest(const Xi::Http::Request& reque
       try {
         jsonInputStream >> jsonRpcRequest;
       } catch (std::runtime_error&) {
-        logger(Logging::DEBUGGING) << "Couldn't parse request: \"" << request.body() << "\"";
+        logger(Logging::Debugging) << "Couldn't parse request: \"" << request.body() << "\"";
         makeJsonParsingErrorResponse(jsonRpcResponse);
         return Xi::Http::Response{Xi::Http::StatusCode::Ok, jsonRpcResponse.toString(), Xi::Http::ContentType::Json};
       }
@@ -81,11 +81,11 @@ Xi::Http::Response JsonRpcServer::doHandleRequest(const Xi::Http::Request& reque
 
       return resp;
     } else {
-      logger(Logging::WARNING) << "Requested url \"" << request.target() << "\" is not found";
+      logger(Logging::Warning) << "Requested url \"" << request.target() << "\" is not found";
       return makeNotFound();
     }
   } catch (std::exception& e) {
-    logger(Logging::WARNING) << "Error while processing http request: " << e.what();
+    logger(Logging::Warning) << "Error while processing http request: " << e.what();
     return makeInternalServerError();
   }
 }

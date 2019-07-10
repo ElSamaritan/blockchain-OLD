@@ -138,7 +138,7 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
     // fill inputs
     for (const TransactionSourceEntry& src_entr : sources) {
       if (src_entr.realOutput >= src_entr.outputs.size()) {
-        logger(ERROR) << "real_output index (" << src_entr.realOutput
+        logger(Error) << "real_output index (" << src_entr.realOutput
                       << ")bigger than output_keys.size()=" << src_entr.outputs.size();
         return false;
       }
@@ -154,7 +154,7 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
 
       // check that derived key is equal with real output key
       if (!(in_ephemeral.publicKey == src_entr.outputs[src_entr.realOutput].second)) {
-        logger(ERROR) << "derived public key mismatch with output public key! " << ENDL
+        logger(Error) << "derived public key mismatch with output public key! " << ENDL
                       << "derived_key:" << Common::podToHex(in_ephemeral.publicKey) << ENDL
                       << "real output_public_key:" << Common::podToHex(src_entr.outputs[src_entr.realOutput].second);
         return false;
@@ -186,7 +186,7 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
     size_t output_index = 0;
     for (const TransactionDestinationEntry& dst_entr : shuffled_dsts) {
       if (!(dst_entr.amount > 0)) {
-        logger(ERROR) << "Destination with wrong amount: " << dst_entr.amount;
+        logger(Error) << "Destination with wrong amount: " << dst_entr.amount;
         return false;
       }
       KeyDerivation derivation;
@@ -194,14 +194,14 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
       bool r = generate_key_derivation(dst_entr.addr.viewPublicKey, txkey.secretKey, derivation);
 
       if (!(r)) {
-        logger(ERROR) << "at creation outs: failed to generate_key_derivation(" << dst_entr.addr.viewPublicKey << ", "
+        logger(Error) << "at creation outs: failed to generate_key_derivation(" << dst_entr.addr.viewPublicKey << ", "
                       << txkey.secretKey << ")";
         return false;
       }
 
       r = derive_public_key(derivation, output_index, dst_entr.addr.spendPublicKey, out_eph_public_key);
       if (!(r)) {
-        logger(ERROR) << "at creation outs: failed to derive_public_key(" << derivation << ", " << output_index << ", "
+        logger(Error) << "at creation outs: failed to derive_public_key(" << derivation << ", " << output_index << ", "
                       << dst_entr.addr.spendPublicKey << ")";
         return false;
       }
@@ -218,7 +218,7 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
 
     // check money
     if (summary_outs_money > summary_inputs_money) {
-      logger(ERROR) << "Transaction inputs money (" << summary_inputs_money << ") less than outputs money ("
+      logger(Error) << "Transaction inputs money (" << summary_inputs_money << ") less than outputs money ("
                     << summary_outs_money << ")";
       return false;
     }
@@ -243,7 +243,7 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
 
     return true;
   } catch (std::exception& e) {
-    logger(Logging::FATAL) << "unable to create transaction (EXCEPTIONAL): " << e.what();
+    logger(Logging::Fatal) << "unable to create transaction (EXCEPTIONAL): " << e.what();
     return false;
   }
 }

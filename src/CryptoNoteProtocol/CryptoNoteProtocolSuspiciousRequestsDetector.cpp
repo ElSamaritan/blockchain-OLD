@@ -51,7 +51,7 @@ bool CryptoNote::CryptoNoteProtocolSuspiciousRequestsDetector::pushAndInspect(
   XI_UNUSED(response);
   const auto chainTimeline = ctx.m_history.getTimeline<ChainRequest>();
   if (chainTimeline.empty()) {
-    m_logger(Logging::DEBUGGING) << ctx << " requested chain objects before requesting the chain";
+    m_logger(Logging::Debugging) << ctx << " requested chain objects before requesting the chain";
     P2P_CLEAR_AND_REPORT();
   }
   if (std::any_of(request.blocks.begin(), request.blocks.end(), [&chainTimeline](const auto &blockId) {
@@ -59,7 +59,7 @@ bool CryptoNote::CryptoNoteProtocolSuspiciousRequestsDetector::pushAndInspect(
           return occ->value.RevealedBlocks.find(blockId) != occ->value.RevealedBlocks.end();
         });
       })) {
-    m_logger(Logging::DEBUGGING) << ctx << " requested a chain object he could not know about (missing chain request)";
+    m_logger(Logging::Debugging) << ctx << " requested a chain object he could not know about (missing chain request)";
     P2P_CLEAR_AND_REPORT();
   }
   return false;
@@ -90,7 +90,7 @@ bool CryptoNote::CryptoNoteProtocolSuspiciousRequestsDetector::pushAndInspect(
       }
       if (timeline[i - 1]->value.start + BlockOffset::fromNative(timeline[i - 1]->value.count) >
           timeline[i]->value.start + BlockOffset::fromNative(1)) {
-        m_logger(Logging::DEBUGGING) << ctx << " none consecutive chain request, last_end="
+        m_logger(Logging::Debugging) << ctx << " none consecutive chain request, last_end="
                                      << timeline[i - 1]->value.start.native() + timeline[i - 1]->value.count
                                      << " current_start=" << timeline[i]->value.start.native();
         P2P_CLEAR_AND_REPORT();

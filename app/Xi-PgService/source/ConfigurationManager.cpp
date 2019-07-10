@@ -64,9 +64,9 @@ bool ConfigurationManager::init(int argc, char** argv) {
         "It's impossible to use both --register-service and --unregister-service at the same time");
   }
 
-  if (serviceConfig.logLevel > Logging::TRACE) {
-    throw std::runtime_error("log-level must be between " + std::to_string(Logging::FATAL) + ".." +
-                             std::to_string(Logging::TRACE));
+  if (serviceConfig.logLevel > Logging::Trace) {
+    throw std::runtime_error("log-level must be between " + std::to_string(Logging::Fatal) + ".." +
+                             std::to_string(Logging::Trace));
   }
 
   if (serviceConfig.containerFile.empty()) {

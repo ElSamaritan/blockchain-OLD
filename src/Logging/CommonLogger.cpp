@@ -58,7 +58,7 @@ std::string formatPattern(const std::string& pattern, const std::string& categor
 
 void CommonLogger::operator()(const std::string& category, Level level, boost::posix_time::ptime time,
                               const std::string& body) {
-  if (level == Logging::NONE || logLevel == Logging::NONE) {
+  if (level == Logging::None || logLevel == Logging::None) {
     return;
   }
   if (level <= logLevel && disabledCategories.count(category) == 0) {

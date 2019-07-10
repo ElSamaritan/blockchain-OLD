@@ -43,7 +43,7 @@ struct LoggingOptions : public IOptions {
   /*!
    * \brief DefaultLogLevel Log level applied if no logger specific level is specified.
    */
-  Logging::Level DefaultLogLevel = Logging::INFO;
+  Logging::Level DefaultLogLevel = Logging::Info;
 
   /*!
    * \brief ConsoleLogLevel Minimum log level for console logging, if not provided the default log level is used.

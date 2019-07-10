@@ -177,12 +177,12 @@ bool Xi::App::Application::evaluateParsedOptions(const cxxopts::Options &options
   XI_APP_CONDITIONAL_OPTION_EVAL(m_checkpointOptions)
   if (isSSLClientRequired()) {
     if (m_sslConfig.isInsecure(Http::SSLConfiguration::Usage::Client)) {
-      (*m_ologger)(Logging::WARNING) << CommonCLI::insecureClientWarning();
+      (*m_ologger)(Logging::Warning) << CommonCLI::insecureClientWarning();
     }
   }
   if (isSSLServerRequired()) {
     if (m_sslConfig.isInsecure(Http::SSLConfiguration::Usage::Server)) {
-      (*m_ologger)(Logging::WARNING) << CommonCLI::insecureClientWarning();
+      (*m_ologger)(Logging::Warning) << CommonCLI::insecureClientWarning();
     }
   }
   return false;
@@ -194,7 +194,7 @@ void Xi::App::Application::tearDown() {
   if (m_remoteNode) m_remoteNode->shutdown();
   if (m_core) {
     if (!m_core->save() && m_ologger) {
-      (*m_ologger)(Logging::FATAL) << "Core routine save procedure failed.";
+      (*m_ologger)(Logging::Fatal) << "Core routine save procedure failed.";
     }
   }
   if (m_database) m_database->shutdown();
@@ -259,7 +259,7 @@ void Xi::App::Application::initializeLogger() {
         std::make_unique<Logging::ConsoleLogger>(m_logOptions->ConsoleLogLevel.value_or(m_logOptions->DefaultLogLevel));
     m_logger->addLogger(*m_consoleLogger);
     auto fileLogLevel = m_logOptions->ConsoleLogLevel.value_or(m_logOptions->DefaultLogLevel);
-    if (fileLogLevel != Logging::NONE) {
+    if (fileLogLevel != Logging::None) {
       auto fileLogger = std::make_unique<Logging::FileLogger>(fileLogLevel);
       fileLogger->init(m_logOptions->LogFilePath);
       m_logger->addLogger(*fileLogger);
@@ -292,7 +292,7 @@ void Xi::App::Application::initializeCore() {
       CryptoNote::createSwappedMainChainStorage(m_dbOptions->DataDirectory, *currency()));
   if (!m_core->load()) {
     if (m_ologger) {
-      (*m_ologger)(Logging::FATAL) << "Core loading procedure failed.";
+      (*m_ologger)(Logging::Fatal) << "Core loading procedure failed.";
       throw std::runtime_error("unable to load core");
     }
   }

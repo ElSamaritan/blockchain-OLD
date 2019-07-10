@@ -46,7 +46,7 @@ void LoggerManager::configure(const JsonValue& val) {
       throw std::runtime_error("parameter globalLevel has wrong type");
     }
   } else {
-    globalLevel = TRACE;
+    globalLevel = Trace;
   }
   std::vector<std::string> globalDisabledCategories;
 
@@ -75,7 +75,7 @@ void LoggerManager::configure(const JsonValue& val) {
           throw std::runtime_error("loggers element must be objects");
         }
 
-        Level level = TRACE;
+        Level level = Trace;
         if (loggerConfiguration.contains("level")) {
           level = static_cast<Level>(loggerConfiguration("level").getInteger());
         }

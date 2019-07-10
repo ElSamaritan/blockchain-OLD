@@ -35,9 +35,7 @@ set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_STATIC_RUNTIME ON)
 
 set(Boost_COMPONENTS
-
     system
-    headers
     filesystem
     thread
     date_time
@@ -51,6 +49,8 @@ set(Boost_COMPONENTS
 
 if(MSVC)
   list(APPEND Boost_COMPONENTS zlib)
+else()
+  list(APPEND Boost_COMPONENTS headers)
 endif()
 
 find_package(

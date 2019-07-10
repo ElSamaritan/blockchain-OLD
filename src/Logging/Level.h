@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -32,7 +32,7 @@
 #include <Serialization/ISerializer.h>
 
 namespace Logging {
-enum Level { NONE = 0, FATAL = 1, ERROR = 2, WARNING = 3, INFO = 4, DEBUGGING = 5, TRACE = 6 };
+enum Level { None = 0, Fatal = 1, Error = 2, Warning = 3, Info = 4, Debugging = 5, Trace = 6 };
 
 class LevelTranslator {
  public:
@@ -43,5 +43,5 @@ class LevelTranslator {
   boost::optional<internal_type> put_value(external_type const& v);
 };
 
-[[nodiscard]]  bool serialize(Level& level, CryptoNote::ISerializer& serializer);
+[[nodiscard]] bool serialize(Level& level, CryptoNote::ISerializer& serializer);
 }  // namespace Logging

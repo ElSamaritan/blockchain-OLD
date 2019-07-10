@@ -43,10 +43,19 @@ void generic_decode_encode_test() {
   const _IntT zero = 0;
   std::array<_IntT, 200> randoms{};
   {
-    std::default_random_engine e{};
-    std::uniform_int_distribution<_IntT> dist{};
-    for (auto &i : randoms) {
-      i = static_cast<_IntT>(dist(e));
+    if constexpr (sizeof(_IntT) == 1) {
+      std::default_random_engine e{};
+      std::uniform_int_distribution<uint16_t> dist{std::numeric_limits<uint16_t>::min(),
+                                                   std::numeric_limits<uint16_t>::max()};
+      for (auto &i : randoms) {
+        i = static_cast<_IntT>(dist(e));
+      }
+    } else {
+      std::default_random_engine e{};
+      std::uniform_int_distribution<_IntT> dist{std::numeric_limits<_IntT>::min(), std::numeric_limits<_IntT>::max()};
+      for (auto &i : randoms) {
+        i = static_cast<_IntT>(dist(e));
+      }
     }
   }
 

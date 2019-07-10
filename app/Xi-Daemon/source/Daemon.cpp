@@ -185,11 +185,11 @@ int main(int argc, char* argv[]) {
 
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-    logger(INFO) << CommonCLI::header(true) << std::endl;
+    logger(Info) << CommonCLI::header(true) << std::endl;
     if (config.ssl.isInsecure(::Xi::Http::SSLConfiguration::Usage::Server)) {
-      logger(WARNING) << "\n" << CommonCLI::insecureServerWarning() << std::endl;
+      logger(Warning) << "\n" << CommonCLI::insecureServerWarning() << std::endl;
     }
-    logger(INFO) << "Program Working Directory: " << argv[0];
+    logger(Info) << "Program Working Directory: " << argv[0];
 
     // create objects and link them
     CryptoNote::CurrencyBuilder currencyBuilder(logManager);
@@ -210,12 +210,12 @@ int main(int argc, char* argv[]) {
 
     CryptoNote::Checkpoints checkpoints(logManager);
     if (use_checkpoints) {
-      logger(INFO) << "Loading Checkpoints for faster initial sync...";
+      logger(Info) << "Loading Checkpoints for faster initial sync...";
       if (config.checkPoints == "default") {
         for (const auto& cp : Xi::Config::CHECKPOINTS) {
           checkpoints.addCheckpoint(cp.index, cp.blockId);
         }
-        logger(INFO) << "Loaded " << Xi::Config::CHECKPOINTS.size() << " default checkpoints";
+        logger(Info) << "Loaded " << Xi::Config::CHECKPOINTS.size() << " default checkpoints";
       } else {
         bool results = checkpoints.loadCheckpointsFromFile(config.checkPoints);
         if (!results) {
@@ -254,35 +254,35 @@ int main(int argc, char* argv[]) {
     }
 
     System::Dispatcher dispatcher;
-    logger(INFO) << "Initializing core...";
+    logger(Info) << "Initializing core...";
     CryptoNote::Core ccore(
         currency, logManager, checkpoints, dispatcher, config.lightNode,
         std::unique_ptr<IBlockchainCacheFactory>(new DatabaseBlockchainCacheFactory(database, logger.getLogger())),
         createSwappedMainChainStorage(config.dataDirectory, currency));
 
     if (!ccore.load()) {
-      logger(FATAL) << "Core initialization failed";
+      logger(Fatal) << "Core initialization failed";
       return EXIT_FAILURE;
     }
-    logger(INFO) << "Core initialized OK";
+    logger(Info) << "Core initialized OK";
 
     // ------------------------------------------ Transaction Pool
-    logger(INFO) << "Initializing transaction pool...";
+    logger(Info) << "Initializing transaction pool...";
     const auto transactionPoolFile = path(config.dataDirectory) / currency.txPoolFileName();
     if (!exists(transactionPoolFile)) {
-      logger(INFO) << "no transaction pool file present, skipping import.";
+      logger(Info) << "no transaction pool file present, skipping import.";
     } else {
       std::ifstream poolFileStream{transactionPoolFile.string(), std::ios::in | std::ios::binary};
       Common::StdInputStream poolInputStream{poolFileStream};
       BinaryInputStreamSerializer poolSerializer(poolInputStream);
       if (!ccore.transactionPool().serialize(poolSerializer)) {
-        logger(ERROR) << "Transaction pool load failed, cleaning state...";
+        logger(Error) << "Transaction pool load failed, cleaning state...";
         ccore.transactionPool().forceFlush();
       } else {
-        logger(INFO) << "Imported " << ccore.transactionPool().size() << " pending pool transactions.";
+        logger(Info) << "Imported " << ccore.transactionPool().size() << " pending pool transactions.";
       }
     }
-    logger(INFO) << "Transaction Pool initialized OK";
+    logger(Info) << "Transaction Pool initialized OK";
     // ------------------------------------------ Transaction Pool
 
     CryptoNote::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
@@ -292,20 +292,20 @@ int main(int argc, char* argv[]) {
 
     cprotocol.set_p2p_endpoint(&p2psrv);
     DaemonCommandsHandler dch(ccore, p2psrv, logManager, rpcServer.get());
-    logger(INFO) << "Initializing p2p server...";
+    logger(Info) << "Initializing p2p server...";
     if (!p2psrv.init(netNodeConfig)) {
-      logger(ERROR) << "Failed to initialize p2p server.";
+      logger(Error) << "Failed to initialize p2p server.";
       return 1;
     }
 
-    logger(INFO) << "P2p server initialized OK";
+    logger(Info) << "P2p server initialized OK";
 
     if (!config.noConsole) {
       dch.start_handling();
     }
 
     // Fire up the RPC Server
-    logger(INFO) << "Starting core rpc server on address " << config.rpcInterface << ":" << config.rpcPort;
+    logger(Info) << "Starting core rpc server on address " << config.rpcInterface << ":" << config.rpcPort;
     rpcServer->setHandler(rpcServer);
     rpcServer->setSSLConfiguration(config.ssl);
     if (!config.feeAddress.empty()) {
@@ -318,9 +318,9 @@ int main(int argc, char* argv[]) {
 
     if (!config.disableRpc) {
       rpcServer->start(config.rpcInterface, config.rpcPort);
-      logger(INFO) << "Core rpc server started ok";
+      logger(Info) << "Core rpc server started ok";
     } else {
-      logger(INFO) << "Core rpc server disabled";
+      logger(Info) << "Core rpc server disabled";
     }
 
     Tools::SignalHandler::install([&dch, &p2psrv] {
@@ -328,52 +328,52 @@ int main(int argc, char* argv[]) {
       p2psrv.sendStopSignal();
     });
 
-    logger(INFO) << "Starting p2p net loop...";
+    logger(Info) << "Starting p2p net loop...";
     if (!p2psrv.run()) {
-      logger(FATAL) << "p2p server initialization failed";
+      logger(Fatal) << "p2p server initialization failed";
     }
-    logger(INFO) << "p2p net loop stopped";
+    logger(Info) << "p2p net loop stopped";
 
     dch.stop_handling();
 
     // stop components
     if (!config.disableRpc) {
-      logger(INFO) << "Stopping core rpc server...";
+      logger(Info) << "Stopping core rpc server...";
       rpcServer->stop();
     }
     rpcServer->setHandler(nullptr);
 
     // deinitialize components
-    logger(INFO) << "Deinitializing p2p...";
+    logger(Info) << "Deinitializing p2p...";
     if (!p2psrv.deinit()) {
-      logger(FATAL) << "p2p shutdown failed, p2p files may be corrupted.";
+      logger(Fatal) << "p2p shutdown failed, p2p files may be corrupted.";
     }
 
     // ------------------------------------------ Transaction Pool
-    logger(INFO) << "Exporting transaction pool...";
+    logger(Info) << "Exporting transaction pool...";
     {
       std::ofstream poolFileStream{transactionPoolFile.string(), std::ios::out | std::ios::binary | std::ios::trunc};
       Common::StdOutputStream poolInputStream{poolFileStream};
       BinaryOutputStreamSerializer poolSerializer(poolInputStream);
       if (!ccore.transactionPool().serialize(poolSerializer)) {
-        logger(ERROR)
+        logger(Error)
             << "Transaction pool save failed, your transaction pool may be corrupted and discarded on next start";
       }
-      logger(INFO) << "Exported " << ccore.transactionPool().size() << " pending pool transactions.";
+      logger(Info) << "Exported " << ccore.transactionPool().size() << " pending pool transactions.";
     }
-    logger(INFO) << "Transaction Pool epxported OK";
+    logger(Info) << "Transaction Pool epxported OK";
     // ------------------------------------------ Transaction Pool
 
     cprotocol.set_p2p_endpoint(nullptr);
     if (!ccore.save()) {
-      logger(FATAL) << "Blockchain save failed, your chain may be corrupted next time you start the daemon.";
+      logger(Fatal) << "Blockchain save failed, your chain may be corrupted next time you start the daemon.";
     }
 
   } catch (const std::exception& e) {
-    logger(ERROR) << "Exception: " << e.what();
+    logger(Error) << "Exception: " << e.what();
     throw e;
   }
 
-  logger(INFO) << "Node stopped.";
+  logger(Info) << "Node stopped.";
   return 0;
 }

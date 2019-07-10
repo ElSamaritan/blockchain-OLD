@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Calex Developers
@@ -261,7 +261,7 @@ bool Core::notifyObservers(BlockchainMessage&& msg) /* noexcept */ {
     }
     return true;
   } catch (std::exception& e) {
-    logger(Logging::WARNING) << "failed to notify observers: " << e.what();
+    logger(Logging::Warning) << "failed to notify observers: " << e.what();
     return false;
   }
 }
@@ -503,7 +503,7 @@ bool Core::queryBlocksLite(const std::vector<Crypto::Hash>& knownBlockHashes, ui
 
     return true;
   } catch (std::exception& e) {
-    logger(Logging::ERROR) << "Failed to query blocks: " << e.what();
+    logger(Logging::Error) << "Failed to query blocks: " << e.what();
     return false;
   }
 }
@@ -559,7 +559,7 @@ bool Core::queryBlocksDetailed(const std::vector<Crypto::Hash>& knownBlockHashes
 
     return true;
   } catch (std::exception& e) {
-    logger(Logging::ERROR) << "Failed to query blocks: " << e.what();
+    logger(Logging::Error) << "Failed to query blocks: " << e.what();
     return false;
   }
 }
@@ -661,21 +661,21 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   os << blockIndex << " (" << blockHash << ")";
   std::string blockStr = os.str();
 
-  logger(Logging::DEBUGGING) << "Request to add block " << blockStr;
+  logger(Logging::Debugging) << "Request to add block " << blockStr;
   if (cachedBlock.getBlockIndex() == 0) {
-    logger(Logging::DEBUGGING) << "Block index=" << cachedBlock.getBlockIndex() << " is genesis block index";
+    logger(Logging::Debugging) << "Block index=" << cachedBlock.getBlockIndex() << " is genesis block index";
     return error::AddBlockErrorCode::REJECTED_AS_ORPHANED;
   }
   const auto& blockTemplate = cachedBlock.getBlock();
   const auto& previousBlockHash = blockTemplate.previousBlockHash;
   auto cache = findSegmentContainingBlock(previousBlockHash);
   if (cache == nullptr) {
-    logger(Logging::DEBUGGING) << "Block " << blockStr << " rejected as orphaned";
+    logger(Logging::Debugging) << "Block " << blockStr << " rejected as orphaned";
     return error::AddBlockErrorCode::REJECTED_AS_ORPHANED;
   }
 
   if (hasBlock(cachedBlock.getBlockHash())) {
-    logger(Logging::DEBUGGING) << "Block " << blockStr << " already exists";
+    logger(Logging::Debugging) << "Block " << blockStr << " already exists";
     return error::AddBlockErrorCode::ALREADY_EXISTS;
   }
 
@@ -686,20 +686,20 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   std::vector<CachedTransaction> transactions;
   uint64_t cumulativeSize = 0;
   if (!extractTransactions(rawBlock.transactions, transactions, cumulativeSize, blockTemplate.version)) {
-    logger(Logging::DEBUGGING) << "Couldn't deserialize raw block transactions in block " << blockStr;
+    logger(Logging::Debugging) << "Couldn't deserialize raw block transactions in block " << blockStr;
     return error::AddBlockErrorCode::DESERIALIZATION_FAILED;
   }
 
   for (uint64_t i = 0; i < transactions.size(); ++i) {
     if (blockTemplate.transactionHashes[i] != transactions[i].getTransactionHash()) {
-      logger(Logging::DEBUGGING)
+      logger(Logging::Debugging)
           << "BlockTemplate and raw transactions are inconsisten, may out of sync or wrongly ordered";
       return error::BlockValidationError::TRANSACTION_INCONSISTENCY;
     }
   }
 
   if (blockTemplate.baseTransaction.binarySize() > currency().maximumCoinbaseSize(blockTemplate.version)) {
-    logger(Logging::DEBUGGING) << "Coinbase transaction exceeds limits " << blockTemplate.baseTransaction.binarySize()
+    logger(Logging::Debugging) << "Coinbase transaction exceeds limits " << blockTemplate.baseTransaction.binarySize()
                                << " > " << currency().maximumCoinbaseSize(blockTemplate.version);
     return error::BlockValidationError::COINBASE_TOO_LARGE;
   }
@@ -710,26 +710,26 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   bool addOnTop = cache->getTopBlockIndex() == previousBlockIndex;
   auto maxBlockCumulativeSize = m_currency.maxBlockCumulativeSize(previousBlockIndex + 1);
   if (cumulativeBlockSize > maxBlockCumulativeSize) {
-    logger(Logging::DEBUGGING) << "Block " << blockStr << " has too big cumulative size";
+    logger(Logging::Debugging) << "Block " << blockStr << " has too big cumulative size";
     return error::BlockValidationError::CUMULATIVE_BLOCK_SIZE_TOO_BIG;
   }
 
   uint64_t minerReward = 0;
   auto blockValidationResult = validateBlock(cachedBlock, cache, minerReward);
   if (blockValidationResult) {
-    logger(Logging::DEBUGGING) << "Failed to validate block " << blockStr << ": " << blockValidationResult.message();
+    logger(Logging::Debugging) << "Failed to validate block " << blockStr << ": " << blockValidationResult.message();
     return blockValidationResult;
   }
 
   auto currentDifficulty = cache->getDifficultyForNextBlock(blockTemplate.version, previousBlockIndex);
   if (currentDifficulty == 0) {
-    logger(Logging::DEBUGGING) << "Block " << blockStr << " has difficulty overhead";
+    logger(Logging::Debugging) << "Block " << blockStr << " has difficulty overhead";
     return error::BlockValidationError::DIFFICULTY_OVERHEAD;
   }
 
   if (checkpoints.isInCheckpointZone(cachedBlock.getBlockIndex())) {
     if (!checkpoints.checkBlock(cachedBlock.getBlockIndex(), cachedBlock.getBlockHash())) {
-      logger(Logging::WARNING) << "Checkpoint block hash mismatch for block " << blockStr;
+      logger(Logging::Warning) << "Checkpoint block hash mismatch for block " << blockStr;
       return error::BlockValidationError::CHECKPOINT_BLOCK_HASH_MISMATCH;
     }
   } else {
@@ -753,7 +753,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     }
 
     if (!m_currency.checkProofOfWork(cachedBlock, currentDifficulty)) {
-      logger(Logging::WARNING) << "Proof of work too weak for block " << blockStr;
+      logger(Logging::Warning) << "Proof of work too weak for block " << blockStr;
       return error::BlockValidationError::PROOF_OF_WORK_TOO_WEAK;
     }
   }
@@ -785,7 +785,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
         validateTransaction(transaction, validatorState, cache, fee, previousBlockIndex, cachedBlock.getBlock().version,
                             cachedBlock.getBlock().timestamp);
     if (transactionValidationResult) {
-      logger(Logging::DEBUGGING) << "Failed to validate transaction " << transaction.getTransactionHash() << ": "
+      logger(Logging::Debugging) << "Failed to validate transaction " << transaction.getTransactionHash() << ": "
                                  << transactionValidationResult.message();
       return transactionValidationResult;
     }
@@ -804,12 +804,12 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   if (!m_currency.getBlockReward(cachedBlock.getBlock().version, blocksSizeMedian,
                                  cumulativeBlockSize - blockTemplate.baseTransaction.binarySize(),
                                  alreadyGeneratedCoins, cumulativeFee, reward, emissionChange)) {
-    logger(Logging::DEBUGGING) << "Block " << blockStr << " has too big cumulative size";
+    logger(Logging::Debugging) << "Block " << blockStr << " has too big cumulative size";
     return error::BlockValidationError::CUMULATIVE_BLOCK_SIZE_TOO_BIG;
   }
 
   if (minerReward != reward) {
-    logger(Logging::DEBUGGING) << "Block reward mismatch for block " << blockStr << ". Expected reward: " << reward
+    logger(Logging::Debugging) << "Block reward mismatch for block " << blockStr << ". Expected reward: " << reward
                                << ", got reward: " << minerReward;
     return error::BlockValidationError::BLOCK_REWARD_MISMATCH;
   }
@@ -843,9 +843,9 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
         updateBlockMedianSize();
 
         ret = error::AddBlockErrorCode::ADDED_TO_MAIN;
-        logger(Logging::DEBUGGING) << "Block " << blockStr << " added to main chain.";
+        logger(Logging::Debugging) << "Block " << blockStr << " added to main chain.";
         if ((previousBlockIndex + 1) % 100 == 0) {
-          logger(Logging::INFO) << "Block " << blockStr << " added to main chain";
+          logger(Logging::Info) << "Block " << blockStr << " added to main chain";
         }
 
         m_blockchainObservers.notify(&IBlockchainObserver::blockAdded, cachedBlock.getBlockIndex(),
@@ -853,7 +853,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
       } else {
         cache->pushBlock(cachedBlock, transactions, validatorState, cumulativeBlockSize, emissionChange,
                          currentDifficulty, std::move(rawBlock));
-        logger(Logging::DEBUGGING) << "Block " << blockStr << " added to alternative chain.";
+        logger(Logging::Debugging) << "Block " << blockStr << " added to alternative chain.";
 
         auto mainChainCache = chainsLeaves[0];
         if (cache->getCurrentCumulativeDifficulty() > mainChainCache->getCurrentCumulativeDifficulty()) {
@@ -873,7 +873,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
           m_blockchainObservers.notify(&IBlockchainObserver::mainChainSwitched, std::cref(*chainsLeaves[endpointIndex]),
                                        std::cref(*chainsLeaves[0]), splitIndex);
 
-          logger(Logging::INFO, Logging::YELLOW)
+          logger(Logging::Info, Logging::YELLOW)
               << "Resolved: " << blockStr << ", Previous: " << chainsLeaves[endpointIndex]->getTopBlockIndex() << " ("
               << chainsLeaves[endpointIndex]->getTopBlockHash() << ")";
         } else {
@@ -890,7 +890,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
       chainsStorage.emplace_back(std::move(newCache));
       chainsLeaves.push_back(newlyForkedChainPtr);
 
-      logger(Logging::DEBUGGING) << "Resolving: " << blockStr;
+      logger(Logging::Debugging) << "Resolving: " << blockStr;
 
       newlyForkedChainPtr->pushBlock(cachedBlock, transactions, validatorState, cumulativeBlockSize, emissionChange,
                                      currentDifficulty, std::move(rawBlock));
@@ -899,7 +899,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
       updateBlockMedianSize();
     }
   } else {
-    logger(Logging::DEBUGGING) << "Resolving: " << blockStr;
+    logger(Logging::Debugging) << "Resolving: " << blockStr;
 
     auto upperSegment = cache->split(previousBlockIndex + 1);
     //[cache] is lower segment now
@@ -931,7 +931,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     updateMainChainSet();
   }
 
-  logger(Logging::DEBUGGING) << "Block: " << blockStr << " successfully added";
+  logger(Logging::Debugging) << "Block: " << blockStr << " successfully added";
   notifyOnSuccess(ret, previousBlockIndex, cachedBlock, *cache);
 
   return ret;
@@ -996,13 +996,13 @@ Xi::Result<std::vector<Crypto::Hash>> Core::addBlock(LiteBlock block, std::vecto
 
   BlockTemplate blockTemplate;
   if (!fromBinaryArray(blockTemplate, std::move(block.blockTemplate))) {
-    logger(Logging::TRACE) << "Lite block has invalid blob";
+    logger(Logging::Trace) << "Lite block has invalid blob";
     return failure(error::AddBlockErrorCode::DESERIALIZATION_FAILED);
   }
 
   // Quick check, we can skip everything if this fails
   if (findSegmentContainingBlock(blockTemplate.previousBlockHash) == nullptr) {
-    logger(Logging::TRACE) << "Lite block rejected as orphaned";
+    logger(Logging::Trace) << "Lite block rejected as orphaned";
     return failure(error::AddBlockErrorCode::REJECTED_AS_ORPHANED);
   }
 
@@ -1037,7 +1037,7 @@ Xi::Result<std::vector<Crypto::Hash>> Core::addBlock(LiteBlock block, std::vecto
     // If pruned we should only consider the pool, because the chain is missing crucial data to validate the lite block.
     getTransactions(missingTXs, txBlobs, innerMissingTXs, isPruned());
     if (!innerMissingTXs.empty()) {
-      logger(Logging::TRACE) << "Lite block has missing transactions.";
+      logger(Logging::Trace) << "Lite block has missing transactions.";
       return success(std::move(innerMissingTXs));
     } else {
       assert(missingTXs.size() == missingTXsIndices.size());
@@ -1045,11 +1045,11 @@ Xi::Result<std::vector<Crypto::Hash>> Core::addBlock(LiteBlock block, std::vecto
       for (size_t i = 0; i < missingTXs.size(); ++i) {
         filledRawBlock.transactions[missingTXsIndices[i]] = std::move(txBlobs[i]);
       }
-      logger(Logging::TRACE) << "Lite block is fully known and will be tried to add";
+      logger(Logging::Trace) << "Lite block is fully known and will be tried to add";
       return failure(addBlock(CachedBlock{std::move(blockTemplate)}, std::move(filledRawBlock)));
     }
   } else {
-    logger(Logging::TRACE) << "Lite block is fully known and will be tried to add";
+    logger(Logging::Trace) << "Lite block is fully known and will be tried to add";
     return failure(addBlock(CachedBlock{std::move(blockTemplate)}, std::move(filledRawBlock)));
   }
 
@@ -1065,7 +1065,7 @@ std::error_code Core::submitBlock(BinaryArray&& rawBlockTemplate) {
   BlockTemplate blockTemplate;
   bool result = fromBinaryArray(blockTemplate, rawBlockTemplate);
   if (!result) {
-    logger(Logging::WARNING) << "Couldn't deserialize block template";
+    logger(Logging::Warning) << "Couldn't deserialize block template";
     return error::AddBlockErrorCode::DESERIALIZATION_FAILED;
   }
 
@@ -1119,7 +1119,7 @@ bool Core::getRandomOutputs(uint64_t amount, uint16_t count, std::vector<uint32_
 
   auto upperBlockLimit = getTopBlockIndex() - m_currency.minedMoneyUnlockWindow();
   if (upperBlockLimit < m_currency.minedMoneyUnlockWindow()) {
-    logger(Logging::DEBUGGING) << "Blockchain height is less than mined unlock window";
+    logger(Logging::Debugging) << "Blockchain height is less than mined unlock window";
     return false;
   }
 
@@ -1135,13 +1135,13 @@ bool Core::getRandomOutputs(uint64_t amount, uint16_t count, std::vector<uint32_
     case ExtractOutputKeysResult::SUCCESS:
       return true;
     case ExtractOutputKeysResult::TIME_PROVIDER_FAILED:
-      logger(Logging::DEBUGGING) << "Time provider failed to yield a valid timestamp.";
+      logger(Logging::Debugging) << "Time provider failed to yield a valid timestamp.";
       return false;
     case ExtractOutputKeysResult::INVALID_GLOBAL_INDEX:
-      logger(Logging::DEBUGGING) << "Invalid global index is given";
+      logger(Logging::Debugging) << "Invalid global index is given";
       return false;
     case ExtractOutputKeysResult::OUTPUT_LOCKED:
-      logger(Logging::DEBUGGING) << "Output is locked";
+      logger(Logging::Debugging) << "Output is locked";
       return false;
   }
 
@@ -1217,7 +1217,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   index = getTopBlockIndex() + 1;
   difficulty = getDifficultyForNextBlock();
   if (difficulty == 0) {
-    logger(Logging::ERROR) << "difficulty overhead.";
+    logger(Logging::Error) << "difficulty overhead.";
     return false;
   }
 
@@ -1229,7 +1229,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   if (m_currency.isStaticRewardEnabledForBlockVersion(b.version)) {
     auto staticReward = m_currency.constructStaticRewardTx(b.previousBlockHash, b.version, index);
     if (staticReward.isError() || !staticReward.value().has_value()) {
-      logger(Logging::ERROR) << "expected static reward but consturation failed";
+      logger(Logging::Error) << "expected static reward but consturation failed";
       return false;
     }
     CachedTransaction cStaticReward{std::move(staticReward.take().value())};
@@ -1242,7 +1242,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
 
   auto timestamp = timeProvider().posixNow();
   if (timestamp.isError()) {
-    logger(Logging::ERROR) << "Failed to receive timestamp: " << timestamp.error().message();
+    logger(Logging::Error) << "Failed to receive timestamp: " << timestamp.error().message();
     return false;
   }
   b.timestamp = timestamp.value();
@@ -1300,7 +1300,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   if (auto ec = m_currency.constructMinerTx(b.version, index, medianSize, alreadyGeneratedCoins, transactionsSize, fee,
                                             adr, b.baseTransaction, extraNonce, 20);
       !ec) {
-    logger(Logging::ERROR) << "Failed to construct miner tx, first chance";
+    logger(Logging::Error) << "Failed to construct miner tx, first chance";
     XI_RETURN_EC(false);
   }
   XI_RETURN_SC(true);
@@ -1378,7 +1378,7 @@ bool Core::extractTransactions(const std::vector<BinaryArray>& rawTransactions,
   try {
     for (const auto& rawTransaction : rawTransactions) {
       if (rawTransaction.size() > m_currency.maxTxSize(blockVersion)) {
-        logger(Logging::INFO) << "Raw transaction size " << rawTransaction.size() << " is too big.";
+        logger(Logging::Info) << "Raw transaction size " << rawTransaction.size() << " is too big.";
         return false;
       }
 
@@ -1386,7 +1386,7 @@ bool Core::extractTransactions(const std::vector<BinaryArray>& rawTransactions,
       transactions.push_back(CachedTransaction{rawTransaction});
     }
   } catch (std::runtime_error& e) {
-    logger(Logging::INFO) << e.what();
+    logger(Logging::Info) << e.what();
     return false;
   }
 
@@ -1712,7 +1712,7 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
 
     auto staticReward = m_currency.constructStaticRewardTx(b.previousBlockHash, b.version, previousBlockIndex + 1);
     if (staticReward.isError() || !staticReward.value().has_value()) {
-      logger(Logging::ERROR) << "expected static reward but consturation failed while validating block";
+      logger(Logging::Error) << "expected static reward but consturation failed while validating block";
       return error::BlockValidationError::STATIC_REWARD_MISMATCH;
       ;
     }
@@ -1744,7 +1744,7 @@ bool Core::save() {
     mergeMainChainSegments();
     return chainsLeaves[0]->save();
   } catch (std::exception& e) {
-    logger(Logging::FATAL) << "Core save routine failed: " << e.what();
+    logger(Logging::Fatal) << "Core save routine failed: " << e.what();
     return false;
   } catch (...) {
     return false;
@@ -1765,35 +1765,35 @@ bool Core::load() {
     auto dbBlocksCount = chainsLeaves[0]->getTopBlockIndex() + 1;
     auto storageBlocksCount = mainChainStorage->getBlockCount();
 
-    logger(Logging::DEBUGGING) << "Blockchain storage blocks count: " << storageBlocksCount
+    logger(Logging::Debugging) << "Blockchain storage blocks count: " << storageBlocksCount
                                << ", DB blocks count: " << dbBlocksCount;
 
     assert(storageBlocksCount != 0);  // we assume the storage has at least genesis block
 
     if (storageBlocksCount > dbBlocksCount) {
-      logger(Logging::INFO) << "Importing blocks from blockchain storage";
+      logger(Logging::Info) << "Importing blocks from blockchain storage";
       XI_RETURN_EC_IF_NOT(importBlocksFromStorage(), false);
     } else if (storageBlocksCount < dbBlocksCount) {
       auto cutFrom = findCommonRoot(*mainChainStorage, *chainsLeaves[0]) + 1;
 
-      logger(Logging::INFO) << "DB has more blocks than blockchain storage, cutting from block index: " << cutFrom;
+      logger(Logging::Info) << "DB has more blocks than blockchain storage, cutting from block index: " << cutFrom;
       cutSegment(*chainsLeaves[0], cutFrom);
 
       assert(chainsLeaves[0]->getTopBlockIndex() + 1 == mainChainStorage->getBlockCount());
     } else if (getBlockHash(mainChainStorage->getBlockByIndex(storageBlocksCount - 1)) !=
                chainsLeaves[0]->getTopBlockHash()) {
-      logger(Logging::INFO) << "Blockchain storage and root segment are on different chains. "
+      logger(Logging::Info) << "Blockchain storage and root segment are on different chains. "
                             << "Cutting root segment to common block index "
                             << findCommonRoot(*mainChainStorage, *chainsLeaves[0]) << " and reimporting blocks";
       XI_RETURN_EC_IF_NOT(importBlocksFromStorage(), false);
     } else {
-      logger(Logging::DEBUGGING) << "Blockchain storage and root segment are on the same height and chain";
+      logger(Logging::Debugging) << "Blockchain storage and root segment are on the same height and chain";
     }
 
     initialized = true;
     return true;
   } catch (std::exception& e) {
-    logger(Logging::FATAL) << "Core loading routine failed: " << e.what();
+    logger(Logging::Fatal) << "Core loading routine failed: " << e.what();
     return false;
   } catch (...) {
     return false;
@@ -1829,7 +1829,7 @@ bool Core::importBlocksFromStorage() {
     CachedBlock cachedBlock(blockTemplate);
 
     if (blockTemplate.previousBlockHash != previousBlockHash) {
-      logger(Logging::ERROR) << "Corrupted blockchain. Block with index " << i << " and hash "
+      logger(Logging::Error) << "Corrupted blockchain. Block with index " << i << " and hash "
                              << cachedBlock.getBlockHash() << " has previous block hash "
                              << blockTemplate.previousBlockHash << ", but parent has hash " << previousBlockHash
                              << ". Resynchronize your daemon please.";
@@ -1843,7 +1843,7 @@ bool Core::importBlocksFromStorage() {
     {
       uint64_t _ = 0;
       if (!extractTransactions(rawBlock.transactions, transactions, _, blockTemplate.version)) {
-        logger(Logging::ERROR) << "Couldn't deserialize raw block transactions in block " << cachedBlock.getBlockHash();
+        logger(Logging::Error) << "Couldn't deserialize raw block transactions in block " << cachedBlock.getBlockHash();
         throw std::system_error(make_error_code(error::AddBlockErrorCode::DESERIALIZATION_FAILED));
       }
     }
@@ -1862,7 +1862,7 @@ bool Core::importBlocksFromStorage() {
                                currentDifficulty, std::move(rawBlock));
 
     if (i % 1000 == 0) {
-      logger(Logging::INFO) << "Imported block with index " << i << " / " << (blockCount - 1);
+      logger(Logging::Info) << "Imported block with index " << i << " / " << (blockCount - 1);
     }
   }
   return true;
@@ -1877,7 +1877,7 @@ void Core::cutSegment(IBlockchainCache& segment, uint32_t startIndex) {
     return;
   }
 
-  logger(Logging::INFO) << "Cutting root segment from index " << startIndex;
+  logger(Logging::Info) << "Cutting root segment from index " << startIndex;
   auto childCache = segment.split(startIndex);
   segment.deleteChild(childCache.get());
 }
@@ -2309,13 +2309,13 @@ void Core::mergeSegments(IBlockchainCache* acceptingSegment, IBlockchainCache* s
 
     BlockTemplate block;
     if (!fromBinaryArray(block, info.rawBlock.blockTemplate)) {
-      logger(Logging::WARNING) << "mergeSegments error: Couldn't deserialize block";
+      logger(Logging::Warning) << "mergeSegments error: Couldn't deserialize block";
       throw std::runtime_error("Couldn't deserialize block");
     }
 
     std::vector<CachedTransaction> transactions;
     if (!Utils::restoreCachedTransactions(info.rawBlock.transactions, transactions)) {
-      logger(Logging::WARNING) << "mergeSegments error: Couldn't deserialize transactions";
+      logger(Logging::Warning) << "mergeSegments error: Couldn't deserialize transactions";
       throw std::runtime_error("Couldn't deserialize transactions");
     }
 
@@ -2605,13 +2605,13 @@ std::vector<Crypto::Hash> Core::getBlockHashesByTimestamps(uint64_t timestampBeg
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
 
-  logger(Logging::DEBUGGING) << "getBlockHashesByTimestamps request with timestamp " << timestampBegin
+  logger(Logging::Debugging) << "getBlockHashesByTimestamps request with timestamp " << timestampBegin
                              << " and seconds count " << secondsCount;
 
   auto mainChain = chainsLeaves[0];
 
   if (timestampBegin + static_cast<uint64_t>(secondsCount) < timestampBegin) {
-    logger(Logging::WARNING) << "Timestamp overflow occured. Timestamp begin: " << timestampBegin
+    logger(Logging::Warning) << "Timestamp overflow occured. Timestamp begin: " << timestampBegin
                              << ", timestamp end: " << (timestampBegin + static_cast<uint64_t>(secondsCount));
 
     throw std::runtime_error("Timestamp overflow");
@@ -2624,7 +2624,7 @@ std::vector<Crypto::Hash> Core::getTransactionHashesByPaymentId(const PaymentId&
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
 
-  logger(Logging::DEBUGGING) << "getTransactionHashesByPaymentId request with paymentId " << paymentId;
+  logger(Logging::Debugging) << "getTransactionHashesByPaymentId request with paymentId " << paymentId;
 
   auto mainChain = chainsLeaves[0];
 
@@ -2814,9 +2814,9 @@ void Core::transactionPoolCleaningProcedure() {
           makeDelTransactionMessage(std::move(deletedTransactions), Messages::DeleteTransaction::Reason::Outdated));
     }
   } catch (System::InterruptedException&) {
-    logger(Logging::DEBUGGING) << "transactionPoolCleaningProcedure has been interrupted";
+    logger(Logging::Debugging) << "transactionPoolCleaningProcedure has been interrupted";
   } catch (std::exception& e) {
-    logger(Logging::ERROR) << "Error occurred while cleaning transactions pool: " << e.what();
+    logger(Logging::Error) << "Error occurred while cleaning transactions pool: " << e.what();
   }
 }
 

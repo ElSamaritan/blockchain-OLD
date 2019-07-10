@@ -207,7 +207,7 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
   JsonRpcResponse jsonResponse;
 
   try {
-    logger(TRACE) << "JSON-RPC request: " << request.body();
+    logger(Trace) << "JSON-RPC request: " << request.body();
     jsonRequest.parseRequest(request.body());
     jsonResponse.setId(jsonRequest.getId());  // copy id
 
@@ -258,7 +258,7 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
   }
 
   response.setBody(jsonResponse.getBody());
-  logger(TRACE) << "JSON-RPC response: " << jsonResponse.getBody();
+  logger(Trace) << "JSON-RPC response: " << jsonResponse.getBody();
   return true;
 }
 
@@ -284,7 +284,7 @@ const std::string& RpcServer::getCorsDomain() { return m_cors; }
 bool RpcServer::isBlockexplorer() const { return m_isBlockexplorer; }
 void RpcServer::setBlockexplorer(bool enabled) {
   m_isBlockexplorer = enabled;
-  logger(INFO) << "Blockexplorer " << (enabled ? "enabled" : "disabled");
+  logger(Info) << "Blockexplorer " << (enabled ? "enabled" : "disabled");
 }
 
 bool RpcServer::isBlockexplorerOnly() const { return m_isBlockexplorerOnly; }
@@ -326,7 +326,7 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req,
       req.block_hashes, Xi::Config::Limits::maximumRPCBlocksQueryCount(), totalBlockCount, startBlockIndex);
 
   if (supplementQuery.isError()) {
-    logger(Logging::ERROR) << "Failed to query blockchain supplement: " << supplementQuery.error().message();
+    logger(Logging::Error) << "Failed to query blockchain supplement: " << supplementQuery.error().message();
     res.status = "Failed";
     return false;
   }
@@ -405,7 +405,7 @@ bool RpcServer::on_get_indexes(const COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::
 
   res.output_indices.assign(outputIndexes.begin(), outputIndexes.end());
   res.status = CORE_RPC_STATUS_OK;
-  logger(TRACE) << "COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES: [" << res.output_indices.size() << "]";
+  logger(Trace) << "COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES: [" << res.output_indices.size() << "]";
   return true;
 }
 
@@ -679,7 +679,7 @@ bool RpcServer::on_get_transactions(const COMMAND_RPC_GET_TRANSACTIONS::request&
   for (auto& tx : txs) {
     Transaction transaction;
     if (!fromBinaryArray(transaction, tx)) {
-      logger(ERROR) << "unable to deserialize transaction returned from core";
+      logger(Error) << "unable to deserialize transaction returned from core";
     } else {
       res.transactions.push_back(std::move(transaction));
     }
@@ -696,7 +696,7 @@ bool RpcServer::on_get_transactions(const COMMAND_RPC_GET_TRANSACTIONS::request&
 bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMMAND_RPC_SEND_RAW_TX::response& res) {
   auto txPushResult = m_core.transactionPool().pushTransaction(req.transaction);
   if (txPushResult.isError()) {
-    logger(DEBUGGING) << "[on_send_raw_tx]: tx verification failed (" << txPushResult.error().message() << ")";
+    logger(Debugging) << "[on_send_raw_tx]: tx verification failed (" << txPushResult.error().message() << ")";
     res.status = "Failed";
     return true;
   }
@@ -1196,7 +1196,7 @@ bool RpcServer::on_getblocktemplate(const COMMAND_RPC_GETBLOCKTEMPLATE::request&
 
   uint32_t blockTemplateIndex = 0;
   if (!m_core.getBlockTemplate(blockTemplate, acc, blob_reserve, res.difficulty, blockTemplateIndex)) {
-    logger(ERROR) << "Failed to create block template";
+    logger(Error) << "Failed to create block template";
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Internal error: failed to create block template"};
   }
   res.height = BlockHeight::fromIndex(blockTemplateIndex);
@@ -1204,7 +1204,7 @@ bool RpcServer::on_getblocktemplate(const COMMAND_RPC_GETBLOCKTEMPLATE::request&
   BinaryArray block_blob = toBinaryArray(blockTemplate);
   PublicKey tx_pub_key = CryptoNote::getTransactionPublicKeyFromExtra(blockTemplate.baseTransaction.extra);
   if (tx_pub_key == PublicKey::Null) {
-    logger(ERROR) << "Failed to find tx pub key in coinbase extra";
+    logger(Error) << "Failed to find tx pub key in coinbase extra";
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
                                 "Internal error: failed to find tx pub key in coinbase extra"};
   }
@@ -1212,14 +1212,14 @@ bool RpcServer::on_getblocktemplate(const COMMAND_RPC_GETBLOCKTEMPLATE::request&
   if (0 < req.reserve_size) {
     res.reserved_offset = slow_memmem((void*)block_blob.data(), block_blob.size(), &tx_pub_key, sizeof(tx_pub_key));
     if (!res.reserved_offset) {
-      logger(ERROR) << "Failed to find tx pub key in blockblob";
+      logger(Error) << "Failed to find tx pub key in blockblob";
       throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
                                   "Internal error: failed to create block template"};
     }
     res.reserved_offset += sizeof(tx_pub_key) + 3;  // 3 bytes: tag for TX_EXTRA_TAG_PUBKEY(1 byte), tag for
                                                     // TX_EXTRA_NONCE(1 byte), counter in TX_EXTRA_NONCE(1 byte)
     if (res.reserved_offset + req.reserve_size > block_blob.size()) {
-      logger(ERROR) << "Failed to calculate offset for reserved bytes";
+      logger(Error) << "Failed to calculate offset for reserved bytes";
       throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
                                   "Internal error: failed to create block template"};
     }
@@ -1259,7 +1259,7 @@ bool RpcServer::on_get_block_template(const RpcCommands::GetBlockTemplate::reque
   CryptoNote::BinaryArray blob_reserve;
   uint32_t blockTemplateIndex = 0;
   if (!m_core.getBlockTemplate(blockTemplate, acc, blob_reserve, res.difficulty, blockTemplateIndex)) {
-    logger(ERROR) << "Failed to create block template";
+    logger(Error) << "Failed to create block template";
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Internal error: failed to create block template"};
   }
   res.height = BlockHeight::fromIndex(blockTemplateIndex);
@@ -1267,7 +1267,7 @@ bool RpcServer::on_get_block_template(const RpcCommands::GetBlockTemplate::reque
   BinaryArray block_blob = toBinaryArray(blockTemplate);
   PublicKey tx_pub_key = CryptoNote::getTransactionPublicKeyFromExtra(blockTemplate.baseTransaction.extra);
   if (tx_pub_key == PublicKey::Null) {
-    logger(ERROR) << "Failed to find tx pub key in coinbase extra";
+    logger(Error) << "Failed to find tx pub key in coinbase extra";
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
                                 "Internal error: failed to find tx pub key in coinbase extra"};
   }
@@ -1276,14 +1276,14 @@ bool RpcServer::on_get_block_template(const RpcCommands::GetBlockTemplate::reque
     res.reserved_offset = static_cast<uint32_t>(
         slow_memmem((void*)block_blob.data(), block_blob.size(), &tx_pub_key, sizeof(tx_pub_key)));
     if (!res.reserved_offset) {
-      logger(ERROR) << "Failed to find tx pub key in blockblob";
+      logger(Error) << "Failed to find tx pub key in blockblob";
       throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
                                   "Internal error: failed to create block template"};
     }
     res.reserved_offset += sizeof(tx_pub_key) + 3;  // 3 bytes: tag for TX_EXTRA_TAG_PUBKEY(1 byte), tag for
                                                     // TX_EXTRA_NONCE(1 byte), counter in TX_EXTRA_NONCE(1 byte)
     if (res.reserved_offset + req.reserve_size > block_blob.size()) {
-      logger(ERROR) << "Failed to calculate offset for reserved bytes";
+      logger(Error) << "Failed to calculate offset for reserved bytes";
       throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
                                   "Internal error: failed to create block template"};
     }

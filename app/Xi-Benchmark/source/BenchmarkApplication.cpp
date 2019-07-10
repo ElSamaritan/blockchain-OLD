@@ -162,7 +162,7 @@ int main(int argc, char** argv) {
 
     XI_UNUSED_REVAL(CommonCLI::make_crash_dumper("xi-benchmark"));
 
-    Logging::ConsoleLogger consoleLogger{(silent ? Logging::INFO : Logging::TRACE)};
+    Logging::ConsoleLogger consoleLogger{(silent ? Logging::Info : Logging::Trace)};
     consoleLogger.setPattern("");
     Logging::LoggerRef logger{consoleLogger, ""};
 
@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
     BencharkSummary summary;
 
     for (threads = minThreadUsage; threads <= maxThreadUsage; ++threads) {
-      logger(Logging::TRACE) << "starting benchmark using " << threads << " threads\n";
+      logger(Logging::Trace) << "starting benchmark using " << threads << " threads\n";
       BenchmarkResult result{blocks, size, threads, "CNX_v0_0"};
       std::vector<std::thread> worker;
       worker.reserve(threads);
@@ -192,16 +192,16 @@ int main(int argc, char** argv) {
         worker[i].join();
       }
       summary.Benchmarks.push_back(result);
-      logger(Logging::TRACE) << "Block Size       : " << size;
-      logger(Logging::TRACE) << "Hashes Per Thread: " << blocks;
-      logger(Logging::TRACE) << "Slowest          : " << result.worstDuration().count() << "ns";
-      logger(Logging::TRACE) << "Best             : " << result.bestDuration().count() << "ns";
-      logger(Logging::TRACE) << "Average          : " << result.averageDuration().count() << "ns";
-      logger(Logging::TRACE) << "Total Hashes     : " << result.totalHashes();
-      logger(Logging::TRACE) << "Slowest Hashrate : " << result.worstHashrate() << "H/s";
-      logger(Logging::TRACE) << "Best    Hashrate : " << result.bestHashrate() << "H/s";
-      logger(Logging::TRACE) << "Average Hashrate : " << result.averageHashrate() << "H/s";
-      logger(Logging::TRACE) << "Total   Hashrate : " << result.totalHashrate() << "H/s\n\n";
+      logger(Logging::Trace) << "Block Size       : " << size;
+      logger(Logging::Trace) << "Hashes Per Thread: " << blocks;
+      logger(Logging::Trace) << "Slowest          : " << result.worstDuration().count() << "ns";
+      logger(Logging::Trace) << "Best             : " << result.bestDuration().count() << "ns";
+      logger(Logging::Trace) << "Average          : " << result.averageDuration().count() << "ns";
+      logger(Logging::Trace) << "Total Hashes     : " << result.totalHashes();
+      logger(Logging::Trace) << "Slowest Hashrate : " << result.worstHashrate() << "H/s";
+      logger(Logging::Trace) << "Best    Hashrate : " << result.bestHashrate() << "H/s";
+      logger(Logging::Trace) << "Average Hashrate : " << result.averageHashrate() << "H/s";
+      logger(Logging::Trace) << "Total   Hashrate : " << result.totalHashrate() << "H/s\n\n";
     }
 
     logger() << formatterSearch->second(summary);

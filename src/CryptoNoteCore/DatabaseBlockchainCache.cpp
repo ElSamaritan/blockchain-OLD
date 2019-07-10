@@ -460,7 +460,7 @@ DatabaseBlockchainCache::DatabaseBlockchainCache(const Currency& curr, IDataBase
 
   auto version = readBatch.getDbSchemeVersion();
   if (!version) {
-    logger(Logging::DEBUGGING) << "DB scheme version not found, writing: " << CURRENT_DB_SCHEME_VERSION;
+    logger(Logging::Debugging) << "DB scheme version not found, writing: " << CURRENT_DB_SCHEME_VERSION;
 
     DatabaseVersionWriteBatch writeBatch(CURRENT_DB_SCHEME_VERSION);
     auto writeError = database.write(writeBatch);
@@ -468,11 +468,11 @@ DatabaseBlockchainCache::DatabaseBlockchainCache(const Currency& curr, IDataBase
       throw std::system_error(writeError);
     }
   } else {
-    logger(Logging::DEBUGGING) << "Current db scheme version: " << *version;
+    logger(Logging::Debugging) << "Current db scheme version: " << *version;
   }
 
   if (getTopBlockIndex() == 0) {
-    logger(Logging::DEBUGGING) << "top block index is nill, add genesis block";
+    logger(Logging::Debugging) << "top block index is nill, add genesis block";
     addGenesisBlock(CachedBlock{currency.genesisBlock()});
   }
 }
@@ -491,12 +491,12 @@ bool DatabaseBlockchainCache::checkDBSchemeVersion(IDataBase& database, Logging:
     // DB scheme version not found. Looks like it was just created.
     return true;
   } else if (*version < CURRENT_DB_SCHEME_VERSION) {
-    logger(Logging::WARNING) << "DB scheme version is less than expected. Expected version "
+    logger(Logging::Warning) << "DB scheme version is less than expected. Expected version "
                              << CURRENT_DB_SCHEME_VERSION << ". Actual version " << *version
                              << ". DB will be destroyed and recreated from blocks.bin file.";
     return false;
   } else if (*version > CURRENT_DB_SCHEME_VERSION) {
-    logger(Logging::ERROR) << "DB scheme version is greater than expected. Expected version "
+    logger(Logging::Error) << "DB scheme version is greater than expected. Expected version "
                            << CURRENT_DB_SCHEME_VERSION << ". Actual version " << *version
                            << ". Please update your software.";
     throw std::runtime_error("DB scheme version is greater than expected");
@@ -514,7 +514,7 @@ void DatabaseBlockchainCache::deleteClosestTimestampBlockIndex(BlockchainWriteBa
   auto midnight = roundToMidnight(timestamp);
   auto timestampResult = requestClosestBlockIndexByTimestamp(midnight, database);
   if (!timestampResult.second) {
-    logger(Logging::ERROR)
+    logger(Logging::Error)
         << "deleteClosestTimestampBlockIndex error: get closest timestamp block index, database read failed";
     throw std::runtime_error("Couldn't get closest timestamp block index");
   }
@@ -536,7 +536,7 @@ void DatabaseBlockchainCache::deleteClosestTimestampBlockIndex(BlockchainWriteBa
     midnight += ONE_DAY_SECONDS;
   }
 
-  logger(Logging::TRACE) << "deleted closest timestamp";
+  logger(Logging::Trace) << "deleted closest timestamp";
 }
 
 /*
@@ -545,7 +545,7 @@ void DatabaseBlockchainCache::deleteClosestTimestampBlockIndex(BlockchainWriteBa
  */
 std::shared_ptr<IBlockchainCache> DatabaseBlockchainCache::split(uint32_t splitBlockIndex) {
   assert(splitBlockIndex <= getTopBlockIndex());
-  logger(Logging::DEBUGGING) << "split at index " << splitBlockIndex
+  logger(Logging::Debugging) << "split at index " << splitBlockIndex
                              << " started, top block index: " << getTopBlockIndex();
 
   auto cache = blockchainCacheFactory.createBlockchainCache(currency, this, splitBlockIndex);
@@ -559,7 +559,7 @@ std::shared_ptr<IBlockchainCache> DatabaseBlockchainCache::split(uint32_t splitB
     ExtendedPushedBlockInfo extendedInfo = getExtendedPushedBlockInfo(blockIndex);
 
     auto validatorState = extendedInfo.pushedBlockInfo.validatorState;
-    logger(Logging::DEBUGGING) << "pushing block " << blockIndex << " to child segment";
+    logger(Logging::Debugging) << "pushing block " << blockIndex << " to child segment";
     auto blockHash = pushBlockToAnotherCache(*cache, std::move(extendedInfo.pushedBlockInfo));
 
     deletingBlocks.emplace_back(blockIndex, blockHash, validatorState, extendedInfo.timestamp);
@@ -582,7 +582,7 @@ std::shared_ptr<IBlockchainCache> DatabaseBlockchainCache::split(uint32_t splitB
 
   std::vector<ExtendedTransactionInfo> extendedTransactions;
   if (!requestExtendedTransactionInfos(deletingTransactionHashes, database, extendedTransactions)) {
-    logger(Logging::ERROR) << "Error while split: failed to request extended transaction info";
+    logger(Logging::Error) << "Error while split: failed to request extended transaction info";
     throw std::runtime_error("failed to request extended transaction info");  // TODO: make error codes
   }
 
@@ -597,18 +597,18 @@ std::shared_ptr<IBlockchainCache> DatabaseBlockchainCache::split(uint32_t splitB
 
   deleteClosestTimestampBlockIndex(writeBatch, splitBlockIndex);
 
-  logger(Logging::DEBUGGING) << "Performing delete operations";
+  logger(Logging::Debugging) << "Performing delete operations";
   // all data and indexes are now copied, no errors detected, can now erase data from database
   auto err = database.write(writeBatch);
   if (err) {
-    logger(Logging::ERROR) << "split write failed, " << err.message();
+    logger(Logging::Error) << "split write failed, " << err.message();
     throw std::runtime_error(err.message());
   }
 
   cutTail(unitsCache, currentTop + 1 - splitBlockIndex);
 
   children.push_back(cache.get());
-  logger(Logging::TRACE) << "Delete successfull";
+  logger(Logging::Trace) << "Delete successfull";
 
   // invalidate top block index and hash
   topBlockIndex = boost::none;
@@ -616,7 +616,7 @@ std::shared_ptr<IBlockchainCache> DatabaseBlockchainCache::split(uint32_t splitB
   topBlockVersion = boost::none;
   transactionsCount = boost::none;
 
-  logger(Logging::DEBUGGING) << "split completed";
+  logger(Logging::Debugging) << "split completed";
 
   // return new cache
   return cache;
@@ -642,7 +642,7 @@ Crypto::Hash DatabaseBlockchainCache::pushBlockToAnotherCache(IBlockchainCache& 
 }
 
 std::vector<Crypto::Hash> DatabaseBlockchainCache::requestTransactionHashesFromBlockIndex(uint32_t splitBlockIndex) {
-  logger(Logging::DEBUGGING) << "Requesting transaction hashes starting from block index " << splitBlockIndex;
+  logger(Logging::Debugging) << "Requesting transaction hashes starting from block index " << splitBlockIndex;
 
   BlockchainReadBatch readBatch;
   for (uint32_t blockIndex = splitBlockIndex; blockIndex <= getTopBlockIndex(); ++blockIndex) {
@@ -694,13 +694,13 @@ void DatabaseBlockchainCache::requestDeletePaymentId(BlockchainWriteBatch& write
   assert(count > 0);
   assert(count >= toDelete);
 
-  logger(Logging::DEBUGGING) << "Deleting last " << toDelete << " transaction hashes of payment id " << paymentId;
+  logger(Logging::Debugging) << "Deleting last " << toDelete << " transaction hashes of payment id " << paymentId;
   writeBatch.removePaymentId(paymentId, static_cast<uint32_t>(count - toDelete));
 }
 
 void DatabaseBlockchainCache::requestDeleteSpentOutputs(BlockchainWriteBatch& writeBatch, uint32_t blockIndex,
                                                         const TransactionValidatorState& spentOutputs) {
-  logger(Logging::DEBUGGING) << "Deleting spent outputs for block index " << blockIndex;
+  logger(Logging::Debugging) << "Deleting spent outputs for block index " << blockIndex;
 
   std::vector<Crypto::KeyImage> spentKeys(spentOutputs.spentKeyImages.begin(), spentOutputs.spentKeyImages.end());
 
@@ -712,7 +712,7 @@ void DatabaseBlockchainCache::requestDeleteKeyOutputs(
     const std::map<IBlockchainCache::Amount, IBlockchainCache::GlobalOutputIndex>& boundaries) {
   if (boundaries.empty()) {
     // hardly possible
-    logger(Logging::DEBUGGING) << "No key output amounts...";
+    logger(Logging::Debugging) << "No key output amounts...";
     return;
   }
 
@@ -735,7 +735,7 @@ void DatabaseBlockchainCache::requestDeleteKeyOutputsAmount(BlockchainWriteBatch
                                                             IBlockchainCache::Amount amount,
                                                             IBlockchainCache::GlobalOutputIndex boundary,
                                                             uint32_t outputsCount) {
-  logger(Logging::DEBUGGING) << "Requesting delete for key output amount " << amount << " starting from global index "
+  logger(Logging::Debugging) << "Requesting delete for key output amount " << amount << " starting from global index "
                              << boundary << " to " << (outputsCount - 1);
 
   writeBatch.removeKeyOutputGlobalIndexes(amount, outputsCount - boundary, boundary);
@@ -760,10 +760,10 @@ void DatabaseBlockchainCache::requestRemoveTimestamp(BlockchainWriteBatch& batch
   indexes.erase(it);
 
   if (indexes.empty()) {
-    logger(Logging::DEBUGGING) << "Deleting timestamp " << timestamp;
+    logger(Logging::Debugging) << "Deleting timestamp " << timestamp;
     batch.removeTimestamp(timestamp);
   } else {
-    logger(Logging::DEBUGGING) << "Deleting block hash " << blockHash << " from timestamp " << timestamp;
+    logger(Logging::Debugging) << "Deleting block hash " << blockHash << " from timestamp " << timestamp;
     batch.insertTimestamp(timestamp, indexes);
   }
 }
@@ -771,7 +771,7 @@ void DatabaseBlockchainCache::requestRemoveTimestamp(BlockchainWriteBatch& batch
 void DatabaseBlockchainCache::pushTransaction(const CachedTransaction& cachedTransaction, uint32_t blockIndex,
                                               uint16_t transactionBlockIndex, BlockchainWriteBatch& batch,
                                               bool isGenerated) {
-  logger(Logging::DEBUGGING) << "push transaction with hash " << cachedTransaction.getTransactionHash();
+  logger(Logging::Debugging) << "push transaction with hash " << cachedTransaction.getTransactionHash();
   const auto& tx = cachedTransaction.getTransaction();
 
   ExtendedTransactionInfo transactionCacheInfo;
@@ -838,20 +838,20 @@ void DatabaseBlockchainCache::pushTransaction(const CachedTransaction& cachedTra
 
   batch.insertCachedTransaction(transactionCacheInfo, getCachedTransactionsCount() + 1);
   transactionsCount = *transactionsCount + 1;
-  logger(Logging::DEBUGGING) << "push transaction with hash " << cachedTransaction.getTransactionHash() << " finished";
+  logger(Logging::Debugging) << "push transaction with hash " << cachedTransaction.getTransactionHash() << " finished";
 }
 
 uint32_t DatabaseBlockchainCache::updateKeyOutputCount(Amount amount, int32_t diff) const {
   auto it = keyOutputCountsForAmounts.find(amount);
   if (it == keyOutputCountsForAmounts.end()) {
-    logger(Logging::TRACE) << "updateKeyOutputCount: failed to found key for amount, request database";
+    logger(Logging::Trace) << "updateKeyOutputCount: failed to found key for amount, request database";
 
     BlockchainReadBatch batch;
     auto result = readDatabase(batch.requestKeyOutputGlobalIndexesCountForAmount(amount));
     auto found = result.getKeyOutputGlobalIndexesCountForAmounts().find(amount);
     auto val = found != result.getKeyOutputGlobalIndexesCountForAmounts().end() ? found->second : 0;
     it = keyOutputCountsForAmounts.insert({amount, val}).first;
-    logger(Logging::TRACE) << "updateKeyOutputCount: database replied: amount " << amount << " value " << val;
+    logger(Logging::Trace) << "updateKeyOutputCount: database replied: amount " << amount << " value " << val;
 
     if (val == 0) {
       if (!keyOutputAmountsCount) {
@@ -908,7 +908,7 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
                                         const TransactionValidatorState& validatorState, size_t blockSize,
                                         uint64_t generatedCoins, uint64_t blockDifficulty, RawBlock&& rawBlock) {
   BlockchainWriteBatch batch;
-  logger(Logging::DEBUGGING) << "push block with hash " << cachedBlock.getBlockHash() << ", and "
+  logger(Logging::Debugging) << "push block with hash " << cachedBlock.getBlockHash() << ", and "
                              << cachedTransactions.size() + 1 << " transactions";  //+1 for base transaction
 
   // TODO: cache top block difficulty, size, timestamp, coins; use it here
@@ -971,7 +971,7 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   auto closestBlockIndexDb =
       requestClosestBlockIndexByTimestamp(roundToMidnight(cachedBlock.getBlock().timestamp), database);
   if (!closestBlockIndexDb.second) {
-    logger(Logging::ERROR) << "push block " << cachedBlock.getBlockHash()
+    logger(Logging::Error) << "push block " << cachedBlock.getBlockHash()
                            << " request closest block index by timestamp failed";
     throw std::runtime_error("Couldn't get closest to timestamp block index");
   }
@@ -984,14 +984,14 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
 
   auto res = database.write(batch);
   if (res) {
-    logger(Logging::ERROR) << "push block " << cachedBlock.getBlockHash() << " write failed: " << res.message();
+    logger(Logging::Error) << "push block " << cachedBlock.getBlockHash() << " write failed: " << res.message();
     throw std::runtime_error(res.message());
   }
 
   topBlockIndex = *topBlockIndex + 1;
   topBlockHash = cachedBlock.getBlockHash();
   topBlockVersion = cachedBlock.getBlock().version;
-  logger(Logging::DEBUGGING) << "push block " << cachedBlock.getBlockHash() << " completed";
+  logger(Logging::Debugging) << "push block " << cachedBlock.getBlockHash() << " completed";
 
   unitsCache.push_back(blockInfo);
   if (unitsCache.size() > unitsCacheSize) {
@@ -1007,7 +1007,7 @@ bool DatabaseBlockchainCache::checkIfSpent(const Crypto::KeyImage& keyImage, uin
   auto batch = BlockchainReadBatch().requestBlockIndexBySpentKeyImage(keyImage);
   auto res = database.read(batch);
   if (res) {
-    logger(Logging::ERROR) << "checkIfSpent failed, request to database failed: " << res.message();
+    logger(Logging::Error) << "checkIfSpent failed, request to database failed: " << res.message();
     return false;
   }
 
@@ -1062,7 +1062,7 @@ ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOtputIndexes(uint64_t
                                                                         Common::ArrayView<uint32_t> globalIndexes,
                                                                         std::vector<PackedOutIndex>& outIndexes) const {
   if (!requestPackedOutputs(amount, globalIndexes, database, outIndexes)) {
-    logger(Logging::ERROR) << "extractKeyOtputIndexes failed: failed to read database";
+    logger(Logging::Error) << "extractKeyOtputIndexes failed: failed to read database";
     return ExtractOutputKeysResult::INVALID_GLOBAL_INDEX;
   }
 
@@ -1087,13 +1087,13 @@ uint32_t DatabaseBlockchainCache::getTopBlockIndex() const {
     auto result = database.read(batch);
 
     if (result) {
-      logger(Logging::ERROR) << "Failed to read top block index from database";
+      logger(Logging::Error) << "Failed to read top block index from database";
       throw std::system_error(result);
     }
 
     auto readResult = batch.extractResult();
     if (!readResult.getLastBlockIndex().second) {
-      logger(Logging::TRACE) << "Top block index does not exist in database";
+      logger(Logging::Trace) << "Top block index does not exist in database";
       topBlockIndex = 0;
     }
 
@@ -1116,13 +1116,13 @@ uint64_t DatabaseBlockchainCache::getCachedTransactionsCount() const {
     auto result = database.read(batch);
 
     if (result) {
-      logger(Logging::ERROR) << "Failed to read transactions count from database";
+      logger(Logging::Error) << "Failed to read transactions count from database";
       throw std::system_error(result);
     }
 
     auto readResult = batch.extractResult();
     if (!readResult.getTransactionsCount().second) {
-      logger(Logging::TRACE) << "Transactions count does not exist in database";
+      logger(Logging::Trace) << "Transactions count does not exist in database";
       transactionsCount = 0;
     } else {
       transactionsCount = readResult.getTransactionsCount().first;
@@ -1375,7 +1375,7 @@ size_t DatabaseBlockchainCache::getKeyOutputsCountForAmount(uint64_t amount, uin
   });
 
   size_t result = static_cast<size_t>(std::distance(begin, it));
-  logger(Logging::DEBUGGING) << "Key outputs count for amount " << amount << " is " << result << " by block index "
+  logger(Logging::Debugging) << "Key outputs count for amount " << amount << " is " << result << " by block index "
                              << blockIndex;
 
   return result;
@@ -1387,7 +1387,7 @@ uint32_t DatabaseBlockchainCache::getTimestampLowerBoundBlockIndex(uint64_t time
   while (midnight > 0) {
     auto dbRes = requestClosestBlockIndexByTimestamp(midnight, database);
     if (!dbRes.second) {
-      logger(Logging::DEBUGGING) << "getTimestampLowerBoundBlockIndex failed: failed to read database";
+      logger(Logging::Debugging) << "getTimestampLowerBoundBlockIndex failed: failed to read database";
       throw std::runtime_error("Couldn't get closest to timestamp block index");
     }
 
@@ -1407,14 +1407,14 @@ bool DatabaseBlockchainCache::getTransactionGlobalIndexes(const Crypto::Hash& tr
   auto batch = BlockchainReadBatch().requestCachedTransaction(transactionHash);
   auto result = database.read(batch);
   if (result) {
-    logger(Logging::DEBUGGING) << "getTransactionGlobalIndexes failed: failed to read database";
+    logger(Logging::Debugging) << "getTransactionGlobalIndexes failed: failed to read database";
     return false;
   }
 
   auto readResult = batch.extractResult();
   auto it = readResult.getCachedTransactions().find(transactionHash);
   if (it == readResult.getCachedTransactions().end()) {
-    logger(Logging::DEBUGGING) << "getTransactionGlobalIndexes failed: cached transaction for hash " << transactionHash
+    logger(Logging::Debugging) << "getTransactionGlobalIndexes failed: cached transaction for hash " << transactionHash
                                << " not present";
     return false;
   }
@@ -1475,14 +1475,14 @@ void DatabaseBlockchainCache::getRawTransactions(const std::vector<Crypto::Hash>
   for (const auto& hash : transactions) {
     auto transactionIt = hashesMap.find(hash);
     if (transactionIt == hashesMap.end()) {
-      logger(Logging::DEBUGGING) << "detected missing transaction for hash " << hash << " in getRawTransaction";
+      logger(Logging::Debugging) << "detected missing transaction for hash " << hash << " in getRawTransaction";
       missedTransactions.push_back(hash);
       continue;
     }
 
     auto blockIt = blocksMap.find(transactionIt->second.blockIndex);
     if (blockIt == blocksMap.end()) {
-      logger(Logging::DEBUGGING) << "detected missing transaction for hash " << hash << " in getRawTransaction";
+      logger(Logging::Debugging) << "detected missing transaction for hash " << hash << " in getRawTransaction";
       missedTransactions.push_back(hash);
       continue;
     }
@@ -1538,8 +1538,8 @@ CachedBlockInfoVector DatabaseBlockchainCache::getBlockInfos(ConstBlockHeightSpa
   CachedBlockInfoVector reval{};
   reval.resize(heights.size());
 
-  const auto topBlockIndex = getTopBlockIndex();
-  const uint32_t cacheStartIndex = (topBlockIndex + 1) - static_cast<uint32_t>(unitsCache.size());
+  const auto topIndex = getTopBlockIndex();
+  const uint32_t cacheStartIndex = (topIndex + 1) - static_cast<uint32_t>(unitsCache.size());
 
   std::map<uint32_t, size_t> cacheMisses{};
   BlockchainReadBatch batch{};
@@ -1548,7 +1548,7 @@ CachedBlockInfoVector DatabaseBlockchainCache::getBlockInfos(ConstBlockHeightSpa
   for (const auto& height : heights) {
     exceptional_if<InvalidArgumentError>(height.isNull(), "provided height is null");
     const auto index = height.toIndex();
-    exceptional_if<OutOfRangeError>(index > topBlockIndex, "height exceeds cache boundary");
+    exceptional_if<OutOfRangeError>(index > topIndex, "height exceeds cache boundary");
 
     if (index < cacheStartIndex || index + 1 >= cacheStartIndex + unitsCache.size()) {
       cacheMisses[index] = i++;
@@ -1740,20 +1740,20 @@ std::vector<uint32_t> DatabaseBlockchainCache::getRandomOutsByAmount(uint64_t am
       for (uint32_t i = 0; i < outputsToPick; ++i, globalIndexes.push_back(generator())) /* */
         ;
     } catch (const SequenceEnded&) {
-      logger(Logging::TRACE) << "getRandomOutsByAmount: generator reached sequence end";
+      logger(Logging::Trace) << "getRandomOutsByAmount: generator reached sequence end";
       return resultOuts;
     }
 
     std::vector<PackedOutIndex> outputs;
     if (extractKeyOtputIndexes(amount, Common::ArrayView<uint32_t>(globalIndexes.data(), globalIndexes.size()),
                                outputs) != ExtractOutputKeysResult::SUCCESS) {
-      logger(Logging::DEBUGGING) << "getRandomOutsByAmount: failed to extract key output indexes";
+      logger(Logging::Debugging) << "getRandomOutsByAmount: failed to extract key output indexes";
       throw std::runtime_error("Invalid output index");  // TODO: make error code
     }
 
     std::vector<ExtendedTransactionInfo> transactions;
     if (!requestExtendedTransactionInfos(outputs, database, transactions)) {
-      logger(Logging::TRACE) << "getRandomOutsByAmount: requestExtendedTransactionInfos failed";
+      logger(Logging::Trace) << "getRandomOutsByAmount: requestExtendedTransactionInfos failed";
       throw std::runtime_error("Error while requesting transactions");  // TODO: make error code
     }
 
@@ -1806,7 +1806,7 @@ ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputs(
     // predicate
     auto ret = callback(tx, fakePoi, kv.first.second);
     if (ret != ExtractOutputKeysResult::SUCCESS) {
-      logger(Logging::DEBUGGING) << "extractKeyOutputs failed : callback returned error";
+      logger(Logging::Debugging) << "extractKeyOutputs failed : callback returned error";
       return ret;
     }
   }
@@ -1918,7 +1918,7 @@ bool DatabaseBlockchainCache::deleteChild(IBlockchainCache* ptr) {
 BlockchainReadResult DatabaseBlockchainCache::readDatabase(BlockchainReadBatch& batch) const {
   auto result = database.read(batch);
   if (result) {
-    logger(Logging::ERROR) << "failed to read database, error is " << result.message();
+    logger(Logging::Error) << "failed to read database, error is " << result.message();
     throw std::runtime_error(result.message());
   }
 
@@ -1970,7 +1970,7 @@ void DatabaseBlockchainCache::addGenesisBlock(CachedBlock&& genesisBlock) {
 
   auto res = database.writeSync(batch);
   if (res) {
-    logger(Logging::ERROR) << "addGenesisBlock failed: failed to write to database, " << res.message();
+    logger(Logging::Error) << "addGenesisBlock failed: failed to write to database, " << res.message();
     throw std::runtime_error(res.message());
   }
 

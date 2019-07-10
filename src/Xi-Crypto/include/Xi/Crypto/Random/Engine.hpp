@@ -59,9 +59,9 @@ class Engine final {
  public:
   static Result<Engine> create() {
     Engine reval{};
-    XI_RETURN_EC_IF(reval.m_state.get() == nullptr, failure(RandomError::Failed));
+    XI_RETURN_EC_IF(reval.m_state.get() == nullptr, makeError(RandomError::Failed));
     XI_RETURN_EC_IF(xi_crypto_random_state_init(reval.m_state.get()) != XI_RETURN_CODE_SUCCESS,
-                    failure(RandomError::Failed));
+                    makeError(RandomError::Failed));
     return success(std::move(reval));
   }
 

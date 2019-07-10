@@ -37,7 +37,7 @@ XiMiner::MinerManager::MinerManager(const CryptoNote::RpcRemoteConfiguration rem
     : m_http{remote.Host, remote.Port, remote.Ssl}, m_logger{logger, "MinerManager"} {}
 
 void XiMiner::MinerManager::onTemplateChanged(MinerBlockTemplate newTemplate) {
-  m_logger(Logging::TRACE) << "template updated";
+  m_logger(Logging::Trace) << "template updated";
   for (uint32_t i = 0; i < m_worker.size(); ++i) {
     auto iWorker = m_worker[i];
     iWorker->setTemplate(newTemplate);
@@ -47,7 +47,7 @@ void XiMiner::MinerManager::onTemplateChanged(MinerBlockTemplate newTemplate) {
 
 void XiMiner::MinerManager::onBlockFound(CryptoNote::BlockTemplate block) {
   try {
-    m_logger(Logging::INFO, Logging::GREEN) << "block found";
+    m_logger(Logging::Info, Logging::GREEN) << "block found";
     CryptoNote::RpcCommands::SubmitBlock::request request;
     CryptoNote::RpcCommands::SubmitBlock::response response;
     request.hex_binary_template = Common::toHex(CryptoNote::toBinaryArray(block));
@@ -55,18 +55,18 @@ void XiMiner::MinerManager::onBlockFound(CryptoNote::BlockTemplate block) {
                                               response);
     CryptoNote::CachedBlock cblock{block};
     m_observer.notify(&MinerManager::Observer::onSuccessfulBlockSubmission, cblock.getBlockHash());
-    m_logger(Logging::INFO) << "block submission result: " << response.result;
+    m_logger(Logging::Info) << "block submission result: " << response.result;
   } catch (std::exception& e) {
-    m_logger(Logging::ERROR) << "error on block submission: " << e.what();
+    m_logger(Logging::Error) << "error on block submission: " << e.what();
   } catch (...) {
-    m_logger(Logging::ERROR) << "unknown error on block submission.";
+    m_logger(Logging::Error) << "unknown error on block submission.";
   }
 }
 
-void XiMiner::MinerManager::onError(std::string what) { m_logger(Logging::ERROR) << "miner worker error: " << what; }
+void XiMiner::MinerManager::onError(std::string what) { m_logger(Logging::Error) << "miner worker error: " << what; }
 
 void XiMiner::MinerManager::run() {
-  m_logger(Logging::INFO) << "starting miner manager";
+  m_logger(Logging::Info) << "starting miner manager";
   m_running.store(true);
   m_shutdownRequest.store(false);
 

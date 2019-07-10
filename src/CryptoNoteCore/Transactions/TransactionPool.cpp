@@ -126,12 +126,12 @@ bool TransactionPool::containsKeyImage(const Crypto::KeyImage& keyImage) const {
 std::vector<Crypto::Hash> TransactionPool::sanityCheck(const uint64_t timeout) {
   std::vector<Crypto::Hash> removedTransactions;
 
-  m_logger(Logging::TRACE) << "Starting sanity check on transaction pool...";
+  m_logger(Logging::Trace) << "Starting sanity check on transaction pool...";
   uint64_t timestamp = 0;
   if (auto timestampQuery = m_blockchain.timeProvider().posixNow(); !timestampQuery.isError()) {
     timestamp = timestampQuery.value();
   } else {
-    m_logger(Logging::ERROR) << "Time provider failed, sanity check will be unable to evaluate timeout.";
+    m_logger(Logging::Error) << "Time provider failed, sanity check will be unable to evaluate timeout.";
   }
 
   {
@@ -154,14 +154,14 @@ std::vector<Crypto::Hash> TransactionPool::sanityCheck(const uint64_t timeout) {
 
     for (const auto& iTransaction : transactions) {
       if (timestamp > iTransaction->receiveTime() && timestamp - iTransaction->receiveTime() > timeout) {
-        m_logger(Logging::TRACE) << "'" << iTransaction->transaction().getTransactionHash() << "'"
+        m_logger(Logging::Trace) << "'" << iTransaction->transaction().getTransactionHash() << "'"
                                  << " exceeded lifespan";
         removedTransactions.emplace_back(iTransaction->transaction().getTransactionHash());
       } else {
         auto iResult = insertTransaction(iTransaction->transaction(), iTransaction->receiveTime(),
                                          ITransactionPoolObserver::AdditionReason::SkipNotification);
         if (iResult.isError()) {
-          m_logger(Logging::TRACE) << "'" << iTransaction->transaction().getTransactionHash() << "'"
+          m_logger(Logging::Trace) << "'" << iTransaction->transaction().getTransactionHash() << "'"
                                    << " could not be readded: " << iResult.error().message();
           removedTransactions.emplace_back(iTransaction->transaction().getTransactionHash());
         }
@@ -174,7 +174,7 @@ std::vector<Crypto::Hash> TransactionPool::sanityCheck(const uint64_t timeout) {
                        ITransactionPoolObserver::DeletionReason::PoolCleanupProcedure);
   }
 
-  m_logger(Logging::TRACE) << "Sanity check on transaction pool finished, removed " << removedTransactions.size()
+  m_logger(Logging::Trace) << "Sanity check on transaction pool finished, removed " << removedTransactions.size()
                            << " total.";
 
   return removedTransactions;
@@ -188,7 +188,7 @@ bool TransactionPool::serialize(ISerializer& serializer) {
     transactionBlobs.reserve(m_transactions.size());
     for (const auto& iinfo : m_transactions) {
       if (iinfo.second.get() == nullptr) {
-        m_logger(Logging::ERROR) << "nullptr transaction detected in pool";
+        m_logger(Logging::Error) << "nullptr transaction detected in pool";
       } else {
         transactionBlobs.push_back(Common::toHex(iinfo.second->transaction().getTransactionBinaryArray()));
         transactionTimestamps.push_back(iinfo.second->receiveTime());
@@ -209,13 +209,13 @@ bool TransactionPool::serialize(ISerializer& serializer) {
       for (size_t i = 0; i < rawTransactions.size(); ++i) {
         Transaction iTransaction;
         if (!fromBinaryArray(iTransaction, rawTransactions[i])) {
-          m_logger(Logging::ERROR) << "failed to deserialize transaction";
+          m_logger(Logging::Error) << "failed to deserialize transaction";
           return false;
         } else {
           auto insertionResult = insertTransaction(CachedTransaction{std::move(iTransaction)}, transactionTimestamps[i],
                                                    Addition::Deserialization);
           if (insertionResult.isError()) {
-            m_logger(Logging::ERROR) << "failed to push deserialized transantion";
+            m_logger(Logging::Error) << "failed to push deserialized transantion";
           }
         }
       }
@@ -230,7 +230,7 @@ ITransactionPool::TransactionQueryResult TransactionPool::queryTransaction(const
   if (search == m_transactions.end()) {
     return nullptr;
   } else if (search->second.get() == nullptr) {
-    m_logger(Logging::ERROR) << "nullptr transaction detected in pool";
+    m_logger(Logging::Error) << "nullptr transaction detected in pool";
     return nullptr;
   } else {
     return search->second;
@@ -264,7 +264,7 @@ void TransactionPool::blockAdded(uint32_t index, const Crypto::Hash&) {
   XI_CONCURRENT_RLOCK(m_access);
   auto mainChain = m_blockchain.mainChain();
   if (mainChain == nullptr) {
-    m_logger(Logging::ERROR) << "Unable to add block, main chain missing.";
+    m_logger(Logging::Error) << "Unable to add block, main chain missing.";
     return;
   }
   pushBlock(mainChain->getBlockByIndex(index));
@@ -274,7 +274,7 @@ void TransactionPool::blockAdded(uint32_t index, const Crypto::Hash&) {
 void TransactionPool::mainChainSwitched(const IBlockchainCache& previous, const IBlockchainCache& current,
                                         uint32_t splitIndex) {
   XI_CONCURRENT_RLOCK(m_access);
-  m_logger(Logging::TRACE) << "Starting main chain switch";
+  m_logger(Logging::Trace) << "Starting main chain switch";
   for (uint32_t i = previous.getTopBlockIndex(); i >= splitIndex; --i) {
     popBlock(previous.getBlockByIndex(i));
     if (splitIndex == 0) {
@@ -285,18 +285,18 @@ void TransactionPool::mainChainSwitched(const IBlockchainCache& previous, const 
     pushBlock(current.getBlockByIndex(i));
   }
   evaluateBlockVersionUpgradeConstraints();
-  m_logger(Logging::TRACE) << "Main chain switch finished";
+  m_logger(Logging::Trace) << "Main chain switch finished";
 }
 
 void TransactionPool::pushBlock(RawBlock block) {
-  m_logger(Logging::TRACE) << "Processing incoming block";
+  m_logger(Logging::Trace) << "Processing incoming block";
   for (auto& transactionBlob : block.transactions) {
     pushBlockTransaction(std::move(transactionBlob));
   }
 }
 
 void TransactionPool::popBlock(RawBlock block) {
-  m_logger(Logging::TRACE) << "Processing block reversal";
+  m_logger(Logging::Trace) << "Processing block reversal";
   for (auto& transactionBlob : block.transactions) {
     popBlockTransaction(std::move(transactionBlob));
   }
@@ -305,11 +305,11 @@ void TransactionPool::popBlock(RawBlock block) {
 void TransactionPool::pushBlockTransaction(BinaryArray transactionBlob) {
   auto transaction = CachedTransaction::fromBinaryArray(transactionBlob);
   if (transaction.isError()) {
-    m_logger(Logging::ERROR) << "Failed to deserialized block transaction: " << transaction.error().message();
+    m_logger(Logging::Error) << "Failed to deserialized block transaction: " << transaction.error().message();
   }
   const auto transactionHash = transaction.value().getTransactionHash();
   if (!removeTransaction(transactionHash, Deletion::AddedToMainChain)) {
-    m_logger(Logging::TRACE) << "Failed to remove pushed block transaction: " << transactionHash.toString();
+    m_logger(Logging::Trace) << "Failed to remove pushed block transaction: " << transactionHash.toString();
   }
   for (const auto& keyImage : transaction.value().getKeyImages()) {
     auto keyImageSearch = m_keyImageReferences.find(keyImage);
@@ -322,12 +322,12 @@ void TransactionPool::pushBlockTransaction(BinaryArray transactionBlob) {
 void TransactionPool::popBlockTransaction(BinaryArray transactionBlob) {
   Transaction transaction;
   if (!fromBinaryArray(transaction, std::move(transactionBlob))) {
-    m_logger(Logging::ERROR) << "Invalid encoded transaction blob poped.";
+    m_logger(Logging::Error) << "Invalid encoded transaction blob poped.";
     return;
   }
   auto insertionResult = insertTransaction(std::move(transaction), Addition::MainChainSwitch);
   if (insertionResult.isError()) {
-    m_logger(Logging::DEBUGGING)
+    m_logger(Logging::Debugging)
         << "Transaction from alternative chain could not be recovered because it is invalid on the new main chain.\n\t"
         << insertionResult.error().message();
   }
@@ -427,7 +427,7 @@ Xi::Result<void> TransactionPool::insertTransaction(CachedTransaction transactio
     auto nfo =
         std::make_shared<PendingTransactionInfo>(std::move(transaction), validation.eligibleIndex(), receiveTime);
     m_transactions.insert(std::make_pair(transactionHash, nfo));
-    m_logger(Logging::INFO) << "transaction added to pool";
+    m_logger(Logging::Info) << "transaction added to pool";
     if (reason != ITransactionPoolObserver::AdditionReason::SkipNotification) {
       m_observers.notify(&ITransactionPoolObserver::transactionAddedToPool, std::cref(transactionHash), reason);
     }
@@ -459,7 +459,7 @@ void TransactionPool::evaluateBlockVersionUpgradeConstraints() {
 
   const auto eligibleIndex = currentEligibleIndex();
   if (eligibleIndex.isError()) {
-    m_logger(Logging::ERROR) << "Unable to retrieve eligible index: " << eligibleIndex.error().message();
+    m_logger(Logging::Error) << "Unable to retrieve eligible index: " << eligibleIndex.error().message();
   }
   const auto version = m_blockchain.upgradeManager().getBlockVersion(eligibleIndex.value().Height);
   if (m_eligibleBlockVersion.has_value() && m_eligibleBlockVersion.value() == version) {
@@ -468,7 +468,7 @@ void TransactionPool::evaluateBlockVersionUpgradeConstraints() {
 
   auto mainChain = m_blockchain.mainChain();
   if (mainChain == nullptr) {
-    m_logger(Logging::ERROR) << "Unable to update constraints for a new block version due to missing main chain.";
+    m_logger(Logging::Error) << "Unable to update constraints for a new block version due to missing main chain.";
     return;
   }
 
@@ -476,7 +476,7 @@ void TransactionPool::evaluateBlockVersionUpgradeConstraints() {
   PoolTransactionValidator validator{*this, version, *mainChain, m_blockchain.currency()};
   for (auto it = m_transactions.begin(); it != m_transactions.end(); ++it) {
     if (it->second.get() == nullptr) {
-      m_logger(Logging::DEBUGGING) << "nullptr transaction detected in pool";
+      m_logger(Logging::Debugging) << "nullptr transaction detected in pool";
       continue;
     }
     const auto& pendingTx = *it->second;

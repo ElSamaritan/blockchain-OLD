@@ -73,7 +73,7 @@ inline WalletServiceConfiguration initConfiguration() {
   config.logFile = "service.log";
   config.daemonPort = Xi::Config::Network::rpcPort();
   config.bindPort = Xi::Config::Network::pgPort();
-  config.logLevel = Logging::INFO;
+  config.logLevel = Logging::Info;
   config.legacySecurity = false;
   config.dumpConfig = false;
   config.generateNewContainer = false;

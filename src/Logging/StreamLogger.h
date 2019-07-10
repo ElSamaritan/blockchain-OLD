@@ -27,8 +27,8 @@ namespace Logging {
 
 class StreamLogger : public CommonLogger {
  public:
-  StreamLogger(Level level = DEBUGGING);
-  StreamLogger(std::ostream& stream, Level level = DEBUGGING);
+  StreamLogger(Level level = Debugging);
+  StreamLogger(std::ostream& stream, Level level = Debugging);
   void attachToStream(std::ostream& stream);
 
  protected:

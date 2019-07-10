@@ -194,16 +194,16 @@ void P2pNode::acceptLoop() {
       auto connection = m_listener.accept();
       auto ctx = new P2pContext(m_dispatcher, std::move(connection), true, getRemoteAddress(connection),
                                 m_cfg.getTimedSyncInterval(), getGenesisPayload());
-      logger(INFO) << "Incoming connection from " << ctx->getRemoteAddress();
+      logger(Info) << "Incoming connection from " << ctx->getRemoteAddress();
       workingContextGroup.spawn([this, ctx] { preprocessIncomingConnection(ContextPtr(ctx)); });
     } catch (InterruptedException&) {
       break;
     } catch (const std::exception& e) {
-      logger(DEBUGGING) << "Exception in acceptLoop: " << e.what();
+      logger(Debugging) << "Exception in acceptLoop: " << e.what();
     }
   }
 
-  logger(DEBUGGING) << "acceptLoop finished";
+  logger(Debugging) << "acceptLoop finished";
 }
 
 void P2pNode::connectorLoop() {
@@ -214,7 +214,7 @@ void P2pNode::connectorLoop() {
     } catch (InterruptedException&) {
       break;
     } catch (const std::exception& e) {
-      logger(WARNING) << "Exception in connectorLoop: " << e.what();
+      logger(Warning) << "Exception in connectorLoop: " << e.what();
     }
   }
 }
@@ -280,7 +280,7 @@ bool P2pNode::makeNewConnectionFromPeerlist(const PeerlistManager::Peerlist& pee
   for (size_t tryCount = 0; idxGen.generate(peerIndex) && tryCount < m_cfg.getPeerListGetTryCount(); ++tryCount) {
     PeerlistEntry peer;
     if (!peerlist.get(peer, peerIndex)) {
-      logger(WARNING) << "Failed to get peer from list, idx = " << peerIndex;
+      logger(Warning) << "Failed to get peer from list, idx = " << peerIndex;
       continue;
     }
 
@@ -288,7 +288,7 @@ bool P2pNode::makeNewConnectionFromPeerlist(const PeerlistManager::Peerlist& pee
       continue;
     }
 
-    logger(DEBUGGING) << "Selected peer: [" << peer.id << " " << peer.address << "] last_seen: "
+    logger(Debugging) << "Selected peer: [" << peer.id << " " << peer.address << "] last_seen: "
                       << (peer.last_seen ? Common::timeIntervalToString(time(NULL) - peer.last_seen) : "never");
 
     auto conn = tryToConnectPeer(peer.address);
@@ -303,7 +303,7 @@ bool P2pNode::makeNewConnectionFromPeerlist(const PeerlistManager::Peerlist& pee
 
 void P2pNode::preprocessIncomingConnection(ContextPtr ctx) {
   try {
-    logger(DEBUGGING) << *ctx << "preprocessIncomingConnection";
+    logger(Debugging) << *ctx << "preprocessIncomingConnection";
 
     OperationTimeout<P2pContext> timeout(m_dispatcher, *ctx, m_cfg.getHandshakeTimeout());
 
@@ -313,7 +313,7 @@ void P2pNode::preprocessIncomingConnection(ContextPtr ctx) {
       enqueueConnection(std::move(proxy));
     }
   } catch (std::exception& e) {
-    logger(WARNING) << " Failed to process connection: " << e.what();
+    logger(Warning) << " Failed to process connection: " << e.what();
   }
 }
 
@@ -362,12 +362,12 @@ P2pNode::ContextPtr P2pNode::tryToConnectPeer(const NetworkAddress& address) {
           connector.connect(Ipv4Address(Common::ipAddressToString(address.ip)), static_cast<uint16_t>(address.port));
     });
 
-    logger(DEBUGGING) << "connection established to " << address;
+    logger(Debugging) << "connection established to " << address;
 
     return ContextPtr(new P2pContext(m_dispatcher, std::move(tcpConnection), false, address,
                                      m_cfg.getTimedSyncInterval(), getGenesisPayload()));
   } catch (std::exception& e) {
-    logger(DEBUGGING) << "Connection to " << address << " failed: " << e.what();
+    logger(Debugging) << "Connection to " << address << " failed: " << e.what();
   }
 
   return ContextPtr();
@@ -397,23 +397,23 @@ bool P2pNode::fetchPeerList(ContextPtr connection) {
     }
 
     if (response.node_data.network_id != request.node_data.network_id) {
-      logger(DEBUGGING) << *connection << "COMMAND_HANDSHAKE failed, wrong network: " << response.node_data.network_id;
+      logger(Debugging) << *connection << "COMMAND_HANDSHAKE failed, wrong network: " << response.node_data.network_id;
       return false;
     }
 
     if (response.node_data.version < Xi::Config::P2P::minimumVersion()) {
-      logger(DEBUGGING) << *connection << "COMMAND_HANDSHAKE Failed, peer is wrong version: "
+      logger(Debugging) << *connection << "COMMAND_HANDSHAKE Failed, peer is wrong version: "
                         << std::to_string(response.node_data.version);
       return false;
     } else if ((response.node_data.version - Xi::Config::P2P::currentVersion()) >=
                Xi::Config::P2P::upgradeNotificationWindow()) {
-      logger(WARNING) << *connection << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please visit: "
+      logger(Warning) << *connection << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please visit: "
                       << Xi::Config::Coin::downloadUrl() << " for the latest version.";
     }
 
     return handleRemotePeerList(response.local_peerlist, response.node_data.local_time);
   } catch (std::exception& e) {
-    logger(INFO) << *connection << "Failed to obtain peer list: " << e.what();
+    logger(Info) << *connection << "Failed to obtain peer list: " << e.what();
   }
 
   return false;
@@ -517,7 +517,7 @@ void P2pNode::tryPing(P2pContext& ctx) {
       COMMAND_PING::response response;
       auto pingResult = proto.invoke(COMMAND_PING::ID, request, response);
       if (pingResult.isError()) {
-        logger(Logging::DEBUGGING) << ctx << "back ping invoke failed from" << peerAddress
+        logger(Logging::Debugging) << ctx << "back ping invoke failed from" << peerAddress
                                    << ", error=" << pingResult.error().message();
       }
 
@@ -528,13 +528,13 @@ void P2pNode::tryPing(P2pContext& ctx) {
         entry.last_seen = time(nullptr);
         m_peerlist.append_with_peer_white(entry);
       } else {
-        logger(Logging::DEBUGGING) << ctx << "back ping invoke wrong response \"" << response.status << "\" from"
+        logger(Logging::Debugging) << ctx << "back ping invoke wrong response \"" << response.status << "\" from"
                                    << peerAddress << ", expected peerId=" << ctx.getPeerId() << ", got "
                                    << response.peer_id;
       }
     });
   } catch (std::exception& e) {
-    logger(DEBUGGING) << "Ping to " << peerAddress << " failed: " << e.what();
+    logger(Debugging) << "Ping to " << peerAddress << " failed: " << e.what();
   }
 }
 

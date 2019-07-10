@@ -73,19 +73,19 @@ const std::array<std::string, 7> ILogger::LEVEL_NAMES = {
 
 const std::string &defaultColor(Level level) {
   switch (level) {
-    case NONE:
+    case None:
       return DEFAULT;
-    case FATAL:
+    case Fatal:
       return MAGENTA;
-    case ERROR:
+    case Error:
       return RED;
-    case WARNING:
+    case Warning:
       return YELLOW;
-    case INFO:
+    case Info:
       return DEFAULT;
-    case DEBUGGING:
+    case Debugging:
       return GREEN;
-    case TRACE:
+    case Trace:
       return CYAN;
   }
   return DEFAULT;

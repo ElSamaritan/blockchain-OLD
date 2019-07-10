@@ -40,7 +40,7 @@ namespace {
 class CryptoNote_BlockchainCache : public ::testing::Test {
  public:
   std::string filename{"./blockchain_cache_test"};
-  Logging::ConsoleLogger logger{Logging::TRACE};
+  Logging::ConsoleLogger logger{Logging::Trace};
   std::unique_ptr<CryptoNote::Currency> currency;
   std::unique_ptr<CryptoNote::BlockchainCache> cache;
 
@@ -62,7 +62,7 @@ class CryptoNote_BlockchainCache : public ::testing::Test {
 class CryptoNote_DatabaseBlockchainCache : public ::testing::Test {
  public:
   std::string dir{"./dbblockchain_cache_test"};
-  Logging::ConsoleLogger logger{Logging::ERROR};
+  Logging::ConsoleLogger logger{Logging::Error};
   std::unique_ptr<CryptoNote::Currency> currency;
   std::unique_ptr<CryptoNote::DatabaseBlockchainCacheFactory> factory;
   std::unique_ptr<CryptoNote::RocksDBWrapper> database;
@@ -136,6 +136,7 @@ TEST_F(CryptoNote_DatabaseBlockchainCache, CachedBlockInfo) {
   CachedBlockInfo pushed;
 
   BlockTemplate tmp;
+  tmp.timestamp = genesis.timestamp + 60;
   tmp.previousBlockHash = genesis.blockHash;
   tmp.version = genesis.version;
   tmp.upgradeVote = genesis.upgradeVote;

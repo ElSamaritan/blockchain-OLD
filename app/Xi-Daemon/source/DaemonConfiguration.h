@@ -48,7 +48,7 @@ struct DaemonConfiguration {
   bool p2pAutoBan = false;
 
   int logLevel;
-  int feeAmount;
+  uint64_t feeAmount;
   bool lightNode = false;
   ::Xi::Config::Network::Type network;
   uint16_t p2pPort;
@@ -91,7 +91,7 @@ DaemonConfiguration initConfiguration() {
   config.lightNode = false;
   config.checkPoints = "default";
   config.logFile = "xi-daemon.log";
-  config.logLevel = Logging::INFO;
+  config.logLevel = Logging::Info;
   config.dbMaxOpenFiles = Xi::Config::Database::maximumOpenFiles();
   config.dbReadCacheSize = Xi::Config::Database::readBufferSize();
   config.dbThreads = std::min<uint16_t>(Xi::Config::Database::backgroundThreads(),
@@ -319,7 +319,7 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     }
 
     if (cli.count("fee-amount") > 0) {
-      config.feeAmount = cli["fee-amount"].as<int>();
+      config.feeAmount = cli["fee-amount"].as<uint64_t>();
     }
 
     if (CommonCLI::handleCLIOptions(options, cli)) exit(0);
@@ -466,7 +466,7 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
   }
 
   if (j.find("fee-amount") != j.end()) {
-    config.feeAmount = j["fee-amount"].get<int>();
+    config.feeAmount = j["fee-amount"].get<uint64_t>();
   }
 
   if (j.find("ssl") != j.end()) {

@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
      thought it was a good idea to pass everything by reference and then
      use them after the functions lifetime they go out of scope and break
      stuff */
-  logManager.setMaxLevel(Logging::TRACE);
+  logManager.setMaxLevel(Logging::Trace);
 
   Logging::FileLogger fileLogger;
   Logging::ConsoleLogger coutLogger;

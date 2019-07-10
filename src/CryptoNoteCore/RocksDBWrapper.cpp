@@ -42,27 +42,27 @@ void RocksDBWrapper::init(const DataBaseConfig& config) {
 
   std::string dataDir = getDataDir(config);
 
-  logger(INFO) << "Opening DB in " << dataDir;
+  logger(Info) << "Opening DB in " << dataDir;
 
   rocksdb::DB* dbPtr;
 
   rocksdb::Options dbOptions = getDBOptions(config);
   rocksdb::Status status = rocksdb::DB::Open(dbOptions, dataDir, &dbPtr);
   if (status.ok()) {
-    logger(INFO) << "DB opened in " << dataDir;
+    logger(Info) << "DB opened in " << dataDir;
   } else if (!status.ok() && status.IsInvalidArgument()) {
-    logger(INFO) << "DB not found in " << dataDir << ". Creating new DB...";
+    logger(Info) << "DB not found in " << dataDir << ". Creating new DB...";
     dbOptions.create_if_missing = true;
     status = rocksdb::DB::Open(dbOptions, dataDir, &dbPtr);
     if (!status.ok()) {
-      logger(ERROR) << "DB Error. DB can't be created in " << dataDir << ". Error: " << status.ToString();
+      logger(Error) << "DB Error. DB can't be created in " << dataDir << ". Error: " << status.ToString();
       throw std::system_error(make_error_code(CryptoNote::error::DataBaseErrorCodes::INTERNAL_ERROR));
     }
   } else if (status.IsIOError()) {
-    logger(ERROR) << "DB Error. DB can't be opened in " << dataDir << ". Error: " << status.ToString();
+    logger(Error) << "DB Error. DB can't be opened in " << dataDir << ". Error: " << status.ToString();
     throw std::system_error(make_error_code(CryptoNote::error::DataBaseErrorCodes::IO_ERROR));
   } else {
-    logger(ERROR) << "DB Error. DB can't be opened in " << dataDir << ". Error: " << status.ToString();
+    logger(Error) << "DB Error. DB can't be opened in " << dataDir << ". Error: " << status.ToString();
     throw std::system_error(make_error_code(CryptoNote::error::DataBaseErrorCodes::INTERNAL_ERROR));
   }
 
@@ -75,7 +75,7 @@ void RocksDBWrapper::shutdown() {
     throw std::system_error(make_error_code(CryptoNote::error::DataBaseErrorCodes::NOT_INITIALIZED));
   }
 
-  logger(INFO) << "Closing DB.";
+  logger(Info) << "Closing DB.";
   db->Flush(rocksdb::FlushOptions());
   db->SyncWAL();
   db.reset();
@@ -89,15 +89,15 @@ void RocksDBWrapper::destoy(const DataBaseConfig& config) {
 
   std::string dataDir = getDataDir(config);
 
-  logger(WARNING) << "Destroying DB in " << dataDir;
+  logger(Warning) << "Destroying DB in " << dataDir;
 
   rocksdb::Options dbOptions = getDBOptions(config);
   rocksdb::Status status = rocksdb::DestroyDB(dataDir, dbOptions);
 
   if (status.ok()) {
-    logger(WARNING) << "DB destroyed in " << dataDir;
+    logger(Warning) << "DB destroyed in " << dataDir;
   } else {
-    logger(ERROR) << "DB Error. DB can't be destroyed in " << dataDir << ". Error: " << status.ToString();
+    logger(Error) << "DB Error. DB can't be destroyed in " << dataDir << ". Error: " << status.ToString();
     throw std::system_error(make_error_code(CryptoNote::error::DataBaseErrorCodes::INTERNAL_ERROR));
   }
 }
@@ -136,7 +136,7 @@ std::error_code RocksDBWrapper::write(IWriteBatch& batch, bool sync) {
   rocksdb::Status status = db->Write(writeOptions, &rocksdbBatch);
 
   if (!status.ok()) {
-    logger(ERROR) << "Can't write to DB. " << status.ToString();
+    logger(Error) << "Can't write to DB. " << status.ToString();
     return make_error_code(CryptoNote::error::DataBaseErrorCodes::INTERNAL_ERROR);
   } else {
     return std::error_code();
