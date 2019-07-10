@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
       }
     }
 
-    Level cfgLogLevel = static_cast<Level>(static_cast<int>(Logging::ERROR) + config.logLevel);
+    Level cfgLogLevel = static_cast<Level>(config.logLevel);
 
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
@@ -310,8 +310,10 @@ int main(int argc, char* argv[]) {
     logger(INFO) << "Starting core rpc server on address " << config.rpcInterface << ":" << config.rpcPort;
     rpcServer->setHandler(rpcServer);
     rpcServer->setSSLConfiguration(config.ssl);
-    rpcServer->setFeeAddress(config.feeAddress);
-    rpcServer->setFeeAmount(config.feeAmount);
+    if (!config.feeAddress.empty()) {
+      rpcServer->setFeeAddress(config.feeAddress);
+      rpcServer->setFeeAmount(config.feeAmount);
+    }
     rpcServer->enableCors(config.enableCors);
     rpcServer->setBlockexplorer(config.enableBlockExplorer | config.onlyBlockExplorer);
     rpcServer->setBlockexplorerOnly(config.onlyBlockExplorer);

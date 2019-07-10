@@ -28,7 +28,7 @@ param(
 )
 
 $RootDir = $(git rev-parse --show-toplevel)
-$BuildDir = "$RootDir\.build\$Name"
+$BuildDir = "$RootDir/.build/$Name"
 
 Write-Host "[--XI--] Container: $Container"
 Write-Host "[--XI--] Root Dir : $RootDir"
@@ -39,9 +39,9 @@ New-Item -ItemType Directory -Force -Path $BuildDir | Out-Null
 Push-Location $RootDir
 
 docker pull $Container
-docker run --rm -it -e HUNTER_ACCESS_TOKEN=$Env:HUNTER_ACCESS_TOKEN -v "${PWD}:/source" -w "/build" $Container bash /source/scripts/dev/Build.sh
+docker run --rm -it -v "${PWD}:/source" -v "${PWD}/.build/$($Name):/build" -w "/build" $Container bash /source/scripts/dev/Build.sh
 if ($JumpIn) {
-    docker run --rm -it -e HUNTER_ACCESS_TOKEN=$Env:HUNTER_ACCESS_TOKEN -v "${PWD}:/source" -v "${PWD}/.build/$($Name):/build" -w "/build" $Container bash
+    docker run --rm -it -v "${PWD}:/source" -v "${PWD}/.build/$($Name):/build" -w "/build" $Container bash
 }
 
 Pop-Location

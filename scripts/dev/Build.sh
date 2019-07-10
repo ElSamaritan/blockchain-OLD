@@ -21,5 +21,13 @@
 #                                                                                                #
 # ============================================================================================== #
 
+set -e
+
+export OPENSSL_ROOT_DIR=/deps/openssl
+export BOOST_ROOT=/deps/boost
+
 cmake -DCMAKE_BUILD_TYPE=Release -DXI_BUILD_TESTSUITE=ON -DXI_BUILD_TOOLS=ON -DXI_BUILD_BREAKPAD=ON -DXI_CACHE_USE=ON -DXI_CACHE_UPLOAD=ON /source
-make -j 6
+make -j6
+ctest -VV
+
+set +e

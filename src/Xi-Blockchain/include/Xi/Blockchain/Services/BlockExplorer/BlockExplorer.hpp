@@ -97,7 +97,7 @@ class BlockExplorer
  private:
   BlockExplorer(std::shared_ptr<Explorer::IExplorer> explorer, Logging::ILogger& logger);
 
- protected:
+ public:
   // clang-format off
   Rpc::ServiceError process(std::string_view command, const CryptoNote::Null&, Limits& response) override;
   Rpc::ServiceError process(std::string_view command, const CryptoNote::Null&, Explorer::CurrencyInfo& response) override;

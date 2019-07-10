@@ -43,15 +43,10 @@ try {
     $CMakeInstallPrefix = Get-Configuration CMAKE_INSTALL_PATH -DefaultValue ".install" -ProvidedValue $InstallPrefix
     $CMakeInstallPath = "$CMakeInstallPrefix\bin"
     $CMakeGenerator = Get-Configuration CMAKE_GENERATOR -DefaultValue $(Get-Generator)
-    $CMakeHunterCachePath = "$CMakeSourcePath\.hunter"
 
     $CMakeSourcePath = Get-Resolve-Path $CMakeSourcePath
     $CMakeBuildPath = Get-Resolve-Path $CMakeBuildPath
     $CMakeInstallPath = Get-Resolve-Path $CMakeInstallPath
-    $CMakeHunterCachePath = Get-Resolve-Path $CMakeHunterCachePath
-
-    [System.Environment]::SetEnvironmentVariable("HUNTER_ROOT", "$CMakeHunterCachePath")
-    [System.Environment]::SetEnvironmentVariable("HUNTER_ROOT", "$CMakeHunterCachePath", "User")
 
     $CMakeCacheFile = "$CMakeBuildPath\CMakeCache.txt"
     if (Test-Path -Path $CMakeCacheFile) {
@@ -67,7 +62,6 @@ try {
 Build Configuration
 `t Source Path         : $CMakeSourcePath   
 `t Build Path          : $CMakeBuildPath
-`t Hunter Cache Path   : $CMakeHunterCachePath
 `t Install Path        : $CMakeInstallPath
 `t Generator           : $CMakeGenerator
 
@@ -86,8 +80,6 @@ $(ConvertTo-Json $BuildEnvironment)
                 -G $CMakeGenerator `
                 -DCMAKE_BUILD_TYPE=Release `
                 -DCMAKE_INSTALL_PREFIX:PATH=$CMakeInstallPath `
-                -DXI_CACHE_USE=ON `
-                -DXI_CACHE_UPLOAD=ON `
                 -DXI_BUILD_CHANNEL="$($BuildEnvironment.Channel)" `
                 -DXI_BUILD_BREAKPAD=ON `
                 -DXI_BUILD_EXECUTABLES=ON `

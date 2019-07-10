@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -72,6 +72,7 @@ const KeyPrefix KEY_IMAGE_TO_BLOCK_INDEX_PREFIX = makePrefix(0x07);
 const KeyPrefix BLOCK_INDEX_TO_BLOCK_HASH_PREFIX = makePrefix(0x08);
 const KeyPrefix TRANSACTION_HASH_TO_TRANSACTION_INFO_PREFIX = makePrefix(0x09);
 const KeyPrefix KEY_OUTPUT_AMOUNT_PREFIX = makePrefix(0x0A);
+const KeyPrefix KEY_OUTPUT_AMOUNT_COUNT_PREFIX = makePrefix(0xAA);
 const KeyPrefix CLOSEST_TIMESTAMP_BLOCK_INDEX_PREFIX = makePrefix(0x0B);
 const KeyPrefix PAYMENT_ID_TO_TX_HASH_PREFIX = makePrefix(0x0C);
 const KeyPrefix TIMESTAMP_TO_BLOCKHASHES_PREFIX = makePrefix(0x0D);

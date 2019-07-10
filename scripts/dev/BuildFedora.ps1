@@ -21,16 +21,8 @@
 #                                                                                                #
 # ============================================================================================== #
 
-hunter_upload_password(
-  REPO_OWNER
-    "hunter-cache"
+Push-Location $PSScriptRoot
 
-  REPO
-    "hunter-cache"
+./BuildWithDocker registry.gitlab.com/galaxia-project/environment/fedora:29 fedora
 
-  USERNAME
-    "hunter-cache"
-
-  PASSWORD
-    "$ENV{HUNTER_ACCESS_TOKEN}"
-)
+Pop-Location

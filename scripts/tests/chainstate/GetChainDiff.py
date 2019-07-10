@@ -14,7 +14,7 @@ class BlockExplorerSerivce:
         self.Port = port
 
     def getBlockInfo(self, height):
-        return self.makeCall("explorer.block.short", {
+        return self.makeCall("explorer.block.detailed", {
             "type": "height",
             "value": height
         })
@@ -44,8 +44,8 @@ class BlockExplorerSerivce:
 firstService = BlockExplorerSerivce('localhost', 22869)
 secondService = BlockExplorerSerivce('localhost', 23869)
 
-for i in range(1, 5):
-    first = firstService.getBlockInfo(i + 1)
+for i in range(1, 500):
+    first = firstService.getBlockInfo(i)
     second = secondService.getBlockInfo(i)
     if first != second:
         print("Difference at height: %d" % (i))

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -66,7 +66,7 @@ BlockchainWriteBatch& BlockchainWriteBatch::insertKeyOutputGlobalIndexes(IBlockc
                                                                          uint32_t totalOutputsCountForAmount) {
   assert(totalOutputsCountForAmount >= outputs.size());
   rawDataToInsert.reserve(rawDataToInsert.size() + outputs.size() + 1);
-  rawDataToInsert.emplace_back(DB::serialize(DB::KEY_OUTPUT_AMOUNT_PREFIX, amount, totalOutputsCountForAmount));
+  rawDataToInsert.emplace_back(DB::serialize(DB::KEY_OUTPUT_AMOUNT_COUNT_PREFIX, amount, totalOutputsCountForAmount));
   uint32_t currentOutputId = totalOutputsCountForAmount - static_cast<uint32_t>(outputs.size());
 
   for (const PackedOutIndex& outIndex : outputs) {
@@ -155,7 +155,7 @@ BlockchainWriteBatch& BlockchainWriteBatch::removeKeyOutputGlobalIndexes(IBlockc
                                                                          uint32_t outputsToRemoveCount,
                                                                          uint32_t totalOutputsCountForAmount) {
   rawKeysToRemove.reserve(rawKeysToRemove.size() + outputsToRemoveCount);
-  rawDataToInsert.emplace_back(DB::serialize(DB::KEY_OUTPUT_AMOUNT_PREFIX, amount, totalOutputsCountForAmount));
+  rawDataToInsert.emplace_back(DB::serialize(DB::KEY_OUTPUT_AMOUNT_COUNT_PREFIX, amount, totalOutputsCountForAmount));
   for (uint32_t i = 0; i < outputsToRemoveCount; ++i) {
     rawKeysToRemove.emplace_back(
         DB::serializeKey(DB::KEY_OUTPUT_AMOUNT_PREFIX, std::make_pair(amount, totalOutputsCountForAmount + i)));

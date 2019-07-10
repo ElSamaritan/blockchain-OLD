@@ -15,9 +15,9 @@ MaximumAmount: 1000
 MinAnonymity: 0
 MaxAnonymity: 0
 
-MinFusionThreshold: 100000000
+MinFusionThreshold: 1000
 MaxFusionThreshold: 100000000
-FusionPropability: 0
+FusionPropability: 10
 
 TransactionsPerMinute: 100
 ResetOnStart: false

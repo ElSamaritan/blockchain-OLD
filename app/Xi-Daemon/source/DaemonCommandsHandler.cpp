@@ -8,17 +8,20 @@
 
 #include <ctime>
 #include <chrono>
+#include <memory>
 
 #include <Xi/Global.hh>
 #include <Xi/Algorithm/String.h>
 #include <Xi/Version/Version.h>
 #include <CommonCLI/CommonCLI.h>
+#include <Xi/Blockchain/Explorer/CoreExplorer.hpp>
 
 #include "P2p/NetNode.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "Serialization/SerializationTools.h"
+#include "Serialization/ConsoleOutputSerializer.hpp"
 
 #include "Rpc/JsonRpc.h"
 #include "CryptoNoteCore/Currency.h"
@@ -27,10 +30,19 @@
 #include "Common/StringTools.h"
 
 namespace {
+std::unique_ptr<CryptoNote::ISerializer> makeConsoleOutputSerializer() {
+  return std::make_unique<CryptoNote::ConsoleOutputSerializer>(std::cout);
+}
+
 template <typename T>
-static bool print_as_json(const T& obj) {
-  std::cout << CryptoNote::storeToJson(obj) << ENDL;
-  return true;
+static bool printObject(const T& obj) {
+  std::cout << "\n";
+  auto serializer = makeConsoleOutputSerializer();
+  XI_RETURN_EC_IF_NOT(serializer->beginObject(""), false);
+  XI_RETURN_EC_IF_NOT((*serializer)(const_cast<T&>(obj), "result"), false);
+  XI_RETURN_EC_IF_NOT(serializer->endObject(), false);
+  std::cout << std::endl;
+  XI_RETURN_SC(true);
 }
 
 std::string printTransactionShortInfo(const CryptoNote::CachedTransaction& transaction) {
@@ -59,6 +71,9 @@ std::string printTransactionFullInfo(const CryptoNote::CachedTransaction& transa
 DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote::NodeServer& srv,
                                              Logging::LoggerManager& log, CryptoNote::RpcServer* prpc_server)
     : m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log), m_prpc_server(prpc_server) {
+  m_explorer = std::make_shared<Xi::Blockchain::Explorer::CoreExplorer>(core);
+  m_explorerService = Xi::Blockchain::Services::BlockExplorer::BlockExplorer::create(m_explorer, log);
+
   DAEMON_COMMAND_DEFINE(exit, "Shutdown the daemon");
   DAEMON_COMMAND_DEFINE(help, "Show this help");
   DAEMON_COMMAND_DEFINE(version, "Shows version information about the running daemon");
@@ -70,6 +85,12 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
   DAEMON_COMMAND_DEFINE(print_tx, "Print transaction, print_tx <transaction_hash>");
   DAEMON_COMMAND_DEFINE(set_log, "set_log <level> - Change current log level, <level> is a number 0-5");
   DAEMON_COMMAND_DEFINE(status, "Show daemon status");
+
+  /* ----------------------------------------------- Explorer Commands --------------------------------------------- */
+  DAEMON_COMMAND_DEFINE(search, "Searches for a block height/hash or transaction hash");
+  DAEMON_COMMAND_DEFINE(top, "Displays top block info");
+  DAEMON_COMMAND_DEFINE(top_short, "Displays top block short info");
+  DAEMON_COMMAND_DEFINE(top_detailed, "Displays top block detailed info");
 
   /* ------------------------------------------------- Pool Commands ----------------------------------------------- */
   DAEMON_COMMAND_DEFINE(print_pool, "Print transaction pool (long format)");
@@ -196,11 +217,10 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string>& args) {
 
     std::cout << "height: " << header.height.native() << ", timestamp: " << header.timestamp
               << ", difficulty: " << header.difficulty << ", size: " << header.block_size
-              << ", transactions: " << header.transactions_count << ENDL
-              << "version: " << toString(header.version) << ", upgrade vote: " << toString(header.upgrade_vote)
-              << ENDL << "block id: " << header.hash << ", previous block id: " << header.prev_hash << ENDL
-              << "difficulty: " << header.difficulty << ", nonce: " << toString(header.nonce)
-              << ", reward: " << currency.formatAmount(header.reward) << ENDL;
+              << ", transactions: " << header.transactions_count << ENDL << "version: " << toString(header.version)
+              << ", upgrade vote: " << toString(header.upgrade_vote) << ENDL << "block id: " << header.hash
+              << ", previous block id: " << header.prev_hash << ENDL << "difficulty: " << header.difficulty
+              << ", nonce: " << toString(header.nonce) << ", reward: " << currency.formatAmount(header.reward) << ENDL;
   }
 
   return true;
@@ -236,7 +256,7 @@ bool DaemonCommandsHandler::print_block_by_height(CryptoNote::BlockHeight height
     std::cout << "Block not found for height: " << std::to_string(height.native()) << std::endl;
     return false;
   }
-  print_as_json(search->block.block().getBlock());
+  printObject(search->block.block().getBlock());
   return true;
 }
 //--------------------------------------------------------------------------------
@@ -251,7 +271,7 @@ bool DaemonCommandsHandler::print_block_by_hash(const std::string& arg) {
     std::cout << "block not found: " << block_hash.toShortString() << std::endl;
     return false;
   } else {
-    print_as_json(search->block.block().getBlock());
+    printObject(search->block.block().getBlock());
     return true;
   }
 }
@@ -296,7 +316,7 @@ bool DaemonCommandsHandler::print_tx(const std::vector<std::string>& args) {
 
   if (1 == txs.size()) {
     CryptoNote::CachedTransaction tx(txs.front());
-    print_as_json(tx.getTransaction());
+    printObject(tx.getTransaction());
   } else {
     std::cout << "transaction wasn't found: <" << str_hash << '>' << std::endl;
   }
@@ -371,6 +391,71 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
   std::cout << Common::get_status_string(iresp) << std::endl;
 
   return true;
+}
+
+bool DaemonCommandsHandler::search(const std::vector<std::string>& args) {
+  try {
+    XI_RETURN_EC_IF(args.empty(), false);
+
+    for (const auto& iArg : args) {
+      std::optional<Xi::Blockchain::Services::BlockExplorer::SearchResponse> res;
+      const auto ec = m_explorerService->process("", iArg, res);
+      if (ec != Xi::Rpc::ServiceError::Success) {
+        std::cout << toString(ec) << std::endl;
+        return false;
+      }
+      printObject(res);
+    }
+    return true;
+  } catch (std::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return false;
+  }
+}
+
+bool DaemonCommandsHandler::top(const std::vector<std::string>&) {
+  try {
+    std::optional<Xi::Blockchain::Explorer::BlockInfo> result{std::nullopt};
+    const auto ec = m_explorerService->process("", std::nullopt, result);
+    if (ec != Xi::Rpc::ServiceError::Success) {
+      std::cout << toString(ec) << std::endl;
+      return false;
+    }
+    return printObject(result);
+  } catch (std::exception& e) {
+    std::cout << e.what() << std::endl;
+    return false;
+  }
+}
+
+bool DaemonCommandsHandler::top_short(const std::vector<std::string>&) {
+  try {
+    std::optional<Xi::Blockchain::Explorer::ShortBlockInfo> result{std::nullopt};
+    const auto ec = m_explorerService->process("", std::nullopt, result);
+    if (ec != Xi::Rpc::ServiceError::Success) {
+      std::cout << toString(ec) << std::endl;
+      return false;
+    }
+    return printObject(result);
+  } catch (std::exception& e) {
+    std::cout << e.what() << std::endl;
+    return false;
+  }
+}
+
+bool DaemonCommandsHandler::top_detailed(const std::vector<std::string>&) {
+  try {
+    std::optional<Xi::Blockchain::Explorer::DetailedBlockInfo> result{std::nullopt};
+    const auto ec = m_explorerService->process("", std::nullopt, result);
+    if (ec != Xi::Rpc::ServiceError::Success) {
+      std::cout << toString(ec) << std::endl;
+      return false;
+    }
+    return printObject(result);
+  } catch (std::exception& e) {
+    std::cout << e.what() << std::endl;
+    return false;
+  }
 }
 
 bool DaemonCommandsHandler::p2p_ban_list(const std::vector<std::string>& args) {

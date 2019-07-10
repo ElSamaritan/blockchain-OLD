@@ -21,8 +21,8 @@
 #                                                                                                #
 # ============================================================================================== #
 
-set(XI_CMAKE_HUNTER_PACKAGES_DIR "${CMAKE_SOURCE_DIR}/cmake/Hunter/Packages")
+Push-Location $PSScriptRoot
 
-include(${XI_CMAKE_HUNTER_PACKAGES_DIR}/ZLib.cmake)
-include(${XI_CMAKE_HUNTER_PACKAGES_DIR}/OpenSSL.cmake)
-include(${XI_CMAKE_HUNTER_PACKAGES_DIR}/Boost.cmake)
+./BuildWithDocker registry.gitlab.com/galaxia-project/environment/debian:9 debian
+
+Pop-Location

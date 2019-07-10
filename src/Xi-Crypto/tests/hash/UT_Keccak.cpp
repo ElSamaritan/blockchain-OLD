@@ -27,7 +27,6 @@
 
 #include <Xi/Crypto/Random/Random.hh>
 #include <Xi/Crypto/Hash/Keccak.hh>
-#include <Xi/Crypto/Hash/Sha3.hh>
 
 #define XI_TEST_SUITE Xi_Crypto_Hash_Keccak
 
@@ -59,57 +58,6 @@ TEST(XI_TEST_SUITE, ConsistentWithStreamedInterface) {
     }
 
     Xi::Crypto::Hash::Keccak::Hash256 iSingleHash;
-    compute(random, iSingleHash);
-
-    xi_crypto_hash_keccak_state state;
-    int ec = xi_crypto_hash_keccak_init(&state);
-    EXPECT_EQ(ec, XI_RETURN_CODE_SUCCESS);
-    for (auto iChunk : chunks) {
-      ec = xi_crypto_hash_keccak_update(&state, iChunk.data(), iChunk.size());
-      EXPECT_EQ(ec, XI_RETURN_CODE_SUCCESS);
-    }
-    Xi::Crypto::Hash::Keccak::Hash256 iChunkedHash;
-    ec = xi_crypto_hash_keccak_finish(&state, iChunkedHash.data());
-    EXPECT_EQ(ec, XI_RETURN_CODE_SUCCESS);
-
-    for (size_t k = 0; k < Xi::Crypto::Hash::Keccak::Hash256::bytes(); ++k) {
-      EXPECT_EQ(singleComputation[k], iSingleHash[k]);
-      EXPECT_EQ(singleComputation[k], iChunkedHash[k]);
-    }
-  }
-}
-
-TEST(XI_TEST_SUITE, ConsistentWithSha3) {
-  for (size_t i = 0; i < 25; ++i) {
-    Xi::ByteArray<1024> random;
-    ASSERT_EQ(Xi::Crypto::Random::generate(random), Xi::Crypto::Random::RandomError::Success);
-
-    Xi::Crypto::Hash::Keccak::Hash256 keccak;
-    compute(random, keccak);
-
-    Xi::Crypto::Hash::Sha3::Hash256 sha;
-    compute(random, sha);
-
-    for (size_t k = 0; k < Xi::Crypto::Hash::Keccak::Hash256::bytes(); ++k) {
-      EXPECT_EQ(keccak[k], sha[k]);
-    }
-  }
-}
-
-TEST(XI_TEST_SUITE, ConsistentWithSha3StreamInterface) {
-  for (size_t i = 0; i < 25; ++i) {
-    Xi::ByteArray<1024> random;
-    ASSERT_EQ(Xi::Crypto::Random::generate(random), Xi::Crypto::Random::RandomError::Success);
-
-    Xi::Crypto::Hash::Keccak::Hash256 singleComputation;
-    compute(random, singleComputation);
-
-    std::vector<Xi::ConstByteSpan> chunks;
-    for (size_t j = 0; j < 1024; j += 32) {
-      chunks.push_back(Xi::ConstByteSpan{random.data() + j, 32});
-    }
-
-    Xi::Crypto::Hash::Sha3::Hash256 iSingleHash;
     compute(random, iSingleHash);
 
     xi_crypto_hash_keccak_state state;

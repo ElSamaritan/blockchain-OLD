@@ -117,7 +117,7 @@ xi_make_library(
     Serialization
 
   PRIVATE_LIBRARIES
-    OpenSSL::Crypto
+    openssl
     boost
 )
 
@@ -126,8 +126,7 @@ xi_make_library(
   Xi-Http
 
   PRIVATE_LIBRARIES
-    OpenSSL::SSL
-    OpenSSL::Crypto
+    openssl
 
   PUBLIC_LIBRARIES
     Xi.Core

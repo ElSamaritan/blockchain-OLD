@@ -24,7 +24,6 @@
 cmake_minimum_required(VERSION 3.12.4)
 
 include(cmake/ApplyDefaultBuildType.cmake)
-include(cmake/Hunter/Hunter.cmake)
 
 project(
   Galaxia
@@ -53,7 +52,6 @@ include(cmake/Common/Common.cmake)
 include(cmake/CompilerCheck.cmake)
 include(cmake/CompilerConfiguration.cmake)
 include(cmake/Platform.cmake)
-include(cmake/Hunter/Packages.cmake)
 include(cmake/XiMakeLibrary.cmake)
 include(cmake/XiMakeApp.cmake)
 include(cmake/Licenses.cmake)

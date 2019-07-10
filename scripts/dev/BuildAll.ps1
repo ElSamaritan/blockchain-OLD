@@ -21,8 +21,14 @@
 #                                                                                                #
 # ============================================================================================== #
 
-set(XI_CMAKE_HUNTER_CONFIG_DIR "${CMAKE_SOURCE_DIR}/cmake/Hunter/Config")
+Push-Location $PSScriptRoot
 
-include(${XI_CMAKE_HUNTER_CONFIG_DIR}/ZLib.cmake)
-include(${XI_CMAKE_HUNTER_CONFIG_DIR}/OpenSSL.cmake)
-include(${XI_CMAKE_HUNTER_CONFIG_DIR}/Boost.cmake)
+./BuildAlpine.ps1
+./BuildBionic.ps1
+./BuildCentOS.ps1
+./BuildDebian.ps1
+./BuildFedora.ps1
+./BuildLeap.ps1
+./BuildXenial.ps1
+
+Pop-Location

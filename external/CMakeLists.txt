@@ -23,6 +23,10 @@
 
 include(ExternalProject)
 
+# Preinstalled Requirements
+include(boostorg-boost.cmake)
+include(openssl-openssl.cmake)
+
 # Contained in buildsystem using submodules
 include(fmtlib-fmt.cmake)
 include(lz4-lz4.cmake)

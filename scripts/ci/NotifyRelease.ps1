@@ -28,13 +28,16 @@ Import-Module -Name "$PSScriptRoot\modules\GetBuildEnvironment.psm1" -Force
 
 $BuildEnvironment = Get-BuildEnvironment
 
-if((-not ($BuildEnvironment.Channel -like "stable")) -and (-not ($BuildEnvironment.Channel -like "beta")))
-{
-    Write-Log "Notifications are only sent on stable and beta releases, skipping..."
+$NotificationChannels = @(
+    "stable",
+    "beta",
+    "edge"
+)
+if (-not ($NotificationChannels -contains $BuildEnvironment.Channel)) {
+    Write-Log "Not a chanel to notify on, skipping..."
     return
 }
-else 
-{
+else {
     Write-Log "Sending discord notification..."
 }
 
@@ -46,7 +49,7 @@ $TextInfo = (Get-Culture).TextInfo
 Invoke-WebRequest -Uri "https://releases.galaxia-project.com/packages.json" -OutFile packages.json
 $Packages = Get-Content packages.json | Out-String | ConvertFrom-Json
 $Packages = $Packages | Where-Object { $_ -like "$($BuildEnvironment.Channel)/latest/*" }
-$Packages = $Packages -replace "$($BuildEnvironment.Channel)/latest/",""
+$Packages = $Packages -replace "$($BuildEnvironment.Channel)/latest/", ""
 $Packages = $Packages | ForEach-Object { "       {
             ""name"": ""$_"",
             ""value"": ""[``Info``]($Url/$($_ -replace " ","%20")/info.json) [``Binaries``]($Url/$($_ -replace " ","%20")/binaries.zip) [``Symbols``]($Url/$($_ -replace " ","%20")/symbols.zip)"",
@@ -56,7 +59,7 @@ $Packages = $Packages | ForEach-Object { "       {
 
 Remove-Item packages.json
 
-$Payload="{
+$Payload = "{
   ""username"": """",
   ""avatar_url"": ""$Icon"",
   ""embeds"": [ {
@@ -76,7 +79,7 @@ $Payload="{
 }"
 
 Invoke-RestMethod -Uri "$($env:DISCORD_WEBHOOK)" -Method "POST" -UserAgent "GitlabCI-Webhook" `
-  -ContentType "application/json" -Header @{"X-Author"="gitlab-ci"} `
-  -Body $Payload
+    -ContentType "application/json" -Header @{"X-Author" = "gitlab-ci" } `
+    -Body $Payload
 
 Write-Log "Notification sent."

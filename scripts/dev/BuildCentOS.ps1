@@ -21,19 +21,8 @@
 #                                                                                                #
 # ============================================================================================== #
 
-set(OPENSSL_USE_STATIC_LIBS ON CACHE INTERNAL "")
+Push-Location $PSScriptRoot
 
-if(MSVC)
-  set(OPENSSL_MSVC_STATIC_RT ON CACHE INTERNAL "")
-endif()
+./BuildWithDocker registry.gitlab.com/galaxia-project/environment/centos:7 centos
 
-hunter_add_package(OpenSSL)
-find_package(OpenSSL REQUIRED)
-
-mark_as_advanced(
-  LIB_EAY_DEBUG
-  LIB_EAY_RELEASE
-
-  SSL_EAY_DEBUG
-  SSL_EAY_RELEASE
-)
+Pop-Location

@@ -298,16 +298,18 @@ Rpc::ServiceError BlockExplorer::process(std::string_view, const SearchRequest &
 
   try {
     auto height = std::stoul(request);
-    if (height >= Block::Height::min().native() && height <= Block::Height::max().native()) {
-      auto search =
-          m_explorer->queryShortBlockInfo(Block::Height::fromNative(static_cast<Block::Height::value_type>(height)))
-              .takeOrThrow();
-      if (search.has_value()) {
-        response.emplace(SearchResponse{*search});
-        return Error::Success;
-      } else {
-        response = std::nullopt;
-        return Error::Success;
+    if (std::to_string(height).size() == request.size()) {
+      if (height >= Block::Height::min().native() && height <= Block::Height::max().native()) {
+        auto search =
+            m_explorer->queryShortBlockInfo(Block::Height::fromNative(static_cast<Block::Height::value_type>(height)))
+                .takeOrThrow();
+        if (search.has_value()) {
+          response.emplace(SearchResponse{*search});
+          return Error::Success;
+        } else {
+          response = std::nullopt;
+          return Error::Success;
+        }
       }
     }
   } catch (std::invalid_argument &) {

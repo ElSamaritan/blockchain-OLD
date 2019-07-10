@@ -23,6 +23,6 @@
 
 Push-Location $PSScriptRoot
 
-.\BuildWithDocker registry.gitlab.com/galaxia-project/blockchain/develop-environments/ubuntu:xenial xenial
+.\BuildWithDocker registry.gitlab.com/galaxia-project/environment/ubuntu:xenial xenial
 
 Pop-Location

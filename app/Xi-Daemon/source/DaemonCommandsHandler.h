@@ -7,11 +7,14 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "Common/ConsoleHandler.h"
 
 #include <Logging/LoggerRef.h>
 #include <Logging/LoggerManager.h>
+#include <Xi/Blockchain/Explorer/IExplorer.hpp>
+#include <Xi/Blockchain/Services/BlockExplorer/BlockExplorer.hpp>
 #include "Rpc/RpcServer.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Rpc/JsonRpc.h"
@@ -41,6 +44,9 @@ class DaemonCommandsHandler {
   Logging::LoggerManager& m_logManager;
   CryptoNote::RpcServer* m_prpc_server;
 
+  std::shared_ptr<Xi::Blockchain::Explorer::IExplorer> m_explorer;
+  std::shared_ptr<Xi::Blockchain::Services::BlockExplorer::BlockExplorer> m_explorerService;
+
   std::string get_commands_str();
   bool print_block_by_height(CryptoNote::BlockHeight height);
   bool print_block_by_hash(const std::string& arg);
@@ -60,6 +66,13 @@ class DaemonCommandsHandler {
   bool start_mining(const std::vector<std::string>& args);
   bool stop_mining(const std::vector<std::string>& args);
   bool status(const std::vector<std::string>& args);
+
+  /* ----------------------------------------------- Explorer Commands --------------------------------------------- */
+  bool search(const std::vector<std::string>& args);
+  bool top(const std::vector<std::string>& args);
+  bool top_short(const std::vector<std::string>& args);
+  bool top_detailed(const std::vector<std::string>& args);
+  /* ----------------------------------------------- Explorer Commands --------------------------------------------- */
 
   /* ------------------------------------------------- Pool Commands ----------------------------------------------- */
   bool print_pool(const std::vector<std::string>& args);

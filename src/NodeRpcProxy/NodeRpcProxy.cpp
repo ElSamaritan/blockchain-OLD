@@ -946,7 +946,8 @@ std::error_code NodeRpcProxy::jsonRpcCommand(const std::string& method, const Re
         ec = interpretResponseStatus(res.status);
       }
     }
-  } catch (const std::exception&) {
+  } catch (const std::exception& e) {
+    m_logger(ERROR) << "Exception on json rpc request: " << e.what();
     ec = make_error_code(error::NETWORK_ERROR);
   }
 
