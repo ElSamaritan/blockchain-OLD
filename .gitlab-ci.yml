@@ -111,11 +111,11 @@ fedora 29 - Build:
 #     BOOST_ROOT: /deps/boost
 #     CI_TARGET_OS: "alpine 3.10"
 
-# Windows 10 - Build:
-#   <<: *generic_build_definition
-#   tags: ["windows"]
-#   variables:
-#     CI_TARGET_OS: "Windows 10"
+Windows 10 - Build:
+  <<: *generic_build_definition
+  tags: ["windows"]
+  variables:
+    CI_TARGET_OS: "Windows 10"
 
 # macOS - Build:
 #   <<: *generic_build_definition
@@ -142,6 +142,9 @@ CppCheck:
   only:
     - develop
     - master
+  variables:
+    OPENSSL_ROOT_DIR: /deps/openssl
+    BOOST_ROOT: /deps/boost
 
 CppLint:
   stage: analyze
@@ -174,7 +177,7 @@ Packages:
     - "fedora 29 - Build"
     # - "openSuse Leap - Build"
     # - "alpine 3.10 - Build"
-    # - "Windows 10 - Build"
+    - "Windows 10 - Build"
     # - "macOS - Build"
   script:
     - pwsh -File ./scripts/ci/DeployPackages.ps1
