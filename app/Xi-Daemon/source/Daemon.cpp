@@ -94,11 +94,9 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   JsonValue& fileLogger = cfgLoggers.pushBack(JsonValue{JsonValue::OBJECT});
   fileLogger.insert("type", JsonValue{"file"});
   fileLogger.insert("filename", JsonValue{logfile});
-  fileLogger.insert("level", JsonValue{static_cast<int64_t>(TRACE)});
 
   JsonValue& consoleLogger = cfgLoggers.pushBack(JsonValue{JsonValue::OBJECT});
   consoleLogger.insert("type", JsonValue{"console"});
-  consoleLogger.insert("level", JsonValue{static_cast<int64_t>(TRACE)});
   consoleLogger.insert("pattern", JsonValue{"%D %T %L "});
 
   return loggerConfiguration;

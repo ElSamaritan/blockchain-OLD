@@ -91,7 +91,7 @@ DaemonConfiguration initConfiguration() {
   config.lightNode = false;
   config.checkPoints = "default";
   config.logFile = "xi-daemon.log";
-  config.logLevel = Logging::WARNING;
+  config.logLevel = Logging::INFO;
   config.dbMaxOpenFiles = Xi::Config::Database::maximumOpenFiles();
   config.dbReadCacheSize = Xi::Config::Database::readBufferSize();
   config.dbThreads = std::min<uint16_t>(Xi::Config::Database::backgroundThreads(),
@@ -143,7 +143,7 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     ("load-checkpoints", "Specify a file <path> containing a CSV of Blockchain checkpoints for faster sync. A value of 'default' uses the built-in checkpoints.",
       cxxopts::value<std::string>()->default_value(config.checkPoints)->implicit_value("default"), "<path>")
     ("log-file", "Specify the <file> to store logs", cxxopts::value<std::string>()->default_value("xi-daemon.log"), "<file>")
-    ("log-level", "Specify log level. Must be 0 - 5", cxxopts::value<uint8_t>()->default_value(std::to_string(config.logLevel)), "#")
+    ("log-level", "Specify log level. Must be 0 - 6", cxxopts::value<uint8_t>()->default_value(std::to_string(config.logLevel)), "#")
     ("no-console", "Disable daemon console commands", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
     ("save-config", "Save the configuration to the specified <file>", cxxopts::value<std::string>(), "<file>");
 
