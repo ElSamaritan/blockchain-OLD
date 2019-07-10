@@ -930,7 +930,11 @@ bool RpcServer::f_on_blocks_list_raw(const F_COMMAND_RPC_GET_BLOCKS_RAW_BY_RANGE
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_WRONG_PARAM, "count may not exceed 100."};
   }
 
-  res.blocks = m_core.getBlocks(req.height.toIndex(), req.count);
+  const auto blocks = m_core.getBlocks(req.height.toIndex(), req.count);
+  std::transform(blocks.begin(), blocks.end(), std::back_inserter(res.blocks), [](const auto& iBlock) {
+    const auto bin = toBinaryArray(iBlock);
+    return Common::toHex(bin);
+  });
   res.status = CORE_RPC_STATUS_OK;
   return true;
 }

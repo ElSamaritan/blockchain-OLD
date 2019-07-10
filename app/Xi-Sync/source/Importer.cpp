@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -55,7 +55,7 @@ void XiSync::Importer::onBatch(XiSync::Batch batch) {
     }
     auto res = m_core.addBlock(std::move(batch.Blocks[index]));
     if (res != CryptoNote::error::AddBlockErrorCondition::BLOCK_ADDED) {
-      Xi::exceptional<InvalidBlockError>();
+      Xi::exceptional<InvalidBlockError>(std::string{"block is invalid: "} + res.message());
     }
   }
 }

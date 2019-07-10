@@ -44,7 +44,7 @@ class BlockExplorerSerivce:
 firstService = BlockExplorerSerivce('localhost', 22869)
 secondService = BlockExplorerSerivce('localhost', 23869)
 
-for i in range(1, 500):
+for i in range(1, 2418):
     first = firstService.getBlockInfo(i)
     second = secondService.getBlockInfo(i)
     if first != second:

@@ -788,9 +788,8 @@ std::error_code NodeRpcProxy::doGetRawBlocksByRange(BlockHeight height, uint32_t
   size_t blocksOffset = blocks.size();
   blocks.reserve(blocksOffset + resp.blocks.size());
   for (const auto& block : resp.blocks) {
-    RawBlock iRawBlock{};
-    iRawBlock.blockTemplate = toBinaryArray(block);
-    blocks.emplace_back(std::move(iRawBlock));
+    const auto bin = Common::fromHex(block);
+    blocks.emplace_back(fromBinaryArray<RawBlock>(bin));
   }
 
   return std::error_code{};

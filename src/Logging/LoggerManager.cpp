@@ -75,7 +75,7 @@ void LoggerManager::configure(const JsonValue& val) {
           throw std::runtime_error("loggers element must be objects");
         }
 
-        Level level = INFO;
+        Level level = TRACE;
         if (loggerConfiguration.contains("level")) {
           level = static_cast<Level>(loggerConfiguration("level").getInteger());
         }

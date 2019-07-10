@@ -659,7 +659,7 @@ struct F_COMMAND_RPC_GET_BLOCKS_RAW_BY_RANGE {
 
   struct response {
     std::string status;
-    std::vector<RawBlock> blocks;
+    std::vector<std::string> blocks;
 
     KV_BEGIN_SERIALIZATION
     KV_MEMBER(status)

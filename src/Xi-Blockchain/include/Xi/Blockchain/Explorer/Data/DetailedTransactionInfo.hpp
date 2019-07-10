@@ -115,14 +115,11 @@ struct DetailedTransactionInfo {
   DetailedTransactionInputVector inputs;
   /// Outputs generated.
   DetailedTransactionOutputVector outputs;
-  /// Ring signature, each inner vector signs all inputs used of the corresponding indexed input.
-  std::vector<std::vector<::Crypto::Signature>> signatures;
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(info)
   KV_MEMBER(inputs)
   KV_MEMBER(outputs)
-  KV_MEMBER(signatures)
   KV_END_SERIALIZATION
 };
 

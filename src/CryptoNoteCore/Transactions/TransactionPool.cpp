@@ -309,7 +309,7 @@ void TransactionPool::pushBlockTransaction(BinaryArray transactionBlob) {
   }
   const auto transactionHash = transaction.value().getTransactionHash();
   if (!removeTransaction(transactionHash, Deletion::AddedToMainChain)) {
-    m_logger(Logging::DEBUGGING) << "Failed to remove pushed block transaction: " << transactionHash.toString();
+    m_logger(Logging::TRACE) << "Failed to remove pushed block transaction: " << transactionHash.toString();
   }
   for (const auto& keyImage : transaction.value().getKeyImages()) {
     auto keyImageSearch = m_keyImageReferences.find(keyImage);
