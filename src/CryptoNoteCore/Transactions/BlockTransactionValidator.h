@@ -37,13 +37,6 @@ class BlockTransactionValidator : public TransactionValidator {
   bool checkIfKeyImageIsAlreadySpent(const Crypto::KeyImage& keyImage) const override;
   bool isInCheckpointRange() const override;
 
-  /*!
-   * \brief isFeeInsufficient always returns fales for a block because it is up to the miner to decide if he dont want
-   * any fees.
-   * \return false
-   */
-  bool isFeeInsufficient(const CachedTransaction&) const override;
-
  private:
   const BlockInfo& m_block;
   const Checkpoints& m_checkpoints;

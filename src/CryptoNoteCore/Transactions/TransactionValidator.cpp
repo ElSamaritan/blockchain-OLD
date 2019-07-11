@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -29,6 +29,7 @@
 #include <crypto/crypto.h>
 
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
+#include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/IBlockchainCache.h"
 #include "CryptoNoteCore/Transactions/TransactionApi.h"
 #include "CryptoNoteCore/Transactions/TransactionUtils.h"
@@ -169,6 +170,37 @@ bool CryptoNote::TransactionValidator::isInvalidDomainKeyImage(const Crypto::Key
 bool CryptoNote::TransactionValidator::containsInvalidDomainKeyImage(
     const std::vector<Crypto::KeyImage> &keyImages) const {
   return std::any_of(keyImages.begin(), keyImages.end(), &TransactionValidator::isInvalidDomainKeyImage);
+}
+
+bool CryptoNote::TransactionValidator::isFeeInsufficient(const CryptoNote::CachedTransaction &transaction) const {
+  const uint64_t fee = transaction.getTransactionFee();
+  const bool isFusionTransaction =
+      fee == 0 && currency().isFusionTransaction(transaction.getTransaction(), transaction.getBlobSize(),
+                                                 chain().getTopBlockVersion());
+  if (!isFusionTransaction) {
+    const uint64_t canonicalBuckets = countCanonicalDecomposition(transaction.getTransaction());
+    const auto minimumFee = currency().minimumFee(blockVersion(), canonicalBuckets);
+    if (fee < minimumFee) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+
+bool CryptoNote::TransactionValidator::isUnlockTooLarge(const CryptoNote::CachedTransaction &transaction) const {
+  return transaction.getTransaction().unlockTime > currency().unlockLimit(blockVersion());
+}
+
+bool CryptoNote::TransactionValidator::isUnlockIllFormed(const CryptoNote::CachedTransaction &transaction) const {
+  const auto unlock = transaction.getTransaction().unlockTime;
+  if (currency().isLockedBasedOnTimestamp(unlock)) {
+    return unlock < currency().genesisTimestamp();
+  } else {
+    return false;
+  }
 }
 
 bool CryptoNote::TransactionValidator::containsSpendedKey(const Crypto::KeyImageSet &keyImages) const {

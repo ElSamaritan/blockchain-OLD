@@ -96,7 +96,10 @@ enum class TransactionValidationError {
   INPUT_MIXIN_TOO_HIGH = 33,
   INPUT_MIXIN_TOO_LOW = 34,
 
-  __NUM = 50  ///< The count of different enum values, if you add a new one use this as its value and increase this by
+  UNLOCK_TOO_LARGE = 50,   ///< Given unlock exceeds limits and is unreasonable high.
+  UNLOCK_ILL_FORMED = 51,  ///< Given unlock is based on timestamp but unlocks before the genesis timestamp.
+
+  __NUM = 52  ///< The count of different enum values, if you add a new one use this as its value and increase this by
               ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation
               ///< and tickets aso.
 };
@@ -216,6 +219,12 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Extra nonce is ill formed.";
       case TransactionValidationError::OUTPUTS_NOT_CANONCIAL:
         return "Outputs are not in canoncial form.";
+
+      case TransactionValidationError::UNLOCK_TOO_LARGE:
+        return "Given unlock exceeds limits and is unreasonable high.";
+      case TransactionValidationError::UNLOCK_ILL_FORMED:
+        return "Given unlock is based on timestamp but unlocks before the genesis timestamp.";
+
       default:
         return "Unknown error";
     }

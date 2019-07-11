@@ -36,5 +36,3 @@ bool CryptoNote::BlockTransactionValidator::checkIfKeyImageIsAlreadySpent(const 
 bool CryptoNote::BlockTransactionValidator::isInCheckpointRange() const {
   return m_checkpoints.isInCheckpointZone(m_block.Height);
 }
-
-bool CryptoNote::BlockTransactionValidator::isFeeInsufficient(const CachedTransaction &) const { return false; }

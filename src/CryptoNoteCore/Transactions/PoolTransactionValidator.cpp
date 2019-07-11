@@ -47,25 +47,6 @@ bool CryptoNote::PoolTransactionValidator::checkIfKeyImageIsAlreadySpent(const C
 
 bool CryptoNote::PoolTransactionValidator::isInCheckpointRange() const { return false; }
 
-bool CryptoNote::PoolTransactionValidator::isFeeInsufficient(const CachedTransaction &transaction) const {
-  const uint64_t fee = transaction.getTransactionFee();
-  const bool isFusionTransaction =
-      fee == 0 && currency().isFusionTransaction(transaction.getTransaction(), transaction.getBlobSize(),
-                                                 chain().getTopBlockVersion());
-  if (!isFusionTransaction) {
-    const size_t canonicalBuckets = countCanonicalDecomposition(transaction.getTransaction());
-    const auto minimumFee = currency().minimumFee(blockVersion());
-    const auto penalizedMinimumFee = minimumFee + (canonicalBuckets / 4) * minimumFee;
-    if (fee < penalizedMinimumFee) {
-      return true;
-    } else {
-      return false;
-    }
-  } else {
-    return false;
-  }
-}
-
 uint64_t CryptoNote::PoolTransactionValidator::transactionWeightLimit() const {
   return currency().blockGrantedFullRewardZoneByBlockVersion(blockVersion()) - currency().minerTxBlobReservedSize();
 }

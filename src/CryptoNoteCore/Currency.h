@@ -70,6 +70,7 @@ class Currency {
   uint64_t requiredMixinThreshold(BlockVersion blockVersion) const;
 
   uint64_t minimumFee(BlockVersion version) const;
+  uint64_t minimumFee(BlockVersion version, uint64_t canonicialBuckets) const;
 
   uint32_t upgradeHeight(BlockVersion version) const;
 
@@ -82,9 +83,6 @@ class Currency {
   size_t maxBlockSizeInitial() const { return m_maxBlockSizeInitial; }
   uint64_t maxBlockSizeGrowthSpeedNumerator() const { return m_maxBlockSizeGrowthSpeedNumerator; }
   uint64_t maxBlockSizeGrowthSpeedDenominator() const { return m_maxBlockSizeGrowthSpeedDenominator; }
-
-  uint64_t lockedTxAllowedDeltaSeconds() const { return m_lockedTxAllowedDeltaSeconds; }
-  size_t lockedTxAllowedDeltaBlocks() const { return m_lockedTxAllowedDeltaBlocks; }
 
   uint64_t mempoolTxLiveTime() const { return m_mempoolTxLiveTime; }
   uint64_t mempoolTxFromAltBlockLiveTime() const { return m_mempoolTxFromAltBlockLiveTime; }
@@ -130,6 +128,7 @@ class Currency {
   bool isLockedBasedOnBlockIndex(uint64_t unlock) const;
   bool isUnlockSatisfied(uint64_t unlock, uint32_t blockIndex, uint64_t timestamp) const;
   uint32_t estimateUnlockIndex(uint64_t unlock) const;
+  uint64_t unlockLimit(BlockVersion version) const;
   // ----------------------------------------------- Locking ----------------------------------------------------------
 
   bool isFusionTransaction(const Transaction& transaction, BlockVersion version) const;
@@ -187,9 +186,6 @@ class Currency {
   size_t m_maxBlockSizeInitial;
   uint64_t m_maxBlockSizeGrowthSpeedNumerator;
   uint64_t m_maxBlockSizeGrowthSpeedDenominator;
-
-  uint64_t m_lockedTxAllowedDeltaSeconds;
-  size_t m_lockedTxAllowedDeltaBlocks;
 
   uint64_t m_mempoolTxLiveTime;
   uint64_t m_mempoolTxFromAltBlockLiveTime;
@@ -293,15 +289,6 @@ class CurrencyBuilder : boost::noncopyable {
   }
   CurrencyBuilder& maxBlockSizeGrowthSpeedDenominator(uint64_t val) {
     m_currency.m_maxBlockSizeGrowthSpeedDenominator = val;
-    return *this;
-  }
-
-  CurrencyBuilder& lockedTxAllowedDeltaSeconds(uint64_t val) {
-    m_currency.m_lockedTxAllowedDeltaSeconds = val;
-    return *this;
-  }
-  CurrencyBuilder& lockedTxAllowedDeltaBlocks(size_t val) {
-    m_currency.m_lockedTxAllowedDeltaBlocks = val;
     return *this;
   }
 

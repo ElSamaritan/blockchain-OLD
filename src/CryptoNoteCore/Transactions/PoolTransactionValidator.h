@@ -34,13 +34,10 @@ class PoolTransactionValidator : public TransactionValidator {
                            const Currency& currency);
 
  protected:
-  Xi::Result<EligibleIndex> doValidate(
-      const CachedTransaction& transaction) const override;
+  Xi::Result<EligibleIndex> doValidate(const CachedTransaction& transaction) const override;
 
   bool checkIfKeyImageIsAlreadySpent(const Crypto::KeyImage& keyImage) const override;
   bool isInCheckpointRange() const override;
-
-  bool isFeeInsufficient(const CachedTransaction& transaction) const override;
 
  private:
   uint64_t transactionWeightLimit() const;

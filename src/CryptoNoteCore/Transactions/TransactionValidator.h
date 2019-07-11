@@ -77,7 +77,6 @@ class TransactionValidator : public ITransactionValidator {
 
   virtual bool checkIfKeyImageIsAlreadySpent(const Crypto::KeyImage& keyImage) const = 0;
   virtual bool isInCheckpointRange() const = 0;
-  virtual bool isFeeInsufficient(const CachedTransaction& transaction) const = 0;
 
  protected:
   error::TransactionValidationError getErrorCode(ExtractOutputKeysResult e) const;
@@ -98,6 +97,10 @@ class TransactionValidator : public ITransactionValidator {
 
   static bool isInvalidDomainKeyImage(const Crypto::KeyImage& keyImage);
   bool containsInvalidDomainKeyImage(const std::vector<Crypto::KeyImage>& keyImages) const;
+
+  bool isFeeInsufficient(const CachedTransaction& transaction) const;
+  bool isUnlockTooLarge(const CachedTransaction& transaction) const;
+  bool isUnlockIllFormed(const CachedTransaction& transaction) const;
 
   bool containsSpendedKey(const Crypto::KeyImageSet& keyImages) const;
 

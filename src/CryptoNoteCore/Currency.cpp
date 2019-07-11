@@ -227,6 +227,13 @@ uint64_t Currency::minimumFee(BlockVersion version) const {
   return m_mininumFee;
 }
 
+uint64_t Currency::minimumFee(BlockVersion version, uint64_t canonicialBuckets) const {
+  const auto minFee = minimumFee(version);
+  XI_RETURN_SC_IF(canonicialBuckets < 3, minFee);
+  canonicialBuckets -= 2;
+  return minFee + (minFee + (canonicialBuckets * minFee) / 10);
+}
+
 size_t Currency::blockGrantedFullRewardZoneByBlockVersion(BlockVersion blockVersion) const {
   return Xi::Config::MinerReward::fullRewardZone(blockVersion);
 }
@@ -487,16 +494,16 @@ bool Currency::isLockedBasedOnBlockIndex(uint64_t unlock) const { return unlock 
 
 bool Currency::isUnlockSatisfied(uint64_t unlock, uint32_t blockIndex, uint64_t timestamp) const {
   if (isLockedBasedOnBlockIndex(unlock)) {
-    return unlock <= blockIndex + lockedTxAllowedDeltaBlocks();
+    return unlock <= blockIndex;
   } else {
     assert(isLockedBasedOnTimestamp(unlock));
-    return unlock <= timestamp + lockedTxAllowedDeltaSeconds();
+    return unlock <= timestamp;
   }
 }
 
 uint32_t Currency::estimateUnlockIndex(uint64_t unlock) const {
   if (isLockedBasedOnBlockIndex(unlock)) {
-    return unlock < lockedTxAllowedDeltaBlocks() ? 0 : static_cast<uint32_t>(unlock - lockedTxAllowedDeltaBlocks());
+    return static_cast<uint32_t>(unlock);
   } else {
     assert(isLockedBasedOnTimestamp(unlock));
     if (unlock < genesisTimestamp()) {
@@ -510,6 +517,11 @@ uint32_t Currency::estimateUnlockIndex(uint64_t unlock) const {
       }
     }
   }
+}
+
+uint64_t Currency::unlockLimit(BlockVersion version) const {
+  (void)version;
+  return 500ULL * 365ULL * 24ULL * 60ULL * 60ULL;  // 500 years in seconds.
 }
 
 bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts,
@@ -708,8 +720,6 @@ Currency::Currency(Currency&& currency)
       m_maxBlockSizeInitial(currency.m_maxBlockSizeInitial),
       m_maxBlockSizeGrowthSpeedNumerator(currency.m_maxBlockSizeGrowthSpeedNumerator),
       m_maxBlockSizeGrowthSpeedDenominator(currency.m_maxBlockSizeGrowthSpeedDenominator),
-      m_lockedTxAllowedDeltaSeconds(currency.m_lockedTxAllowedDeltaSeconds),
-      m_lockedTxAllowedDeltaBlocks(currency.m_lockedTxAllowedDeltaBlocks),
       m_mempoolTxLiveTime(currency.m_mempoolTxLiveTime),
       m_numberOfPeriodsToForgetTxDeletedFromPool(currency.m_numberOfPeriodsToForgetTxDeletedFromPool),
       m_fusionTxMaxSize(currency.m_fusionTxMaxSize),
@@ -746,10 +756,6 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
   maxBlockSizeInitial(Xi::Config::Limits::initialBlockBlobSizeLimit());
   maxBlockSizeGrowthSpeedNumerator(Xi::Config::Limits::blockBlobSizeGrowthNumerator());
   maxBlockSizeGrowthSpeedDenominator(Xi::Config::Limits::blockBlobSizeGrowthDenominator());
-
-  lockedTxAllowedDeltaSeconds(
-      static_cast<uint64_t>(Xi::Config::Limits::maximumTimeWindowForLockedTransation().count()));
-  lockedTxAllowedDeltaBlocks(Xi::Config::Limits::maximumBlockWindowForLockedTransation());
 
   mempoolTxLiveTime(static_cast<uint64_t>(Xi::Config::Limits::maximumTransactionLivetimeSpan().count()));
   mempoolTxFromAltBlockLiveTime(

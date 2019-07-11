@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Calex Developers
@@ -1401,6 +1401,12 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
     return error::TransactionValidationError::TOO_LARGE;
   }
 
+  const auto unlock = cachedTransaction.getTransaction().unlockTime;
+  XI_RETURN_EC_IF(unlock > currency().unlockLimit(blockVersion), error::TransactionValidationError::UNLOCK_TOO_LARGE);
+  if (currency().isLockedBasedOnTimestamp(unlock)) {
+    XI_RETURN_EC_IF(unlock < currency().genesisTimestamp(), error::TransactionValidationError::UNLOCK_ILL_FORMED);
+  }
+
   const auto& transaction = cachedTransaction.getTransaction();
   if (transaction.version > m_currency.maxTxVersion() || transaction.version < m_currency.minTxVersion()) {
     return error::TransactionValidationError::INVALID_VERSION;
@@ -1416,10 +1422,9 @@ std::error_code Core::validateTransaction(const CachedTransaction& cachedTransac
   }
 
   if (!(fee == 0 && currency().isFusionTransaction(transaction, cachedTransaction.getBlobSize(), blockVersion))) {
-    const size_t canonicalBuckets = countCanonicalDecomposition(transaction);
-    const auto minimumFee = currency().minimumFee(blockVersion);
-    const auto penalizedMinimumFee = minimumFee + (canonicalBuckets / 4) * minimumFee;
-    if (fee < penalizedMinimumFee) {
+    const uint64_t canonicalBuckets = countCanonicalDecomposition(transaction);
+    const auto minimumFee = currency().minimumFee(blockVersion, canonicalBuckets);
+    if (fee < minimumFee) {
       return error::TransactionValidationError::FEE_INSUFFICIENT;
     }
   }
