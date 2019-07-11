@@ -59,7 +59,7 @@ XiMiner::UpdateMonitor::UpdateMonitor(std::string address, CryptoNote::Currency 
   }
 
   m_pollThread = std::thread{[&, this] { this->updateLoop(); }};
-  m_logger(Logging::INFO) << "starting update monitor";
+  m_logger(Logging::Info) << "starting update monitor";
 }
 
 void XiMiner::UpdateMonitor::shutdown() {
@@ -83,26 +83,26 @@ std::chrono::milliseconds XiMiner::UpdateMonitor::pollInterval() const {
 
 Xi::Result<std::string> XiMiner::UpdateMonitor::getBlockTemplateState() {
   XI_ERROR_TRY();
-  m_logger(Logging::TRACE) << "request block template state";
+  m_logger(Logging::Trace) << "request block template state";
   CryptoNote::RpcCommands::GetBlockTemplateState::request request;
   CryptoNote::RpcCommands::GetBlockTemplateState::response response;
   CryptoNote::JsonRpc::invokeJsonRpcCommand(m_http, CryptoNote::RpcCommands::GetBlockTemplateState::identifier(),
                                             request, response);
-  m_logger(Logging::TRACE) << "block template state: " << response.template_state;
+  m_logger(Logging::Trace) << "block template state: " << response.template_state;
   return success(std::move(response.template_state));
   XI_ERROR_CATCH();
 }
 
 Xi::Result<XiMiner::MinerBlockTemplate> XiMiner::UpdateMonitor::getBlockTemplate() {
   XI_ERROR_TRY();
-  m_logger(Logging::TRACE) << "request block template state";
+  m_logger(Logging::Trace) << "request block template state";
   CryptoNote::RpcCommands::GetBlockTemplate::request request;
   CryptoNote::RpcCommands::GetBlockTemplate::response response;
   request.reserve_size = 0;
   request.wallet_address = m_address;
   CryptoNote::JsonRpc::invokeJsonRpcCommand(m_http, CryptoNote::RpcCommands::GetBlockTemplate::identifier(), request,
                                             response);
-  m_logger(Logging::TRACE) << "block template state: " << response.template_state;
+  m_logger(Logging::Trace) << "block template state: " << response.template_state;
   MinerBlockTemplate reval;
   CryptoNote::BinaryArray binaryTemplate = Common::fromHex(response.blocktemplate_blob);
   if (!CryptoNote::fromBinaryArray(reval.Template, binaryTemplate)) {
@@ -133,16 +133,16 @@ void XiMiner::UpdateMonitor::updateLoop() {
           continue;
         }
       }
-      m_logger(Logging::DEBUGGING) << "template updated, polling...";
+      m_logger(Logging::Debugging) << "template updated, polling...";
       auto block = getBlockTemplate().takeOrThrow();
       m_observer.notify(&Observer::onTemplateChanged, block);
       m_blockTemplateState = block.TemplateState;
       m_lastPoll = std::chrono::high_resolution_clock::now();
       m_lastUpdate = std::chrono::high_resolution_clock::now();
     } catch (std::exception &e) {
-      m_logger(Logging::ERROR) << "update loop failed: " << e.what();
+      m_logger(Logging::Error) << "update loop failed: " << e.what();
     } catch (...) {
-      m_logger(Logging::ERROR) << "updated loop failed for unknown reason.";
+      m_logger(Logging::Error) << "updated loop failed for unknown reason.";
       std::this_thread::sleep_for(std::chrono::seconds{1});
     }
   }

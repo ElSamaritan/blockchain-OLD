@@ -50,8 +50,8 @@ PaymentGateService::PaymentGateService()
       config(),
       service(nullptr),
       logger(),
-      fileLogger(Logging::TRACE),
-      consoleLogger(Logging::INFO) {
+      fileLogger(Logging::Trace),
+      consoleLogger(Logging::Info) {
   consoleLogger.setPattern("%D %T %L ");
   fileLogger.setPattern("%D %T %L ");
 }
@@ -69,7 +69,7 @@ bool PaymentGateService::init(int argc, char** argv) {
 
   if (!config.serviceConfig.serverRoot.empty()) {
     changeDirectory(config.serviceConfig.serverRoot);
-    log(Logging::INFO) << "Current working directory now is " << config.serviceConfig.serverRoot;
+    log(Logging::Info) << "Current working directory now is " << config.serviceConfig.serverRoot;
   }
 
   fileStream.open(config.serviceConfig.logFile, std::ofstream::app);
@@ -108,7 +108,7 @@ void PaymentGateService::run() {
 
   Logging::LoggerRef log(logger, "run");
   if (config.serviceConfig.ssl.isInsecure(::Xi::Http::SSLConfiguration::Usage::Both)) {
-    log(Logging::WARNING) << "\n" << CommonCLI::insecureClientWarning() << std::endl;
+    log(Logging::Warning) << "\n" << CommonCLI::insecureClientWarning() << std::endl;
   }
 
   runRpcProxy(log);
@@ -120,7 +120,7 @@ void PaymentGateService::run() {
 void PaymentGateService::stop() {
   Logging::LoggerRef log(logger, "stop");
 
-  log(Logging::INFO) << "Stop signal caught";
+  log(Logging::Info) << "Stop signal caught";
 
   if (dispatcher != nullptr) {
     dispatcher->remoteSpawn([&]() {
@@ -132,7 +132,7 @@ void PaymentGateService::stop() {
 }
 
 void PaymentGateService::runRpcProxy(Logging::LoggerRef& log) {
-  log(Logging::INFO) << "Starting Payment Gate with remote node";
+  log(Logging::Info) << "Starting Payment Gate with remote node";
   const CryptoNote::Currency& currency = getCurrency();
 
   std::unique_ptr<CryptoNote::INode> node(
@@ -154,7 +154,7 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
   try {
     service->init();
   } catch (std::exception& e) {
-    Logging::LoggerRef(logger, "run")(Logging::ERROR) << "Failed to init walletService reason: " << e.what();
+    Logging::LoggerRef(logger, "run")(Logging::Error) << "Failed to init walletService reason: " << e.what();
     return;
   }
 
@@ -172,13 +172,13 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
     rpcServer->setSSLConfiguration(config.serviceConfig.ssl);
     rpcServer->start(config.serviceConfig.bindAddress, config.serviceConfig.bindPort);
 
-    Logging::LoggerRef(logger, "PaymentGateService")(Logging::INFO)
+    Logging::LoggerRef(logger, "PaymentGateService")(Logging::Info)
         << "JSON-RPC server stopped, stopping wallet service...";
 
     try {
       service->saveWallet();
     } catch (std::exception& ex) {
-      Logging::LoggerRef(logger, "saveWallet")(Logging::WARNING) << "Couldn't save container: " << ex.what();
+      Logging::LoggerRef(logger, "saveWallet")(Logging::Warning) << "Couldn't save container: " << ex.what();
     }
   }
 }

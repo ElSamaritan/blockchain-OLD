@@ -307,7 +307,7 @@ uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, BlockHeight
 
       if (tx.isLastTransactionInBlock) {
         ++processedBlockCount;
-        m_logger(TRACE) << "Processed block " << processedBlockCount << " of " << count
+        m_logger(Trace) << "Processed block " << processedBlockCount << " of " << count
                         << ", last processed block index " << tx.blockInfo.height.native() << ", hash "
                         << blocks[processedBlockCount - 1].blockHash;
 
@@ -316,20 +316,20 @@ uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, BlockHeight
       }
     }
   } catch (const MarkTransactionConfirmedException& e) {
-    m_logger(ERROR) << "Failed to process block transactions: failed to confirm transaction " << e.getTxHash()
+    m_logger(Error) << "Failed to process block transactions: failed to confirm transaction " << e.getTxHash()
                     << ", remove this transaction from all containers and transaction pool";
     forEachSubscription([&e](TransfersSubscription& sub) { sub.deleteUnconfirmedTransaction(e.getTxHash()); });
 
     m_poolTxs.erase(e.getTxHash());
   } catch (std::exception& e) {
-    m_logger(ERROR) << "Failed to process block transactions, exception: " << e.what();
+    m_logger(Error) << "Failed to process block transactions, exception: " << e.what();
   } catch (...) {
-    m_logger(ERROR) << "Failed to process block transactions, unknown exception";
+    m_logger(Error) << "Failed to process block transactions, unknown exception";
   }
 
   if (processedBlockCount < count) {
     BlockHeight detachHeight = startHeight.next(processedBlockCount);
-    m_logger(ERROR) << "Not all block transactions are processed, fully processed block count: " << processedBlockCount
+    m_logger(Error) << "Not all block transactions are processed, fully processed block count: " << processedBlockCount
                     << " of " << count << ", last processed block hash "
                     << (processedBlockCount > 0 ? blocks[processedBlockCount - 1].blockHash : Hash::Null)
                     << ", detach block height " << detachHeight.native() << " to remove partially processed block";
@@ -439,7 +439,7 @@ std::error_code createTransfers(const AccountKeys& account, const TransactionBlo
 
       if (transactions_hash_seen.find(tx.getTransactionHash()) == transactions_hash_seen.end()) {
         if (public_keys_seen.find(out.key) != public_keys_seen.end()) {
-          m_logger(WARNING, BRIGHT_RED) << "A duplicate public key was found in "
+          m_logger(Warning, BRIGHT_RED) << "A duplicate public key was found in "
                                         << Common::podToHex(tx.getTransactionHash());
           isDuplicate = true;
         } else {
@@ -467,7 +467,7 @@ std::error_code TransfersConsumer::preprocessOutputs(const TransactionBlockInfo&
   try {
     findMyOutputs(tx, m_viewSecret, m_spendKeys, outputs);
   } catch (const std::exception& e) {
-    m_logger(WARNING, BRIGHT_RED) << "Failed to process transaction: " << e.what() << ", transaction hash "
+    m_logger(Warning, BRIGHT_RED) << "Failed to process transaction: " << e.what() << ", transaction hash "
                                   << Common::podToHex(tx.getTransactionHash());
     return std::error_code();
   }
@@ -517,7 +517,7 @@ void TransfersConsumer::processTransaction(const TransactionBlockInfo& blockInfo
   std::vector<TransactionOutputInformationIn> emptyOutputs;
   std::vector<ITransfersContainer*> transactionContainers;
 
-  m_logger(TRACE) << "Process transaction, block " << blockInfo.height.native() << ", transaction index "
+  m_logger(Trace) << "Process transaction, block " << blockInfo.height.native() << ", transaction index "
                   << blockInfo.transactionIndex << ", hash " << tx.getTransactionHash();
   bool someContainerUpdated = false;
   for (auto& kv : m_subscriptions) {
@@ -535,11 +535,11 @@ void TransfersConsumer::processTransaction(const TransactionBlockInfo& blockInfo
   }
 
   if (someContainerUpdated) {
-    m_logger(TRACE) << "Transaction updated some containers, hash " << tx.getTransactionHash();
+    m_logger(Trace) << "Transaction updated some containers, hash " << tx.getTransactionHash();
     m_observerManager.notify(&IBlockchainConsumerObserver::onTransactionUpdated, this, tx.getTransactionHash(),
                              transactionContainers);
   } else {
-    m_logger(TRACE) << "Transaction doesn't updated any container, hash " << tx.getTransactionHash();
+    m_logger(Trace) << "Transaction doesn't updated any container, hash " << tx.getTransactionHash();
   }
 }
 
@@ -558,7 +558,7 @@ void TransfersConsumer::processOutputs(const TransactionBlockInfo& blockInfo, Tr
         sub.markTransactionConfirmed(blockInfo, tx.getTransactionHash(), globalIdxs);
         updated = true;
       } catch (...) {
-        m_logger(ERROR) << "markTransactionConfirmed failed, throw MarkTransactionConfirmedException";
+        m_logger(Error) << "markTransactionConfirmed failed, throw MarkTransactionConfirmedException";
         throw MarkTransactionConfirmedException(tx.getTransactionHash());
       }
     } else {

@@ -41,7 +41,7 @@ SynchronizationStart TransfersSubscription::getSyncStart() {
 void TransfersSubscription::onBlockchainDetach(BlockHeight height) {
   std::vector<Hash> deletedTransactions = transfers.detach(height);
   for (auto& hash : deletedTransactions) {
-    logger(TRACE) << "Transaction deleted from wallet " << m_address << ", hash " << hash;
+    logger(Trace) << "Transaction deleted from wallet " << m_address << ", hash " << hash;
     m_observerManager.notify(&ITransfersObserver::onTransactionDeleted, this, hash);
   }
 }
@@ -61,7 +61,7 @@ bool TransfersSubscription::addTransaction(const TransactionBlockInfo& blockInfo
                                            const std::vector<TransactionOutputInformationIn>& transfersList) {
   bool added = transfers.addTransaction(blockInfo, tx, transfersList);
   if (added) {
-    logger(TRACE) << "Transaction updates balance of wallet " << m_address << ", hash " << tx.getTransactionHash();
+    logger(Trace) << "Transaction updates balance of wallet " << m_address << ", hash " << tx.getTransactionHash();
     m_observerManager.notify(&ITransfersObserver::onTransactionUpdated, this, tx.getTransactionHash());
   }
 
@@ -74,7 +74,7 @@ ITransfersContainer& TransfersSubscription::getContainer() { return transfers; }
 
 void TransfersSubscription::deleteUnconfirmedTransaction(const Hash& transactionHash) {
   if (transfers.deleteUnconfirmedTransaction(transactionHash)) {
-    logger(TRACE) << "Transaction deleted from wallet " << m_address << ", hash " << transactionHash;
+    logger(Trace) << "Transaction deleted from wallet " << m_address << ", hash " << transactionHash;
     m_observerManager.notify(&ITransfersObserver::onTransactionDeleted, this, transactionHash);
   }
 }

@@ -26,7 +26,7 @@ namespace Logging {
 
 class ConsoleLogger : public CommonLogger {
  public:
-  ConsoleLogger(Level level = DEBUGGING);
+  ConsoleLogger(Level level = Debugging);
 
  protected:
   virtual void doLogString(const std::string& message) override;

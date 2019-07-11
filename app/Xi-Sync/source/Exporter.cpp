@@ -46,7 +46,7 @@ Xi::Result<void> XiSync::Exporter::exportBlocks(uint32_t startIndex, uint32_t co
     Xi::exceptional<InvalidBatchSizeError>();
   }
 
-  m_logger(Logging::INFO) << "exporting blockchain up to index " << topIndex;
+  m_logger(Logging::Info) << "exporting blockchain up to index " << topIndex;
   count = std::min(topIndex + 1 - startIndex, count);
 
   uint32_t totalWritten = 0;
@@ -56,9 +56,9 @@ Xi::Result<void> XiSync::Exporter::exportBlocks(uint32_t startIndex, uint32_t co
     m_writer.write(startIndex, std::move(blocks)).throwOnError();
     startIndex += querySize;
     totalWritten += querySize;
-    m_logger(Logging::INFO) << totalWritten << " of " << (topIndex + 1) << " written";
+    m_logger(Logging::Info) << totalWritten << " of " << (topIndex + 1) << " written";
   }
-  m_logger(Logging::INFO) << "export finished";
+  m_logger(Logging::Info) << "export finished";
   return Xi::success();
   XI_ERROR_CATCH();
 }

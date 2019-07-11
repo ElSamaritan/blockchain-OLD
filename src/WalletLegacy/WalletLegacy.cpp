@@ -89,7 +89,7 @@ WalletLegacy::WalletLegacy(const CryptoNote::Currency& currency, INode& node)
     : m_state(NOT_INITIALIZED),
       m_currency(currency),
       m_node(node),
-      m_consoleLogger(Logging::ERROR),
+      m_consoleLogger(Logging::Error),
       m_isStopping(false),
       m_lastNotifiedActualBalance(0),
       m_lastNotifiedPendingBalance(0),

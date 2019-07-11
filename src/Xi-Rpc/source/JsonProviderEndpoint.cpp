@@ -226,6 +226,7 @@ JsonProviderEndpoint::Json JsonProviderEndpoint::handleBatch(JsonProviderEndpoin
 #if !defined(NDEBUG)
     return makeError(ErrorCode::InternalServerError, std::move(id), e.what());
 #else
+    XI_UNUSED(e);
     return makeError(ErrorCode::InternalServerError, std::move(id), "");
 #endif
   }

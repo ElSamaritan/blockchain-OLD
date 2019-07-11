@@ -45,5 +45,11 @@ target_include_directories(openssl INTERFACE ${OPENSSL_INCLUDE_DIR})
 target_link_libraries(openssl INTERFACE ${OPENSSL_LIBRARIES} ${OPENSSL_EXTRA_LIBS})
 
 set(OPENSSL_VERSION ${OPENSSL_VERSION} CACHE STRING "OpenSSL Version" FORCE)
-mark_as_advanced(OPENSSL_VERSION)
+mark_as_advanced(
+  OPENSSL_VERSION
+  SSL_EAY_DEBUG
+  SSL_EAY_RELEASE
+  LIB_EAY_DEBUG
+  LIB_EAY_RELEASE
+)
 

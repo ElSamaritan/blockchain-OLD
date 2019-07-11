@@ -125,6 +125,8 @@ class JsonRpcRequest {
         params = std::move(output.getValue()(""));
       }
       psReq.set("params", std::move(params));
+    } else {
+      XI_UNUSED(v);
     }
     return true;
   }

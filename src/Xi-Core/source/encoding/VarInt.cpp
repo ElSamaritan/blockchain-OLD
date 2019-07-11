@@ -37,113 +37,113 @@ XI_ERROR_CODE_CATEGORY_END()
 
 Xi::Result<size_t> Xi::Encoding::VarInt::decode(const Xi::ByteSpan source, int8_t &out) {
   auto reval = xi_encoding_varint_decode_int8(source.data(), static_cast<size_t>(source.size()), &out);
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, failure(DecodeError::Overflow));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, failure(DecodeError::NoneCanonical));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, failure(DecodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, makeError(DecodeError::Overflow));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, makeError(DecodeError::NoneCanonical));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, makeError(DecodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::decode(const Xi::ByteSpan source, uint8_t &out) {
   auto reval = xi_encoding_varint_decode_uint8(source.data(), static_cast<size_t>(source.size()), &out);
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, failure(DecodeError::Overflow));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, failure(DecodeError::NoneCanonical));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, failure(DecodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, makeError(DecodeError::Overflow));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, makeError(DecodeError::NoneCanonical));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, makeError(DecodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::decode(const Xi::ByteSpan source, int16_t &out) {
   auto reval = xi_encoding_varint_decode_int16(source.data(), static_cast<size_t>(source.size()), &out);
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, failure(DecodeError::Overflow));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, failure(DecodeError::NoneCanonical));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, failure(DecodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, makeError(DecodeError::Overflow));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, makeError(DecodeError::NoneCanonical));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, makeError(DecodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::decode(const Xi::ByteSpan source, uint16_t &out) {
   auto reval = xi_encoding_varint_decode_uint16(source.data(), static_cast<size_t>(source.size()), &out);
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, failure(DecodeError::Overflow));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, failure(DecodeError::NoneCanonical));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, failure(DecodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, makeError(DecodeError::Overflow));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, makeError(DecodeError::NoneCanonical));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, makeError(DecodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::decode(const Xi::ByteSpan source, int32_t &out) {
   auto reval = xi_encoding_varint_decode_int32(source.data(), static_cast<size_t>(source.size()), &out);
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, failure(DecodeError::Overflow));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, failure(DecodeError::NoneCanonical));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, failure(DecodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, makeError(DecodeError::Overflow));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, makeError(DecodeError::NoneCanonical));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, makeError(DecodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::decode(const Xi::ByteSpan source, uint32_t &out) {
   auto reval = xi_encoding_varint_decode_uint32(source.data(), static_cast<size_t>(source.size()), &out);
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, failure(DecodeError::Overflow));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, failure(DecodeError::NoneCanonical));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, failure(DecodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, makeError(DecodeError::Overflow));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, makeError(DecodeError::NoneCanonical));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, makeError(DecodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::decode(const Xi::ByteSpan source, int64_t &out) {
   auto reval = xi_encoding_varint_decode_int64(source.data(), static_cast<size_t>(source.size()), &out);
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, failure(DecodeError::Overflow));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, failure(DecodeError::NoneCanonical));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, failure(DecodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, makeError(DecodeError::Overflow));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, makeError(DecodeError::NoneCanonical));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, makeError(DecodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::decode(const Xi::ByteSpan source, uint64_t &out) {
   auto reval = xi_encoding_varint_decode_uint64(source.data(), static_cast<size_t>(source.size()), &out);
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, failure(DecodeError::Overflow));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, failure(DecodeError::NoneCanonical));
-  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, failure(DecodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OVERFLOW, makeError(DecodeError::Overflow));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_NONE_CANONICAL, makeError(DecodeError::NoneCanonical));
+  XI_RETURN_EC_IF(reval == XI_VARINT_DECODE_OUT_OF_MEMORY, makeError(DecodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::encode(int8_t value, Xi::ByteSpan dest) {
   auto reval = xi_encoding_varint_encode_int8(value, dest.data(), static_cast<size_t>(dest.size()));
-  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, failure(EncodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, makeError(EncodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::encode(uint8_t value, Xi::ByteSpan dest) {
   auto reval = xi_encoding_varint_encode_uint8(value, dest.data(), static_cast<size_t>(dest.size()));
-  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, failure(EncodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, makeError(EncodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::encode(int16_t value, Xi::ByteSpan dest) {
   auto reval = xi_encoding_varint_encode_int16(value, dest.data(), static_cast<size_t>(dest.size()));
-  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, failure(EncodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, makeError(EncodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::encode(uint16_t value, Xi::ByteSpan dest) {
   auto reval = xi_encoding_varint_encode_uint16(value, dest.data(), static_cast<size_t>(dest.size()));
-  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, failure(EncodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, makeError(EncodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::encode(int32_t value, Xi::ByteSpan dest) {
   auto reval = xi_encoding_varint_encode_int32(value, dest.data(), static_cast<size_t>(dest.size()));
-  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, failure(EncodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, makeError(EncodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::encode(uint32_t value, Xi::ByteSpan dest) {
   auto reval = xi_encoding_varint_encode_uint32(value, dest.data(), static_cast<size_t>(dest.size()));
-  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, failure(EncodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, makeError(EncodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::encode(int64_t value, Xi::ByteSpan dest) {
   auto reval = xi_encoding_varint_encode_int64(value, dest.data(), static_cast<size_t>(dest.size()));
-  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, failure(EncodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, makeError(EncodeError::OutOfMemory));
   return success(reval);
 }
 
 Xi::Result<size_t> Xi::Encoding::VarInt::encode(uint64_t value, Xi::ByteSpan dest) {
   auto reval = xi_encoding_varint_encode_uint64(value, dest.data(), static_cast<size_t>(dest.size()));
-  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, failure(EncodeError::OutOfMemory));
+  XI_RETURN_EC_IF(reval == XI_VARINT_ENCODE_OUT_OF_MEMORY, makeError(EncodeError::OutOfMemory));
   return success(reval);
 }
 

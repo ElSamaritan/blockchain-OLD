@@ -28,7 +28,7 @@ namespace Logging {
 class LoggerRef {
  public:
   LoggerRef(ILogger& logger, const std::string& category);
-  LoggerMessage operator()(Level level = Level::INFO) const;
+  LoggerMessage operator()(Level level = Level::Info) const;
   LoggerMessage operator()(Level level, const std::string& color) const;
   ILogger& getLogger() const;
 

@@ -71,14 +71,14 @@ bool Currency::init() {
   }
 
   if (!generateGenesisBlock()) {
-    logger(ERROR) << "Failed to generate genesis block";
+    logger(Error) << "Failed to generate genesis block";
     return false;
   }
 
   try {
     m_cachedGenesisBlock->getBlockHash();
   } catch (std::exception& e) {
-    logger(ERROR) << "Failed to get genesis block hash: " << e.what();
+    logger(Error) << "Failed to get genesis block hash: " << e.what();
     return false;
   }
 
@@ -98,7 +98,7 @@ bool Currency::generateGenesisBlock() {
     minerTxBlob = fromHex(genesisCoinbaseTxHex);
     m_genesisBlockTemplate.baseTransaction = fromBinaryArray<Transaction>(minerTxBlob);
   } catch (std::exception& e) {
-    logger(ERROR) << "failed to parse coinbase tx from hard coded blob: " << e.what();
+    logger(Error) << "failed to parse coinbase tx from hard coded blob: " << e.what();
     return false;
   }
 
@@ -112,7 +112,7 @@ bool Currency::generateGenesisBlock() {
   }
 
   if (!fromBinaryArray(m_genesisBlockTemplate.baseTransaction, minerTxBlob)) {
-    logger(ERROR) << "Unable to parse hex encoded genesis coinbase transaction.";
+    logger(Error) << "Unable to parse hex encoded genesis coinbase transaction.";
     return false;
   }
 
@@ -120,10 +120,10 @@ bool Currency::generateGenesisBlock() {
     auto staticReward =
         constructStaticRewardTx(m_genesisBlockTemplate.previousBlockHash, m_genesisBlockTemplate.version, 0);
     if (staticReward.isError()) {
-      logger(ERROR) << "Static reward construction failed: " << staticReward.error().message();
+      logger(Error) << "Static reward construction failed: " << staticReward.error().message();
       return false;
     } else if (!staticReward.value().has_value()) {
-      logger(ERROR) << "Expected static reward but none given.";
+      logger(Error) << "Expected static reward but none given.";
       return false;
     }
     const CachedTransaction cStaticReward{*staticReward.takeOrThrow()};
@@ -277,13 +277,13 @@ bool Currency::getBlockReward(BlockVersion blockVersion, size_t medianSize, size
   uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
   if (alreadyGeneratedCoins == 0 && m_genesisBlockReward != 0) {
     baseReward = m_genesisBlockReward;
-    logger(TRACE) << "Genesis block reward: " << baseReward;
+    logger(Trace) << "Genesis block reward: " << baseReward;
   }
 
   size_t blockGrantedFullRewardZone = blockGrantedFullRewardZoneByBlockVersion(blockVersion);
   medianSize = std::max(medianSize, blockGrantedFullRewardZone);
   if (currentBlockSize > UINT64_C(2) * medianSize) {
-    logger(TRACE) << "Block cumulative size is too big: " << currentBlockSize << ", expected less than "
+    logger(Trace) << "Block cumulative size is too big: " << currentBlockSize << ", expected less than "
                   << 2 * medianSize;
     return false;
   }
@@ -332,7 +332,7 @@ bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_
   int64_t emissionChange;
   if (!getBlockReward(blockVersion, medianSize, currentBlockSize, alreadyGeneratedCoins, fee, blockReward,
                       emissionChange)) {
-    logger(INFO) << "Block is too big";
+    logger(Info) << "Block is too big";
     return false;
   }
 
@@ -340,7 +340,7 @@ bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_
   decompose_amount_into_digits(blockReward, [&outAmounts](uint64_t a_chunk) { outAmounts.push_back(a_chunk); });
 
   if (!(1 <= maxOuts)) {
-    logger(ERROR) << "max_out must be non-zero";
+    logger(Error) << "max_out must be non-zero";
     return false;
   }
   while (maxOuts < outAmounts.size()) {
@@ -356,7 +356,7 @@ bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_
     bool r = Crypto::generate_key_derivation(minerAddress.viewPublicKey, txkey.secretKey, derivation);
 
     if (!(r)) {
-      logger(ERROR) << "while creating outs: failed to generate_key_derivation(" << minerAddress.viewPublicKey << ", "
+      logger(Error) << "while creating outs: failed to generate_key_derivation(" << minerAddress.viewPublicKey << ", "
                     << txkey.secretKey << ")";
       return false;
     }
@@ -364,7 +364,7 @@ bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_
     r = Crypto::derive_public_key(derivation, no, minerAddress.spendPublicKey, outEphemeralPubKey);
 
     if (!(r)) {
-      logger(ERROR) << "while creating outs: failed to derive_public_key(" << derivation << ", " << no << ", "
+      logger(Error) << "while creating outs: failed to derive_public_key(" << derivation << ", " << no << ", "
                     << minerAddress.spendPublicKey << ")";
       return false;
     }
@@ -379,7 +379,7 @@ bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_
   }
 
   if (!(summaryAmounts == blockReward)) {
-    logger(ERROR) << "Failed to construct miner tx, summaryAmounts = " << summaryAmounts
+    logger(Error) << "Failed to construct miner tx, summaryAmounts = " << summaryAmounts
                   << " not equal blockReward = " << blockReward;
     return false;
   }
@@ -411,12 +411,12 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const
   const auto rewardAddress = staticRewardAddressForBlockVersion(blockVersion);
   if (rewardAddress.empty() || rewardAmount == 0) {
     if (!rewardAddress.empty()) {
-      logger(ERROR) << "Static reward address set but amount is zero, consider deleting the static reward address.";
+      logger(Error) << "Static reward address set but amount is zero, consider deleting the static reward address.";
     } else if (rewardAmount > 0) {
-      logger(ERROR)
+      logger(Error)
           << "Static reward amount set but no address given, consider setting the static reward amount to zero.";
     } else {
-      logger(TRACE) << "Skipping static reward.";
+      logger(Trace) << "Skipping static reward.";
     }
     return success<boost::optional<Transaction>>(boost::none);
   }
@@ -603,7 +603,7 @@ bool Currency::parseAccountAddressString(const std::string& str, AccountPublicAd
   }
 
   if (prefix != m_publicAddressBase58Prefix) {
-    logger(DEBUGGING) << "Wrong address prefix: " << prefix << ", expected " << m_publicAddressBase58Prefix;
+    logger(Debugging) << "Wrong address prefix: " << prefix << ", expected " << m_publicAddressBase58Prefix;
     return false;
   }
 

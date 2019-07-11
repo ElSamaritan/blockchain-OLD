@@ -140,7 +140,7 @@ bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlockedByTimestam
   assert(blockIndex < getTopBlockIndex() + 1);
 
   if (blockIndex > getTopBlockIndex()) {
-    m_logger(Level::FATAL)
+    m_logger(Level::Fatal)
         << "Cannot query children for transaction spend time unlock timestamp, this would be ambiguous.";
     return false;
   }
@@ -150,7 +150,7 @@ bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlockedByTimestam
     if (parent != nullptr) {
       return parent->isTransactionSpendTimeUnlocked(unlockTime, blockIndex);
     } else {
-      m_logger(Level::FATAL) << "Unable to load block timestamp, block not contained by this and no parent given.";
+      m_logger(Level::Fatal) << "Unable to load block timestamp, block not contained by this and no parent given.";
       return false;
     }
   }
@@ -158,7 +158,7 @@ bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlockedByTimestam
   uint64_t timestamp = 0;
   time_t localTime = time(nullptr);
   if (localTime < 0) {
-    m_logger(Level::FATAL) << "Unable to retrieve unix timestamp. Expected > 0, actual: " << timestamp;
+    m_logger(Level::Fatal) << "Unable to retrieve unix timestamp. Expected > 0, actual: " << timestamp;
     return false;
   } else {
     timestamp = static_cast<uint64_t>(localTime);

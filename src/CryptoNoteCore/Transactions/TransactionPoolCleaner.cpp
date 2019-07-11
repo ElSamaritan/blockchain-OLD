@@ -119,7 +119,7 @@ std::vector<Crypto::Hash> TransactionPoolCleanWrapper::clean() {
   } catch (System::InterruptedException&) {
     throw;
   } catch (std::exception& e) {
-    logger(Logging::WARNING) << "Caught an exception: " << e.what() << ", stopping cleaning procedure cycle";
+    logger(Logging::Warning) << "Caught an exception: " << e.what() << ", stopping cleaning procedure cycle";
     throw;
   }
 }

@@ -41,10 +41,10 @@ XiMiner::MinerMonitor::MinerMonitor(MinerManager& miner, Logging::ILogger& logge
 
 void XiMiner::MinerMonitor::onSuccessfulBlockSubmission(Crypto::Hash hash) {
   m_blocksMined += 1;
-  m_logger(Logging::INFO, Logging::GREEN)
+  m_logger(Logging::Info, Logging::GREEN)
       << "Block successfully submitted: " << Common::toHex(hash.data(), hash.size());
   if (blockLimit() > 0 && blocksMined() >= blockLimit()) {
-    m_logger(Logging::INFO, Logging::RED) << "Blocks limit reached, shutting down.";
+    m_logger(Logging::Info, Logging::RED) << "Blocks limit reached, shutting down.";
     std::exit(EXIT_SUCCESS);  // sorry
   }
 }
@@ -138,7 +138,7 @@ void XiMiner::MinerMonitor::reportHashrate() {
     color = Logging::RED;
   else if (abs < -0.08)
     color = Logging::YELLOW;
-  m_logger(Logging::TRACE, color) << status().AverageHashrate << " H/s";
+  m_logger(Logging::Trace, color) << status().AverageHashrate << " H/s";
 }
 
 void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
@@ -165,7 +165,7 @@ void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
           (double)m_hrTimeline.size();
       const auto abs = (shortAverage - m_status.AverageHashrate) / m_status.AverageHashrate;
       if ((abs < -0.5 || shortAverage < 0.1) && isPanicExitEnabled()) {
-        m_logger(Logging::FATAL) << "Hashrate stall detected, panic out.";
+        m_logger(Logging::Fatal) << "Hashrate stall detected, panic out.";
         std::exit(EXIT_FAILURE);  // sorry
       }
     }
@@ -179,7 +179,7 @@ void XiMiner::MinerMonitor::checkForStall() {
   }
   const auto lastUpdateDuration = now - m_lastBlockUpdate;
   if (lastUpdateDuration > std::chrono::minutes{8}) {
-    m_logger(Logging::ERROR) << "last block update is "
+    m_logger(Logging::Error) << "last block update is "
                              << std::chrono::duration_cast<std::chrono::minutes>(lastUpdateDuration).count()
                              << " minutes ago.";
     if (isPanicExitEnabled()) {
@@ -187,7 +187,7 @@ void XiMiner::MinerMonitor::checkForStall() {
     }
     m_lastStallNotification = now;
   } else if (lastUpdateDuration > std::chrono::minutes{3}) {
-    m_logger(Logging::WARNING) << "last block update is "
+    m_logger(Logging::Warning) << "last block update is "
                                << std::chrono::duration_cast<std::chrono::minutes>(lastUpdateDuration).count()
                                << " minutes ago.";
     m_lastStallNotification = now;

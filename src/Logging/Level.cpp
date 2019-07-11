@@ -37,13 +37,13 @@
 boost::optional<Logging::LevelTranslator::external_type> Logging::LevelTranslator::get_value(
     const Logging::LevelTranslator::internal_type &v) {
   auto string = Xi::to_lower(v);
-  LOG_LEVEL_STRING_CASE(NONE)
-  LOG_LEVEL_STRING_CASE(FATAL)
-  LOG_LEVEL_STRING_CASE(ERROR)
-  LOG_LEVEL_STRING_CASE(WARNING)
-  LOG_LEVEL_STRING_CASE(INFO)
-  LOG_LEVEL_STRING_CASE(DEBUGGING)
-  LOG_LEVEL_STRING_CASE(TRACE)
+  LOG_LEVEL_STRING_CASE(None)
+  LOG_LEVEL_STRING_CASE(Fatal)
+  LOG_LEVEL_STRING_CASE(Error)
+  LOG_LEVEL_STRING_CASE(Warning)
+  LOG_LEVEL_STRING_CASE(Info)
+  LOG_LEVEL_STRING_CASE(Debugging)
+  LOG_LEVEL_STRING_CASE(Trace)
   return boost::none;
 }
 
@@ -52,19 +52,19 @@ boost::optional<Logging::LevelTranslator::external_type> Logging::LevelTranslato
 boost::optional<Logging::LevelTranslator::internal_type> Logging::LevelTranslator::put_value(
     const Logging::LevelTranslator::external_type &v) {
   switch (v) {
-    case Logging::NONE:
+    case Logging::None:
       return std::string{"none"};
-    case Logging::FATAL:
+    case Logging::Fatal:
       return std::string{"fatal"};
-    case Logging::ERROR:
+    case Logging::Error:
       return std::string{"error"};
-    case Logging::WARNING:
+    case Logging::Warning:
       return std::string{"warning"};
-    case Logging::INFO:
+    case Logging::Info:
       return std::string{"info"};
-    case Logging::DEBUGGING:
+    case Logging::Debugging:
       return std::string{"debugging"};
-    case Logging::TRACE:
+    case Logging::Trace:
       return std::string{"trace"};
   }
   return boost::none;

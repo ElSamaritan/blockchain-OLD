@@ -79,7 +79,7 @@ NodeRpcProxy::~NodeRpcProxy() {
   try {
     shutdown();
   } catch (std::exception& ex) {
-    m_logger(FATAL) << "Node could not shutdown properly: " << ex.what();
+    m_logger(Fatal) << "Node could not shutdown properly: " << ex.what();
   }
 }
 
@@ -174,7 +174,7 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
             updateNodeStatus();
             continiousExceptionCounter = 0;
           } catch (std::exception& ex) {
-            m_logger(ERROR) << "Failed to updated node status (try " << std::to_string(continiousExceptionCounter + 1)
+            m_logger(Error) << "Failed to updated node status (try " << std::to_string(continiousExceptionCounter + 1)
                             << " of " << std::to_string(MaxRetries) << "): " << ex.what();
             if (++continiousExceptionCounter > MaxRetries)
               throw ex;  // The endpoint failed MaxRetries times, we should break here.
@@ -193,7 +193,7 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
       m_dispatcher->yield();
     }
   } catch (std::exception& ex) {
-    m_logger(FATAL) << "Error in node synchronization: '" << ex.what() << "\n', going to shutdown...";
+    m_logger(Fatal) << "Error in node synchronization: '" << ex.what() << "\n', going to shutdown...";
   }
 
   {
@@ -213,7 +213,7 @@ void NodeRpcProxy::updateNodeStatus() {
   bool updateBlockchain = true;
   while (pollUpdatesEnabled() && updateBlockchain && !m_stop) {
     if (const auto ec = updateBlockchainStatus(); ec) {
-      m_logger(ERROR) << "Error updating blockchain status: " << ec.message();
+      m_logger(Error) << "Error updating blockchain status: " << ec.message();
       if (m_connected) {
         m_connected = false;
         m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
@@ -632,7 +632,7 @@ std::error_code NodeRpcProxy::doRelayTransaction(const CryptoNote::Transaction& 
   COMMAND_RPC_SEND_RAW_TX::request req;
   COMMAND_RPC_SEND_RAW_TX::response rsp;
   req.transaction = transaction;
-  m_logger(TRACE) << "NodeRpcProxy::doRelayTransaction";
+  m_logger(Trace) << "NodeRpcProxy::doRelayTransaction";
   XI_TRY_RPC_COMMAND(jsonCommand("/sendrawtransaction", req, rsp));
   return std::error_code{};
 }
@@ -648,7 +648,7 @@ std::error_code NodeRpcProxy::doGetRandomOutsByAmounts(
     req.amounts.emplace_back(COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request_entry{amount.first, amount.second});
   }
 
-  m_logger(TRACE) << "Send getrandom_outs request";
+  m_logger(Trace) << "Send getrandom_outs request";
   XI_TRY_RPC_COMMAND(jsonCommand("/getrandom_outs", req, rsp));
   outs = std::move(rsp.outs);
   return std::error_code{};
@@ -660,9 +660,9 @@ std::error_code NodeRpcProxy::doGetNewBlocks(std::vector<Crypto::Hash>& knownBlo
   CryptoNote::COMMAND_RPC_GET_BLOCKS_FAST::response rsp = AUTO_VAL_INIT(rsp);
   req.block_hashes = std::move(knownBlockIds);
 
-  m_logger(TRACE) << "Send getblocks request";
+  m_logger(Trace) << "Send getblocks request";
   XI_TRY_RPC_COMMAND(jsonCommand("/getblocks", req, rsp));
-  m_logger(TRACE) << "getblocks complete, start_height " << rsp.start_height.native() << ", block count "
+  m_logger(Trace) << "getblocks complete, start_height " << rsp.start_height.native() << ", block count "
                   << rsp.blocks.size();
   newBlocks = std::move(rsp.blocks);
   startHeight = rsp.start_height;
@@ -675,9 +675,9 @@ std::error_code NodeRpcProxy::doGetTransactionOutsGlobalIndices(const Crypto::Ha
   CryptoNote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::response rsp = AUTO_VAL_INIT(rsp);
   req.transaction_hash = transactionHash;
 
-  m_logger(TRACE) << "Send get_o_indexes request, transaction " << req.transaction_hash;
+  m_logger(Trace) << "Send get_o_indexes request, transaction " << req.transaction_hash;
   XI_TRY_RPC_COMMAND(jsonCommand("/get_o_indexes", req, rsp));
-  m_logger(TRACE) << "get_o_indexes complete";
+  m_logger(Trace) << "get_o_indexes complete";
   outsGlobalIndices.clear();
   for (auto idx : rsp.output_indices) {
     outsGlobalIndices.push_back(static_cast<uint32_t>(idx));
@@ -694,10 +694,10 @@ std::error_code NodeRpcProxy::doQueryBlocksLite(const std::vector<Crypto::Hash>&
   req.block_hashes = knownBlockIds;
   req.timestamp = timestamp;
 
-  m_logger(TRACE) << "Send queryblockslite request, timestamp " << req.timestamp;
+  m_logger(Trace) << "Send queryblockslite request, timestamp " << req.timestamp;
   XI_TRY_RPC_COMMAND(jsonCommand("/queryblockslite", req, rsp));
 
-  m_logger(TRACE) << "queryblockslite complete, startHeight " << rsp.start_height.native() << ", block count "
+  m_logger(Trace) << "queryblockslite complete, startHeight " << rsp.start_height.native() << ", block count "
                   << rsp.blocks.size();
   startHeight = rsp.start_height;
 
@@ -737,10 +737,10 @@ std::error_code NodeRpcProxy::doGetPoolSymmetricDifference(std::vector<Crypto::H
   req.tail_block_hash = knownBlockId;
   req.known_transaction_hashes = knownPoolTxIds;
 
-  m_logger(TRACE) << "Send get_pool_changes_lite request, tailBlockId " << req.tail_block_hash;
+  m_logger(Trace) << "Send get_pool_changes_lite request, tailBlockId " << req.tail_block_hash;
   XI_TRY_RPC_COMMAND(jsonCommand("/get_pool_changes_lite", req, rsp));
 
-  m_logger(TRACE) << "get_pool_changes_lite complete, isTailBlockActual " << rsp.is_current_tail_block;
+  m_logger(Trace) << "get_pool_changes_lite complete, isTailBlockActual " << rsp.is_current_tail_block;
   isBcActual = rsp.is_current_tail_block;
 
   deletedTxIds = std::move(rsp.deleted_transaction_hashes);
@@ -886,6 +886,8 @@ void invokeJsonCommand(HttpClient& client, const std::string& url, const Request
   std::string body{""};
   if constexpr (!std::is_same_v<Request, CryptoNote::Null>) {
     body = storeToJson(req);
+  } else {
+    XI_UNUSED(req);
   }
 
   const auto response = client.postSync(url, Xi::Http::ContentType::Json, std::move(body));
@@ -897,6 +899,8 @@ void invokeJsonCommand(HttpClient& client, const std::string& url, const Request
     if (!loadFromJson(res, response.body())) {
       throw std::runtime_error("Failed to parse JSON response");
     }
+  } else {
+    XI_UNUSED(res);
   }
 }
 }  // namespace
@@ -906,18 +910,18 @@ std::error_code NodeRpcProxy::jsonCommand(const std::string& url, const Request&
   std::error_code ec;
 
   try {
-    m_logger(TRACE) << "Send " << url << " JSON request";
+    m_logger(Trace) << "Send " << url << " JSON request";
     invokeJsonCommand(*m_httpClient, url, req, res);
     ec = interpretResponseStatus(res.status);
   } catch (const std::exception& e) {
-    m_logger(ERROR) << url << " JSON response deserialization failed: " << e.what();
+    m_logger(Error) << url << " JSON response deserialization failed: " << e.what();
     ec = make_error_code(error::NETWORK_ERROR);
   }
 
   if (ec) {
-    m_logger(TRACE) << url << " JSON request failed: " << ec << ", " << ec.message();
+    m_logger(Trace) << url << " JSON request failed: " << ec << ", " << ec.message();
   } else {
-    m_logger(TRACE) << url << " JSON request compete";
+    m_logger(Trace) << url << " JSON request compete";
   }
 
   return ec;
@@ -929,7 +933,7 @@ std::error_code NodeRpcProxy::jsonRpcCommand(const std::string& method, const Re
   std::error_code ec = make_error_code(error::INTERNAL_NODE_ERROR);
 
   try {
-    m_logger(TRACE) << "Send " << method << " JSON RPC request";
+    m_logger(Trace) << "Send " << method << " JSON RPC request";
 
     JsonRpc::JsonRpcRequest jsReq;
     jsReq.setMethod(method);
@@ -946,14 +950,14 @@ std::error_code NodeRpcProxy::jsonRpcCommand(const std::string& method, const Re
       }
     }
   } catch (const std::exception& e) {
-    m_logger(ERROR) << "Exception on json rpc request: " << e.what();
+    m_logger(Error) << "Exception on json rpc request: " << e.what();
     ec = make_error_code(error::NETWORK_ERROR);
   }
 
   if (ec) {
-    m_logger(TRACE) << method << " JSON RPC request failed: " << ec << ", " << ec.message();
+    m_logger(Trace) << method << " JSON RPC request failed: " << ec << ", " << ec.message();
   } else {
-    m_logger(TRACE) << method << " JSON RPC request compete";
+    m_logger(Trace) << method << " JSON RPC request compete";
   }
 
   return ec;

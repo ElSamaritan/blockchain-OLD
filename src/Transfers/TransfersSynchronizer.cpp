@@ -279,7 +279,7 @@ bool TransfersSyncronizer::load(std::istream& is) {
             setObjectState(sub->getContainer(), state);
             updatedStates.back().subscriptionStates.push_back(std::make_pair(acc, prevState));
           } else {
-            m_logger(Logging::DEBUGGING) << "Subscription not found: " << m_currency.accountAddressAsString(acc);
+            m_logger(Logging::Debugging) << "Subscription not found: " << m_currency.accountAddressAsString(acc);
           }
 
           XI_RETURN_EC_IF_NOT(s.endObject(), false);
@@ -287,7 +287,7 @@ bool TransfersSyncronizer::load(std::istream& is) {
 
         XI_RETURN_EC_IF_NOT(s.endArray(), false);
       } else {
-        m_logger(Logging::DEBUGGING) << "Consumer not found: " << viewKey;
+        m_logger(Logging::Debugging) << "Consumer not found: " << viewKey;
       }
 
       XI_RETURN_EC_IF_NOT(s.endObject(), false);

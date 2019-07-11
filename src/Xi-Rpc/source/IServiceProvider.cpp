@@ -72,13 +72,13 @@ ServiceError IServiceProvider::operator()(std::string_view command, CryptoNote::
     logThrow(e);
     return ServiceError::NotInitialized;
   } catch (...) {
-    m_logger(Logging::FATAL) << "Service operator threw: UNKNOWN EXCEPTION TYPE";
+    m_logger(Logging::Fatal) << "Service operator threw: UNKNOWN EXCEPTION TYPE";
     return ServiceError::Exceptional;
   }
 }
 
 void IServiceProvider::logThrow(std::exception& e) {
-  m_logger(Logging::ERROR) << "Service operator threw: " << e.what();
+  m_logger(Logging::Error) << "Service operator threw: " << e.what();
 }
 
 }  // namespace Rpc

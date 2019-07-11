@@ -53,7 +53,7 @@ std::string GetLastErrorMessage(DWORD errorMessageID) {
 void __stdcall serviceHandler(DWORD fdwControl) {
   if (fdwControl == SERVICE_CONTROL_STOP) {
     Logging::LoggerRef log(ppg->getLogger(), "serviceHandler");
-    log(Logging::INFO, Logging::BRIGHT_YELLOW) << "Stop signal caught";
+    log(Logging::Info, Logging::BRIGHT_YELLOW) << "Stop signal caught";
 
     SERVICE_STATUS serviceStatus{SERVICE_WIN32_OWN_PROCESS, SERVICE_STOP_PENDING, 0, NO_ERROR, 0, 0, 0};
     SetServiceStatus(serviceStatusHandle, &serviceStatus);
@@ -68,26 +68,26 @@ void __stdcall serviceMain(DWORD dwArgc, char** lpszArgv) {
 
   serviceStatusHandle = RegisterServiceCtrlHandler("PaymentGate", serviceHandler);
   if (serviceStatusHandle == NULL) {
-    logRef(Logging::FATAL) << "Couldn't make RegisterServiceCtrlHandler call: " << GetLastErrorMessage(GetLastError());
+    logRef(Logging::Fatal) << "Couldn't make RegisterServiceCtrlHandler call: " << GetLastErrorMessage(GetLastError());
     return;
   }
 
   SERVICE_STATUS serviceStatus{SERVICE_WIN32_OWN_PROCESS, SERVICE_START_PENDING, 0, NO_ERROR, 0, 1, 3000};
   if (SetServiceStatus(serviceStatusHandle, &serviceStatus) != TRUE) {
-    logRef(Logging::FATAL) << "Couldn't make SetServiceStatus call: " << GetLastErrorMessage(GetLastError());
+    logRef(Logging::Fatal) << "Couldn't make SetServiceStatus call: " << GetLastErrorMessage(GetLastError());
     return;
   }
 
   serviceStatus = {SERVICE_WIN32_OWN_PROCESS, SERVICE_RUNNING, SERVICE_ACCEPT_STOP, NO_ERROR, 0, 0, 0};
   if (SetServiceStatus(serviceStatusHandle, &serviceStatus) != TRUE) {
-    logRef(Logging::FATAL) << "Couldn't make SetServiceStatus call: " << GetLastErrorMessage(GetLastError());
+    logRef(Logging::Fatal) << "Couldn't make SetServiceStatus call: " << GetLastErrorMessage(GetLastError());
     return;
   }
 
   try {
     ppg->run();
   } catch (std::exception& ex) {
-    logRef(Logging::FATAL) << "Error occurred: " << ex.what();
+    logRef(Logging::Fatal) << "Error occurred: " << ex.what();
   }
 
   serviceStatus = {SERVICE_WIN32_OWN_PROCESS, SERVICE_STOPPED, 0, NO_ERROR, 0, 0, 0};
@@ -128,11 +128,11 @@ int runDaemon() {
   Logging::LoggerRef logRef(ppg->getLogger(), "RunService");
 
   if (StartServiceCtrlDispatcher(serviceTable) != TRUE) {
-    logRef(Logging::FATAL) << "Couldn't start service: " << GetLastErrorMessage(GetLastError());
+    logRef(Logging::Fatal) << "Couldn't start service: " << GetLastErrorMessage(GetLastError());
     return 1;
   }
 
-  logRef(Logging::INFO) << "Service stopped";
+  logRef(Logging::Info) << "Service stopped";
   return 0;
 
 #else
@@ -165,7 +165,7 @@ int registerService() {
 
   for (;;) {
     if (GetModuleFileName(NULL, pathBuff, ARRAYSIZE(pathBuff)) == 0) {
-      logRef(Logging::FATAL) << "GetModuleFileName failed with error: " << GetLastErrorMessage(GetLastError());
+      logRef(Logging::Fatal) << "GetModuleFileName failed with error: " << GetLastErrorMessage(GetLastError());
       ret = 1;
       break;
     }
@@ -177,7 +177,7 @@ int registerService() {
 
     scManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT | SC_MANAGER_CREATE_SERVICE);
     if (scManager == NULL) {
-      logRef(Logging::FATAL) << "OpenSCManager failed with error: " << GetLastErrorMessage(GetLastError());
+      logRef(Logging::Fatal) << "OpenSCManager failed with error: " << GetLastErrorMessage(GetLastError());
       ret = 1;
       break;
     }
@@ -187,13 +187,13 @@ int registerService() {
                       SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, modulePath.c_str(), NULL, NULL, NULL, NULL, NULL);
 
     if (scService == NULL) {
-      logRef(Logging::FATAL) << "CreateService failed with error: " << GetLastErrorMessage(GetLastError());
+      logRef(Logging::Fatal) << "CreateService failed with error: " << GetLastErrorMessage(GetLastError());
       ret = 1;
       break;
     }
 
-    logRef(Logging::INFO) << "Service is registered successfully";
-    logRef(Logging::INFO) << "Please make sure " << moduleDir + "payment_service.conf"
+    logRef(Logging::Info) << "Service is registered successfully";
+    logRef(Logging::Info) << "Please make sure " << moduleDir + "payment_service.conf"
                           << " exists";
     break;
   }
@@ -224,25 +224,25 @@ int unregisterService() {
   for (;;) {
     scManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if (scManager == NULL) {
-      logRef(Logging::FATAL) << "OpenSCManager failed with error: " << GetLastErrorMessage(GetLastError());
+      logRef(Logging::Fatal) << "OpenSCManager failed with error: " << GetLastErrorMessage(GetLastError());
       ret = 1;
       break;
     }
 
     scService = OpenService(scManager, SERVICE_NAME, SERVICE_STOP | SERVICE_QUERY_STATUS | DELETE);
     if (scService == NULL) {
-      logRef(Logging::FATAL) << "OpenService failed with error: " << GetLastErrorMessage(GetLastError());
+      logRef(Logging::Fatal) << "OpenService failed with error: " << GetLastErrorMessage(GetLastError());
       ret = 1;
       break;
     }
 
     if (ControlService(scService, SERVICE_CONTROL_STOP, &ssSvcStatus)) {
-      logRef(Logging::INFO) << "Stopping " << SERVICE_NAME;
+      logRef(Logging::Info) << "Stopping " << SERVICE_NAME;
       Sleep(1000);
 
       while (QueryServiceStatus(scService, &ssSvcStatus)) {
         if (ssSvcStatus.dwCurrentState == SERVICE_STOP_PENDING) {
-          logRef(Logging::INFO) << "Waiting...";
+          logRef(Logging::Info) << "Waiting...";
           Sleep(1000);
         } else {
           break;
@@ -251,19 +251,19 @@ int unregisterService() {
 
       std::cout << std::endl;
       if (ssSvcStatus.dwCurrentState == SERVICE_STOPPED) {
-        logRef(Logging::INFO) << SERVICE_NAME << " is stopped";
+        logRef(Logging::Info) << SERVICE_NAME << " is stopped";
       } else {
-        logRef(Logging::FATAL) << SERVICE_NAME << " failed to stop" << std::endl;
+        logRef(Logging::Fatal) << SERVICE_NAME << " failed to stop" << std::endl;
       }
     }
 
     if (!DeleteService(scService)) {
-      logRef(Logging::FATAL) << "DeleteService failed with error: " << GetLastErrorMessage(GetLastError());
+      logRef(Logging::Fatal) << "DeleteService failed with error: " << GetLastErrorMessage(GetLastError());
       ret = 1;
       break;
     }
 
-    logRef(Logging::INFO) << SERVICE_NAME << " is removed";
+    logRef(Logging::Info) << SERVICE_NAME << " is removed";
     break;
   }
 
