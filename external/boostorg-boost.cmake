@@ -77,7 +77,7 @@ if(MSVC)
 endif()
 
 set(Boost_VERSION ${Boost_VERSION} CACHE STRING "Boost Version" FORCE)
-mark_as_advanced(Boost_VERSION)
+mark_as_advanced(Boost_VERSION boost_zlib_DIR)
 
 foreach(component ${Boost_COMPONENTS})
   mark_as_advanced(boost_${component}_DIR)

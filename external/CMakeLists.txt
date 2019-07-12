@@ -40,6 +40,7 @@ include(rang.cmake)
 include(yaml-cpp.cmake)
 include(ruslo-leathers.cmake)
 include(google-cpu-features.cmake)
+include(amanieu-asyncplusplus.cmake)
 
 if(XI_BUILD_BREAKPAD)
   include(google-breakpad.cmake)
