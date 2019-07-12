@@ -823,7 +823,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
       validatorState.spentKeyImages.merge(std::move(transferValidation.usedKeyImages));
       XI_RETURN_EC_IF(validatorState.spentKeyImages.size() != prevSize + additionSize,
                       error::BlockValidationError::DOUBLE_SPENDING);
-      for (auto& amountReferences : transferValidation.globalOutputIndicesUsed) {
+      for (auto&& amountReferences : transferValidation.globalOutputIndicesUsed) {
         globalOutputReferences[amountReferences.first].merge(std::move(amountReferences.second));
       }
     }
@@ -849,7 +849,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
       }
     }
   } else {
-    for (auto& transferValidation : transferValidations) {
+    for (auto&& transferValidation : transferValidations) {
       const auto prevSize = validatorState.spentKeyImages.size();
       const auto additionSize = transferValidation.usedKeyImages.size();
       validatorState.spentKeyImages.merge(std::move(transferValidation.usedKeyImages));
