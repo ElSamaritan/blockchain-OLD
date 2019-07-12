@@ -65,9 +65,12 @@ class Currency {
   size_t numberOfDecimalPlaces() const { return m_numberOfDecimalPlaces; }
   uint64_t coin() const;
 
-  uint8_t requiredMixin(BlockVersion blockVersion) const;
+  uint8_t mixinLowerBound(BlockVersion blockVersion) const;
+  uint8_t mixinUpperBound(BlockVersion blockVersion) const;
   uint64_t requiredMixinUpgradeWindow(BlockVersion blockVersion) const;
   uint64_t requiredMixinThreshold(BlockVersion blockVersion) const;
+
+  [[nodiscard]] bool isTransferVersionSupported(BlockVersion blockVersion, uint16_t transferVersion) const;
 
   uint64_t minimumFee(BlockVersion version) const;
   uint64_t minimumFee(BlockVersion version, uint64_t canonicialBuckets) const;

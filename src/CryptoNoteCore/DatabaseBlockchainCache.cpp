@@ -815,7 +815,7 @@ void DatabaseBlockchainCache::pushTransaction(const CachedTransaction& cachedTra
       outputInfo.publicKey = keyOutput->key;
       outputInfo.transactionHash = transactionCacheInfo.transactionHash;
       outputInfo.unlockTime = transactionCacheInfo.unlockTime;
-      outputInfo.outputIndex = poi.data.outputIndex;
+      outputInfo.index = poi;
 
       batch.insertKeyOutputInfo(output.amount, globalIndex, outputInfo);
     }
@@ -1021,6 +1021,24 @@ bool DatabaseBlockchainCache::checkIfSpent(const Crypto::KeyImage& keyImage) con
   return checkIfSpent(keyImage, getTopBlockIndex());
 }
 
+bool DatabaseBlockchainCache::checkIfAnySpent(const Crypto::KeyImageSet& keyImages, uint32_t blockIndex) const {
+  BlockchainReadBatch batch{};
+  for (const auto& keyImage : keyImages) {
+    batch.requestBlockIndexBySpentKeyImage(keyImage);
+  }
+
+  if (const auto ec = database.read(batch)) {
+    logger(Logging::Fatal) << "checkIfSpent failed, request to database failed: " << ec.message();
+    XI_RETURN_EC(true);
+  }
+
+  auto readResult = batch.extractResult();
+  const auto spentKeyImages = readResult.getBlockIndexesBySpentKeyImages();
+
+  return std::any_of(spentKeyImages.begin(), spentKeyImages.end(),
+                     [blockIndex](const auto& spentKeyImage) { return blockIndex <= spentKeyImage.second; });
+}
+
 ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputKeys(
     uint64_t amount, Common::ArrayView<uint32_t> globalIndexes, std::vector<Crypto::PublicKey>& publicKeys) const {
   return extractKeyOutputKeys(amount, getTopBlockIndex(), globalIndexes, publicKeys);
@@ -1079,6 +1097,37 @@ ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOtputReferences(
         outputReferences.push_back(std::make_pair(info.transactionHash, index.data.outputIndex));
         return ExtractOutputKeysResult::SUCCESS;
       });
+}
+
+std::map<DatabaseBlockchainCache::Amount, std::map<DatabaseBlockchainCache::GlobalOutputIndex, KeyOutputInfo>>
+DatabaseBlockchainCache::extractKeyOutputs(
+    const std::unordered_map<DatabaseBlockchainCache::Amount, GlobalOutputIndexSet>& references,
+    uint32_t blockIndex) const {
+  XI_RETURN_SC_IF(references.empty(), {});
+
+  BlockchainReadBatch batch{};
+  std::map<Amount, std::map<GlobalOutputIndex, KeyOutputInfo>> reval{};
+
+  for (const auto& amountReferences : references) {
+    const auto amount = amountReferences.first;
+    const auto& globalIndices = amountReferences.second;
+
+    for (const auto& globalIndex : globalIndices) {
+      batch.requestKeyOutputInfo(amount, globalIndex);
+    }
+  }
+
+  const auto read = readDatabase(batch);
+  const auto& keyOutputInfos = read.getKeyOutputInfo();
+  for (const auto& keyOutputInfo : keyOutputInfos) {
+    if (keyOutputInfo.second.index.data.blockIndex > blockIndex) {
+      // TODO: with an ordered map we could break here :)
+      continue;
+    }
+    reval[keyOutputInfo.first.first][keyOutputInfo.first.second] = keyOutputInfo.second;
+  }
+
+  return reval;
 }
 
 uint32_t DatabaseBlockchainCache::getTopBlockIndex() const {
@@ -1797,14 +1846,12 @@ ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputs(
     ExtendedTransactionInfo tx;
     tx.unlockTime = kv.second.unlockTime;
     tx.transactionHash = kv.second.transactionHash;
-    tx.outputs.resize(kv.second.outputIndex + 1);
-    tx.outputs[kv.second.outputIndex] = KeyOutput{kv.second.publicKey};
-    PackedOutIndex fakePoi;
-    fakePoi.data.outputIndex = kv.second.outputIndex;
+    tx.outputs.resize(kv.second.index.data.outputIndex + 1);
+    tx.outputs[kv.second.index.data.outputIndex] = KeyOutput{kv.second.publicKey};
 
     // TODO: change the interface of extractKeyOutputs to return vector of structures instead of passing callback as
     // predicate
-    auto ret = callback(tx, fakePoi, kv.first.second);
+    auto ret = callback(tx, kv.second.index, kv.first.second);
     if (ret != ExtractOutputKeysResult::SUCCESS) {
       logger(Logging::Debugging) << "extractKeyOutputs failed : callback returned error";
       return ret;

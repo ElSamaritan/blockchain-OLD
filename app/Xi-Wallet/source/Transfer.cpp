@@ -308,7 +308,7 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, bool sendAll, CryptoNote::
      the fee from full balance */
   uint64_t amount = 0;
 
-  const uint64_t mixin = node.currency().requiredMixin(node.getLastKnownBlockVersion());
+  const uint64_t mixin = node.currency().mixinUpperBound(node.getLastKnownBlockVersion());
 
   /* If we're sending everything, obviously we don't need to ask them how
      much to send */

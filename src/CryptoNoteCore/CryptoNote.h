@@ -68,6 +68,7 @@ using PaymentId = Crypto::PublicKey;
 
 using GlobalOutputIndex = uint32_t;
 using GlobalOutputIndexVector = std::vector<GlobalOutputIndex>;
+using GlobalOutputIndexSet = std::set<GlobalOutputIndex>;
 
 struct BlockTemplate : public BlockHeader {
   Transaction baseTransaction;

@@ -25,6 +25,12 @@
 
 #include <cinttypes>
 
+#if defined(__GNUC__) || defined(__clang__)
+#include <cstdio>
+#else
+#include <limits>
+#endif
+
 namespace Xi {
 /*!
  * \brief pow computes the to the power of function (base^exponent)
@@ -45,6 +51,21 @@ static inline constexpr uint32_t pow(uint32_t base, uint32_t exponent) {
 static inline constexpr uint64_t pow64(uint64_t base, uint64_t exponent) {
   return exponent == 0 ? 1 : base * pow64(base, exponent - 1);
 }
+
+template <typename _IntegerT>
+bool hasAdditionOverflow(const _IntegerT lhs, const _IntegerT rhs, _IntegerT* res) {
+#if defined(__GNUC__) || defined(__clang__)
+  return __builtin_add_overflow(lhs, rhs, res);
+#else
+  if (lhs + rhs < lhs) {
+    return true;
+  } else {
+    *res = lhs + rhs;
+    return false;
+  }
+#endif
+}
+
 }  // namespace Xi
 
 static inline constexpr uint64_t operator"" _k(unsigned long long kilo) { return kilo * Xi::pow(10, 3); }

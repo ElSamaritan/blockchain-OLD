@@ -95,10 +95,8 @@ class crypto_ops {
                                       const SecretKey &, size_t, Signature *);
   friend void generate_ring_signature(const Hash &, const KeyImage &, const PublicKey *const *, size_t,
                                       const SecretKey &, size_t, Signature *);
-  static bool check_ring_signature(const Hash &, const KeyImage &, const PublicKey *const *, size_t, const Signature *,
-                                   bool);
-  friend bool check_ring_signature(const Hash &, const KeyImage &, const PublicKey *const *, size_t, const Signature *,
-                                   bool);
+  static bool check_ring_signature(const Hash &, const KeyImage &, const PublicKey *const *, size_t, const Signature *);
+  friend bool check_ring_signature(const Hash &, const KeyImage &, const PublicKey *const *, size_t, const Signature *);
 };
 
 /* Generate a new key pair
@@ -210,8 +208,8 @@ inline void generate_ring_signature(const Hash &prefix_hash, const KeyImage &ima
   crypto_ops::generate_ring_signature(prefix_hash, image, pubs, pubs_count, sec, sec_index, sig);
 }
 inline bool check_ring_signature(const Hash &prefix_hash, const KeyImage &image, const PublicKey *const *pubs,
-                                 size_t pubs_count, const Signature *sig, bool checkKeyImage) {
-  return crypto_ops::check_ring_signature(prefix_hash, image, pubs, pubs_count, sig, checkKeyImage);
+                                 size_t pubs_count, const Signature *sig) {
+  return crypto_ops::check_ring_signature(prefix_hash, image, pubs, pubs_count, sig);
 }
 
 /* Variants with vector<const PublicKey *> parameters.
@@ -222,8 +220,8 @@ inline void generate_ring_signature(const Hash &prefix_hash, const KeyImage &ima
   generate_ring_signature(prefix_hash, image, pubs.data(), pubs.size(), sec, sec_index, sig);
 }
 inline bool check_ring_signature(const Hash &prefix_hash, const KeyImage &image,
-                                 const std::vector<const PublicKey *> &pubs, const Signature *sig, bool checkKeyImage) {
-  return check_ring_signature(prefix_hash, image, pubs.data(), pubs.size(), sig, checkKeyImage);
+                                 const std::vector<const PublicKey *> &pubs, const Signature *sig) {
+  return check_ring_signature(prefix_hash, image, pubs.data(), pubs.size(), sig);
 }
 
 }  // namespace Crypto

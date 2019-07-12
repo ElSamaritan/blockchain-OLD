@@ -109,7 +109,11 @@ SecretKey crypto_ops::generate_m_keys(PublicKey &pub, SecretKey &sec, const Secr
 
 bool crypto_ops::check_key(const PublicKey &key) {
   ge_p3 point;
-  return ge_frombytes_vartime(&point, reinterpret_cast<const unsigned char *>(&key)) == 0;
+  XI_RETURN_EC_IF_NOT(ge_frombytes_vartime(&point, reinterpret_cast<const unsigned char *>(&key)) == 0, false);
+  ge_dsmp image_dsm;
+  ge_dsm_precomp(image_dsm, &point);
+  XI_RETURN_EC_IF_NOT(ge_check_subgroup_precomp_vartime(image_dsm) == 0, false);
+  XI_RETURN_SC(true);
 }
 
 bool crypto_ops::secret_key_to_public_key(const SecretKey &sec, PublicKey &pub) {
@@ -466,7 +470,7 @@ void crypto_ops::generate_ring_signature(const Hash &prefix_hash, const KeyImage
 }
 
 bool crypto_ops::check_ring_signature(const Hash &prefix_hash, const KeyImage &image, const PublicKey *const *pubs,
-                                      size_t pubs_count, const Signature *sig, bool checkKeyImage) {
+                                      size_t pubs_count, const Signature *sig) {
   size_t i;
   ge_p3 image_unp;
   ge_dsmp image_pre;
@@ -481,9 +485,6 @@ bool crypto_ops::check_ring_signature(const Hash &prefix_hash, const KeyImage &i
     return false;
   }
   ge_dsm_precomp(image_pre, &image_unp);
-  if (checkKeyImage && ge_check_subgroup_precomp_vartime(image_pre) != 0) {
-    return false;
-  }
   sc_0(reinterpret_cast<unsigned char *>(&sum));
   buf->h = prefix_hash;
   for (i = 0; i < pubs_count; i++) {

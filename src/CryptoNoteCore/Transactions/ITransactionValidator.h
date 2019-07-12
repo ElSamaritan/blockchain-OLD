@@ -41,8 +41,7 @@ class ITransactionValidator {
   Xi::Result<TransactionValidationResult> updateValidation(const CachedTransaction& transaction) const;
 
  protected:
-  virtual Xi::Result<EligibleIndex> doValidate(
-      const CachedTransaction& transaction) const = 0;
+  virtual Xi::Result<EligibleIndex> doValidate(const CachedTransaction& transaction) const = 0;
 };
 
 }  // namespace CryptoNote

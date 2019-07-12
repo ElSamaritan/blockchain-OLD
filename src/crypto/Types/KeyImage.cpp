@@ -27,7 +27,7 @@
 #include <Common/StringTools.h>
 
 #include "crypto/Types/KeyImage.h"
-#include "crypto/crypto.h"
+#include "crypto/crypto-ops.h"
 
 const Crypto::KeyImage Crypto::KeyImage::Null{};
 
@@ -60,13 +60,12 @@ Xi::ConstByteSpan Crypto::KeyImage::span() const { return Xi::ConstByteSpan{data
 Xi::ByteSpan Crypto::KeyImage::span() { return Xi::ByteSpan{data(), bytes()}; }
 
 bool Crypto::KeyImage::isValid() const {
-  static const Crypto::KeyImage I{{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
-  static const Crypto::KeyImage L{{0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7,
-                                   0xa2, 0xde, 0xf9, 0xde, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10}};
-  return scalarmultKey(*this, L) == I;
+  ge_p3 point;
+  XI_RETURN_EC_IF_NOT(ge_frombytes_vartime(&point, data()) == 0, false);
+  ge_dsmp image_dsm;
+  ge_dsm_precomp(image_dsm, &point);
+  XI_RETURN_EC_IF_NOT(ge_check_subgroup_precomp_vartime(image_dsm) == 0, false);
+  XI_RETURN_SC(true);
 }
 
 bool Crypto::KeyImage::isNull() const { return (*this) == Null; }
@@ -75,6 +74,5 @@ void Crypto::KeyImage::nullify() { fill(0); }
 
 bool Crypto::serialize(Crypto::KeyImage &keyImage, Common::StringView name, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(keyImage.data(), KeyImage::bytes(), name), false);
-  XI_RETURN_EC_IF_NOT(keyImage.isValid(), false);
   return true;
 }

@@ -67,6 +67,5 @@ void Crypto::Signature::nullify() { fill(0); }
 
 bool Crypto::serialize(Crypto::Signature &signature, Common::StringView name, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(signature.data(), Signature::bytes(), name), false);
-  XI_RETURN_EC_IF_NOT(signature.isValid(), false);
   return true;
 }

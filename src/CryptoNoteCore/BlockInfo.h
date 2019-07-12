@@ -31,9 +31,9 @@ namespace CryptoNote {
 
 struct BlockInfo {
   const BlockHeader Header;
-  const uint32_t Height;
+  const uint32_t previousBlockIndex;
 
-  BlockInfo(const BlockHeader& header, uint32_t height) : Header{header}, Height{height} {}
+  BlockInfo(const BlockHeader& header, uint32_t prevIndex) : Header{header}, previousBlockIndex{prevIndex} {}
   ~BlockInfo() = default;
 };
 

@@ -26,6 +26,7 @@
 #include "CryptoNoteCore/CryptoNote.h"
 #include "CryptoNoteCore/CachedBlock.h"
 #include "CryptoNoteCore/Blockchain/RawBlock.h"
+#include "CryptoNoteCore/DatabaseCacheData.h"
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"
 #include "CryptoNoteCore/Transactions/TransactionValidatiorState.h"
 
@@ -35,16 +36,6 @@ class ISerializer;
 struct TransactionValidatorState;
 
 enum class ExtractOutputKeysResult { SUCCESS, INVALID_GLOBAL_INDEX, OUTPUT_LOCKED, TIME_PROVIDER_FAILED };
-
-union PackedOutIndex {
-  struct {
-    uint32_t blockIndex;
-    uint16_t transactionIndex;
-    uint16_t outputIndex;
-  } data;
-
-  uint64_t packedValue;
-};
 
 const uint32_t INVALID_BLOCK_INDEX = std::numeric_limits<uint32_t>::max();
 
@@ -79,6 +70,14 @@ struct CachedTransactionInfo {
   [[nodiscard]] bool serialize(ISerializer& s);
 };
 using CachedTransactionInfoVector = std::vector<CachedTransactionInfo>;
+
+// inherit here to avoid breaking IBlockchainCache interface
+struct ExtendedTransactionInfo : CachedTransactionInfo {
+  // CachedTransactionInfo tx;
+  std::map<uint64_t, std::vector<uint32_t>>
+      amountToKeyIndexes;  // global key output indexes spawned in this transaction
+  [[nodiscard]] bool serialize(ISerializer& s);
+};
 
 struct CachedBlockInfo {
   Crypto::Hash blockHash{Crypto::Hash::Null};
@@ -141,8 +140,11 @@ class IBlockchainCache : public std::enable_shared_from_this<IBlockchainCache> {
                          const TransactionValidatorState& validatorState, size_t blockSize, uint64_t generatedCoins,
                          uint64_t blockDifficulty, RawBlock&& rawBlock) = 0;
   virtual PushedBlockInfo getPushedBlockInfo(uint32_t index) const = 0;
+
   [[nodiscard]] virtual bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) const = 0;
   [[nodiscard]] virtual bool checkIfSpent(const Crypto::KeyImage& keyImage) const = 0;
+  [[nodiscard]] virtual bool checkIfAnySpent(const Crypto::KeyImageSet& keyImages, uint32_t blockIndex) const = 0;
+
   [[nodiscard]] virtual uint64_t getAvailableMixinsCount(Amount amount, uint32_t blockIndex,
                                                          uint64_t threshold) const = 0;
 
@@ -211,6 +213,9 @@ class IBlockchainCache : public std::enable_shared_from_this<IBlockchainCache> {
       std::function<ExtractOutputKeysResult(const CachedTransactionInfo& info, PackedOutIndex index,
                                             uint32_t globalIndex)>
           pred) const = 0;
+
+  virtual std::map<Amount, std::map<GlobalOutputIndex, KeyOutputInfo>> extractKeyOutputs(
+      const std::unordered_map<Amount, GlobalOutputIndexSet>& references, uint32_t blockIndex) const = 0;
 
   virtual uint32_t getTopBlockIndex() const = 0;
   virtual const Crypto::Hash& getTopBlockHash() const = 0;

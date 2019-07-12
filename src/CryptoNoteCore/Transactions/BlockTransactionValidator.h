@@ -34,8 +34,8 @@ class BlockTransactionValidator : public TransactionValidator {
                             const Currency& currency);
 
  protected:
-  bool checkIfKeyImageIsAlreadySpent(const Crypto::KeyImage& keyImage) const override;
-  bool isInCheckpointRange() const override;
+  [[nodiscard]] bool checkIfAnySpent(const Crypto::KeyImageSet& keyImages) const override;
+  void fillContext(TransferValidationContext& context) const override;
 
  private:
   const BlockInfo& m_block;

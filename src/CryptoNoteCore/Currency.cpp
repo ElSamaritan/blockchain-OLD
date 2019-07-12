@@ -207,7 +207,7 @@ uint64_t Currency::rewardCutOffByBlockVersion(BlockVersion blockVersion) const {
   return Xi::Config::MinerReward::cutOff(blockVersion);
 }
 
-uint8_t Currency::requiredMixin(BlockVersion blockVersion) const { return Xi::Config::Mixin::required(blockVersion); }
+uint8_t Currency::mixinUpperBound(BlockVersion blockVersion) const { return Xi::Config::Mixin::required(blockVersion); }
 
 uint64_t Currency::requiredMixinUpgradeWindow(BlockVersion blockVersion) const {
   (void)blockVersion;
@@ -216,10 +216,15 @@ uint64_t Currency::requiredMixinUpgradeWindow(BlockVersion blockVersion) const {
 
 uint64_t Currency::requiredMixinThreshold(BlockVersion blockVersion) const {
   const auto minMixin = 2;
-  const auto maxMixin = requiredMixin(blockVersion);
+  const auto maxMixin = mixinUpperBound(blockVersion);
   XI_RETURN_SC_IF(maxMixin == 0, 0);
   XI_RETURN_SC_IF(maxMixin < minMixin, 0);
   return requiredMixinUpgradeWindow(blockVersion) * maxMixin;
+}
+
+bool Currency::isTransferVersionSupported(BlockVersion blockVersion, uint16_t transferVersion) const {
+  XI_UNUSED(blockVersion);
+  return transferVersion == 1;
 }
 
 uint64_t Currency::minimumFee(BlockVersion version) const {
@@ -239,6 +244,11 @@ size_t Currency::blockGrantedFullRewardZoneByBlockVersion(BlockVersion blockVers
 }
 
 uint64_t Currency::coin() const { return m_coin; }
+
+uint8_t Currency::mixinLowerBound(BlockVersion blockVersion) const {
+  XI_UNUSED(blockVersion);
+  return 2;
+}
 
 uint32_t Currency::upgradeHeight(BlockVersion version) const {
   return Xi::Config::BlockVersion::upgradeHeight(version);
@@ -794,22 +804,28 @@ Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<Accoun
   uint64_t block_reward = m_currency.m_genesisBlockReward;
   uint64_t target_amount = block_reward / targets.size();
   uint64_t first_target_amount = target_amount + block_reward % targets.size();
+  size_t iOutputIndex = 0;
   for (size_t i = 0; i < targets.size(); ++i) {
-    Crypto::KeyDerivation derivation = boost::value_initialized<Crypto::KeyDerivation>();
-    Crypto::PublicKey outEphemeralPubKey = boost::value_initialized<Crypto::PublicKey>();
-    if (!Crypto::generate_key_derivation(targets[i].viewPublicKey, txkey.secretKey, derivation)) {
-      Xi::exceptional<Crypto::KeyDerivationError>();
+    const auto amount = (i == 0) ? first_target_amount : target_amount;
+    AmountVector canoncialDeomposition{};
+    decomposeAmount(amount, canoncialDeomposition);
+
+    for (const auto iAmount : canoncialDeomposition) {
+      Crypto::KeyDerivation derivation = boost::value_initialized<Crypto::KeyDerivation>();
+      Crypto::PublicKey outEphemeralPubKey = boost::value_initialized<Crypto::PublicKey>();
+      if (!Crypto::generate_key_derivation(targets[i].viewPublicKey, txkey.secretKey, derivation)) {
+        Xi::exceptional<Crypto::KeyDerivationError>();
+      }
+      if (!Crypto::derive_public_key(derivation, iOutputIndex++, targets[i].spendPublicKey, outEphemeralPubKey)) {
+        Xi::exceptional<Crypto::PublicKeyDerivationError>();
+      }
+      KeyOutput tk;
+      tk.key = outEphemeralPubKey;
+      TransactionOutput out;
+      out.amount = iAmount;
+      out.target = tk;
+      tx.outputs.push_back(out);
     }
-    if (!Crypto::derive_public_key(derivation, i, targets[i].spendPublicKey, outEphemeralPubKey)) {
-      Xi::exceptional<Crypto::PublicKeyDerivationError>();
-    }
-    KeyOutput tk;
-    tk.key = outEphemeralPubKey;
-    TransactionOutput out;
-    out.amount = (i == 0) ? first_target_amount : target_amount;
-    std::cout << "outs: " << std::to_string(out.amount) << std::endl;
-    out.target = tk;
-    tx.outputs.push_back(out);
   }
   return tx;
 }

@@ -177,7 +177,7 @@ void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::INo
   auto amount = maybeAmount.x;
   auto fee = node.currency().minimumFee(node.getLastKnownBlockVersion());
   auto extra = getExtraFromPaymentID(addressBookEntry.paymentID);
-  auto mixin = node.currency().requiredMixin(node.getLastKnownBlockVersion());
+  auto mixin = node.currency().mixinUpperBound(node.getLastKnownBlockVersion());
   auto integrated = addressBookEntry.integratedAddress;
 
   if (integrated) {

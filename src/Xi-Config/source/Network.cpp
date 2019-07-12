@@ -3,7 +3,7 @@
 #include <Xi/Version/BuildInfo.h>
 
 Xi::Config::Network::Type Xi::Config::Network::defaultNetworkType() {
-#if defined(_DEBUG)
+#if !defined(NDEBUG)
   return LocalTestNet;
 #elif defined(BUILD_CHANNEL_CLUTTER) || defined(BUILD_CHANNEL_EDGE)
   return TestNet;

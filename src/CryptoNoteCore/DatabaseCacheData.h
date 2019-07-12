@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -21,26 +21,30 @@
 #include <vector>
 #include <cinttypes>
 
+#include <crypto/CryptoTypes.h>
 #include <Serialization/ISerializer.h>
-#include <CryptoNoteCore/BlockchainCache.h>
 
 namespace CryptoNote {
+
+union PackedOutIndex {
+  struct {
+    uint32_t blockIndex;
+    uint16_t transactionIndex;
+    uint16_t outputIndex;
+  } data;
+
+  uint64_t packedValue;
+};
 
 struct KeyOutputInfo {
   Crypto::PublicKey publicKey;
   Crypto::Hash transactionHash;
   uint64_t unlockTime;
-  uint16_t outputIndex;
+  PackedOutIndex index;
 
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& s);
 };
 
-// inherit here to avoid breaking IBlockchainCache interface
-struct ExtendedTransactionInfo : CachedTransactionInfo {
-  // CachedTransactionInfo tx;
-  std::map<IBlockchainCache::Amount, std::vector<IBlockchainCache::GlobalOutputIndex>>
-      amountToKeyIndexes;  // global key output indexes spawned in this transaction
-  [[nodiscard]] bool serialize(ISerializer& s);
-};
+using KeyOutputInfoVector = std::vector<KeyOutputInfo>;
 
 }  // namespace CryptoNote

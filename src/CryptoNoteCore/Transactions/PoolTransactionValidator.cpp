@@ -41,11 +41,20 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::PoolTransactionValidator::doVa
   }
 }
 
-bool CryptoNote::PoolTransactionValidator::checkIfKeyImageIsAlreadySpent(const Crypto::KeyImage &keyImage) const {
-  return chain().checkIfSpent(keyImage) || m_pool.containsKeyImage(keyImage);
+bool CryptoNote::PoolTransactionValidator::checkIfAnySpent(const Crypto::KeyImageSet &keyImages) const {
+  XI_RETURN_EC_IF(chain().checkIfAnySpent(keyImages, chain().getTopBlockIndex()), true);
+  for (const auto &keyImage : keyImages) {
+    XI_RETURN_EC_IF(m_pool.containsKeyImage(keyImage), true);
+  }
+  XI_RETURN_SC(false);
 }
 
-bool CryptoNote::PoolTransactionValidator::isInCheckpointRange() const { return false; }
+void CryptoNote::PoolTransactionValidator::fillContext(CryptoNote::TransferValidationContext &context) const {
+  context.blockVersion = blockVersion();
+  context.previousBlockIndex = chain().getTopBlockIndex();
+  context.timestamp = static_cast<uint64_t>(time(nullptr));
+  context.inCheckpointRange = false;
+}
 
 uint64_t CryptoNote::PoolTransactionValidator::transactionWeightLimit() const {
   return currency().blockGrantedFullRewardZoneByBlockVersion(blockVersion()) - currency().minerTxBlobReservedSize();

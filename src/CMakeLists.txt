@@ -250,6 +250,9 @@ target_link_libraries(
         rocksdb
         lz4
         boost
+
+    PRIVATE
+        Async++
 )
 
 # The reason we link so many Xi libraries here:

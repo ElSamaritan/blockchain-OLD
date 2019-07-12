@@ -29,10 +29,12 @@ CryptoNote::BlockTransactionValidator::BlockTransactionValidator(const CryptoNot
                                                                  const Currency &currency)
     : TransactionValidator(info.Header.version, chain, currency), m_block{info}, m_checkpoints{checkpoints} {}
 
-bool CryptoNote::BlockTransactionValidator::checkIfKeyImageIsAlreadySpent(const Crypto::KeyImage &keyImage) const {
-  return chain().checkIfSpent(keyImage, m_block.Height);
+bool CryptoNote::BlockTransactionValidator::checkIfAnySpent(const Crypto::KeyImageSet &keyImages) const {
+  return chain().checkIfAnySpent(keyImages, m_block.previousBlockIndex);
 }
 
-bool CryptoNote::BlockTransactionValidator::isInCheckpointRange() const {
-  return m_checkpoints.isInCheckpointZone(m_block.Height);
+void CryptoNote::BlockTransactionValidator::fillContext(CryptoNote::TransferValidationContext &context) const {
+  context.blockVersion = m_block.Header.version;
+  context.previousBlockIndex = m_block.previousBlockIndex;
+  context.timestamp = m_block.Header.timestamp;
 }

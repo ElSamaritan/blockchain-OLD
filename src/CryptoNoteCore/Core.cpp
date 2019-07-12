@@ -10,9 +10,14 @@
 #include <set>
 #include <unordered_set>
 
+#include <Xi/ExternalIncludePush.h>
+#include <async++.h>
+#include <Xi/ExternalIncludePop.h>
+
 #include <Xi/Global.hh>
 #include <Xi/Exceptions.hpp>
 #include <Xi/Algorithm/IsUnique.h>
+#include <Xi/Algorithm/Math.h>
 
 #include "Core.h"
 #include "Common/ShuffleGenerator.h"
@@ -776,21 +781,81 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     }
   }
 
-  TransactionValidatorState validatorState;
-  uint64_t cumulativeFee = 0;
+  TransferValidationContext transferContext{currency(), *cache};
+  transferContext.blockVersion = blockTemplate.version;
+  transferContext.previousBlockIndex = previousBlockIndex;
+  transferContext.timestamp = blockTemplate.timestamp;
+  transferContext.inCheckpointRange = checkpoints.isInCheckpointZone(blockIndex);
+  transferContext.minimumMixin = currency().mixinLowerBound(blockTemplate.version);
+  transferContext.maximumMixin = currency().mixinUpperBound(blockTemplate.version);
+  std::vector<TransferValidationState> transferValidations{};
+  transferValidations.resize(transactions.size(), TransferValidationState{});
+  std::vector<TransferValidationCache> transferCaches{};
+  transferCaches.resize(transactions.size(), TransferValidationCache{});
+  std::vector<std::error_code> transferResults{};
+  transferResults.resize(transactions.size(), std::error_code{});
 
-  for (const auto& transaction : transactions) {
-    uint64_t fee = 0;
-    auto transactionValidationResult =
-        validateTransaction(transaction, validatorState, cache, fee, previousBlockIndex, cachedBlock.getBlock().version,
-                            cachedBlock.getBlock().timestamp);
-    if (transactionValidationResult) {
-      logger(Logging::Debugging) << "Failed to validate transaction " << transaction.getTransactionHash() << ": "
-                                 << transactionValidationResult.message();
-      return transactionValidationResult;
+  async::parallel_for(async::irange(0ULL, transactions.size()), [&](auto i) {
+    const auto ec = preValidateTransfer(transactions[i], transferContext, transferCaches[i], transferValidations[i]);
+    if (ec) {
+      logger(Logging::Debugging) << "Failed to validate transaction " << transactions[i].getTransactionHash() << ": "
+                                 << ec.message();
+    }
+    transferResults[i] = ec;
+  });
+
+  uint64_t cumulativeFee = 0;
+  for (size_t i = 0; i < transactions.size(); ++i) {
+    if (transferResults[i] != error::TransactionValidationError::VALIDATION_SUCCESS) {
+      return transferResults[i];
+    }
+    if (Xi::hasAdditionOverflow(cumulativeFee, transferValidations[i].fee, &cumulativeFee)) {
+      return error::BlockValidationError::FEE_AMOUNT_OVERFLOW;
+    }
+  }
+  TransactionValidatorState validatorState{};
+
+  if (!checkpoints.isInCheckpointZone(blockIndex)) {
+    std::unordered_map<Amount, GlobalOutputIndexSet> globalOutputReferences{};
+    for (auto& transferValidation : transferValidations) {
+      const auto prevSize = validatorState.spentKeyImages.size();
+      const auto additionSize = transferValidation.usedKeyImages.size();
+      validatorState.spentKeyImages.merge(std::move(transferValidation.usedKeyImages));
+      XI_RETURN_EC_IF(validatorState.spentKeyImages.size() != prevSize + additionSize,
+                      error::BlockValidationError::DOUBLE_SPENDING);
+      for (auto& amountReferences : transferValidation.globalOutputIndicesUsed) {
+        globalOutputReferences[amountReferences.first].merge(std::move(amountReferences.second));
+      }
     }
 
-    cumulativeFee += fee;
+    XI_RETURN_EC_IF(cache->checkIfAnySpent(validatorState.spentKeyImages, previousBlockIndex),
+                    error::BlockValidationError::DOUBLE_SPENDING);
+
+    TransferValidationInfo transfersInfo{};
+    transfersInfo.outputs = cache->extractKeyOutputs(globalOutputReferences, previousBlockIndex);
+
+    async::parallel_for(async::irange(0ULL, transactions.size()), [&](auto i) {
+      const auto ec = postValidateTransfer(transactions[i], transferContext, transferCaches[i], transfersInfo);
+      if (ec) {
+        logger(Logging::Debugging) << "Failed to validate transaction " << transactions[i].getTransactionHash() << ": "
+                                   << ec.message();
+      }
+      transferResults[i] = ec;
+    });
+
+    for (size_t i = 0; i < transactions.size(); ++i) {
+      if (transferResults[i] != error::TransactionValidationError::VALIDATION_SUCCESS) {
+        return transferResults[i];
+      }
+    }
+  } else {
+    for (auto& transferValidation : transferValidations) {
+      const auto prevSize = validatorState.spentKeyImages.size();
+      const auto additionSize = transferValidation.usedKeyImages.size();
+      validatorState.spentKeyImages.merge(std::move(transferValidation.usedKeyImages));
+      XI_RETURN_EC_IF(validatorState.spentKeyImages.size() != prevSize + additionSize,
+                      error::BlockValidationError::DOUBLE_SPENDING);
+    }
   }
 
   uint64_t reward = 0;
@@ -1391,204 +1456,6 @@ bool Core::extractTransactions(const std::vector<BinaryArray>& rawTransactions,
   }
 
   return true;
-}
-
-std::error_code Core::validateTransaction(const CachedTransaction& cachedTransaction, TransactionValidatorState& state,
-                                          IBlockchainCache* cache, uint64_t& fee, uint32_t blockIndex,
-                                          BlockVersion blockVersion, uint64_t blockTimestamp) {
-  // TransactionValidatorState currentState;
-  if (cachedTransaction.getTransactionBinaryArray().size() > currency().maxTxSize(blockVersion)) {
-    return error::TransactionValidationError::TOO_LARGE;
-  }
-
-  const auto unlock = cachedTransaction.getTransaction().unlockTime;
-  XI_RETURN_EC_IF(unlock > currency().unlockLimit(blockVersion), error::TransactionValidationError::UNLOCK_TOO_LARGE);
-  if (currency().isLockedBasedOnTimestamp(unlock)) {
-    XI_RETURN_EC_IF(unlock < currency().genesisTimestamp(), error::TransactionValidationError::UNLOCK_ILL_FORMED);
-  }
-
-  const auto& transaction = cachedTransaction.getTransaction();
-  if (transaction.version > m_currency.maxTxVersion() || transaction.version < m_currency.minTxVersion()) {
-    return error::TransactionValidationError::INVALID_VERSION;
-  }
-
-  auto error = validateSemantic(transaction, fee, blockIndex);
-  if (error != error::TransactionValidationError::VALIDATION_SUCCESS) {
-    return error;
-  }
-
-  if (!validateCanonicalDecomposition(transaction)) {
-    return error::TransactionValidationError::OUTPUTS_NOT_CANONCIAL;
-  }
-
-  if (!(fee == 0 && currency().isFusionTransaction(transaction, cachedTransaction.getBlobSize(), blockVersion))) {
-    const uint64_t canonicalBuckets = countCanonicalDecomposition(transaction);
-    const auto minimumFee = currency().minimumFee(blockVersion, canonicalBuckets);
-    if (fee < minimumFee) {
-      return error::TransactionValidationError::FEE_INSUFFICIENT;
-    }
-  }
-
-  error = validateExtra(transaction);
-  if (error != error::TransactionValidationError::VALIDATION_SUCCESS) {
-    return error;
-  }
-
-  const size_t requiredRingSize = m_currency.requiredMixin(blockVersion) + 1;
-  std::map<Amount, std::set<uint32_t>> usedGlobalIndices;
-
-  if (!std::holds_alternative<TransactionSignatureCollection>(transaction.signatures)) {
-    return error::TransactionValidationError::INVALID_SIGNATURE_TYPE;
-  }
-  const auto& ringSignatures = std::get<TransactionSignatureCollection>(transaction.signatures);
-
-  size_t inputIndex = 0;
-  for (const auto& input : transaction.inputs) {
-    if (inputIndex >= ringSignatures.size()) {
-      return error::TransactionValidationError::INPUT_WRONG_SIGNATURES_COUNT;
-    }
-
-    if (auto keyInput = std::get_if<KeyInput>(&input)) {
-      if (!state.spentKeyImages.insert(keyInput->keyImage).second) {
-        return error::TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT;
-      }
-
-      const auto ringSize = keyInput->outputIndices.size();
-      if (ringSize < requiredRingSize) {
-        return error::TransactionValidationError::INPUT_MIXIN_TOO_LOW;
-      } else if (ringSize > requiredRingSize) {
-        return error::TransactionValidationError::INPUT_MIXIN_TOO_HIGH;
-      }
-
-      if (!checkpoints.isInCheckpointZone(blockIndex + 1)) {
-        if (cache->checkIfSpent(keyInput->keyImage, blockIndex)) {
-          return error::TransactionValidationError::INPUT_KEYIMAGE_ALREADY_SPENT;
-        }
-
-        std::vector<PublicKey> outputKeys;
-        assert(!keyInput->outputIndices.empty());
-
-        std::vector<uint32_t> globalIndexes = relativeOutputOffsetsToAbsolute(keyInput->outputIndices);
-        for (auto globalIndex : globalIndexes) {
-          if (!usedGlobalIndices[keyInput->amount].insert(globalIndex).second) {
-            return error::TransactionValidationError::INPUT_DUPLICATE_GLOBAL_INDEX;
-          }
-        }
-
-        auto result = cache->extractKeyOutputKeys(
-            keyInput->amount, blockIndex, {globalIndexes.data(), globalIndexes.size()}, outputKeys, blockTimestamp);
-        if (result == ExtractOutputKeysResult::INVALID_GLOBAL_INDEX) {
-          return error::TransactionValidationError::INPUT_INVALID_GLOBAL_INDEX;
-        }
-
-        if (result == ExtractOutputKeysResult::OUTPUT_LOCKED) {
-          return error::TransactionValidationError::INPUT_SPEND_LOCKED_OUT;
-        }
-
-        if (outputKeys.size() != ringSignatures[inputIndex].size()) {
-          return error::TransactionValidationError::INPUT_INVALID_SIGNATURES_COUNT;
-        }
-
-        std::vector<const Crypto::PublicKey*> outputKeyPointers;
-        outputKeyPointers.reserve(outputKeys.size());
-        std::for_each(outputKeys.begin(), outputKeys.end(),
-                      [&outputKeyPointers](const Crypto::PublicKey& key) { outputKeyPointers.push_back(&key); });
-        if (outputKeyPointers.size() != ringSignatures[inputIndex].size()) {
-          return error::TransactionValidationError::INPUT_INVALID_SIGNATURES_COUNT;
-        }
-        if (!Crypto::check_ring_signature(cachedTransaction.getTransactionPrefixHash(), keyInput->keyImage,
-                                          outputKeyPointers.data(), outputKeyPointers.size(),
-                                          ringSignatures[inputIndex].data(), true)) {
-          return error::TransactionValidationError::INPUT_INVALID_SIGNATURES;
-        }
-      }
-
-    } else {
-      assert(false);
-      return error::TransactionValidationError::INPUT_UNKNOWN_TYPE;
-    }
-
-    inputIndex++;
-  }
-
-  return error::TransactionValidationError::VALIDATION_SUCCESS;
-}
-
-std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t& fee, uint32_t) {
-  if (transaction.inputs.empty()) {
-    return error::TransactionValidationError::EMPTY_INPUTS;
-  }
-  if (transaction.outputs.empty()) {
-    return error::TransactionValidationError::EMPTY_OUTPUTS;
-  }
-  if (transaction.extra.size() > TX_EXTRA_MAX_SIZE) {
-    return error::TransactionValidationError::EXTRA_NONCE_TOO_LARGE;
-  }
-
-  uint64_t summaryOutputAmount = 0;
-  for (const auto& output : transaction.outputs) {
-    if (output.amount == 0) {
-      return error::TransactionValidationError::OUTPUT_ZERO_AMOUNT;
-    }
-
-    if (auto keyOutput = std::get_if<KeyOutput>(&output.target)) {
-      if (!check_key(keyOutput->key)) {
-        return error::TransactionValidationError::OUTPUT_INVALID_KEY;
-      }
-    } else {
-      return error::TransactionValidationError::OUTPUT_UNKNOWN_TYPE;
-    }
-
-    if (std::numeric_limits<uint64_t>::max() - output.amount < summaryOutputAmount) {
-      return error::TransactionValidationError::OUTPUTS_AMOUNT_OVERFLOW;
-    }
-
-    summaryOutputAmount += output.amount;
-  }
-
-  uint64_t summaryInputAmount = 0;
-  std::unordered_set<Crypto::KeyImage> ki;
-  std::set<std::pair<uint64_t, uint32_t>> outputsUsage;
-  for (const auto& input : transaction.inputs) {
-    uint64_t amount = 0;
-    if (auto keyInput = std::get_if<KeyInput>(&input)) {
-      amount = keyInput->amount;
-      if (!ki.insert(keyInput->keyImage).second) {
-        return error::TransactionValidationError::INPUT_IDENTICAL_KEYIMAGES;
-      }
-
-      if (keyInput->outputIndices.empty()) {
-        return error::TransactionValidationError::INPUT_EMPTY_OUTPUT_USAGE;
-      }
-
-      // outputIndexes are packed here, first is absolute, others are offsets to previous,
-      // so first can be zero, others can't
-      // Fix discovered by Monero Lab and suggested by "fluffypony" (bitcointalk.org)
-      if (!keyInput->keyImage.isValid()) {
-        return error::TransactionValidationError::INPUT_INVALID_DOMAIN_KEYIMAGES;
-      }
-
-      if (std::find(++std::begin(keyInput->outputIndices), std::end(keyInput->outputIndices), 0u) !=
-          std::end(keyInput->outputIndices)) {
-        return error::TransactionValidationError::INPUT_IDENTICAL_OUTPUT_INDEXES;
-      }
-    } else {
-      return error::TransactionValidationError::INPUT_UNKNOWN_TYPE;
-    }
-
-    if (std::numeric_limits<uint64_t>::max() - amount < summaryInputAmount) {
-      return error::TransactionValidationError::INPUTS_AMOUNT_OVERFLOW;
-    }
-
-    summaryInputAmount += amount;
-  }
-
-  if (summaryOutputAmount > summaryInputAmount) {
-    return error::TransactionValidationError::INPUT_AMOUNT_INSUFFICIENT;
-  }
-
-  fee = summaryInputAmount - summaryOutputAmount;
-  return error::TransactionValidationError::VALIDATION_SUCCESS;
 }
 
 Xi::Result<uint32_t> Core::findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds) const {

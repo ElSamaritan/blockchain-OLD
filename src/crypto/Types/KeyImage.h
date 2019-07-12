@@ -30,6 +30,7 @@
 #include <Xi/Global.hh>
 #include <Xi/Result.h>
 #include <Xi/Byte.hh>
+#include <Xi/Span.hpp>
 #include <Serialization/ISerializer.h>
 #include <Xi/Algorithm/GenericHash.h>
 #include <Xi/Algorithm/GenericComparison.h>
@@ -65,6 +66,7 @@ struct KeyImage : Xi::ByteArray<32> {
 };
 
 using KeyImageSet = std::unordered_set<KeyImage>;
+XI_DECLARE_SPANS(KeyImage)
 
 XI_MAKE_GENERIC_HASH_FUNC(KeyImage)
 XI_MAKE_GENERIC_COMPARISON(KeyImage)

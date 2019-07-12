@@ -59,8 +59,12 @@ std::string Crypto::KeyDerivation::toString() const { return Common::toHex(data(
 bool Crypto::KeyDerivation::isNull() const { return (*this) == Null; }
 
 bool Crypto::KeyDerivation::isValid() const {
-  ge_p3 p;
-  return ge_frombytes_vartime(&p, data()) == 0;
+  ge_p3 point;
+  XI_RETURN_EC_IF_NOT(ge_frombytes_vartime(&point, data()) == 0, false);
+  ge_dsmp image_dsm;
+  ge_dsm_precomp(image_dsm, &point);
+  XI_RETURN_EC_IF_NOT(ge_check_subgroup_precomp_vartime(image_dsm) == 0, false);
+  XI_RETURN_SC(true);
 }
 
 Xi::ConstByteSpan Crypto::KeyDerivation::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
@@ -72,6 +76,5 @@ void Crypto::KeyDerivation::nullify() { fill(0); }
 bool Crypto::serialize(Crypto::KeyDerivation &keyDerivation, Common::StringView name,
                        CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(keyDerivation.data(), KeyDerivation::bytes(), name), false);
-  XI_RETURN_EC_IF_NOT(keyDerivation.isValid(), false);
   return true;
 }

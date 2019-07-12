@@ -1065,7 +1065,7 @@ std::error_code WalletService::sendTransaction(SendTransaction::Request& request
     sendParams.sourceAddresses = request.sourceAddresses;
     sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers, m_node_address, m_node_fee);
     sendParams.fee = request.fee.value_or(currency.minimumFee(node.getLastKnownBlockVersion()));
-    sendParams.mixIn = request.anonymity.value_or(currency.requiredMixin(node.getLastKnownBlockVersion()));
+    sendParams.mixIn = request.anonymity.value_or(currency.mixinUpperBound(node.getLastKnownBlockVersion()));
     sendParams.unlockTimestamp = request.unlockTime.value_or(0);
     sendParams.changeDestination = request.changeAddress.value_or("");
 

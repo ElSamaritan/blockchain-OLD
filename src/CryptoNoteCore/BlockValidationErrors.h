@@ -48,13 +48,16 @@ enum class BlockValidationError {
 
   COINBASE_TOO_LARGE = 22,
 
+  FEE_AMOUNT_OVERFLOW = 23,
+  DOUBLE_SPENDING = 24,
+
   MERGE_MINING_TAG_DISABLED = 17,
   MERGE_MINING_TAG_EMPTY = 18,
   MERGE_MINING_TAG_TOO_LARGE = 19,
   MERGE_MINING_TAG_INVALID_TYPE = 20,
   MERGE_MINING_TAG_PRUNED = 21,
 
-  __NUM = 23,
+  __NUM = 25,
 };
 
 // custom category:
@@ -106,6 +109,11 @@ class BlockValidationErrorCategory : public std::error_category {
         return "Block template and raw block have inconsistent transactions";
       case BlockValidationError::UNEXPECTED_STATIC_REWARD:
         return "Block template contains a static reward but static rewards are disabled for the current block version";
+
+      case BlockValidationError::FEE_AMOUNT_OVERFLOW:
+        return "Sum of fees in block overflows integer precision.";
+      case BlockValidationError::DOUBLE_SPENDING:
+        return "Block contains double spending.";
 
       case BlockValidationError::COINBASE_TOO_LARGE:
         return "Block template coinbase transaction is too large.";

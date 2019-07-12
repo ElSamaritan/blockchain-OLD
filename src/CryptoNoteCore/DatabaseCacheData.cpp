@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -22,17 +22,12 @@
 
 namespace CryptoNote {
 
-bool ExtendedTransactionInfo::serialize(CryptoNote::ISerializer& s) {
-  XI_RETURN_EC_IF_NOT(s(static_cast<CachedTransactionInfo&>(*this), "cached_transaction"), false);
-  XI_RETURN_EC_IF_NOT(s(amountToKeyIndexes, "key_indexes"), false);
-  return true;
-}
-
 bool KeyOutputInfo::serialize(ISerializer& s) {
   XI_RETURN_EC_IF_NOT(s(publicKey, "public_key"), false);
   XI_RETURN_EC_IF_NOT(s(transactionHash, "transaction_hash"), false);
   XI_RETURN_EC_IF_NOT(s(unlockTime, "unlock_time"), false);
-  XI_RETURN_EC_IF_NOT(s(outputIndex, "output_index"), false);
+  // TODO consider no varint here
+  XI_RETURN_EC_IF_NOT(s(index.packedValue, "index"), false);
   return true;
 }
 

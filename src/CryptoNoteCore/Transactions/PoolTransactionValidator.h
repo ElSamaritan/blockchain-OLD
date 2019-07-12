@@ -36,8 +36,8 @@ class PoolTransactionValidator : public TransactionValidator {
  protected:
   Xi::Result<EligibleIndex> doValidate(const CachedTransaction& transaction) const override;
 
-  bool checkIfKeyImageIsAlreadySpent(const Crypto::KeyImage& keyImage) const override;
-  bool isInCheckpointRange() const override;
+  [[nodiscard]] bool checkIfAnySpent(const Crypto::KeyImageSet& keyImages) const override;
+  void fillContext(TransferValidationContext& context) const override;
 
  private:
   uint64_t transactionWeightLimit() const;

@@ -52,7 +52,9 @@ enum class TransactionValidationError {
   INPUT_INVALID_GLOBAL_INDEX = 12,  ///< The input used could not be found.
   INPUT_SPEND_LOCKED_OUT = 13,      ///< Transaction contains duplicate global output indices in its input.
   INPUT_DUPLICATE_GLOBAL_INDEX =
-      48,  ///< An input used for the transaction is an output of a transaction that is still locked.
+      48,                     ///< An input used for the transaction is an output of a transaction that is still locked.
+  INPUT_ZERO_AMOUNT = 54,     ///< Input amount is zero.
+  INPUTS_NOT_CANONICAL = 53,  ///< One of the input amounts is not canoncial.
   EXTRA_MISSING_PUBLIC_KEY = 41,  ///< Every transaction must have at least one embedded public key.
   EXTRA_INVALID_PUBLIC_KEY = 42,  ///< A transaction extra encoded public key must be a valid ecc point.
   EXTRA_INVALID_NONCE = 46,  ///< A transaction extra nonce, may encode a single playment id or custom data indicated by
@@ -83,6 +85,7 @@ enum class TransactionValidationError {
       22,                   ///< An error occured during input validation thats has no mapping to this error collection.
   FEE_INSUFFICIENT = 23,    ///< A transaction was pushed to the transaction pool with unsifficient fees.
   OUTPUT_ZERO_AMOUNT = 24,  ///< One of the outputs actually has no amount attached to it
+  OUTPUT_ZERO = 52,         ///< Sum of all outputs is zero.
   OUTPUT_INVALID_KEY = 25,
   OUTPUT_INVALID_REQUIRED_SIGNATURES_COUNT = 26,
   OUTPUT_UNEXPECTED_TYPE = 27,
@@ -99,7 +102,7 @@ enum class TransactionValidationError {
   UNLOCK_TOO_LARGE = 50,   ///< Given unlock exceeds limits and is unreasonable high.
   UNLOCK_ILL_FORMED = 51,  ///< Given unlock is based on timestamp but unlocks before the genesis timestamp.
 
-  __NUM = 52  ///< The count of different enum values, if you add a new one use this as its value and increase this by
+  __NUM = 55  ///< The count of different enum values, if you add a new one use this as its value and increase this by
               ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation
               ///< and tickets aso.
 };
@@ -147,12 +150,16 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Transaction contains global index duplicates";
       case TransactionValidationError::INPUT_INVALID_SIGNATURES:
         return "Transaction has input with invalid signature";
+      case TransactionValidationError::INPUT_ZERO_AMOUNT:
+        return "Input has zero amount.";
       case TransactionValidationError::INVALID_SIGNATURE_TYPE:
         return "Transaction signature is pruned or has an invalid type.";
       case TransactionValidationError::INPUT_WRONG_SIGNATURES_COUNT:
         return "Transaction has input with wrong signatures count";
       case TransactionValidationError::INPUTS_AMOUNT_OVERFLOW:
         return "Transaction's inputs sum overflow";
+      case TransactionValidationError::INPUTS_NOT_CANONICAL:
+        return "Input amount is not canonical.";
       case TransactionValidationError::BASE_INPUT_WRONG_COUNT:
         return "Wrong input count";
       case TransactionValidationError::BASE_INPUT_UNEXPECTED_TYPE:
@@ -219,6 +226,8 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Extra nonce is ill formed.";
       case TransactionValidationError::OUTPUTS_NOT_CANONCIAL:
         return "Outputs are not in canoncial form.";
+      case TransactionValidationError::OUTPUT_ZERO:
+        return "The sum of all output amounts is zero.";
 
       case TransactionValidationError::UNLOCK_TOO_LARGE:
         return "Given unlock exceeds limits and is unreasonable high.";

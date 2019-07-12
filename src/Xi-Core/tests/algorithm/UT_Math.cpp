@@ -21,52 +21,35 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <stdexcept>
-#include <utility>
+#include <limits>
+#include <cinttypes>
 
-#include <Xi/Memory/Clear.hh>
-#include <Common/StringTools.h>
-#include <crypto/crypto-ops.h>
+#include <gmock/gmock.h>
 
-#include "crypto/Types/SecretKey.h"
+#include <Xi/Algorithm/Math.h>
 
-const Crypto::SecretKey Crypto::SecretKey::Null{};
+#define XI_UNIT_TEST_SUITE Algorithm_Math
 
-Xi::Result<Crypto::SecretKey> Crypto::SecretKey::fromString(const std::string &hex) {
-  XI_ERROR_TRY();
-  SecretKey reval;
-  if (SecretKey::bytes() * 2 != hex.size()) {
-    throw std::runtime_error{"wrong hex size"};
+namespace {
+
+template <typename _IntegerT>
+void genericOverflowTest() {
+  using namespace Xi;
+
+  const auto max = std::numeric_limits<_IntegerT>::max();
+
+  _IntegerT acc = 0;
+  for (_IntegerT i = 1; i < 32; ++i) {
+    EXPECT_FALSE(hasAdditionOverflow(max - i + 1, i - 1, &acc));
+    EXPECT_EQ(acc, max);
+    EXPECT_FALSE(hasAdditionOverflow(max - i, i, &acc));
+    EXPECT_EQ(acc, max);
+    EXPECT_TRUE(hasAdditionOverflow(max - i, i + 1, &acc));
   }
-  if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
-    throw std::runtime_error{"invalid hex string"};
-  }
-  if (!reval.isValid()) {
-    throw std::runtime_error{"secret key is invalid"};
-  }
-  return success(std::move(reval));
-  XI_ERROR_CATCH();
 }
 
-Crypto::SecretKey::SecretKey() { nullify(); }
+}  // namespace
 
-Crypto::SecretKey::SecretKey(Crypto::SecretKey::array_type raw) : array_type(std::move(raw)) {}
+TEST(XI_UNIT_TEST_SUITE, OverflowUInt32) { genericOverflowTest<uint32_t>(); }
 
-Crypto::SecretKey::~SecretKey() { Xi::Memory::secureClear(span()); }
-
-std::string Crypto::SecretKey::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
-
-bool Crypto::SecretKey::isNull() const { return *this == SecretKey::Null; }
-
-bool Crypto::SecretKey::isValid() const { return sc_check(data()) == 0; }
-
-Xi::ConstByteSpan Crypto::SecretKey::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
-
-Xi::ByteSpan Crypto::SecretKey::span() { return Xi::ByteSpan{data(), bytes()}; }
-
-void Crypto::SecretKey::nullify() { fill(0); }
-
-bool Crypto::serialize(Crypto::SecretKey &secretKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
-  XI_RETURN_EC_IF_NOT(serializer.binary(secretKey.data(), SecretKey::bytes(), name), false);
-  return true;
-}
+TEST(XI_UNIT_TEST_SUITE, OverflowUInt64) { genericOverflowTest<uint64_t>(); }

@@ -25,10 +25,13 @@
 
 #include <algorithm>
 #include <iterator>
+#include <cassert>
 
+#include <Xi/Algorithm/Math.h>
 #include <Xi/Exceptional.hpp>
 
 #include "CryptoNoteCore/CryptoNoteTools.h"
+#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 
 using Error = CryptoNote::error::TransactionValidationError;
 
@@ -97,4 +100,140 @@ bool CryptoNote::validateExtraNonce(const CryptoNote::TransactionExtraNonce &non
 bool CryptoNote::validateCanonicalDecomposition(const CryptoNote::Transaction &tx) {
   return std::all_of(tx.outputs.begin(), tx.outputs.end(),
                      [](const auto &iOutput) { return isCanonicalAmount(iOutput.amount); });
+}
+
+std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransaction &transaction,
+                                                const TransferValidationContext &context,
+                                                TransferValidationCache &cache,
+                                                CryptoNote::TransferValidationState &out) {
+  const auto &tx = transaction.getTransaction();
+
+  XI_RETURN_EC_IF(transaction.getBlobSize() > context.currency.maxTxSize(context.blockVersion), Error::TOO_LARGE);
+
+  const auto unlock = tx.unlockTime;
+  XI_RETURN_EC_IF(unlock > context.currency.unlockLimit(context.blockVersion), Error::UNLOCK_TOO_LARGE);
+  if (context.currency.isLockedBasedOnTimestamp(unlock)) {
+    XI_RETURN_EC_IF(unlock < context.currency.genesisTimestamp(), Error::UNLOCK_ILL_FORMED);
+  }
+
+  XI_RETURN_EC_IF_NOT(context.currency.isTransferVersionSupported(context.blockVersion, tx.version),
+                      Error::INVALID_VERSION);
+
+  if (const auto ec = validateExtra(tx); ec != Error::VALIDATION_SUCCESS) {
+    XI_RETURN_EC(ec);
+  }
+
+  XI_RETURN_EC_IF(tx.outputs.empty(), Error::EMPTY_OUTPUTS);
+  for (const auto &output : tx.outputs) {
+    XI_RETURN_EC_IF_NOT(std::holds_alternative<KeyOutput>(output.target), Error::OUTPUT_UNKNOWN_TYPE);
+    const auto &keyTarget = std::get<KeyOutput>(output.target);
+    if (!context.inCheckpointRange) {
+      XI_RETURN_EC_IF_NOT(keyTarget.key.isValid(), Error::OUTPUT_INVALID_KEY);
+    }
+    XI_RETURN_EC_IF(output.amount == 0, Error::OUTPUT_ZERO_AMOUNT);
+    XI_RETURN_EC_IF_NOT(isCanonicalAmount(output.amount), Error::OUTPUTS_NOT_CANONCIAL);
+    if (Xi::hasAdditionOverflow(out.outputSum, output.amount, &out.outputSum)) {
+      XI_RETURN_EC(Error::OUTPUTS_AMOUNT_OVERFLOW);
+    }
+  }
+  XI_RETURN_EC_IF(out.outputSum == 0, Error::OUTPUT_ZERO);
+
+  XI_RETURN_EC_IF(tx.inputs.empty(), Error::EMPTY_INPUTS);
+  XI_RETURN_EC_IF_NOT(std::holds_alternative<TransactionSignatureCollection>(tx.signatures),
+                      Error::INVALID_SIGNATURE_TYPE);
+  const auto &signatures = std::get<TransactionSignatureCollection>(tx.signatures);
+  cache.globalIndicesForInput.reserve(tx.inputs.size());
+  XI_RETURN_EC_IF_NOT(tx.inputs.size() == signatures.size(), Error::INPUT_INVALID_SIGNATURES_COUNT);
+  for (size_t i = 0; i < tx.inputs.size(); ++i) {
+    const auto &input = tx.inputs[i];
+    XI_RETURN_EC_IF_NOT(std::holds_alternative<KeyInput>(input), Error::INPUT_UNKNOWN_TYPE);
+    const auto &keyInput = std::get<KeyInput>(input);
+
+    if (!context.inCheckpointRange) {
+      XI_RETURN_EC_IF_NOT(keyInput.keyImage.isValid(), Error::INPUT_INVALID_DOMAIN_KEYIMAGES);
+    }
+    XI_RETURN_EC_IF(keyInput.amount == 0, Error::INPUT_ZERO_AMOUNT);
+    // XI_RETURN_EC_IF_NOT(isCanonicalAmount(keyInput.amount), Error::INPUTS_NOT_CANONICAL);
+    if (Xi::hasAdditionOverflow(out.inputSum, keyInput.amount, &out.inputSum)) {
+      XI_RETURN_EC(Error::INPUTS_AMOUNT_OVERFLOW);
+    }
+
+    XI_RETURN_EC_IF(keyInput.outputIndices.empty(), Error::INPUT_EMPTY_OUTPUT_USAGE);
+    XI_RETURN_EC_IF_NOT(keyInput.outputIndices.size() == signatures[i].size(), Error::INPUT_INVALID_SIGNATURES_COUNT);
+    for (const auto &signature : signatures[i]) {
+      XI_RETURN_EC_IF_NOT(signature.isValid(), Error::INPUT_INVALID_SIGNATURES);
+    }
+
+    if (keyInput.outputIndices.size() > 1) {
+      XI_RETURN_EC_IF(keyInput.outputIndices.size() < static_cast<size_t>(context.minimumMixin + 1),
+                      Error::INPUT_MIXIN_TOO_LOW);
+      XI_RETURN_EC_IF(keyInput.outputIndices.size() > static_cast<size_t>(context.maximumMixin + 1),
+                      Error::INPUT_MIXIN_TOO_HIGH);
+    }
+    cache.globalIndicesForInput.emplace_back(relativeOutputOffsetsToAbsolute(keyInput.outputIndices));
+    for (const auto &globalOutputIndex : cache.globalIndicesForInput.back()) {
+      XI_RETURN_EC_IF_NOT(out.usedKeyImages.insert(keyInput.keyImage).second, Error::INPUT_IDENTICAL_KEYIMAGES);
+      XI_RETURN_EC_IF_NOT(out.globalOutputIndicesUsed[keyInput.amount].insert(globalOutputIndex).second,
+                          Error::INPUT_IDENTICAL_OUTPUT_INDEXES);
+    }
+  }
+  XI_RETURN_EC_IF(out.inputSum < out.outputSum, Error::INPUT_AMOUNT_INSUFFICIENT);
+  out.fee = out.inputSum - out.outputSum;
+
+  const auto isFusionTransaction = out.fee == 0 && context.currency.isFusionTransaction(tx, context.blockVersion);
+  if (!isFusionTransaction) {
+    const auto canoncialBuckets = countCanonicalDecomposition(tx);
+    XI_RETURN_EC_IF(out.fee < context.currency.minimumFee(context.blockVersion, canoncialBuckets),
+                    Error::FEE_INSUFFICIENT);
+  }
+
+  return Error::VALIDATION_SUCCESS;
+}
+
+std::error_code CryptoNote::postValidateTransfer(const CryptoNote::CachedTransaction &transaction,
+                                                 const CryptoNote::TransferValidationContext &context,
+                                                 TransferValidationCache &cache, const TransferValidationInfo &info) {
+  XI_UNUSED(context);
+
+  const auto &tx = transaction.getTransaction();
+  assert(std::holds_alternative<TransactionSignatureCollection>(tx.signatures));
+  const auto &signatures = std::get<TransactionSignatureCollection>(tx.signatures);
+  assert(tx.inputs.size() == signatures.size());
+  assert(tx.inputs.size() == info.inputsGlobalOutputsIndicesUsed.size());
+
+  for (size_t i = 0; i < tx.inputs.size(); ++i) {
+    const auto &input = tx.inputs[i];
+    const auto &inputSignatures = signatures[i];
+    assert(std::holds_alternative<KeyInput>(input));
+    const auto &keyInput = std::get<KeyInput>(input);
+    assert(inputSignatures.size() == keyInput.outputIndices.size());
+
+    std::vector<const Crypto::PublicKey *> publicKeysReferenced{};
+    publicKeysReferenced.reserve(keyInput.outputIndices.size());
+
+    const auto &iGlobalIndicesUsed = cache.globalIndicesForInput[i];
+    assert(iGlobalIndicesUsed.size() == keyInput.outputIndices.size());
+
+    const auto referencedAmountsSearch = info.outputs.find(keyInput.amount);
+    XI_RETURN_EC_IF(referencedAmountsSearch == info.outputs.end(), Error::INPUT_INVALID_GLOBAL_INDEX);
+    for (const auto iGlobalIndex : iGlobalIndicesUsed) {
+      const auto referencedPublicKeySearch = referencedAmountsSearch->second.find(iGlobalIndex);
+      XI_RETURN_EC_IF(referencedPublicKeySearch == referencedAmountsSearch->second.end(),
+                      Error::INPUT_INVALID_GLOBAL_INDEX);
+
+      XI_RETURN_EC_IF_NOT(context.currency.isUnlockSatisfied(referencedPublicKeySearch->second.unlockTime,
+                                                             context.previousBlockIndex + 1, context.timestamp),
+                          Error::INPUT_SPEND_LOCKED_OUT);
+
+      publicKeysReferenced.emplace_back(std::addressof(referencedPublicKeySearch->second.publicKey));
+    }
+
+    // Key images is already checked in pre validation.
+    XI_RETURN_EC_IF_NOT(
+        Crypto::check_ring_signature(transaction.getTransactionPrefixHash(), keyInput.keyImage,
+                                     publicKeysReferenced.data(), publicKeysReferenced.size(), inputSignatures.data()),
+        Error::INPUT_INVALID_SIGNATURES);
+  }
+
+  return Error::VALIDATION_SUCCESS;
 }

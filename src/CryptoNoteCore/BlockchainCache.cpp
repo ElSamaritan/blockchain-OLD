@@ -82,6 +82,12 @@ bool CachedTransactionInfo::serialize(ISerializer& s) {
   return true;
 }
 
+bool ExtendedTransactionInfo::serialize(CryptoNote::ISerializer& s) {
+  XI_RETURN_EC_IF_NOT(s(static_cast<CachedTransactionInfo&>(*this), "cached_transaction"), false);
+  XI_RETURN_EC_IF_NOT(s(amountToKeyIndexes, "key_indexes"), false);
+  return true;
+}
+
 bool CachedBlockInfo::serialize(ISerializer& s) {
   XI_RETURN_EC_IF_NOT(s(blockHash, "block_hash"), false);
   XI_RETURN_EC_IF_NOT(s(version, "version"), false);
@@ -468,6 +474,22 @@ bool BlockchainCache::checkIfSpent(const Crypto::KeyImage& keyImage) const {
   }
 
   return parent != nullptr && parent->checkIfSpent(keyImage);
+}
+
+bool BlockchainCache::checkIfAnySpent(const Crypto::KeyImageSet& keyImages, uint32_t blockIndex) const {
+  if (parent != nullptr) {
+    XI_RETURN_EC_IF(parent->checkIfAnySpent(keyImages, blockIndex), true);
+  }
+
+  const auto& keyImagesTag = spentKeyImages.get<KeyImageTag>();
+  return std::any_of(keyImages.begin(), keyImages.end(), [&keyImagesTag, blockIndex](const auto& keyImage) {
+    const auto search = keyImagesTag.find(keyImage);
+    if (search == keyImagesTag.end()) {
+      return false;
+    } else {
+      return search->blockIndex <= blockIndex;
+    }
+  });
 }
 
 uint32_t BlockchainCache::getBlockCount() const { return static_cast<uint32_t>(blockInfos.size()); }
@@ -1049,6 +1071,78 @@ ExtractOutputKeysResult BlockchainCache::extractKeyOtputIndexes(uint64_t amount,
         outIndexes.push_back(index);
         return ExtractOutputKeysResult::SUCCESS;
       });
+}
+
+std::map<IBlockchainCache::Amount, std::map<IBlockchainCache::GlobalOutputIndex, KeyOutputInfo>>
+BlockchainCache::extractKeyOutputs(const std::unordered_map<IBlockchainCache::Amount, GlobalOutputIndexSet>& references,
+                                   uint32_t blockIndex) const {
+  XI_RETURN_SC_IF(references.empty(), {});
+
+  if (startIndex < blockIndex) {
+    if (parent != nullptr) {
+      return parent->extractKeyOutputs(references, blockIndex);
+    } else {
+      XI_RETURN_SC({});
+    }
+  }
+
+  std::map<Amount, std::map<GlobalOutputIndex, KeyOutputInfo>> reval{};
+  if (parent != nullptr) {
+    reval = parent->extractKeyOutputs(references, blockIndex);
+  }
+
+  for (const auto& iAmountReferences : references) {
+    const auto amount = iAmountReferences.first;
+    const auto& globalIndices = iAmountReferences.second;
+
+    if (globalIndices.empty()) {
+      continue;
+    }
+
+    auto globalIndicesIterator = keyOutputsGlobalIndexes.find(amount);
+    if (globalIndicesIterator == keyOutputsGlobalIndexes.end()) {
+      continue;
+    }
+
+    auto thisStartIndex = globalIndicesIterator->second.startIndex;
+    auto thisEndIndex = thisStartIndex + static_cast<uint32_t>(globalIndicesIterator->second.outputs.size());
+
+    auto thisQueryStartIterator = globalIndices.lower_bound(thisStartIndex);
+    auto thisQueryEndIterator = globalIndices.upper_bound(thisEndIndex);
+
+    const auto& transactionsTag = transactions.get<TransactionInBlockTag>();
+    for (auto i = thisQueryStartIterator; i != thisQueryEndIterator; ++i) {
+      const auto iGlobalIndex = *i;
+      assert(iGlobalIndex >= thisStartIndex);
+
+      const auto localOutputIndex = iGlobalIndex - thisStartIndex;
+      const auto& txOutputIndex = globalIndicesIterator->second.outputs[localOutputIndex];
+
+      if (txOutputIndex.data.blockIndex > blockIndex) {
+        break;
+      }
+
+      const auto txSearch =
+          transactionsTag.find(boost::make_tuple(txOutputIndex.data.blockIndex, txOutputIndex.data.transactionIndex));
+      if (txSearch == transactionsTag.end()) {
+        continue;
+      }
+
+      assert(txOutputIndex.data.outputIndex < txSearch->outputs.size());
+      assert(std::holds_alternative<KeyOutput>(txSearch->outputs[txOutputIndex.data.outputIndex]));
+      const auto& keyOutput = std::get<KeyOutput>(txSearch->outputs[txOutputIndex.data.outputIndex]);
+
+      KeyOutputInfo iOutputInfo{};
+      iOutputInfo.transactionHash = txSearch->transactionHash;
+      iOutputInfo.index = txOutputIndex;
+      iOutputInfo.unlockTime = txSearch->unlockTime;
+      iOutputInfo.publicKey = keyOutput.key;
+
+      reval[amount][iGlobalIndex] = std::move(iOutputInfo);
+    }
+  }
+
+  return reval;
 }
 
 uint64_t BlockchainCache::getAvailableMixinsCount(IBlockchainCache::Amount amount, uint32_t blockIndex,

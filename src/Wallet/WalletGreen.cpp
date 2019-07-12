@@ -3229,7 +3229,7 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, const std::vecto
 
   System::EventLock lk(m_readyEvent);
 
-  const auto mixin = m_node.currency().requiredMixin(m_node.getLastKnownBlockVersion());
+  const auto mixin = m_node.currency().mixinUpperBound(m_node.getLastKnownBlockVersion());
   m_logger(Info) << "createFusionTransaction"
                  << ", from " << Common::makeContainerFormatter(sourceAddresses) << ", to '" << destinationAddress
                  << '\'' << ", threshold " << m_currency.formatAmount(threshold) << ", mixin " << mixin;

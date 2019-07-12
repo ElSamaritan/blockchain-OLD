@@ -107,7 +107,6 @@ void sc_reduce(unsigned char *);
 void ge_scalarmult(ge_p2 *, const unsigned char *, const ge_p3 *);
 void ge_double_scalarmult_precomp_vartime(ge_p2 *, const unsigned char *, const ge_p3 *, const unsigned char *,
                                           const ge_dsmp);
-int ge_check_subgroup_precomp_vartime(const ge_dsmp);
 void ge_mul8(ge_p1p1 *, const ge_p2 *);
 extern const fe fe_ma2;
 extern const fe fe_ma;
@@ -123,6 +122,8 @@ void sc_sub(unsigned char *, const unsigned char *, const unsigned char *);
 void sc_mulsub(unsigned char *, const unsigned char *, const unsigned char *, const unsigned char *);
 int sc_check(const unsigned char *);
 int sc_isnonzero(const unsigned char *); /* Doesn't normalize */
+
+int ge_check_subgroup_precomp_vartime(const ge_dsmp);
 
 int sc_less_32(const unsigned char *lhs, const unsigned char *rhs);
 

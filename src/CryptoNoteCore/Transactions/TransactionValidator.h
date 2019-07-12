@@ -32,6 +32,7 @@
 #include "CryptoNoteCore/IBlockchainCache.h"
 #include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteCore/Transactions/ITransactionValidator.h"
+#include "CryptoNoteCore/Transactions/Validation.h"
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"
 #include "CryptoNoteCore/Transactions/TransactionValidationErrors.h"
 
@@ -75,50 +76,9 @@ class TransactionValidator : public ITransactionValidator {
  protected:
   Xi::Result<EligibleIndex> doValidate(const CachedTransaction& transaction) const override;
 
-  virtual bool checkIfKeyImageIsAlreadySpent(const Crypto::KeyImage& keyImage) const = 0;
-  virtual bool isInCheckpointRange() const = 0;
-
  protected:
-  error::TransactionValidationError getErrorCode(ExtractOutputKeysResult e) const;
-
- private:
-  /*!
-   * \return true iff the transaction version is not supported in the current context.
-   */
-  bool hasUnsupportedVersion(const uint8_t version) const;
-  bool containsUnsupportedInputTypes(const Transaction& transaction) const;
-  bool containsUnsupportedOutputTypes(const Transaction& transaction) const;
-  bool containsEmptyOutput(const Transaction& transaction) const;
-  bool containsInvalidOutputKey(const std::vector<Crypto::PublicKey>& keys) const;
-  bool hasInputOverflow(const Transaction& transaction) const;
-  bool hasOutputOverflow(const Transaction& transaction) const;
-  bool containsKeyImageDuplicates(const std::vector<Crypto::KeyImage>& keyImages) const;
-  bool hasInvalidExtra(const Transaction& transaction) const;
-
-  static bool isInvalidDomainKeyImage(const Crypto::KeyImage& keyImage);
-  bool containsInvalidDomainKeyImage(const std::vector<Crypto::KeyImage>& keyImages) const;
-
-  bool isFeeInsufficient(const CachedTransaction& transaction) const;
-  bool isUnlockTooLarge(const CachedTransaction& transaction) const;
-  bool isUnlockIllFormed(const CachedTransaction& transaction) const;
-
-  bool containsSpendedKey(const Crypto::KeyImageSet& keyImages) const;
-
-  /*!
-   * \brief extractOutputKeys extracts the used output keys used as input for the transaction
-   * \param amount The amount used for the input
-   * \param indices The key indices referenced as input
-   * \return An error or the public keys of the referenced inputs together with a minimum height/timestamp required for
-   * the referenced outputs to be unlocked.
-   */
-  Xi::Result<std::tuple<std::vector<Crypto::PublicKey>, EligibleIndex>> extractOutputKeys(
-      uint64_t amount, const std::vector<uint32_t>& indices) const;
-
-  Xi::Result<EligibleIndex> validateKeyInput(const KeyInput& keyInput, size_t inputIndex,
-                                             const CachedTransaction& transaction) const;
-  Xi::Result<EligibleIndex> validateInputs(const CachedTransaction& transaction) const;
-
-  error::TransactionValidationError validateMixin(const CachedTransaction& transaction) const;
+  [[nodiscard]] virtual bool checkIfAnySpent(const Crypto::KeyImageSet& keyImages) const = 0;
+  virtual void fillContext(TransferValidationContext& context) const = 0;
 
  private:
   BlockVersion m_blockVersion;

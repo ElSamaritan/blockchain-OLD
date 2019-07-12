@@ -59,6 +59,7 @@ class BlockchainCache : public CommonBlockchainCache {
   virtual PushedBlockInfo getPushedBlockInfo(uint32_t index) const override;
   [[nodiscard]] bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) const override;
   [[nodiscard]] bool checkIfSpent(const Crypto::KeyImage& keyImage) const override;
+  [[nodiscard]] bool checkIfAnySpent(const Crypto::KeyImageSet& keyImages, uint32_t blockIndex) const override;
 
   ExtractOutputKeysResult extractKeyOutputKeys(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
                                                std::vector<Crypto::PublicKey>& publicKeys) const override;
@@ -72,6 +73,9 @@ class BlockchainCache : public CommonBlockchainCache {
 
   ExtractOutputKeysResult extractKeyOtputIndexes(uint64_t amount, Common::ArrayView<uint32_t> globalIndexes,
                                                  std::vector<PackedOutIndex>& outIndexes) const override;
+
+  std::map<Amount, std::map<GlobalOutputIndex, KeyOutputInfo>> extractKeyOutputs(
+      const std::unordered_map<Amount, GlobalOutputIndexSet>& references, uint32_t blockIndex) const override;
 
   [[nodiscard]] uint64_t getAvailableMixinsCount(Amount amount, uint32_t blockIndex, uint64_t threshold) const override;
 
