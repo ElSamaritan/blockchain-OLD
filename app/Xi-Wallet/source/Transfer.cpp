@@ -112,7 +112,11 @@ bool confirmTransaction(CryptoNote::TransactionParameters t, std::shared_ptr<Wal
 
   std::cout << " The transaction will be unlocked ";
   if (t.unlockTimestamp > 0) {
-    std::cout << "at " << WarningMsg(Xi::Time::unixToLocalShortString(t.unlockTimestamp)) << ".";
+    if (t.unlockTimestamp > CryptoNote::BlockHeight::max().toIndex()) {
+      std::cout << "at " << WarningMsg(Xi::Time::unixToLocalShortString(t.unlockTimestamp)) << ".";
+    } else {
+      std::cout << "at height " << WarningMsg(std::to_string(t.unlockTimestamp + 1)) << ".";
+    }
   } else {
     std::cout << SuccessMsg("immediately.");
   }
