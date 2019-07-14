@@ -9,6 +9,7 @@
 #include <atomic>
 #include <string>
 #include <vector>
+#include <ctime>
 
 #include <Xi/Algorithm/String.h>
 #include <Common/FormatTools.h>
@@ -16,6 +17,11 @@
 
 #include <CryptoNoteCore/Account.h>
 #include <CryptoNoteCore/Transactions/TransactionExtra.h>
+
+#include <Xi/ExternalIncludePush.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
+#include <Xi/ExternalIncludePop.h>
 
 #ifndef MSVC
 #include <fstream>
@@ -322,6 +328,38 @@ void saveCSV(CryptoNote::WalletGreen &wallet, CryptoNote::INode &node) {
             << std::endl;
 }
 
+void printUnlockTime(CryptoNote::WalletTransaction t, CryptoNote::INode &node, bool isIncoming) {
+  if (t.unlockTime > 0) {
+    if (isIncoming) {
+      std::cout << SuccessMsg("    Unlock        ");
+    } else {
+      std::cout << WarningMsg("    Unlock        ");
+    }
+    if (node.currency().isLockedBasedOnBlockIndex(t.unlockTime)) {
+      if (isIncoming) {
+        std::cout << SuccessMsg(std::to_string(t.unlockTime + 1));
+      } else {
+        std::cout << WarningMsg(std::to_string(t.unlockTime + 1));
+      }
+    } else {
+      const auto timestamp = boost::posix_time::from_time_t(static_cast<std::time_t>(t.unlockTime));
+      if (isIncoming) {
+        std::cout << SuccessMsg(to_simple_string(timestamp));
+      } else {
+        std::cout << WarningMsg(to_simple_string(timestamp));
+      }
+    }
+
+    if (node.currency().isUnlockSatisfied(t.unlockTime, node.getLastKnownBlockHeight().toIndex(),
+                                          static_cast<uint64_t>(time(nullptr)))) {
+      std::cout << SuccessMsg(" (UNLOCKED)");
+    } else {
+      std::cout << WarningMsg(" (LOCKED)");
+    }
+    std::cout << std::endl;
+  }
+}
+
 void printOutgoingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &node) {
   XI_UNUSED(node);
   assert(t.totalAmount < 0);
@@ -335,6 +373,7 @@ void printOutgoingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
     std::cout << WarningMsg("    Block height  ") << WarningMsg(toString(t.blockHeight)) << std::endl
               << WarningMsg("    Timestamp     ") << WarningMsg(unixTimeToDate(t.timestamp)) << std::endl;
   }
+  printUnlockTime(t, node, false);
 
   std::cout << WarningMsg("    Spent         " + formatAmount(absTotalAmount - t.fee)) << std::endl
             << WarningMsg("    Fee           " + formatAmount(t.fee)) << std::endl
@@ -361,6 +400,7 @@ void printIncomingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
     std::cout << SuccessMsg("    Block height  ") << SuccessMsg(toString(t.blockHeight)) << std::endl
               << SuccessMsg("    Timestamp     ") << SuccessMsg(unixTimeToDate(t.timestamp)) << std::endl;
   }
+  printUnlockTime(t, node, true);
 
   std::cout << SuccessMsg("    Amount        " + formatAmount(absTotalAmount)) << std::endl;
 
