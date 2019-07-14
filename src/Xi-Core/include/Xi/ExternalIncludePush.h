@@ -36,6 +36,7 @@
 #pragma warning(disable : 4003)
 #pragma warning(disable : 4067)
 #pragma warning(disable : 4267)
+#pragma warning(disable : 4324)
 #pragma warning(disable : 4456)
 #pragma warning(disable : 4458)
 #pragma warning(disable : 4702)
