@@ -199,7 +199,6 @@ std::error_code CryptoNote::postValidateTransfer(const CryptoNote::CachedTransac
   assert(std::holds_alternative<TransactionSignatureCollection>(tx.signatures));
   const auto &signatures = std::get<TransactionSignatureCollection>(tx.signatures);
   assert(tx.inputs.size() == signatures.size());
-  assert(tx.inputs.size() == info.inputsGlobalOutputsIndicesUsed.size());
 
   for (size_t i = 0; i < tx.inputs.size(); ++i) {
     const auto &input = tx.inputs[i];

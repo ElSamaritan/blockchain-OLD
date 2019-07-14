@@ -18,6 +18,7 @@
 #include <Xi/Exceptions.hpp>
 #include <Xi/Algorithm/IsUnique.h>
 #include <Xi/Algorithm/Math.h>
+#include <Xi/Algorithm/Merge.hpp>
 
 #include "Core.h"
 #include "Common/ShuffleGenerator.h"
@@ -818,13 +819,12 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   if (!checkpoints.isInCheckpointZone(blockIndex)) {
     std::unordered_map<Amount, GlobalOutputIndexSet> globalOutputReferences{};
     for (auto& transferValidation : transferValidations) {
-      const auto prevSize = validatorState.spentKeyImages.size();
       const auto additionSize = transferValidation.usedKeyImages.size();
-      validatorState.spentKeyImages.merge(std::move(transferValidation.usedKeyImages));
-      XI_RETURN_EC_IF(validatorState.spentKeyImages.size() != prevSize + additionSize,
-                      error::BlockValidationError::DOUBLE_SPENDING);
+      XI_RETURN_EC_IF_NOT(
+          Xi::merge(validatorState.spentKeyImages, std::move(transferValidation.usedKeyImages)) == additionSize,
+          error::BlockValidationError::DOUBLE_SPENDING);
       for (auto&& amountReferences : transferValidation.globalOutputIndicesUsed) {
-        globalOutputReferences[amountReferences.first].merge(std::move(amountReferences.second));
+        Xi::merge(globalOutputReferences[amountReferences.first], std::move(amountReferences.second));
       }
     }
 
@@ -850,11 +850,10 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     }
   } else {
     for (auto&& transferValidation : transferValidations) {
-      const auto prevSize = validatorState.spentKeyImages.size();
       const auto additionSize = transferValidation.usedKeyImages.size();
-      validatorState.spentKeyImages.merge(std::move(transferValidation.usedKeyImages));
-      XI_RETURN_EC_IF(validatorState.spentKeyImages.size() != prevSize + additionSize,
-                      error::BlockValidationError::DOUBLE_SPENDING);
+      XI_RETURN_EC_IF_NOT(
+          Xi::merge(validatorState.spentKeyImages, std::move(transferValidation.usedKeyImages)) == additionSize,
+          error::BlockValidationError::DOUBLE_SPENDING);
     }
   }
 
