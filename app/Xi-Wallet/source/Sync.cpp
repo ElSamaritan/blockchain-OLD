@@ -30,8 +30,10 @@ void checkForNewTransactions(std::shared_ptr<WalletInfo> walletInfo) {
                   << InformationMsg("New transaction found!") << std::endl
                   << SuccessMsg("Incoming transfer:") << std::endl
                   << SuccessMsg("Hash: " + Common::podToHex(t.hash)) << std::endl
-                  << SuccessMsg("Amount: " + formatAmount(t.totalAmount)) << std::endl
-                  << InformationMsg(getPrompt(walletInfo)) << std::flush;
+                  << SuccessMsg("Amount: " + formatAmount(t.totalAmount)) << std::endl;
+        printUnlockTime(t, walletInfo->wallet.currency(),
+                        CryptoNote::BlockHeight::fromNative(walletInfo->wallet.getBlockCount()), true, "Unlock: ");
+        std::cout << InformationMsg(getPrompt(walletInfo)) << std::flush;
       }
     }
 

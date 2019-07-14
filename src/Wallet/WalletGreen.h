@@ -84,6 +84,7 @@ class WalletGreen : public IWallet,
 
   virtual void deleteAddress(const std::string& address) override;
 
+  virtual const CryptoNote::Currency& currency() const override;
   virtual uint64_t getActualBalance() const override;
   virtual uint64_t getActualBalance(const std::string& address) const override;
   virtual uint64_t getPendingBalance() const override;
@@ -328,6 +329,8 @@ class WalletGreen : public IWallet,
   void pushBackOutgoingTransfers(size_t txId, const std::vector<WalletTransfer>& destinations);
   void insertUnlockTransactionJob(const Crypto::Hash& transactionHash, BlockHeight blockHeight,
                                   CryptoNote::ITransfersContainer* container);
+  void insertUnlockTransactionJob(const Crypto::Hash& transactionHash, uint64_t timestamp,
+                                  CryptoNote::ITransfersContainer* container);
   void deleteUnlockTransactionJob(const Crypto::Hash& transactionHash);
   void startBlockchainSynchronizer();
   void stopBlockchainSynchronizer();
@@ -387,7 +390,8 @@ class WalletGreen : public IWallet,
 
   WalletsContainer m_walletsContainer;
   ContainerStorage m_containerStorage;
-  UnlockTransactionJobs m_unlockTransactionsJob;
+  UnlockHeightTransactionJobs m_unlockHeigtTransactionsJob;
+  UnlockTimestampTransactionJobs m_unlockTimestampTransactionsJob;
   WalletTransactions m_transactions;
   WalletTransfers m_transfers;                                // sorted
   mutable std::unordered_map<size_t, bool> m_fusionTxsCache;  // txIndex -> isFusion

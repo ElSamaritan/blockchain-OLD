@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -24,6 +24,7 @@
 #pragma once
 
 #include <chrono>
+#include <cinttypes>
 #include <string>
 
 #include "Xi/Result.h"
@@ -33,7 +34,9 @@ namespace Time {
 
 Xi::Result<std::chrono::microseconds> parseDuration(std::string str);
 
-}
+std::string unixToLocalShortString(const uint64_t timestamp);
+
+}  // namespace Time
 }  // namespace Xi
 
 inline constexpr std::chrono::nanoseconds operator"" _ns(unsigned long long arg) {

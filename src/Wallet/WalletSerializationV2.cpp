@@ -27,8 +27,15 @@ using namespace Crypto;
 namespace {
 
 // DO NOT CHANGE IT
-struct UnlockTransactionJobDtoV2 {
+struct UnlockHeightTransactionJobDtoV2 {
   CryptoNote::BlockHeight blockHeight;
+  Hash transactionHash;
+  Crypto::PublicKey walletSpendPublicKey;
+};
+
+// DO NOT CHANGE IT
+struct UnlockTimestampTransactionJobDtoV2 {
+  uint64_t timestamp;
   Hash transactionHash;
   Crypto::PublicKey walletSpendPublicKey;
 };
@@ -77,8 +84,15 @@ struct WalletTransferDtoV2 {
   uint8_t type;
 };
 
-[[nodiscard]] bool serialize(UnlockTransactionJobDtoV2& value, CryptoNote::ISerializer& serializer) {
+[[nodiscard]] bool serialize(UnlockHeightTransactionJobDtoV2& value, CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(value.blockHeight, "block_height"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.transactionHash, "transaction_hash"), false);
+  XI_RETURN_EC_IF_NOT(serializer(value.walletSpendPublicKey, "wallet_spend_public_key"), false);
+  return true;
+}
+
+[[nodiscard]] bool serialize(UnlockTimestampTransactionJobDtoV2& value, CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(value.timestamp, "timestamp"), false);
   XI_RETURN_EC_IF_NOT(serializer(value.transactionHash, "transaction_hash"), false);
   XI_RETURN_EC_IF_NOT(serializer(value.walletSpendPublicKey, "wallet_spend_public_key"), false);
   return true;
@@ -116,7 +130,9 @@ namespace CryptoNote {
 
 WalletSerializerV2::WalletSerializerV2(ITransfersObserver& transfersObserver, uint64_t& actualBalance,
                                        uint64_t& pendingBalance, WalletsContainer& walletsContainer,
-                                       TransfersSyncronizer& synchronizer, UnlockTransactionJobs& unlockTransactions,
+                                       TransfersSyncronizer& synchronizer,
+                                       UnlockHeightTransactionJobs& unlockHeightTransactions,
+                                       UnlockTimestampTransactionJobs& unlockTimestampTransactions,
                                        WalletTransactions& transactions, WalletTransfers& transfers,
                                        UncommitedTransactions& uncommitedTransactions, std::string& extra,
                                        uint32_t transactionSoftLockTime)
@@ -125,7 +141,8 @@ WalletSerializerV2::WalletSerializerV2(ITransfersObserver& transfersObserver, ui
       m_pendingBalance(pendingBalance),
       m_walletsContainer(walletsContainer),
       m_synchronizer(synchronizer),
-      m_unlockTransactions(unlockTransactions),
+      m_unlockHeightTransactions(unlockHeightTransactions),
+      m_unlockTimestampTransactions(unlockTimestampTransactions),
       m_transactions(transactions),
       m_transfers(transfers),
       m_uncommitedTransactions(uncommitedTransactions),
@@ -341,49 +358,105 @@ bool WalletSerializerV2::saveTransfersSynchronizer(CryptoNote::ISerializer& seri
 }
 
 bool WalletSerializerV2::loadUnlockTransactionsJobs(CryptoNote::ISerializer& serializer) {
-  auto& index = m_unlockTransactions.get<TransactionHashIndex>();
-  auto& walletsIndex = m_walletsContainer.get<KeysIndex>();
+  {
+    auto& index = m_unlockHeightTransactions.get<TransactionHashIndex>();
+    auto& walletsIndex = m_walletsContainer.get<KeysIndex>();
 
-  uint64_t jobsCount = 0;
-  XI_RETURN_EC_IF_NOT(serializer(jobsCount, "unlockTransactionsJobsCount"), false);
+    uint64_t jobsCount = 0;
+    XI_RETURN_EC_IF_NOT(serializer.beginArray(jobsCount, "unlockHeightTransactionsJobsCount"), false);
 
-  for (uint64_t i = 0; i < jobsCount; ++i) {
-    UnlockTransactionJobDtoV2 dto;
-    XI_RETURN_EC_IF_NOT(serializer(dto, "unlockTransactionsJob"), false);
+    for (uint64_t i = 0; i < jobsCount; ++i) {
+      UnlockHeightTransactionJobDtoV2 dto;
+      XI_RETURN_EC_IF_NOT(serializer(dto, "unlockHeightTransactionsJob"), false);
 
-    auto walletIt = walletsIndex.find(dto.walletSpendPublicKey);
-    if (walletIt != walletsIndex.end()) {
-      UnlockTransactionJob job;
-      job.blockHeight = dto.blockHeight;
-      job.transactionHash = dto.transactionHash;
-      job.container = walletIt->container;
+      auto walletIt = walletsIndex.find(dto.walletSpendPublicKey);
+      if (walletIt != walletsIndex.end()) {
+        UnlockHeightTransactionJob job;
+        job.blockHeight = dto.blockHeight;
+        job.transactionHash = dto.transactionHash;
+        job.container = walletIt->container;
 
-      index.emplace(std::move(job));
+        index.emplace(std::move(job));
+      }
     }
+
+    XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
+  }
+  {
+    auto& index = m_unlockTimestampTransactions.get<TransactionHashIndex>();
+    auto& walletsIndex = m_walletsContainer.get<KeysIndex>();
+
+    uint64_t jobsCount = 0;
+    XI_RETURN_EC_IF_NOT(serializer.beginArray(jobsCount, "unlockTimestampTransactionsJobsCount"), false);
+
+    for (uint64_t i = 0; i < jobsCount; ++i) {
+      UnlockTimestampTransactionJobDtoV2 dto;
+      XI_RETURN_EC_IF_NOT(serializer(dto, "unlockTimestampTransactionsJob"), false);
+
+      auto walletIt = walletsIndex.find(dto.walletSpendPublicKey);
+      if (walletIt != walletsIndex.end()) {
+        UnlockTimestampTransactionJob job;
+        job.timestamp = dto.timestamp;
+        job.transactionHash = dto.transactionHash;
+        job.container = walletIt->container;
+
+        index.emplace(std::move(job));
+      }
+    }
+
+    XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
   }
   return true;
 }
 
 bool WalletSerializerV2::saveUnlockTransactionsJobs(CryptoNote::ISerializer& serializer) {
-  auto& index = m_unlockTransactions.get<TransactionHashIndex>();
-  auto& wallets = m_walletsContainer.get<TransfersContainerIndex>();
+  {
+    auto& index = m_unlockHeightTransactions.get<TransactionHashIndex>();
+    auto& wallets = m_walletsContainer.get<TransfersContainerIndex>();
 
-  uint64_t jobsCount = index.size();
-  XI_RETURN_EC_IF_NOT(serializer(jobsCount, "unlockTransactionsJobsCount"), false);
+    uint64_t jobsCount = index.size();
+    XI_RETURN_EC_IF_NOT(serializer.beginArray(jobsCount, "unlockHeightTransactionsJobsCount"), false);
 
-  for (const auto& j : index) {
-    auto containerIt = wallets.find(j.container);
-    assert(containerIt != wallets.end());
+    for (const auto& j : index) {
+      auto containerIt = wallets.find(j.container);
+      assert(containerIt != wallets.end());
 
-    auto keyIt = m_walletsContainer.project<KeysIndex>(containerIt);
-    assert(keyIt != m_walletsContainer.get<KeysIndex>().end());
+      auto keyIt = m_walletsContainer.project<KeysIndex>(containerIt);
+      assert(keyIt != m_walletsContainer.get<KeysIndex>().end());
 
-    UnlockTransactionJobDtoV2 dto;
-    dto.blockHeight = j.blockHeight;
-    dto.transactionHash = j.transactionHash;
-    dto.walletSpendPublicKey = keyIt->spendPublicKey;
+      UnlockHeightTransactionJobDtoV2 dto;
+      dto.blockHeight = j.blockHeight;
+      dto.transactionHash = j.transactionHash;
+      dto.walletSpendPublicKey = keyIt->spendPublicKey;
 
-    XI_RETURN_EC_IF_NOT(serializer(dto, "unlockTransactionsJob"), false);
+      XI_RETURN_EC_IF_NOT(serializer(dto, "unlockHeightTransactionsJob"), false);
+    }
+
+    XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
+  }
+  {
+    auto& index = m_unlockTimestampTransactions.get<TransactionHashIndex>();
+    auto& wallets = m_walletsContainer.get<TransfersContainerIndex>();
+
+    uint64_t jobsCount = index.size();
+    XI_RETURN_EC_IF_NOT(serializer.beginArray(jobsCount, "unlockTimestampTransactionsJobsCount"), false);
+
+    for (const auto& j : index) {
+      auto containerIt = wallets.find(j.container);
+      assert(containerIt != wallets.end());
+
+      auto keyIt = m_walletsContainer.project<KeysIndex>(containerIt);
+      assert(keyIt != m_walletsContainer.get<KeysIndex>().end());
+
+      UnlockTimestampTransactionJobDtoV2 dto;
+      dto.timestamp = j.timestamp;
+      dto.transactionHash = j.transactionHash;
+      dto.walletSpendPublicKey = keyIt->spendPublicKey;
+
+      XI_RETURN_EC_IF_NOT(serializer(dto, "unlockTimestampTransactionsJob"), false);
+    }
+
+    XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
   }
   return true;
 }

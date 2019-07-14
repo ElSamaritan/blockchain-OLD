@@ -11,6 +11,7 @@
 #include <string>
 
 #include <Xi/Algorithm/String.h>
+#include <Xi/Time.h>
 
 #include <Common/Base58.h>
 #include <Common/StringTools.h>
@@ -111,7 +112,7 @@ bool confirmTransaction(CryptoNote::TransactionParameters t, std::shared_ptr<Wal
 
   std::cout << " The transaction will be unlocked ";
   if (t.unlockTimestamp > 0) {
-    std::cout << "at block " << WarningMsg(std::to_string(t.unlockTimestamp)) << ".";
+    std::cout << "at " << WarningMsg(Xi::Time::unixToLocalShortString(t.unlockTimestamp)) << ".";
   } else {
     std::cout << SuccessMsg("immediately.");
   }

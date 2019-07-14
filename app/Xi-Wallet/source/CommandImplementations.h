@@ -43,7 +43,8 @@ void save(CryptoNote::WalletGreen &wallet);
 
 void listTransfers(bool incoming, bool outgoing, CryptoNote::WalletGreen &wallet, CryptoNote::INode &node);
 
-void printUnlockTime(CryptoNote::WalletTransaction t, CryptoNote::INode &node, bool isIncoming);
+void printUnlockTime(CryptoNote::WalletTransaction t, const CryptoNote::Currency &currency,
+                     CryptoNote::BlockHeight knownHeight, bool isIncoming, const std::string &prefix);
 void printOutgoingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &node);
 void printIncomingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &node);
 

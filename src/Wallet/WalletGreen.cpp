@@ -264,7 +264,8 @@ void WalletGreen::clearCaches(bool clearTransactions, bool clearCachedData) {
                   [this](const AccountPublicAddress& address) { m_synchronizer.removeSubscription(address); });
 
     m_uncommitedTransactions.clear();
-    m_unlockTransactionsJob.clear();
+    m_unlockHeigtTransactionsJob.clear();
+    m_unlockTimestampTransactionsJob.clear();
     m_actualBalance = 0;
     m_pendingBalance = 0;
     m_fusionTxsCache.clear();
@@ -599,8 +600,8 @@ void WalletGreen::loadWalletCache(std::unordered_set<Crypto::PublicKey>& addedKe
   loadAndDecryptContainerData(m_containerStorage, m_key, contanerData);
 
   WalletSerializerV2 s(*this, m_actualBalance, m_pendingBalance, m_walletsContainer, m_synchronizer,
-                       m_unlockTransactionsJob, m_transactions, m_transfers, m_uncommitedTransactions, extra,
-                       m_transactionSoftLockTime);
+                       m_unlockHeigtTransactionsJob, m_unlockTimestampTransactionsJob, m_transactions, m_transfers,
+                       m_uncommitedTransactions, extra, m_transactionSoftLockTime);
 
   Common::MemoryInputStream containerStream(contanerData.data(), contanerData.size());
   if (!s.load(containerStream, reinterpret_cast<const ContainerStoragePrefix*>(m_containerStorage.prefix())->version)) {
@@ -639,8 +640,8 @@ void WalletGreen::saveWalletCache(ContainerStorage& storage, const Crypto::chach
   Common::StringOutputStream containerStream(containerData);
 
   WalletSerializerV2 s(*this, m_actualBalance, m_pendingBalance, m_walletsContainer, m_synchronizer,
-                       m_unlockTransactionsJob, transactions, transfers, m_uncommitedTransactions,
-                       const_cast<std::string&>(extra), m_transactionSoftLockTime);
+                       m_unlockHeigtTransactionsJob, m_unlockTimestampTransactionsJob, transactions, transfers,
+                       m_uncommitedTransactions, const_cast<std::string&>(extra), m_transactionSoftLockTime);
 
   if (!s.save(containerStream, saveLevel)) {
     m_logger(Fatal) << "Container saving failed";
@@ -843,8 +844,8 @@ void WalletGreen::subscribeWallets() {
 
 void WalletGreen::convertAndLoadWalletFile(const std::string& path, std::ifstream&& walletFileStream) {
   WalletSerializerV1 s(*this, m_viewPublicKey, m_viewSecretKey, m_actualBalance, m_pendingBalance, m_walletsContainer,
-                       m_synchronizer, m_unlockTransactionsJob, m_transactions, m_transfers, m_uncommitedTransactions,
-                       m_transactionSoftLockTime);
+                       m_synchronizer, m_unlockHeigtTransactionsJob, m_transactions, m_transfers,
+                       m_uncommitedTransactions, m_transactionSoftLockTime);
 
   StdInputStream stream(walletFileStream);
   s.load(m_key, stream);
@@ -1367,6 +1368,13 @@ void WalletGreen::deleteAddress(const std::string& address) {
   }
 
   m_logger(Info) << "Wallet deleted " << address;
+}
+
+const Currency& WalletGreen::currency() const {
+  throwIfNotInitialized();
+  throwIfStopped();
+
+  return m_node.currency();
 }
 
 uint64_t WalletGreen::getActualBalance() const {
@@ -2791,7 +2799,7 @@ void WalletGreen::onSynchronizationProgressUpdated(uint32_t processedBlockCount,
   }
 
   pushEvent(makeSyncProgressUpdatedEvent(processedBlockCount, totalBlockCount));
-  unlockBalances(BlockHeight::fromNative(processedBlockCount));
+  unlockBalances(BlockHeight::fromNative(totalBlockCount));
 }
 
 void WalletGreen::onSynchronizationCompleted() {
@@ -2860,16 +2868,38 @@ void WalletGreen::transactionDeleteEnd(Crypto::Hash transactionHash) {
 }
 
 void WalletGreen::unlockBalances(BlockHeight height) {
-  auto& index = m_unlockTransactionsJob.get<BlockHeightIndex>();
-  auto upper = index.upper_bound(height);
+  std::set<CryptoNote::ITransfersContainer*> updated{};
 
-  if (index.begin() != upper) {
-    for (auto it = index.begin(); it != upper; ++it) {
-      updateBalance(it->container);
+  {
+    auto& index = m_unlockHeigtTransactionsJob.get<BlockHeightIndex>();
+    auto upper = index.upper_bound(height);
+
+    if (index.begin() != upper) {
+      for (auto it = index.begin(); it != upper; ++it) {
+        updated.insert(it->container);
+      }
+
+      index.erase(index.begin(), upper);
+      pushEvent(makeMoneyUnlockedEvent());
     }
+  }
 
-    index.erase(index.begin(), upper);
-    pushEvent(makeMoneyUnlockedEvent());
+  {
+    auto& index = m_unlockTimestampTransactionsJob.get<BlockTimestampIndex>();
+    auto upper = index.upper_bound(static_cast<uint64_t>(time(nullptr)));
+
+    if (index.begin() != upper) {
+      for (auto it = index.begin(); it != upper; ++it) {
+        updated.insert(it->container);
+      }
+
+      index.erase(index.begin(), upper);
+      pushEvent(makeMoneyUnlockedEvent());
+    }
+  }
+
+  for (const auto updatedContainer : updated) {
+    updateBalance(updatedContainer);
   }
 }
 
@@ -2946,12 +2976,26 @@ void WalletGreen::transactionUpdated(const TransactionInformation& transactionIn
   for (auto containerAmounts : containerAmountsList) {
     updateBalance(containerAmounts.container);
 
+    BlockHeight softUnlockHeight =
+        transactionInfo.blockHeight.next(static_cast<BlockHeight::value_type>(m_transactionSoftLockTime));
+    uint64_t softUnlockTimestamp =
+        static_cast<uint64_t>(time(nullptr)) + m_transactionSoftLockTime * m_node.currency().blockTimeTarget();
+
     if (!transactionInfo.blockHeight.isNull()) {
-      BlockHeight unlockHeight =
-          transactionInfo.blockHeight.next(static_cast<BlockHeight::signed_value_type>(m_transactionSoftLockTime));
-      unlockHeight =
-          std::min(unlockHeight, BlockHeight::fromIndex(m_currency.estimateUnlockIndex(transactionInfo.unlockTime)));
-      insertUnlockTransactionJob(transactionInfo.transactionHash, unlockHeight, containerAmounts.container);
+      if (transactionInfo.unlockTime > 0) {
+        if (m_node.currency().isLockedBasedOnBlockIndex(transactionInfo.unlockTime)) {
+          auto unlockHeight = BlockHeight::fromIndex(static_cast<BlockHeight::value_type>(transactionInfo.unlockTime));
+          insertUnlockTransactionJob(transactionInfo.transactionHash, std::max(softUnlockHeight, unlockHeight),
+                                     containerAmounts.container);
+        } else {
+          insertUnlockTransactionJob(transactionInfo.transactionHash,
+                                     std::max(softUnlockTimestamp, transactionInfo.unlockTime),
+                                     containerAmounts.container);
+        }
+
+      } else {
+        insertUnlockTransactionJob(transactionInfo.transactionHash, softUnlockHeight, containerAmounts.container);
+      }
     }
   }
 
@@ -3046,13 +3090,31 @@ void WalletGreen::transactionDeleted(ITransfersSubscription* object, const Hash&
 
 void WalletGreen::insertUnlockTransactionJob(const Hash& transactionHash, BlockHeight blockHeight,
                                              CryptoNote::ITransfersContainer* container) {
-  auto& index = m_unlockTransactionsJob.get<BlockHeightIndex>();
+  auto& index = m_unlockHeigtTransactionsJob.get<BlockHeightIndex>();
   index.insert({blockHeight, container, transactionHash});
 }
 
+void WalletGreen::insertUnlockTransactionJob(const Hash& transactionHash, uint64_t timestamp,
+                                             ITransfersContainer* container) {
+  auto& index = m_unlockTimestampTransactionsJob.get<BlockTimestampIndex>();
+  index.insert({timestamp, container, transactionHash});
+}
+
 void WalletGreen::deleteUnlockTransactionJob(const Hash& transactionHash) {
-  auto& index = m_unlockTransactionsJob.get<TransactionHashIndex>();
-  index.erase(transactionHash);
+  {
+    auto& index = m_unlockHeigtTransactionsJob.get<TransactionHashIndex>();
+    if (auto search = index.find(transactionHash); search != index.end()) {
+      index.erase(transactionHash);
+      return;
+    }
+  }
+  {
+    auto& index = m_unlockTimestampTransactionsJob.get<TransactionHashIndex>();
+    if (auto search = index.find(transactionHash); search != index.end()) {
+      index.erase(transactionHash);
+      return;
+    }
+  }
 }
 
 void WalletGreen::startBlockchainSynchronizer() {
@@ -3629,9 +3691,16 @@ bool WalletGreen::isMyAddress(const std::string& addressString) const {
 }
 
 void WalletGreen::deleteContainerFromUnlockTransactionJobs(const ITransfersContainer* container) {
-  for (auto it = m_unlockTransactionsJob.begin(); it != m_unlockTransactionsJob.end();) {
+  for (auto it = m_unlockHeigtTransactionsJob.begin(); it != m_unlockHeigtTransactionsJob.end();) {
     if (it->container == container) {
-      it = m_unlockTransactionsJob.erase(it);
+      it = m_unlockHeigtTransactionsJob.erase(it);
+    } else {
+      ++it;
+    }
+  }
+  for (auto it = m_unlockTimestampTransactionsJob.begin(); it != m_unlockTimestampTransactionsJob.end();) {
+    if (it->container == container) {
+      it = m_unlockTimestampTransactionsJob.erase(it);
     } else {
       ++it;
     }

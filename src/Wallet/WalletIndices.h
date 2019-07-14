@@ -64,6 +64,7 @@ struct TransfersContainerIndex {};
 struct WalletIndex {};
 struct TransactionOutputIndex {};
 struct BlockHeightIndex {};
+struct BlockTimestampIndex {};
 
 struct TransactionHashIndex {};
 struct TransactionIndex {};
@@ -80,21 +81,39 @@ typedef boost::multi_index_container<
                                                                    container)> > >
     WalletsContainer;
 
-struct UnlockTransactionJob {
+struct UnlockHeightTransactionJob {
   BlockHeight blockHeight;
   CryptoNote::ITransfersContainer* container;
   Crypto::Hash transactionHash;
 };
 
 typedef boost::multi_index_container<
-    UnlockTransactionJob, boost::multi_index::indexed_by<
-                              boost::multi_index::ordered_non_unique<
-                                  boost::multi_index::tag<BlockHeightIndex>,
-                                  BOOST_MULTI_INDEX_MEMBER(UnlockTransactionJob, BlockHeight, blockHeight)>,
-                              boost::multi_index::hashed_non_unique<
-                                  boost::multi_index::tag<TransactionHashIndex>,
-                                  BOOST_MULTI_INDEX_MEMBER(UnlockTransactionJob, Crypto::Hash, transactionHash)> > >
-    UnlockTransactionJobs;
+    UnlockHeightTransactionJob,
+    boost::multi_index::indexed_by<
+        boost::multi_index::ordered_non_unique<boost::multi_index::tag<BlockHeightIndex>,
+                                               BOOST_MULTI_INDEX_MEMBER(UnlockHeightTransactionJob, BlockHeight,
+                                                                        blockHeight)>,
+        boost::multi_index::hashed_non_unique<boost::multi_index::tag<TransactionHashIndex>,
+                                              BOOST_MULTI_INDEX_MEMBER(UnlockHeightTransactionJob, Crypto::Hash,
+                                                                       transactionHash)> > >
+    UnlockHeightTransactionJobs;
+
+struct UnlockTimestampTransactionJob {
+  uint64_t timestamp;
+  CryptoNote::ITransfersContainer* container;
+  Crypto::Hash transactionHash;
+};
+
+typedef boost::multi_index_container<
+    UnlockTimestampTransactionJob,
+    boost::multi_index::indexed_by<
+        boost::multi_index::ordered_non_unique<boost::multi_index::tag<BlockTimestampIndex>,
+                                               BOOST_MULTI_INDEX_MEMBER(UnlockTimestampTransactionJob, uint64_t,
+                                                                        timestamp)>,
+        boost::multi_index::hashed_non_unique<boost::multi_index::tag<TransactionHashIndex>,
+                                              BOOST_MULTI_INDEX_MEMBER(UnlockTimestampTransactionJob, Crypto::Hash,
+                                                                       transactionHash)> > >
+    UnlockTimestampTransactionJobs;
 
 typedef boost::multi_index_container<
     CryptoNote::WalletTransaction,

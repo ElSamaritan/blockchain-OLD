@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -33,7 +33,8 @@ class WalletSerializerV2 {
  public:
   WalletSerializerV2(ITransfersObserver& transfersObserver, uint64_t& actualBalance, uint64_t& pendingBalance,
                      WalletsContainer& walletsContainer, TransfersSyncronizer& synchronizer,
-                     UnlockTransactionJobs& unlockTransactions, WalletTransactions& transactions,
+                     UnlockHeightTransactionJobs& unlockHeightTransactions,
+                     UnlockTimestampTransactionJobs& unlockTimestampTransactions, WalletTransactions& transactions,
                      WalletTransfers& transfers, UncommitedTransactions& uncommitedTransactions, std::string& extra,
                      uint32_t transactionSoftLockTime);
 
@@ -67,7 +68,8 @@ class WalletSerializerV2 {
   uint64_t& m_pendingBalance;
   WalletsContainer& m_walletsContainer;
   TransfersSyncronizer& m_synchronizer;
-  UnlockTransactionJobs& m_unlockTransactions;
+  UnlockHeightTransactionJobs& m_unlockHeightTransactions;
+  UnlockTimestampTransactionJobs& m_unlockTimestampTransactions;
   WalletTransactions& m_transactions;
   WalletTransfers& m_transfers;
   UncommitedTransactions& m_uncommitedTransactions;

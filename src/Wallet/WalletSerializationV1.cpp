@@ -241,7 +241,7 @@ void WalletSerializerV1::CryptoContext::incIv() {
 WalletSerializerV1::WalletSerializerV1(ITransfersObserver& transfersObserver, Crypto::PublicKey& viewPublicKey,
                                        Crypto::SecretKey& viewSecretKey, uint64_t& actualBalance,
                                        uint64_t& pendingBalance, WalletsContainer& walletsContainer,
-                                       TransfersSyncronizer& synchronizer, UnlockTransactionJobs& unlockTransactions,
+                                       TransfersSyncronizer& synchronizer, UnlockHeightTransactionJobs& unlockTransactions,
                                        WalletTransactions& transactions, WalletTransfers& transfers,
                                        UncommitedTransactions& uncommitedTransactions, uint32_t transactionSoftLockTime)
     : m_transfersObserver(transfersObserver),
@@ -574,7 +574,7 @@ void WalletSerializerV1::loadUnlockTransactionsJobs(Common::IInputStream& source
 
     assert(dto.walletIndex < walletsSize);
 
-    UnlockTransactionJob job;
+    UnlockHeightTransactionJob job;
     job.blockHeight = dto.blockHeight;
     job.transactionHash = dto.transactionHash;
     job.container = walletsIndex[dto.walletIndex].container;

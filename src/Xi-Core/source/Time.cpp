@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -28,6 +28,11 @@
 
 #include <Xi/ExternalIncludePush.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
+#include <boost/date_time/local_time/local_time_io.hpp>
+#include <boost/date_time/c_local_time_adjustor.hpp>
 #include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Exceptional.hpp>
@@ -101,4 +106,11 @@ Xi::Result<std::chrono::microseconds> Xi::Time::parseDuration(std::string str) {
 
   return success(total);
   XI_ERROR_CATCH();
+}
+
+std::string Xi::Time::unixToLocalShortString(const uint64_t timestamp) {
+  const auto posixTimestamp = boost::posix_time::from_time_t(static_cast<std::time_t>(timestamp));
+  const auto localTimestamp =
+      boost::date_time::c_local_adjustor<boost::posix_time::ptime>::utc_to_local(posixTimestamp);
+  return to_simple_string(localTimestamp);
 }

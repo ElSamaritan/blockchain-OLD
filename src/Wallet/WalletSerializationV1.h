@@ -34,7 +34,7 @@ class WalletSerializerV1 {
   WalletSerializerV1(ITransfersObserver& transfersObserver, Crypto::PublicKey& viewPublicKey,
                      Crypto::SecretKey& viewSecretKey, uint64_t& actualBalance, uint64_t& pendingBalance,
                      WalletsContainer& walletsContainer, TransfersSyncronizer& synchronizer,
-                     UnlockTransactionJobs& unlockTransactions, WalletTransactions& transactions,
+                     UnlockHeightTransactionJobs& unlockTransactions, WalletTransactions& transactions,
                      WalletTransfers& transfers, UncommitedTransactions& uncommitedTransactions,
                      uint32_t transactionSoftLockTime);
 
@@ -86,7 +86,7 @@ class WalletSerializerV1 {
   uint64_t& m_pendingBalance;
   WalletsContainer& m_walletsContainer;
   TransfersSyncronizer& m_synchronizer;
-  UnlockTransactionJobs& m_unlockTransactions;
+  UnlockHeightTransactionJobs& m_unlockTransactions;
   WalletTransactions& m_transactions;
   WalletTransfers& m_transfers;
   UncommitedTransactions& m_uncommitedTransactions;
