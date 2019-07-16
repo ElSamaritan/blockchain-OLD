@@ -7,11 +7,6 @@
 
 /* Make sure everything in here is const - or it won't compile! */
 namespace WalletConfig {
-/* The prefix your coins address starts with */
-const std::string addressPrefix = ::Xi::Config::Coin::addressPrefix();
-
-/* Your coins 'Ticker', e.g. Monero = XMR, Bitcoin = BTC */
-const std::string ticker = ::Xi::Config::Coin::ticker();
 
 /* The filename to output the CSV to in save_csv */
 const std::string csvFilename = "transactions.csv";
@@ -30,15 +25,6 @@ const std::string walletName = "xi-wallet";
    wallet */
 const std::string walletdName = "xi-pgservice";
 
-/* The full name of your crypto */
-const std::string coinName = Xi::Config::Coin::name();
-
-/* Where can your users contact you for support? E.g. discord */
-const std::string contactLink = Xi::Config::Coin::contactUrl();
-
-/* The number of decimals your coin has */
-const int numDecimalPlaces = Xi::Config ::Coin::numberOfDecimalPoints();
-
 /* The length of a standard address for your coin */
 const long unsigned int standardAddressLength = 98;
 
@@ -48,13 +34,4 @@ const long unsigned int standardAddressLength = 98;
    chunks of 8 chars at once into blocks of 11 chars, we can calculate
    this automatically */
 const long unsigned int integratedAddressLength = standardAddressLength + ((64 * 11) / 8);
-
-/* The default fee value to use with transactions (in ATOMIC units!) */
-const uint64_t defaultFee = Xi::Config::Coin::minimumFee();
-
-/* The minimum fee value to allow with transactions (in ATOMIC units!) */
-const uint64_t minimumFee = Xi::Config::Coin::minimumFee();
-
-/* The minimum amount allowed to be sent - usually 1 (in ATOMIC units!) */
-const uint64_t minimumSend = 1;
 }  // namespace WalletConfig

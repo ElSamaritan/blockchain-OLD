@@ -1153,10 +1153,7 @@ uint32_t DatabaseBlockchainCache::getTopBlockIndex() const {
 }
 
 BlockVersion DatabaseBlockchainCache::getBlockVersionForHeight(uint32_t height) const {
-  UpgradeManager upgradeManager;
-  for (auto version : Xi::Config::BlockVersion::versions())
-    upgradeManager.addBlockVersion(version, currency.upgradeHeight(version));
-  return upgradeManager.getBlockVersion(height);
+  return currency.upgradeManager().getBlockVersion(height);
 }
 
 uint64_t DatabaseBlockchainCache::getCachedTransactionsCount() const {

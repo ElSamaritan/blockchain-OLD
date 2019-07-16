@@ -21,17 +21,62 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/Config/Registry.hpp"
 
-#include <CryptoNoteCore/HashAlgorithms.h>
+#include <iostream>
+#include <fstream>
+#include <utility>
 
-#include "Xi/Config/_Impl/BeginHashes.h"
+#include <Xi/Exceptions.hpp>
+#include <Serialization/SerializationTools.h>
 
-// clang-format off
-//                (_Index, _Version,                    _Algorithm)
-MakeHashCheckpoint(     0,        1,  ::CryptoNote::Hashes::CNX_v1)
-// clang-format on
+#include "AllConfigs.hpp"
 
-#define CURRENT_HASH_CHECKPOINT_INDEX 0
+std::map<std::string, Xi::Config::Configuration> Xi::Config::Registry::m_configs{};
+Xi::Concurrent::RecursiveLock Xi::Config::Registry::m_lock{};
 
-#include "Xi/Config/_Impl/EndHashes.h"
+int Xi::Config::Registry::addConfigJson(std::string_view name, std::string_view content) {
+  XI_CONCURRENT_RLOCK(m_lock);
+  XiEmbeddedConfigs::init();
+
+  if (searchByName(name) != nullptr) {
+    std::cerr << "Duplicate configuration for: " << name << std::endl;
+    exceptional<RuntimeError>();
+  }
+  Configuration config{};
+  std::string scontent{content};
+  if (!CryptoNote::loadFromJson(config, scontent)) {
+    std::cerr << "Loading configuration failed for: " << name << std::endl;
+    exceptional<RuntimeError>();
+  }
+  m_configs[std::string{name}] = std::move(config);
+  return 0;
+}
+
+bool Xi::Config::Registry::addConfigJsonFile(std::string_view name, std::string_view path) {
+  XI_CONCURRENT_RLOCK(m_lock);
+  XiEmbeddedConfigs::init();
+
+  std::string spath{path};
+  std::ifstream stream{spath, std::ios::in};
+  XI_RETURN_EC_IF_NOT(stream.good(), false);
+  std::string scontent((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+  try {
+    addConfigJson(name, scontent);
+    XI_RETURN_SC(true);
+  } catch (...) {
+    XI_RETURN_EC(false);
+  }
+}
+
+const Xi::Config::Configuration *Xi::Config::Registry::searchByName(std::string_view name) {
+  XI_CONCURRENT_RLOCK(m_lock);
+  XiEmbeddedConfigs::init();
+
+  std::string sname{name};
+  if (auto search = m_configs.find(sname); search != m_configs.end()) {
+    return std::addressof(search->second);
+  } else {
+    return nullptr;
+  }
+}

@@ -23,35 +23,28 @@
 
 #pragma once
 
+#include <string>
 #include <cinttypes>
 
-#include <Xi/Blockchain/Block/Version.hpp>
-
-#include "Xi/Config/BlockVersion.h"
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
 
 namespace Xi {
 namespace Config {
-namespace MinerReward {
-template <Blockchain::Block::Version::value_type>
-struct RewardCheckpoint;
-}
+
+namespace Coin {
+
+class AddressPrefix {
+ public:
+  XI_PROPERTY(std::string, text)
+  XI_PROPERTY(uint32_t, base58)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(text(), text)
+  KV_MEMBER_RENAME(base58(), base58)
+  KV_END_SERIALIZATION
+};
+
+}  // namespace Coin
 }  // namespace Config
 }  // namespace Xi
-
-#define MakeRewardCheckpoint(_Index, _Version, _Window, _Zone, _CutOff)                                           \
-  namespace Xi {                                                                                                  \
-  namespace Config {                                                                                              \
-  namespace MinerReward {                                                                                         \
-  template <>                                                                                                     \
-  struct RewardCheckpoint<_Index> {                                                                               \
-    static inline constexpr uint8_t index() { return _Index; }                                                    \
-    static inline constexpr Blockchain::Block::Version version() { return Blockchain::Block::Version{_Version}; } \
-    static inline constexpr uint32_t window() { return _Window; }                                                 \
-    static inline constexpr uint64_t fullRewardZone() { return _Zone; }                                           \
-    static inline constexpr uint64_t cutOff() { return _CutOff; }                                                 \
-    static_assert(::Xi::Config::BlockVersion::exists(Blockchain::Block::Version{_Version}),                       \
-                  "Non existing block version referenced.");                                                      \
-  };                                                                                                              \
-  }                                                                                                               \
-  }                                                                                                               \
-  }

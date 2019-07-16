@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -23,66 +23,50 @@
 
 #pragma once
 
-#include <cinttypes>
+#include <Xi/Global.hh>
+#include <Xi/Blockchain/Block/Height.hpp>
+#include <Serialization/ISerializer.h>
+#include <Serialization/OptionalSerialization.hpp>
 
-#include <Xi/Blockchain/Block/Version.hpp>
-
+#include "Xi/Config/MinerReward.h"
 #include "Xi/Config/StaticReward.h"
-
-#undef MakeStaticRewardCheckpoint
-
-#ifndef CURRENT_STATIC_REWARD_CHECKPOINT_INDEX
-#pragma error "CURRENT_STATIC_REWARD_CHECKPOINT_INDEX must be defines"
-#endif
+#include "Xi/Config/Limits.h"
+#include "Xi/Config/Time.h"
+#include "Xi/Config/Transaction.h"
+#include "Xi/Config/Difficulty.h"
+#include "Xi/Config/MergeMining.hpp"
 
 namespace Xi {
 namespace Config {
-namespace StaticReward {
+namespace Upgrade {
 
-struct StaticRewardCheckpointResolver {
-  template <Blockchain::Block::Version::value_type>
-  static inline uint64_t amount(Blockchain::Block::Version version);
+class Configuration {
+ public:
+  XI_PROPERTY(Blockchain::Block::Height, height)
+  XI_PROPERTY(bool, fork)
 
-  template <Blockchain::Block::Version::value_type>
-  static inline std::string address(Blockchain::Block::Version version);
+  XI_PROPERTY(std::optional<MinerReward::Configuration>, minerReward)
+  XI_PROPERTY(std::optional<StaticReward::Configuration>, staticReward)
+  XI_PROPERTY(std::optional<Time::Configuration>, time)
+  XI_PROPERTY(std::optional<Limits::Configuration>, limit)
+  XI_PROPERTY(std::optional<Transaction::Configuration>, transaction)
+  XI_PROPERTY(std::optional<Difficulty::Configuration>, difficulty)
+  XI_PROPERTY(std::optional<MergeMining::Configuration>, mergeMining)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(height(), height)
+  KV_MEMBER_RENAME(fork(), fork)
+
+  KV_MEMBER_RENAME(minerReward(), miner_reward)
+  KV_MEMBER_RENAME(staticReward(), static_reward)
+  KV_MEMBER_RENAME(time(), time)
+  KV_MEMBER_RENAME(limit(), limit)
+  KV_MEMBER_RENAME(transaction(), transaction)
+  KV_MEMBER_RENAME(difficulty(), difficulty)
+  KV_MEMBER_RENAME(mergeMining(), merge_mining)
+  KV_END_SERIALIZATION
 };
 
-template <>
-inline uint64_t StaticRewardCheckpointResolver::amount<0>(Blockchain::Block::Version) {
-  return StaticRewardCheckpoint<0>::amount();
-}
-template <Blockchain::Block::Version::value_type _Index>
-inline uint64_t StaticRewardCheckpointResolver::amount(Blockchain::Block::Version version) {
-  if (version >= StaticRewardCheckpoint<_Index>::version())
-    return StaticRewardCheckpoint<_Index>::amount();
-  else
-    return amount<_Index - 1>(version);
-}
-
-template <>
-inline std::string StaticRewardCheckpointResolver::address<0>(Blockchain::Block::Version) {
-  return StaticRewardCheckpoint<0>::address();
-}
-template <Blockchain::Block::Version::value_type _Index>
-inline std::string StaticRewardCheckpointResolver::address(Blockchain::Block::Version version) {
-  if (version >= StaticRewardCheckpoint<_Index>::version())
-    return StaticRewardCheckpoint<_Index>::address();
-  else
-    return address<_Index - 1>(version);
-}
-
-inline uint64_t amount(Blockchain::Block::Version version) {
-  return StaticRewardCheckpointResolver::amount<CURRENT_STATIC_REWARD_CHECKPOINT_INDEX>(version);
-}
-
-inline std::string address(Blockchain::Block::Version version) {
-  return StaticRewardCheckpointResolver::address<CURRENT_STATIC_REWARD_CHECKPOINT_INDEX>(version);
-}
-
-inline bool isEnabled(Blockchain::Block::Version version) { return !address(version).empty() && amount(version) > 0; }
-
-}  // namespace StaticReward
+}  // namespace Upgrade
 }  // namespace Config
 }  // namespace Xi
-
-#undef CURRENT_STATIC_REWARD_CHECKPOINT_INDEX

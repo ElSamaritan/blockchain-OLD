@@ -282,7 +282,7 @@ std::tuple<std::string, std::string> decodeIntegratedAddress(const std::string& 
   }
 
   /* The prefix needs to be the same as the base58 prefix */
-  if (prefix != Xi::Config::Coin::addressBas58Prefix()) {
+  if (prefix != currency.coin().prefix().base58()) {
     throw std::system_error(make_error_code(CryptoNote::error::BAD_ADDRESS));
   }
 
@@ -475,11 +475,11 @@ void WalletService::getNodeFee() {
 
   if (!m_node_address.empty() && m_node_fee != 0) {
     // Partially borrowed from <Tools.h>
-    uint64_t div = Xi::pow64(10, currency.numberOfDecimalPlaces());
+    uint64_t div = Xi::pow64(10, currency.coin().decimals());
     uint64_t coins = m_node_fee / div;
     uint64_t cents = m_node_fee % div;
     std::stringstream stream;
-    stream << std::setfill('0') << std::setw(static_cast<std::streamsize>(currency.numberOfDecimalPlaces())) << cents;
+    stream << std::setfill('0') << std::setw(static_cast<std::streamsize>(currency.coin().decimals())) << cents;
     std::string amount = std::to_string(coins) + "." + stream.str();
 
     logger(Logging::Info, Logging::RED) << "You have connected to a node that charges "
@@ -1381,7 +1381,7 @@ std::error_code WalletService::createIntegratedAddress(const std::string& addres
   std::string keys = Common::asString(ba);
 
   /* Encode prefix + paymentID + keys as an address */
-  integratedAddress = Tools::Base58::encode_addr(Xi::Config::Coin::addressBas58Prefix(), paymentId + keys);
+  integratedAddress = Tools::Base58::encode_addr(wallet.currency().coin().prefix().base58(), paymentId + keys);
 
   return std::error_code();
 }

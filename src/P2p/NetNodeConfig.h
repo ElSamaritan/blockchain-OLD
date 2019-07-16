@@ -11,7 +11,7 @@
 #include <string>
 #include <chrono>
 
-#include <Xi/Config/NetworkType.h>
+#include <Xi/Config/Network.h>
 
 #include "P2pProtocolTypes.h"
 
@@ -20,13 +20,13 @@ namespace CryptoNote {
 class NetNodeConfig {
  public:
   NetNodeConfig();
-  bool init(const std::string interface, const int port, const int external, const bool localIp, const bool hidePort,
-            const std::string dataDir, const std::vector<std::string> addPeers,
+  bool init(const Xi::Config::Network::Configuration& netConfig, const std::string& coinName,
+            const std::string interface, const uint16_t port, const uint16_t externalPort, const bool localIp,
+            const bool hidePort, const std::string dataDir, const std::vector<std::string> addPeers,
             const std::vector<std::string> addExclusiveNodes, const std::vector<std::string> addPriorityNodes,
             const std::vector<std::string> addSeedNodes);
 
   std::string getP2pStateFilename() const;
-  Xi::Config::Network::Type getNetwork() const;
   std::string getBindIp() const;
   uint16_t getBindPort() const;
   uint16_t getExternalPort() const;
@@ -39,6 +39,8 @@ class NetNodeConfig {
   std::string getConfigFolder() const;
   std::chrono::seconds getBlockDuration() const;
   bool getAutoBlock() const;
+  const std::string& appIdentifier() const;
+  const Xi::Config::Network::Configuration& network() const;
 
   void setP2pStateFilename(const std::string& filename);
   void setNetwork(Xi::Config::Network::Type network);
@@ -67,9 +69,10 @@ class NetNodeConfig {
   bool hideMyPort;
   std::string configFolder;
   std::string p2pStateFilename;
-  Xi::Config::Network::Type m_network;
   std::chrono::seconds m_blockDuration;
   bool m_autoBlock;
+  std::string m_appid;
+  Xi::Config::Network::Configuration m_netConfig;
 };
 
 }  // namespace CryptoNote

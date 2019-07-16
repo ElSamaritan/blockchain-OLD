@@ -9,6 +9,7 @@
 #include "DaemonCommandsHandler.h"
 
 #include <Logging/LoggerMessage.h>
+#include <Logging/ConsoleLogger.h>
 
 #include "Common/ScopeExit.h"
 #include "Common/SignalHandler.h"
@@ -35,7 +36,7 @@
 
 #include <Xi/Algorithm/String.h>
 #include <Xi/FileSystem.h>
-#include <Xi/Config/Checkpoints.h>
+#include <CryptoNoteCore/Checkpoints.h>
 
 #include <Logging/LoggerManager.h>
 
@@ -51,36 +52,35 @@ using namespace CryptoNote;
 using namespace Logging;
 using namespace boost::filesystem;
 
-void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, LoggerManager& logManager) {
+void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const CurrencyBuilder& currency,
+                          ILogger& logManager) {
+  Logging::LoggerRef logger{logManager, "GenesisTX"};
   std::vector<CryptoNote::AccountPublicAddress> rewardTargets;
-  CryptoNote::CurrencyBuilder currencyBuilder(logManager);
 
   for (const auto& rewardAddress : rewardAddresses) {
     CryptoNote::AccountPublicAddress address;
     uint64_t prefix = 0;
     if (!parseAccountAddressString(prefix, address, rewardAddress) ||
-        prefix != Xi::Config::Coin::addressBas58Prefix()) {
-      std::cout << "Failed to parse genesis reward address: " << rewardAddress << std::endl;
+        prefix != currency.immediateState().coin().prefix().base58()) {
+      logger(Logging::Fatal) << "Failed to parse genesis reward address: " << rewardAddress << std::endl;
       return;
     }
     rewardTargets.emplace_back(std::move(address));
   }
   CryptoNote::Transaction transaction;
   if (rewardTargets.empty()) {
-    if (Xi::Config::Coin::amountOfPremine() > 0) {
-      std::cout << "Error: Genesis Block Reward Addresses are not defined" << std::endl;
+    if (currency.immediateState().coin().premine() > 0) {
+      logger(Logging::Fatal) << "Genesis Block Reward Addresses are not defined" << std::endl;
       return;
     }
-    transaction = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction();
+    transaction = currency.generateGenesisTransaction();
   } else {
-    transaction = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction(rewardTargets);
+    transaction = currency.generateGenesisTransaction(rewardTargets);
   }
   auto transactionBlob = CryptoNote::toBinaryArray(transaction);
   std::string transactionHex = Common::toHex(transactionBlob);
-  std::cout << CommonCLI::header() << std::endl
-            << std::endl
-            << "Replace the current genesisTransactionHash line in src/Xi/Config/Coin.h with this one:" << std::endl
-            << "\"" << transactionHex << "\";" << std::endl;
+  std::cout << "Replace the current genesis_transaction propertiy in your config file with this one:" << std::endl
+            << "\"" << transactionHex << "\"" << std::endl;
 
   return;
 }
@@ -133,7 +133,9 @@ int main(int argc, char* argv[]) {
   handleSettings(argc, argv, config);
   if (config.printGenesisTx)  // Do we weant to generate the Genesis Tx?
   {
-    print_genesis_tx_hex(config.genesisAwardAddresses, logManager);
+    ConsoleLogger clog{Level::Trace};
+    auto currency = config.makeCurrency(clog).takeOrThrow();
+    print_genesis_tx_hex(config.genesisAwardAddresses, currency, logManager);
     exit(0);
   }
 
@@ -152,16 +154,18 @@ int main(int argc, char* argv[]) {
   // Load in the CLI specified parameters again to overwrite anything from the config file
   handleSettings(argc, argv, config);
 
+  auto currency = config.makeCurrency(logManager).takeOrThrow().currency();
+
   if (config.dumpConfig) {
-    std::cout << CommonCLI::header() << asString(config) << std::endl;
+    std::cout << CommonCLI::header(currency) << asString(config) << std::endl;
     exit(0);
   } else if (!config.outputFile.empty()) {
     try {
       asFile(config, config.outputFile);
-      std::cout << CommonCLI::header() << "Configuration saved to: " << config.outputFile << std::endl;
+      std::cout << CommonCLI::header(currency) << "Configuration saved to: " << config.outputFile << std::endl;
       exit(0);
     } catch (std::exception& e) {
-      std::cout << CommonCLI::header() << "Could not save configuration to: " << config.outputFile << std::endl
+      std::cout << CommonCLI::header(currency) << "Could not save configuration to: " << config.outputFile << std::endl
                 << e.what() << std::endl;
       exit(1);
     }
@@ -185,26 +189,11 @@ int main(int argc, char* argv[]) {
 
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-    logger(Info) << CommonCLI::header(true) << std::endl;
+    logger(Info) << CommonCLI::header(currency, true) << std::endl;
     if (config.ssl.isInsecure(::Xi::Http::SSLConfiguration::Usage::Server)) {
       logger(Warning) << "\n" << CommonCLI::insecureServerWarning() << std::endl;
     }
     logger(Info) << "Program Working Directory: " << argv[0];
-
-    // create objects and link them
-    CryptoNote::CurrencyBuilder currencyBuilder(logManager);
-    // clang-format off
-    currencyBuilder
-      .network(config.network);
-    // clang-format on
-    try {
-      currencyBuilder.currency();
-    } catch (std::exception&) {
-      std::cout << "genesisTransactionHash() constant has an incorrect value. Please launch: "
-                << "xi-daemon --print-genesis-tx" << std::endl;
-      return 1;
-    }
-    CryptoNote::Currency currency = currencyBuilder.currency();
 
     bool use_checkpoints = !config.checkPoints.empty();
 
@@ -212,10 +201,10 @@ int main(int argc, char* argv[]) {
     if (use_checkpoints) {
       logger(Info) << "Loading Checkpoints for faster initial sync...";
       if (config.checkPoints == "default") {
-        for (const auto& cp : Xi::Config::CHECKPOINTS) {
+        for (const auto& cp : currency.integratedCheckpoints()) {
           checkpoints.addCheckpoint(cp.index, cp.blockId);
         }
-        logger(Info) << "Loaded " << Xi::Config::CHECKPOINTS.size() << " default checkpoints";
+        logger(Info) << "Loaded " << currency.integratedCheckpoints().size() << " default checkpoints";
       } else {
         bool results = checkpoints.loadCheckpointsFromFile(config.checkPoints);
         if (!results) {
@@ -224,18 +213,19 @@ int main(int argc, char* argv[]) {
       }
     }
 
+    config.dataDirectory += std::string{"/"} + currency.networkUniqueName();
+    Xi::FileSystem::ensureDirectoryExists(config.dataDirectory).throwOnError();
+
     NetNodeConfig netNodeConfig;
-    netNodeConfig.setNetwork(config.network);
     netNodeConfig.setBlockDuration(std::chrono::minutes{std::max<int64_t>(0, config.p2pBanDurationMinutes)});
     netNodeConfig.setAutoBlock(config.p2pAutoBan);
-    netNodeConfig.init(config.p2pInterface, config.p2pPort, config.p2pExternalPort, config.localIp, config.hideMyPort,
-                       config.dataDirectory, config.peers, config.exclusiveNodes, config.priorityNodes,
-                       config.seedNodes);
+    netNodeConfig.init(currency.network(), currency.coin().name(), config.p2pInterface, config.p2pPort,
+                       config.p2pExternalPort, config.localIp, config.hideMyPort, config.dataDirectory, config.peers,
+                       config.exclusiveNodes, config.priorityNodes, config.seedNodes);
 
     DataBaseConfig dbConfig;
     dbConfig.init(config.dataDirectory, config.dbThreads, config.dbMaxOpenFiles, config.dbWriteBufferSize,
                   config.dbReadCacheSize);
-    dbConfig.setNetwork(config.network);
     dbConfig.setCompression(config.dbCompression);
     Xi::FileSystem::ensureDirectoryExists(dbConfig.getDataDir()).throwOnError();
 
@@ -286,7 +276,7 @@ int main(int argc, char* argv[]) {
     // ------------------------------------------ Transaction Pool
 
     CryptoNote::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
-    CryptoNote::NodeServer p2psrv(dispatcher, config.network, cprotocol, logManager);
+    CryptoNote::NodeServer p2psrv(dispatcher, currency.network(), cprotocol, logManager);
     auto rpcServer = std::make_shared<CryptoNote::RpcServer>(dispatcher, logManager, ccore, p2psrv, cprotocol);
     if (!config.enableCors.empty()) rpcServer->enableCors(config.enableCors);
 

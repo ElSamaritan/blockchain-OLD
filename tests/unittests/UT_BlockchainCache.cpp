@@ -48,7 +48,7 @@ class CryptoNote_BlockchainCache : public ::testing::Test {
     using namespace CryptoNote;
 
     Xi::FileSystem::removeFileIfExists(filename).throwOnError();
-    currency = std::make_unique<Currency>(CurrencyBuilder{logger}.currency());
+    currency = std::make_unique<Currency>(CurrencyBuilder{logger}.network("UnitTests.Network").currency());
     cache = std::make_unique<BlockchainCache>(filename, *currency, logger, nullptr);
     ASSERT_NE(cache.get(), nullptr);
   }
@@ -73,7 +73,7 @@ class CryptoNote_DatabaseBlockchainCache : public ::testing::Test {
 
     Xi::FileSystem::removeDircetoryIfExists(dir).throwOnError();
     Xi::FileSystem::ensureDirectoryExists(dir).throwOnError();
-    currency = std::make_unique<Currency>(CurrencyBuilder{logger}.currency());
+    currency = std::make_unique<Currency>(CurrencyBuilder{logger}.network("UnitTests.Network").currency());
     CryptoNote::DataBaseConfig config{};
     config.setDataDir(dir);
     database = std::make_unique<CryptoNote::RocksDBWrapper>(logger);

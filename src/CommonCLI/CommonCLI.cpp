@@ -60,20 +60,20 @@ Xi::CrashHandlerConfig BreakpadConfig;
 }
 #endif  // XI_USE_BREAKPAD
 
-std::string CommonCLI::header(bool colored) {
+std::string CommonCLI::header(const CryptoNote::Currency& currency, bool colored) {
   std::stringstream programHeader;
   programHeader << std::endl
                 << Xi::Config::asciiArt(colored) << std::endl
-                << " " << Xi::Config::Coin::name() << " v" << APP_VERSION << " (" << BUILD_COMMIT_ID << ")" << std::endl
+                << " " << currency.coin().name() << " v" << APP_VERSION << " (" << BUILD_COMMIT_ID << ")" << std::endl
                 << " This software is distributed under the General Public License v3.0" << std::endl
                 << std::endl
                 << " " << PROJECT_COPYRIGHT << std::endl
                 << std::endl
                 << " Additional Copyright(s) may apply, please see the included LICENSE file for more information."
                 << std::endl;
-  if (!Xi::Config::Coin::licenseUrl().empty()) {
+  if (!currency.general().licenseUrl().empty()) {
     programHeader << " If you did not receive a copy of the LICENSE, please visit:" << std::endl
-                  << " " << Xi::Config::Coin::licenseUrl() << std::endl
+                  << " " << currency.general().licenseUrl() << std::endl
                   << std::endl;
   }
 
@@ -175,11 +175,10 @@ bool CommonCLI::handleCLIOptions(const cxxopts::Options& options, const cxxopts:
     std::cout << Xi::Version::thirdPartyLicense() << std::endl;
     return true;
   } else if (result.count("os-version")) {
-    std::cout << CommonCLI::header() << "OS: " << Tools::get_os_version_string() << std::endl;
+    std::cout << "OS: " << Tools::get_os_version_string() << std::endl;
     return true;
   } else if (isDevVersion() && (result.count("dev-mode") == 0)) {
-    std::cout << header()
-              << "\n You are using a development version and did not provide the --dev-mode flag. Exiting..."
+    std::cout << "\n You are using a development version and did not provide the --dev-mode flag. Exiting..."
               << std::endl;
     return true;
   } else {

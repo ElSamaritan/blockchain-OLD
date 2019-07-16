@@ -100,9 +100,10 @@ void balance(CryptoNote::INode &node, CryptoNote::WalletGreen &wallet, bool view
   const auto remoteHeight = node.getLastKnownBlockHeight();
   const auto walletHeight = CryptoNote::BlockHeight::fromSize(wallet.getBlockCount());
 
-  std::cout << "Available balance: " << SuccessMsg(formatAmount(confirmedBalance)) << std::endl
-            << "Locked (unconfirmed) balance: " << WarningMsg(formatAmount(unconfirmedBalance)) << std::endl
-            << "Total balance: " << InformationMsg(formatAmount(totalBalance)) << std::endl;
+  std::cout << "Available balance: " << SuccessMsg(wallet.currency().amountFormatter()(confirmedBalance)) << std::endl
+            << "Locked (unconfirmed) balance: " << WarningMsg(wallet.currency().amountFormatter()(unconfirmedBalance))
+            << std::endl
+            << "Total balance: " << InformationMsg(wallet.currency().amountFormatter()(totalBalance)) << std::endl;
 
   if (viewWallet) {
     std::cout << std::endl
@@ -211,14 +212,14 @@ void printSyncSummary(CryptoNote::BlockHeight localHeight, CryptoNote::BlockHeig
 
 void printPeerCount(size_t peerCount) { std::cout << "Peers: " << SuccessMsg(std::to_string(peerCount)) << std::endl; }
 
-void printHashrate(uint64_t difficulty) {
+void printHashrate(uint64_t difficulty, const CryptoNote::Currency &currency) {
   /* Offline node / not responding */
   if (difficulty == 0) {
     return;
   }
 
   /* Hashrate is difficulty divided by block target time */
-  uint32_t hashrate = static_cast<uint32_t>(round(difficulty / Xi::Config::Time::blockTimeSeconds()));
+  uint32_t hashrate = static_cast<uint32_t>(round(difficulty / currency.coin().blockTime()));
 
   std::cout << "Network hashrate: " << SuccessMsg(Common::get_mining_speed(hashrate))
             << " (Based on the last local block)" << std::endl;
@@ -243,7 +244,7 @@ void status(CryptoNote::INode &node, CryptoNote::WalletGreen &wallet) {
   std::cout << std::endl;
 
   /* Print the network hashrate, based on the last local block */
-  printHashrate(node.getLastLocalBlockHeaderInfo().difficulty);
+  printHashrate(node.getLastLocalBlockHeaderInfo().difficulty, wallet.currency());
 
   /* Print the amount of peers we have */
   printPeerCount(node.getPeerCount());
@@ -307,7 +308,8 @@ void saveCSV(CryptoNote::WalletGreen &wallet, CryptoNote::INode &node) {
       continue;
     }
 
-    const std::string amount = formatAmountBasic(static_cast<uint64_t>(std::abs(t.totalAmount)));
+    const std::string amount =
+        wallet.currency().amountFormatter()(static_cast<uint64_t>(std::abs(t.totalAmount)), false);
     const std::string direction = t.totalAmount > 0 ? "IN" : "OUT";
 
     csv << unixTimeToDate(t.timestamp) << "," /* Timestamp */
@@ -370,9 +372,9 @@ void printOutgoingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
   }
   printUnlockTime(t, node.currency(), node.getLastKnownBlockHeight(), false, "    Unlock        ");
 
-  std::cout << WarningMsg("    Spent         " + formatAmount(absTotalAmount - t.fee)) << std::endl
-            << WarningMsg("    Fee           " + formatAmount(t.fee)) << std::endl
-            << WarningMsg("    Total Spent   " + formatAmount(absTotalAmount)) << std::endl;
+  std::cout << WarningMsg("    Spent         " + node.currency().amountFormatter()(absTotalAmount - t.fee)) << std::endl
+            << WarningMsg("    Fee           " + node.currency().amountFormatter()(t.fee)) << std::endl
+            << WarningMsg("    Total Spent   " + node.currency().amountFormatter()(absTotalAmount)) << std::endl;
 
   const std::string paymentID = getPaymentIDFromExtra(t.extra);
 
@@ -397,7 +399,7 @@ void printIncomingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
   }
   printUnlockTime(t, node.currency(), node.getLastKnownBlockHeight(), true, "    Unlock        ");
 
-  std::cout << SuccessMsg("    Amount        " + formatAmount(absTotalAmount)) << std::endl;
+  std::cout << SuccessMsg("    Amount        " + node.currency().amountFormatter()(absTotalAmount)) << std::endl;
 
   const std::string paymentID = getPaymentIDFromExtra(t.extra);
 
@@ -428,12 +430,15 @@ void listTransfers(bool incoming, bool outgoing, CryptoNote::WalletGreen &wallet
 
   if (incoming) {
     assert(totalReceived >= 0);
-    std::cout << SuccessMsg("Total received: " + formatAmount(static_cast<uint64_t>(totalReceived))) << std::endl;
+    std::cout << SuccessMsg("Total received: " +
+                            node.currency().amountFormatter()(static_cast<uint64_t>(totalReceived)))
+              << std::endl;
   }
 
   if (outgoing) {
     assert(totalSpent >= 0);
-    std::cout << WarningMsg("Total spent: " + formatAmount(static_cast<uint64_t>(totalSpent))) << std::endl;
+    std::cout << WarningMsg("Total spent: " + node.currency().amountFormatter()(static_cast<uint64_t>(totalSpent)))
+              << std::endl;
   }
 }
 
@@ -443,7 +448,7 @@ void save(CryptoNote::WalletGreen &wallet) {
   std::cout << InformationMsg("Saved.") << std::endl;
 }
 
-void createIntegratedAddress() {
+void createIntegratedAddress(const CryptoNote::Currency &currency) {
   std::cout << InformationMsg("Creating an integrated address from an ")
             << InformationMsg("address and payment ID pair...") << std::endl
             << std::endl;
@@ -459,7 +464,7 @@ void createIntegratedAddress() {
 
     std::cout << std::endl;
 
-    if (parseStandardAddress(address, true)) {
+    if (parseStandardAddress(address, currency, true)) {
       break;
     }
   }
@@ -487,14 +492,14 @@ void createIntegratedAddress() {
     break;
   }
 
-  std::cout << InformationMsg(createIntegratedAddress(address, paymentID)) << std::endl;
+  std::cout << InformationMsg(createIntegratedAddress(address, currency, paymentID)) << std::endl;
 }
 
 void help(std::shared_ptr<WalletInfo> wallet) {
   if (wallet->viewWallet) {
-    printCommands(basicViewWalletCommands());
+    printCommands(basicViewWalletCommands(wallet->currency()));
   } else {
-    printCommands(basicCommands());
+    printCommands(basicCommands(wallet->currency()));
   }
 }
 
@@ -502,9 +507,10 @@ void advanced(std::shared_ptr<WalletInfo> wallet) {
   /* We pass the offset of the command to know what index to print for
      command numbers */
   if (wallet->viewWallet) {
-    printCommands(advancedViewWalletCommands(), static_cast<int>(basicViewWalletCommands().size()));
+    printCommands(advancedViewWalletCommands(wallet->currency()),
+                  static_cast<int>(basicViewWalletCommands(wallet->currency()).size()));
   } else {
-    printCommands(advancedCommands(), static_cast<int>(basicCommands().size()));
+    printCommands(advancedCommands(wallet->currency()), static_cast<int>(basicCommands(wallet->currency()).size()));
   }
 }
 

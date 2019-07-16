@@ -26,31 +26,15 @@
 #include <string>
 
 #include <Xi/Algorithm/Math.h>
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
 
 #include "Xi/Config/NetworkType.h"
+#include "Xi/Config/AddressPrefix.hpp"
 
 namespace Xi {
 namespace Config {
 namespace Coin {
-inline std::string name() { return "Galaxia"; }
-inline std::string ticker() { return "GLX"; }
-inline std::string addressPrefix() { return "gxi"; }
-inline constexpr uint32_t addressBas58Prefix() { return 0x1cf46e; }
-constexpr uint8_t numberOfDecimalPoints() { return 6; }
-constexpr uint64_t toAtomicUnits(uint64_t coins) { return coins * Xi::pow(10, numberOfDecimalPoints()); }
-constexpr uint64_t totalSupply() { return toAtomicUnits(55_M); }
-constexpr uint64_t amountOfPremine() { return toAtomicUnits(1100_k); }
-constexpr uint64_t minimumFee() { return 1000; }
-constexpr uint32_t emissionSpeed() { return 21; }
-
-inline std::string homepage() { return "https://galaixia-project.com"; }
-inline std::string description() { return "An evolving framework for blockchain-based applications."; }
-inline std::string copyright() { return "(c) 2018-2019 Xi Project Developers"; }
-inline std::string contactUrl() { return "https://chat.galaxia-project.com"; }
-inline std::string licenseUrl() { return "https://gitlab.com/galaxia-project/blockchain/blob/develop/LICENSE"; }
-inline std::string downloadUrl() { return "https://releases.galaxia-project.com"; }
-
-uint64_t genesisTimestamp(Xi::Config::Network::Type network);
 
 /*
  * How to generate a premine:
@@ -63,9 +47,45 @@ uint64_t genesisTimestamp(Xi::Config::Network::Type network);
  * - Recompile, setup your seed nodes, and start mining
  * - You should see your premine appear in the previously generated wallet.
  */
-std::string genesisTransactionBlob(Network::Type network);
 
-static_assert(emissionSpeed() <= 8 * sizeof(uint64_t), "Bad emission speed.");
+class Configuration {
+ public:
+  XI_PROPERTY(std::string, name)
+  XI_PROPERTY(std::string, ticker)
+  XI_PROPERTY(AddressPrefix, prefix)
+
+  XI_PROPERTY(uint8_t, decimals)
+  XI_PROPERTY(uint64_t, totalSupply)
+  XI_PROPERTY(uint64_t, premine)
+
+  XI_PROPERTY(uint16_t, blockTime)
+  XI_PROPERTY(uint32_t, rewardUnlockTime)
+  XI_PROPERTY(uint32_t, emissionSpeed)
+
+  XI_PROPERTY(uint64_t, startTimestamp)
+  XI_PROPERTY(std::string, genesisTransaction)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(name(), name)
+  KV_MEMBER_RENAME(ticker(), ticker)
+  KV_MEMBER_RENAME(prefix(), prefix)
+
+  KV_MEMBER_RENAME(decimals(), decimals)
+  KV_MEMBER_RENAME(totalSupply(), total_supply)
+  KV_MEMBER_RENAME(premine(), premine)
+
+  KV_MEMBER_RENAME(blockTime(), block_time)
+  KV_MEMBER_RENAME(rewardUnlockTime(), reward_unlock_time)
+  KV_MEMBER_RENAME(emissionSpeed(), emission_speed)
+  XI_RETURN_EC_IF_NOT(emissionSpeed() <= 8 * sizeof(uint64_t), false);
+
+  KV_MEMBER_RENAME(startTimestamp(), start_timestamp)
+  KV_MEMBER_RENAME(genesisTransaction(), genesis_transaction)
+  KV_END_SERIALIZATION
+
+  uint32_t expectedBlocksPerDay() const { return (24ULL * 60ULL * 60ULL) / blockTime(); }
+};
+
 }  // namespace Coin
 }  // namespace Config
 }  // namespace Xi

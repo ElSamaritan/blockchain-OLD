@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -54,7 +54,7 @@ TransactionBuilder::TransactionBuilder() {
   TransactionExtraPublicKey pk = {txKeys.publicKey};
   extra.set(pk);
 
-  transaction.version = Xi::Config::Transaction::version();
+  transaction.version = 1;
   transaction.unlockTime = 0;
   transaction.extra = extra.serialize();
   transaction.signatures = TransactionSignatureCollection{};

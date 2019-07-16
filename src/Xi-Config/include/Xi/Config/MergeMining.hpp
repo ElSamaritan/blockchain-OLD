@@ -23,38 +23,29 @@
 
 #pragma once
 
-#include <vector>
 #include <cinttypes>
-#include <chrono>
 
-#include <Xi/Blockchain/Block/Version.hpp>
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
+#include <Serialization/SerializationOverloads.h>
 
-#include "CryptoNoteCore/Difficulty.h"
-#include "Xi/Config/BlockVersion.h"
+#include "Xi/Config/VersionContainer.hpp"
 
 namespace Xi {
 namespace Config {
-namespace Difficulty {
-template <Blockchain::Block::Version::value_type _Index>
-struct DifficultyCheckpoint;
-}
+namespace MergeMining {
+
+class Configuration {
+ public:
+  XI_PROPERTY(uint64_t, maximum)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(maximum(), max)
+  KV_END_SERIALIZATION
+};
+
+using Container = VersionContainer<MergeMining::Configuration>;
+
+}  // namespace MergeMining
 }  // namespace Config
 }  // namespace Xi
-
-#define MakeDifficultyCheckpoint(_Index, _Version, _Window, _Initial, _Algorithm)                                 \
-  namespace Xi {                                                                                                  \
-  namespace Config {                                                                                              \
-  namespace Difficulty {                                                                                          \
-  template <>                                                                                                     \
-  struct DifficultyCheckpoint<_Index> {                                                                           \
-    static inline constexpr uint8_t index() { return _Index; }                                                    \
-    static inline constexpr Blockchain::Block::Version version() { return Blockchain::Block::Version{_Version}; } \
-    static inline constexpr uint32_t windowSize() { return _Window; }                                             \
-    static inline constexpr uint64_t initialValue() { return _Initial; }                                          \
-    using algorithm = _Algorithm;                                                                                 \
-    static_assert(::Xi::Config::BlockVersion::exists(Blockchain::Block::Version{_Version}),                       \
-                  "Non existing block version referenced.");                                                      \
-  };                                                                                                              \
-  }                                                                                                               \
-  }                                                                                                               \
-  }

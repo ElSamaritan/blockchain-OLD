@@ -1231,11 +1231,7 @@ uint32_t BlockchainCache::getBlockIndexContainingTx(const Crypto::Hash& transact
 }
 
 BlockVersion BlockchainCache::getBlockVersionForHeight(uint32_t height) const {
-  // TODO this only changes during compile time
-  UpgradeManager upgradeManager;
-  for (auto version : Xi::Config::BlockVersion::versions())
-    upgradeManager.addBlockVersion(version, currency.upgradeHeight(version));
-  return upgradeManager.getBlockVersion(height);
+  return currency.upgradeManager().getBlockVersion(height);
 }
 
 void BlockchainCache::fixChildrenParent(IBlockchainCache* p) {

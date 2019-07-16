@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -122,7 +122,7 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
     tx.signatures = TransactionSignatureCollection{};
     auto& signatures = std::get<TransactionSignatureCollection>(tx.signatures);
 
-    tx.version = Xi::Config::Transaction::version();
+    tx.version = 1;
     tx.unlockTime = unlock_time;
 
     tx.extra = extra;

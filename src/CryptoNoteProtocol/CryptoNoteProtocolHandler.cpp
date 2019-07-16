@@ -212,6 +212,8 @@ void CryptoNoteProtocolHandler::log_connections() {
   m_logger(Info) << "Connections: " << ENDL << ss.str();
 }
 
+std::string CryptoNoteProtocolHandler::updateDownloadUrl() const { return m_currency.general().downloadUrl(); }
+
 BlockHeight CryptoNoteProtocolHandler::get_current_blockchain_height() {
   return BlockHeight::fromIndex(m_core.getTopBlockIndex());
 }
@@ -239,11 +241,11 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
     auto diff = remoteHeight - currentHeight;
 
     /* Find out how many days behind/ahead we are from the remote height */
-    uint64_t days = static_cast<uint64_t>(std::abs(diff.native())) / (24 * 60 * 60 / m_currency.difficultyTarget());
+    uint64_t days = static_cast<uint64_t>(std::abs(diff.native())) / (24 * 60 * 60 / m_currency.coin().blockTime());
 
     std::stringstream ss;
 
-    ss << "Your " << Xi::Config::Coin::name() << " node is syncing with the network ";
+    ss << "Your " << m_core.currency().coin().name() << " node is syncing with the network ";
 
     /* We're behind the remote node */
     if (diff >= BlockOffset::fromNative(0)) {
@@ -752,8 +754,7 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized() {
   bool val_expected = false;
   if (m_synchronized.compare_exchange_strong(val_expected, true)) {
     m_logger(Logging::Info) << ENDL;
-    m_logger(Info, BRIGHT_MAGENTA) << "===[ " + std::string(Xi::Config::Coin::name()) +
-                                          " Tip! ]============================="
+    m_logger(Info, BRIGHT_MAGENTA) << "===[ " + m_core.currency().coin().name() + " Tip! ]============================="
                                    << ENDL;
     m_logger(Info) << " Always exit " + WalletConfig::daemonName + " and " + WalletConfig::walletName +
                           " with the \"exit\" command to preserve your chain and wallet data."
@@ -762,7 +763,7 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized() {
     m_logger(Info) << " Use the \"backup\" command in " + WalletConfig::walletName +
                           " to display your keys/seed for restoring a corrupted wallet."
                    << ENDL;
-    m_logger(Info) << " If you need more assistance, you can contact us for support at " + WalletConfig::contactLink
+    m_logger(Info) << " If you need more assistance, you can contact us for support at " + m_core.currency().general().contactUrl()
                    << ENDL;
     m_logger(Info, BRIGHT_MAGENTA) << "===================================================" << ENDL << ENDL;
 

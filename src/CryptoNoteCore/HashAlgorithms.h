@@ -23,14 +23,41 @@
 
 #pragma once
 
+#include <memory>
+#include <string_view>
+#include <string>
+#include <vector>
+
 #include <Xi/Byte.hh>
 
 #include "CryptoNoteCore/CachedBlock.h"
 
 namespace CryptoNote {
 namespace Hashes {
-struct CNX_v1 {
-  void operator()(Xi::ConstByteSpan blob, Crypto::Hash& hash) const;
+
+struct IProofOfWorkAlgorithm {
+  virtual ~IProofOfWorkAlgorithm() = default;
+
+  virtual void operator()(Xi::ConstByteSpan blob, Crypto::Hash& hash) const = 0;
 };
+
+struct CNX_v1 : IProofOfWorkAlgorithm {
+  ~CNX_v1() override = default;
+  void operator()(Xi::ConstByteSpan blob, Crypto::Hash& hash) const override;
+};
+
+struct Sha2_256 : IProofOfWorkAlgorithm {
+  ~Sha2_256() override = default;
+  void operator()(Xi::ConstByteSpan blob, Crypto::Hash& hash) const override;
+};
+
+struct Keccak : IProofOfWorkAlgorithm {
+  ~Keccak() override = default;
+  void operator()(Xi::ConstByteSpan blob, Crypto::Hash& hash) const override;
+};
+
+std::shared_ptr<IProofOfWorkAlgorithm> makeProofOfWorkAlgorithm(std::string_view id);
+std::vector<std::string> supportedProofOfWorkAlgorithms();
+
 }  // namespace Hashes
 }  // namespace CryptoNote

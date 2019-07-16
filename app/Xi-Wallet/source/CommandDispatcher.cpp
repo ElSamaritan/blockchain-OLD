@@ -34,7 +34,7 @@ bool handleCommand(const std::string command, std::shared_ptr<WalletInfo> wallet
   }
   /* Advanced commands */
   else if (command == "ab_add") {
-    addToAddressBook();
+    addToAddressBook(walletInfo->currency());
   } else if (command == "ab_delete") {
     deleteFromAddressBook();
   } else if (command == "ab_list") {
@@ -44,7 +44,7 @@ bool handleCommand(const std::string command, std::shared_ptr<WalletInfo> wallet
   } else if (command == "change_password") {
     changePassword(walletInfo);
   } else if (command == "make_integrated_address") {
-    createIntegratedAddress();
+    createIntegratedAddress(walletInfo->currency());
   } else if (command == "incoming_transfers") {
     listTransfers(true, false, walletInfo->wallet, node);
   } else if (command == "list_transfers") {

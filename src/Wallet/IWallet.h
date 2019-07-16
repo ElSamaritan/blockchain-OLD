@@ -150,6 +150,8 @@ class IWallet {
   virtual void deleteAddress(const std::string& address) = 0;
 
   virtual const CryptoNote::Currency& currency() const = 0;
+  virtual const CryptoNote::BlockVersion lastKnownBlockVersion() const = 0;
+
   virtual uint64_t getActualBalance() const = 0;
   virtual uint64_t getActualBalance(const std::string& address) const = 0;
   virtual uint64_t getPendingBalance() const = 0;

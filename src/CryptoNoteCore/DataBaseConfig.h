@@ -36,7 +36,6 @@ class DataBaseConfig {
   uint32_t getMaxOpenFiles() const;
   uint64_t getWriteBufferSize() const;  // Bytes
   uint64_t getReadCacheSize() const;    // Bytes
-  Xi::Config::Network::Type getNetwork() const;
   Compression getCompression() const;
 
   void setConfigFolderDefaulted(bool defaulted);
@@ -45,7 +44,6 @@ class DataBaseConfig {
   void setMaxOpenFiles(uint32_t maxOpenFiles);
   void setWriteBufferSize(uint64_t writeBufferSize);  // Bytes
   void setReadCacheSize(uint64_t readCacheSize);      // Bytes
-  void setNetwork(Xi::Config::Network::Type network);
   void setCompression(Compression compression);
 
  private:
@@ -55,11 +53,10 @@ class DataBaseConfig {
   uint32_t maxOpenFiles;
   uint64_t writeBufferSize;
   uint64_t readCacheSize;
-  Xi::Config::Network::Type m_network;
   Compression compression;
 };
 
-[[nodiscard]]  bool serialize(DataBaseConfig::Compression& compression, ISerializer& s);
+[[nodiscard]] bool serialize(DataBaseConfig::Compression& compression, ISerializer& s);
 }  // namespace CryptoNote
 
 namespace Common {

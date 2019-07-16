@@ -3,32 +3,19 @@
 #include <stdexcept>
 
 static_assert(
-    static_cast<uint8_t>(Xi::Config::Network::Type::MainNet) == 0,
+    static_cast<uint8_t>(Xi::Config::Network::Type::MainNet) == 1,
     "Their values are used as offset for fundamental configurations, changing those will break the entire chain.");
 static_assert(
-    static_cast<uint8_t>(Xi::Config::Network::Type::StageNet) == 1,
+    static_cast<uint8_t>(Xi::Config::Network::Type::StageNet) == 2,
     "Their values are used as offset for fundamental configurations, changing those will break the entire chain.");
 static_assert(
-    static_cast<uint8_t>(Xi::Config::Network::Type::TestNet) == 2,
+    static_cast<uint8_t>(Xi::Config::Network::Type::TestNet) == 3,
     "Their values are used as offset for fundamental configurations, changing those will break the entire chain.");
 static_assert(
-    static_cast<uint8_t>(Xi::Config::Network::Type::LocalTestNet) == 3,
+    static_cast<uint8_t>(Xi::Config::Network::Type::LocalTestNet) == 4,
     "Their values are used as offset for fundamental configurations, changing those will break the entire chain.");
 
-std::string Xi::to_string(Xi::Config::Network::Type type) {
-  switch (type) {
-    case Config::Network::MainNet:
-      return "MainNet";
-    case Config::Network::StageNet:
-      return "StageNet";
-    case Config::Network::TestNet:
-      return "TestNet";
-    case Config::Network::LocalTestNet:
-      return "LocalTestNet";
-    default:
-      return "Unknown";
-  }
-}
+std::string Xi::to_string(Xi::Config::Network::Type type) { return toString(type); }
 
 namespace Xi {
 template <>
@@ -44,4 +31,20 @@ Xi::Config::Network::Type lexical_cast<::Xi::Config::Network::Type>(const std::s
   else
     throw std::runtime_error{"Unknown network type string."};
 }
+
+std::string Config::Network::toString(Config::Network::Type type) {
+  switch (type) {
+    case Config::Network::MainNet:
+      return "MainNet";
+    case Config::Network::StageNet:
+      return "StageNet";
+    case Config::Network::TestNet:
+      return "TestNet";
+    case Config::Network::LocalTestNet:
+      return "LocalTestNet";
+    default:
+      return "Unknown";
+  }
+}
+
 }  // namespace Xi

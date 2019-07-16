@@ -18,7 +18,6 @@
 #include "WalletUtils.h"
 
 #include "CryptoNoteCore/CryptoNote.h"
-#include <Xi/Config/Mixin.h>
 #include "crypto/crypto.h"
 #include "Wallet/WalletErrors.h"
 
@@ -120,7 +119,7 @@ TransferListFormatter::TransferListFormatter(const CryptoNote::Currency& currenc
 void TransferListFormatter::print(std::ostream& os) const {
   for (auto it = m_range.first; it != m_range.second; ++it) {
     os << '\n'
-       << std::setw(21) << m_currency.formatAmount(it->second.amount) << ' '
+       << std::setw(21) << m_currency.amountFormatter()(it->second.amount) << ' '
        << (it->second.address.empty() ? "<UNKNOWN>" : it->second.address) << ' ' << it->second.type;
   }
 }
@@ -138,11 +137,11 @@ void WalletOrderListFormatter::print(std::ostream& os) const {
   os << '{';
 
   if (!m_walletOrderList.empty()) {
-    os << '<' << m_currency.formatAmount(m_walletOrderList.front().amount) << ", " << m_walletOrderList.front().address
-       << '>';
+    os << '<' << m_currency.amountFormatter()(m_walletOrderList.front().amount) << ", "
+       << m_walletOrderList.front().address << '>';
 
     for (auto it = std::next(m_walletOrderList.begin()); it != m_walletOrderList.end(); ++it) {
-      os << '<' << m_currency.formatAmount(it->amount) << ", " << it->address << '>';
+      os << '<' << m_currency.amountFormatter()(it->amount) << ", " << it->address << '>';
     }
   }
 

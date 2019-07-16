@@ -15,8 +15,14 @@
 #include <Xi/Result.h>
 #include <Xi/Config.h>
 #include "Logging/LoggerRef.h"
-#include "CachedBlock.h"
-#include "CryptoNoteBasic.h"
+
+#include "CryptoNoteCore/CryptoNoteBasic.h"
+#include "CryptoNoteCore/CachedBlock.h"
+#include "CryptoNoteCore/Checkpoints.h"
+#include "CryptoNoteCore/IAmountFormatter.hpp"
+#include "CryptoNoteCore/Difficulty.h"
+#include "CryptoNoteCore/HashAlgorithms.h"
+#include "CryptoNoteCore/UpgradeManager.h"
 
 namespace CryptoNote {
 
@@ -33,83 +39,72 @@ class Currency {
  public:
   XI_DELETE_COPY(Currency);
 
-  std::string name() const;
-  std::string ticker() const;
-  std::string addressPrefix() const;
+  const Xi::Config::General::Configuration& general() const;
+  const Xi::Config::Coin::Configuration& coin() const;
+  const Xi::Config::Network::Configuration& network() const;
+  const Xi::Config::Transaction::Configuration& transaction(BlockVersion version) const;
+  const Xi::Config::MinerReward::Configuration& minerReward(BlockVersion version) const;
+  const Xi::Config::StaticReward::Configuration* staticReward(BlockVersion version) const;
+  const Xi::Config::Time::Configuration& time(BlockVersion version) const;
+  const Xi::Config::Limits::Configuration& limit(BlockVersion version) const;
+  const Xi::Config::Difficulty::Configuration& difficulty(BlockVersion version) const;
+  const Xi::Config::MergeMining::Configuration* mergeMining(BlockVersion version) const;
+  const IUpgradeManager& upgradeManager() const;
 
-  std::string homepage() const;
-  std::string description() const;
-  std::string copyright() const;
+  const Difficulty::IDifficultyAlgorithm& difficultyAlgorithm(BlockVersion version) const;
+  const Hashes::IProofOfWorkAlgorithm& proofOfWorkAlgorithm(BlockVersion version) const;
 
-  size_t maxBlockBlobSize() const { return m_maxBlockBlobSize; }
+  std::string networkUniqueName() const;
+
   size_t maxTxSize(BlockVersion blockVersion) const;
-  uint8_t maxTxVersion() const;
-  uint8_t minTxVersion() const;
-  uint64_t publicAddressBase58Prefix() const { return m_publicAddressBase58Prefix; }
-  uint32_t minedMoneyUnlockWindow() const { return m_minedMoneyUnlockWindow; }
+  uint32_t minedMoneyUnlockWindow() const;
 
-  uint32_t timestampCheckWindow(BlockVersion version) const;
-  uint64_t blockFutureTimeLimit(BlockVersion version) const;
+  const IAmountFormatter& amountFormatter() const;
 
-  uint32_t blockTimeTarget() const;
-
-  uint64_t moneySupply() const { return m_moneySupply; }
-  unsigned int emissionSpeedFactor() const { return m_emissionSpeedFactor; }
-  uint64_t genesisBlockReward() const { return m_genesisBlockReward; }
+  unsigned int emissionSpeedFactor() const;
 
   size_t rewardBlocksWindowByBlockVersion(BlockVersion blockVersion) const;
   uint64_t rewardCutOffByBlockVersion(BlockVersion blockVersion) const;
   size_t blockGrantedFullRewardZoneByBlockVersion(BlockVersion blockVersion) const;
-  size_t minerTxBlobReservedSize() const { return m_minerTxBlobReservedSize; }
-
-  size_t numberOfDecimalPlaces() const { return m_numberOfDecimalPlaces; }
-  uint64_t coin() const;
+  size_t minerTxBlobReservedSize(BlockVersion blockVersion) const;
 
   uint8_t mixinLowerBound(BlockVersion blockVersion) const;
   uint8_t mixinUpperBound(BlockVersion blockVersion) const;
-  uint64_t requiredMixinUpgradeWindow(BlockVersion blockVersion) const;
-  uint64_t requiredMixinThreshold(BlockVersion blockVersion) const;
 
   [[nodiscard]] bool isTransferVersionSupported(BlockVersion blockVersion, uint16_t transferVersion) const;
 
   uint64_t minimumFee(BlockVersion version) const;
   uint64_t minimumFee(BlockVersion version, uint64_t canonicialBuckets) const;
 
-  uint32_t upgradeHeight(BlockVersion version) const;
-
-  uint64_t difficultyTarget() const { return m_difficultyTarget; }
   size_t difficultyBlocksCountByVersion(BlockVersion version) const;
 
   uint64_t maximumMergeMiningSize(BlockVersion version) const;
   uint64_t maximumCoinbaseSize(BlockVersion version) const;
 
-  size_t maxBlockSizeInitial() const { return m_maxBlockSizeInitial; }
-  uint64_t maxBlockSizeGrowthSpeedNumerator() const { return m_maxBlockSizeGrowthSpeedNumerator; }
-  uint64_t maxBlockSizeGrowthSpeedDenominator() const { return m_maxBlockSizeGrowthSpeedDenominator; }
+  uint64_t maxBlockSize(BlockVersion version, uint32_t index) const;
+  uint64_t maxBlockSizeInitial(BlockVersion version) const;
+  uint64_t maxBlockSizeGrowthSpeedNumerator(BlockVersion version) const;
+  uint64_t maxBlockSizeGrowthSpeedDenominator(BlockVersion version) const;
 
   uint64_t mempoolTxLiveTime() const { return m_mempoolTxLiveTime; }
   uint64_t mempoolTxFromAltBlockLiveTime() const { return m_mempoolTxFromAltBlockLiveTime; }
   uint64_t numberOfPeriodsToForgetTxDeletedFromPool() const { return m_numberOfPeriodsToForgetTxDeletedFromPool; }
 
   size_t fusionTxMaxSize(BlockVersion blockVersion) const;
-  size_t fusionTxMinInputCount() const { return m_fusionTxMinInputCount; }
-  size_t fusionTxMinInOutCountRatio() const { return m_fusionTxMinInOutCountRatio; }
+  size_t fusionTxMinInputCount(BlockVersion blockVersion) const;
+  size_t fusionTxMinInOutCountRatio(BlockVersion blockVersion) const;
 
   std::string blocksFileName() const;
   std::string blockIndexesFileName() const;
   std::string txPoolFileName() const;
 
-  ::Xi::Config::Network::Type network() const { return m_network; }
-  bool isMainNet() const { return m_network == ::Xi::Config::Network::Type::MainNet; }
-  bool isTestNet() const { return !isMainNet() && m_network != ::Xi::Config::Network::MainNet; }
+  const std::vector<CheckpointData>& integratedCheckpoints() const;
 
   const BlockTemplate& genesisBlock() const;
   const Crypto::Hash& genesisBlockHash() const;
-  uint64_t genesisTimestamp() const;
 
   bool getBlockReward(BlockVersion blockVersion, size_t medianSize, size_t currentBlockSize,
                       uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward, int64_t& emissionChange) const;
-  size_t maxBlockCumulativeSize(uint64_t height) const;
 
   bool constructMinerTx(BlockVersion blockVersion, uint32_t height, size_t medianSize, uint64_t alreadyGeneratedCoins,
                         size_t currentBlockSize, uint64_t fee, const AccountPublicAddress& minerAddress,
@@ -119,11 +114,11 @@ class Currency {
   bool isStaticRewardEnabledForBlockVersion(BlockVersion blockVersion) const;
   uint64_t staticRewardAmountForBlockVersion(BlockVersion blockVersion) const;
   std::string staticRewardAddressForBlockVersion(BlockVersion blockVersion) const;
-  Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const Crypto::Hash& previousBlockHash,
-                                                                    BlockVersion blockVersion,
-                                                                    uint32_t blockIndex) const;
-  Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const CachedBlock& block) const;
-  Xi::Result<boost::optional<Transaction> > constructStaticRewardTx(const BlockTemplate& block) const;
+  Xi::Result<boost::optional<Transaction>> constructStaticRewardTx(const Crypto::Hash& previousBlockHash,
+                                                                   BlockVersion blockVersion,
+                                                                   uint32_t blockIndex) const;
+  Xi::Result<boost::optional<Transaction>> constructStaticRewardTx(const CachedBlock& block) const;
+  Xi::Result<boost::optional<Transaction>> constructStaticRewardTx(const BlockTemplate& block) const;
   // -------------------------------------------- Static Reward -------------------------------------------------------
 
   // ----------------------------------------------- Locking ----------------------------------------------------------
@@ -145,10 +140,6 @@ class Currency {
   std::string accountAddressAsString(const AccountPublicAddress& accountPublicAddress) const;
   [[nodiscard]] bool parseAccountAddressString(const std::string& str, AccountPublicAddress& addr) const;
 
-  std::string formatAmount(uint64_t amount) const;
-  std::string formatAmount(int64_t amount) const;
-  [[nodiscard]] bool parseAmount(const std::string& str, uint64_t& amount) const;
-
   uint64_t nextDifficulty(BlockVersion version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
                           std::vector<uint64_t> cumulativeDifficulties) const;
 
@@ -165,46 +156,13 @@ class Currency {
   bool generateGenesisBlock();
 
  private:
-  size_t m_maxBlockBlobSize;
-  size_t m_maxTxSize;
-  uint64_t m_publicAddressBase58Prefix;
-  uint32_t m_minedMoneyUnlockWindow;
-
-  size_t m_timestampCheckWindow;
-  uint64_t m_blockFutureTimeLimit;
-
-  uint64_t m_moneySupply;
-  unsigned int m_emissionSpeedFactor;
-  uint64_t m_genesisBlockReward;
-
-  size_t m_minerTxBlobReservedSize;
-
-  size_t m_numberOfDecimalPlaces;
-  uint64_t m_coin;
-
-  uint64_t m_mininumFee;
-
-  uint64_t m_difficultyTarget;
-
-  size_t m_maxBlockSizeInitial;
-  uint64_t m_maxBlockSizeGrowthSpeedNumerator;
-  uint64_t m_maxBlockSizeGrowthSpeedDenominator;
-
   uint64_t m_mempoolTxLiveTime;
   uint64_t m_mempoolTxFromAltBlockLiveTime;
   uint64_t m_numberOfPeriodsToForgetTxDeletedFromPool;
 
-  size_t m_fusionTxMaxSize;
-  size_t m_fusionTxMinInputCount;
-  size_t m_fusionTxMinInOutCountRatio;
-
   std::string m_blocksFileName;
   std::string m_blockIndexesFileName;
   std::string m_txPoolFileName;
-
-  static const std::vector<uint64_t> PRETTY_AMOUNTS;
-
-  Xi::Config::Network::Type m_network;
 
   BlockTemplate m_genesisBlockTemplate;
   std::unique_ptr<CachedBlock> m_cachedGenesisBlock;
@@ -213,87 +171,36 @@ class Currency {
 
   Logging::LoggerRef logger;
 
+  std::shared_ptr<IAmountFormatter> m_amountFormatter;
+  std::vector<CheckpointData> m_integratedCheckpointData;
+  Xi::Config::General::Configuration m_general;
+  Xi::Config::Coin::Configuration m_coin;
+  Xi::Config::StaticReward::Container m_staticReward;
+  Xi::Config::Network::Configuration m_network;
+  Xi::Config::Transaction::Container m_transaction;
+  Xi::Config::Time::Container m_time;
+  Xi::Config::Limits::Container m_limit;
+  Xi::Config::MinerReward::Container m_minerReward;
+  Xi::Config::Difficulty::Container m_difficulty;
+  Xi::Config::MergeMining::Container m_mergeMining;
+  std::shared_ptr<IUpgradeManager> m_upgradeManager;
+
+  std::vector<std::shared_ptr<Difficulty::IDifficultyAlgorithm>> m_difficultyAlgorithms;
+  std::vector<std::shared_ptr<Hashes::IProofOfWorkAlgorithm>> m_proofOfWorkAlgorithms;
+
   friend class CurrencyBuilder;
 };
 
-class CurrencyBuilder : boost::noncopyable {
+class CurrencyBuilder {
  public:
   CurrencyBuilder(Logging::ILogger& log);
+  XI_DELETE_COPY(CurrencyBuilder);
+  XI_DEFAULT_MOVE(CurrencyBuilder);
 
-  Currency currency() {
-    if (!m_currency.init()) {
-      throw std::runtime_error("Failed to initialize currency object");
-    }
+  Currency currency();
 
-    return std::move(m_currency);
-  }
-
-  Transaction generateGenesisTransaction();
-  Transaction generateGenesisTransaction(const std::vector<AccountPublicAddress>& targets);
-  CurrencyBuilder& maxBlockBlobSize(size_t val) {
-    m_currency.m_maxBlockBlobSize = val;
-    return *this;
-  }
-  CurrencyBuilder& maxTxSize(size_t val) {
-    m_currency.m_maxTxSize = val;
-    return *this;
-  }
-  CurrencyBuilder& publicAddressBase58Prefix(uint64_t val) {
-    m_currency.m_publicAddressBase58Prefix = val;
-    return *this;
-  }
-  CurrencyBuilder& minedMoneyUnlockWindow(uint32_t val) {
-    m_currency.m_minedMoneyUnlockWindow = val;
-    return *this;
-  }
-
-  CurrencyBuilder& timestampCheckWindow(size_t val) {
-    m_currency.m_timestampCheckWindow = val;
-    return *this;
-  }
-  CurrencyBuilder& blockFutureTimeLimit(uint64_t val) {
-    m_currency.m_blockFutureTimeLimit = val;
-    return *this;
-  }
-
-  CurrencyBuilder& moneySupply(uint64_t val) {
-    m_currency.m_moneySupply = val;
-    return *this;
-  }
-  CurrencyBuilder& emissionSpeedFactor(unsigned int val);
-  CurrencyBuilder& genesisBlockReward(uint64_t val) {
-    m_currency.m_genesisBlockReward = val;
-    return *this;
-  }
-  CurrencyBuilder& minerTxBlobReservedSize(size_t val) {
-    m_currency.m_minerTxBlobReservedSize = val;
-    return *this;
-  }
-
-  CurrencyBuilder& numberOfDecimalPlaces(size_t val);
-
-  CurrencyBuilder& mininumFee(uint64_t val) {
-    m_currency.m_mininumFee = val;
-    return *this;
-  }
-
-  CurrencyBuilder& difficultyTarget(uint64_t val) {
-    m_currency.m_difficultyTarget = val;
-    return *this;
-  }
-
-  CurrencyBuilder& maxBlockSizeInitial(size_t val) {
-    m_currency.m_maxBlockSizeInitial = val;
-    return *this;
-  }
-  CurrencyBuilder& maxBlockSizeGrowthSpeedNumerator(uint64_t val) {
-    m_currency.m_maxBlockSizeGrowthSpeedNumerator = val;
-    return *this;
-  }
-  CurrencyBuilder& maxBlockSizeGrowthSpeedDenominator(uint64_t val) {
-    m_currency.m_maxBlockSizeGrowthSpeedDenominator = val;
-    return *this;
-  }
+  Transaction generateGenesisTransaction() const;
+  Transaction generateGenesisTransaction(const std::vector<AccountPublicAddress>& targets) const;
 
   CurrencyBuilder& mempoolTxLiveTime(uint64_t val) {
     m_currency.m_mempoolTxLiveTime = val;
@@ -305,19 +212,6 @@ class CurrencyBuilder : boost::noncopyable {
   }
   CurrencyBuilder& numberOfPeriodsToForgetTxDeletedFromPool(uint64_t val) {
     m_currency.m_numberOfPeriodsToForgetTxDeletedFromPool = val;
-    return *this;
-  }
-
-  CurrencyBuilder& fusionTxMaxSize(size_t val) {
-    m_currency.m_fusionTxMaxSize = val;
-    return *this;
-  }
-  CurrencyBuilder& fusionTxMinInputCount(size_t val) {
-    m_currency.m_fusionTxMinInputCount = val;
-    return *this;
-  }
-  CurrencyBuilder& fusionTxMinInOutCountRatio(size_t val) {
-    m_currency.m_fusionTxMinInOutCountRatio = val;
     return *this;
   }
 
@@ -334,13 +228,15 @@ class CurrencyBuilder : boost::noncopyable {
     return *this;
   }
 
-  CurrencyBuilder& network(Xi::Config::Network::Type network) {
-    m_currency.m_network = network;
-    return *this;
-  }
+  CurrencyBuilder& configuration(const Xi::Config::Configuration& config);
+  CurrencyBuilder& network(std::string netId);
+  CurrencyBuilder& networkDir(std::string dir);
+
+  const Currency& immediateState() const;
 
  private:
   Currency m_currency;
+  std::string m_networkDir;
 };
 
 }  // namespace CryptoNote

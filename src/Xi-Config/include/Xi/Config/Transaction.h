@@ -24,18 +24,76 @@
 #pragma once
 
 #include <cinttypes>
+#include <array>
+
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
+#include <Serialization/SerializationOverloads.h>
+
+#include "Xi/Config/VersionContainer.hpp"
 
 namespace Xi {
 namespace Config {
 namespace Transaction {
 
-/*!
- * \brief version yields the current version to be used, can later be adjusted to take height into account.
- */
-inline constexpr uint8_t version() { return 1; }
+class Fusion {
+ public:
+  XI_PROPERTY(uint64_t, maximumSize)
+  XI_PROPERTY(uint64_t, minimumInputCount)
+  XI_PROPERTY(uint64_t, ratioLimit)
 
-inline constexpr uint8_t minimumVersion() { return 1; }
-inline constexpr uint8_t maximumVersion() { return 1; }
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(maximumSize(), max_size)
+  KV_MEMBER_RENAME(minimumInputCount(), min_input)
+  KV_MEMBER_RENAME(ratioLimit(), ratio_limit)
+  KV_END_SERIALIZATION
+};
+
+class Transfer {
+  XI_PROPERTY(uint64_t, maximumSize)
+  XI_PROPERTY(uint64_t, minimumFee)
+  XI_PROPERTY(uint64_t, freeBuckets)
+  XI_PROPERTY(uint64_t, rateNominator)
+  XI_PROPERTY(uint64_t, rateDenominator)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(maximumSize(), max_size)
+  KV_MEMBER_RENAME(minimumFee(), min_fee)
+  KV_MEMBER_RENAME(freeBuckets(), free_buckets)
+  KV_MEMBER_RENAME(rateNominator(), rate_nominator)
+  KV_MEMBER_RENAME(rateDenominator(), rate_denominator)
+  KV_END_SERIALIZATION
+};
+
+class Mixin {
+ public:
+  XI_PROPERTY(uint8_t, minimum)
+  XI_PROPERTY(uint8_t, maximum)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(minimum(), min)
+  KV_MEMBER_RENAME(maximum(), max)
+  KV_END_SERIALIZATION
+};
+
+class Configuration {
+ public:
+  XI_PROPERTY(Transfer, transfer)
+  XI_PROPERTY(Fusion, fusion)
+  XI_PROPERTY(Mixin, mixin)
+  XI_PROPERTY(uint32_t, futureUnlockLimit)
+  XI_PROPERTY(std::vector<uint16_t>, supportedVersions)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(transfer(), transfer)
+  KV_MEMBER_RENAME(fusion(), fusion)
+  KV_MEMBER_RENAME(mixin(), mixin)
+  KV_MEMBER_RENAME(futureUnlockLimit(), future_unlock_limit)
+  KV_MEMBER_RENAME(supportedVersions(), supported_versions)
+  KV_END_SERIALIZATION
+};
+
+using Container = VersionContainer<Transaction::Configuration>;
 
 }  // namespace Transaction
 }  // namespace Config

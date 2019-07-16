@@ -26,19 +26,39 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
+#include <memory>
+#include <string_view>
 
 namespace CryptoNote {
 namespace Difficulty {
 
-struct LWMA_3 {
-  uint64_t operator()(const std::vector<uint64_t> &timestamps, const std::vector<uint64_t> &cumulativeDifficulties,
-                      uint32_t windowSize, uint16_t blockTime) const;
+struct IDifficultyAlgorithm {
+  virtual ~IDifficultyAlgorithm() = default;
+
+  virtual uint64_t operator()(const std::vector<uint64_t> &timestamps,
+                              const std::vector<uint64_t> &cumulativeDifficulties, uint32_t windowSize,
+                              uint16_t blockTime) const = 0;
 };
 
-struct LWMA_2 {
+struct LWMA_3 : IDifficultyAlgorithm {
+  ~LWMA_3() override = default;
   uint64_t operator()(const std::vector<uint64_t> &timestamps, const std::vector<uint64_t> &cumulativeDifficulties,
-                      uint32_t windowSize, uint16_t blockTime) const;
+                      uint32_t windowSize, uint16_t blockTime) const override;
 };
+
+struct LWMA_2 : IDifficultyAlgorithm {
+  ~LWMA_2() override = default;
+  uint64_t operator()(const std::vector<uint64_t> &timestamps, const std::vector<uint64_t> &cumulativeDifficulties,
+                      uint32_t windowSize, uint16_t blockTime) const override;
+};
+
+struct LWMA_1 : IDifficultyAlgorithm {
+  ~LWMA_1() override = default;
+  uint64_t operator()(const std::vector<uint64_t> &timestamps, const std::vector<uint64_t> &cumulativeDifficulties,
+                      uint32_t windowSize, uint16_t blockTime) const override;
+};
+
+std::shared_ptr<IDifficultyAlgorithm> makeDifficultyAlgorithm(std::string_view id);
 
 }  // namespace Difficulty
 }  // namespace CryptoNote

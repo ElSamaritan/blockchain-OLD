@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -37,7 +37,8 @@
 namespace Xi {
 namespace App {
 struct NetworkOptions : public IOptions {
-  Xi::Config::Network::Type Network = Xi::Config::Network::defaultNetworkType();
+  std::string NetworkDir = "./config";
+  std::string Network = Xi::Config::Network::defaultNetworkIdentifier();
 
   // TODO: serialization
 

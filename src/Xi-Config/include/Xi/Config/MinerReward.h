@@ -23,15 +23,17 @@
 
 #pragma once
 
-#include <Xi/Byte.hh>
+#include <cinttypes>
 
-#include "Xi/Config/_Impl/BeginMinerReward.h"
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
+#include <Serialization/SerializationOverloads.h>
+
+#include "Xi/Config/VersionContainer.hpp"
 
 /*!
  * \section Reward
  *
- * Index  : Chronological order of introduced checkpoints
- * Version: The block version introducing the checkpoint
  * Window : Number of previous blocks for median size calculation, blocks with used to calculate penalities for larger
  *            blocks.
  * Zone   : Size in bytes until block penalties will be introduced. If a block is mined larger than the zone
@@ -41,11 +43,27 @@
  *
  */
 
-// clang-format off
-//                  (_Index, _Version, _Window,    _Zone, _CutOff)
-MakeRewardCheckpoint(     0,        1,     128,   128_kB,       4)
-// clang-format on
+namespace Xi {
+namespace Config {
+namespace MinerReward {
 
-#define CURRENT_REWARD_CHECKPOINT_INDEX 0
+class Configuration {
+ public:
+  XI_PROPERTY(uint64_t, windowSize)
+  XI_PROPERTY(uint64_t, zone)
+  XI_PROPERTY(uint8_t, cuttOff)
+  XI_PROPERTY(uint64_t, reservedSize)
 
-#include "Xi/Config/_Impl/EndMinerReward.h"
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(windowSize(), window_size)
+  KV_MEMBER_RENAME(zone(), zone)
+  KV_MEMBER_RENAME(cuttOff(), cut_off)
+  KV_MEMBER_RENAME(reservedSize(), reserved_size)
+  KV_END_SERIALIZATION
+};
+
+using Container = VersionContainer<MinerReward::Configuration>;
+
+}  // namespace MinerReward
+}  // namespace Config
+}  // namespace Xi

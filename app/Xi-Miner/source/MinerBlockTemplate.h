@@ -33,6 +33,7 @@ namespace XiMiner {
 struct MinerBlockTemplate {
   uint64_t Difficutly;
   std::optional<CryptoNote::BlockProofOfWork> ProofOfWork{std::nullopt};
+  std::string Algorithm;
   CryptoNote::BlockTemplate Template;
   std::string TemplateState;
 };

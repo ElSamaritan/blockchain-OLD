@@ -7,7 +7,7 @@
 
 #include <Types.h>
 
-void addToAddressBook();
+void addToAddressBook(const CryptoNote::Currency &currency);
 
 void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::INode &node);
 

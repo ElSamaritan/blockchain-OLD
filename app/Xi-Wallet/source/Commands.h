@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <Xi/Config/WalletConfig.h>
+#include <CryptoNoteCore/Currency.h>
 
 class Command {
  public:
@@ -29,14 +30,14 @@ std::vector<Command> startupCommands();
 
 std::vector<Command> nodeDownCommands();
 
-std::vector<AdvancedCommand> allCommands();
+std::vector<AdvancedCommand> allCommands(const CryptoNote::Currency& currency);
 
-std::vector<AdvancedCommand> basicCommands();
+std::vector<AdvancedCommand> basicCommands(const CryptoNote::Currency& currency);
 
-std::vector<AdvancedCommand> advancedCommands();
+std::vector<AdvancedCommand> advancedCommands(const CryptoNote::Currency& currency);
 
-std::vector<AdvancedCommand> basicViewWalletCommands();
+std::vector<AdvancedCommand> basicViewWalletCommands(const CryptoNote::Currency& currency);
 
-std::vector<AdvancedCommand> advancedViewWalletCommands();
+std::vector<AdvancedCommand> advancedViewWalletCommands(const CryptoNote::Currency& currency);
 
-std::vector<AdvancedCommand> allViewWalletCommands();
+std::vector<AdvancedCommand> allViewWalletCommands(const CryptoNote::Currency& currency);

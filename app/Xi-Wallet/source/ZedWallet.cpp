@@ -7,7 +7,12 @@
 ////////////////////////////////
 
 #include <Common/SignalHandler.h>
+#include <Common/Base58.h>
+#include <Mnemonics/Mnemonics.h>
+#include <Serialization/ConsoleOutputSerializer.hpp>
 #include <CryptoNoteCore/Currency.h>
+#include <CryptoNoteCore/Account.h>
+#include <CryptoNoteCore/CryptoNoteTools.h>
 #include <NodeRpcProxy/NodeErrors.h>
 #include <Logging/FileLogger.h>
 #include <Logging/ConsoleLogger.h>
@@ -25,6 +30,44 @@
 
 #include "CommonCLI.h"
 
+namespace {
+int generate(Logging::ILogger &logger, const Config &config) {
+  CryptoNote::CurrencyBuilder builder{logger};
+  const auto &currency = builder.networkDir(config.networkDir).network(config.network).immediateState();
+  CryptoNote::AccountKeys account;
+  if (config.generate_seed.empty()) {
+    Crypto::generate_keys(account.address.spendPublicKey, account.spendSecretKey);
+  } else {
+    Crypto::generate_deterministic_keys(account.address.spendPublicKey, account.spendSecretKey,
+                                        Xi::asByteSpan(config.generate_seed));
+  }
+  CryptoNote::AccountBase::generateViewFromSpend(account.spendSecretKey, account.viewSecretKey);
+  if (!Crypto::secret_key_to_public_key(account.viewSecretKey, account.address.viewPublicKey)) {
+    return EXIT_FAILURE;
+  }
+
+  auto binaryAddress = CryptoNote::toBinaryArray(account.address);
+  auto address = Tools::Base58::encode_addr(currency.coin().prefix().base58(), Common::asString(binaryAddress));
+  auto mnemonicSeed = Mnemonics::PrivateKeyToMnemonic(account.spendSecretKey);
+
+  CryptoNote::ConsoleOutputSerializer ser{std::cout};
+  XI_RETURN_EC_IF_NOT(ser.beginObject("wallet"), EXIT_FAILURE);
+  XI_RETURN_EC_IF_NOT(ser(address, "address"), EXIT_FAILURE);
+  XI_RETURN_EC_IF_NOT(ser.beginObject("public_keys"), EXIT_FAILURE);
+  XI_RETURN_EC_IF_NOT(ser(account.address.viewPublicKey, "view_key"), EXIT_FAILURE);
+  XI_RETURN_EC_IF_NOT(ser(account.address.spendPublicKey, "spend_key"), EXIT_FAILURE);
+  XI_RETURN_EC_IF_NOT(ser.endObject(), EXIT_FAILURE);
+  XI_RETURN_EC_IF_NOT(ser.beginObject("secret_keys"), EXIT_FAILURE);
+  XI_RETURN_EC_IF_NOT(ser(account.viewSecretKey, "view_key"), EXIT_FAILURE);
+  XI_RETURN_EC_IF_NOT(ser(account.spendSecretKey, "spend_key"), EXIT_FAILURE);
+  XI_RETURN_EC_IF_NOT(ser.endObject(), EXIT_FAILURE);
+  XI_RETURN_EC_IF_NOT(ser(mnemonicSeed, "mnemonics"), EXIT_FAILURE);
+  XI_RETURN_EC_IF_NOT(ser.endObject(), EXIT_FAILURE);
+  std::cout << std::endl;
+  return EXIT_SUCCESS;
+};
+}  // namespace
+
 int main(int argc, char **argv) {
 /* On ctrl+c the program seems to throw "xi-wallet.exe has stopped
    working" when calling exit(0)... I'm not sure why, this is a bit of
@@ -38,12 +81,6 @@ int main(int argc, char **argv) {
 
   auto crashDumper = CommonCLI::make_crash_dumper("xi-wallet");
   (void)crashDumper;
-
-  std::cout << InformationMsg(CommonCLI::header()) << std::endl;
-
-  if (config.ssl.isInsecure(::Xi::Http::SSLConfiguration::Usage::Client)) {
-    std::cout << WarningMsg(CommonCLI::insecureClientWarning()) << std::endl;
-  }
 
   Logging::LoggerManager logManager;
 
@@ -66,8 +103,20 @@ int main(int argc, char **argv) {
 
   Logging::LoggerRef logger(logManager, WalletConfig::walletName);
 
+  if (config.generate) {
+    coutLogger.setMaxLevel(Logging::Level::Warning);
+    return generate(coutLogger, config);
+  }
+
   /* Currency contains our coin parameters, such as decimal places, supply */
-  const CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logManager).network(config.network).currency();
+  const CryptoNote::Currency currency =
+      CryptoNote::CurrencyBuilder(logManager).networkDir(config.networkDir).network(config.network).currency();
+
+  std::cout << InformationMsg(CommonCLI::header(currency)) << std::endl;
+
+  if (config.ssl.isInsecure(::Xi::Http::SSLConfiguration::Usage::Client)) {
+    std::cout << WarningMsg(CommonCLI::insecureClientWarning()) << std::endl;
+  }
 
   System::Dispatcher localDispatcher;
   System::Dispatcher *dispatcher = &localDispatcher;
@@ -123,8 +172,8 @@ int main(int argc, char **argv) {
              << "You have connected to a node that charges "
              << "a fee to send transactions." << std::endl
              << std::endl
-             << "The fee for sending transactions is: " << formatAmount(nodeFee->amount) << " per transaction."
-             << std::endl
+             << "The fee for sending transactions is: " << node->currency().amountFormatter()(nodeFee->amount)
+             << " per transaction." << std::endl
              << std::endl
              << "If you don't want to pay the node fee, please "
              << "relaunch " << WalletConfig::walletName << " and specify a different node or run your own."

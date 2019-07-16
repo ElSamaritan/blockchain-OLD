@@ -82,7 +82,8 @@ bool PaymentGateService::init(int argc, char** argv) {
   logger.addLogger(fileLogger);
 
   CryptoNote::CurrencyBuilder builder{log.getLogger()};
-  m_currency = std::make_unique<CryptoNote::Currency>(builder.network(config.serviceConfig.network).currency());
+  m_currency = std::make_unique<CryptoNote::Currency>(
+      builder.networkDir(config.serviceConfig.networkDir).network(config.serviceConfig.network).currency());
 
   return true;
 }

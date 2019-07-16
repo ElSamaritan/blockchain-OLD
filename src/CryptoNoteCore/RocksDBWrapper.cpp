@@ -27,10 +27,6 @@
 using namespace CryptoNote;
 using namespace Logging;
 
-namespace {
-const std::string DB_PREFIX{"db_"};
-}  // namespace
-
 RocksDBWrapper::RocksDBWrapper(Logging::ILogger& logger) : logger(logger, "RocksDBWrapper"), state(NOT_INITIALIZED) {}
 
 RocksDBWrapper::~RocksDBWrapper() {}
@@ -227,6 +223,4 @@ rocksdb::Options RocksDBWrapper::getDBOptions(const DataBaseConfig& config) {
   return rocksdb::Options(dbOptions, fOptions);
 }
 
-std::string RocksDBWrapper::getDataDir(const DataBaseConfig& config) {
-  return config.getDataDir() + "/" + DB_PREFIX + Xi::to_lower(Xi::to_string(config.getNetwork()));
-}
+std::string RocksDBWrapper::getDataDir(const DataBaseConfig& config) { return config.getDataDir() + "/rocksdb"; }

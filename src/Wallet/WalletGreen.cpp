@@ -558,8 +558,8 @@ void WalletGreen::load(const std::string& path, const std::string& password, std
 
   m_state = WalletState::INITIALIZED;
   m_logger(Info) << "Container loaded, view public key " << m_viewPublicKey << ", wallet count "
-                 << m_walletsContainer.size() << ", actual balance " << m_currency.formatAmount(m_actualBalance)
-                 << ", pending balance " << m_currency.formatAmount(m_pendingBalance);
+                 << m_walletsContainer.size() << ", actual balance " << m_currency.amountFormatter()(m_actualBalance)
+                 << ", pending balance " << m_currency.amountFormatter()(m_pendingBalance);
 }
 
 void WalletGreen::load(const std::string& path, const std::string& password) {
@@ -1231,14 +1231,14 @@ uint64_t WalletGreen::scanHeightToTimestamp(const BlockHeight scanHeight) {
   }
 
   /* Get the amount of seconds since the blockchain launched */
-  uint64_t secondsSinceLaunch = scanHeight.toIndex() * Xi::Config::Time::blockTimeSeconds();
+  uint64_t secondsSinceLaunch = scanHeight.toIndex() * m_currency.coin().blockTime();
 
   /* Add a bit of a buffer in case of difficulty weirdness, blocks coming
      out too fast */
   secondsSinceLaunch = (secondsSinceLaunch * 95) / 100;
 
   /* Get the genesis block timestamp and add the time since launch */
-  timestamp = m_currency.genesisTimestamp() + secondsSinceLaunch;
+  timestamp = m_currency.coin().startTimestamp() + secondsSinceLaunch;
 
   /* Timestamp in the future */
   if (timestamp >= static_cast<uint64_t>(std::time(nullptr))) {
@@ -1254,9 +1254,7 @@ uint64_t WalletGreen::getCurrentTimestampAdjusted() {
 
   /* Take the amount of time a block can potentially be in the past/future
    * Get the largest adjustment possible */
-  int64_t adjust = std::chrono::seconds{Xi::Config::Time::futureTimeLimit(Xi::Config::BlockVersion::version(
-                                            m_node.getLastKnownBlockHeight().toIndex()))}
-                       .count();
+  int64_t adjust = std::chrono::seconds{currency().time(m_node.getLastKnownBlockVersion()).futureLimit()}.count();
   assert(adjust >= 0);
 
   /* Take the earliest timestamp that will include all possible blocks */
@@ -1327,8 +1325,8 @@ void WalletGreen::deleteAddress(const std::string& address) {
   m_pendingBalance -= it->pendingBalance;
 
   if (it->actualBalance != 0 || it->pendingBalance != 0) {
-    m_logger(Info) << "Container balance updated, actual " << m_currency.formatAmount(m_actualBalance) << ", pending "
-                   << m_currency.formatAmount(m_pendingBalance);
+    m_logger(Info) << "Container balance updated, actual " << m_currency.amountFormatter()(m_actualBalance)
+                   << ", pending " << m_currency.amountFormatter()(m_pendingBalance);
   }
 
   auto addressIndex = std::distance(m_walletsContainer.get<RandomAccessIndex>().begin(),
@@ -1374,7 +1372,14 @@ const Currency& WalletGreen::currency() const {
   throwIfNotInitialized();
   throwIfStopped();
 
-  return m_node.currency();
+  return m_currency;
+}
+
+const BlockVersion WalletGreen::lastKnownBlockVersion() const {
+  throwIfNotInitialized();
+  throwIfStopped();
+
+  return m_node.getLastKnownBlockVersion();
 }
 
 uint64_t WalletGreen::getActualBalance() const {
@@ -1468,8 +1473,8 @@ size_t WalletGreen::transfer(const PreparedTransaction& preparedTransaction) {
     if (id != WALLET_INVALID_TRANSACTION_ID) {
       auto& tx = m_transactions[id];
       m_logger(Info) << "Transaction created and send, ID " << id << ", hash " << tx.hash << ", state " << tx.state
-                     << ", totalAmount " << m_currency.formatAmount(tx.totalAmount) << ", fee "
-                     << m_currency.formatAmount(tx.fee)
+                     << ", totalAmount " << m_currency.amountFormatter()(tx.totalAmount) << ", fee "
+                     << m_currency.amountFormatter()(tx.fee)
                      << ", transfers: " << TransferListFormatter(m_currency, getTransactionTransfersRange(id));
     }
   });
@@ -1492,8 +1497,8 @@ size_t WalletGreen::transfer(const TransactionParameters& transactionParameters)
     if (id != WALLET_INVALID_TRANSACTION_ID) {
       auto& tx = m_transactions[id];
       m_logger(Info) << "Transaction created and send, ID " << id << ", hash " << m_transactions[id].hash << ", state "
-                     << tx.state << ", totalAmount " << m_currency.formatAmount(tx.totalAmount) << ", fee "
-                     << m_currency.formatAmount(tx.fee)
+                     << tx.state << ", totalAmount " << m_currency.amountFormatter()(tx.totalAmount) << ", fee "
+                     << m_currency.amountFormatter()(tx.fee)
                      << ", transfers: " << TransferListFormatter(m_currency, getTransactionTransfersRange(id));
     }
   });
@@ -1508,7 +1513,7 @@ size_t WalletGreen::transfer(const TransactionParameters& transactionParameters)
                  << ", from " << Common::makeContainerFormatter(transactionParameters.sourceAddresses) << ", to "
                  << WalletOrderListFormatter(m_currency, transactionParameters.destinations) << ", change address '"
                  << transactionParameters.changeDestination << '\'' << ", fee "
-                 << m_currency.formatAmount(transactionParameters.fee) << ", mixin " << transactionParameters.mixIn
+                 << m_currency.amountFormatter()(transactionParameters.fee) << ", mixin " << transactionParameters.mixIn
                  << ", unlockTimestamp " << transactionParameters.unlockTimestamp;
 
   id = doTransfer(transactionParameters);
@@ -1538,8 +1543,8 @@ void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets, const st
 
   if (foundMoney < preparedTransaction.neededMoney) {
     m_logger(Error) << "Failed to create transaction: not enough money. Needed "
-                    << m_currency.formatAmount(preparedTransaction.neededMoney) << ", found "
-                    << m_currency.formatAmount(foundMoney);
+                    << m_currency.amountFormatter()(preparedTransaction.neededMoney) << ", found "
+                    << m_currency.amountFormatter()(foundMoney);
     throw std::system_error(make_error_code(error::WRONG_AMOUNT), "Not enough money");
   }
 
@@ -1611,7 +1616,7 @@ std::vector<WalletTransfer> WalletGreen::convertOrdersToTransfers(const std::vec
 
     if (order.amount > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
       std::string message = "Order amount must not exceed " +
-                            m_currency.formatAmount(std::numeric_limits<decltype(transfer.amount)>::max());
+                            m_currency.amountFormatter()(std::numeric_limits<decltype(transfer.amount)>::max());
       m_logger(Error) << message;
       throw std::system_error(make_error_code(CryptoNote::error::WRONG_AMOUNT), message);
     }
@@ -1675,7 +1680,7 @@ uint64_t WalletGreen::pushDonationTransferIfPossible(const DonationSettings& don
   if (!donation.address.empty() && donation.threshold != 0) {
     if (donation.threshold > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
       std::string message =
-          "Donation threshold must not exceed " + m_currency.formatAmount(std::numeric_limits<int64_t>::max());
+          "Donation threshold must not exceed " + m_currency.amountFormatter()(std::numeric_limits<int64_t>::max());
       m_logger(Error) << message;
       throw std::system_error(make_error_code(error::WRONG_AMOUNT), message);
     }
@@ -1685,7 +1690,7 @@ uint64_t WalletGreen::pushDonationTransferIfPossible(const DonationSettings& don
       destinations.emplace_back(
           WalletTransfer{WalletTransferType::DONATION, donation.address, static_cast<int64_t>(donationAmount)});
       m_logger(Debugging) << "Added donation: address " << donation.address << ", amount "
-                          << m_currency.formatAmount(donationAmount);
+                          << m_currency.amountFormatter()(donationAmount);
     }
   }
 
@@ -1710,7 +1715,7 @@ void WalletGreen::validateOrders(const std::vector<WalletOrder>& orders) const {
 
     if (order.amount >= static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
       std::string message =
-          "Order amount must not exceed " + m_currency.formatAmount(std::numeric_limits<int64_t>::max());
+          "Order amount must not exceed " + m_currency.amountFormatter()(std::numeric_limits<int64_t>::max());
       m_logger(Error) << message;
       throw std::system_error(make_error_code(CryptoNote::error::WRONG_AMOUNT), message);
     }
@@ -1754,8 +1759,8 @@ void WalletGreen::validateTransactionParameters(const TransactionParameters& tra
 
   const auto minimumFee = m_currency.minimumFee(m_node.getLastKnownBlockVersion());
   if (transactionParameters.fee < minimumFee) {
-    std::string message = "Fee is too small. Fee " + m_currency.formatAmount(transactionParameters.fee) +
-                          ", minimum fee " + m_currency.formatAmount(minimumFee);
+    std::string message = "Fee is too small. Fee " + m_currency.amountFormatter()(transactionParameters.fee) +
+                          ", minimum fee " + m_currency.amountFormatter()(minimumFee);
     m_logger(Error) << message;
     throw std::system_error(make_error_code(error::FEE_TOO_SMALL), message);
   }
@@ -1763,7 +1768,7 @@ void WalletGreen::validateTransactionParameters(const TransactionParameters& tra
   if (transactionParameters.donation.address.empty() != (transactionParameters.donation.threshold == 0)) {
     std::string message = "DonationSettings must have both address and threshold parameters filled. Address '" +
                           transactionParameters.donation.address + "'" + ", threshold " +
-                          m_currency.formatAmount(transactionParameters.donation.threshold);
+                          m_currency.amountFormatter()(transactionParameters.donation.threshold);
     m_logger(Error) << message;
     throw std::system_error(make_error_code(error::WRONG_PARAMETERS), message);
   }
@@ -1832,8 +1837,8 @@ size_t WalletGreen::makeTransaction(const TransactionParameters& sendingTransact
     if (id != WALLET_INVALID_TRANSACTION_ID) {
       auto& tx = m_transactions[id];
       m_logger(Info) << "Delayed transaction created, ID " << id << ", hash " << m_transactions[id].hash << ", state "
-                     << tx.state << ", totalAmount " << m_currency.formatAmount(tx.totalAmount) << ", fee "
-                     << m_currency.formatAmount(tx.fee)
+                     << tx.state << ", totalAmount " << m_currency.amountFormatter()(tx.totalAmount) << ", fee "
+                     << m_currency.amountFormatter()(tx.fee)
                      << ", transfers: " << TransferListFormatter(m_currency, getTransactionTransfersRange(id));
     }
   });
@@ -1848,7 +1853,7 @@ size_t WalletGreen::makeTransaction(const TransactionParameters& sendingTransact
                  << ", from " << Common::makeContainerFormatter(sendingTransaction.sourceAddresses) << ", to "
                  << WalletOrderListFormatter(m_currency, sendingTransaction.destinations) << ", change address '"
                  << sendingTransaction.changeDestination << '\'' << ", fee "
-                 << m_currency.formatAmount(sendingTransaction.fee) << ", mixin " << sendingTransaction.mixIn
+                 << m_currency.amountFormatter()(sendingTransaction.fee) << ", mixin " << sendingTransaction.mixIn
                  << ", unlockTimestamp " << sendingTransaction.unlockTimestamp;
 
   validateTransactionParameters(sendingTransaction);
@@ -2327,9 +2332,9 @@ std::unique_ptr<CryptoNote::ITransactionBuilder> WalletGreen::makeTransaction(
   }
 
   m_logger(Debugging) << "Transaction created, hash " << tx->getTransactionHash() << ", inputs "
-                      << m_currency.formatAmount(tx->getInputTotalAmount()) << ", outputs "
-                      << m_currency.formatAmount(tx->getOutputTotalAmount()) << ", fee "
-                      << m_currency.formatAmount(tx->getInputTotalAmount() - tx->getOutputTotalAmount());
+                      << m_currency.amountFormatter()(tx->getInputTotalAmount()) << ", outputs "
+                      << m_currency.amountFormatter()(tx->getOutputTotalAmount()) << ", fee "
+                      << m_currency.amountFormatter()(tx->getInputTotalAmount() - tx->getOutputTotalAmount());
   return tx;
 }
 
@@ -2935,8 +2940,8 @@ void WalletGreen::transactionUpdated(const TransactionInformation& transactionIn
 
   m_logger(Debugging) << "transactionUpdated event, hash " << transactionInfo.transactionHash << ", block "
                       << transactionInfo.blockHeight.native() << ", totalAmountIn "
-                      << m_currency.formatAmount(transactionInfo.totalAmountIn) << ", totalAmountOut "
-                      << m_currency.formatAmount(transactionInfo.totalAmountOut)
+                      << m_currency.amountFormatter()(transactionInfo.totalAmountIn) << ", totalAmountOut "
+                      << m_currency.amountFormatter()(transactionInfo.totalAmountOut)
                       << (transactionInfo.paymentId.has_value()
                               ? ", paymentId NONE"
                               : ", paymentId " + transactionInfo.paymentId->toString());
@@ -2979,7 +2984,7 @@ void WalletGreen::transactionUpdated(const TransactionInformation& transactionIn
     BlockHeight softUnlockHeight =
         transactionInfo.blockHeight.next(static_cast<BlockHeight::value_type>(m_transactionSoftLockTime));
     uint64_t softUnlockTimestamp =
-        static_cast<uint64_t>(time(nullptr)) + m_transactionSoftLockTime * m_node.currency().blockTimeTarget();
+        static_cast<uint64_t>(time(nullptr)) + m_transactionSoftLockTime * m_node.currency().coin().blockTime();
 
     if (!transactionInfo.blockHeight.isNull()) {
       if (transactionInfo.unlockTime > 0) {
@@ -3007,8 +3012,8 @@ void WalletGreen::transactionUpdated(const TransactionInformation& transactionIn
   if (isNew) {
     const auto& tx = m_transactions[transactionId];
     m_logger(Info) << "New transaction received, ID " << transactionId << ", hash " << tx.hash << ", state " << tx.state
-                   << ", totalAmount " << m_currency.formatAmount(tx.totalAmount) << ", fee "
-                   << m_currency.formatAmount(tx.fee)
+                   << ", totalAmount " << m_currency.amountFormatter()(tx.totalAmount) << ", fee "
+                   << m_currency.amountFormatter()(tx.fee)
                    << ", transfers: " << TransferListFormatter(m_currency, getTransactionTransfersRange(transactionId));
 
     pushEvent(makeTransactionCreatedEvent(transactionId));
@@ -3083,7 +3088,7 @@ void WalletGreen::transactionDeleted(ITransfersSubscription* object, const Hash&
     const auto& tx = m_transactions[transactionId];
     m_logger(Info) << "Transaction deleted, ID " << transactionId << ", hash " << transactionHash << ", state "
                    << tx.state << ", block " << tx.blockHeight.native() << ", totalAmount "
-                   << m_currency.formatAmount(tx.totalAmount) << ", fee " << m_currency.formatAmount(tx.fee);
+                   << m_currency.amountFormatter()(tx.totalAmount) << ", fee " << m_currency.amountFormatter()(tx.fee);
     pushEvent(makeTransactionUpdatedEvent(transactionId));
   }
 }
@@ -3208,10 +3213,10 @@ void WalletGreen::updateBalance(CryptoNote::ITransfersContainer* container) {
 
     m_logger(Info) << "Wallet balance updated, address "
                    << m_currency.accountAddressAsString({it->spendPublicKey, m_viewPublicKey}) << ", actual "
-                   << m_currency.formatAmount(it->actualBalance) << ", pending "
-                   << m_currency.formatAmount(it->pendingBalance);
-    m_logger(Info) << "Container balance updated, actual " << m_currency.formatAmount(m_actualBalance) << ", pending "
-                   << m_currency.formatAmount(m_pendingBalance);
+                   << m_currency.amountFormatter()(it->actualBalance) << ", pending "
+                   << m_currency.amountFormatter()(it->pendingBalance);
+    m_logger(Info) << "Container balance updated, actual " << m_currency.amountFormatter()(m_actualBalance)
+                   << ", pending " << m_currency.amountFormatter()(m_pendingBalance);
   }
 }
 
@@ -3294,7 +3299,7 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, const std::vecto
   const auto mixin = m_node.currency().mixinUpperBound(m_node.getLastKnownBlockVersion());
   m_logger(Info) << "createFusionTransaction"
                  << ", from " << Common::makeContainerFormatter(sourceAddresses) << ", to '" << destinationAddress
-                 << '\'' << ", threshold " << m_currency.formatAmount(threshold) << ", mixin " << mixin;
+                 << '\'' << ", threshold " << m_currency.amountFormatter()(threshold) << ", mixin " << mixin;
 
   throwIfNotInitialized();
   throwIfTrackingMode();
@@ -3304,7 +3309,7 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, const std::vecto
   validateChangeDestination(sourceAddresses, destinationAddress, true);
 
   const auto blockVersion = m_node.getLastKnownBlockVersion();
-  const size_t fusionRatio = m_node.currency().fusionTxMinInOutCountRatio();
+  const size_t fusionRatio = m_node.currency().fusionTxMinInOutCountRatio(blockVersion);
 
   if (m_walletsContainer.get<RandomAccessIndex>().size() == 0) {
     m_logger(Error) << "The container doesn't have any wallets";
@@ -3313,17 +3318,17 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, const std::vecto
 
   size_t estimatedFusionInputsCount =
       m_currency.getApproximateMaximumInputCount(m_currency.fusionTxMaxSize(blockVersion), fusionRatio, mixin);
-  if (estimatedFusionInputsCount < m_currency.fusionTxMinInputCount()) {
+  if (estimatedFusionInputsCount < m_currency.fusionTxMinInputCount(blockVersion)) {
     m_logger(Error) << "Fusion transaction mixin is too big " << mixin;
     throw std::system_error(make_error_code(error::MIXIN_COUNT_TOO_BIG));
   }
 
-  auto fusionInputs = pickRandomFusionInputs(sourceAddresses, threshold, m_currency.fusionTxMinInputCount(),
+  auto fusionInputs = pickRandomFusionInputs(sourceAddresses, threshold, m_currency.fusionTxMinInputCount(blockVersion),
                                              estimatedFusionInputsCount);
-  if (fusionInputs.size() < m_currency.fusionTxMinInputCount()) {
+  if (fusionInputs.size() < m_currency.fusionTxMinInputCount(blockVersion)) {
     // nothing to optimize
     m_logger(Warning) << "Fusion transaction not created: nothing to optimize, threshold "
-                      << m_currency.formatAmount(threshold);
+                      << m_currency.amountFormatter()(threshold);
     return WALLET_INVALID_TRANSACTION_ID;
   }
 
@@ -3366,9 +3371,9 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, const std::vecto
 
     ++round;
   } while (transactionSize > m_currency.fusionTxMaxSize(blockVersion) &&
-           fusionInputs.size() >= m_currency.fusionTxMinInputCount());
+           fusionInputs.size() >= m_currency.fusionTxMinInputCount(blockVersion));
 
-  if (fusionInputs.size() < m_currency.fusionTxMinInputCount()) {
+  if (fusionInputs.size() < m_currency.fusionTxMinInputCount(blockVersion)) {
     m_logger(Error) << "Unable to create fusion transaction";
     throw std::runtime_error("Unable to create fusion transaction");
   }
@@ -3485,7 +3490,7 @@ IFusionManager::EstimateResult WalletGreen::estimate(uint64_t threshold,
   }
 
   for (auto bucketSize : bucketSizes) {
-    if (bucketSize >= m_currency.fusionTxMinInputCount()) {
+    if (bucketSize >= currency().fusionTxMinInputCount(m_node.getLastKnownBlockVersion())) {
       result.fusionReadyCount += bucketSize;
     }
   }

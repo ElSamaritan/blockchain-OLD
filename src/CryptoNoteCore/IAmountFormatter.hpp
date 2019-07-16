@@ -24,30 +24,14 @@
 #pragma once
 
 #include <cinttypes>
+#include <string>
 
-#include "Xi/Config/BlockVersion.h"
+namespace CryptoNote {
+class IAmountFormatter {
+ public:
+  virtual ~IAmountFormatter() = default;
 
-namespace Xi {
-namespace Config {
-namespace Mixin {
-template <Blockchain::Block::Version::value_type _Index>
-struct MixinCheckpoint;
-}
-}  // namespace Config
-}  // namespace Xi
-
-#define MakeMixinCheckpoint(_Index, _Version, _Required)                                                          \
-  namespace Xi {                                                                                                  \
-  namespace Config {                                                                                              \
-  namespace Mixin {                                                                                               \
-  template <>                                                                                                     \
-  struct MixinCheckpoint<_Index> {                                                                                \
-    static inline constexpr uint8_t index() { return _Index; }                                                    \
-    static inline constexpr Blockchain::Block::Version version() { return Blockchain::Block::Version{_Version}; } \
-    static inline constexpr uint8_t required() { return _Required; }                                              \
-    static_assert(::Xi::Config::BlockVersion::exists(Blockchain::Block::Version{_Version}),                       \
-                  "Non existing block version referenced.");                                                      \
-  };                                                                                                              \
-  }                                                                                                               \
-  }                                                                                                               \
-  }
+  virtual std::string operator()(const uint64_t amount, bool addTicker = true) const = 0;
+  virtual std::string operator()(const int64_t amount, bool addTicker = true) const = 0;
+};
+}  // namespace CryptoNote

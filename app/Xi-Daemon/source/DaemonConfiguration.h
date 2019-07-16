@@ -18,6 +18,7 @@
 #include <nlohmann/json.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Result.h>
 #include <Xi/Config/NetworkType.h>
 #include <Xi/Config/Network.h>
 #include <Xi/Http/SSLConfiguration.h>
@@ -26,6 +27,7 @@
 
 #include <Xi/Config.h>
 #include <CryptoNoteCore/DataBaseConfig.h>
+#include <CryptoNoteCore/Currency.h>
 #include <Logging/ILogger.h>
 #include "Common/PathTools.h"
 #include "Common/Util.h"
@@ -50,7 +52,10 @@ struct DaemonConfiguration {
   int logLevel;
   uint64_t feeAmount;
   bool lightNode = false;
-  ::Xi::Config::Network::Type network;
+
+  std::string network;
+  std::string networkConfigDir;
+
   uint16_t p2pPort;
   uint16_t p2pExternalPort;
   uint16_t dbThreads;
@@ -82,6 +87,20 @@ struct DaemonConfiguration {
   bool osVersion;
   bool printGenesisTx;
   bool dumpConfig;
+
+  // ----- Shorthands
+  Xi::Result<CryptoNote::CurrencyBuilder> makeCurrency(Logging::ILogger& logger) const {
+    XI_ERROR_TRY();
+    // create objects and link them
+    CryptoNote::CurrencyBuilder currencyBuilder(logger);
+    // clang-format off
+    currencyBuilder
+      .networkDir(networkConfigDir)
+      .network(network);
+    // clang-format on
+    return success(std::move(currencyBuilder));
+    XI_ERROR_CATCH();
+  }
 };
 
 DaemonConfiguration initConfiguration() {
@@ -97,14 +116,15 @@ DaemonConfiguration initConfiguration() {
   config.dbThreads = std::min<uint16_t>(Xi::Config::Database::backgroundThreads(),
                                         static_cast<uint16_t>(std::thread::hardware_concurrency()));
   config.dbWriteBufferSize = Xi::Config::Database::writeBufferSize();
-  config.network = ::Xi::Config::Network::defaultNetworkType();
+  config.network = ::Xi::Config::Network::defaultNetworkIdentifier();
+  config.networkConfigDir = "./config";
   config.p2pInterface = "0.0.0.0";
   config.p2pPort = Xi::Config::P2P::defaultPort();
   config.p2pExternalPort = 0;
   config.p2pBanDurationMinutes = 24 * 60;
   config.p2pAutoBan = false;
   config.rpcInterface = "127.0.0.1";
-  config.rpcPort = Xi::Config::Network::rpcPort();
+  config.rpcPort = Xi::Config::Network::Configuration::rpcDefaultPort();
   config.noConsole = false;
   config.enableBlockExplorer = false;
   config.localIp = false;
@@ -127,7 +147,7 @@ DaemonConfiguration initConfiguration(const char* path) {
 };
 
 void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
-  cxxopts::Options options(argv[0], CommonCLI::header());
+  cxxopts::Options options(argv[0]);
   CommonCLI::emplaceCLIOptions(options);
 
   // clang-format off
@@ -157,9 +177,10 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     ("fee-amount", "Sets the convenience charge amount for light wallets that use the daemon", cxxopts::value<int>()->default_value("0"), "#");
 
   options.add_options("Network")
+    ("network-dir", "Directory to search for additional network configuration files.", cxxopts::value<std::string>()->default_value(config.networkConfigDir))
     ("network", "The network type you want to connect to, mostly you want to use 'MainNet' here.",
-     cxxopts::value<std::string>()->default_value(Xi::to_string(Xi::Config::Network::defaultNetworkType())),
-     "[MainNet|StageNet|TestNet|LocalTestNet]")
+     cxxopts::value<std::string>()->default_value(config.network),
+     "<NAME>.[MainNet|StageNet|TestNet|LocalTestNet]")
 
     ("allow-local-ip", "Allow the local IP to be added to the peer list", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
     ("hide-my-port", "Do not announce yourself as a peerlist candidate", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
@@ -259,7 +280,11 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     }
 
     if (cli.count("network") > 0) {
-      config.network = Xi::lexical_cast<::Xi::Config::Network::Type>(cli["network"].as<std::string>());
+      config.network = cli["network"].as<std::string>();
+    }
+
+    if (cli.count("network-dir") > 0) {
+      config.networkConfigDir = cli["network-dir"].as<std::string>();
     }
 
     if (cli.count("local-ip") > 0) {
@@ -390,7 +415,11 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
   }
 
   if (j.find("network") != j.end()) {
-    config.network = Xi::lexical_cast<::Xi::Config::Network::Type>(j["network"].get<std::string>());
+    config.network = j["network"].get<std::string>();
+  }
+
+  if (j.find("network-dir") != j.end()) {
+    config.networkConfigDir = j["network-dir"].get<std::string>();
   }
 
   if (j.find("allow-local-ip") != j.end()) {
@@ -491,7 +520,8 @@ json asJSON(const DaemonConfiguration& config) {
                 {"db-threads", config.dbThreads},
                 {"db-write-buffer-size", config.dbWriteBufferSize},
                 {"db-compression", compressionString},
-                {"network", Xi::to_string(config.network)},
+                {"network", config.network},
+                {"network-dir", config.networkConfigDir},
                 {"allow-local-ip", config.localIp},
                 {"hide-my-port", config.hideMyPort},
                 {"p2p-bind-ip", config.p2pInterface},

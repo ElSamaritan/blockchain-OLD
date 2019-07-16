@@ -119,8 +119,7 @@ std::shared_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(
 
   throwIf(transfers.empty(), error::ZERO_DESTINATION);
   validateTransfersAddresses(transfers);
-  m_upperTransactionSizeLimit =
-      Xi::Config::MinerReward::fullRewardZone(blockVersion) - m_currency.minerTxBlobReservedSize();
+  m_upperTransactionSizeLimit = m_currency.maxTxSize(blockVersion);
   uint64_t neededMoney = countNeededMoney(fee, transfers);
 
   std::shared_ptr<SendTransactionContext> context = std::make_shared<SendTransactionContext>();

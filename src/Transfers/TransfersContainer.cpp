@@ -319,7 +319,7 @@ bool TransfersContainer::addTransactionInputs(const TransactionBlockInfo& block,
                         << ": hash " << spentOutput.transactionHash << ", block " << spentOutput.blockHeight.native()
                         << ", transaction index " << spentOutput.transactionIndex << ", output "
                         << spentOutput.outputInTransaction << ", amount "
-                        << m_currency.formatAmount(spentOutput.amount);
+                        << m_currency.amountFormatter()(spentOutput.amount);
         throw std::runtime_error(message);
       }
 
@@ -349,7 +349,7 @@ bool TransfersContainer::addTransactionInputs(const TransactionBlockInfo& block,
       if (spendingTransferIt == availableOutputsRange.second) {
         auto message = "Failed to add key input: invalid amount";
         m_logger(Error) << message << ", key image " << input.keyImage << ", amount "
-                        << m_currency.formatAmount(input.amount);
+                        << m_currency.amountFormatter()(input.amount);
         throw std::runtime_error(message);
       }
 
@@ -941,7 +941,7 @@ void TransfersContainer::repair() {
     if (m_transactions.count(it->transactionHash) == 0) {
       m_logger(Warning) << "Orphan unconfirmed output found, remove it"
                         << ", transaction hash " << it->transactionHash << ", output " << std::setw(2)
-                        << it->outputInTransaction << ", amount " << m_currency.formatAmount(it->amount);
+                        << it->outputInTransaction << ", amount " << m_currency.amountFormatter()(it->amount);
 
       if (it->type == TransactionTypes::OutputType::Key) {
         KeyImage keyImage = it->keyImage;
@@ -966,7 +966,7 @@ void TransfersContainer::repair() {
                         << ", block " << std::setw(7) << it->blockHeight.native() << ", transaction index "
                         << std::setw(2) << it->transactionIndex << ", transaction hash " << it->transactionHash
                         << ", output " << std::setw(2) << it->outputInTransaction << ", amount "
-                        << m_currency.formatAmount(it->amount);
+                        << m_currency.amountFormatter()(it->amount);
 
       if (it->type == TransactionTypes::OutputType::Key) {
         KeyImage keyImage = it->keyImage;

@@ -173,7 +173,6 @@ class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
   System::ContextGroup contextGroup;
   Logging::LoggerRef logger;
   Checkpoints& checkpoints;
-  std::unique_ptr<IUpgradeManager> m_upgradeManager;
   std::vector<std::shared_ptr<IBlockchainCache>> chainsStorage;
   std::vector<IBlockchainCache*> chainsLeaves;
   std::unique_ptr<ITransactionPool> m_transactionPool;

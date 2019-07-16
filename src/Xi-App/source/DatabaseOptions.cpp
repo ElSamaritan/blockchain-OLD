@@ -74,10 +74,9 @@ bool Xi::App::DatabaseOptions::evaluateParsedOptions(const cxxopts::Options &opt
   return false;
 }
 
-CryptoNote::DataBaseConfig Xi::App::DatabaseOptions::getConfig(Xi::Config::Network::Type network) const {
+CryptoNote::DataBaseConfig Xi::App::DatabaseOptions::getConfig() const {
   CryptoNote::DataBaseConfig config;
   config.setDataDir(DataDirectory);
-  config.setNetwork(network);
   config.setCompression(Compression);
   config.setMaxOpenFiles(MaximumOpenFiles);
   config.setReadCacheSize(ReadCacheSize);

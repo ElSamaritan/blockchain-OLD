@@ -6,6 +6,8 @@
 #include <GetInput.h>
 ///////////////////////////////
 
+#include <sstream>
+
 #include <Xi/ExternalIncludePush.h>
 #include "linenoise.hpp"
 #include <Xi/ExternalIncludePop.h>
@@ -37,7 +39,13 @@ std::string getPrompt(std::shared_ptr<WalletInfo> walletInfo) {
 
   const std::string shortName = walletName.substr(0, promptLength);
 
-  return "[" + WalletConfig::ticker + " " + shortName + "]: ";
+  std::stringstream builder{};
+  builder << "[" << walletInfo->currency().coin().ticker();
+  if (!walletInfo->currency().network().isMainNet()) {
+    builder << " (" << toString(walletInfo->currency().network().type()) << ")";
+  }
+  builder << " " << shortName << "]: ";
+  return builder.str();
 }
 
 template <typename T>

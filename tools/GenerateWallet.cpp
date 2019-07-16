@@ -42,7 +42,7 @@ int main(int, char**) {
   }
 
   auto binaryAddress = CryptoNote::toBinaryArray(account.address);
-  auto address = Tools::Base58::encode_addr(Xi::Config::Coin::addressBas58Prefix(), Common::asString(binaryAddress));
+  auto address = Tools::Base58::encode_addr(0x1cf46e, Common::asString(binaryAddress));
   auto mnemonicSeed = Mnemonics::PrivateKeyToMnemonic(account.spendSecretKey);
 
   CryptoNote::JsonOutputStreamSerializer ser{};
@@ -50,11 +50,11 @@ int main(int, char**) {
   XI_RETURN_EC_IF_NOT(ser.beginObject("public_keys"), -1);
   XI_RETURN_EC_IF_NOT(ser(account.address.viewPublicKey, "view_key"),-1);
   XI_RETURN_EC_IF_NOT(ser(account.address.spendPublicKey, "spend_key"),-1);
-  XI_RETURN_EC_IF_NOT(ser.endObject(), false);
+  XI_RETURN_EC_IF_NOT(ser.endObject(), -1);
   XI_RETURN_EC_IF_NOT(ser.beginObject("secret_keys"), -1);
   XI_RETURN_EC_IF_NOT(ser(account.viewSecretKey, "view_key"), -1);
   XI_RETURN_EC_IF_NOT(ser(account.spendSecretKey, "spend_key"), -1);
-  XI_RETURN_EC_IF_NOT(ser.endObject(), false);
+  XI_RETURN_EC_IF_NOT(ser.endObject(), -1);
   XI_RETURN_EC_IF_NOT(ser(mnemonicSeed, "mnemonics"), -1);
 
   std::cout << ser << std::endl;

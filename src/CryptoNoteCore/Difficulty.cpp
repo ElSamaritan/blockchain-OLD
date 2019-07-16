@@ -23,6 +23,8 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <cassert>
+#include <algorithm>
 
 #include "Difficulty.h"
 
@@ -112,4 +114,66 @@ uint64_t CryptoNote::Difficulty::LWMA_2::operator()(const std::vector<uint64_t>&
   }
 
   return static_cast<uint64_t>(next_D);
+}
+
+uint64_t CryptoNote::Difficulty::LWMA_1::operator()(const std::vector<uint64_t>& timestamps,
+                                                    const std::vector<uint64_t>& cumulativeDifficulties,
+                                                    uint32_t windowSize, uint16_t blockTime) const {
+  // This old way was not very proper
+  // uint64_t  T = DIFFICULTY_TARGET;
+  // uint64_t  N = DIFFICULTY_WINDOW; // N=60, 90, and 150 for T=600, 120, 60.
+
+  auto N = windowSize;
+  assert(timestamps.size() == N + 1);
+
+  auto T = blockTime;
+  uint64_t L(0), next_D, i, this_timestamp(0), previous_timestamp(0), avg_D;
+
+  previous_timestamp = timestamps[0] - T;
+  for (i = 1; i <= N; i++) {
+    // Safely prevent out-of-sequence timestamps
+    if (timestamps[i] > previous_timestamp) {
+      this_timestamp = timestamps[i];
+    } else {
+      this_timestamp = previous_timestamp + 1;
+    }
+    L += i * std::min<uint64_t>(6ULL * T, this_timestamp - previous_timestamp);
+    previous_timestamp = this_timestamp;
+  }
+  if (L < N * N * T / 20) {
+    L = N * N * T / 20;
+  }
+  avg_D = (cumulativeDifficulties[N] - cumulativeDifficulties[0]) / N;
+
+  // Prevent round off error for small D and overflow for large D.
+  if (avg_D > 2000000 * N * N * T) {
+    next_D = (avg_D / (200 * L)) * (N * (N + 1) * T * 99);
+  } else {
+    next_D = (avg_D * N * (N + 1) * T * 99) / (200 * L);
+  }
+
+  // Optional. Make all insignificant digits zero for easy reading.
+  i = 1000000000;
+  while (i > 1) {
+    if (next_D > i * 100) {
+      next_D = ((next_D + i / 2) / i) * i;
+      break;
+    } else {
+      i /= 10;
+    }
+  }
+  return next_D;
+}
+
+std::shared_ptr<CryptoNote::Difficulty::IDifficultyAlgorithm> CryptoNote::Difficulty::makeDifficultyAlgorithm(
+    std::string_view id) {
+  if (id == "LWMA-v1") {
+    return std::make_shared<LWMA_1>();
+  } else if (id == "LWMA-v2") {
+    return std::make_shared<LWMA_2>();
+  } else if (id == "LWMA-v3") {
+    return std::make_shared<LWMA_3>();
+  } else {
+    return nullptr;
+  }
 }

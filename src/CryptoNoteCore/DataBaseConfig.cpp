@@ -34,7 +34,6 @@ DataBaseConfig::DataBaseConfig()
       maxOpenFiles(Xi::Config::Database::maximumOpenFiles()),
       writeBufferSize(Xi::Config::Database::writeBufferSize()),
       readCacheSize(Xi::Config::Database::readBufferSize()),
-      m_network(Xi::Config::Network::defaultNetworkType()),
       compression(Compression::LZ4) {}
 
 bool DataBaseConfig::init(const std::string dataDirectory, const uint16_t backgroundThreads, const uint16_t openFiles,
@@ -64,8 +63,6 @@ uint64_t DataBaseConfig::getWriteBufferSize() const { return writeBufferSize; }
 
 uint64_t DataBaseConfig::getReadCacheSize() const { return readCacheSize; }
 
-Xi::Config::Network::Type DataBaseConfig::getNetwork() const { return m_network; }
-
 DataBaseConfig::Compression DataBaseConfig::getCompression() const { return compression; }
 
 void DataBaseConfig::setConfigFolderDefaulted(bool defaulted) { configFolderDefaulted = defaulted; }
@@ -81,8 +78,6 @@ void DataBaseConfig::setMaxOpenFiles(uint32_t _maxOpenFiles) { this->maxOpenFile
 void DataBaseConfig::setWriteBufferSize(uint64_t _writeBufferSize) { this->writeBufferSize = _writeBufferSize; }
 
 void DataBaseConfig::setReadCacheSize(uint64_t _readCacheSize) { this->readCacheSize = _readCacheSize; }
-
-void DataBaseConfig::setNetwork(Xi::Config::Network::Type network) { this->m_network = network; }
 
 void DataBaseConfig::setCompression(DataBaseConfig::Compression _compression) { compression = _compression; }
 

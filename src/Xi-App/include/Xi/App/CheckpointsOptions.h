@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -33,6 +33,7 @@
 #include <Logging/ILogger.h>
 #include <Serialization/ISerializer.h>
 #include <CryptoNoteCore/Checkpoints.h>
+#include <CryptoNoteCore/Currency.h>
 
 #include "Xi/App/IOptions.h"
 
@@ -50,7 +51,8 @@ struct CheckpointsOptions : public IOptions {
   void emplaceOptions(cxxopts::Options& options) override;
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
 
-  std::unique_ptr<CryptoNote::Checkpoints> getCheckpoints(Logging::ILogger& logger) const;
+  std::unique_ptr<CryptoNote::Checkpoints> getCheckpoints(const CryptoNote::Currency& currency,
+                                                          Logging::ILogger& logger) const;
 };
 }  // namespace App
 }  // namespace Xi

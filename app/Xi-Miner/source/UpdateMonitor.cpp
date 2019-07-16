@@ -112,6 +112,7 @@ Xi::Result<XiMiner::MinerBlockTemplate> XiMiner::UpdateMonitor::getBlockTemplate
   CryptoNote::CachedBlock block{reval.Template};
   reval.Difficutly = response.difficulty;
   reval.TemplateState = response.template_state;
+  reval.Algorithm = response.proof_of_work_algorithm;
   reval.ProofOfWork = block.getProofOfWorkBlob();
 
   return success(std::move(reval));

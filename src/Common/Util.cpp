@@ -272,14 +272,14 @@ std::string get_special_folder_path(int nfolder, bool iscreate) {
 
 std::string getDefaultDataDirectory() {
   // namespace fs = boost::filesystem;
-  // Windows < Vista: C:\Documents and Settings\Username\Application Data\CRYPTONOTE_NAME
-  // Windows >= Vista: C:\Users\Username\AppData\Roaming\CRYPTONOTE_NAME
-  // Mac: ~/Library/Application Support/CRYPTONOTE_NAME
-  // Unix: ~/.CRYPTONOTE_NAME
+  // Windows < Vista: C:\Documents and Settings\Username\Application Data\Xi
+  // Windows >= Vista: C:\Users\Username\AppData\Roaming\Xi
+  // Mac: ~/Library/Application Support/Xi
+  // Unix: ~/.Xi
   std::string config_folder;
 #ifdef WIN32
   // Windows
-  config_folder = get_special_folder_path(CSIDL_APPDATA, true) + "/" + Xi::Config::Coin::name();
+  config_folder = get_special_folder_path(CSIDL_APPDATA, true) + "/Xi";
 #else
   std::string pathRet;
   char* pszHome = getenv("HOME");
@@ -290,10 +290,10 @@ std::string getDefaultDataDirectory() {
 #ifdef MAC_OSX
   // Mac
   pathRet /= "Library/Application Support";
-  config_folder = (pathRet + "/" + Xi::Config::Coin::name());
+  config_folder = (pathRet + "/Xi");
 #else
   // Unix
-  config_folder = (pathRet + "/." + Xi::Config::Coin::name());
+  config_folder = (pathRet + "/.Xi");
 #endif
 #endif
 

@@ -52,7 +52,7 @@ const Maybe<std::string> getAddressBookPaymentID() {
   return getPaymentID(msg.str());
 }
 
-void addToAddressBook() {
+void addToAddressBook(const CryptoNote::Currency& currency) {
   std::cout << InformationMsg(
                    "Note: You can type cancel at any time to "
                    "cancel adding someone to your address book")
@@ -68,7 +68,7 @@ void addToAddressBook() {
     return;
   }
 
-  auto maybeAddress = getAddress("\nWhat address does this user have? ");
+  auto maybeAddress = getAddress("\nWhat address does this user have? ", currency);
 
   if (!maybeAddress.isJust) {
     std::cout << WarningMsg("Cancelling addition to address book.") << std::endl;
@@ -156,14 +156,14 @@ void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::INo
 
   auto addressBookEntry = maybeAddressBookEntry.x;
 
-  auto maybeAmount = getTransferAmount();
+  auto maybeAmount = getTransferAmount(node.currency());
 
   if (!maybeAmount.isJust) {
     std::cout << WarningMsg("Cancelling transction.") << std::endl;
     return;
   }
 
-  const auto maybeUnlockTimestamp = getUnlockTimestamp();
+  const auto maybeUnlockTimestamp = getTransferUnlock(node.getLastKnownBlockVersion(), node.currency());
   if (!maybeUnlockTimestamp.isJust) {
     std::cout << WarningMsg("Cancelling transaction.") << std::endl;
     return;
@@ -181,7 +181,7 @@ void sendFromAddressBook(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::INo
   auto integrated = addressBookEntry.integratedAddress;
 
   if (integrated) {
-    auto addrPaymentIDPair = extractIntegratedAddress(address);
+    auto addrPaymentIDPair = extractIntegratedAddress(address, walletInfo->currency());
     address = addrPaymentIDPair.x.first;
     extra = getExtraFromPaymentID(addrPaymentIDPair.x.second);
   }

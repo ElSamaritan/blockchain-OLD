@@ -85,6 +85,8 @@ class WalletGreen : public IWallet,
   virtual void deleteAddress(const std::string& address) override;
 
   virtual const CryptoNote::Currency& currency() const override;
+  virtual const CryptoNote::BlockVersion lastKnownBlockVersion() const override;
+
   virtual uint64_t getActualBalance() const override;
   virtual uint64_t getActualBalance(const std::string& address) const override;
   virtual uint64_t getPendingBalance() const override;

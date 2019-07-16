@@ -159,13 +159,18 @@ xi_make_library(
     CryptoNoteCore
 )
 
+include(Xi-Config/Config.cmake)
 xi_make_library(
   Xi-Config
 
   PUBLIC_LIBRARIES
     Xi::Core
     Xi::Blockchain
+
+  EXTRA_SOURCES
+    ${config_sources}
 )
+target_include_directories(Xi.Config PRIVATE ${CONFIG_OUT})
 
 if(XI_BUILD_BREAKPAD)
   xi_make_library(

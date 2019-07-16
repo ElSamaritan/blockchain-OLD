@@ -31,7 +31,14 @@ macro(xi_make_library source_dir)
   file(GLOB_RECURSE private_header_files "${lib_source_dir}/**.h" "${lib_source_dir}/**.hpp" "${lib_source_dir}/**.hh")
   file(GLOB_RECURSE source_files "${lib_source_dir}/**.cpp" "${lib_source_dir}/**.c")
 
-  cmake_parse_arguments(XI_MAKE_LIBRARY "" "" "PUBLIC_LIBRARIES;PRIVATE_LIBRARIES;TEST_LIBRARIES" ${ARGN})
+  cmake_parse_arguments(
+    XI_MAKE_LIBRARY
+      ""
+      ""
+      "PUBLIC_LIBRARIES;PRIVATE_LIBRARIES;TEST_LIBRARIES;EXTRA_SOURCES"
+
+    ${ARGN}
+  )
 
   foreach(source_file ${public_header_files} ${private_hader_files} ${source_files})
     set_source_files_properties(${source_file} PROPERTIES COMPILE_FLAGS "${XI_CXX_FLAGS}")
@@ -46,6 +53,7 @@ macro(xi_make_library source_dir)
         ${public_header_files}
         ${private_header_files}
         ${source_files}
+        ${XI_MAKE_LIBRARY_EXTRA_SOURCES}
     )
 
     target_include_directories(

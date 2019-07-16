@@ -61,7 +61,8 @@ struct WalletServiceConfiguration {
 
   uint32_t scanHeight;
 
-  ::Xi::Config::Network::Type network;
+  std::string network;
+  std::string networkDir;
   ::Xi::Http::SSLConfiguration ssl;
 };
 
@@ -71,8 +72,8 @@ inline WalletServiceConfiguration initConfiguration() {
   config.daemonAddress = "127.0.0.1";
   config.bindAddress = "127.0.0.1";
   config.logFile = "service.log";
-  config.daemonPort = Xi::Config::Network::rpcPort();
-  config.bindPort = Xi::Config::Network::pgPort();
+  config.daemonPort = Xi::Config::Network::Configuration::rpcDefaultPort();
+  config.bindPort = Xi::Config::Network::Configuration::pgserviceDefaultPort();
   config.logLevel = Logging::Info;
   config.legacySecurity = false;
   config.dumpConfig = false;
@@ -82,13 +83,14 @@ inline WalletServiceConfiguration initConfiguration() {
   config.unregisterService = false;
   config.printAddresses = false;
   config.syncFromZero = false;
-  config.network = Xi::Config::Network::defaultNetworkType();
+  config.network = Xi::Config::Network::defaultNetworkIdentifier();
+  config.networkDir = "./config";
 
   return config;
 };
 
 inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& config) {
-  cxxopts::Options options(argv[0], CommonCLI::header());
+  cxxopts::Options options(argv[0]);
   CommonCLI::emplaceCLIOptions(options);
 
   // clang-format off
@@ -118,6 +120,7 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
   options.add_options("Network")
     ("bind-address", "Interface IP address for the RPC service", cxxopts::value<std::string>()->default_value(config.bindAddress), "<ip>")
     ("bind-port", "TCP port for the RPC service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.bindPort)), "<port>")
+    ("network-dir", "Directory to search for additional network configuration files.", cxxopts::value<std::string>()->default_value(config.networkDir))
     ("network", "The network type you want to connect to, mostly you want to use 'MainNet' here.",
      cxxopts::value<std::string>()->default_value(Xi::to_string(Xi::Config::Network::defaultNetworkType())),
      "[MainNet|StageNet|TestNet|LocalTestNet]");
@@ -243,7 +246,11 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
     }
 
     if (cli.count("network") > 0) {
-      config.network = Xi::lexical_cast<::Xi::Config::Network::Type>(cli["network"].as<std::string>());
+      config.network = cli["network"].as<std::string>();
+    }
+
+    if (cli.count("network-dir") > 0) {
+      config.networkDir = cli["network-dir"].as<std::string>();
     }
 
     if (CommonCLI::handleCLIOptions(options, cli)) exit(0);
@@ -320,7 +327,7 @@ inline void handleSettings(const std::string configFile, WalletServiceConfigurat
     }
   }
   if (j.find("network") != j.end()) {
-    config.network = Xi::lexical_cast<::Xi::Config::Network::Type>(j["network"]);
+    config.network = j["network"];
   }
 }
 
@@ -338,7 +345,8 @@ inline json asJSON(const WalletServiceConfiguration& config) {
                 {"rpc-password", config.rpcPassword},
                 {"server-root", config.serverRoot},
                 {"ssl", CryptoNote::storeToJson(config.ssl)},
-                {"network", Xi::to_string(config.network)}};
+                {"network", config.network},
+                {"network-dir", config.networkDir}};
   return j;
 };
 

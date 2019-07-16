@@ -30,8 +30,10 @@ void checkForNewTransactions(std::shared_ptr<WalletInfo> walletInfo) {
                   << InformationMsg("New transaction found!") << std::endl
                   << SuccessMsg("Incoming transfer:") << std::endl
                   << SuccessMsg("Hash: " + Common::podToHex(t.hash)) << std::endl
-                  << SuccessMsg("Amount: " + formatAmount(t.totalAmount)) << std::endl;
-        printUnlockTime(t, walletInfo->wallet.currency(),
+                  << SuccessMsg("Amount: " +
+                                walletInfo->currency().amountFormatter()(static_cast<uint64_t>(t.totalAmount)))
+                  << std::endl;
+        printUnlockTime(t, walletInfo->currency(),
                         CryptoNote::BlockHeight::fromNative(walletInfo->wallet.getBlockCount()), true, "Unlock: ");
         std::cout << InformationMsg(getPrompt(walletInfo)) << std::flush;
       }
@@ -116,7 +118,7 @@ void syncWallet(CryptoNote::INode &node, std::shared_ptr<WalletInfo> walletInfo)
       if (stuckCounter > 20) {
         std::cout << WarningMsg("Syncing may be stuck. Try restarting ") << WarningMsg(WalletConfig::daemonName)
                   << WarningMsg(".") << std::endl
-                  << WarningMsg("If this persists, visit ") << WarningMsg(WalletConfig::contactLink)
+                  << WarningMsg("If this persists, visit ") << WarningMsg(node.currency().general().contactUrl())
                   << WarningMsg(" for support.") << std::endl;
       } else if (stuckCounter > 19) {
         /*

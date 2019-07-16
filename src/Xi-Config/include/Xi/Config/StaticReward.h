@@ -25,10 +25,10 @@
 
 #include <string>
 
-#include "Xi/Config/Coin.h"
-#include "Xi/Config/NetworkType.h"
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
 
-#include "Xi/Config/_Impl/BeginStaticReward.h"
+#include "Xi/Config/VersionContainer.hpp"
 
 namespace Xi {
 namespace Config {
@@ -44,16 +44,23 @@ namespace Config {
  * paying out the initial address any longer.
  *
  */
-namespace StaticReward {}
+namespace StaticReward {
 
+class Configuration {
+ public:
+  XI_PROPERTY(uint64_t, amount)
+  XI_PROPERTY(std::string, address)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(amount(), amount)
+  KV_MEMBER_RENAME(address(), address)
+  KV_END_SERIALIZATION
+
+  bool isEnabled() const { return !this->address().empty(); }
+};
+
+using Container = VersionContainer<StaticReward::Configuration>;
+
+}  // namespace StaticReward
 }  // namespace Config
 }  // namespace Xi
-
-// clang-format off
-//                        (_Index, _Version,                _Amount,  _Address...
-MakeStaticRewardCheckpoint(     0,        1, Coin::toAtomicUnits(1),  "gxi1D8NCRbEVtADk1AjdHz4AJLkicPwPhddn2VotETtjVw6cDkdP5WHCq5Gr5d7Tm68iQDHhs5bfyTPXK3y2YZMe69FCQXiLNZ")
-// clang-format on
-
-#define CURRENT_STATIC_REWARD_CHECKPOINT_INDEX 0
-
-#include "Xi/Config/_Impl/EndStaticReward.h"

@@ -5,16 +5,13 @@
 #pragma once
 
 #include <algorithm>
-
 #include <memory>
-
 #include <string>
-
 #include <vector>
-
 #include <iterator>
 
 #include <Types.h>
+#include <CryptoNoteCore/Currency.h>
 
 void confirmPassword(const std::string &walletPass, const std::string &msg = "");
 
@@ -35,16 +32,12 @@ bool fileExists(const std::string &filename);
 
 bool shutdown(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::INode &node, bool &alreadyShuttingDown);
 
-std::string formatAmountBasic(const uint64_t amount);
-std::string formatAmount(const uint64_t amount);
-std::string formatDollars(const uint64_t amount);
-std::string formatCents(const uint64_t amount);
-
 std::string getPaymentIDFromExtra(const std::string &extra);
 
 std::string unixTimeToDate(const uint64_t timestamp);
 
-std::string createIntegratedAddress(const std::string &address, const std::string &paymentID);
+std::string createIntegratedAddress(const std::string &address, const CryptoNote::Currency &currency,
+                                    const std::string &paymentID);
 
 uint64_t getDivisor();
 

@@ -23,9 +23,42 @@
 
 #include "CryptoNoteCore/HashAlgorithms.h"
 
+#include <Xi/Crypto/Hash/Sha2.hh>
+#include <Xi/Crypto/Hash/Keccak.hh>
+
 #include "crypto/cnx/cnx.h"
 #include "crypto/hash-predef.h"
 
+// TODO Error return codes.
 void CryptoNote::Hashes::CNX_v1::operator()(Xi::ConstByteSpan blob, Crypto::Hash &hash) const {
   Crypto::CNX::Hash_v1{}(blob.data(), blob.size(), hash);
+}
+
+void CryptoNote::Hashes::Sha2_256::operator()(Xi::ConstByteSpan blob, Crypto::Hash &hash) const {
+  xi_crypto_hash_sha2_256(blob.data(), blob.size_bytes(), hash.data());
+}
+
+void CryptoNote::Hashes::Keccak::operator()(Xi::ConstByteSpan blob, Crypto::Hash &hash) const {
+  xi_crypto_hash_keccak_256(blob.data(), blob.size_bytes(), hash.data());
+}
+
+std::shared_ptr<CryptoNote::Hashes::IProofOfWorkAlgorithm> CryptoNote::Hashes::makeProofOfWorkAlgorithm(
+    std::string_view id) {
+  if (id == "CNX-v1") {
+    return std::make_shared<CNX_v1>();
+  } else if (id == "SHA2-256") {
+    return std::make_shared<Sha2_256>();
+  } else if (id == "Keccak") {
+    return std::make_shared<Keccak>();
+  } else {
+    return nullptr;
+  }
+}
+
+std::vector<std::string> CryptoNote::Hashes::supportedProofOfWorkAlgorithms() {
+  return {{
+      "CNX-v1",
+      "SHA2-256",
+      "Keccak",
+  }};
 }

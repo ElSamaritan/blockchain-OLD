@@ -23,37 +23,35 @@
 
 #pragma once
 
-#include <vector>
-#include <cinttypes>
-#include <chrono>
+#include <string>
 
-#include <Xi/Blockchain/Block/Version.hpp>
-
-#include "CryptoNoteCore/Difficulty.h"
-
-#include "Xi/Config/BlockVersion.h"
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
 
 namespace Xi {
 namespace Config {
-namespace Hashes {
-template <Blockchain::Block::Version::value_type _Index>
-struct HashCheckpoint;
-}
+
+namespace General {
+
+class Configuration {
+ public:
+  XI_PROPERTY(std::string, homepage)
+  XI_PROPERTY(std::string, description)
+  XI_PROPERTY(std::string, copyright)
+  XI_PROPERTY(std::string, contactUrl)
+  XI_PROPERTY(std::string, licenseUrl)
+  XI_PROPERTY(std::string, downloadUrl)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(homepage(), homepage)
+  KV_MEMBER_RENAME(description(), description)
+  KV_MEMBER_RENAME(copyright(), copyright)
+  KV_MEMBER_RENAME(contactUrl(), contact_url)
+  KV_MEMBER_RENAME(licenseUrl(), license_url)
+  KV_MEMBER_RENAME(downloadUrl(), download_url)
+  KV_END_SERIALIZATION
+};
+
+}  // namespace General
 }  // namespace Config
 }  // namespace Xi
-
-#define MakeHashCheckpoint(_Index, _Version, _Algorithm)                                                          \
-  namespace Xi {                                                                                                  \
-  namespace Config {                                                                                              \
-  namespace Hashes {                                                                                              \
-  template <>                                                                                                     \
-  struct HashCheckpoint<_Index> {                                                                                 \
-    static inline constexpr uint8_t index() { return _Index; }                                                    \
-    static inline constexpr Blockchain::Block::Version version() { return Blockchain::Block::Version{_Version}; } \
-    using algorithm = _Algorithm;                                                                                 \
-    static_assert(::Xi::Config::BlockVersion::exists(Blockchain::Block::Version{_Version}),                       \
-                  "Non existing block version referenced.");                                                      \
-  };                                                                                                              \
-  }                                                                                                               \
-  }                                                                                                               \
-  }

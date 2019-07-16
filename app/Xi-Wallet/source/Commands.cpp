@@ -27,22 +27,22 @@ std::vector<Command> nodeDownCommands() {
   };
 }
 
-std::vector<AdvancedCommand> allCommands() {
+std::vector<AdvancedCommand> allCommands(const CryptoNote::Currency& currency) {
   return {
       /* Basic commands */
       AdvancedCommand("advanced", "List available advanced commands", true, false),
       AdvancedCommand("address", "Display your payment address", true, false),
-      AdvancedCommand("balance", "Display how much " + WalletConfig::ticker + " you have", true, false),
+      AdvancedCommand("balance", "Display how much " + currency.coin().ticker() + " you have", true, false),
       AdvancedCommand("backup", "Backup your private keys and/or seed", true, false),
       AdvancedCommand("exit", "Exit and save your wallet", true, false),
       AdvancedCommand("help", "List this help message", true, false),
-      AdvancedCommand("transfer", "Send " + WalletConfig::ticker + " to someone", false, false),
+      AdvancedCommand("transfer", "Send " + currency.coin().ticker() + " to someone", false, false),
 
       /* Advanced commands */
       AdvancedCommand("ab_add", "Add a person to your address book", true, true),
       AdvancedCommand("ab_delete", "Delete a person in your address book", true, true),
       AdvancedCommand("ab_list", "List everyone in your address book", true, true),
-      AdvancedCommand("ab_send", "Send " + WalletConfig::ticker + " to someone in your address book", false, true),
+      AdvancedCommand("ab_send", "Send " + currency.coin().ticker() + " to someone in your address book", false, true),
       AdvancedCommand("change_password", "Change your wallet password", true, true),
       AdvancedCommand("make_integrated_address", "Make a combined address + payment ID", true, true),
       AdvancedCommand("incoming_transfers", "Show incoming transfers", true, true),
@@ -60,22 +60,22 @@ std::vector<AdvancedCommand> allCommands() {
   };
 }
 
-std::vector<AdvancedCommand> basicCommands() {
-  return filter(allCommands(), [](AdvancedCommand c) { return !c.advanced; });
+std::vector<AdvancedCommand> basicCommands(const CryptoNote::Currency& currency) {
+  return filter(allCommands(currency), [](AdvancedCommand c) { return !c.advanced; });
 }
 
-std::vector<AdvancedCommand> advancedCommands() {
-  return filter(allCommands(), [](AdvancedCommand c) { return c.advanced; });
+std::vector<AdvancedCommand> advancedCommands(const CryptoNote::Currency& currency) {
+  return filter(allCommands(currency), [](AdvancedCommand c) { return c.advanced; });
 }
 
-std::vector<AdvancedCommand> basicViewWalletCommands() {
-  return filter(basicCommands(), [](AdvancedCommand c) { return c.viewWalletSupport; });
+std::vector<AdvancedCommand> basicViewWalletCommands(const CryptoNote::Currency& currency) {
+  return filter(basicCommands(currency), [](AdvancedCommand c) { return c.viewWalletSupport; });
 }
 
-std::vector<AdvancedCommand> advancedViewWalletCommands() {
-  return filter(advancedCommands(), [](AdvancedCommand c) { return c.viewWalletSupport; });
+std::vector<AdvancedCommand> advancedViewWalletCommands(const CryptoNote::Currency& currency) {
+  return filter(advancedCommands(currency), [](AdvancedCommand c) { return c.viewWalletSupport; });
 }
 
-std::vector<AdvancedCommand> allViewWalletCommands() {
-  return filter(allCommands(), [](AdvancedCommand c) { return c.viewWalletSupport; });
+std::vector<AdvancedCommand> allViewWalletCommands(const CryptoNote::Currency& currency) {
+  return filter(allCommands(currency), [](AdvancedCommand c) { return c.viewWalletSupport; });
 }

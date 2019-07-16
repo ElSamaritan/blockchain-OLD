@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -34,29 +34,23 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(UnrecognizedNetwork, "given network is unregcogn
 void Xi::App::NetworkOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("network")
-    ("network", "the xi network you want to operate on.", cxxopts::value<std::string>()->default_value(Xi::to_string(Network)),
-        "MainNet,StageNet,TestNet,LocalTestNet")
+    ("network", "the xi network you want to operate on.", cxxopts::value<std::string>()->default_value(Xi::Config::Network::defaultNetworkIdentifier()),
+        "<NAME>.[MainNet|StageNet|TestNet|LocalTestNet]")
+    ("network-dir", "Directory to search for additional network configuration files.",
+     cxxopts::value<std::string>()->default_value(NetworkDir))
   ;
   // clang-format on
 }
 
-#define XI_NETWORK_CASE(NET)                                                  \
-  if (network == Xi::to_lower(Xi::to_string(Xi::Config::Network::Type::NET))) \
-    Network = Xi::Config::Network::Type::NET;                                 \
-  else
-
 bool Xi::App::NetworkOptions::evaluateParsedOptions(const cxxopts::Options &options,
                                                     const cxxopts::ParseResult &result) {
   XI_UNUSED(options);
-  if (result.count("network") == 0) {
-    return false;
+  if (result.count("network")) {
+    Network = result["network"].as<std::string>();
   }
-  auto network = Xi::to_lower(result["network"].as<std::string>());
-  XI_NETWORK_CASE(MainNet)
-  XI_NETWORK_CASE(StageNet)
-  XI_NETWORK_CASE(TestNet)
-  XI_NETWORK_CASE(LocalTestNet)
-  Xi::exceptional<UnrecognizedNetworkError>();
+  if (result.count("network-dir")) {
+    NetworkDir = result["network-dir"].as<std::string>();
+  }
   return false;
 }
 

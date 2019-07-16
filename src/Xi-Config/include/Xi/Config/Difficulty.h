@@ -24,26 +24,36 @@
 #pragma once
 
 #include <cinttypes>
-#include <chrono>
+#include <array>
+#include <string>
 
-#include "Xi/Config/_Impl/BeginDifficulty.h"
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
+#include <Serialization/SerializationOverloads.h>
 
-/*!
- * Configuring LWMA
- *
- * _Index      : The order in which the different configurations apply.
- * _Version    : The block version when this algorithm should be applied
- * _Window     : The amount of previous blocks that shall be considered for calculating the new difficulty.
- * _Initial    : The initial difficulty chosen if not enough block have been mined to obtain all data required.
- * _Algorithm  : The implementation to use for difficulty calculation from that checkpoint on to the next, if present
- *
- */
+#include "Xi/Config/VersionContainer.hpp"
 
-// clang-format off
-//                      (_Index, _Version, _Window, _Initial,                       _Algorithm)
-MakeDifficultyCheckpoint(     0,        1,     128,     1000, ::CryptoNote::Difficulty::LWMA_2)
-// clang-format on
+namespace Xi {
+namespace Config {
+namespace Difficulty {
 
-#define CURRENT_DIFFICULTY_CHECKPOINT_INDEX 0
+class Configuration {
+ public:
+  XI_PROPERTY(std::string, algorithm)
+  XI_PROPERTY(uint32_t, windowSize)
+  XI_PROPERTY(uint64_t, initialDifficulty)
+  XI_PROPERTY(std::string, proofOfWorkAlgorithm)
 
-#include "Xi/Config/_Impl/EndDifficulty.h"
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(algorithm(), algorithm)
+  KV_MEMBER_RENAME(windowSize(), window_size)
+  KV_MEMBER_RENAME(initialDifficulty(), initial)
+  KV_MEMBER_RENAME(proofOfWorkAlgorithm(), proof_of_work)
+  KV_END_SERIALIZATION
+};
+
+using Container = VersionContainer<Difficulty::Configuration>;
+
+}  // namespace Difficulty
+}  // namespace Config
+}  // namespace Xi

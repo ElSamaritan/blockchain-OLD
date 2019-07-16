@@ -32,8 +32,12 @@ class UpgradeManager : public IUpgradeManager {
   UpgradeManager();
   virtual ~UpgradeManager() override;
 
-  virtual void addBlockVersion(Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeHeight) override;
+  virtual void addBlockVersion(Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeHeight,
+                               bool fork) override;
   virtual Xi::Blockchain::Block::Version getBlockVersion(uint32_t blockIndex) const override;
+  virtual bool isFork(Xi::Blockchain::Block::Version version) const override;
+  virtual uint32_t getForkIndex(Xi::Blockchain::Block::Version version) const override;
+  virtual Xi::Blockchain::Block::Version maximumVersion() const override;
 
  private:
   std::vector<std::unique_ptr<IUpgradeDetector>> m_upgradeDetectors;

@@ -24,49 +24,32 @@
 #pragma once
 
 #include <cinttypes>
+#include <string_view>
+#include <string>
+#include <locale>
 
-#include <Xi/Byte.hh>
-#include <crypto/CryptoTypes.h>
+#include "CryptoNoteCore/IAmountFormatter.hpp"
 
-#include "Xi/Config/Hashes.h"
+namespace CryptoNote {
 
-#undef MakeHashCheckpoint
+class AmountFormatter : public IAmountFormatter {
+ public:
+  explicit AmountFormatter(const uint64_t decimals, std::string_view ticker,
+                           const std::locale& locale = std::locale{""});
+  ~AmountFormatter() override;
 
-#ifndef CURRENT_HASH_CHECKPOINT_INDEX
-#pragma error "CURRENT_HASH_CHECKPOINT_INDEX must be defined"
-#endif
+ public:
+  std::string operator()(const uint64_t amount, bool addTicker = true) const override;
+  std::string operator()(const int64_t amount, bool addTicker = true) const override;
 
-namespace Xi {
-namespace Config {
-namespace Hashes {
+  uint64_t decimals() const;
+  const std::string& ticker() const;
+  const std::locale& locale() const;
 
-struct HashCheckpointResolver {
-  template <Blockchain::Block::Version::value_type>
-  static inline void compute(Xi::ConstByteSpan blob, ::Crypto::Hash& hash, Blockchain::Block::Version version);
+ private:
+  uint64_t m_decimals;
+  std::string m_ticker;
+  std::locale m_locale;
 };
 
-template <>
-inline void HashCheckpointResolver::compute<0>(Xi::ConstByteSpan blob, ::Crypto::Hash& hash,
-                                               Blockchain::Block::Version) {
-  typename HashCheckpoint<0>::algorithm hashFn{};
-  hashFn(blob, hash);
-}
-template <Blockchain::Block::Version::value_type _Index>
-inline void HashCheckpointResolver::compute(Xi::ConstByteSpan blob, ::Crypto::Hash& hash,
-                                            Blockchain::Block::Version version) {
-  if (version >= HashCheckpoint<_Index>::version()) {
-    typename HashCheckpoint<_Index>::algorithm hashFn{};
-    hashFn(blob, hash);
-  } else
-    return compute<_Index - 1>(blob, hash, version);
-}
-
-inline void compute(Xi::ConstByteSpan blob, ::Crypto::Hash& hash, Blockchain::Block::Version version) {
-  HashCheckpointResolver::compute<CURRENT_HASH_CHECKPOINT_INDEX>(blob, hash, version);
-}
-
-}  // namespace Hashes
-}  // namespace Config
-}  // namespace Xi
-
-#undef CURRENT_HASH_CHECKPOINT_INDEX
+}  // namespace CryptoNote

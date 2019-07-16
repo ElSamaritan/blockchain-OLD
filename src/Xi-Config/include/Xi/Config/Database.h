@@ -30,9 +30,9 @@
 namespace Xi {
 namespace Config {
 namespace Database {
-inline std::string blocksFilename() { return "xi-blocks"; }
-inline std::string blockIndicesFilename() { return "xi-blockindices"; }
-inline std::string pooldataFilename() { return "xi-transaction-pool"; }
+inline std::string blocksFilename() { return "blocks"; }
+inline std::string blockIndicesFilename() { return "block-indices"; }
+inline std::string pooldataFilename() { return "transaction-pool"; }
 
 inline constexpr uint64_t writeBufferSize() { return 256_MB; }
 inline constexpr uint64_t readBufferSize() { return 10_MB; }

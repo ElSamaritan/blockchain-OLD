@@ -58,6 +58,8 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
   virtual bool isLightNode() const override;
   void log_connections();
 
+  std::string updateDownloadUrl() const;
+
   // Interface t_payload_net_handler, where t_payload_net_handler is template argument of nodetool::node_server
   void stop();
   bool start_sync(CryptoNoteConnectionContext& context);

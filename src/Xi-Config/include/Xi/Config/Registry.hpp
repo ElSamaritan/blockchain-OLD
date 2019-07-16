@@ -23,38 +23,27 @@
 
 #pragma once
 
-#include <cinttypes>
+#include <map>
 #include <string>
+#include <string_view>
 
-#include <Xi/Blockchain/Block/Version.hpp>
+#include <Xi/Concurrent/RecursiveLock.h>
 
-#include "Xi/Config/BlockVersion.h"
+#include "Xi/Config/Configuration.hpp"
 
 namespace Xi {
 namespace Config {
-namespace StaticReward {
-template <uint8_t _Index>
-struct StaticRewardCheckpoint;
-}
+
+class Registry {
+ public:
+  static int addConfigJson(std::string_view name, std::string_view content);
+  static bool addConfigJsonFile(std::string_view name, std::string_view path);
+  static const Configuration* searchByName(std::string_view name);
+
+ private:
+  static std::map<std::string, Configuration> m_configs;
+  static Concurrent::RecursiveLock m_lock;
+};
+
 }  // namespace Config
 }  // namespace Xi
-
-#define MakeStaticRewardCheckpoint(_Index, _Version, _Amount, _Address)                                           \
-  namespace Xi {                                                                                                  \
-  namespace Config {                                                                                              \
-  namespace StaticReward {                                                                                        \
-  template <>                                                                                                     \
-  struct StaticRewardCheckpoint<_Index> {                                                                         \
-    static inline constexpr Blockchain::Block::Version::value_type index() { return _Index; }                     \
-    static inline constexpr Blockchain::Block::Version version() { return Blockchain::Block::Version{_Version}; } \
-    static inline constexpr uint64_t amount() { return _Amount; }                                                 \
-    static inline std::string address() {                                                                         \
-      static const std::string __Address{_Address};                                                               \
-      return __Address;                                                                                           \
-    }                                                                                                             \
-    static_assert(::Xi::Config::BlockVersion::exists(Blockchain::Block::Version{_Version}),                       \
-                  "Non existing block version referenced.");                                                      \
-  };                                                                                                              \
-  }                                                                                                               \
-  }                                                                                                               \
-  }

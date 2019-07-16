@@ -43,6 +43,8 @@ struct WalletInfo {
 
   /* The walletgreen wallet container */
   CryptoNote::WalletGreen &wallet;
+
+  const CryptoNote::Currency &currency() { return this->wallet.currency(); }
 };
 
 struct Config {
@@ -62,16 +64,22 @@ struct Config {
   std::string host = "127.0.0.1";
 
   /* The network to connect to, ie. MainNet/StageNet ... */
-  Xi::Config::Network::Type network = Xi::Config::Network::defaultNetworkType();
+  std::string network = Xi::Config::Network::defaultNetworkIdentifier();
+  std::string networkDir = "./config";
 
   /* The daemon port */
-  uint16_t port = Xi::Config::Network::rpcPort();
+  uint16_t port = Xi::Config::Network::Configuration::rpcDefaultPort();
 
   /* The wallet file path */
   std::string walletFile = "";
 
   /* The wallet password */
   std::string walletPass = "";
+
+  /* Generates a wallet and exits. */
+  bool generate = false;
+  /* Uses a seed for wallet generation, can be used to recover wallets. */
+  std::string generate_seed{};
 
   /* Configuration of SSL usage using the HTTP(S) client. */
   ::Xi::Http::SSLConfiguration ssl;

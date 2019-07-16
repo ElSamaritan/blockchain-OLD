@@ -27,6 +27,7 @@
 #include <cinttypes>
 
 #include <Xi/Algorithm/String.h>
+#include <Serialization/EnumSerialization.hpp>
 
 namespace Xi {
 namespace Config {
@@ -40,19 +41,32 @@ namespace Network {
  * For more information what the purpose of every network is, please have a look at the specific enum entries.
  */
 enum Type : uint8_t {
-  MainNet = 0,   ///< This indicates the production network. Meaning you are on the official blockchain most users are
+  MainNet = 1,   ///< This indicates the production network. Meaning you are on the official blockchain most users are
                  ///< connected to.
-  StageNet = 1,  ///< This network is for testing new releases that are nearly ready for production.
+  StageNet = 2,  ///< This network is for testing new releases that are nearly ready for production.
   TestNet =
-      2,  ///< A network that may shutdown every moment or is not even compatible to any other chain. This network is
+      3,  ///< A network that may shutdown every moment or is not even compatible to any other chain. This network is
           /// used internally by the developers to test new features. If you are not explicitly invited you shall not
           /// use it.
-  LocalTestNet = 3,  ///< This network is used by developers to test new configurations locally. You are not able to
+  LocalTestNet = 4,  ///< This network is used by developers to test new configurations locally. You are not able to
                      ///< reach it from any other machine.
 };
+XI_SERIALIZATION_ENUM(Type)
+
+std::string toString(Type type);
 }  // namespace Network
 }  // namespace Config
 std::string to_string(Xi::Config::Network::Type type);
 template <>
 ::Xi::Config::Network::Type lexical_cast<::Xi::Config::Network::Type>(const std::string& str);
 }  // namespace Xi
+
+namespace CryptoNote {
+using NetworkType = Xi::Config::Network::Type;
+}
+
+XI_SERIALIZATION_ENUM_RANGE(Xi::Config::Network::Type, MainNet, LocalTestNet)
+XI_SERIALIZATION_ENUM_TAG(Xi::Config::Network::Type, MainNet, "main")
+XI_SERIALIZATION_ENUM_TAG(Xi::Config::Network::Type, StageNet, "staging")
+XI_SERIALIZATION_ENUM_TAG(Xi::Config::Network::Type, TestNet, "testing")
+XI_SERIALIZATION_ENUM_TAG(Xi::Config::Network::Type, LocalTestNet, "local")

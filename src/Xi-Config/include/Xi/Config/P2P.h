@@ -34,7 +34,7 @@
 namespace Xi {
 namespace Config {
 namespace P2P {
-static inline constexpr uint16_t defaultPort() { return Network::p2pPort(); }
+static inline constexpr uint16_t defaultPort() { return Network::Configuration::p2pDefaultPort(); }
 
 static inline constexpr uint8_t minimumVersion() { return 1; }
 static inline constexpr uint8_t currentVersion() { return 1; }
@@ -54,7 +54,7 @@ static inline constexpr uint32_t maximumPackageSize() { return static_cast<uint3
 static inline constexpr std::chrono::seconds handshakeInterval() { return std::chrono::seconds{60}; }
 static inline constexpr std::chrono::seconds handshakeTimeout() { return std::chrono::seconds{5}; }
 
-static inline std::string stateBackupFilename() { return "xi-p2p"; }
+static inline std::string stateBackupFilename() { return "p2p"; }
 
 /*!
  * \brief handshakePeersCount is the number of known peers exchanged during a handshake.

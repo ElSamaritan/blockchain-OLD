@@ -292,7 +292,7 @@ int main(int argc, char** argv) {
     auto crashDumper = CommonCLI::make_crash_dumper("xi-pgservice");
     (void)crashDumper;
 
-    std::cout << CommonCLI::header() << std::endl;
+    std::cout << CommonCLI::header(pg.getCurrency()) << std::endl;
 
     const auto& config = pg.getConfig();
 

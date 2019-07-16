@@ -25,41 +25,19 @@
 
 #include <cinttypes>
 #include <algorithm>
+#include <chrono>
 
+#include <Xi/Global.hh>
 #include <Xi/Byte.hh>
+#include <Xi/Time.h>
 #include <Xi/Algorithm/Math.h>
+#include <Serialization/ISerializer.h>
 
-#include "Xi/Config/Time.h"
+#include "Xi/Config/VersionContainer.hpp"
 
 namespace Xi {
 namespace Config {
 namespace Limits {
-
-/* +++ Block Sizes +++ */
-inline constexpr uint64_t maximumTransactionSize() { return 1_T; }
-
-inline constexpr uint64_t maximumBlockBlobSize() { return 2_MB; }
-inline constexpr uint64_t maximumBlockExtraSize() { return 140_kB; }
-
-inline constexpr uint64_t initialBlockBlobSizeLimit() { return 512_kB; }
-inline constexpr std::chrono::seconds blockBlobSizeGrowthTimeWindow() { return 24_h; }
-inline constexpr uint64_t blockBlobSizeGrowthIncrementor() { return 1_kB; }
-inline constexpr uint64_t blockBlobCoinbaseReservedSize() { return 600_Bytes; }
-
-inline constexpr uint64_t blockBlobSizeGrowthNumerator() { return blockBlobSizeGrowthIncrementor(); }
-inline constexpr uint64_t blockBlobSizeGrowthDenominator() {
-  return static_cast<uint64_t>(std::chrono::seconds{blockBlobSizeGrowthTimeWindow()}.count()) /
-         Xi::Config::Time::blockTimeSeconds();
-}
-
-/* +++ RPC +++ */
-inline constexpr uint64_t maximumRPCBlocksQueryCount() { return 500; }
-
-/* +++ Transactions +++ */
-inline constexpr uint32_t maximumBlockWindowForLockedTransation() { return 1; }
-inline constexpr std::chrono::seconds maximumTimeWindowForLockedTransation() {
-  return maximumBlockWindowForLockedTransation() * Xi::Config::Time::blockTime();
-}
 
 inline constexpr std::chrono::seconds maximumTransactionLivetimeSpan() { return 24_h; }
 inline constexpr std::chrono::seconds maximumTransactionLivetimeSpanFromAltBlocks() { return 7 * 24_h; }
@@ -73,9 +51,23 @@ inline constexpr std::chrono::seconds maximumTransactionLivetimeSpanFromAltBlock
  */
 inline constexpr uint64_t minimumTransactionLivetimeSpansUntilDeletion() { return 7; }
 
-inline constexpr uint64_t maximumFusionTransactionSize() { return 32_kB; }
-inline constexpr uint64_t minimumFusionTransactionInputCount() { return 12; }
-inline constexpr uint64_t minimumFusionTransactionInputOutputRatio() { return 4; }
+class Configuration {
+ public:
+  XI_PROPERTY(uint64_t, maximum)
+  XI_PROPERTY(uint64_t, initial)
+  XI_PROPERTY(uint64_t, windowSize)
+  XI_PROPERTY(uint64_t, increaseRate)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(maximum(), maximum)
+  KV_MEMBER_RENAME(initial(), initial)
+  KV_MEMBER_RENAME(windowSize(), window_size)
+  KV_MEMBER_RENAME(increaseRate(), increase_rate)
+  KV_END_SERIALIZATION
+};
+
+using Container = VersionContainer<Limits::Configuration>;
+
 }  // namespace Limits
 }  // namespace Config
 }  // namespace Xi

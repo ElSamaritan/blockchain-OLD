@@ -27,8 +27,24 @@ class IUpgradeManager {
  public:
   virtual ~IUpgradeManager() {}
 
-  virtual void addBlockVersion(Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeHeight) = 0;
+  virtual void addBlockVersion(Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeHeight, bool fork) = 0;
   virtual Xi::Blockchain::Block::Version getBlockVersion(uint32_t blockIndex) const = 0;
+  virtual bool isFork(Xi::Blockchain::Block::Version version) const = 0;
+  virtual uint32_t getForkIndex(Xi::Blockchain::Block::Version version) const = 0;
+  virtual Xi::Blockchain::Block::Version maximumVersion() const = 0;
 };
+
+inline std::vector<uint32_t> getForks(const IUpgradeManager& manager) {
+  std::vector<uint32_t> reval{};
+  reval.reserve(manager.maximumVersion().native());
+  for (Xi::Blockchain::Block::Version::value_type i = Xi::Blockchain::Block::Version::Genesis.native();
+       i <= manager.maximumVersion().native(); ++i) {
+    const Xi::Blockchain::Block::Version current{i};
+    if (manager.isFork(current)) {
+      reval.push_back(manager.getForkIndex(current));
+    }
+  }
+  return reval;
+}
 
 }  // namespace CryptoNote

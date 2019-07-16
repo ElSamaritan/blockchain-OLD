@@ -44,7 +44,7 @@ namespace Xi {
 namespace App {
 struct RemoteRpcOptions : public IOptions {
   std::string Address = "127.0.0.1";
-  uint16_t Port = Xi::Config::Network::rpcPort();
+  uint16_t Port = Xi::Config::Network::Configuration::rpcDefaultPort();
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(Address)

@@ -294,7 +294,7 @@ void RpcServer::setBlockexplorerOnly(bool enabled) {
 }
 
 bool RpcServer::isCoreReady() {
-  return m_core.getCurrency().isTestNet() || m_p2p.get_payload_object().isSynchronized();
+  return (!m_core.getCurrency().network().isMainNet()) || m_p2p.get_payload_object().isSynchronized();
 }
 
 bool RpcServer::on_options_request(const RpcServer::HttpRequest& request, RpcServer::HttpResponse& response) {
@@ -322,8 +322,7 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req,
 
   uint32_t totalBlockCount;
   uint32_t startBlockIndex;
-  auto supplementQuery = m_core.findBlockchainSupplement(
-      req.block_hashes, Xi::Config::Limits::maximumRPCBlocksQueryCount(), totalBlockCount, startBlockIndex);
+  auto supplementQuery = m_core.findBlockchainSupplement(req.block_hashes, 500, totalBlockCount, startBlockIndex);
 
   if (supplementQuery.isError()) {
     logger(Logging::Error) << "Failed to query blockchain supplement: " << supplementQuery.error().message();
@@ -637,14 +636,14 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.grey_peerlist_size = m_p2p.getPeerlistManager().get_gray_peers_count();
   res.last_known_block_height = std::max(BlockHeight::fromIndex(0), m_protocol.getObservedHeight());
   res.network_height = std::max(BlockHeight::fromIndex(0), m_protocol.getBlockchainHeight());
-  const auto forks = Xi::Config::BlockVersion::forks();
+  const auto forks = getForks(m_core.upgradeManager());
   std::transform(forks.begin(), forks.end(), std::back_inserter(res.upgrade_heights),
                  [](const auto forkIndex) { return BlockHeight::fromIndex(forkIndex); });
   res.supported_height = res.upgrade_heights.empty() ? BlockHeight::fromIndex(0) : *res.upgrade_heights.rbegin();
   res.hashrate =
-      (uint32_t)round(res.difficulty / Xi::Config::Time::blockTimeSeconds());  // TODO Not a good approximation
+      (uint32_t)round(res.difficulty / m_core.currency().coin().blockTime());  // TODO Not a good approximation
   res.synced = res.height == res.network_height;
-  res.network = Xi::to_string(m_core.getCurrency().network());
+  res.network = Xi::to_string(m_core.getCurrency().network().type());
   auto topBlockSearch = m_core.getBlockByIndex(m_core.getTopBlockIndex());
   if (!topBlockSearch) {
     return false;
@@ -1292,6 +1291,7 @@ bool RpcServer::on_get_block_template(const RpcCommands::GetBlockTemplate::reque
   }
 
   res.blocktemplate_blob = toHex(block_blob);
+  res.proof_of_work_algorithm = m_core.currency().difficulty(blockTemplate.version).proofOfWorkAlgorithm();
   const auto btstate = block_template_state_hash();
   res.template_state = Common::podToHex(btstate);
   res.status = CORE_RPC_STATUS_OK;

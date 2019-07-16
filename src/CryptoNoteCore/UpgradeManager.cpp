@@ -20,6 +20,7 @@
 #include <stdexcept>
 
 #include <Xi/Config.h>
+#include <Xi/Exceptions.hpp>
 
 namespace CryptoNote {
 
@@ -27,9 +28,9 @@ UpgradeManager::UpgradeManager() {}
 
 UpgradeManager::~UpgradeManager() {}
 
-void UpgradeManager::addBlockVersion(Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeHeight) {
+void UpgradeManager::addBlockVersion(Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeHeight, bool fork) {
   assert(m_upgradeDetectors.empty() || m_upgradeDetectors.back()->targetVersion() < targetVersion);
-  m_upgradeDetectors.emplace_back(makeUpgradeDetector(targetVersion, upgradeHeight));
+  m_upgradeDetectors.emplace_back(makeUpgradeDetector(targetVersion, upgradeHeight, fork));
 }
 
 Xi::Blockchain::Block::Version UpgradeManager::getBlockVersion(uint32_t blockIndex) const {
@@ -39,7 +40,32 @@ Xi::Blockchain::Block::Version UpgradeManager::getBlockVersion(uint32_t blockInd
     }
   }
 
-  return Xi::Config::BlockVersion::BlockVersionCheckpoint<0>::version();
+  return Xi::Blockchain::Block::Version::Genesis;
+}
+
+bool UpgradeManager::isFork(Xi::Blockchain::Block::Version version) const {
+  auto search = std::find_if(m_upgradeDetectors.begin(), m_upgradeDetectors.end(),
+                             [version](const auto& detector) { return detector->targetVersion() == version; });
+  if (search == m_upgradeDetectors.end()) {
+    return false;
+  } else {
+    return (*search)->isFork();
+  }
+}
+
+uint32_t UpgradeManager::getForkIndex(Xi::Blockchain::Block::Version version) const {
+  auto search = std::find_if(m_upgradeDetectors.begin(), m_upgradeDetectors.end(),
+                             [version](const auto& detector) { return detector->targetVersion() == version; });
+  if (search == m_upgradeDetectors.end()) {
+    Xi::exceptional<Xi::NotFoundError>();
+  } else {
+    return (*search)->upgradeIndex();
+  }
+}
+
+Xi::Blockchain::Block::Version UpgradeManager::maximumVersion() const {
+  return Xi::Blockchain::Block::Version{
+      static_cast<Xi::Blockchain::Block::Version::value_type>(m_upgradeDetectors.size())};
 }
 
 }  // namespace CryptoNote

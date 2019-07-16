@@ -63,7 +63,7 @@ size_t get_random_index_with_fixed_probability(size_t max_index) {
   return (x * x * x) / (max_index * max_index);  // parabola \/
 }
 
-void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
+void addPortMapping(Logging::LoggerRef& logger, const std::string& appname, uint16_t intport, uint16_t extport) {
   // Add UPnP port mapping
   logger(Info) << "Attempting to add IGD port mapping.";
   int result;
@@ -75,11 +75,11 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
   freeUPNPDevlist(deviceList);
   if (result != 0) {
     if (result == 1) {
-      std::ostringstream portString;
-      portString << port;
+      auto intportstring = std::to_string(intport);
+      auto extportstring = std::to_string(extport);
       int upnpPortMappingResult =
-          UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(),
-                              portString.str().c_str(), lanAddress, Xi::Config::Coin::name().c_str(), "TCP", 0, "0");
+          UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, extportstring.c_str(), intportstring.c_str(),
+                              lanAddress, appname.c_str(), "TCP", 0, "0");
       if (upnpPortMappingResult != UPNPCOMMAND_SUCCESS) {
         logger(Error) << "UPNP_AddPortMapping failed: " << get_upnp_error_message(upnpPortMappingResult);
       } else {
@@ -107,27 +107,6 @@ bool parse_peer_from_string(NetworkAddress& pe, const std::string& node_addr) {
 
 namespace CryptoNote {
 namespace {
-
-const command_line::arg_descriptor<std::string> arg_p2p_bind_ip = {"p2p-bind-ip", "Interface for p2p network protocol",
-                                                                   "0.0.0.0"};
-const command_line::arg_descriptor<std::string> arg_p2p_bind_port = {"p2p-bind-port", "Port for p2p network protocol",
-                                                                     std::to_string(Xi::Config::P2P::defaultPort())};
-const command_line::arg_descriptor<uint16_t> arg_p2p_external_port = {
-    "p2p-external-port", "External port for p2p network protocol (if port forwarding used with NAT)", 0};
-const command_line::arg_descriptor<bool> arg_p2p_allow_local_ip = {
-    "allow-local-ip", "Allow local ip add to peer list, mostly in debug purposes"};
-const command_line::arg_descriptor<std::vector<std::string>> arg_p2p_add_peer = {"add-peer",
-                                                                                 "Manually add peer to local peerlist"};
-const command_line::arg_descriptor<std::vector<std::string>> arg_p2p_add_priority_node = {
-    "add-priority-node", "Specify list of peers to connect to and attempt to keep the connection open"};
-const command_line::arg_descriptor<std::vector<std::string>> arg_p2p_add_exclusive_node = {
-    "add-exclusive-node",
-    "Specify list of peers to connect to only."
-    " If this option is given the options add-priority-node and seed-node are ignored"};
-const command_line::arg_descriptor<std::vector<std::string>> arg_p2p_seed_node = {
-    "seed-node", "Connect to a node to retrieve peer addresses, and disconnect"};
-const command_line::arg_descriptor<bool> arg_p2p_hide_my_port = {
-    "hide-my-port", "Do not announce yourself as peerlist candidate", false, true};
 
 std::string print_peerlist_to_string(const std::list<PeerlistEntry>& pl) {
   time_t now_time = 0;
@@ -210,15 +189,15 @@ int invokeAdaptor(const BinaryArray& reqBuf, BinaryArray& resBuf, P2pConnectionC
   return ret;
 }
 
-NodeServer::NodeServer(System::Dispatcher& dispatcher, Xi::Config::Network::Type network,
+NodeServer::NodeServer(System::Dispatcher& dispatcher, const Xi::Config::Network::Configuration& network,
                        CryptoNote::CryptoNoteProtocolHandler& payload_handler, Logging::ILogger& log)
     : m_dispatcher(dispatcher),
       m_workingContextGroup(dispatcher),
       m_payload_handler(payload_handler),
       m_allow_local_ip(false),
       m_hide_my_port(false),
-      m_network_id(Xi::Config::Network::identifier(network)),
-      logger(log, "node_server"),
+      m_network_id(network.identifier()),
+      logger(log, "NodeServer"),
       m_stopEvent(m_dispatcher),
       m_idleTimer(m_dispatcher),
       m_timedSyncTimer(m_dispatcher),
@@ -336,21 +315,6 @@ int NodeServer::handleCommand(const LevinProtocol::Command& cmd, BinaryArray& ou
 
 #undef INVOKE_HANDLER
 
-//-----------------------------------------------------------------------------------
-
-void NodeServer::init_options(boost::program_options::options_description& desc) {
-  command_line::add_arg(desc, arg_p2p_bind_ip);
-  command_line::add_arg(desc, arg_p2p_bind_port);
-  command_line::add_arg(desc, arg_p2p_external_port);
-  command_line::add_arg(desc, arg_p2p_allow_local_ip);
-  command_line::add_arg(desc, arg_p2p_add_peer);
-  command_line::add_arg(desc, arg_p2p_add_priority_node);
-  command_line::add_arg(desc, arg_p2p_add_exclusive_node);
-  command_line::add_arg(desc, arg_p2p_seed_node);
-  command_line::add_arg(desc, arg_p2p_hide_my_port);
-}
-//-----------------------------------------------------------------------------------
-
 bool NodeServer::init_config() {
   try {
     std::string state_file_path = m_config_folder + "/" + m_p2p_state_filename;
@@ -426,45 +390,6 @@ bool NodeServer::make_default_config() {
 
 //-----------------------------------------------------------------------------------
 
-bool NodeServer::handle_command_line(const boost::program_options::variables_map& vm) {
-  m_bind_ip = command_line::get_arg(vm, arg_p2p_bind_ip);
-  m_port = command_line::get_arg(vm, arg_p2p_bind_port);
-  m_external_port = command_line::get_arg(vm, arg_p2p_external_port);
-  m_allow_local_ip = command_line::get_arg(vm, arg_p2p_allow_local_ip);
-
-  if (command_line::has_arg(vm, arg_p2p_add_peer)) {
-    std::vector<std::string> perrs = command_line::get_arg(vm, arg_p2p_add_peer);
-    for (const std::string& pr_str : perrs) {
-      PeerlistEntry pe = boost::value_initialized<PeerlistEntry>();
-      XI_RETURN_EC_IF_NOT(Xi::Crypto::Random::generate(Xi::asByteSpan(&pe.id, sizeof(PeerIdType))) ==
-                              Xi::Crypto::Random::RandomError::Success,
-                          false);
-      bool r = parse_peer_from_string(pe.address, pr_str);
-      if (!(r)) {
-        logger(Error) << "Failed to parse address from string: " << pr_str;
-        return false;
-      }
-      m_command_line_peers.push_back(pe);
-    }
-  }
-
-  if (command_line::has_arg(vm, arg_p2p_add_exclusive_node)) {
-    if (!parse_peers_and_add_to_container(vm, arg_p2p_add_exclusive_node, m_exclusive_peers)) return false;
-  }
-  if (command_line::has_arg(vm, arg_p2p_add_priority_node)) {
-    if (!parse_peers_and_add_to_container(vm, arg_p2p_add_priority_node, m_priority_peers)) return false;
-  }
-  if (command_line::has_arg(vm, arg_p2p_seed_node)) {
-    if (!parse_peers_and_add_to_container(vm, arg_p2p_seed_node, m_seed_nodes)) return false;
-  }
-
-  if (command_line::has_arg(vm, arg_p2p_hide_my_port)) {
-    m_hide_my_port = true;
-  }
-
-  return true;
-}
-
 bool NodeServer::handleConfig(const NetNodeConfig& config) {
   m_bind_ip = config.getBindIp();
   m_port = std::to_string(config.getBindPort());
@@ -518,7 +443,7 @@ bool NodeServer::append_net_address(std::vector<NetworkAddress>& nodes, const st
 //-----------------------------------------------------------------------------------
 
 bool NodeServer::init(const NetNodeConfig& config) {
-  const auto seedNodes = Xi::Config::Network::seedNodes(config.getNetwork());
+  const auto seedNodes = config.network().seeds();
   for (const auto& seed : seedNodes) {
     append_net_address(m_seed_nodes, seed);
   }
@@ -565,7 +490,7 @@ bool NodeServer::init(const NetNodeConfig& config) {
 
   if (m_external_port) logger(Info) << "External port defined as " << m_external_port;
 
-  addPortMapping(logger, m_listeningPort);
+  addPortMapping(logger, config.appIdentifier(), m_listeningPort, m_external_port ? m_external_port : m_listeningPort);
 
   return true;
 }
@@ -670,7 +595,7 @@ bool NodeServer::handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContex
   } else if ((rsp.node_data.version - Xi::Config::P2P::currentVersion()) >=
              Xi::Config::P2P::upgradeNotificationWindow()) {
     logger(Logging::Warning) << context << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please visit: "
-                             << Xi::Config::Coin::downloadUrl() << " for the latest version.";
+                             << m_payload_handler.updateDownloadUrl() << " for the latest version.";
   }
 
   if (!handle_remote_peerlist(rsp.local_peerlist, rsp.node_data.local_time, context)) {
@@ -1267,9 +1192,8 @@ int NodeServer::handle_handshake(int command, COMMAND_HANDSHAKE::request& arg, C
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
   } else if (arg.node_data.version > Xi::Config::P2P::currentVersion()) {
-    logger(Logging::Warning) << context
-                             << "Our software may be out of date. Please visit: " << Xi::Config::Coin::downloadUrl()
-                             << " for the latest version.";
+    logger(Logging::Warning) << context << "Our software may be out of date. Please visit: "
+                             << m_payload_handler.updateDownloadUrl() << " for the latest version.";
   }
 
   if (!context.m_is_income) {

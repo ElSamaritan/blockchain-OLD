@@ -31,7 +31,7 @@ void printSyncSummary(CryptoNote::BlockHeight localHeight, CryptoNote::BlockHeig
 
 void printPeerCount(size_t peerCount);
 
-void printHashrate(uint64_t difficulty);
+void printHashrate(uint64_t difficulty, const CryptoNote::Currency &currency);
 
 void balance(CryptoNote::INode &node, CryptoNote::WalletGreen &wallet, bool viewWallet);
 
@@ -48,7 +48,7 @@ void printUnlockTime(CryptoNote::WalletTransaction t, const CryptoNote::Currency
 void printOutgoingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &node);
 void printIncomingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &node);
 
-void createIntegratedAddress();
+void createIntegratedAddress(const CryptoNote::Currency &currency);
 
 void help(std::shared_ptr<WalletInfo> wallet);
 

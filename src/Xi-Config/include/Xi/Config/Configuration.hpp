@@ -23,43 +23,34 @@
 
 #pragma once
 
-#include <cinttypes>
+#include <vector>
 
-#include <Xi/Blockchain/Block/Version.hpp>
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
+#include <Serialization/SerializationOverloads.h>
 
-#ifndef CURRENT_MIXIN_CHECKPOINT_INDEX
-#pragma error "CURRENT_MIXIN_CHECKPOINT_INDEX must be defined."
-#endif
-
-#undef MakeMixinCheckpoint
+#include "Xi/Config/General.hpp"
+#include "Xi/Config/Coin.h"
+#include "Xi/Config/Network.h"
+#include "Xi/Config/Upgrade.hpp"
 
 namespace Xi {
 namespace Config {
-namespace Mixin {
 
-struct MixinCheckpointResolver {
-  template <Blockchain::Block::Version::value_type _Index>
-  static inline uint8_t required(Blockchain::Block::Version version);
+class Configuration {
+ public:
+  XI_PROPERTY(General::Configuration, general)
+  XI_PROPERTY(Coin::Configuration, coin)
+  XI_PROPERTY(Network::Configuration, network)
+  XI_PROPERTY(std::vector<Upgrade::Configuration>, upgrades)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(general(), general)
+  KV_MEMBER_RENAME(coin(), coin)
+  KV_MEMBER_RENAME(network(), network)
+  KV_MEMBER_RENAME(upgrades(), upgrades)
+  KV_END_SERIALIZATION
 };
 
-template <>
-inline uint8_t MixinCheckpointResolver::required<0>(Blockchain::Block::Version) {
-  return MixinCheckpoint<0>::required();
-}
-template <Blockchain::Block::Version::value_type _Index>
-inline uint8_t MixinCheckpointResolver::required(Blockchain::Block::Version version) {
-  if (version >= MixinCheckpoint<_Index>::version())
-    return MixinCheckpoint<_Index>::required();
-  else
-    return required<_Index - 1>(version);
-}
-
-inline uint8_t required(Blockchain::Block::Version version) {
-  return MixinCheckpointResolver::required<CURRENT_MIXIN_CHECKPOINT_INDEX>(version);
-}
-
-}  // namespace Mixin
 }  // namespace Config
 }  // namespace Xi
-
-#undef CURRENT_MIXIN_CHECKPOINT_INDEX

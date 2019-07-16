@@ -64,7 +64,7 @@ struct DatabaseOptions : public IOptions {
   void emplaceOptions(cxxopts::Options& options) override;
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
 
-  CryptoNote::DataBaseConfig getConfig(Xi::Config::Network::Type network) const;
+  CryptoNote::DataBaseConfig getConfig() const;
 };
 }  // namespace App
 }  // namespace Xi

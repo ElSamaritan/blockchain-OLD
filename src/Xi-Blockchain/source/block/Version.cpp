@@ -38,3 +38,7 @@ std::string Xi::Blockchain::Block::toString(const Xi::Blockchain::Block::Version
 Xi::Blockchain::Block::Version::Version() : EnableIntegralFromThis(Null) {}
 
 bool Xi::Blockchain::Block::Version::isNull() const { return *this == Null; }
+
+std::size_t std::hash<Xi::Blockchain::Block::Version>::operator()(const Xi::Blockchain::Block::Version &version) const {
+  return std::hash<Xi::Blockchain::Block::Version::value_type>{}(version.native());
+}

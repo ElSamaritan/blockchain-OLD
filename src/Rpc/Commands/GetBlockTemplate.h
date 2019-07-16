@@ -53,6 +53,7 @@ struct GetBlockTemplate {
     BlockHeight height;
     uint32_t reserved_offset;
     std::string blocktemplate_blob;
+    std::string proof_of_work_algorithm;
     std::string status;
 
     /*!
@@ -65,6 +66,7 @@ struct GetBlockTemplate {
     KV_MEMBER(height)
     KV_MEMBER(reserved_offset)
     KV_MEMBER(blocktemplate_blob)
+    KV_MEMBER(proof_of_work_algorithm)
     KV_MEMBER(status)
     KV_MEMBER(template_state)
     KV_END_SERIALIZATION

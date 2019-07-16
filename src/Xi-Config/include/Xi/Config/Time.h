@@ -26,44 +26,28 @@
 #include <chrono>
 #include <limits>
 
-#include <Xi/Time.h>
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
 
-#include "Xi/Config/Coin.h"
+#include "Xi/Config/VersionContainer.hpp"
 
 namespace Xi {
 namespace Config {
 namespace Time {
-constexpr std::chrono::seconds blockTime() { return 60_s; }
-constexpr std::chrono::seconds minerRewardUnlockTime() { return 600_s; }
 
-constexpr uint32_t minerRewardUnlockBlocksCount() {
-  return static_cast<uint32_t>(std::chrono::seconds{minerRewardUnlockTime()}.count() /
-                               std::chrono::seconds{blockTime()}.count());
-}
-constexpr uint32_t expectedBlocksPerDay() {
-  return static_cast<uint32_t>(std::chrono::seconds{std::chrono::hours{24}}.count() /
-                               std::chrono::seconds{blockTime()}.count());
-}
+class Configuration {
+ public:
+  XI_PROPERTY(uint32_t, windowSize)
+  XI_PROPERTY(uint16_t, futureLimit)
 
-constexpr uint16_t blockTimeSeconds() { return static_cast<uint16_t>(std::chrono::seconds{blockTime()}.count()); }
-constexpr std::chrono::seconds expectedBlockhainUptimeForHeight(uint32_t height) { return height * blockTime(); }
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(windowSize(), window_size)
+  KV_MEMBER_RENAME(futureLimit(), future_limit)
+  KV_END_SERIALIZATION
+};
 
-static_assert(std::chrono::seconds{blockTime()}.count() < std::numeric_limits<uint16_t>::max(),
-              "Only a maximum of 2^16-1 seconds is allowed as block time.");
-static_assert(blockTimeSeconds() > 0, "blockTime must be convert to positve none zero seconds.");
-static_assert(minerRewardUnlockBlocksCount() > 0,
-              "minerRewardUnlockBlocksCount must be convert to positve none zero amount of blocks.");
+using Container = VersionContainer<Time::Configuration>;
+
 }  // namespace Time
 }  // namespace Config
 }  // namespace Xi
-
-#include "Xi/Config/_Impl/BeginTime.h"
-
-// clang-format off
-//                (_Index, _Version, _PastWindow, _FutureLimit)
-MakeTimeCheckpoint(     0,        1,        2048,          5_m)
-// clang-format on
-
-#define CURRENT_TIME_CHECKPOINT_INDEX 0
-
-#include "Xi/Config/_Impl/EndTime.h"

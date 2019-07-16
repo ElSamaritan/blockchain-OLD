@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -21,66 +21,51 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "CryptoNoteCore/AmountFormatter.hpp"
 
-#ifndef CURRENT_TIME_CHECKPOINT_INDEX
-#pragma error "CURRENT_TIME_CHECKPOINT_INDEX must be defined."
-#endif
+#include <sstream>
+#include <iomanip>
+#include <limits>
 
-#include <cinttypes>
+#include <Xi/Algorithm/Math.h>
+#include <Xi/Exceptions.hpp>
 
-#include <Xi/Blockchain/Block/Version.hpp>
+namespace CryptoNote {
 
-#include "Xi/Config/Time.h"
-
-#undef MakeDifficultyCheckpoint
-
-namespace Xi {
-namespace Config {
-namespace Time {
-
-struct TimeCheckpointResolver {
-  template <Blockchain::Block::Version::value_type _Index>
-  static inline uint32_t pastWindowSize(Blockchain::Block::Version version);
-
-  template <Blockchain::Block::Version::value_type _Index>
-  static inline std::chrono::seconds futureTimeLimit(Blockchain::Block::Version version);
-};
-
-template <>
-inline uint32_t TimeCheckpointResolver::pastWindowSize<0>(Blockchain::Block::Version) {
-  return TimeCheckpoint<0>::pastWindowSize();
-}
-template <Blockchain::Block::Version::value_type _Index>
-inline uint32_t TimeCheckpointResolver::pastWindowSize(Blockchain::Block::Version version) {
-  if (version >= TimeCheckpoint<_Index>::version())
-    return TimeCheckpoint<_Index>::pastWindowSize();
-  else
-    return pastWindowSize<_Index - 1>(version);
+AmountFormatter::AmountFormatter(const uint64_t _decimals, std::string_view _ticker, const std::locale& _locale)
+    : m_decimals{_decimals}, m_ticker{_ticker}, m_locale{_locale} {
+  Xi::exceptional_if<Xi::OutOfRangeError>(_decimals == 0 || _decimals > std::numeric_limits<uint64_t>::digits10);
 }
 
-template <>
-inline std::chrono::seconds TimeCheckpointResolver::futureTimeLimit<0>(Blockchain::Block::Version) {
-  return TimeCheckpoint<0>::futureTimeLimit();
-}
-template <Blockchain::Block::Version::value_type _Index>
-inline std::chrono::seconds TimeCheckpointResolver::futureTimeLimit(Blockchain::Block::Version version) {
-  if (version >= TimeCheckpoint<_Index>::version())
-    return TimeCheckpoint<_Index>::futureTimeLimit();
-  else
-    return futureTimeLimit<_Index - 1>(version);
-}
+AmountFormatter::~AmountFormatter() {}
 
-inline uint32_t pastWindowSize(Blockchain::Block::Version version) {
-  return TimeCheckpointResolver::pastWindowSize<CURRENT_TIME_CHECKPOINT_INDEX>(version);
-}
+std::string AmountFormatter::operator()(const uint64_t amount, bool addTicker) const {
+  const auto divisor = Xi::pow64(10, decimals());
+  const uint64_t major = amount / divisor;
+  const uint64_t minor = amount % divisor;
 
-inline std::chrono::seconds futureTimeLimit(Blockchain::Block::Version version) {
-  return TimeCheckpointResolver::futureTimeLimit<CURRENT_TIME_CHECKPOINT_INDEX>(version);
+  const auto& numpunct = std::use_facet<std::numpunct<char>>(m_locale);
+
+  std::stringstream builder{};
+  builder << major << numpunct.decimal_point() << std::setw(static_cast<int>(decimals())) << std::setfill('0') << minor;
+  if (addTicker) {
+    builder << " " << m_ticker;
+  }
+  return builder.str();
 }
 
-}  // namespace Time
-}  // namespace Config
-}  // namespace Xi
+std::string AmountFormatter::operator()(const int64_t amount, bool addTicker) const {
+  if (amount < 0) {
+    return std::string{"-"} + (*this)(static_cast<uint64_t>(amount), addTicker);
+  } else {
+    return (*this)(static_cast<uint64_t>(amount), addTicker);
+  }
+}
 
-#undef CURRENT_TIME_CHECKPOINT_INDEX
+uint64_t AmountFormatter::decimals() const { return m_decimals; }
+
+const std::string& AmountFormatter::ticker() const { return m_ticker; }
+
+const std::locale& AmountFormatter::locale() const { return m_locale; }
+
+}  // namespace CryptoNote

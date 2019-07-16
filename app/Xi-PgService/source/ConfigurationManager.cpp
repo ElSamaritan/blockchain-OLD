@@ -45,15 +45,15 @@ bool ConfigurationManager::init(int argc, char** argv) {
   handleSettings(argc, argv, serviceConfig);
 
   if (serviceConfig.dumpConfig) {
-    std::cout << CommonCLI::header() << asString(serviceConfig) << std::endl;
+    std::cout << asString(serviceConfig) << std::endl;
     exit(0);
   } else if (!serviceConfig.outputFile.empty()) {
     try {
       asFile(serviceConfig, serviceConfig.outputFile);
-      std::cout << CommonCLI::header() << "Configuration saved to: " << serviceConfig.outputFile << std::endl;
+      std::cout << "Configuration saved to: " << serviceConfig.outputFile << std::endl;
       exit(0);
     } catch (std::exception& e) {
-      std::cout << CommonCLI::header() << "Could not save configuration to: " << serviceConfig.outputFile << std::endl
+      std::cout << "Unable to save configuration to: " << serviceConfig.outputFile << std::endl
                 << e.what() << std::endl;
       exit(1);
     }

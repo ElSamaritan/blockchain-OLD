@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -26,7 +26,7 @@
 #include <Xi/Global.hh>
 #include <Xi/Exceptional.hpp>
 #include <Xi/FileSystem.h>
-#include <Xi/Config/Checkpoints.h>
+#include <CryptoNoteCore/Checkpoints.h>
 
 namespace {
 // clang-format off
@@ -55,10 +55,11 @@ bool Xi::App::CheckpointsOptions::evaluateParsedOptions(const cxxopts::Options &
   return false;
 }
 
-std::unique_ptr<CryptoNote::Checkpoints> Xi::App::CheckpointsOptions::getCheckpoints(Logging::ILogger &logger) const {
+std::unique_ptr<CryptoNote::Checkpoints> Xi::App::CheckpointsOptions::getCheckpoints(
+    const CryptoNote::Currency &currency, Logging::ILogger &logger) const {
   auto reval = std::make_unique<CryptoNote::Checkpoints>(logger);
   reval->setEnabled(UseCheckpoints);
-  for (const auto &checkpoint : Xi::Config::CHECKPOINTS) {
+  for (const auto &checkpoint : currency.integratedCheckpoints()) {
     reval->addCheckpoint(checkpoint.index, checkpoint.blockId);
   }
   if (!CheckpointsFile.empty()) {

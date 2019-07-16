@@ -184,14 +184,11 @@ Core::Core(const Currency& currency, Logging::ILogger& logger, Checkpoints& chec
       contextGroup(dispatcher),
       logger(logger, "Core"),
       checkpoints(checkpoints),
-      m_upgradeManager(new UpgradeManager()),
       m_isLightNode{isLightNode},
       blockchainCacheFactory(std::move(blockchainCacheFactory)),
       mainChainStorage(std::move(mainchainStorage)),
       initialized(false),
       m_access{} {
-  for (auto version : Xi::Config::BlockVersion::versions())
-    m_upgradeManager->addBlockVersion(version, currency.upgradeHeight(version));
   m_transactionPool = std::make_unique<TransactionPoolCleanWrapper>(
       std::unique_ptr<ITransactionPool>(new TransactionPool(*this, logger)),
       std::unique_ptr<ITimeProvider>(new LocalRealTimeProvider()), logger, currency.mempoolTxLiveTime());
@@ -222,7 +219,7 @@ const IBlockchainCache* Core::mainChain() const {
     return chainsLeaves[0];
 }
 
-const IUpgradeManager& Core::upgradeManager() const { return *m_upgradeManager; }
+const IUpgradeManager& Core::upgradeManager() const { return currency().upgradeManager(); }
 const ITimeProvider& Core::timeProvider() const { return *m_timeProvider; }
 bool Core::isInitialized() const { return initialized; }
 
@@ -714,7 +711,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   auto previousBlockIndex = cache->getBlockIndex(previousBlockHash);
 
   bool addOnTop = cache->getTopBlockIndex() == previousBlockIndex;
-  auto maxBlockCumulativeSize = m_currency.maxBlockCumulativeSize(previousBlockIndex + 1);
+  auto maxBlockCumulativeSize = m_currency.maxBlockSize(blockTemplate.version, previousBlockIndex);
   if (cumulativeBlockSize > maxBlockCumulativeSize) {
     logger(Logging::Debugging) << "Block " << blockStr << " has too big cumulative size";
     return error::BlockValidationError::CUMULATIVE_BLOCK_SIZE_TOO_BIG;
@@ -1330,7 +1327,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
      https://github.com/loki-project/loki/pull/26 */
 
   /* How many blocks we look in the past to calculate the median timestamp */
-  uint32_t blockchain_timestamp_check_window = m_currency.timestampCheckWindow(b.version);
+  uint32_t blockchain_timestamp_check_window = m_currency.time(b.version).windowSize();
 
   /* Skip the first N blocks, we don't have enough blocks to calculate a
      proper median yet */
@@ -1349,8 +1346,8 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
     }
   }
 
-  size_t medianSize = calculateCumulativeBlocksizeLimit(index) / 2;
-  const size_t maxBlockSize = std::max(2 * medianSize, m_currency.maxBlockCumulativeSize(index));
+  uint64_t medianSize = calculateCumulativeBlocksizeLimit(index) / 2;
+  const uint64_t maxBlockSize = std::min<uint64_t>(2ULL * medianSize, m_currency.maxBlockSize(b.version, index));
 
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
@@ -1484,28 +1481,27 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
 
   minerReward = 0;
 
-  if (m_upgradeManager->getBlockVersion(cachedBlock.getBlockIndex()) != block.version) {
+  if (upgradeManager().getBlockVersion(cachedBlock.getBlockIndex()) != block.version) {
     return error::BlockValidationError::WRONG_VERSION;
   }
   if (block.upgradeVote < block.version || block.upgradeVote.native() > block.version.native() + 1) {
     return error::BlockValidationError::WRONG_UPGRADE_VOTE;
   }
 
-  if (block.timestamp > getAdjustedTime() + m_currency.blockFutureTimeLimit(block.version)) {
+  if (block.timestamp > getAdjustedTime() + m_currency.time(block.version).futureLimit()) {
     return error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_FUTURE;
   }
 
   auto timestamps =
-      cache->getLastTimestamps(m_currency.timestampCheckWindow(block.version), previousBlockIndex, addGenesisBlock);
-  if (timestamps.size() >= m_currency.timestampCheckWindow(block.version)) {
+      cache->getLastTimestamps(m_currency.time(block.version).windowSize(), previousBlockIndex, addGenesisBlock);
+  if (timestamps.size() >= m_currency.time(block.version).windowSize()) {
     auto median_ts = Common::medianValue(timestamps);
     if (block.timestamp < median_ts) {
       return error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_PAST;
     }
   }
 
-  if ((block.baseTransaction.version < m_currency.minTxVersion()) ||
-      (block.baseTransaction.version > m_currency.maxTxVersion())) {
+  if (!m_currency.isTransferVersionSupported(block.version, block.baseTransaction.version)) {
     return error::TransactionValidationError::INVALID_VERSION;
   }
 
@@ -2030,7 +2026,9 @@ void Core::getTransactionPoolDifference(const std::vector<Crypto::Hash>& knownHa
   deletedTransactions.assign(knownTransactions.begin(), knownTransactions.end());
 }
 
-BlockVersion Core::getBlockVersionForIndex(uint32_t height) const { return m_upgradeManager->getBlockVersion(height); }
+BlockVersion Core::getBlockVersionForIndex(uint32_t height) const {
+  return currency().upgradeManager().getBlockVersion(height);
+}
 
 size_t Core::calculateCumulativeBlocksizeLimit(uint32_t height) const {
   const auto nextBlockVersion = getBlockVersionForIndex(height);
@@ -2060,7 +2058,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, uint32_t index, size_t fullRe
   uint64_t currentReward = 0;
   m_currency.getBlockReward(block.version, fullRewardZone, 0, generatedCoins, fee, currentReward, emissionChange);
 
-  size_t cumulativeSize = m_currency.minerTxBlobReservedSize();
+  size_t cumulativeSize = m_currency.minerReward(block.version).reservedSize();
 
   const EligibleIndex blockIndex{index, block.timestamp};
   // We assume eligible transactions are ordered, such that the first transactions are most profitible. Using this
@@ -2695,10 +2693,10 @@ void Core::updateBlockMedianSize() {
   auto mainChain = chainsLeaves[0];
 
   size_t nextBlockGrantedFullRewardZone = m_currency.blockGrantedFullRewardZoneByBlockVersion(
-      m_upgradeManager->getBlockVersion(mainChain->getTopBlockIndex() + 1));
+      currency().upgradeManager().getBlockVersion(mainChain->getTopBlockIndex() + 1));
 
   auto lastBlockSizes = mainChain->getLastBlocksSizes(m_currency.rewardBlocksWindowByBlockVersion(
-      m_upgradeManager->getBlockVersion(mainChain->getTopBlockIndex() + 1)));
+      currency().upgradeManager().getBlockVersion(mainChain->getTopBlockIndex() + 1)));
 
   blockMedianSize =
       std::max(Common::medianValue(lastBlockSizes), static_cast<uint64_t>(nextBlockGrantedFullRewardZone));

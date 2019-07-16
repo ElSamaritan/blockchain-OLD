@@ -407,8 +407,9 @@ bool P2pNode::fetchPeerList(ContextPtr connection) {
       return false;
     } else if ((response.node_data.version - Xi::Config::P2P::currentVersion()) >=
                Xi::Config::P2P::upgradeNotificationWindow()) {
-      logger(Warning) << *connection << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please visit: "
-                      << Xi::Config::Coin::downloadUrl() << " for the latest version.";
+      logger(Warning)
+          << *connection
+          << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please check if an update is available.";
     }
 
     return handleRemotePeerList(response.local_peerlist, response.node_data.local_time);

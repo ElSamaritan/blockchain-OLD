@@ -423,14 +423,14 @@ uint64_t BlockchainExplorer::getRewardBlocksWindow(BlockVersion version) {
   if (state.load() != INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
-  return Xi::Config::MinerReward::window(version);
+  return node.currency().minerReward(version).windowSize();
 }
 
 uint64_t BlockchainExplorer::getFullRewardMaxBlockSize(BlockVersion version) {
   if (state.load() != INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
-  return Xi::Config::MinerReward::fullRewardZone(version);
+  return node.currency().minerReward(version).zone();
 }
 
 bool BlockchainExplorer::isSynchronized() {

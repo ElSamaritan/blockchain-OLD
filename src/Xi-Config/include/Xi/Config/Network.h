@@ -31,20 +31,49 @@
 #include <boost/uuid/uuid.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
+#include <Serialization/SerializationOverloads.h>
+
 #include "Xi/Config/NetworkType.h"
 
 namespace Xi {
 namespace Config {
 namespace Network {
+
+class Configuration {
+ public:
+  XI_PROPERTY(Type, type)
+  XI_PROPERTY(boost::uuids::uuid, identifier)
+  XI_PROPERTY(std::vector<std::string>, seeds)
+
+  XI_PROPERTY(uint16_t, p2pPort)
+  static inline constexpr uint16_t p2pDefaultPort() { return 22868; }
+
+  XI_PROPERTY(uint16_t, rpcPort)
+  static inline constexpr uint16_t rpcDefaultPort() { return 22869; }
+
+  XI_PROPERTY(uint16_t, pgservicePort)
+  static inline constexpr uint16_t pgserviceDefaultPort() { return 38070; }
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(type(), type)
+  XI_RETURN_EC_IF_NOT(s.binary(identifier().data, identifier().size(), "identifier"), false);
+  KV_MEMBER_RENAME(seeds(), seeds)
+
+  KV_MEMBER_RENAME(p2pPort(), p2p_port)
+  KV_MEMBER_RENAME(rpcPort(), rpc_port)
+  KV_MEMBER_RENAME(pgservicePort(), pgservice_port)
+  KV_END_SERIALIZATION
+
+  bool isMainNet() const { return this->type() == Type::MainNet; }
+};
+
+std::string defaultNetworkName();
 Type defaultNetworkType();
-boost::uuids::uuid identifier(Type network);
-std::vector<std::string> seedNodes(Type network);
+std::string defaultNetworkIdentifier();
 
 std::string breakpadServer();
-
-static inline constexpr uint16_t p2pPort() { return 22868; }
-static inline constexpr uint16_t rpcPort() { return 22869; }
-static inline constexpr uint16_t pgPort() { return 38070; }
 
 static inline constexpr uint64_t blockIdentifiersSynchronizationBatchSize() { return 500; }
 static inline constexpr uint64_t blocksSynchronizationBatchSize() { return 100; }

@@ -113,7 +113,14 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
   const auto unlock = tx.unlockTime;
   XI_RETURN_EC_IF(unlock > context.currency.unlockLimit(context.blockVersion), Error::UNLOCK_TOO_LARGE);
   if (context.currency.isLockedBasedOnTimestamp(unlock)) {
-    XI_RETURN_EC_IF(unlock < context.currency.genesisTimestamp(), Error::UNLOCK_ILL_FORMED);
+    XI_RETURN_EC_IF(unlock < context.currency.coin().startTimestamp(), Error::UNLOCK_ILL_FORMED);
+    XI_RETURN_EC_IF(unlock > context.timestamp + context.currency.transaction(context.blockVersion).futureUnlockLimit(),
+                    Error::UNLOCK_TOO_LARGE);
+  } else {
+    uint32_t blockFutureLimit =
+        context.currency.transaction(context.blockVersion).futureUnlockLimit() / context.currency.coin().blockTime() +
+        1;
+    XI_RETURN_EC_IF(context.previousBlockIndex + 1 + blockFutureLimit < unlock, Error::UNLOCK_TOO_LARGE);
   }
 
   XI_RETURN_EC_IF_NOT(context.currency.isTransferVersionSupported(context.blockVersion, tx.version),
@@ -153,7 +160,7 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
       XI_RETURN_EC_IF_NOT(keyInput.keyImage.isValid(), Error::INPUT_INVALID_DOMAIN_KEYIMAGES);
     }
     XI_RETURN_EC_IF(keyInput.amount == 0, Error::INPUT_ZERO_AMOUNT);
-    // XI_RETURN_EC_IF_NOT(isCanonicalAmount(keyInput.amount), Error::INPUTS_NOT_CANONICAL);
+    XI_RETURN_EC_IF_NOT(isCanonicalAmount(keyInput.amount), Error::INPUTS_NOT_CANONICAL);
     if (Xi::hasAdditionOverflow(out.inputSum, keyInput.amount, &out.inputSum)) {
       XI_RETURN_EC(Error::INPUTS_AMOUNT_OVERFLOW);
     }

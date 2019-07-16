@@ -194,19 +194,20 @@ std::string getAction(Config &config) {
 
 void mainLoop(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::INode &node) {
   if (walletInfo->viewWallet) {
-    printCommands(basicViewWalletCommands());
+    printCommands(basicViewWalletCommands(walletInfo->currency()));
   } else {
-    printCommands(basicCommands());
+    printCommands(basicCommands(walletInfo->currency()));
   }
 
   while (true) {
     std::string command;
 
     if (walletInfo->viewWallet) {
-      command =
-          parseCommand(basicViewWalletCommands(), allViewWalletCommands(), getPrompt(walletInfo), true, walletInfo);
+      command = parseCommand(basicViewWalletCommands(walletInfo->currency()),
+                             allViewWalletCommands(walletInfo->currency()), getPrompt(walletInfo), true, walletInfo);
     } else {
-      command = parseCommand(basicCommands(), allCommands(), getPrompt(walletInfo), true, walletInfo);
+      command = parseCommand(basicCommands(walletInfo->currency()), allCommands(walletInfo->currency()),
+                             getPrompt(walletInfo), true, walletInfo);
     }
 
     /* User exited */

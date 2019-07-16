@@ -106,9 +106,7 @@ struct P2pConnectionContext : public CryptoNoteConnectionContext {
 
 class NodeServer : public IP2pEndpoint {
  public:
-  static void init_options(boost::program_options::options_description& desc);
-
-  NodeServer(System::Dispatcher& dispatcher, ::Xi::Config::Network::Type network,
+  NodeServer(System::Dispatcher& dispatcher, const Xi::Config::Network::Configuration& network,
              CryptoNote::CryptoNoteProtocolHandler& payload_handler, Logging::ILogger& log);
 
   [[nodiscard]] bool run();
@@ -176,7 +174,6 @@ class NodeServer : public IP2pEndpoint {
   virtual bool is_ip_address_blocked(const uint32_t ip) override;
 
   //-----------------------------------------------------------------------------------------------
-  bool handle_command_line(const boost::program_options::variables_map& vm);
   bool handleConfig(const NetNodeConfig& config);
   bool append_net_address(std::vector<NetworkAddress>& nodes, const std::string& addr);
   bool idle_worker();

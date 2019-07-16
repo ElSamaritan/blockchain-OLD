@@ -27,6 +27,8 @@
 #include <cxxopts.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <CryptoNoteCore/Currency.h>
+
 #include <string>
 
 namespace CommonCLI {
@@ -37,7 +39,7 @@ namespace CommonCLI {
  * \param colored If true emplaces color encoding used by the logging library
  * \return a header to display at startup
  */
-std::string header(bool colored = false);
+std::string header(const CryptoNote::Currency& currency, bool colored = false);
 
 /*!
  * \brief checks wheter this version was built from non master branch source code

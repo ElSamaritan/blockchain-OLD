@@ -92,6 +92,7 @@ uint64_t getOutputAmount(const Transaction& transaction);
 void decomposeAmount(uint64_t amount, std::vector<uint64_t>& decomposedAmounts);
 
 bool isCanonicalAmount(uint64_t amount);
+uint8_t getCanoncialAmountDecimalPlace(uint64_t amount);
 
 size_t countCanonicalDecomposition(const Transaction& tx);
 size_t countCanonicalDecomposition(const std::vector<uint64_t>& amounts);

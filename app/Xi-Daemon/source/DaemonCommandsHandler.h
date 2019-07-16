@@ -68,6 +68,7 @@ class DaemonCommandsHandler {
   bool status(const std::vector<std::string>& args);
 
   /* ----------------------------------------------- Explorer Commands --------------------------------------------- */
+  bool info(const std::vector<std::string>& args);
   bool search(const std::vector<std::string>& args);
   bool top(const std::vector<std::string>& args);
   bool top_short(const std::vector<std::string>& args);

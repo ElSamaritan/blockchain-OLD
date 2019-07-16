@@ -21,35 +21,17 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include <string>
 
-#include <cinttypes>
+#include "Xi/Config/Registry.hpp"
+#include "@CONFIG_NAME@/@CONFIG_NAME@.hpp"
 
-#include <Xi/Blockchain/Block/Version.hpp>
+// clang-format off
+int @CONFIG_ID@::init() { return
+Xi::Config::Registry::addConfigJson("@CONFIG_NAME@", R"_________(
 
-namespace Xi {
-namespace Config {
-namespace BlockVersion {
-template <Blockchain::Block::Version::value_type>
-struct BlockVersionCheckpoint {
-  static inline constexpr bool exists() { return false; }
-};
-}  // namespace BlockVersion
-}  // namespace Config
-}  // namespace Xi
+@INPUT_CONTENT@
 
-#define MakeBlockVersionCheckpoint(_Index, _Height, _Version, _IsFork)                                            \
-  namespace Xi {                                                                                                  \
-  namespace Config {                                                                                              \
-  namespace BlockVersion {                                                                                        \
-  template <>                                                                                                     \
-  struct BlockVersionCheckpoint<_Index> {                                                                         \
-    static inline constexpr bool exists() { return true; }                                                        \
-    static inline constexpr uint8_t index() { return _Index; }                                                    \
-    static inline constexpr uint32_t height() { return _Height; }                                                 \
-    static inline constexpr Blockchain::Block::Version version() { return Blockchain::Block::Version{_Version}; } \
-    static inline constexpr bool isFork() { return _IsFork; }                                                     \
-  };                                                                                                              \
-  }                                                                                                               \
-  }                                                                                                               \
-  }
+)_________");
+}
+// clang-format on

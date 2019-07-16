@@ -23,17 +23,18 @@
 
 #pragma once
 
-#include "Xi/Config/BlockVersion.h"
+#include "Xi/Config/General.hpp"
 #include "Xi/Config/Limits.h"
 #include "Xi/Config/Coin.h"
 #include "Xi/Config/Time.h"
 #include "Xi/Config/Network.h"
 #include "Xi/Config/P2P.h"
-#include "Xi/Config/Mixin.h"
 #include "Xi/Config/Difficulty.h"
 #include "Xi/Config/Database.h"
 #include "Xi/Config/MinerReward.h"
 #include "Xi/Config/StaticReward.h"
 #include "Xi/Config/Transaction.h"
-#include "Xi/Config/Hashes.h"
-#include "Xi/Config/Checkpoints.h"
+#include "Xi/Config/MergeMining.hpp"
+#include "Xi/Config/Upgrade.hpp"
+#include "Xi/Config/Configuration.hpp"
+#include "Xi/Config/Registry.hpp"

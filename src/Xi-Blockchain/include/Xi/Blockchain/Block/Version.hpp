@@ -25,6 +25,7 @@
 
 #include <cinttypes>
 #include <string>
+#include <functional>
 
 #include <Xi/Global.hh>
 #include <Serialization/ISerializer.h>
@@ -79,3 +80,10 @@ std::string toString(const Version version);
 }  // namespace Block
 }  // namespace Blockchain
 }  // namespace Xi
+
+namespace std {
+template <>
+struct hash<Xi::Blockchain::Block::Version> {
+  size_t operator()(const Xi::Blockchain::Block::Version& version) const;
+};
+}  // namespace std

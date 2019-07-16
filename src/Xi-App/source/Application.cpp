@@ -214,6 +214,7 @@ void Xi::App::Application::useDatabase() {
   if (m_dbOptions.get() == nullptr) {
     m_dbOptions = std::make_unique<DatabaseOptions>();
     useNetwork();
+    useCurrency();
     useLogging();
   }
 }
@@ -237,6 +238,7 @@ void Xi::App::Application::useCurrency() {
 }
 
 void Xi::App::Application::useCheckpoints() {
+  useCurrency();
   if (m_checkpointOptions == nullptr) {
     m_checkpointOptions = std::make_unique<CheckpointsOptions>();
   }
@@ -270,17 +272,21 @@ void Xi::App::Application::initializeLogger() {
 
 void Xi::App::Application::initializeDatabase() {
   m_database = std::make_unique<CryptoNote::RocksDBWrapper>(logger());
-  m_database->init(m_dbOptions->getConfig(m_netOptions->Network));
+  m_dbOptions->DataDirectory = m_dbOptions->DataDirectory + std::string{"/"} + currency()->networkUniqueName();
+  m_database->init(m_dbOptions->getConfig());
   if (!CryptoNote::DatabaseBlockchainCache::checkDBSchemeVersion(*m_database, logger())) {
     m_database->shutdown();
     exceptional<ModuleSetUpError>("unable to initialize database.");
   }
 }
 
-void Xi::App::Application::initializeCheckpoints() { m_checkpoints = m_checkpointOptions->getCheckpoints(logger()); }
+void Xi::App::Application::initializeCheckpoints() {
+  m_checkpoints = m_checkpointOptions->getCheckpoints(*currency(), logger());
+}
 
 void Xi::App::Application::initializeCurrency() {
   CryptoNote::CurrencyBuilder builder{logger()};
+  builder.networkDir(m_netOptions->NetworkDir);
   builder.network(m_netOptions->Network);
   m_currency = std::make_unique<CryptoNote::Currency>(builder.currency());
 }

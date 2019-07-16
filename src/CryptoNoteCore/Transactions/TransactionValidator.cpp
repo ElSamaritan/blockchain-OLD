@@ -85,5 +85,19 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValida
     }
   }
 
+  const auto unlock = transaction.getTransaction().unlockTime;
+  if (unlock > 0) {
+    if (currency().isLockedBasedOnBlockIndex(unlock)) {
+      const auto maxUnlockDiff =
+          currency().transaction(blockVersion()).futureUnlockLimit() / currency().coin().blockTime() + 1;
+      if (maxUnlockDiff < unlock) {
+        eligibleIndex.Height = std::max(eligibleIndex.Height, static_cast<uint32_t>(unlock - maxUnlockDiff + 1));
+      }
+    } else {
+      const auto maxUnlockDiff = currency().transaction(blockVersion()).futureUnlockLimit();
+      eligibleIndex.Timestamp = std::max(eligibleIndex.Timestamp, unlock - maxUnlockDiff + 1);
+    }
+  }
+
   return Xi::success(eligibleIndex);
 }

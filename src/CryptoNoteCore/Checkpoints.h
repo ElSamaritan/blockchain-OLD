@@ -28,6 +28,11 @@
 #include "CryptoNoteBasicImpl.h"
 
 namespace CryptoNote {
+struct CheckpointData {
+  uint32_t index;
+  std::string blockId;
+};
+
 class Checkpoints {
  public:
   Checkpoints(Logging::ILogger& log);

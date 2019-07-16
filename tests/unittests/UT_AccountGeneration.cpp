@@ -34,7 +34,7 @@ TEST(CryptoNote, AccountGeneration) {
   CryptoNote::AccountBase::generateViewFromSpend(account.spendSecretKey, account.viewSecretKey);
   EXPECT_TRUE(Crypto::secret_key_to_public_key(account.viewSecretKey, account.address.viewPublicKey));
 
-  auto currency = CryptoNote::CurrencyBuilder(Logging::noLogging()).currency();
+  auto currency = CryptoNote::CurrencyBuilder(Logging::noLogging()).network("UnitTests.Network").currency();
   auto address = currency.accountAddressAsString(account.address);
 
   CryptoNote::AccountPublicAddress recoveredAddress;

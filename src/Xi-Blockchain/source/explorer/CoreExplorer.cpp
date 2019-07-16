@@ -53,16 +53,17 @@ Result<CurrencyInfo> CoreExplorer::queryCurrencyInfo() {
   XI_ERROR_TRY();
   const auto &currency = m_core.currency();
   CurrencyInfo reval{};
-  reval.name = currency.name();
-  reval.ticker = currency.ticker();
-  reval.address_prefix = currency.addressPrefix();
-  reval.total_supply = currency.moneySupply();
-  reval.premine = currency.genesisBlockReward();
+  reval.name = currency.coin().name();
+  reval.ticker = currency.coin().ticker();
+  reval.address_prefix = currency.coin().prefix().text();
+  reval.total_supply = currency.coin().totalSupply();
+  ;
+  reval.premine = currency.coin().premine();
   reval.emission_speed = currency.emissionSpeedFactor();
 
-  reval.homepage = currency.homepage();
-  reval.description = currency.description();
-  reval.copyright = currency.copyright();
+  reval.homepage = currency.general().homepage();
+  reval.description = currency.general().description();
+  reval.copyright = currency.general().copyright();
 
   return success(std::move(reval));
   XI_ERROR_CATCH();
@@ -387,7 +388,6 @@ BlockInfo CoreExplorer::fromCore(const CryptoNote::CachedRawBlock &raw, const Cr
 
   reval.nonce = raw.block().getBlock().nonce;
   reval.previous_hash = raw.block().getBlock().previousBlockHash;
-  reval.blob_size = raw.blobSize();
   reval.transactions_count = raw.transactionCount();
   reval.miner_reward = fromCore(raw.block().coinbase(), false, transactionContainer);
 

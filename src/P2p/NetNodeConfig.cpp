@@ -7,6 +7,7 @@
 #include "NetNodeConfig.h"
 
 #include <limits>
+#include <sstream>
 
 #include <Xi/Config.h>
 #include <Xi/Algorithm/String.h>
@@ -59,27 +60,31 @@ NetNodeConfig::NetNodeConfig() {
   allowLocalIp = false;
   hideMyPort = false;
   configFolder = Tools::getDefaultDataDirectory();
-  m_network = Xi::Config::Network::defaultNetworkType();
-  m_blockDuration = std::chrono::hours{24};
+  m_blockDuration = std::chrono::hours{1};
   m_autoBlock = false;
+  m_appid = "";
 }
 
-bool NetNodeConfig::init(const std::string interface, const int port, const int external, const bool localIp,
-                         const bool hidePort, const std::string dataDir, const std::vector<std::string> addPeers,
-                         const std::vector<std::string> addExclusiveNodes,
+bool NetNodeConfig::init(const Xi::Config::Network::Configuration& netConfig, const std::string& coinName,
+                         const std::string interface, const uint16_t port, const uint16_t _externalPort,
+                         const bool localIp, const bool hidePort, const std::string dataDir,
+                         const std::vector<std::string> addPeers, const std::vector<std::string> addExclusiveNodes,
                          const std::vector<std::string> addPriorityNodes, const std::vector<std::string> addSeedNodes) {
+  m_netConfig = netConfig;
   bindIp = interface;
 
-  if (port < std::numeric_limits<uint16_t>::min() || port > std::numeric_limits<uint16_t>::max()) return false;
-  bindPort = static_cast<uint16_t>(port);
-
-  if (externalPort < std::numeric_limits<uint16_t>::min() || externalPort > std::numeric_limits<uint16_t>::max())
-    return false;
-  externalPort = static_cast<uint16_t>(external);
+  bindPort = port;
+  externalPort = _externalPort;
+  configFolder = dataDir;
 
   allowLocalIp = localIp;
   hideMyPort = hidePort;
-  configFolder = dataDir;
+
+  m_appid = coinName;
+  if (!netConfig.isMainNet()) {
+    m_appid += std::string{"."} + toString(netConfig.type());
+  }
+
   p2pStateFilename = Xi::Config::P2P::stateBackupFilename();
 
   if (!addPeers.empty()) {
@@ -109,13 +114,7 @@ bool NetNodeConfig::init(const std::string interface, const int port, const int 
   return true;
 }
 
-void NetNodeConfig::setNetwork(Xi::Config::Network::Type network) { m_network = network; }
-
-std::string NetNodeConfig::getP2pStateFilename() const {
-  return p2pStateFilename + "." + Xi::to_lower(Xi::to_string(getNetwork()));
-}
-
-Xi::Config::Network::Type NetNodeConfig::getNetwork() const { return m_network; }
+std::string NetNodeConfig::getP2pStateFilename() const { return "p2p"; }
 
 std::string NetNodeConfig::getBindIp() const { return bindIp; }
 
@@ -140,6 +139,10 @@ std::string NetNodeConfig::getConfigFolder() const { return configFolder; }
 std::chrono::seconds NetNodeConfig::getBlockDuration() const { return m_blockDuration; }
 
 bool NetNodeConfig::getAutoBlock() const { return m_autoBlock; }
+
+const std::string& NetNodeConfig::appIdentifier() const { return m_appid; }
+
+const Xi::Config::Network::Configuration& NetNodeConfig::network() const { return m_netConfig; }
 
 void NetNodeConfig::setP2pStateFilename(const std::string& filename) { p2pStateFilename = filename; }
 

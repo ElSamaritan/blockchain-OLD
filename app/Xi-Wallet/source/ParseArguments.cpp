@@ -48,7 +48,7 @@ bool parseDaemonAddressFromString(std::string& host, uint16_t& port, const std::
   }
 
   host = parts.at(0);
-  port = Xi::Config::Network::rpcPort();
+  port = Xi::Config::Network::Configuration::rpcDefaultPort();
   return true;
 }
 
@@ -58,7 +58,7 @@ Config parseArguments(int argc, char** argv) {
   std::stringstream defaultRemoteDaemon;
   defaultRemoteDaemon << config.host << ":" << config.port;
 
-  cxxopts::Options options(argv[0], CommonCLI::header());
+  cxxopts::Options options(argv[0]);
   CommonCLI::emplaceCLIOptions(options);
 
   std::string remoteDaemon;
@@ -69,6 +69,8 @@ Config parseArguments(int argc, char** argv) {
       cxxopts::value<bool>(config.debug)->default_value("false")->implicit_value("true"))
     ("verbose", "Enables verbose logging for debugging purposes.",
       cxxopts::value<bool>(config.verbose)->default_value("false")->implicit_value("true"))
+    ("network-dir", "Directory to search for additional network configuration files.",
+     cxxopts::value<std::string>()->default_value(config.networkDir))
     ("network", "The network type you want to connect to, mostly you want to use 'MainNet' here.",
      cxxopts::value<std::string>()->default_value(Xi::to_string(Xi::Config::Network::defaultNetworkType())),
      "[MainNet|StageNet|TestNet|LocalTestNet]");
@@ -79,7 +81,10 @@ Config parseArguments(int argc, char** argv) {
 
   options.add_options("Wallet")
     ("w,wallet-file", "Open the wallet <file>", cxxopts::value<std::string>(config.walletFile), "<file>")
-    ("p,password", "Use the password <pass> to open the wallet", cxxopts::value<std::string>(config.walletPass), "<pass>");
+    ("p,password", "Use the password <pass> to open the wallet", cxxopts::value<std::string>(config.walletPass), "<pass>")
+    ("g,generate", "Generates a wallets and exits", cxxopts::value<bool>(config.generate), "true|false")
+    ("s,generate-seed", "Uses a determenistic seed for wallet generation.", cxxopts::value<std::string>(config.generate_seed), "<string>")
+  ;
 
 
   config.ssl.emplaceOptions(options, ::Xi::Http::SSLConfiguration::Usage::Client);
@@ -90,7 +95,10 @@ Config parseArguments(int argc, char** argv) {
     if (CommonCLI::handleCLIOptions(options, result)) exit(0);
 
     if (result.count("network")) {
-      config.network = Xi::lexical_cast<Xi::Config::Network::Type>(result["network"].as<std::string>());
+      config.network = result["network"].as<std::string>();
+    }
+    if (result.count("network-dir")) {
+      config.networkDir = result["network-dir"].as<std::string>();
     }
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Error: Unable to parse command line argument options: " << e.what() << std::endl << std::endl;

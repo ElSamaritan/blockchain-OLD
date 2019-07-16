@@ -32,6 +32,7 @@
 #include <Xi/Crypto/Random/Random.hh>
 #include <crypto/cnx/cnx.h>
 #include <CryptoNoteCore/CheckDifficulty.h>
+#include <CryptoNoteCore/HashAlgorithms.h>
 
 XiMiner::MinerWorker::MinerWorker() {}
 
@@ -90,6 +91,8 @@ XiMiner::HashrateSummary XiMiner::MinerWorker::resetHashrateSummary() {
 void XiMiner::MinerWorker::mineLoop() {
   resetHashrateSummary();
   auto block = acquireTemplate();
+  std::shared_ptr<CryptoNote::Hashes::IProofOfWorkAlgorithm> algo =
+      CryptoNote::Hashes::makeProofOfWorkAlgorithm(block.Algorithm);
 
   while (!m_shutdownRequest.load()) {
     if (m_paused.load()) {
@@ -99,6 +102,7 @@ void XiMiner::MinerWorker::mineLoop() {
 
     if (m_swapTemplate.load()) {
       block = acquireTemplate();
+      algo = CryptoNote::Hashes::makeProofOfWorkAlgorithm(block.Algorithm);
     }
 
     if (!block.ProofOfWork.has_value()) {
@@ -106,7 +110,13 @@ void XiMiner::MinerWorker::mineLoop() {
       continue;
     }
 
-    const uint32_t batchSize = 10;
+    if (!algo) {
+      m_observer.notify(&Observer::onError, std::string{"Unknown hash algorithm: "} + block.Algorithm);
+      std::this_thread::sleep_for(std::chrono::milliseconds{100});
+      continue;
+    }
+
+    const uint32_t batchSize = 50;
     for (uint32_t i = 0; i < batchSize; ++i) {
       auto ec = Xi::Crypto::Random::generate(block.ProofOfWork->nonceSpan());
       if (ec != Xi::Crypto::Random::RandomError::Success) {
@@ -116,7 +126,7 @@ void XiMiner::MinerWorker::mineLoop() {
       }
 
       Crypto::Hash h;
-      Crypto::CNX::Hash_v1{}(block.ProofOfWork->data(), block.ProofOfWork->size(), h);
+      (*algo)(Xi::ConstByteSpan{block.ProofOfWork->data(), block.ProofOfWork->size()}, h);
       if (CryptoNote::check_hash(h, block.Difficutly)) {
         std::memcpy(block.Template.nonce.data(), block.ProofOfWork->nonceSpan().data(),
                     CryptoNote::BlockNonce::bytes());

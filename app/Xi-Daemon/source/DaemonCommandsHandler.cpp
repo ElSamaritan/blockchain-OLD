@@ -87,6 +87,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
   DAEMON_COMMAND_DEFINE(status, "Show daemon status");
 
   /* ----------------------------------------------- Explorer Commands --------------------------------------------- */
+  DAEMON_COMMAND_DEFINE(info, "Prints general informations about the curring blockchain");
   DAEMON_COMMAND_DEFINE(search, "Searches for a block height/hash or transaction hash");
   DAEMON_COMMAND_DEFINE(top, "Displays top block info");
   DAEMON_COMMAND_DEFINE(top_short, "Displays top block short info");
@@ -119,7 +120,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
 //--------------------------------------------------------------------------------
 std::string DaemonCommandsHandler::get_commands_str() {
   std::stringstream ss;
-  ss << Xi::Config::Coin::name() << " v" << APP_VERSION << ENDL;
+  ss << m_core.currency().coin().name() << " v" << APP_VERSION << ENDL;
   ss << "Commands: " << ENDL;
   std::string usage = m_consoleHandler.getUsage();
   boost::replace_all(usage, "\n", "\n  ");
@@ -220,7 +221,8 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string>& args) {
               << ", transactions: " << header.transactions_count << ENDL << "version: " << toString(header.version)
               << ", upgrade vote: " << toString(header.upgrade_vote) << ENDL << "block id: " << header.hash
               << ", previous block id: " << header.prev_hash << ENDL << "difficulty: " << header.difficulty
-              << ", nonce: " << toString(header.nonce) << ", reward: " << currency.formatAmount(header.reward) << ENDL;
+              << ", nonce: " << toString(header.nonce) << ", reward: " << currency.amountFormatter()(header.reward)
+              << ENDL;
   }
 
   return true;
@@ -388,9 +390,23 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
     return false;
   }
 
-  std::cout << Common::get_status_string(iresp) << std::endl;
+  std::cout << Common::get_status_string(iresp, m_core.currency()) << std::endl;
 
   return true;
+}
+
+bool DaemonCommandsHandler::info(const std::vector<std::string>& args) {
+  XI_RETURN_EC_IF_NOT(args.empty(), false);
+  std::cout << "\n";
+  auto serializer = makeConsoleOutputSerializer();
+  // clang-format off
+  XI_RETURN_EC_IF_NOT(serializer->beginObject("Info"), false);
+  XI_RETURN_EC_IF_NOT((*serializer)(const_cast<Xi::Config::General::Configuration&>(m_core.currency().general()), "general"), false);
+  XI_RETURN_EC_IF_NOT((*serializer)(const_cast<Xi::Config::Coin::Configuration&>(m_core.currency().coin()), "coin"), false);
+  XI_RETURN_EC_IF_NOT(serializer->endObject(), false);
+  // clang-format on
+  std::cout << std::endl;
+  XI_RETURN_SC(true);
 }
 
 bool DaemonCommandsHandler::search(const std::vector<std::string>& args) {

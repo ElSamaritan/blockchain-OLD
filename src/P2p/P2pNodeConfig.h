@@ -19,7 +19,7 @@
 
 #include <chrono>
 
-#include <Xi/Config/NetworkType.h>
+#include <Xi/Config/Network.h>
 
 #include "NetNodeConfig.h"
 
@@ -27,7 +27,7 @@ namespace CryptoNote {
 
 class P2pNodeConfig : public NetNodeConfig {
  public:
-  P2pNodeConfig(::Xi::Config::Network::Type network);
+  P2pNodeConfig(const Xi::Config::Network::Configuration& network);
 
   // getters
   std::chrono::nanoseconds getTimedSyncInterval() const;

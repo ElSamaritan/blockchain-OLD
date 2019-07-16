@@ -24,8 +24,8 @@
 #include "UpgradeDetector.h"
 
 CryptoNote::NoVotingUpgradeDetector::NoVotingUpgradeDetector(Xi::Blockchain::Block::Version targetVersion,
-                                                             uint32_t upgradeIndex)
-    : m_targetVersion(targetVersion), m_upgradeIndex(upgradeIndex) {}
+                                                             uint32_t upgradeIndex, bool _isFork)
+    : m_targetVersion(targetVersion), m_upgradeIndex(upgradeIndex), m_isFork{_isFork} {}
 
 CryptoNote::NoVotingUpgradeDetector::~NoVotingUpgradeDetector() {}
 
@@ -33,7 +33,9 @@ Xi::Blockchain::Block::Version CryptoNote::NoVotingUpgradeDetector::targetVersio
 
 uint32_t CryptoNote::NoVotingUpgradeDetector::upgradeIndex() const { return m_upgradeIndex; }
 
+bool CryptoNote::NoVotingUpgradeDetector::isFork() const { return m_isFork; }
+
 std::unique_ptr<CryptoNote::IUpgradeDetector> CryptoNote::makeUpgradeDetector(
-    Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeIndex) {
-  return std::unique_ptr<NoVotingUpgradeDetector>(new NoVotingUpgradeDetector(targetVersion, upgradeIndex));
+    Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeIndex, bool isFork) {
+  return std::unique_ptr<NoVotingUpgradeDetector>(new NoVotingUpgradeDetector(targetVersion, upgradeIndex, isFork));
 }

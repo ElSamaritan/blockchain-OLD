@@ -57,5 +57,5 @@ void CryptoNote::PoolTransactionValidator::fillContext(CryptoNote::TransferValid
 }
 
 uint64_t CryptoNote::PoolTransactionValidator::transactionWeightLimit() const {
-  return currency().blockGrantedFullRewardZoneByBlockVersion(blockVersion()) - currency().minerTxBlobReservedSize();
+  return currency().maxTxSize(blockVersion());
 }

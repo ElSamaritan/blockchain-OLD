@@ -29,12 +29,12 @@ const size_t P2P_DEFAULT_PEERLIST_GET_TRY_COUNT = 10;
 
 }  // namespace
 
-P2pNodeConfig::P2pNodeConfig(Xi::Config::Network::Type network)
+P2pNodeConfig::P2pNodeConfig(const Xi::Config::Network::Configuration& network)
     : timedSyncInterval(std::chrono::seconds(Xi::Config::P2P::handshakeInterval())),
       handshakeTimeout(std::chrono::milliseconds(Xi::Config::P2P::handshakeTimeout())),
       connectInterval(P2P_DEFAULT_CONNECT_INTERVAL),
       connectTimeout(std::chrono::milliseconds(Xi::Config::P2P::connectionTimeout())),
-      networkId(Xi::Config::Network::identifier(network)),
+      networkId(network.identifier()),
       expectedOutgoingConnectionsCount(Xi::Config::P2P::connectionsCount()),
       whiteListConnectionsPercent(Xi::Config::P2P::whiteListPreferenceThreshold()),
       peerListConnectRange(P2P_DEFAULT_CONNECT_RANGE),

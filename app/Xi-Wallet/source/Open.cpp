@@ -40,13 +40,13 @@ std::shared_ptr<WalletInfo> createViewWallet(CryptoNote::WalletGreen &wallet) {
   std::string address;
 
   while (true) {
-    std::cout << InformationMsg("Enter your public ") << InformationMsg(WalletConfig::ticker)
+    std::cout << InformationMsg("Enter your public ") << InformationMsg(wallet.currency().coin().ticker())
               << InformationMsg(" address: ");
 
     std::getline(std::cin, address);
     trim(address);
 
-    if (parseStandardAddress(address, true)) {
+    if (parseStandardAddress(address, wallet.currency(), true)) {
       break;
     }
   }

@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -48,6 +48,7 @@
 #include <Logging/LoggerRef.h>
 #include <Serialization/JsonOutputStreamSerializer.h>
 #include <crypto/cnx/cnx.h>
+#include <CryptoNoteCore/HashAlgorithms.h>
 
 #include "BenchmarkResult.h"
 #include "BenchmarkSerialization.h"
@@ -70,21 +71,22 @@ std::string format_cpu_info(const cpu_features::X86Info& nfo) {
 
 std::string format_table(const XiBenchmark::BencharkSummary& summary) {
   using namespace CommonCLI;
-  const std::string seperator = std::string{"+"} + std::string(62, '-') + std::string{"+\n"};
+  const std::string seperator = std::string{"+"} + std::string(77, '-') + std::string{"+\n"};
   std::stringstream builder;
   builder.setf(std::ios::fixed);
   builder.precision(3);
   builder << seperator;
-  builder << "|" << std::setw(61) << centered(format_cpu_info(summary.CPUInfo)) << " |\n";
+  builder << "|" << std::setw(76) << centered(format_cpu_info(summary.CPUInfo)) << " |\n";
   builder << seperator;
-  builder << "| " << std::setw(8) << centered("Threads") << " | " << std::setw(10) << centered("Total H/s") << " | "
+  builder << "| " << std::setw(8) << centered("Threads") << " | " << std::setw(12) << centered("Total H/s") << " | "
           << std::setw(10) << centered("Avg H/s") << " | " << std::setw(10) << centered("Worst H/s") << " | "
-          << std::setw(10) << centered("Best H/s") << " |\n";
+          << std::setw(10) << centered("Best H/s") << " | " << std::setw(10) << centered("Algo") << " |\n";
   builder << seperator;
   for (const auto& iResult : summary.Benchmarks) {
-    builder << "| " << std::setw(8) << iResult.ThreadResults.size() << " | " << std::setw(10) << iResult.totalHashrate()
+    builder << "| " << std::setw(8) << iResult.ThreadResults.size() << " | " << std::setw(12) << iResult.totalHashrate()
             << " | " << std::setw(10) << iResult.averageHashrate() << " | " << std::setw(10) << iResult.worstHashrate()
-            << " | " << std::setw(10) << iResult.bestHashrate() << " |\n";
+            << " | " << std::setw(10) << iResult.bestHashrate() << " | " << std::setw(10) << iResult.Algorithm
+            << " |\n";
   }
   builder << seperator;
   return builder.str();
@@ -134,6 +136,7 @@ int main(int argc, char** argv) {
     size_t threads = std::thread::hardware_concurrency();
     uint32_t blocks = 1000;
     std::string format{"table"};
+    std::string algo{"CNX-v1"};
     const uint32_t size = 410;
     // clang-format off
     cliOptions.add_options("benchmark")
@@ -147,12 +150,24 @@ int main(int argc, char** argv) {
 
         ("f,format", "summary format [csv|json|discord|table]",
             cxxopts::value<std::string>(format)->default_value(format))
+
+        ("a,algorithm", "algorithm to benchmark",
+            cxxopts::value<std::string>(algo)->default_value(algo))
     ;
     // clang-format on
 
     auto cliParseResult = cliOptions.parse(argc, argv);
     if (CommonCLI::handleCLIOptions(cliOptions, cliParseResult)) {
       return 0;
+    }
+
+    auto hashAlgo = CryptoNote::Hashes::makeProofOfWorkAlgorithm(algo);
+    if (!hashAlgo) {
+      std::string supported{};
+      for (const auto& iAlgo : CryptoNote::Hashes::supportedProofOfWorkAlgorithms()) {
+        supported += iAlgo + ", ";
+      }
+      throw std::runtime_error{std::string{"unkown hash algorithm '"} + algo + "'. Supported: " + supported};
     }
 
     auto formatterSearch = formatters.find(format);
@@ -173,17 +188,17 @@ int main(int argc, char** argv) {
 
     for (threads = minThreadUsage; threads <= maxThreadUsage; ++threads) {
       logger(Logging::Trace) << "starting benchmark using " << threads << " threads\n";
-      BenchmarkResult result{blocks, size, threads, "CNX_v0_0"};
+      BenchmarkResult result{blocks, size, threads, algo};
       std::vector<std::thread> worker;
       worker.reserve(threads);
 
       for (size_t i = 0; i < threads; ++i) {
-        worker.emplace_back([&blockData, &result, i, blocks, size]() {
+        worker.emplace_back([&blockData, &result, i, blocks, size, hashAlgo]() {
           result.ThreadResults[i].start();
-          const char* data = reinterpret_cast<const char*>(blockData.data());
+          auto data = reinterpret_cast<const Xi::Byte*>(blockData.data());
           for (size_t j = 0; j < blocks; ++j) {
             Crypto::Hash hash;
-            HashAlgorithm{}(data + (i * blocks + j) * size, size, hash);
+            (*hashAlgo)(Xi::ConstByteSpan{data + (i * blocks + j) * size, size}, hash);
           }
           result.ThreadResults[i].stop();
         });

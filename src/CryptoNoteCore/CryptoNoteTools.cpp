@@ -147,3 +147,11 @@ uint64_t CryptoNote::cutDigitsFromAmount(uint64_t amount, const size_t count) {
     return amount - (amount % decimal);
   }
 }
+
+uint8_t CryptoNote::getCanoncialAmountDecimalPlace(uint64_t amount) {
+  if (const auto search = AmountDecompositions::units().find(amount); search != AmountDecompositions::units().end()) {
+    return search->second.DecadeIndex;
+  } else {
+    XI_RETURN_EC(std::numeric_limits<uint8_t>::max());
+  }
+}
