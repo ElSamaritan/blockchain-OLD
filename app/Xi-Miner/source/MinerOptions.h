@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -44,6 +44,7 @@ class MinerOptions {
   uint16_t ReportInterval = 5;  ///< Hashrate report interval in seconds.
   uint32_t BlockLimit = 0;
   bool Panic = false;  ///< Forces the application to abort if healthy checks fail.
+  bool NoneInteractive = false;
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(Address)
@@ -52,6 +53,7 @@ class MinerOptions {
   KV_MEMBER(ReportInterval)
   KV_MEMBER(BlockLimit)
   KV_MEMBER(Panic)
+  KV_MEMBER(NoneInteractive)
   KV_END_SERIALIZATION
 
   void emplaceOptions(cxxopts::Options& options);

@@ -23,6 +23,7 @@
 
 #include <numeric>
 #include <chrono>
+#include <future>
 
 #include <Xi/App/Application.h>
 #include <Common/SignalHandler.h>
@@ -82,8 +83,14 @@ int XiMiner::MinerApplication::run() {
   cli.minerMonitor().run();
   miner.run();
 
-  // Tools::SignalHandler::install([&miner] { miner.shutdown(); });
-  cli.run(name(), "./");
+  if (Options.NoneInteractive) {
+    std::promise<void> shutdownPromise{};
+    auto future = shutdownPromise.get_future();
+    Tools::SignalHandler::install([&shutdownPromise]() mutable { shutdownPromise.set_value(); });
+    future.get();
+  } else {
+    cli.run(name(), "./");
+  }
 
   miner.shutdown();
   cli.minerMonitor().shutdown();

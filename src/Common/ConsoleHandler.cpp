@@ -159,9 +159,13 @@ void ConsoleHandler::handleCommand(const std::string& cmd) {
 }
 
 void ConsoleHandler::completionCallback(const char* buf, std::vector<std::string>& out) {
+  const auto buflen = strlen(buf);
   for (const auto& handler : m_handlers) {
     const auto& cmd = handler.first;
-    if (!strcasecmp(buf, cmd.c_str())) {
+    if (buflen > cmd.size()) {
+      continue;
+    }
+    if (std::memcmp(cmd.c_str(), buf, buflen) == 0) {
       out.push_back(cmd);
     }
   }

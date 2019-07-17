@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -56,6 +56,8 @@ void XiMiner::MinerOptions::emplaceOptions(cxxopts::Options &options) {
         cxxopts::value<uint32_t>(BlockLimit)->default_value(std::to_string(BlockLimit)))
     ("p,panic", "forces the application to exit if a health check fails",
         cxxopts::value<bool>(Panic)->implicit_value("true"))
+    ("n,none-interactive", "disabled interactive command line",
+          cxxopts::value<bool>(NoneInteractive)->implicit_value("true"))
   ;
   // clang-format on
 }
