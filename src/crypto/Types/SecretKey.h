@@ -37,7 +37,9 @@ namespace Crypto {
 struct SecretKey : Xi::ByteArray<32> {
   using array_type = Xi::ByteArray<32>;
   static const SecretKey Null;
-  static inline constexpr size_t bytes() { return 32; }
+  static inline constexpr size_t bytes() {
+    return 32;
+  }
   static Xi::Result<SecretKey> fromString(const std::string& hex);
 
   SecretKey();

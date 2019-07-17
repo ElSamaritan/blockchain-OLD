@@ -94,8 +94,10 @@ inline boost::optional<_T> safe_lexical_cast(const std::string& value) {
   }
 }
 
-#define FOWARD_TO_STRING_TO_STD(TYPE) \
-  inline std::string to_string(TYPE&& value) { return std::to_string(std::forward<TYPE>(value)); }
+#define FOWARD_TO_STRING_TO_STD(TYPE)                 \
+  inline std::string to_string(TYPE&& value) {        \
+    return std::to_string(std::forward<TYPE>(value)); \
+  }
 
 FOWARD_TO_STRING_TO_STD(char)
 FOWARD_TO_STRING_TO_STD(unsigned char)

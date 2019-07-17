@@ -24,7 +24,8 @@ namespace CryptoNote {
 
 class IMainChainStorage {
  public:
-  virtual ~IMainChainStorage() {}
+  virtual ~IMainChainStorage() {
+  }
 
   virtual void pushBlock(const RawBlock& rawBlock, const uint64_t blobSize) = 0;
   virtual void popBlock() = 0;

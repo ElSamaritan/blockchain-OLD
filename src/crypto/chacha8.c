@@ -48,7 +48,8 @@ void chacha8(const void* data, size_t length, const uint8_t* key, const uint8_t*
   char tmp[64];
   int i;
 
-  if (!length) return;
+  if (!length)
+    return;
 
   j0 = U8TO32_LITTLE(sigma + 0);
   j1 = U8TO32_LITTLE(sigma + 4);

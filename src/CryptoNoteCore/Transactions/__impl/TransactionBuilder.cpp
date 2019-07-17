@@ -104,7 +104,9 @@ PublicKey TransactionBuilder::getTransactionPublicKey() const {
   return pk;
 }
 
-uint64_t TransactionBuilder::getUnlockTime() const { return transaction.unlockTime; }
+uint64_t TransactionBuilder::getUnlockTime() const {
+  return transaction.unlockTime;
+}
 
 void TransactionBuilder::setUnlockTime(uint64_t unlockTime) {
   checkIfSigning();
@@ -220,7 +222,9 @@ std::vector<Signature>& TransactionBuilder::getSignatures(size_t input) {
   return signatures[input];
 }
 
-BinaryArray TransactionBuilder::getTransactionData() const { return toBinaryArray(transaction); }
+BinaryArray TransactionBuilder::getTransactionData() const {
+  return toBinaryArray(transaction);
+}
 
 void TransactionBuilder::setPaymentId(const PaymentId& pid) {
   checkIfSigning();
@@ -266,9 +270,13 @@ bool TransactionBuilder::getExtraNonce(BinaryArray& nonce) const {
   return false;
 }
 
-BinaryArray TransactionBuilder::getExtra() const { return transaction.extra; }
+BinaryArray TransactionBuilder::getExtra() const {
+  return transaction.extra;
+}
 
-size_t TransactionBuilder::getInputCount() const { return transaction.inputs.size(); }
+size_t TransactionBuilder::getInputCount() const {
+  return transaction.inputs.size();
+}
 
 uint64_t TransactionBuilder::getInputTotalAmount() const {
   return std::accumulate(transaction.inputs.begin(), transaction.inputs.end(), 0ULL,
@@ -283,7 +291,9 @@ void TransactionBuilder::getInput(size_t index, KeyInput& input) const {
   input = std::get<KeyInput>(getInputChecked(transaction, index, TransactionTypes::InputType::Key));
 }
 
-size_t TransactionBuilder::getOutputCount() const { return transaction.outputs.size(); }
+size_t TransactionBuilder::getOutputCount() const {
+  return transaction.outputs.size();
+}
 
 uint64_t TransactionBuilder::getOutputTotalAmount() const {
   return std::accumulate(transaction.outputs.begin(), transaction.outputs.end(), 0ULL,

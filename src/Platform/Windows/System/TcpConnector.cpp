@@ -45,9 +45,11 @@ LPFN_CONNECTEX connectEx = nullptr;
 
 }  // namespace
 
-TcpConnector::TcpConnector() : dispatcher(nullptr) {}
+TcpConnector::TcpConnector() : dispatcher(nullptr) {
+}
 
-TcpConnector::TcpConnector(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {}
+TcpConnector::TcpConnector(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {
+}
 
 TcpConnector::TcpConnector(TcpConnector&& other) : dispatcher(other.dispatcher) {
   if (dispatcher != nullptr) {
@@ -57,7 +59,9 @@ TcpConnector::TcpConnector(TcpConnector&& other) : dispatcher(other.dispatcher) 
   }
 }
 
-TcpConnector::~TcpConnector() { assert(dispatcher == nullptr || context == nullptr); }
+TcpConnector::~TcpConnector() {
+  assert(dispatcher == nullptr || context == nullptr);
+}
 
 TcpConnector& TcpConnector::operator=(TcpConnector&& other) {
   assert(dispatcher == nullptr || context == nullptr);

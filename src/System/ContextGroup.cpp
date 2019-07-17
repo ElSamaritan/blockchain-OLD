@@ -20,7 +20,9 @@
 
 namespace System {
 
-ContextGroup::ContextGroup(Dispatcher& dispatcher) : dispatcher(&dispatcher) { contextGroup.firstContext = nullptr; }
+ContextGroup::ContextGroup(Dispatcher& dispatcher) : dispatcher(&dispatcher) {
+  contextGroup.firstContext = nullptr;
+}
 
 ContextGroup::ContextGroup(ContextGroup&& other) : dispatcher(other.dispatcher) {
   if (dispatcher != nullptr) {

@@ -68,8 +68,12 @@ class PeerlistManager {
   PeerlistManager();
 
   bool init(bool allow_local_ip);
-  size_t get_white_peers_count() const { return m_peers_white.size(); }
-  size_t get_gray_peers_count() const { return m_peers_gray.size(); }
+  size_t get_white_peers_count() const {
+    return m_peers_white.size();
+  }
+  size_t get_gray_peers_count() const {
+    return m_peers_gray.size();
+  }
   bool merge_peerlist(const std::list<PeerlistEntry>& outer_bs);
   bool get_peerlist_head(std::list<PeerlistEntry>& bs_head,
                          uint32_t depth = Xi::Config::P2P::handshakePeersCount()) const;
@@ -85,7 +89,7 @@ class PeerlistManager {
   void trim_white_peerlist();
   void trim_gray_peerlist();
 
-[[nodiscard]]  bool serialize(ISerializer& s);
+  [[nodiscard]] bool serialize(ISerializer& s);
 
   Peerlist& getWhite();
   Peerlist& getGray();

@@ -25,7 +25,9 @@ TcpStreambuf::TcpStreambuf(TcpConnection& connection) : connection(connection) {
   setp(reinterpret_cast<char*>(&writeBuf.front()), reinterpret_cast<char*>(&writeBuf.front() + writeBuf.max_size()));
 }
 
-TcpStreambuf::~TcpStreambuf() { dumpBuffer(true); }
+TcpStreambuf::~TcpStreambuf() {
+  dumpBuffer(true);
+}
 
 std::streambuf::int_type TcpStreambuf::overflow(std::streambuf::int_type ch) {
   if (ch == traits_type::eof()) {
@@ -43,7 +45,9 @@ std::streambuf::int_type TcpStreambuf::overflow(std::streambuf::int_type ch) {
   return ch;
 }
 
-int TcpStreambuf::sync() { return dumpBuffer(true) ? 0 : -1; }
+int TcpStreambuf::sync() {
+  return dumpBuffer(true) ? 0 : -1;
+}
 
 std::streambuf::int_type TcpStreambuf::underflow() {
   if (gptr() < egptr()) {

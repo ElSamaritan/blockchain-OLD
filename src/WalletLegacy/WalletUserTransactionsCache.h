@@ -21,7 +21,6 @@
 #include <list>
 #include <vector>
 
-
 #include "IWalletLegacy.h"
 #include "Transfers/ITransfersContainer.h"
 

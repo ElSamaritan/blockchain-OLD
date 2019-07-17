@@ -369,7 +369,9 @@ void NodeRpcProxy::getFeeInfo() {
   return;
 }
 
-const Currency& NodeRpcProxy::currency() const { return m_currency; }
+const Currency& NodeRpcProxy::currency() const {
+  return m_currency;
+}
 
 std::error_code NodeRpcProxy::ping() {
   try {
@@ -383,19 +385,29 @@ std::error_code NodeRpcProxy::ping() {
   }
 }
 
-std::optional<FeeAddress> NodeRpcProxy::feeAddress() const { return m_fee; }
+std::optional<FeeAddress> NodeRpcProxy::feeAddress() const {
+  return m_fee;
+}
 
-void NodeRpcProxy::setPollUpdatesEnabled(bool enabled) { m_pollUpdates.store(enabled); }
+void NodeRpcProxy::setPollUpdatesEnabled(bool enabled) {
+  m_pollUpdates.store(enabled);
+}
 
-bool NodeRpcProxy::pollUpdatesEnabled() const { return m_pollUpdates.load(); }
+bool NodeRpcProxy::pollUpdatesEnabled() const {
+  return m_pollUpdates.load();
+}
 
 std::vector<Crypto::Hash> NodeRpcProxy::getKnownTxsVector() const {
   return std::vector<Crypto::Hash>(m_knownTxs.begin(), m_knownTxs.end());
 }
 
-bool NodeRpcProxy::addObserver(INodeObserver* observer) { return m_observerManager.add(observer); }
+bool NodeRpcProxy::addObserver(INodeObserver* observer) {
+  return m_observerManager.add(observer);
+}
 
-bool NodeRpcProxy::removeObserver(INodeObserver* observer) { return m_observerManager.remove(observer); }
+bool NodeRpcProxy::removeObserver(INodeObserver* observer) {
+  return m_observerManager.remove(observer);
+}
 
 bool NodeRpcProxy::addObserver(CryptoNote::INodeRpcProxyObserver* observer) {
   return m_rpcProxyObserverManager.add(observer);
@@ -405,7 +417,9 @@ bool NodeRpcProxy::removeObserver(CryptoNote::INodeRpcProxyObserver* observer) {
   return m_rpcProxyObserverManager.remove(observer);
 }
 
-size_t NodeRpcProxy::getPeerCount() const { return m_peerCount.load(std::memory_order_relaxed); }
+size_t NodeRpcProxy::getPeerCount() const {
+  return m_peerCount.load(std::memory_order_relaxed);
+}
 
 BlockVersion NodeRpcProxy::getLastKnownBlockVersion() const {
   return BlockVersion{m_networkVersion.load(std::memory_order_consume)};
@@ -416,16 +430,22 @@ BlockHeight NodeRpcProxy::getLastLocalBlockHeight() const {
   return lastLocalBlockHeaderInfo.height;
 }
 
-BlockHeight NodeRpcProxy::getLastKnownBlockHeight() const { return m_networkHeight.load(std::memory_order_relaxed); }
+BlockHeight NodeRpcProxy::getLastKnownBlockHeight() const {
+  return m_networkHeight.load(std::memory_order_relaxed);
+}
 
 uint32_t NodeRpcProxy::getLocalBlockCount() const {
   std::lock_guard<std::mutex> lock(m_mutex);
   return lastLocalBlockHeaderInfo.height.native();
 }
 
-uint32_t NodeRpcProxy::getKnownBlockCount() const { return m_networkHeight.load(std::memory_order_relaxed).native(); }
+uint32_t NodeRpcProxy::getKnownBlockCount() const {
+  return m_networkHeight.load(std::memory_order_relaxed).native();
+}
 
-BlockHeight NodeRpcProxy::getNodeHeight() const { return m_nodeHeight.load(std::memory_order_relaxed); }
+BlockHeight NodeRpcProxy::getNodeHeight() const {
+  return m_nodeHeight.load(std::memory_order_relaxed);
+}
 
 uint64_t NodeRpcProxy::getLastLocalBlockTimestamp() const {
   std::lock_guard<std::mutex> lock(m_mutex);
@@ -836,11 +856,16 @@ void NodeRpcProxy::scheduleRequest(std::function<std::error_code()>&& procedure,
    public:
     Wrapper(std::function<void(std::function<std::error_code()>&, Callback&)>&& _func,
             std::function<std::error_code()>&& _procedure, const Callback& _callback)
-        : func(std::move(_func)), procedure(std::move(_procedure)), callback(std::move(_callback)) {}
-    Wrapper(const Wrapper& other) : func(other.func), procedure(other.procedure), callback(other.callback) {}
+        : func(std::move(_func)), procedure(std::move(_procedure)), callback(std::move(_callback)) {
+    }
+    Wrapper(const Wrapper& other) : func(other.func), procedure(other.procedure), callback(other.callback) {
+    }
     Wrapper(Wrapper&& other)  // must be noexcept
-        : func(std::move(other.func)), procedure(std::move(other.procedure)), callback(std::move(other.callback)) {}
-    void operator()() { func(procedure, callback); }
+        : func(std::move(other.func)), procedure(std::move(other.procedure)), callback(std::move(other.callback)) {
+    }
+    void operator()() {
+      func(procedure, callback);
+    }
 
    private:
     std::function<void(std::function<std::error_code()>&, Callback&)> func;

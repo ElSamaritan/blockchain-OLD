@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -25,10 +25,22 @@
 
 #include <cstring>
 
-#define XI_MAKE_GENERIC_COMPARISON(_T)                                                                               \
-  static inline bool operator==(const _T& lhs, const _T& rhs) { return ::std::memcmp(&lhs, &rhs, sizeof(_T)) == 0; } \
-  static inline bool operator!=(const _T& lhs, const _T& rhs) { return ::std::memcmp(&lhs, &rhs, sizeof(_T)) != 0; } \
-  static inline bool operator<(const _T& lhs, const _T& rhs) { return ::std::memcmp(&lhs, &rhs, sizeof(_T)) < 0; }   \
-  static inline bool operator<=(const _T& lhs, const _T& rhs) { return ::std::memcmp(&lhs, &rhs, sizeof(_T)) < 1; }  \
-  static inline bool operator>(const _T& lhs, const _T& rhs) { return ::std::memcmp(&lhs, &rhs, sizeof(_T)) > 0; }   \
-  static inline bool operator>=(const _T& lhs, const _T& rhs) { return ::std::memcmp(&lhs, &rhs, sizeof(_T)) > -1; }
+#define XI_MAKE_GENERIC_COMPARISON(_T)                          \
+  static inline bool operator==(const _T& lhs, const _T& rhs) { \
+    return ::std::memcmp(&lhs, &rhs, sizeof(_T)) == 0;          \
+  }                                                             \
+  static inline bool operator!=(const _T& lhs, const _T& rhs) { \
+    return ::std::memcmp(&lhs, &rhs, sizeof(_T)) != 0;          \
+  }                                                             \
+  static inline bool operator<(const _T& lhs, const _T& rhs) {  \
+    return ::std::memcmp(&lhs, &rhs, sizeof(_T)) < 0;           \
+  }                                                             \
+  static inline bool operator<=(const _T& lhs, const _T& rhs) { \
+    return ::std::memcmp(&lhs, &rhs, sizeof(_T)) < 1;           \
+  }                                                             \
+  static inline bool operator>(const _T& lhs, const _T& rhs) {  \
+    return ::std::memcmp(&lhs, &rhs, sizeof(_T)) > 0;           \
+  }                                                             \
+  static inline bool operator>=(const _T& lhs, const _T& rhs) { \
+    return ::std::memcmp(&lhs, &rhs, sizeof(_T)) > -1;          \
+  }

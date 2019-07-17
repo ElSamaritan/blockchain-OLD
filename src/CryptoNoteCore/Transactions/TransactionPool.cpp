@@ -60,17 +60,25 @@ TransactionPool::~TransactionPool() {
   m_blockchain.removeObserver(this);
 }
 
-void TransactionPool::addObserver(ITransactionPoolObserver* observer) { m_observers.add(observer); }
-void TransactionPool::removeObserver(ITransactionPoolObserver* observer) { m_observers.remove(observer); }
+void TransactionPool::addObserver(ITransactionPoolObserver* observer) {
+  m_observers.add(observer);
+}
+void TransactionPool::removeObserver(ITransactionPoolObserver* observer) {
+  m_observers.remove(observer);
+}
 
 std::size_t TransactionPool::size() const {
   XI_CONCURRENT_RLOCK(m_access);
   return m_transactions.size();
 }
 
-std::size_t TransactionPool::cumulativeSize() const { return m_cumulativeSize.load(std::memory_order_consume); }
+std::size_t TransactionPool::cumulativeSize() const {
+  return m_cumulativeSize.load(std::memory_order_consume);
+}
 
-std::size_t TransactionPool::cumulativeFees() const { return m_cumulativeFees.load(std::memory_order_consume); }
+std::size_t TransactionPool::cumulativeFees() const {
+  return m_cumulativeFees.load(std::memory_order_consume);
+}
 
 Crypto::Hash TransactionPool::stateHash() const {
   XI_CONCURRENT_RLOCK(m_access);
@@ -399,8 +407,10 @@ Xi::Result<void> TransactionPool::insertTransaction(CachedTransaction transactio
 Xi::Result<void> TransactionPool::insertTransaction(CachedTransaction transaction, PosixTimestamp receiveTime,
                                                     ITransactionPoolObserver::AdditionReason reason) {
   auto mainChain = m_blockchain.mainChain();
-  if (mainChain == nullptr) return Xi::make_error(Error::MAIN_CHAIN_MISSING);
-  if (mainChain->hasTransaction(transaction.getTransactionHash())) return Xi::make_error(Error::ALREADY_MINED);
+  if (mainChain == nullptr)
+    return Xi::make_error(Error::MAIN_CHAIN_MISSING);
+  if (mainChain->hasTransaction(transaction.getTransactionHash()))
+    return Xi::make_error(Error::ALREADY_MINED);
   const auto blockVersion = m_blockchain.upgradeManager().getBlockVersion(mainChain->getTopBlockIndex() + 1);
   PoolTransactionValidator validator{*this, blockVersion, *mainChain, m_blockchain.currency()};
   auto validationResult = validator.validate(transaction);
@@ -452,7 +462,9 @@ Crypto::Hash TransactionPool::computeStateHash() const {
   }
 }
 
-void TransactionPool::invalidateStateHash() { m_stateHash = boost::none; }
+void TransactionPool::invalidateStateHash() {
+  m_stateHash = boost::none;
+}
 
 void TransactionPool::evaluateBlockVersionUpgradeConstraints() {
   XI_CONCURRENT_RLOCK(m_access);
@@ -518,7 +530,9 @@ std::vector<Crypto::Hash> TransactionPool::getTransactionHashes() const {
   return hashes;
 }
 
-bool TransactionPool::checkIfTransactionPresent(const Crypto::Hash& hash) const { return containsTransaction(hash); }
+bool TransactionPool::checkIfTransactionPresent(const Crypto::Hash& hash) const {
+  return containsTransaction(hash);
+}
 
 std::vector<CachedTransaction> TransactionPool::getPoolTransactions() const {
   XI_CONCURRENT_RLOCK(m_access);

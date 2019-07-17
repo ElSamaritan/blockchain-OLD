@@ -37,12 +37,16 @@ Xi::Http::ServerSession::ServerSession(socket_t socket, buffer_t buffer, std::sh
       m_buffer{std::move(buffer)},
       m_handler{handler},
       m_dispatcher{dispatcher} {
-  if (m_handler.get() == nullptr) throw std::invalid_argument{"a server session requires a non null request handler"};
+  if (m_handler.get() == nullptr)
+    throw std::invalid_argument{"a server session requires a non null request handler"};
 }
 
-Xi::Http::ServerSession::~ServerSession() {}
+Xi::Http::ServerSession::~ServerSession() {
+}
 
-void Xi::Http::ServerSession::run() { readRequest(); }
+void Xi::Http::ServerSession::run() {
+  readRequest();
+}
 
 void Xi::Http::ServerSession::readRequest() {
   try {

@@ -48,13 +48,19 @@ class Configuration {
   XI_PROPERTY(std::vector<std::string>, seeds)
 
   XI_PROPERTY(uint16_t, p2pPort)
-  static inline constexpr uint16_t p2pDefaultPort() { return 22868; }
+  static inline constexpr uint16_t p2pDefaultPort() {
+    return 22868;
+  }
 
   XI_PROPERTY(uint16_t, rpcPort)
-  static inline constexpr uint16_t rpcDefaultPort() { return 22869; }
+  static inline constexpr uint16_t rpcDefaultPort() {
+    return 22869;
+  }
 
   XI_PROPERTY(uint16_t, pgservicePort)
-  static inline constexpr uint16_t pgserviceDefaultPort() { return 38070; }
+  static inline constexpr uint16_t pgserviceDefaultPort() {
+    return 38070;
+  }
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER_RENAME(type(), type)
@@ -66,7 +72,9 @@ class Configuration {
   KV_MEMBER_RENAME(pgservicePort(), pgservice_port)
   KV_END_SERIALIZATION
 
-  bool isMainNet() const { return this->type() == Type::MainNet; }
+  bool isMainNet() const {
+    return this->type() == Type::MainNet;
+  }
 };
 
 std::string defaultNetworkName();
@@ -75,8 +83,12 @@ std::string defaultNetworkIdentifier();
 
 std::string breakpadServer();
 
-static inline constexpr uint64_t blockIdentifiersSynchronizationBatchSize() { return 500; }
-static inline constexpr uint64_t blocksSynchronizationBatchSize() { return 100; }
+static inline constexpr uint64_t blockIdentifiersSynchronizationBatchSize() {
+  return 500;
+}
+static inline constexpr uint64_t blocksSynchronizationBatchSize() {
+  return 100;
+}
 }  // namespace Network
 }  // namespace Config
 }  // namespace Xi

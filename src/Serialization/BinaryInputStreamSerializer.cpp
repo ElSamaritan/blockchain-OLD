@@ -44,18 +44,26 @@ void readInteger(IInputStream& s, T& i, bool useVarint) {
 
 }  // namespace
 
-ISerializer::SerializerType BinaryInputStreamSerializer::type() const { return ISerializer::INPUT; }
+ISerializer::SerializerType BinaryInputStreamSerializer::type() const {
+  return ISerializer::INPUT;
+}
 
-bool BinaryInputStreamSerializer::useVarInt() { return m_varintUse; }
+bool BinaryInputStreamSerializer::useVarInt() {
+  return m_varintUse;
+}
 
-void BinaryInputStreamSerializer::setUseVarInt(bool use) { m_varintUse = use; }
+void BinaryInputStreamSerializer::setUseVarInt(bool use) {
+  m_varintUse = use;
+}
 
 bool BinaryInputStreamSerializer::beginObject(Common::StringView name) {
   XI_UNUSED(name);
   return true;
 }
 
-bool BinaryInputStreamSerializer::endObject() { return true; }
+bool BinaryInputStreamSerializer::endObject() {
+  return true;
+}
 
 bool BinaryInputStreamSerializer::beginArray(size_t& size, Common::StringView name) {
   XI_UNUSED(name);
@@ -68,7 +76,9 @@ bool BinaryInputStreamSerializer::beginStaticArray(const size_t size, StringView
   return true;
 }
 
-bool BinaryInputStreamSerializer::endArray() { return true; }
+bool BinaryInputStreamSerializer::endArray() {
+  return true;
+}
 
 bool BinaryInputStreamSerializer::operator()(uint8_t& value, Common::StringView name) {
   XI_UNUSED(name);
@@ -151,7 +161,9 @@ bool BinaryInputStreamSerializer::binary(void* value, size_t size, Common::Strin
   return true;
 }
 
-bool BinaryInputStreamSerializer::binary(std::string& value, Common::StringView name) { return (*this)(value, name); }
+bool BinaryInputStreamSerializer::binary(std::string& value, Common::StringView name) {
+  return (*this)(value, name);
+}
 
 bool BinaryInputStreamSerializer::binary(Xi::ByteVector& value, StringView name) {
   size_t size = 0;
@@ -165,7 +177,9 @@ bool BinaryInputStreamSerializer::binary(Xi::ByteVector& value, StringView name)
   }
 }
 
-bool BinaryInputStreamSerializer::maybe(bool& value, Common::StringView name) { return this->operator()(value, name); }
+bool BinaryInputStreamSerializer::maybe(bool& value, Common::StringView name) {
+  return this->operator()(value, name);
+}
 
 bool BinaryInputStreamSerializer::typeTag(TypeTag& tag, Common::StringView name) {
   TypeTag::binary_type bTag = TypeTag::NoBinaryTag;
@@ -193,6 +207,8 @@ bool BinaryInputStreamSerializer::operator()(double& value, Common::StringView n
   throw std::runtime_error("double serialization is not supported in BinaryInputStreamSerializer");
 }
 
-void BinaryInputStreamSerializer::checkedRead(char* buf, size_t size) { read(stream, buf, size); }
+void BinaryInputStreamSerializer::checkedRead(char* buf, size_t size) {
+  read(stream, buf, size);
+}
 
 }  // namespace CryptoNote

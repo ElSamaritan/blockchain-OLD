@@ -91,7 +91,8 @@ T readVarint(IInputStream& in) {
 template <typename T>
 class ContainerFormatter {
  public:
-  explicit ContainerFormatter(const T& container) : m_container(container) {}
+  explicit ContainerFormatter(const T& container) : m_container(container) {
+  }
 
   friend std::ostream& operator<<(std::ostream& os, const ContainerFormatter<T>& formatter) {
     os << '{';

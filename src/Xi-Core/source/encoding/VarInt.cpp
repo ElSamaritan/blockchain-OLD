@@ -147,4 +147,6 @@ Xi::Result<size_t> Xi::Encoding::VarInt::encode(uint64_t value, Xi::ByteSpan des
   return success(reval);
 }
 
-bool Xi::Encoding::VarInt::hasSuccessor(Xi::Byte current) { return xi_encoding_varint_has_successor(current); }
+bool Xi::Encoding::VarInt::hasSuccessor(Xi::Byte current) {
+  return xi_encoding_varint_has_successor(current);
+}

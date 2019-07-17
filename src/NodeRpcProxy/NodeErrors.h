@@ -42,7 +42,9 @@ class NodeErrorCategory : public std::error_category {
  public:
   static NodeErrorCategory INSTANCE;
 
-  virtual const char* name() const throw() override { return "NodeErrorCategory"; }
+  virtual const char* name() const throw() override {
+    return "NodeErrorCategory";
+  }
 
   virtual std::error_condition default_error_condition(int ev) const throw() override {
     return std::error_condition(ev, *this);
@@ -72,7 +74,8 @@ class NodeErrorCategory : public std::error_category {
   }
 
  private:
-  NodeErrorCategory() {}
+  NodeErrorCategory() {
+  }
 };
 
 }  // namespace error

@@ -99,15 +99,23 @@ Xi::Result<void> Crypto::Hash::computeMerkleTree(ConstHashSpan data, Crypto::Has
   XI_ERROR_CATCH();
 }
 
-Crypto::Hash::Hash() { nullify(); }
+Crypto::Hash::Hash() {
+  nullify();
+}
 
-Crypto::Hash::Hash(Crypto::Hash::array_type raw) : array_type(std::move(raw)) {}
+Crypto::Hash::Hash(Crypto::Hash::array_type raw) : array_type(std::move(raw)) {
+}
 
-Crypto::Hash::~Hash() {}
+Crypto::Hash::~Hash() {
+}
 
-bool Crypto::Hash::isNull() const { return *this == Hash::Null; }
+bool Crypto::Hash::isNull() const {
+  return *this == Hash::Null;
+}
 
-std::string Crypto::Hash::toString() const { return Common::toHex(data(), size()); }
+std::string Crypto::Hash::toString() const {
+  return Common::toHex(data(), size());
+}
 
 std::string Crypto::Hash::toShortString() const {
   std::string res = toString();
@@ -116,11 +124,17 @@ std::string Crypto::Hash::toShortString() const {
   return res;
 }
 
-Xi::ConstByteSpan Crypto::Hash::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
+Xi::ConstByteSpan Crypto::Hash::span() const {
+  return Xi::ConstByteSpan{data(), bytes()};
+}
 
-Xi::ByteSpan Crypto::Hash::span() { return Xi::ByteSpan{data(), bytes()}; }
+Xi::ByteSpan Crypto::Hash::span() {
+  return Xi::ByteSpan{data(), bytes()};
+}
 
-void Crypto::Hash::nullify() { fill(0); }
+void Crypto::Hash::nullify() {
+  fill(0);
+}
 
 bool Crypto::serialize(Crypto::Hash &hash, Common::StringView name, CryptoNote::ISerializer &serializer) {
   return serializer.binary(hash.data(), Hash::bytes(), name);

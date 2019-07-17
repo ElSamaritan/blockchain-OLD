@@ -37,7 +37,8 @@ AmountFormatter::AmountFormatter(const uint64_t _decimals, std::string_view _tic
   Xi::exceptional_if<Xi::OutOfRangeError>(_decimals == 0 || _decimals > std::numeric_limits<uint64_t>::digits10);
 }
 
-AmountFormatter::~AmountFormatter() {}
+AmountFormatter::~AmountFormatter() {
+}
 
 std::string AmountFormatter::operator()(const uint64_t amount, bool addTicker) const {
   const auto divisor = Xi::pow64(10, decimals());
@@ -62,10 +63,16 @@ std::string AmountFormatter::operator()(const int64_t amount, bool addTicker) co
   }
 }
 
-uint64_t AmountFormatter::decimals() const { return m_decimals; }
+uint64_t AmountFormatter::decimals() const {
+  return m_decimals;
+}
 
-const std::string& AmountFormatter::ticker() const { return m_ticker; }
+const std::string& AmountFormatter::ticker() const {
+  return m_ticker;
+}
 
-const std::locale& AmountFormatter::locale() const { return m_locale; }
+const std::locale& AmountFormatter::locale() const {
+  return m_locale;
+}
 
 }  // namespace CryptoNote

@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -72,7 +72,9 @@ Xi::Result<void> Xi::FileSystem::removeDircetoryIfExists(const std::string &dire
   XI_ERROR_CATCH();
 }
 
-Xi::Result<bool> Xi::FileSystem::exists(const std::string &path) { return success(boost::filesystem::exists(path)); }
+Xi::Result<bool> Xi::FileSystem::exists(const std::string &path) {
+  return success(boost::filesystem::exists(path));
+}
 
 Xi::Result<void> Xi::FileSystem::removeFileIfExists(const std::string &p) {
   XI_ERROR_TRY();

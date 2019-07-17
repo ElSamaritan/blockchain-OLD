@@ -35,7 +35,8 @@ class ISerializer {
  public:
   enum SerializerType { INPUT, OUTPUT };
 
-  virtual ~ISerializer() {}
+  virtual ~ISerializer() {
+  }
 
   virtual SerializerType type() const = 0;
 
@@ -70,8 +71,12 @@ class ISerializer {
   // flags
   [[nodiscard]] virtual bool flag(std::vector<TypeTag>& flag, Common::StringView name) = 0;
 
-  [[nodiscard]] bool isInput() const { return type() == INPUT; }
-  [[nodiscard]] bool isOutput() const { return type() == OUTPUT; }
+  [[nodiscard]] bool isInput() const {
+    return type() == INPUT;
+  }
+  [[nodiscard]] bool isOutput() const {
+    return type() == OUTPUT;
+  }
 
   template <typename T>
   [[nodiscard]] bool operator()(T& value, Common::StringView name);

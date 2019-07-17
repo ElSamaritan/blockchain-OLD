@@ -66,14 +66,16 @@ boost::program_options::typed_value<T, char>* make_semantic(const arg_descriptor
 template <typename T>
 boost::program_options::typed_value<T, char>* make_semantic(const arg_descriptor<T, false>& arg) {
   auto semantic = boost::program_options::value<T>();
-  if (!arg.not_use_default) semantic->default_value(arg.default_value);
+  if (!arg.not_use_default)
+    semantic->default_value(arg.default_value);
   return semantic;
 }
 
 template <typename T>
 boost::program_options::typed_value<T, char>* make_semantic(const arg_descriptor<T, false>& arg, const T& def) {
   auto semantic = boost::program_options::value<T>();
-  if (!arg.not_use_default) semantic->default_value(def);
+  if (!arg.not_use_default)
+    semantic->default_value(def);
   return semantic;
 }
 

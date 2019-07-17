@@ -21,9 +21,11 @@
 
 using namespace CryptoNote;
 
-BlockchainWriteBatch::BlockchainWriteBatch() {}
+BlockchainWriteBatch::BlockchainWriteBatch() {
+}
 
-BlockchainWriteBatch::~BlockchainWriteBatch() {}
+BlockchainWriteBatch::~BlockchainWriteBatch() {
+}
 
 BlockchainWriteBatch& BlockchainWriteBatch::insertSpentKeyImages(
     uint32_t blockIndex, const std::unordered_set<Crypto::KeyImage>& spentKeyImages) {
@@ -200,4 +202,6 @@ std::vector<std::pair<std::string, std::string>> BlockchainWriteBatch::extractRa
   return std::move(rawDataToInsert);
 }
 
-std::vector<std::string> BlockchainWriteBatch::extractRawKeysToRemove() { return std::move(rawKeysToRemove); }
+std::vector<std::string> BlockchainWriteBatch::extractRawKeysToRemove() {
+  return std::move(rawKeysToRemove);
+}

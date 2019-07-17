@@ -22,7 +22,6 @@
 #include <mutex>
 #include <string>
 
-
 #include "IWalletLegacy.h"
 
 namespace CryptoNote {
@@ -31,13 +30,17 @@ namespace WalletHelper {
 class SaveWalletResultObserver : public CryptoNote::IWalletLegacyObserver {
  public:
   std::promise<std::error_code> saveResult;
-  virtual void saveCompleted(std::error_code result) override { saveResult.set_value(result); }
+  virtual void saveCompleted(std::error_code result) override {
+    saveResult.set_value(result);
+  }
 };
 
 class InitWalletResultObserver : public CryptoNote::IWalletLegacyObserver {
  public:
   std::promise<std::error_code> initResult;
-  virtual void initCompleted(std::error_code result) override { initResult.set_value(result); }
+  virtual void initCompleted(std::error_code result) override {
+    initResult.set_value(result);
+  }
 };
 
 class SendCompleteResultObserver : public CryptoNote::IWalletLegacyObserver {

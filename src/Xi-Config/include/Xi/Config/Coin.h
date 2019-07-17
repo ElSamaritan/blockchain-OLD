@@ -83,7 +83,9 @@ class Configuration {
   KV_MEMBER_RENAME(genesisTransaction(), genesis_transaction)
   KV_END_SERIALIZATION
 
-  uint32_t expectedBlocksPerDay() const { return (24ULL * 60ULL * 60ULL) / blockTime(); }
+  uint32_t expectedBlocksPerDay() const {
+    return (24ULL * 60ULL * 60ULL) / blockTime();
+  }
 };
 
 }  // namespace Coin

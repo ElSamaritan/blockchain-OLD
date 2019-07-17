@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -32,6 +32,8 @@ namespace CryptoNote {
 /*!
  * \brief p2pCommandIdOffset The offset of all cryptonote command IDs, lower IDs are reserved.
  */
-inline constexpr uint32_t p2pCommandIdOffset() { return BC_COMMANDS_POOL_BASE; }
+inline constexpr uint32_t p2pCommandIdOffset() {
+  return BC_COMMANDS_POOL_BASE;
+}
 
 }  // namespace CryptoNote

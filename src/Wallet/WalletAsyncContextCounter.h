@@ -25,7 +25,8 @@ namespace CryptoNote {
 
 class WalletAsyncContextCounter {
  public:
-  WalletAsyncContextCounter() : m_asyncContexts(0) {}
+  WalletAsyncContextCounter() : m_asyncContexts(0) {
+  }
 
   void addAsyncContext();
   void delAsyncContext();

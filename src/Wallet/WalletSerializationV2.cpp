@@ -53,7 +53,8 @@ struct WalletTransactionDtoV2 {
   std::string extra;
   bool isBase;
 
-  WalletTransactionDtoV2() {}
+  WalletTransactionDtoV2() {
+  }
 
   WalletTransactionDtoV2(const CryptoNote::WalletTransaction& wallet) {
     state = wallet.state;
@@ -71,7 +72,8 @@ struct WalletTransactionDtoV2 {
 
 // DO NOT CHANGE IT
 struct WalletTransferDtoV2 {
-  WalletTransferDtoV2() {}
+  WalletTransferDtoV2() {
+  }
 
   WalletTransferDtoV2(const CryptoNote::WalletTransfer& tr) {
     address = tr.address;
@@ -147,10 +149,12 @@ WalletSerializerV2::WalletSerializerV2(ITransfersObserver& transfersObserver, ui
       m_transfers(transfers),
       m_uncommitedTransactions(uncommitedTransactions),
       m_extra(extra),
-      m_transactionSoftLockTime(transactionSoftLockTime) {}
+      m_transactionSoftLockTime(transactionSoftLockTime) {
+}
 
 bool WalletSerializerV2::load(Common::IInputStream& source, uint8_t version) {
-  if (version != WalletSerializerV2::SERIALIZATION_VERSION) throw std::runtime_error{"Unsupported wallet version."};
+  if (version != WalletSerializerV2::SERIALIZATION_VERSION)
+    throw std::runtime_error{"Unsupported wallet version."};
 
   CryptoNote::BinaryInputStreamSerializer s(source);
 
@@ -198,9 +202,13 @@ bool WalletSerializerV2::save(Common::IOutputStream& destination, WalletSaveLeve
   return true;
 }
 
-std::unordered_set<Crypto::PublicKey>& WalletSerializerV2::addedKeys() { return m_addedKeys; }
+std::unordered_set<Crypto::PublicKey>& WalletSerializerV2::addedKeys() {
+  return m_addedKeys;
+}
 
-std::unordered_set<Crypto::PublicKey>& WalletSerializerV2::deletedKeys() { return m_deletedKeys; }
+std::unordered_set<Crypto::PublicKey>& WalletSerializerV2::deletedKeys() {
+  return m_deletedKeys;
+}
 
 bool WalletSerializerV2::loadKeyListAndBalances(CryptoNote::ISerializer& serializer, bool saveCache) {
   size_t walletCount;

@@ -40,7 +40,8 @@ struct TcpConnectionContext : public OVERLAPPED {
 
 }  // namespace
 
-TcpConnection::TcpConnection() : dispatcher(nullptr) {}
+TcpConnection::TcpConnection() : dispatcher(nullptr) {
+}
 
 TcpConnection::TcpConnection(TcpConnection&& other) : dispatcher(other.dispatcher) {
   if (dispatcher != nullptr) {
@@ -236,6 +237,7 @@ std::pair<Ipv4Address, uint16_t> TcpConnection::getPeerAddressAndPort() const {
 }
 
 TcpConnection::TcpConnection(Dispatcher& dispatcher, size_t connection)
-    : dispatcher(&dispatcher), connection(connection), readContext(nullptr), writeContext(nullptr) {}
+    : dispatcher(&dispatcher), connection(connection), readContext(nullptr), writeContext(nullptr) {
+}
 
 }  // namespace System

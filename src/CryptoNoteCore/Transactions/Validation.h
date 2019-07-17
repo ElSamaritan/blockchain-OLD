@@ -59,7 +59,8 @@ struct TransferValidationContext {
   uint8_t maximumMixin = 0;
 
   explicit TransferValidationContext(const Currency& _currency, const IBlockchainCache& _segment)
-      : currency{_currency}, segment{_segment} {}
+      : currency{_currency}, segment{_segment} {
+  }
 };
 
 /// Contains all informations gathered by the pre validate transfer call.

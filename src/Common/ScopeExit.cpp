@@ -19,7 +19,8 @@
 
 namespace Tools {
 
-ScopeExit::ScopeExit(std::function<void()>&& handler) : m_handler(std::move(handler)), m_cancelled(false) {}
+ScopeExit::ScopeExit(std::function<void()>&& handler) : m_handler(std::move(handler)), m_cancelled(false) {
+}
 
 ScopeExit::~ScopeExit() {
   if (!m_cancelled) {
@@ -27,8 +28,12 @@ ScopeExit::~ScopeExit() {
   }
 }
 
-void ScopeExit::cancel() { m_cancelled = true; }
+void ScopeExit::cancel() {
+  m_cancelled = true;
+}
 
-void ScopeExit::resume() { m_cancelled = false; }
+void ScopeExit::resume() {
+  m_cancelled = false;
+}
 
 }  // namespace Tools

@@ -55,7 +55,8 @@ std::string get_windows_version_display_string() {
 #pragma warning(suppress : 4996)
   bOsVersionInfoEx = GetVersionEx((OSVERSIONINFO*)&osvi);
 
-  if (!bOsVersionInfoEx) return pszOS;
+  if (!bOsVersionInfoEx)
+    return pszOS;
 
   // Call GetNativeSystemInfo if supported or GetSystemInfo otherwise.
 
@@ -244,7 +245,8 @@ std::string get_windows_version_display_string() {
 std::string get_nix_version_display_string() {
   utsname un;
 
-  if (uname(&un) < 0) return std::string("*nix: failed to get os version");
+  if (uname(&un) < 0)
+    return std::string("*nix: failed to get os version");
   return std::string() + un.sysname + " " + un.version + " " + un.release;
 }
 #endif

@@ -150,7 +150,8 @@ void Skein_Put64_LSB_First(u08b_t *dst, const u64b_t *src, size_t bCnt)
 {                      /* this version is fully portable (big-endian or little-endian), but slow */
   size_t n;
 
-  for (n = 0; n < bCnt; n++) dst[n] = (u08b_t)(src[n >> 3] >> (8 * (n & 7)));
+  for (n = 0; n < bCnt; n++)
+    dst[n] = (u08b_t)(src[n >> 3] >> (8 * (n & 7)));
 }
 #else
     ; /* output only the function prototype */

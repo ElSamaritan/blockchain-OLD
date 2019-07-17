@@ -48,6 +48,12 @@ inline constexpr std::chrono::microseconds operator"" _us(unsigned long long arg
 inline constexpr std::chrono::milliseconds operator"" _ms(unsigned long long arg) {
   return std::chrono::milliseconds{arg};
 }
-inline constexpr std::chrono::seconds operator"" _s(unsigned long long arg) { return std::chrono::seconds{arg}; }
-inline constexpr std::chrono::minutes operator"" _m(unsigned long long arg) { return std::chrono::minutes{arg}; }
-inline constexpr std::chrono::hours operator"" _h(unsigned long long arg) { return std::chrono::hours{arg}; }
+inline constexpr std::chrono::seconds operator"" _s(unsigned long long arg) {
+  return std::chrono::seconds{arg};
+}
+inline constexpr std::chrono::minutes operator"" _m(unsigned long long arg) {
+  return std::chrono::minutes{arg};
+}
+inline constexpr std::chrono::hours operator"" _h(unsigned long long arg) {
+  return std::chrono::hours{arg};
+}

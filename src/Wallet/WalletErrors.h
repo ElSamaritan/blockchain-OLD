@@ -66,7 +66,9 @@ class WalletErrorCategory : public std::error_category {
  public:
   static WalletErrorCategory INSTANCE;
 
-  virtual const char* name() const throw() override { return "WalletErrorCategory"; }
+  virtual const char* name() const throw() override {
+    return "WalletErrorCategory";
+  }
 
   virtual std::error_condition default_error_condition(int ev) const throw() override {
     return std::error_condition(ev, *this);
@@ -146,7 +148,8 @@ class WalletErrorCategory : public std::error_category {
   }
 
  private:
-  WalletErrorCategory() {}
+  WalletErrorCategory() {
+  }
 };
 
 }  // namespace error

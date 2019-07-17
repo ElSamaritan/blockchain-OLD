@@ -46,9 +46,12 @@ JsonInputValueSerializer::JsonInputValueSerializer(Common::JsonValue&& _value) :
   chain.push_back(&value);
 }
 
-JsonInputValueSerializer::~JsonInputValueSerializer() {}
+JsonInputValueSerializer::~JsonInputValueSerializer() {
+}
 
-ISerializer::SerializerType JsonInputValueSerializer::type() const { return ISerializer::INPUT; }
+ISerializer::SerializerType JsonInputValueSerializer::type() const {
+  return ISerializer::INPUT;
+}
 
 bool JsonInputValueSerializer::beginObject(Common::StringView name) {
   XI_RETURN_EC_IF(chain.empty(), false);
@@ -132,21 +135,37 @@ bool JsonInputValueSerializer::endArray() {
   return true;
 }
 
-bool JsonInputValueSerializer::operator()(uint16_t& _value, Common::StringView name) { return getNumber(name, _value); }
+bool JsonInputValueSerializer::operator()(uint16_t& _value, Common::StringView name) {
+  return getNumber(name, _value);
+}
 
-bool JsonInputValueSerializer::operator()(int16_t& _value, Common::StringView name) { return getNumber(name, _value); }
+bool JsonInputValueSerializer::operator()(int16_t& _value, Common::StringView name) {
+  return getNumber(name, _value);
+}
 
-bool JsonInputValueSerializer::operator()(uint32_t& _value, Common::StringView name) { return getNumber(name, _value); }
+bool JsonInputValueSerializer::operator()(uint32_t& _value, Common::StringView name) {
+  return getNumber(name, _value);
+}
 
-bool JsonInputValueSerializer::operator()(int32_t& _value, Common::StringView name) { return getNumber(name, _value); }
+bool JsonInputValueSerializer::operator()(int32_t& _value, Common::StringView name) {
+  return getNumber(name, _value);
+}
 
-bool JsonInputValueSerializer::operator()(int64_t& _value, Common::StringView name) { return getNumber(name, _value); }
+bool JsonInputValueSerializer::operator()(int64_t& _value, Common::StringView name) {
+  return getNumber(name, _value);
+}
 
-bool JsonInputValueSerializer::operator()(uint64_t& _value, Common::StringView name) { return getNumber(name, _value); }
+bool JsonInputValueSerializer::operator()(uint64_t& _value, Common::StringView name) {
+  return getNumber(name, _value);
+}
 
-bool JsonInputValueSerializer::operator()(double& _value, Common::StringView name) { return getNumber(name, _value); }
+bool JsonInputValueSerializer::operator()(double& _value, Common::StringView name) {
+  return getNumber(name, _value);
+}
 
-bool JsonInputValueSerializer::operator()(uint8_t& _value, Common::StringView name) { return getNumber(name, _value); }
+bool JsonInputValueSerializer::operator()(uint8_t& _value, Common::StringView name) {
+  return getNumber(name, _value);
+}
 
 bool JsonInputValueSerializer::operator()(std::string& _value, Common::StringView name) {
   auto ptr = getValue(name);

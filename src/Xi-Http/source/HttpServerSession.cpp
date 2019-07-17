@@ -55,7 +55,9 @@ void Xi::Http::HttpServerSession::doWriteResponse(Response&& response) {
                                                      std::placeholders::_1, std::placeholders::_2)));
 }
 
-void Xi::Http::HttpServerSession::doOnResponseWritten() { close(); }
+void Xi::Http::HttpServerSession::doOnResponseWritten() {
+  close();
+}
 
 void Xi::Http::HttpServerSession::doClose() {
   boost::beast::error_code ec;

@@ -39,8 +39,12 @@ namespace Xi {
 namespace Config {
 namespace Limits {
 
-inline constexpr std::chrono::seconds maximumTransactionLivetimeSpan() { return 24_h; }
-inline constexpr std::chrono::seconds maximumTransactionLivetimeSpanFromAltBlocks() { return 7 * 24_h; }
+inline constexpr std::chrono::seconds maximumTransactionLivetimeSpan() {
+  return 24_h;
+}
+inline constexpr std::chrono::seconds maximumTransactionLivetimeSpanFromAltBlocks() {
+  return 7 * 24_h;
+}
 
 /*!
  * \brief minimumTransactionLivetimeSpansUntilDeletion is the amount of lifetime spans a transaction must be hold in
@@ -49,7 +53,9 @@ inline constexpr std::chrono::seconds maximumTransactionLivetimeSpanFromAltBlock
  * Thus the minimum amount of time a transaction will remain in the transaction pool is:
  *   maximumTransactionLivetimeSpan() * minimumTransactionLivetimeSpansUntilDeletion()
  */
-inline constexpr uint64_t minimumTransactionLivetimeSpansUntilDeletion() { return 7; }
+inline constexpr uint64_t minimumTransactionLivetimeSpansUntilDeletion() {
+  return 7;
+}
 
 class Configuration {
  public:

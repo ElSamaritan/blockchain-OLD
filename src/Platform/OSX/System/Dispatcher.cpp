@@ -47,7 +47,9 @@ class MutextGuard {
     }
   }
 
-  ~MutextGuard() { pthread_mutex_unlock(&mutex); }
+  ~MutextGuard() {
+    pthread_mutex_unlock(&mutex);
+  }
 
  private:
   pthread_mutex_t& mutex;
@@ -212,9 +214,13 @@ void Dispatcher::dispatch() {
   }
 }
 
-NativeContext* Dispatcher::getCurrentContext() const { return currentContext; }
+NativeContext* Dispatcher::getCurrentContext() const {
+  return currentContext;
+}
 
-void Dispatcher::interrupt() { interrupt(currentContext); }
+void Dispatcher::interrupt() {
+  interrupt(currentContext);
+}
 
 void Dispatcher::interrupt(NativeContext* context) {
   assert(context != nullptr);
@@ -240,7 +246,8 @@ bool Dispatcher::interrupted() {
 void Dispatcher::pushContext(NativeContext* context) {
   assert(context != nullptr);
 
-  if (context->inExecutionQueue) return;
+  if (context->inExecutionQueue)
+    return;
 
   context->next = nullptr;
   context->inExecutionQueue = true;
@@ -337,7 +344,9 @@ void Dispatcher::yield() {
   }
 }
 
-int Dispatcher::getKqueue() const { return kqueue; }
+int Dispatcher::getKqueue() const {
+  return kqueue;
+}
 
 NativeContext& Dispatcher::getReusableContext() {
   if (firstReusableContext == nullptr) {
@@ -383,7 +392,9 @@ int Dispatcher::getTimer() {
   return timer;
 }
 
-void Dispatcher::pushTimer(int timer) { timers.push(timer); }
+void Dispatcher::pushTimer(int timer) {
+  timers.push(timer);
+}
 
 void Dispatcher::contextProcedure(void* ucontext) {
   assert(firstReusableContext == nullptr);

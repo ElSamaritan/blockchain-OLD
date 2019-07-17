@@ -52,7 +52,9 @@ CryptoNote::CachedRawBlock &CryptoNote::CachedRawBlock::operator=(CryptoNote::Ca
   return *this;
 }
 
-const CryptoNote::RawBlock &CryptoNote::CachedRawBlock::raw() const { return m_raw; }
+const CryptoNote::RawBlock &CryptoNote::CachedRawBlock::raw() const {
+  return m_raw;
+}
 
 const CryptoNote::CachedBlock &CryptoNote::CachedRawBlock::block() const {
   XI_CONCURRENT_LOCK_PREPARE_WRITE(m_guard);
@@ -75,7 +77,9 @@ size_t CryptoNote::CachedRawBlock::transactionCount() const {
   return (block().getBlock().staticRewardHash ? 2 : 1) + m_raw.transactions.size();
 }
 
-size_t CryptoNote::CachedRawBlock::transferCount() const { return m_transactions.size(); }
+size_t CryptoNote::CachedRawBlock::transferCount() const {
+  return m_transactions.size();
+}
 
 const CryptoNote::CachedTransaction &CryptoNote::CachedRawBlock::operator[](size_t index) const {
   Xi::exceptional_if_not<Xi::OutOfRangeError>(index < m_transactions.size());
@@ -89,7 +93,9 @@ const CryptoNote::CachedTransaction &CryptoNote::CachedRawBlock::operator[](size
   return *m_transactions[index];
 }
 
-CryptoNote::CachedRawBlock CryptoNote::cache(CryptoNote::RawBlock block) { return CachedRawBlock{std::move(block)}; }
+CryptoNote::CachedRawBlock CryptoNote::cache(CryptoNote::RawBlock block) {
+  return CachedRawBlock{std::move(block)};
+}
 
 CryptoNote::CachedRawBlockVector CryptoNote::cache(CryptoNote::RawBlockVector blocks) {
   CachedRawBlockVector reval{};

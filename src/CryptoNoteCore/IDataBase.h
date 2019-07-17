@@ -27,7 +27,8 @@ namespace CryptoNote {
 
 class IDataBase {
  public:
-  virtual ~IDataBase() {}
+  virtual ~IDataBase() {
+  }
 
   [[nodiscard]] virtual std::error_code write(IWriteBatch& batch) = 0;
   [[nodiscard]] virtual std::error_code writeSync(IWriteBatch& batch) = 0;

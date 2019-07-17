@@ -30,8 +30,8 @@ struct UnconfirmedTransferDetails;
 struct WalletLegacyTransaction;
 struct WalletLegacyTransfer;
 
-[[nodiscard]]  bool serialize(UnconfirmedTransferDetails& utd, ISerializer& serializer);
-[[nodiscard]]  bool serialize(WalletLegacyTransaction& txi, ISerializer& serializer);
-[[nodiscard]]  bool serialize(WalletLegacyTransfer& tr, ISerializer& serializer);
+[[nodiscard]] bool serialize(UnconfirmedTransferDetails& utd, ISerializer& serializer);
+[[nodiscard]] bool serialize(WalletLegacyTransaction& txi, ISerializer& serializer);
+[[nodiscard]] bool serialize(WalletLegacyTransfer& tr, ISerializer& serializer);
 
 }  // namespace CryptoNote

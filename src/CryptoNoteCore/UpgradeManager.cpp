@@ -24,9 +24,11 @@
 
 namespace CryptoNote {
 
-UpgradeManager::UpgradeManager() {}
+UpgradeManager::UpgradeManager() {
+}
 
-UpgradeManager::~UpgradeManager() {}
+UpgradeManager::~UpgradeManager() {
+}
 
 void UpgradeManager::addBlockVersion(Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeHeight, bool fork) {
   assert(m_upgradeDetectors.empty() || m_upgradeDetectors.back()->targetVersion() < targetVersion);

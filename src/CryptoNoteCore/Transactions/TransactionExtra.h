@@ -61,7 +61,8 @@ bool findTransactionExtraFieldByType(const std::vector<TransactionExtraField>& t
   auto it = std::find_if(tx_extra_fields.begin(), tx_extra_fields.end(),
                          [](const TransactionExtraField& f) { return typeid(T) == f.type(); });
 
-  if (tx_extra_fields.end() == it) return false;
+  if (tx_extra_fields.end() == it)
+    return false;
 
   field = boost::get<T>(*it);
   return true;

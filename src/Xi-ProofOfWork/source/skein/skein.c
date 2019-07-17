@@ -10,9 +10,9 @@
 
 #define SKEIN_PORT_CODE /* instantiate any code in skein_port.h */
 
-#include <stddef.h> /* get size_t definition */
-#include <string.h> /* get the memcpy/memset functions */
-#include "skein/skein.h"  /* get the Skein API definitions   */
+#include <stddef.h>      /* get size_t definition */
+#include <string.h>      /* get the memcpy/memset functions */
+#include "skein/skein.h" /* get the Skein API definitions   */
 
 #define DISABLE_UNUSED 0
 
@@ -268,7 +268,8 @@ static int  Skein1024_Output   (Skein1024_Ctxt_t *ctx, u08b_t * hashVal);
 #include <assert.h>
 #define Skein_Assert(x, retCode) \
   {                              \
-    if (!(x)) return retCode;    \
+    if (!(x))                    \
+      return retCode;            \
   }                               /*  caller  error */
 #define Skein_assert(x) assert(x) /* internal error */
 #endif
@@ -702,7 +703,9 @@ static void Skein_256_Process_Block(Skein_256_Ctxt_t *ctx, const u08b_t *blkPtr,
 static size_t Skein_256_Process_Block_CodeSize(void) {
   return ((u08b_t *)Skein_256_Process_Block_CodeSize) - ((u08b_t *)Skein_256_Process_Block);
 }
-static uint_t Skein_256_Unroll_Cnt(void) { return SKEIN_UNROLL_256; }
+static uint_t Skein_256_Unroll_Cnt(void) {
+  return SKEIN_UNROLL_256;
+}
 #endif
 #endif
 
@@ -912,7 +915,9 @@ static void Skein_512_Process_Block(Skein_512_Ctxt_t *ctx, const u08b_t *blkPtr,
 static size_t Skein_512_Process_Block_CodeSize(void) {
   return ((u08b_t *)Skein_512_Process_Block_CodeSize) - ((u08b_t *)Skein_512_Process_Block);
 }
-static uint_t Skein_512_Unroll_Cnt(void) { return SKEIN_UNROLL_512; }
+static uint_t Skein_512_Unroll_Cnt(void) {
+  return SKEIN_UNROLL_512;
+}
 #endif
 #endif
 
@@ -1188,7 +1193,9 @@ static void Skein1024_Process_Block(
 static size_t Skein1024_Process_Block_CodeSize(void) {
   return ((u08b_t *)Skein1024_Process_Block_CodeSize) - ((u08b_t *)Skein1024_Process_Block);
 }
-static uint_t Skein1024_Unroll_Cnt(void) { return SKEIN_UNROLL_1024; }
+static uint_t Skein1024_Unroll_Cnt(void) {
+  return SKEIN_UNROLL_1024;
+}
 #endif
 #endif
 
@@ -1367,7 +1374,8 @@ static int Skein_256_Final(Skein_256_Ctxt_t *ctx, u08b_t *hashVal) {
     Skein_Start_New_Type(ctx, OUT_FINAL);
     Skein_256_Process_Block(ctx, ctx->b, 1, sizeof(u64b_t)); /* run "counter mode" */
     n = byteCnt - i * SKEIN_256_BLOCK_BYTES;                 /* number of output bytes left to go */
-    if (n >= SKEIN_256_BLOCK_BYTES) n = SKEIN_256_BLOCK_BYTES;
+    if (n >= SKEIN_256_BLOCK_BYTES)
+      n = SKEIN_256_BLOCK_BYTES;
     Skein_Put64_LSB_First(hashVal + i * SKEIN_256_BLOCK_BYTES, ctx->X, n); /* "output" the ctr mode bytes */
     Skein_Show_Final(256, &ctx->h, n, hashVal + i * SKEIN_256_BLOCK_BYTES);
     memcpy(ctx->X, X, sizeof(X)); /* restore the counter mode key for next time */
@@ -1376,7 +1384,9 @@ static int Skein_256_Final(Skein_256_Ctxt_t *ctx, u08b_t *hashVal) {
 }
 
 #if defined(SKEIN_CODE_SIZE) || defined(SKEIN_PERF)
-static size_t Skein_256_API_CodeSize(void) { return ((u08b_t *)Skein_256_API_CodeSize) - ((u08b_t *)Skein_256_Init); }
+static size_t Skein_256_API_CodeSize(void) {
+  return ((u08b_t *)Skein_256_API_CodeSize) - ((u08b_t *)Skein_256_Init);
+}
 #endif
 
 /*****************************************************************/
@@ -1560,7 +1570,8 @@ static int Skein_512_Final(Skein_512_Ctxt_t *ctx, u08b_t *hashVal) {
     Skein_Start_New_Type(ctx, OUT_FINAL);
     Skein_512_Process_Block(ctx, ctx->b, 1, sizeof(u64b_t)); /* run "counter mode" */
     n = byteCnt - i * SKEIN_512_BLOCK_BYTES;                 /* number of output bytes left to go */
-    if (n >= SKEIN_512_BLOCK_BYTES) n = SKEIN_512_BLOCK_BYTES;
+    if (n >= SKEIN_512_BLOCK_BYTES)
+      n = SKEIN_512_BLOCK_BYTES;
     Skein_Put64_LSB_First(hashVal + i * SKEIN_512_BLOCK_BYTES, ctx->X, n); /* "output" the ctr mode bytes */
     Skein_Show_Final(512, &ctx->h, n, hashVal + i * SKEIN_512_BLOCK_BYTES);
     memcpy(ctx->X, X, sizeof(X)); /* restore the counter mode key for next time */
@@ -1569,7 +1580,9 @@ static int Skein_512_Final(Skein_512_Ctxt_t *ctx, u08b_t *hashVal) {
 }
 
 #if defined(SKEIN_CODE_SIZE) || defined(SKEIN_PERF)
-static size_t Skein_512_API_CodeSize(void) { return ((u08b_t *)Skein_512_API_CodeSize) - ((u08b_t *)Skein_512_Init); }
+static size_t Skein_512_API_CodeSize(void) {
+  return ((u08b_t *)Skein_512_API_CodeSize) - ((u08b_t *)Skein_512_Init);
+}
 #endif
 
 /*****************************************************************/
@@ -1749,7 +1762,8 @@ static int Skein1024_Final(Skein1024_Ctxt_t *ctx, u08b_t *hashVal) {
     Skein_Start_New_Type(ctx, OUT_FINAL);
     Skein1024_Process_Block(ctx, ctx->b, 1, sizeof(u64b_t)); /* run "counter mode" */
     n = byteCnt - i * SKEIN1024_BLOCK_BYTES;                 /* number of output bytes left to go */
-    if (n >= SKEIN1024_BLOCK_BYTES) n = SKEIN1024_BLOCK_BYTES;
+    if (n >= SKEIN1024_BLOCK_BYTES)
+      n = SKEIN1024_BLOCK_BYTES;
     Skein_Put64_LSB_First(hashVal + i * SKEIN1024_BLOCK_BYTES, ctx->X, n); /* "output" the ctr mode bytes */
     Skein_Show_Final(1024, &ctx->h, n, hashVal + i * SKEIN1024_BLOCK_BYTES);
     memcpy(ctx->X, X, sizeof(X)); /* restore the counter mode key for next time */
@@ -1758,7 +1772,9 @@ static int Skein1024_Final(Skein1024_Ctxt_t *ctx, u08b_t *hashVal) {
 }
 
 #if defined(SKEIN_CODE_SIZE) || defined(SKEIN_PERF)
-static size_t Skein1024_API_CodeSize(void) { return ((u08b_t *)Skein1024_API_CodeSize) - ((u08b_t *)Skein1024_Init); }
+static size_t Skein1024_API_CodeSize(void) {
+  return ((u08b_t *)Skein1024_API_CodeSize) - ((u08b_t *)Skein1024_Init);
+}
 #endif
 
 /**************** Functions to support MAC/tree hashing ***************/

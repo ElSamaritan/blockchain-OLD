@@ -42,9 +42,11 @@ struct ConnectorContext : public OperationContext {
 
 }  // namespace
 
-TcpConnector::TcpConnector() : dispatcher(nullptr) {}
+TcpConnector::TcpConnector() : dispatcher(nullptr) {
+}
 
-TcpConnector::TcpConnector(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {}
+TcpConnector::TcpConnector(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {
+}
 
 TcpConnector::TcpConnector(TcpConnector&& other) : dispatcher(other.dispatcher) {
   if (other.dispatcher != nullptr) {
@@ -54,7 +56,9 @@ TcpConnector::TcpConnector(TcpConnector&& other) : dispatcher(other.dispatcher) 
   }
 }
 
-TcpConnector::~TcpConnector() { assert(dispatcher == nullptr || context == nullptr); }
+TcpConnector::~TcpConnector() {
+  assert(dispatcher == nullptr || context == nullptr);
+}
 
 TcpConnector& TcpConnector::operator=(TcpConnector&& other) {
   dispatcher = other.dispatcher;

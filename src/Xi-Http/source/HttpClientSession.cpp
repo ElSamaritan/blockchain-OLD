@@ -30,9 +30,11 @@
 
 Xi::Http::HttpClientSession::HttpClientSession(boost::asio::io_context& io,
                                                std::shared_ptr<IClientSessionBuilder> builder)
-    : ClientSession(io, builder), m_socket{io} {}
+    : ClientSession(io, builder), m_socket{io} {
+}
 
-void Xi::Http::HttpClientSession::doPrepareRun() {}
+void Xi::Http::HttpClientSession::doPrepareRun() {
+}
 
 void Xi::Http::HttpClientSession::doOnHostResolved(resolver_t::iterator begin, resolver_t::iterator end) {
   boost::asio::async_connect(m_socket, begin, end,
@@ -57,7 +59,8 @@ void Xi::Http::HttpClientSession::doOnResponseRecieved() {
   onShutdown(ec);
 }
 
-void Xi::Http::HttpClientSession::doOnShutdown() {}
+void Xi::Http::HttpClientSession::doOnShutdown() {
+}
 
 #if defined(_MSC_VER)
 #pragma warning(pop)

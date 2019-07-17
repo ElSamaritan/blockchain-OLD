@@ -33,9 +33,13 @@ JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, 
   setSSLConfiguration(sslConfig);
 }
 
-void JsonRpcServer::setCorsHeader(std::string _cors) { cors = _cors; }
+void JsonRpcServer::setCorsHeader(std::string _cors) {
+  cors = _cors;
+}
 
-const std::string& JsonRpcServer::corsHeader() { return cors; }
+const std::string& JsonRpcServer::corsHeader() {
+  return cors;
+}
 
 void JsonRpcServer::start(const std::string& bindAddress, uint16_t bindPort) {
   Server::start(bindAddress, bindPort);
@@ -191,7 +195,9 @@ void JsonRpcServer::makeInvalidPasswordResponse(Common::JsonValue& resp) {
   resp.insert("error", error);
 }
 
-void JsonRpcServer::fillJsonResponse(const Common::JsonValue& v, Common::JsonValue& resp) { resp.insert("result", v); }
+void JsonRpcServer::fillJsonResponse(const Common::JsonValue& v, Common::JsonValue& resp) {
+  resp.insert("result", v);
+}
 
 void JsonRpcServer::makeJsonParsingErrorResponse(Common::JsonValue& resp) {
   using Common::JsonValue;

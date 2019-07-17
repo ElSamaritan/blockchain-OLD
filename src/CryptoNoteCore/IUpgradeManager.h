@@ -25,7 +25,8 @@ namespace CryptoNote {
 
 class IUpgradeManager {
  public:
-  virtual ~IUpgradeManager() {}
+  virtual ~IUpgradeManager() {
+  }
 
   virtual void addBlockVersion(Xi::Blockchain::Block::Version targetVersion, uint32_t upgradeHeight, bool fork) = 0;
   virtual Xi::Blockchain::Block::Version getBlockVersion(uint32_t blockIndex) const = 0;

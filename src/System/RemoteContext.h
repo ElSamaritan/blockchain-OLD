@@ -34,7 +34,8 @@ class RemoteContext {
         event(d),
         procedure(std::move(operation)),
         future(System::Detail::async<T>([this] { return asyncProcedure(); })),
-        interrupted(false) {}
+        interrupted(false) {
+  }
 
   // Run other task on dispatcher until future is ready, then return lambda's result, or rethrow exception. UB if called
   // more than once.
@@ -76,7 +77,8 @@ class RemoteContext {
 
  private:
   struct NotifyOnDestruction {
-    NotifyOnDestruction(Dispatcher& d, Event& e) : dispatcher(d), event(e) {}
+    NotifyOnDestruction(Dispatcher& d, Event& e) : dispatcher(d), event(e) {
+    }
 
     ~NotifyOnDestruction() {
       // make a local copy; event reference will be dead when function is called

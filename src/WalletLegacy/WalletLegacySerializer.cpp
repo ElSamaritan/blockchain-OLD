@@ -29,7 +29,8 @@ namespace CryptoNote {
 
 WalletLegacySerializer::WalletLegacySerializer(CryptoNote::AccountBase& account,
                                                WalletUserTransactionsCache& transactionsCache)
-    : account(account), transactionsCache(transactionsCache), walletSerializationVersion(1) {}
+    : account(account), transactionsCache(transactionsCache), walletSerializationVersion(1) {
+}
 
 bool WalletLegacySerializer::serialize(std::ostream& stream, const std::string& password, bool saveDetailed,
                                        const std::string& cache) {

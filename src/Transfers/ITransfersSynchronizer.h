@@ -23,7 +23,6 @@
 
 #include <Xi/Global.hh>
 
-
 #include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 #include "Transfers/ITransfersContainer.h"
 #include "Common/IStreamSerializable.h"
@@ -65,7 +64,8 @@ class ITransfersObserver {
 
 class ITransfersSubscription : public IObservable<ITransfersObserver> {
  public:
-  virtual ~ITransfersSubscription() {}
+  virtual ~ITransfersSubscription() {
+  }
 
   virtual AccountPublicAddress getAddress() = 0;
   virtual ITransfersContainer& getContainer() = 0;

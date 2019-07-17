@@ -74,7 +74,8 @@ class JsonRpcRequest {
   using JsonValue = Common::JsonValue;
 
  public:
-  JsonRpcRequest() : psReq(Common::JsonValue::OBJECT) {}
+  JsonRpcRequest() : psReq(Common::JsonValue::OBJECT) {
+  }
 
   bool parseRequest(const std::string& requestBody) {
     try {
@@ -131,13 +132,21 @@ class JsonRpcRequest {
     return true;
   }
 
-  const std::string& getMethod() const { return method; }
+  const std::string& getMethod() const {
+    return method;
+  }
 
-  void setMethod(const std::string& m) { method = m; }
+  void setMethod(const std::string& m) {
+    method = m;
+  }
 
-  const OptionalId& getId() const { return id; }
+  const OptionalId& getId() const {
+    return id;
+  }
 
-  const OptionalPassword& getPassword() const { return password; }
+  const OptionalPassword& getPassword() const {
+    return password;
+  }
 
   std::string getBody() {
     psReq.set("jsonrpc", JsonValue{std::string("2.0")});
@@ -157,7 +166,8 @@ class JsonRpcResponse {
   using JsonValue = Common::JsonValue;
 
  public:
-  JsonRpcResponse() : psResp(Common::JsonValue::OBJECT) {}
+  JsonRpcResponse() : psResp(Common::JsonValue::OBJECT) {
+  }
 
   void parse(const std::string& responseBody) {
     try {
@@ -173,7 +183,9 @@ class JsonRpcResponse {
     }
   }
 
-  void setError(const JsonRpcError& err) { psResp.set("error", storeToJsonValue(err)); }
+  void setError(const JsonRpcError& err) {
+    psResp.set("error", storeToJsonValue(err));
+  }
 
   bool getError(JsonRpcError& err) const {
     if (!psResp.contains("error")) {

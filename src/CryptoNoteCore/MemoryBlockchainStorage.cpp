@@ -21,18 +21,25 @@
 
 using namespace CryptoNote;
 
-MemoryBlockchainStorage::MemoryBlockchainStorage(uint32_t reserveSize) { blocks.reserve(reserveSize); }
+MemoryBlockchainStorage::MemoryBlockchainStorage(uint32_t reserveSize) {
+  blocks.reserve(reserveSize);
+}
 
-MemoryBlockchainStorage::~MemoryBlockchainStorage() {}
+MemoryBlockchainStorage::~MemoryBlockchainStorage() {
+}
 
-void MemoryBlockchainStorage::pushBlock(RawBlock&& rawBlock) { blocks.push_back(rawBlock); }
+void MemoryBlockchainStorage::pushBlock(RawBlock&& rawBlock) {
+  blocks.push_back(rawBlock);
+}
 
 RawBlock MemoryBlockchainStorage::getBlockByIndex(uint32_t index) const {
   assert(index < getBlockCount());
   return blocks[index];
 }
 
-uint32_t MemoryBlockchainStorage::getBlockCount() const { return static_cast<uint32_t>(blocks.size()); }
+uint32_t MemoryBlockchainStorage::getBlockCount() const {
+  return static_cast<uint32_t>(blocks.size());
+}
 
 // Returns MemoryBlockchainStorage with elements from [splitIndex, blocks.size() - 1].
 // Original MemoryBlockchainStorage will contain elements from [0, splitIndex - 1].

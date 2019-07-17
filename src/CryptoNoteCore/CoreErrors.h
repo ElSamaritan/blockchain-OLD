@@ -30,9 +30,13 @@ class CoreErrorCategory : public std::error_category {
  public:
   static CoreErrorCategory INSTANCE;
 
-  virtual const char* name() const throw() { return "CoreErrorCategory"; }
+  virtual const char* name() const throw() {
+    return "CoreErrorCategory";
+  }
 
-  virtual std::error_condition default_error_condition(int ev) const throw() { return std::error_condition(ev, *this); }
+  virtual std::error_condition default_error_condition(int ev) const throw() {
+    return std::error_condition(ev, *this);
+  }
 
   virtual std::string message(int ev) const {
     CoreErrorCode code = static_cast<CoreErrorCode>(ev);
@@ -50,7 +54,8 @@ class CoreErrorCategory : public std::error_category {
   }
 
  private:
-  CoreErrorCategory() {}
+  CoreErrorCategory() {
+  }
 };
 
 inline std::error_code make_error_code(CryptoNote::error::CoreErrorCode e) {

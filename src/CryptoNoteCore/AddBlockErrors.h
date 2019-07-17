@@ -37,9 +37,13 @@ class AddBlockErrorCategory : public std::error_category {
  public:
   static AddBlockErrorCategory INSTANCE;
 
-  virtual const char* name() const throw() { return "AddBlockErrorCategory"; }
+  virtual const char* name() const throw() {
+    return "AddBlockErrorCategory";
+  }
 
-  virtual std::error_condition default_error_condition(int ev) const throw() { return std::error_condition(ev, *this); }
+  virtual std::error_condition default_error_condition(int ev) const throw() {
+    return std::error_condition(ev, *this);
+  }
 
   virtual std::string message(int ev) const {
     AddBlockErrorCode code = static_cast<AddBlockErrorCode>(ev);
@@ -63,7 +67,8 @@ class AddBlockErrorCategory : public std::error_category {
   }
 
  private:
-  AddBlockErrorCategory() {}
+  AddBlockErrorCategory() {
+  }
 };
 
 inline std::error_code make_error_code(CryptoNote::error::AddBlockErrorCode e) {

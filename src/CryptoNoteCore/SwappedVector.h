@@ -46,21 +46,35 @@ class SwappedVector {
     typedef const T& reference;
     typedef T value_type;
 
-    const_iterator() {}
+    const_iterator() {
+    }
 
-    const_iterator(SwappedVector* swappedVector, size_t index) : m_swappedVector(swappedVector), m_index(index) {}
+    const_iterator(SwappedVector* swappedVector, size_t index) : m_swappedVector(swappedVector), m_index(index) {
+    }
 
-    bool operator!=(const const_iterator& other) const { return m_index != other.m_index; }
+    bool operator!=(const const_iterator& other) const {
+      return m_index != other.m_index;
+    }
 
-    bool operator<(const const_iterator& other) const { return m_index < other.m_index; }
+    bool operator<(const const_iterator& other) const {
+      return m_index < other.m_index;
+    }
 
-    bool operator<=(const const_iterator& other) const { return m_index <= other.m_index; }
+    bool operator<=(const const_iterator& other) const {
+      return m_index <= other.m_index;
+    }
 
-    bool operator==(const const_iterator& other) const { return m_index == other.m_index; }
+    bool operator==(const const_iterator& other) const {
+      return m_index == other.m_index;
+    }
 
-    bool operator>(const const_iterator& other) const { return m_index > other.m_index; }
+    bool operator>(const const_iterator& other) const {
+      return m_index > other.m_index;
+    }
 
-    bool operator>=(const const_iterator& other) const { return m_index >= other.m_index; }
+    bool operator>=(const const_iterator& other) const {
+      return m_index >= other.m_index;
+    }
 
     const_iterator& operator++() {
       ++m_index;
@@ -94,23 +108,37 @@ class SwappedVector {
       return *this;
     }
 
-    const_iterator operator+(difference_type n) const { return const_iterator(m_swappedVector, m_index + n); }
+    const_iterator operator+(difference_type n) const {
+      return const_iterator(m_swappedVector, m_index + n);
+    }
 
     friend const_iterator operator+(difference_type n, const const_iterator& i) {
       return const_iterator(i.m_swappedVector, n + i.m_index);
     }
 
-    difference_type operator-(const const_iterator& other) const { return m_index - other.m_index; }
+    difference_type operator-(const const_iterator& other) const {
+      return m_index - other.m_index;
+    }
 
-    const_iterator& operator-(difference_type n) const { return const_iterator(m_swappedVector, m_index - n); }
+    const_iterator& operator-(difference_type n) const {
+      return const_iterator(m_swappedVector, m_index - n);
+    }
 
-    const T& operator*() const { return (*m_swappedVector)[m_index]; }
+    const T& operator*() const {
+      return (*m_swappedVector)[m_index];
+    }
 
-    const T* operator->() const { return &(*m_swappedVector)[m_index]; }
+    const T* operator->() const {
+      return &(*m_swappedVector)[m_index];
+    }
 
-    const T& operator[](difference_type offset) const { return (*m_swappedVector)[m_index + offset]; }
+    const T& operator[](difference_type offset) const {
+      return (*m_swappedVector)[m_index + offset];
+    }
 
-    size_t index() const { return m_index; }
+    size_t index() const {
+      return m_index;
+    }
 
    private:
     SwappedVector* m_swappedVector;
@@ -165,7 +193,8 @@ class SwappedVector {
 };
 
 template <class T>
-SwappedVector<T>::SwappedVector() {}
+SwappedVector<T>::SwappedVector() {
+}
 
 template <class T>
 SwappedVector<T>::~SwappedVector() {
@@ -228,7 +257,8 @@ bool SwappedVector<T>::open(const std::string& itemFileName, const std::string& 
 }
 
 template <class T>
-void SwappedVector<T>::close() {}
+void SwappedVector<T>::close() {
+}
 
 template <class T>
 bool SwappedVector<T>::empty() const {

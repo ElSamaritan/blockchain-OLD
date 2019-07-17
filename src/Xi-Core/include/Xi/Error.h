@@ -116,7 +116,11 @@ class [[nodiscard]] Error {
   std::variant<not_initialized_tag, std::exception_ptr, std::error_code> m_error;
 };
 
-inline Error makeError(std::exception_ptr e) { return Error{e}; }
-inline Error makeError(std::error_code ec) { return Error{ec}; }
+inline Error makeError(std::exception_ptr e) {
+  return Error{e};
+}
+inline Error makeError(std::error_code ec) {
+  return Error{ec};
+}
 
 }  // namespace Xi

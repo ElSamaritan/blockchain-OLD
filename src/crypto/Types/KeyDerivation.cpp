@@ -48,15 +48,23 @@ Xi::Result<Crypto::KeyDerivation> Crypto::KeyDerivation::fromString(const std::s
   XI_ERROR_CATCH();
 }
 
-Crypto::KeyDerivation::KeyDerivation() { nullify(); }
+Crypto::KeyDerivation::KeyDerivation() {
+  nullify();
+}
 
-Crypto::KeyDerivation::KeyDerivation(Crypto::KeyDerivation::array_type raw) : array_type(std::move(raw)) {}
+Crypto::KeyDerivation::KeyDerivation(Crypto::KeyDerivation::array_type raw) : array_type(std::move(raw)) {
+}
 
-Crypto::KeyDerivation::~KeyDerivation() {}
+Crypto::KeyDerivation::~KeyDerivation() {
+}
 
-std::string Crypto::KeyDerivation::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+std::string Crypto::KeyDerivation::toString() const {
+  return Common::toHex(data(), size() * sizeof(value_type));
+}
 
-bool Crypto::KeyDerivation::isNull() const { return (*this) == Null; }
+bool Crypto::KeyDerivation::isNull() const {
+  return (*this) == Null;
+}
 
 bool Crypto::KeyDerivation::isValid() const {
   ge_p3 point;
@@ -67,11 +75,17 @@ bool Crypto::KeyDerivation::isValid() const {
   XI_RETURN_SC(true);
 }
 
-Xi::ConstByteSpan Crypto::KeyDerivation::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
+Xi::ConstByteSpan Crypto::KeyDerivation::span() const {
+  return Xi::ConstByteSpan{data(), bytes()};
+}
 
-Xi::ByteSpan Crypto::KeyDerivation::span() { return Xi::ByteSpan{data(), bytes()}; }
+Xi::ByteSpan Crypto::KeyDerivation::span() {
+  return Xi::ByteSpan{data(), bytes()};
+}
 
-void Crypto::KeyDerivation::nullify() { fill(0); }
+void Crypto::KeyDerivation::nullify() {
+  fill(0);
+}
 
 bool Crypto::serialize(Crypto::KeyDerivation &keyDerivation, Common::StringView name,
                        CryptoNote::ISerializer &serializer) {

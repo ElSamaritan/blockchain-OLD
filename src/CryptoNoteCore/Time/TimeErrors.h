@@ -38,7 +38,9 @@ class TimeErrorCategory : public std::error_category {
  public:
   static TimeErrorCategory INSTANCE;
 
-  virtual const char* name() const noexcept { return "TimeErrorCategory"; }
+  virtual const char* name() const noexcept {
+    return "TimeErrorCategory";
+  }
 
   virtual std::error_condition default_error_condition(int ev) const noexcept {
     return std::error_condition(ev, *this);
@@ -70,7 +72,9 @@ inline std::error_code make_error_code(CryptoNote::error::TimeError e) {
 }  // namespace CryptoNote
 
 namespace Xi {
-inline Error make_error(CryptoNote::error::TimeError e) { return Error{CryptoNote::error::make_error_code(e)}; }
+inline Error make_error(CryptoNote::error::TimeError e) {
+  return Error{CryptoNote::error::make_error_code(e)};
+}
 }  // namespace Xi
 
 namespace std {

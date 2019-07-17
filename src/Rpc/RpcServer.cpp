@@ -279,15 +279,21 @@ bool RpcServer::enableCors(const std::string& domain) {
   return true;
 }
 
-const std::string& RpcServer::getCorsDomain() { return m_cors; }
+const std::string& RpcServer::getCorsDomain() {
+  return m_cors;
+}
 
-bool RpcServer::isBlockexplorer() const { return m_isBlockexplorer; }
+bool RpcServer::isBlockexplorer() const {
+  return m_isBlockexplorer;
+}
 void RpcServer::setBlockexplorer(bool enabled) {
   m_isBlockexplorer = enabled;
   logger(Info) << "Blockexplorer " << (enabled ? "enabled" : "disabled");
 }
 
-bool RpcServer::isBlockexplorerOnly() const { return m_isBlockexplorerOnly; }
+bool RpcServer::isBlockexplorerOnly() const {
+  return m_isBlockexplorerOnly;
+}
 void RpcServer::setBlockexplorerOnly(bool enabled) {
   m_isBlockexplorerOnly = enabled;
   setBlockexplorer(true);
@@ -654,7 +660,9 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   return true;
 }
 
-const Currency& RpcServer::currency() const { return m_core.currency(); }
+const Currency& RpcServer::currency() const {
+  return m_core.currency();
+}
 
 bool RpcServer::on_get_height(const COMMAND_RPC_GET_HEIGHT::request& req, COMMAND_RPC_GET_HEIGHT::response& res) {
   XI_UNUSED(req);
@@ -1001,7 +1009,8 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
 
   res.transaction_details.hash = res.transaction.hash();
   res.transaction_details.fee = amount_in - amount_out;
-  if (amount_in == 0) res.transaction_details.fee = 0;
+  if (amount_in == 0)
+    res.transaction_details.fee = 0;
   res.transaction_details.amount_out = amount_out;
   res.transaction_details.size = res.transaction.binarySize();
 
@@ -1167,8 +1176,10 @@ uint64_t slow_memmem(void* start_buff, size_t buflen, void* pat, size_t patlen) 
   void* buf = memchr(start_buff, ((char*)pat)[0], buflen);
   void* end = (char*)buf + buflen - patlen;
   while (buf) {
-    if (buf > end) return 0;
-    if (memcmp(buf, pat, patlen) == 0) return static_cast<uint64_t>((char*)buf - (char*)start_buff);
+    if (buf > end)
+      return 0;
+    if (memcmp(buf, pat, patlen) == 0)
+      return static_cast<uint64_t>((char*)buf - (char*)start_buff);
     buf = (char*)buf + 1;
     buf = memchr(buf, ((char*)pat)[0], buflen);
   }

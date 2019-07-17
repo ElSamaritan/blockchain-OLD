@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -25,7 +25,6 @@
 
 #include <Xi/Global.hh>
 #include <CryptoNoteCore/CryptoNote.h>
-
 
 namespace CryptoNote {
 struct PendingLiteBlock {

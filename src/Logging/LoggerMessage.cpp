@@ -27,7 +27,8 @@ LoggerMessage::LoggerMessage(ILogger& logger, const std::string& category, Level
       logLevel(level),
       message(color),
       timestamp(boost::posix_time::microsec_clock::local_time()),
-      gotText(false) {}
+      gotText(false) {
+}
 
 LoggerMessage::~LoggerMessage() {
   if (gotText) {

@@ -33,7 +33,8 @@ struct BlockInfo {
   const BlockHeader Header;
   const uint32_t previousBlockIndex;
 
-  BlockInfo(const BlockHeader& header, uint32_t prevIndex) : Header{header}, previousBlockIndex{prevIndex} {}
+  BlockInfo(const BlockHeader& header, uint32_t prevIndex) : Header{header}, previousBlockIndex{prevIndex} {
+  }
   ~BlockInfo() = default;
 };
 

@@ -54,7 +54,9 @@ class CryptoNoteProtocolHandler : public ICryptoNoteProtocolHandler {
 
   void set_p2p_endpoint(IP2pEndpoint* p2p);
   // ICore& get_core() { return m_core; }
-  virtual bool isSynchronized() const override { return m_synchronized; }
+  virtual bool isSynchronized() const override {
+    return m_synchronized;
+  }
   virtual bool isLightNode() const override;
   void log_connections();
 

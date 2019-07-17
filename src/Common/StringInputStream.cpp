@@ -20,7 +20,8 @@
 
 namespace Common {
 
-StringInputStream::StringInputStream(const std::string& in) : in(in), offset(0) {}
+StringInputStream::StringInputStream(const std::string& in) : in(in), offset(0) {
+}
 
 size_t StringInputStream::readSome(void* data, size_t size) {
   if (size > in.size() - offset) {

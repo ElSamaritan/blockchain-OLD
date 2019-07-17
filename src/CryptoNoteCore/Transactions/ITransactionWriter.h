@@ -34,7 +34,8 @@ namespace CryptoNote {
 
 class ITransactionWriter {
  public:
-  virtual ~ITransactionWriter() {}
+  virtual ~ITransactionWriter() {
+  }
 
   // transaction parameters
   virtual void setUnlockTime(uint64_t unlockTime) = 0;

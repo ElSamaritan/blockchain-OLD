@@ -23,9 +23,12 @@
 
 namespace Logging {
 
-LoggerGroup::LoggerGroup(Level level) : CommonLogger(level) {}
+LoggerGroup::LoggerGroup(Level level) : CommonLogger(level) {
+}
 
-void LoggerGroup::addLogger(ILogger& logger) { loggers.push_back(&logger); }
+void LoggerGroup::addLogger(ILogger& logger) {
+  loggers.push_back(&logger);
+}
 
 void LoggerGroup::removeLogger(ILogger& logger) {
   loggers.erase(std::remove(loggers.begin(), loggers.end(), &logger), loggers.end());
@@ -40,6 +43,8 @@ void LoggerGroup::operator()(const std::string& category, Level level, boost::po
   }
 }
 
-void LoggerGroup::doLogString(const std::string& message) { XI_UNUSED(message); }
+void LoggerGroup::doLogString(const std::string& message) {
+  XI_UNUSED(message);
+}
 
 }  // namespace Logging

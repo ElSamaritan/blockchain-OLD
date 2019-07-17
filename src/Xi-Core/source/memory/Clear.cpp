@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -23,4 +23,6 @@
 
 #include "Xi/Memory/Clear.hh"
 
-void Xi::Memory::secureClear(Xi::ByteSpan data) { xi_memory_secure_clear(data.data(), data.size_bytes()); }
+void Xi::Memory::secureClear(Xi::ByteSpan data) {
+  xi_memory_secure_clear(data.data(), data.size_bytes());
+}

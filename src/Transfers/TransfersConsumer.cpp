@@ -35,8 +35,11 @@ using namespace CryptoNote;
 
 class MarkTransactionConfirmedException : public std::exception {
  public:
-  MarkTransactionConfirmedException(const Crypto::Hash& txHash) : m_txHash{txHash} {}
-  const Hash& getTxHash() const { return m_txHash; }
+  MarkTransactionConfirmedException(const Crypto::Hash& txHash) : m_txHash{txHash} {
+  }
+  const Hash& getTxHash() const {
+    return m_txHash;
+  }
 
  private:
   Crypto::Hash m_txHash;
@@ -373,7 +376,9 @@ std::error_code TransfersConsumer::onPoolUpdated(
   return std::error_code();
 }
 
-const std::unordered_set<Crypto::Hash>& TransfersConsumer::getKnownPoolTxIds() const { return m_poolTxs; }
+const std::unordered_set<Crypto::Hash>& TransfersConsumer::getKnownPoolTxIds() const {
+  return m_poolTxs;
+}
 
 std::error_code TransfersConsumer::addUnconfirmedTransaction(const ITransactionReader& transaction) {
   TransactionBlockInfo unconfirmedBlockInfo;

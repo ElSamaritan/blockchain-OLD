@@ -24,12 +24,17 @@ namespace {
 
 const uint64_t ACCOUN_CREATE_TIME_ACCURACY = 24 * 60 * 60;
 
-void throwNotDefined() { throw std::runtime_error("The behavior is not defined!"); }
+void throwNotDefined() {
+  throw std::runtime_error("The behavior is not defined!");
+}
 
 class ContextCounterHolder {
  public:
-  ContextCounterHolder(CryptoNote::WalletAsyncContextCounter& shutdowner) : m_shutdowner(shutdowner) {}
-  ~ContextCounterHolder() { m_shutdowner.delAsyncContext(); }
+  ContextCounterHolder(CryptoNote::WalletAsyncContextCounter& shutdowner) : m_shutdowner(shutdowner) {
+  }
+  ~ContextCounterHolder() {
+    m_shutdowner.delAsyncContext();
+  }
 
  private:
   CryptoNote::WalletAsyncContextCounter& m_shutdowner;
@@ -43,11 +48,16 @@ void runAtomic(std::mutex& mutex, F f) {
 
 class InitWaiter : public CryptoNote::IWalletLegacyObserver {
  public:
-  InitWaiter() : future(promise.get_future()) {}
+  InitWaiter() : future(promise.get_future()) {
+  }
 
-  virtual void initCompleted(std::error_code result) override { promise.set_value(result); }
+  virtual void initCompleted(std::error_code result) override {
+    promise.set_value(result);
+  }
 
-  std::error_code waitInit() { return future.get(); }
+  std::error_code waitInit() {
+    return future.get();
+  }
 
  private:
   std::promise<std::error_code> promise;
@@ -56,11 +66,16 @@ class InitWaiter : public CryptoNote::IWalletLegacyObserver {
 
 class SaveWaiter : public CryptoNote::IWalletLegacyObserver {
  public:
-  SaveWaiter() : future(promise.get_future()) {}
+  SaveWaiter() : future(promise.get_future()) {
+  }
 
-  virtual void saveCompleted(std::error_code result) override { promise.set_value(result); }
+  virtual void saveCompleted(std::error_code result) override {
+    promise.set_value(result);
+  }
 
-  std::error_code waitSave() { return future.get(); }
+  std::error_code waitSave() {
+    return future.get();
+  }
 
  private:
   std::promise<std::error_code> promise;
@@ -73,7 +88,8 @@ namespace CryptoNote {
 
 class SyncStarter : public CryptoNote::IWalletLegacyObserver {
  public:
-  SyncStarter(BlockchainSynchronizer& sync) : m_sync(sync) {}
+  SyncStarter(BlockchainSynchronizer& sync) : m_sync(sync) {
+  }
   virtual ~SyncStarter() override = default;
 
   virtual void initCompleted(std::error_code result) override {
@@ -119,9 +135,13 @@ WalletLegacy::~WalletLegacy() {
   m_sender.release();
 }
 
-void WalletLegacy::addObserver(IWalletLegacyObserver* observer) { m_observerManager.add(observer); }
+void WalletLegacy::addObserver(IWalletLegacyObserver* observer) {
+  m_observerManager.add(observer);
+}
 
-void WalletLegacy::removeObserver(IWalletLegacyObserver* observer) { m_observerManager.remove(observer); }
+void WalletLegacy::removeObserver(IWalletLegacyObserver* observer) {
+  m_observerManager.remove(observer);
+}
 
 void WalletLegacy::initAndGenerate(const std::string& password) {
   {
@@ -247,11 +267,13 @@ void WalletLegacy::shutdown() {
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
 
-    if (m_isStopping) throwNotDefined();
+    if (m_isStopping)
+      throwNotDefined();
 
     m_isStopping = true;
 
-    if (m_state != INITIALIZED) throwNotDefined();
+    if (m_state != INITIALIZED)
+      throwNotDefined();
 
     m_sender->stop();
   }
@@ -372,7 +394,8 @@ std::error_code WalletLegacy::changePassword(const std::string& oldPassword, con
 
   throwIfNotInitialised();
 
-  if (m_password.compare(oldPassword)) return make_error_code(CryptoNote::error::WRONG_PASSWORD);
+  if (m_password.compare(oldPassword))
+    return make_error_code(CryptoNote::error::WRONG_PASSWORD);
 
   // we don't let the user to change the password while saving
   m_password = newPassword;

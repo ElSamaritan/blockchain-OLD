@@ -86,7 +86,9 @@ void read(IInputStream& in, int64_t& value) {
   boost::endian::little_to_native_inplace(value);
 }
 
-void read(IInputStream& in, uint8_t& value) { read(in, &value, sizeof(value)); }
+void read(IInputStream& in, uint8_t& value) {
+  read(in, &value, sizeof(value));
+}
 
 void read(IInputStream& in, uint16_t& value) {
   read(in, &value, sizeof(value));
@@ -126,7 +128,9 @@ void write(IOutputStream& out, const void* data, size_t size) {
   }
 }
 
-void write(IOutputStream& out, int8_t value) { write(out, &value, sizeof(value)); }
+void write(IOutputStream& out, int8_t value) {
+  write(out, &value, sizeof(value));
+}
 
 void write(IOutputStream& out, int16_t value) {
   boost::endian::native_to_little_inplace(value);
@@ -163,25 +167,61 @@ void write(IOutputStream& out, uint64_t value) {
   write(out, &value, sizeof(value));
 }
 
-void write(IOutputStream& out, const std::vector<uint8_t>& data) { write(out, data.data(), data.size()); }
+void write(IOutputStream& out, const std::vector<uint8_t>& data) {
+  write(out, data.data(), data.size());
+}
 
-void write(IOutputStream& out, const std::string& data) { write(out, data.data(), data.size()); }
+void write(IOutputStream& out, const std::string& data) {
+  write(out, data.data(), data.size());
+}
 
-void readVarint(IInputStream& in, uint8_t& value) { genericReadVarint(in, value); }
-void readVarint(IInputStream& in, uint16_t& value) { genericReadVarint(in, value); }
-void readVarint(IInputStream& in, uint32_t& value) { genericReadVarint(in, value); }
-void readVarint(IInputStream& in, uint64_t& value) { genericReadVarint(in, value); }
-void readVarint(IInputStream& in, int8_t& value) { genericReadVarint(in, value); }
-void readVarint(IInputStream& in, int16_t& value) { genericReadVarint(in, value); }
-void readVarint(IInputStream& in, int32_t& value) { genericReadVarint(in, value); }
-void readVarint(IInputStream& in, int64_t& value) { genericReadVarint(in, value); }
-void writeVarint(IOutputStream& out, uint8_t value) { genericWriteVarint(out, value); }
-void writeVarint(IOutputStream& out, uint16_t value) { genericWriteVarint(out, value); }
-void writeVarint(IOutputStream& out, uint32_t value) { genericWriteVarint(out, value); }
-void writeVarint(IOutputStream& out, uint64_t value) { genericWriteVarint(out, value); }
-void writeVarint(IOutputStream& out, int8_t value) { genericWriteVarint(out, value); }
-void writeVarint(IOutputStream& out, int16_t value) { genericWriteVarint(out, value); }
-void writeVarint(IOutputStream& out, int32_t value) { genericWriteVarint(out, value); }
-void writeVarint(IOutputStream& out, int64_t value) { genericWriteVarint(out, value); }
+void readVarint(IInputStream& in, uint8_t& value) {
+  genericReadVarint(in, value);
+}
+void readVarint(IInputStream& in, uint16_t& value) {
+  genericReadVarint(in, value);
+}
+void readVarint(IInputStream& in, uint32_t& value) {
+  genericReadVarint(in, value);
+}
+void readVarint(IInputStream& in, uint64_t& value) {
+  genericReadVarint(in, value);
+}
+void readVarint(IInputStream& in, int8_t& value) {
+  genericReadVarint(in, value);
+}
+void readVarint(IInputStream& in, int16_t& value) {
+  genericReadVarint(in, value);
+}
+void readVarint(IInputStream& in, int32_t& value) {
+  genericReadVarint(in, value);
+}
+void readVarint(IInputStream& in, int64_t& value) {
+  genericReadVarint(in, value);
+}
+void writeVarint(IOutputStream& out, uint8_t value) {
+  genericWriteVarint(out, value);
+}
+void writeVarint(IOutputStream& out, uint16_t value) {
+  genericWriteVarint(out, value);
+}
+void writeVarint(IOutputStream& out, uint32_t value) {
+  genericWriteVarint(out, value);
+}
+void writeVarint(IOutputStream& out, uint64_t value) {
+  genericWriteVarint(out, value);
+}
+void writeVarint(IOutputStream& out, int8_t value) {
+  genericWriteVarint(out, value);
+}
+void writeVarint(IOutputStream& out, int16_t value) {
+  genericWriteVarint(out, value);
+}
+void writeVarint(IOutputStream& out, int32_t value) {
+  genericWriteVarint(out, value);
+}
+void writeVarint(IOutputStream& out, int64_t value) {
+  genericWriteVarint(out, value);
+}
 
 }  // namespace Common

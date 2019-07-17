@@ -43,13 +43,17 @@ const std::string NewLine{"\n"};
 std::string makeDisposition(const std::string &name) {
   return std::string{"Content-Disposition: form-data; name=\""} + name + "\"";
 }
-std::string makeContentType(Xi::Http::ContentType type) { return std::string{"Content-Type: "} + Xi::to_string(type); }
+std::string makeContentType(Xi::Http::ContentType type) {
+  return std::string{"Content-Type: "} + Xi::to_string(type);
+}
 }  // namespace
 
 Xi::Http::MultipartFormDataBuilder::MultipartFormDataBuilder()
-    : m_boundary{boost::lexical_cast<std::string>(boost::uuids::random_generator{}())}, m_body{NewLine} {}
+    : m_boundary{boost::lexical_cast<std::string>(boost::uuids::random_generator{}())}, m_body{NewLine} {
+}
 
-Xi::Http::MultipartFormDataBuilder::~MultipartFormDataBuilder() {}
+Xi::Http::MultipartFormDataBuilder::~MultipartFormDataBuilder() {
+}
 
 void Xi::Http::MultipartFormDataBuilder::addFile(const std::string &name, const std::string &filepath,
                                                  ContentType type) {

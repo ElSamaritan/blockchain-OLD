@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -34,13 +34,20 @@ const CryptoNote::TypeTag::binary_type CryptoNote::TypeTag::NoBinaryTag{
 
 const CryptoNote::TypeTag::text_type CryptoNote::TypeTag::NoTextTag{""};
 
-CryptoNote::TypeTag::TypeTag(binary_type binary, text_type text) : m_binary{binary}, m_text{std::move(text)} {}
+CryptoNote::TypeTag::TypeTag(binary_type binary, text_type text) : m_binary{binary}, m_text{std::move(text)} {
+}
 
-CryptoNote::TypeTag::binary_type CryptoNote::TypeTag::binary() const { return m_binary; }
+CryptoNote::TypeTag::binary_type CryptoNote::TypeTag::binary() const {
+  return m_binary;
+}
 
-const CryptoNote::TypeTag::text_type &CryptoNote::TypeTag::text() const { return m_text; }
+const CryptoNote::TypeTag::text_type &CryptoNote::TypeTag::text() const {
+  return m_text;
+}
 
-bool CryptoNote::TypeTag::isNull() const { return binary() == NoBinaryTag && text() == NoTextTag; }
+bool CryptoNote::TypeTag::isNull() const {
+  return binary() == NoBinaryTag && text() == NoTextTag;
+}
 
 bool CryptoNote::TypeTag::operator==(const CryptoNote::TypeTag &rhs) const {
   if (binary() != NoBinaryTag && binary() == rhs.binary()) {
@@ -52,4 +59,6 @@ bool CryptoNote::TypeTag::operator==(const CryptoNote::TypeTag &rhs) const {
   }
 }
 
-bool CryptoNote::TypeTag::operator!=(const CryptoNote::TypeTag &rhs) const { return !(*this == rhs); }
+bool CryptoNote::TypeTag::operator!=(const CryptoNote::TypeTag &rhs) const {
+  return !(*this == rhs);
+}

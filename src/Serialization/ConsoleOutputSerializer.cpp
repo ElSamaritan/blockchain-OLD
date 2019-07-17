@@ -75,7 +75,9 @@ ConsoleOutputSerializer::ConsoleOutputSerializer(std::ostream &stream) : m_impl{
 ConsoleOutputSerializer::~ConsoleOutputSerializer() { /* */
 }
 
-ISerializer::SerializerType ConsoleOutputSerializer::type() const { return ISerializer::OUTPUT; }
+ISerializer::SerializerType ConsoleOutputSerializer::type() const {
+  return ISerializer::OUTPUT;
+}
 
 bool ConsoleOutputSerializer::beginObject(Common::StringView name) {
   if (m_impl->stack.empty()) {

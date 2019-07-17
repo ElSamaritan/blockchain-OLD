@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -36,34 +36,69 @@ Xi::Http::SSLConfiguration::SSLConfiguration()
       m_privateKeyPath{"key.pem"},
       m_dhparamPath{"dh.pem"},
       m_trustedKeysPath{"trusted.pem"},
-      m_privateKeyPassword{""} {}
+      m_privateKeyPassword{""} {
+}
 
-bool Xi::Http::SSLConfiguration::enabled() const { return m_enabled; }
-bool Xi::Http::SSLConfiguration::disabled() const { return !m_enabled; }
-void Xi::Http::SSLConfiguration::setEnabled(bool isEnabled) { m_enabled = isEnabled; }
+bool Xi::Http::SSLConfiguration::enabled() const {
+  return m_enabled;
+}
+bool Xi::Http::SSLConfiguration::disabled() const {
+  return !m_enabled;
+}
+void Xi::Http::SSLConfiguration::setEnabled(bool isEnabled) {
+  m_enabled = isEnabled;
+}
 
-bool Xi::Http::SSLConfiguration::verifyPeers() const { return m_verifyPeers; }
+bool Xi::Http::SSLConfiguration::verifyPeers() const {
+  return m_verifyPeers;
+}
 
-void Xi::Http::SSLConfiguration::setVerifyPeers(bool isEnabled) { m_verifyPeers = isEnabled; }
+void Xi::Http::SSLConfiguration::setVerifyPeers(bool isEnabled) {
+  m_verifyPeers = isEnabled;
+}
 
-const std::string &Xi::Http::SSLConfiguration::rootPath() const { return m_rootPath; }
+const std::string &Xi::Http::SSLConfiguration::rootPath() const {
+  return m_rootPath;
+}
 
-void Xi::Http::SSLConfiguration::setRootPath(const std::string &path) { m_rootPath = path; }
+void Xi::Http::SSLConfiguration::setRootPath(const std::string &path) {
+  m_rootPath = path;
+}
 
-const std::string &Xi::Http::SSLConfiguration::certificatePath() const { return m_certificatePath; }
-void Xi::Http::SSLConfiguration::setCertificatePath(const std::string &path) { m_certificatePath = path; }
+const std::string &Xi::Http::SSLConfiguration::certificatePath() const {
+  return m_certificatePath;
+}
+void Xi::Http::SSLConfiguration::setCertificatePath(const std::string &path) {
+  m_certificatePath = path;
+}
 
-const std::string &Xi::Http::SSLConfiguration::privateKeyPath() const { return m_privateKeyPath; }
-void Xi::Http::SSLConfiguration::setPrivateKeyPath(const std::string &path) { m_privateKeyPath = path; }
+const std::string &Xi::Http::SSLConfiguration::privateKeyPath() const {
+  return m_privateKeyPath;
+}
+void Xi::Http::SSLConfiguration::setPrivateKeyPath(const std::string &path) {
+  m_privateKeyPath = path;
+}
 
-const std::string &Xi::Http::SSLConfiguration::dhparamPath() const { return m_dhparamPath; }
-void Xi::Http::SSLConfiguration::setDhparamPath(const std::string &path) { m_dhparamPath = path; }
+const std::string &Xi::Http::SSLConfiguration::dhparamPath() const {
+  return m_dhparamPath;
+}
+void Xi::Http::SSLConfiguration::setDhparamPath(const std::string &path) {
+  m_dhparamPath = path;
+}
 
-const std::string &Xi::Http::SSLConfiguration::trustedKeysPath() const { return m_trustedKeysPath; }
-void Xi::Http::SSLConfiguration::setTrustedKeysPath(const std::string &path) { m_trustedKeysPath = path; }
+const std::string &Xi::Http::SSLConfiguration::trustedKeysPath() const {
+  return m_trustedKeysPath;
+}
+void Xi::Http::SSLConfiguration::setTrustedKeysPath(const std::string &path) {
+  m_trustedKeysPath = path;
+}
 
-const std::string &Xi::Http::SSLConfiguration::privateKeyPassword() const { return m_privateKeyPassword; }
-void Xi::Http::SSLConfiguration::setPrivateKeyPassword(const std::string &password) { m_privateKeyPassword = password; }
+const std::string &Xi::Http::SSLConfiguration::privateKeyPassword() const {
+  return m_privateKeyPassword;
+}
+void Xi::Http::SSLConfiguration::setPrivateKeyPassword(const std::string &password) {
+  m_privateKeyPassword = password;
+}
 
 bool Xi::Http::SSLConfiguration::serialize(CryptoNote::ISerializer &s) {
   XI_RETURN_EC_IF_NOT(s(m_enabled, "enabled"), false);
@@ -119,17 +154,22 @@ void Xi::Http::SSLConfiguration::emplaceOptions(cxxopts::Options &options, Xi::H
 #define CATCH_THROW_WITH_CONTEXT(INST, FILE)                         \
   try {                                                              \
     INST;                                                            \
-    if (ec) throw std::runtime_error{""};                            \
+    if (ec)                                                          \
+      throw std::runtime_error{""};                                  \
   } catch (...) {                                                    \
     throw std::runtime_error{std::string{"unable to load "} + FILE}; \
   }
 
 void Xi::Http::SSLConfiguration::initializeServerContext(boost::asio::ssl::context &ctx) {
   using namespace boost::filesystem;
-  if (disabled()) return;
-  if (!exists(rootedPath(certificatePath()))) throw std::runtime_error{"CertFile could not be found."};
-  if (!exists(rootedPath(privateKeyPath()))) throw std::runtime_error{"KeyFile could not be found."};
-  if (!exists(rootedPath(dhparamPath()))) throw std::runtime_error{"DhFile could not be found."};
+  if (disabled())
+    return;
+  if (!exists(rootedPath(certificatePath())))
+    throw std::runtime_error{"CertFile could not be found."};
+  if (!exists(rootedPath(privateKeyPath())))
+    throw std::runtime_error{"KeyFile could not be found."};
+  if (!exists(rootedPath(dhparamPath())))
+    throw std::runtime_error{"DhFile could not be found."};
 
   ctx.set_password_callback(
       [pkp = privateKeyPassword()](std::size_t, boost::asio::ssl::context_base::password_purpose) { return pkp; });

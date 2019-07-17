@@ -25,7 +25,7 @@
 
 namespace CryptoNote {
 
-[[nodiscard]]  bool serialize(UnconfirmedTransferDetails& utd, CryptoNote::ISerializer& serializer) {
+[[nodiscard]] bool serialize(UnconfirmedTransferDetails& utd, CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(utd.tx, "transaction"), false);
   XI_RETURN_EC_IF_NOT(serializer(utd.amount, "amount"), false);
   XI_RETURN_EC_IF_NOT(serializer(utd.outsAmount, "outs_amount"), false);
@@ -38,7 +38,7 @@ namespace CryptoNote {
   return true;
 }
 
-[[nodiscard]]  bool serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer) {
+[[nodiscard]] bool serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer) {
   uint64_t trId = static_cast<uint64_t>(txi.firstTransferId);
   XI_RETURN_EC_IF_NOT(serializer(trId, "first_transfer_id"), false);
   txi.firstTransferId = static_cast<size_t>(trId);
@@ -66,7 +66,7 @@ namespace CryptoNote {
   return true;
 }
 
-[[nodiscard]]  bool serialize(WalletLegacyTransfer& tr, CryptoNote::ISerializer& serializer) {
+[[nodiscard]] bool serialize(WalletLegacyTransfer& tr, CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(tr.address, "address"), false);
   XI_RETURN_EC_IF_NOT(serializer(tr.amount, "amount"), false);
   return true;

@@ -39,15 +39,15 @@ class ITransactionPoolObserver {
   };
 
   enum struct DeletionReason {
-    AddedToMainChain,          ///< A block was added to the main chain containing the transaction.
-    KeyImageUsedInMainChain,   ///< A block was added to the main chain that uses the same input as one of the
-                               ///< transactions in the pool. The pool transaction is now invalid as it would perform
-                               ///< double spending once added to the main chain.
-    BlockVersionUpgrade,  ///< The version in the blockchain upgraded introducing new constraints the
-                               ///< transaction does not satisfy anymore
-    PoolCleanupProcedure,      ///< Transaction was in pool but got outdated or invalid while remaining there.
-    Forced,                    ///< The user forced the deletion of the transaction
-    SkipNotification,          ///< Skips the notification of observers.
+    AddedToMainChain,         ///< A block was added to the main chain containing the transaction.
+    KeyImageUsedInMainChain,  ///< A block was added to the main chain that uses the same input as one of the
+                              ///< transactions in the pool. The pool transaction is now invalid as it would perform
+                              ///< double spending once added to the main chain.
+    BlockVersionUpgrade,      ///< The version in the blockchain upgraded introducing new constraints the
+                              ///< transaction does not satisfy anymore
+    PoolCleanupProcedure,     ///< Transaction was in pool but got outdated or invalid while remaining there.
+    Forced,                   ///< The user forced the deletion of the transaction
+    SkipNotification,         ///< Skips the notification of observers.
   };
 
  public:

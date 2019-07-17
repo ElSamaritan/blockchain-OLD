@@ -22,15 +22,18 @@
 
 class SequenceEnded : public std::runtime_error {
  public:
-  SequenceEnded() : std::runtime_error("shuffle sequence ended") {}
+  SequenceEnded() : std::runtime_error("shuffle sequence ended") {
+  }
 
-  ~SequenceEnded() {}
+  ~SequenceEnded() {
+  }
 };
 
 template <typename T, typename Gen>
 class ShuffleGenerator {
  public:
-  ShuffleGenerator(T n) : N(n), generator(Gen::create().takeOrThrow()), count(n) {}
+  ShuffleGenerator(T n) : N(n), generator(Gen::create().takeOrThrow()), count(n) {
+  }
 
   T operator()() {
     if (count == 0) {
@@ -59,7 +62,9 @@ class ShuffleGenerator {
     return value;
   }
 
-  bool empty() const { return count == 0; }
+  bool empty() const {
+    return count == 0;
+  }
 
   void reset() {
     count = N;

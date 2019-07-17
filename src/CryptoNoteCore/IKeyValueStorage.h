@@ -26,7 +26,8 @@ class ReadBatch;
 
 class IKeyValueStorage {
  public:
-  virtual ~IKeyValueStorage() {}
+  virtual ~IKeyValueStorage() {
+  }
 
   virtual bool insert(const WriteBatch& batch, bool sync = false) = 0;
   virtual void read(const ReadBatch& batch) const = 0;

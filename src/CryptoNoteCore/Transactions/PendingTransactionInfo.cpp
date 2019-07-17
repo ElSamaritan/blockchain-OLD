@@ -26,10 +26,17 @@
 
 CryptoNote::PendingTransactionInfo::PendingTransactionInfo(CachedTransaction tx, CryptoNote::EligibleIndex index,
                                                            PosixTimestamp time)
-    : m_transaction{std::make_shared<CachedTransaction>(std::move(tx))}, m_eligibleIndex{index}, m_receiveTime{time} {}
+    : m_transaction{std::make_shared<CachedTransaction>(std::move(tx))}, m_eligibleIndex{index}, m_receiveTime{time} {
+}
 
-const CryptoNote::CachedTransaction &CryptoNote::PendingTransactionInfo::transaction() const { return *m_transaction; }
+const CryptoNote::CachedTransaction &CryptoNote::PendingTransactionInfo::transaction() const {
+  return *m_transaction;
+}
 
-CryptoNote::EligibleIndex CryptoNote::PendingTransactionInfo::eligibleIndex() const { return m_eligibleIndex; }
+CryptoNote::EligibleIndex CryptoNote::PendingTransactionInfo::eligibleIndex() const {
+  return m_eligibleIndex;
+}
 
-CryptoNote::PosixTimestamp CryptoNote::PendingTransactionInfo::receiveTime() const { return m_receiveTime; }
+CryptoNote::PosixTimestamp CryptoNote::PendingTransactionInfo::receiveTime() const {
+  return m_receiveTime;
+}

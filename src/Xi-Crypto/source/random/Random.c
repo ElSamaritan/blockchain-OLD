@@ -47,14 +47,13 @@
 #include "Xi/Crypto/Hash/Keccak.hh"
 
 struct xi_crypto_random_state {
-  uint64_t bytes[XI_HASH_1600_SIZE / sizeof (uint64_t)];
+  uint64_t bytes[XI_HASH_1600_SIZE / sizeof(uint64_t)];
   size_t left;
 };
 
+static XI_RUNTIME_THREAD_LOCAL xi_crypto_random_state *xi_crypto_random_state_instance = NULL;
 
-static XI_RUNTIME_THREAD_LOCAL xi_crypto_random_state* xi_crypto_random_state_instance = NULL;
-
-#if defined (_WIN32)
+#if defined(_WIN32)
 
 #include <synchapi.h>
 
@@ -64,9 +63,8 @@ static void __cdecl xi_crypto_random_system_byte_critical_section_initialize(voi
   InitializeCriticalSection(&xi_crypto_random_system_byte_critical_section);
 }
 #pragma section(".CRT$XCU", read)
-__declspec(allocate(".CRT$XCU"))
-const void (__cdecl *_xi_crypto_random_system_byte_critical_section_initialize)(void) =
-        xi_crypto_random_system_byte_critical_section_initialize;
+__declspec(allocate(".CRT$XCU")) const void(__cdecl *_xi_crypto_random_system_byte_critical_section_initialize)(void) =
+    xi_crypto_random_system_byte_critical_section_initialize;
 
 #else
 
@@ -76,8 +74,7 @@ pthread_mutex_t xi_crypto_random_system_byte_critical_section = PTHREAD_MUTEX_IN
 
 #endif
 
-int xi_crypto_random_system_bytes(xi_byte_t *out, size_t count)
-{
+int xi_crypto_random_system_bytes(xi_byte_t *out, size_t count) {
 #if defined(_WIN32)
   EnterCriticalSection(&xi_crypto_random_system_byte_critical_section);
   HCRYPTPROV hCryptProv;
@@ -85,7 +82,7 @@ int xi_crypto_random_system_bytes(xi_byte_t *out, size_t count)
     LeaveCriticalSection(&xi_crypto_random_system_byte_critical_section);
     return XI_RETURN_CODE_NO_SUCCESS;
   }
-  if (CryptGenRandom(hCryptProv, (DWORD)count, (BYTE*)out) != TRUE) {
+  if (CryptGenRandom(hCryptProv, (DWORD)count, (BYTE *)out) != TRUE) {
     LeaveCriticalSection(&xi_crypto_random_system_byte_critical_section);
     return XI_RETURN_CODE_NO_SUCCESS;
   }
@@ -100,127 +97,117 @@ int xi_crypto_random_system_bytes(xi_byte_t *out, size_t count)
     return XI_RETURN_CODE_NO_SUCCESS;
   }
   size_t offset = 0;
-  while(offset < count) {
-      const ssize_t iBytesRead = read(fileDescriptor, out + offset, count - offset);
-      if(iBytesRead < 1) {
-          pthread_mutex_unlock(&xi_crypto_random_system_byte_critical_section);
-          return XI_RETURN_CODE_NO_SUCCESS;
-      }
-      offset += (size_t)iBytesRead;
+  while (offset < count) {
+    const ssize_t iBytesRead = read(fileDescriptor, out + offset, count - offset);
+    if (iBytesRead < 1) {
+      pthread_mutex_unlock(&xi_crypto_random_system_byte_critical_section);
+      return XI_RETURN_CODE_NO_SUCCESS;
+    }
+    offset += (size_t)iBytesRead;
   }
   pthread_mutex_unlock(&xi_crypto_random_system_byte_critical_section);
   return XI_RETURN_CODE_SUCCESS;
 #endif
 }
 
-xi_crypto_random_state *xi_crypto_random_state_create(void)
-{
-  xi_crypto_random_state* reval = NULL;
-  reval = (xi_crypto_random_state*)malloc(sizeof(xi_crypto_random_state));
+xi_crypto_random_state *xi_crypto_random_state_create(void) {
+  xi_crypto_random_state *reval = NULL;
+  reval = (xi_crypto_random_state *)malloc(sizeof(xi_crypto_random_state));
   return reval;
 }
 
-int xi_crypto_random_state_init(xi_crypto_random_state *state)
-{
+int xi_crypto_random_state_init(xi_crypto_random_state *state) {
   int ec = XI_RETURN_CODE_SUCCESS;
-  ec = xi_crypto_random_system_bytes((xi_byte_t*)state->bytes, XI_HASH_1600_SIZE);
+  ec = xi_crypto_random_system_bytes((xi_byte_t *)state->bytes, XI_HASH_1600_SIZE);
   XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
   xi_crypto_random_state_permutation(state);
   return XI_RETURN_CODE_SUCCESS;
 }
 
-int xi_crypto_random_state_init_deterministic(xi_crypto_random_state *state, const xi_byte_t *seed, size_t seedLength)
-{
+int xi_crypto_random_state_init_deterministic(xi_crypto_random_state *state, const xi_byte_t *seed, size_t seedLength) {
   memset(state->bytes, 0, XI_HASH_1600_SIZE);
   int ec = XI_RETURN_CODE_SUCCESS;
-  ec = xi_crypto_hash_keccak_1600(seed, seedLength, (xi_byte_t*)state->bytes);
+  ec = xi_crypto_hash_keccak_1600(seed, seedLength, (xi_byte_t *)state->bytes);
   XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
   state->left = XI_HASH_1600_SIZE;
   return XI_RETURN_CODE_SUCCESS;
 }
 
-
-void xi_crypto_random_state_destroy(xi_crypto_random_state *state)
-{
-  xi_memory_secure_clear((xi_byte_t*)state->bytes, XI_HASH_1600_SIZE);
+void xi_crypto_random_state_destroy(xi_crypto_random_state *state) {
+  xi_memory_secure_clear((xi_byte_t *)state->bytes, XI_HASH_1600_SIZE);
   free(state);
 }
 
-int xi_crypto_random_bytes_from_state(xi_byte_t *out, size_t count, xi_crypto_random_state *state)
-{
-  if(state == NULL) {
+int xi_crypto_random_bytes_from_state(xi_byte_t *out, size_t count, xi_crypto_random_state *state) {
+  if (state == NULL) {
     return XI_RETURN_CODE_NO_SUCCESS;
-  } else if(count == 0) {
+  } else if (count == 0) {
     return XI_RETURN_CODE_SUCCESS;
   } else {
     size_t generated = 0;
     do {
-      if(state->left == 0) {
+      if (state->left == 0) {
         xi_crypto_random_state_permutation(state);
       }
 
       const size_t nLeft = count - generated;
       const size_t nCopy = state->left < nLeft ? state->left : nLeft;
-      memcpy(out + generated, ((xi_byte_t*)state->bytes) + (XI_HASH_1600_SIZE - state->left), nCopy);
+      memcpy(out + generated, ((xi_byte_t *)state->bytes) + (XI_HASH_1600_SIZE - state->left), nCopy);
       state->left -= nCopy;
       generated += nCopy;
-    } while(generated < count);
+    } while (generated < count);
     return XI_RETURN_CODE_SUCCESS;
   }
 }
 
-int xi_crypto_random_bytes_from_state_deterministic(xi_byte_t *out, size_t count, xi_crypto_random_state *state)
-{
-  if(state == NULL) {
+int xi_crypto_random_bytes_from_state_deterministic(xi_byte_t *out, size_t count, xi_crypto_random_state *state) {
+  if (state == NULL) {
     return XI_RETURN_CODE_NO_SUCCESS;
-  } else if(count == 0) {
+  } else if (count == 0) {
     return XI_RETURN_CODE_SUCCESS;
   } else {
     size_t generated = 0;
     do {
-      if(state->left == 0) {
+      if (state->left == 0) {
         xi_crypto_random_state_permutation_deterministic(state);
       }
 
       const size_t nLeft = count - generated;
       const size_t nCopy = state->left < nLeft ? state->left : nLeft;
-      memcpy(out + generated, ((xi_byte_t*)state->bytes) + (XI_HASH_1600_SIZE - state->left), nCopy);
+      memcpy(out + generated, ((xi_byte_t *)state->bytes) + (XI_HASH_1600_SIZE - state->left), nCopy);
       state->left -= nCopy;
       generated += nCopy;
-    } while(generated < count);
+    } while (generated < count);
     return XI_RETURN_CODE_SUCCESS;
   }
 }
 
-void xi_crypto_random_state_permutation(xi_crypto_random_state *state)
-{
+void xi_crypto_random_state_permutation(xi_crypto_random_state *state) {
   xi_crypto_hash_keccakf(state->bytes, 24U);
   state->left = XI_HASH_1600_SIZE;
 }
 
-void xi_crypto_random_state_permutation_deterministic(xi_crypto_random_state *state)
-{
-#if !defined (XI_COMPILER_ENDIANESS_LITTLE)
-  for(size_t i = 0; i < XI_HASH_1600_SIZE / sizeof (uint64_t); ++i) {
+void xi_crypto_random_state_permutation_deterministic(xi_crypto_random_state *state) {
+#if !defined(XI_COMPILER_ENDIANESS_LITTLE)
+  for (size_t i = 0; i < XI_HASH_1600_SIZE / sizeof(uint64_t); ++i) {
     state->bytes[i] = xi_endianess_little_u64(state->bytes[i]);
   }
 #endif
   xi_crypto_random_state_permutation(state);
-#if ! defined (XI_COMPILER_ENDIANESS_LITTLE)
-  for(size_t i = 0; i < XI_HASH_1600_SIZE / sizeof (uint64_t); ++i) {
+#if !defined(XI_COMPILER_ENDIANESS_LITTLE)
+  for (size_t i = 0; i < XI_HASH_1600_SIZE / sizeof(uint64_t); ++i) {
     state->bytes[i] = xi_endianess_little_u64(state->bytes[i]);
   }
 #endif
 }
 
-int xi_crypto_random_bytes(xi_byte_t *out, size_t count)
-{
+int xi_crypto_random_bytes(xi_byte_t *out, size_t count) {
   int ec = XI_RETURN_CODE_SUCCESS;
-  if(xi_crypto_random_state_instance == NULL) {
+  if (xi_crypto_random_state_instance == NULL) {
     xi_crypto_random_state_instance = xi_crypto_random_state_create();
     XI_RETURN_EC_IF(xi_crypto_random_state_instance == NULL, XI_RETURN_CODE_NO_SUCCESS);
     ec = xi_crypto_random_state_init(xi_crypto_random_state_instance);
-    if(ec != XI_RETURN_CODE_SUCCESS) {
+    if (ec != XI_RETURN_CODE_SUCCESS) {
       xi_crypto_random_state_destroy(xi_crypto_random_state_instance);
       xi_crypto_random_state_instance = NULL;
       return ec;
@@ -232,13 +219,12 @@ int xi_crypto_random_bytes(xi_byte_t *out, size_t count)
   return XI_RETURN_CODE_SUCCESS;
 }
 
-int xi_crypto_random_bytes_determenistic(xi_byte_t *out, size_t count, const xi_byte_t *seed, size_t seedLength)
-{
-  xi_crypto_random_state* state = xi_crypto_random_state_create();
+int xi_crypto_random_bytes_determenistic(xi_byte_t *out, size_t count, const xi_byte_t *seed, size_t seedLength) {
+  xi_crypto_random_state *state = xi_crypto_random_state_create();
   XI_RETURN_EC_IF(state == NULL, XI_RETURN_CODE_NO_SUCCESS);
   int ec = XI_RETURN_CODE_SUCCESS;
   ec = xi_crypto_random_state_init_deterministic(state, seed, seedLength);
-  if(ec != XI_RETURN_CODE_SUCCESS) {
+  if (ec != XI_RETURN_CODE_SUCCESS) {
     xi_crypto_random_state_destroy(state);
     return ec;
   }
@@ -247,4 +233,3 @@ int xi_crypto_random_bytes_determenistic(xi_byte_t *out, size_t count, const xi_
   XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
   return XI_RETURN_CODE_SUCCESS;
 }
-

@@ -11,9 +11,13 @@
 
 namespace CryptoNote {
 //-----------------------------------------------------------------
-AccountBase::AccountBase() { nullify(); }
+AccountBase::AccountBase() {
+  nullify();
+}
 //-----------------------------------------------------------------
-void AccountBase::nullify() { m_keys = AccountKeys(); }
+void AccountBase::nullify() {
+  m_keys = AccountKeys();
+}
 //-----------------------------------------------------------------
 void AccountBase::generate() {
   Crypto::generate_keys(m_keys.address.spendPublicKey, m_keys.spendSecretKey);
@@ -35,9 +39,13 @@ void AccountBase::generateViewFromSpend(const Crypto::SecretKey &spend, Crypto::
   Crypto::generate_deterministic_keys(viewSecret, spend.span());
 }
 //-----------------------------------------------------------------
-const AccountKeys &AccountBase::getAccountKeys() const { return m_keys; }
+const AccountKeys &AccountBase::getAccountKeys() const {
+  return m_keys;
+}
 
-void AccountBase::setAccountKeys(const AccountKeys &keys) { m_keys = keys; }
+void AccountBase::setAccountKeys(const AccountKeys &keys) {
+  m_keys = keys;
+}
 //-----------------------------------------------------------------
 
 bool AccountBase::serialize(ISerializer &s) {

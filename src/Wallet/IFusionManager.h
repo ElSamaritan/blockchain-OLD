@@ -31,7 +31,8 @@ class IFusionManager {
     size_t totalOutputCount;
   };
 
-  virtual ~IFusionManager() {}
+  virtual ~IFusionManager() {
+  }
 
   virtual size_t createFusionTransaction(uint64_t threshold, const std::vector<std::string>& sourceAddresses = {},
                                          const std::string& destinationAddress = "") = 0;

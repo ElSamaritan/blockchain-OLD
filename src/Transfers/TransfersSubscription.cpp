@@ -30,7 +30,8 @@ TransfersSubscription::TransfersSubscription(const CryptoNote::Currency& currenc
     : subscription(sub),
       logger(logger, "TransfersSubscription"),
       transfers(currency, logger, sub.transactionSpendableAge),
-      m_address(currency.accountAddressAsString(sub.keys.address)) {}
+      m_address(currency.accountAddressAsString(sub.keys.address)) {
+}
 
 SynchronizationStart TransfersSubscription::getSyncStart() {
   int affe = 4;
@@ -53,9 +54,13 @@ void TransfersSubscription::onError(const std::error_code& ec, BlockHeight heigh
   m_observerManager.notify(&ITransfersObserver::onError, this, height, ec);
 }
 
-bool TransfersSubscription::advanceHeight(BlockHeight height) { return transfers.advanceHeight(height); }
+bool TransfersSubscription::advanceHeight(BlockHeight height) {
+  return transfers.advanceHeight(height);
+}
 
-const AccountKeys& TransfersSubscription::getKeys() const { return subscription.keys; }
+const AccountKeys& TransfersSubscription::getKeys() const {
+  return subscription.keys;
+}
 
 bool TransfersSubscription::addTransaction(const TransactionBlockInfo& blockInfo, const ITransactionReader& tx,
                                            const std::vector<TransactionOutputInformationIn>& transfersList) {
@@ -68,9 +73,13 @@ bool TransfersSubscription::addTransaction(const TransactionBlockInfo& blockInfo
   return added;
 }
 
-AccountPublicAddress TransfersSubscription::getAddress() { return subscription.keys.address; }
+AccountPublicAddress TransfersSubscription::getAddress() {
+  return subscription.keys.address;
+}
 
-ITransfersContainer& TransfersSubscription::getContainer() { return transfers; }
+ITransfersContainer& TransfersSubscription::getContainer() {
+  return transfers;
+}
 
 void TransfersSubscription::deleteUnconfirmedTransaction(const Hash& transactionHash) {
   if (transfers.deleteUnconfirmedTransaction(transactionHash)) {

@@ -104,9 +104,13 @@ Xi::Http::Uri::Uri(const Uri &other, const std::map<Xi::Http::Uri::Component, st
   m_fragment = (replacements.count(Component::Fragment)) ? replacements.at(Component::Fragment) : other.m_fragment;
 }
 
-const std::string &Xi::Http::Uri::scheme() const { return m_scheme; }
+const std::string &Xi::Http::Uri::scheme() const {
+  return m_scheme;
+}
 
-Xi::Http::Uri::SchemeCategory Xi::Http::Uri::schemeCategory() const { return m_category; }
+Xi::Http::Uri::SchemeCategory Xi::Http::Uri::schemeCategory() const {
+  return m_category;
+}
 
 const std::string &Xi::Http::Uri::content() const {
   if (m_category != SchemeCategory::NonHierarchical) {
@@ -150,11 +154,17 @@ const std::string &Xi::Http::Uri::path() const {
   return m_path;
 }
 
-const std::string &Xi::Http::Uri::query() const { return m_query; }
+const std::string &Xi::Http::Uri::query() const {
+  return m_query;
+}
 
-const std::map<std::string, std::string> &Xi::Http::Uri::queryDictionary() const { return m_queryDict; }
+const std::map<std::string, std::string> &Xi::Http::Uri::queryDictionary() const {
+  return m_queryDict;
+}
 
-const std::string &Xi::Http::Uri::fragment() const { return m_fragment; }
+const std::string &Xi::Http::Uri::fragment() const {
+  return m_fragment;
+}
 
 std::string Xi::Http::Uri::toString() const {
   std::string full_uri;
@@ -198,8 +208,10 @@ std::string Xi::Http::Uri::toString() const {
 
 std::string Xi::Http::Uri::relativePart() const {
   auto relativePart = std::string{"/"} + path();
-  if (!query().empty()) relativePart += std::string{"?"} + query();
-  if (!fragment().empty()) relativePart += std::string{"#"} + fragment();
+  if (!query().empty())
+    relativePart += std::string{"?"} + query();
+  if (!fragment().empty())
+    relativePart += std::string{"#"} + fragment();
   return relativePart;
 }
 

@@ -33,9 +33,11 @@ struct EventWaiter {
 
 }  // namespace
 
-Event::Event() : dispatcher(nullptr) {}
+Event::Event() : dispatcher(nullptr) {
+}
 
-Event::Event(Dispatcher& dispatcher) : dispatcher(&dispatcher), state(false), first(nullptr) {}
+Event::Event(Dispatcher& dispatcher) : dispatcher(&dispatcher), state(false), first(nullptr) {
+}
 
 Event::Event(Event&& other) : dispatcher(other.dispatcher) {
   if (dispatcher != nullptr) {
@@ -49,7 +51,9 @@ Event::Event(Event&& other) : dispatcher(other.dispatcher) {
   }
 }
 
-Event::~Event() { assert(dispatcher == nullptr || state || first == nullptr); }
+Event::~Event() {
+  assert(dispatcher == nullptr || state || first == nullptr);
+}
 
 Event& Event::operator=(Event&& other) {
   assert(dispatcher == nullptr || state || first == nullptr);

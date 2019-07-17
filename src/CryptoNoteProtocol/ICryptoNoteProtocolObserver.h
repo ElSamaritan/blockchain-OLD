@@ -23,17 +23,21 @@
 
 #include <Xi/Global.hh>
 
-
-
 namespace CryptoNote {
 
 class ICryptoNoteProtocolObserver {
  public:
   virtual ~ICryptoNoteProtocolObserver() = default;
 
-  virtual void peerCountUpdated(size_t count) { XI_UNUSED(count); }
-  virtual void lastKnownBlockHeightUpdated(BlockHeight height) { XI_UNUSED(height); }
-  virtual void blockchainSynchronized(BlockHeight topHeight) { XI_UNUSED(topHeight); }
+  virtual void peerCountUpdated(size_t count) {
+    XI_UNUSED(count);
+  }
+  virtual void lastKnownBlockHeightUpdated(BlockHeight height) {
+    XI_UNUSED(height);
+  }
+  virtual void blockchainSynchronized(BlockHeight topHeight) {
+    XI_UNUSED(topHeight);
+  }
 };
 
 }  // namespace CryptoNote

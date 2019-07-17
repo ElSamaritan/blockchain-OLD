@@ -37,7 +37,9 @@ namespace Crypto {
 struct KeyDerivation : Xi::ByteArray<32> {
   using array_type = Xi::ByteArray<32>;
   static const KeyDerivation Null;
-  static inline constexpr size_t bytes() { return 32; }
+  static inline constexpr size_t bytes() {
+    return 32;
+  }
   static Xi::Result<KeyDerivation> fromString(const std::string& hex);
 
   KeyDerivation();

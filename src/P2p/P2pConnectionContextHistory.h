@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -43,16 +43,20 @@ class P2pConnectionContextHistory {
 
     time_point timestamp;
 
-    IObservedOccurrence(time_point t) : timestamp{t} {}
+    IObservedOccurrence(time_point t) : timestamp{t} {
+    }
   };
 
   template <typename _ObservedT>
   struct ObservedOccurrence : IObservedOccurrence {
-    static inline const std::type_info& type() { return typeid(_ObservedT); }
+    static inline const std::type_info& type() {
+      return typeid(_ObservedT);
+    }
 
     _ObservedT value;
 
-    ObservedOccurrence(time_point t, _ObservedT o) : IObservedOccurrence(t), value{std::move(o)} {}
+    ObservedOccurrence(time_point t, _ObservedT o) : IObservedOccurrence(t), value{std::move(o)} {
+    }
   };
 
  private:
@@ -83,6 +87,8 @@ class P2pConnectionContextHistory {
     }
   }
 
-  inline void clear() { this->m_timeline.clear(); }
+  inline void clear() {
+    this->m_timeline.clear();
+  }
 };
 }  // namespace CryptoNote

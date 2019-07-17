@@ -26,7 +26,9 @@ std::string Xi::trim_right(std::string str) {
   return str;
 }
 
-std::string Xi::trim(std::string str) { return trim_right(trim_left(str)); }
+std::string Xi::trim(std::string str) {
+  return trim_right(trim_left(str));
+}
 
 static_assert(std::numeric_limits<uint64_t>::max() == std::numeric_limits<unsigned long long>::max(), "");
 
@@ -34,14 +36,16 @@ namespace Xi {
 template <>
 uint16_t lexical_cast<uint16_t>(const std::string &value) {
   auto const converted = std::stoul(value);
-  if (converted > std::numeric_limits<uint16_t>::max()) throw std::runtime_error{"provided value is too large"};
+  if (converted > std::numeric_limits<uint16_t>::max())
+    throw std::runtime_error{"provided value is too large"};
   return static_cast<uint16_t>(converted);
 }
 
 template <>
 uint32_t lexical_cast<uint32_t>(const std::string &value) {
   auto const converted = std::stoull(value);
-  if (converted > std::numeric_limits<uint32_t>::max()) throw std::runtime_error{"provided value is too large"};
+  if (converted > std::numeric_limits<uint32_t>::max())
+    throw std::runtime_error{"provided value is too large"};
   return static_cast<uint32_t>(converted);
 }
 

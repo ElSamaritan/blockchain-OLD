@@ -108,6 +108,8 @@ std::string RemoveExtension(const std::string& filename) {
   return filename.substr(0, pos);
 }
 
-bool HasParentPath(const std::string& path) { return path.find(GENERIC_PATH_SEPARATOR) != std::string::npos; }
+bool HasParentPath(const std::string& path) {
+  return path.find(GENERIC_PATH_SEPARATOR) != std::string::npos;
+}
 
 }  // namespace Common

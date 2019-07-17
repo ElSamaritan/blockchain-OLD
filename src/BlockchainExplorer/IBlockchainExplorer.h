@@ -30,7 +30,8 @@ namespace CryptoNote {
 
 class IBlockchainObserver {
  public:
-  virtual ~IBlockchainObserver() {}
+  virtual ~IBlockchainObserver() {
+  }
 
   virtual void blockchainUpdated(const std::vector<BlockDetails>& newBlocks,
                                  const std::vector<BlockDetails>& alternativeBlocks) {
@@ -41,7 +42,9 @@ class IBlockchainObserver {
     XI_UNUSED(newTransactions, removedTransactions);
   }
 
-  virtual void blockchainSynchronized(const BlockDetails& topBlock) { XI_UNUSED(topBlock); }
+  virtual void blockchainSynchronized(const BlockDetails& topBlock) {
+    XI_UNUSED(topBlock);
+  }
 };
 
 class IBlockchainExplorer {

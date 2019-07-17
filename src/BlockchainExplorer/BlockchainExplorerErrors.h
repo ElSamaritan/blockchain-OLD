@@ -34,7 +34,9 @@ class BlockchainExplorerErrorCategory : public std::error_category {
  public:
   static BlockchainExplorerErrorCategory INSTANCE;
 
-  virtual const char* name() const throw() override { return "BlockchainExplorerErrorCategory"; }
+  virtual const char* name() const throw() override {
+    return "BlockchainExplorerErrorCategory";
+  }
 
   virtual std::error_condition default_error_condition(int ev) const throw() override {
     return std::error_condition(ev, *this);
@@ -56,7 +58,8 @@ class BlockchainExplorerErrorCategory : public std::error_category {
   }
 
  private:
-  BlockchainExplorerErrorCategory() {}
+  BlockchainExplorerErrorCategory() {
+  }
 };
 
 }  // namespace error

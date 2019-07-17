@@ -79,14 +79,23 @@ void CommonLogger::operator()(const std::string& category, Level level, boost::p
   }
 }
 
-void CommonLogger::setPattern(const std::string& _pattern) { this->pattern = _pattern; }
+void CommonLogger::setPattern(const std::string& _pattern) {
+  this->pattern = _pattern;
+}
 
-void CommonLogger::enableCategory(const std::string& category) { disabledCategories.erase(category); }
+void CommonLogger::enableCategory(const std::string& category) {
+  disabledCategories.erase(category);
+}
 
-void CommonLogger::disableCategory(const std::string& category) { disabledCategories.insert(category); }
+void CommonLogger::disableCategory(const std::string& category) {
+  disabledCategories.insert(category);
+}
 
-void CommonLogger::setMaxLevel(Level level) { logLevel = level; }
+void CommonLogger::setMaxLevel(Level level) {
+  logLevel = level;
+}
 
-CommonLogger::CommonLogger(Level level) : logLevel(level), pattern("%D %T [%C] ") {}
+CommonLogger::CommonLogger(Level level) : logLevel(level), pattern("%D %T [%C] ") {
+}
 
 }  // namespace Logging

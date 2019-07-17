@@ -28,7 +28,8 @@ class BlockingQueue {
  public:
   typedef BlockingQueue<T, Container> ThisType;
 
-  explicit BlockingQueue(size_t maxSize = 1) : m_maxSize(maxSize), m_closed(false) {}
+  explicit BlockingQueue(size_t maxSize = 1) : m_maxSize(maxSize), m_closed(false) {
+  }
 
   template <typename TT>
   bool push(TT&& v) {
@@ -88,7 +89,9 @@ class BlockingQueue {
     return m_queue.size();
   }
 
-  size_t capacity() const { return m_maxSize; }
+  size_t capacity() const {
+    return m_maxSize;
+  }
 
  private:
   const size_t m_maxSize;
@@ -103,11 +106,14 @@ class BlockingQueue {
 template <typename QueueT>
 class GroupClose {
  public:
-  GroupClose(QueueT& queue, size_t groupSize) : m_queue(queue), m_count(groupSize) {}
+  GroupClose(QueueT& queue, size_t groupSize) : m_queue(queue), m_count(groupSize) {
+  }
 
   void close() {
-    if (m_count == 0) return;
-    if (m_count.fetch_sub(1) == 1) m_queue.close();
+    if (m_count == 0)
+      return;
+    if (m_count.fetch_sub(1) == 1)
+      m_queue.close();
   }
 
  private:

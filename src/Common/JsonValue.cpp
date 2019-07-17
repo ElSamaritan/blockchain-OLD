@@ -21,7 +21,8 @@
 
 namespace Common {
 
-JsonValue::JsonValue() : type(NIL) {}
+JsonValue::JsonValue() : type(NIL) {
+}
 
 JsonValue::JsonValue(const JsonValue& other) {
   switch (other.type) {
@@ -111,11 +112,14 @@ JsonValue::JsonValue(Array&& value) {
   type = ARRAY;
 }
 
-JsonValue::JsonValue(Bool value) : type(BOOL), valueBool(value) {}
+JsonValue::JsonValue(Bool value) : type(BOOL), valueBool(value) {
+}
 
-JsonValue::JsonValue(Integer value) : type(INTEGER), valueInteger(value) {}
+JsonValue::JsonValue(Integer value) : type(INTEGER), valueInteger(value) {
+}
 
-JsonValue::JsonValue(Nil) : type(NIL) {}
+JsonValue::JsonValue(Nil) : type(NIL) {
+}
 
 JsonValue::JsonValue(const Object& value) {
   new (valueObject) Object(value);
@@ -127,7 +131,8 @@ JsonValue::JsonValue(Object&& value) {
   type = OBJECT;
 }
 
-JsonValue::JsonValue(Real value) : type(REAL), valueReal(value) {}
+JsonValue::JsonValue(Real value) : type(REAL), valueReal(value) {
+}
 
 JsonValue::JsonValue(std::string_view value) {
   new (valueString) String(value);
@@ -144,7 +149,9 @@ JsonValue::JsonValue(String&& value) {
   type = STRING;
 }
 
-JsonValue::~JsonValue() { destructValue(); }
+JsonValue::~JsonValue() {
+  destructValue();
+}
 
 JsonValue& JsonValue::operator=(const JsonValue& other) {
   if (type != other.type) {
@@ -386,21 +393,37 @@ JsonValue& JsonValue::operator=(String&& value) {
   return *this;
 }
 
-bool JsonValue::isArray() const { return type == ARRAY; }
+bool JsonValue::isArray() const {
+  return type == ARRAY;
+}
 
-bool JsonValue::isBool() const { return type == BOOL; }
+bool JsonValue::isBool() const {
+  return type == BOOL;
+}
 
-bool JsonValue::isInteger() const { return type == INTEGER; }
+bool JsonValue::isInteger() const {
+  return type == INTEGER;
+}
 
-bool JsonValue::isNil() const { return type == NIL; }
+bool JsonValue::isNil() const {
+  return type == NIL;
+}
 
-bool JsonValue::isObject() const { return type == OBJECT; }
+bool JsonValue::isObject() const {
+  return type == OBJECT;
+}
 
-bool JsonValue::isReal() const { return type == REAL; }
+bool JsonValue::isReal() const {
+  return type == REAL;
+}
 
-bool JsonValue::isString() const { return type == STRING; }
+bool JsonValue::isString() const {
+  return type == STRING;
+}
 
-JsonValue::Type JsonValue::getType() const { return type; }
+JsonValue::Type JsonValue::getType() const {
+  return type;
+}
 
 JsonValue::Array& JsonValue::getArray() {
   if (type != ARRAY) {
@@ -519,11 +542,17 @@ JsonValue& JsonValue::pushBack(JsonValue&& value) {
   return reinterpret_cast<Array*>(valueArray)->back();
 }
 
-JsonValue& JsonValue::operator()(const Key& key) { return getObject().at(key); }
+JsonValue& JsonValue::operator()(const Key& key) {
+  return getObject().at(key);
+}
 
-const JsonValue& JsonValue::operator()(const Key& key) const { return getObject().at(key); }
+const JsonValue& JsonValue::operator()(const Key& key) const {
+  return getObject().at(key);
+}
 
-bool JsonValue::contains(const Key& key) const { return getObject().count(key) > 0; }
+bool JsonValue::contains(const Key& key) const {
+  return getObject().count(key) > 0;
+}
 
 JsonValue& JsonValue::insert(const Key& key, const JsonValue& value) {
   return getObject().emplace(key, value).first->second;
@@ -543,7 +572,9 @@ JsonValue& JsonValue::set(const Key& key, JsonValue&& value) {
   return *this;
 }
 
-size_t JsonValue::erase(const Key& key) { return getObject().erase(key); }
+size_t JsonValue::erase(const Key& key) {
+  return getObject().erase(key);
+}
 
 JsonValue JsonValue::fromString(const std::string& source) {
   JsonValue jsonValue;

@@ -25,16 +25,20 @@
 
 #include "Xi/Blockchain/Block/Height.hpp"
 
-Xi::Blockchain::Block::Offset::Offset(Xi::Blockchain::Block::Offset::value_type value) : m_native{value} {}
+Xi::Blockchain::Block::Offset::Offset(Xi::Blockchain::Block::Offset::value_type value) : m_native{value} {
+}
 
 Xi::Blockchain::Block::Offset Xi::Blockchain::Block::Offset::fromNative(
     const Xi::Blockchain::Block::Offset::value_type value) {
   return Offset{value};
 }
 
-Xi::Blockchain::Block::Offset::Offset() : m_native{0} {}
+Xi::Blockchain::Block::Offset::Offset() : m_native{0} {
+}
 
-int64_t Xi::Blockchain::Block::Offset::native() const { return m_native; }
+int64_t Xi::Blockchain::Block::Offset::native() const {
+  return m_native;
+}
 
 bool Xi::Blockchain::Block::Offset::operator==(const Xi::Blockchain::Block::Offset rhs) const {
   return m_native == rhs.m_native;

@@ -30,11 +30,16 @@
 const Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::Null{std::numeric_limits<value_type>::max()};
 const Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::Genesis{1};
 
-Xi::Blockchain::Block::Height::Height(Xi::Blockchain::Block::Height::value_type height) : m_height{height} {}
+Xi::Blockchain::Block::Height::Height(Xi::Blockchain::Block::Height::value_type height) : m_height{height} {
+}
 
-Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::min() { return Genesis; }
+Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::min() {
+  return Genesis;
+}
 
-Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::max() { return Height{50'000'000}; }
+Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::max() {
+  return Height{50'000'000};
+}
 
 Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::fromIndex(
     Xi::Blockchain::Block::Height::value_type index) {
@@ -59,7 +64,8 @@ Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::fromSize(size_t nat
   }
 }
 
-Xi::Blockchain::Block::Height::Height() : m_height{Null.native()} {}
+Xi::Blockchain::Block::Height::Height() : m_height{Null.native()} {
+}
 
 void Xi::Blockchain::Block::Height::displace(signed_value_type offset) {
   if (isNull()) {
@@ -109,16 +115,22 @@ Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::next(size_t offset)
   return reval;
 }
 
-Xi::Blockchain::Block::Height::value_type Xi::Blockchain::Block::Height::native() const { return m_height; }
+Xi::Blockchain::Block::Height::value_type Xi::Blockchain::Block::Height::native() const {
+  return m_height;
+}
 
 Xi::Blockchain::Block::Height::value_type Xi::Blockchain::Block::Height::toIndex() const {
   XI_RETURN_EC_IF_NOT(m_height > 0, std::numeric_limits<value_type>::max());
   return m_height - 1;
 }
 
-Xi::Blockchain::Block::Height::value_type Xi::Blockchain::Block::Height::toSize() const { return m_height; }
+Xi::Blockchain::Block::Height::value_type Xi::Blockchain::Block::Height::toSize() const {
+  return m_height;
+}
 
-bool Xi::Blockchain::Block::Height::isNull() const { return *this == Height::Null; }
+bool Xi::Blockchain::Block::Height::isNull() const {
+  return *this == Height::Null;
+}
 
 bool Xi::Blockchain::Block::Height::operator==(const Xi::Blockchain::Block::Height rhs) const {
   return m_height == rhs.m_height;

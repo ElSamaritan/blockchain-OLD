@@ -47,23 +47,39 @@ Xi::Result<Crypto::PublicKey> Crypto::PublicKey::fromString(const std::string &h
   XI_ERROR_CATCH();
 }
 
-Crypto::PublicKey::PublicKey() { nullify(); }
+Crypto::PublicKey::PublicKey() {
+  nullify();
+}
 
-Crypto::PublicKey::PublicKey(Crypto::PublicKey::array_type raw) : array_type(std::move(raw)) {}
+Crypto::PublicKey::PublicKey(Crypto::PublicKey::array_type raw) : array_type(std::move(raw)) {
+}
 
-Crypto::PublicKey::~PublicKey() {}
+Crypto::PublicKey::~PublicKey() {
+}
 
-std::string Crypto::PublicKey::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+std::string Crypto::PublicKey::toString() const {
+  return Common::toHex(data(), size() * sizeof(value_type));
+}
 
-bool Crypto::PublicKey::isNull() const { return *this == PublicKey::Null; }
+bool Crypto::PublicKey::isNull() const {
+  return *this == PublicKey::Null;
+}
 
-Xi::ConstByteSpan Crypto::PublicKey::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
+Xi::ConstByteSpan Crypto::PublicKey::span() const {
+  return Xi::ConstByteSpan{data(), bytes()};
+}
 
-Xi::ByteSpan Crypto::PublicKey::span() { return Xi::ByteSpan{data(), bytes()}; }
+Xi::ByteSpan Crypto::PublicKey::span() {
+  return Xi::ByteSpan{data(), bytes()};
+}
 
-bool Crypto::PublicKey::isValid() const { return check_key(*this) && !isNull(); }
+bool Crypto::PublicKey::isValid() const {
+  return check_key(*this) && !isNull();
+}
 
-void Crypto::PublicKey::nullify() { fill(0); }
+void Crypto::PublicKey::nullify() {
+  fill(0);
+}
 
 bool Crypto::serialize(Crypto::PublicKey &publicKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(publicKey.data(), PublicKey::bytes(), name), false);

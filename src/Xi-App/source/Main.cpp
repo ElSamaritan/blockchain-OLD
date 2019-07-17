@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -23,4 +23,6 @@
 
 #include "Xi/App/Application.h"
 
-int main(int argc, char** argv) { return Xi::App::Application::instance().exec(argc, argv); }
+int main(int argc, char** argv) {
+  return Xi::App::Application::instance().exec(argc, argv);
+}

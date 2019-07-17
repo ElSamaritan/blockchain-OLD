@@ -27,11 +27,20 @@ namespace CryptoNote {
 class INodeObserver {
  public:
   virtual ~INodeObserver() = default;
-  virtual void peerCountUpdated(size_t count) { XI_UNUSED(count); }
-  virtual void localBlockchainUpdated(BlockHeight height) { XI_UNUSED(height); }
-  virtual void lastKnownBlockHeightUpdated(BlockHeight height) { XI_UNUSED(height); }
-  virtual void poolChanged() {}
-  virtual void blockchainSynchronized(BlockHeight topHeight) { XI_UNUSED(topHeight); }
+  virtual void peerCountUpdated(size_t count) {
+    XI_UNUSED(count);
+  }
+  virtual void localBlockchainUpdated(BlockHeight height) {
+    XI_UNUSED(height);
+  }
+  virtual void lastKnownBlockHeightUpdated(BlockHeight height) {
+    XI_UNUSED(height);
+  }
+  virtual void poolChanged() {
+  }
+  virtual void blockchainSynchronized(BlockHeight topHeight) {
+    XI_UNUSED(topHeight);
+  }
   virtual void chainSwitched(BlockHeight newTopHeight, BlockHeight commonRoot,
                              const std::vector<Crypto::Hash>& hashes) {
     XI_UNUSED(newTopHeight, commonRoot, hashes);
@@ -78,7 +87,8 @@ class INode {
  public:
   typedef std::function<void(std::error_code)> Callback;
 
-  virtual ~INode() {}
+  virtual ~INode() {
+  }
   virtual bool addObserver(INodeObserver* observer) = 0;
   virtual bool removeObserver(INodeObserver* observer) = 0;
 

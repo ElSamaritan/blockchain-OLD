@@ -21,7 +21,8 @@ namespace CryptoNote {
 
 namespace JsonRpc {
 
-JsonRpcError::JsonRpcError() : code(0) {}
+JsonRpcError::JsonRpcError() : code(0) {
+}
 
 JsonRpcError::JsonRpcError(int c) : code(c) {
   switch (c) {
@@ -49,7 +50,8 @@ JsonRpcError::JsonRpcError(int c) : code(c) {
   }
 }
 
-JsonRpcError::JsonRpcError(int c, const std::string& msg) : code(c), message(msg) {}
+JsonRpcError::JsonRpcError(int c, const std::string& msg) : code(c), message(msg) {
+}
 
 void invokeJsonRpcCommand(HttpClient& httpClient, JsonRpcRequest& jsReq, JsonRpcResponse& jsRes) {
   using namespace Xi::Http;

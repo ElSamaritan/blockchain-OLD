@@ -72,7 +72,8 @@ struct WalletTransactionDto {
   uint64_t unlockTime;
   std::string extra;
 
-  WalletTransactionDto() {}
+  WalletTransactionDto() {
+  }
 
   WalletTransactionDto(const CryptoNote::WalletTransaction& wallet) {
     state = wallet.state;
@@ -89,7 +90,8 @@ struct WalletTransactionDto {
 
 // DO NOT CHANGE IT
 struct WalletTransferDto {
-  WalletTransferDto(uint32_t version) : version(version) {}
+  WalletTransferDto(uint32_t version) : version(version) {
+  }
   WalletTransferDto(const CryptoNote::WalletTransfer& tr, uint32_t version) : WalletTransferDto(version) {
     address = tr.address;
     amount = tr.amount;
@@ -241,7 +243,8 @@ void WalletSerializerV1::CryptoContext::incIv() {
 WalletSerializerV1::WalletSerializerV1(ITransfersObserver& transfersObserver, Crypto::PublicKey& viewPublicKey,
                                        Crypto::SecretKey& viewSecretKey, uint64_t& actualBalance,
                                        uint64_t& pendingBalance, WalletsContainer& walletsContainer,
-                                       TransfersSyncronizer& synchronizer, UnlockHeightTransactionJobs& unlockTransactions,
+                                       TransfersSyncronizer& synchronizer,
+                                       UnlockHeightTransactionJobs& unlockTransactions,
                                        WalletTransactions& transactions, WalletTransfers& transfers,
                                        UncommitedTransactions& uncommitedTransactions, uint32_t transactionSoftLockTime)
     : m_transfersObserver(transfersObserver),
@@ -255,7 +258,8 @@ WalletSerializerV1::WalletSerializerV1(ITransfersObserver& transfersObserver, Cr
       m_transactions(transactions),
       m_transfers(transfers),
       m_uncommitedTransactions(uncommitedTransactions),
-      m_transactionSoftLockTime(transactionSoftLockTime) {}
+      m_transactionSoftLockTime(transactionSoftLockTime) {
+}
 
 void WalletSerializerV1::load(const Crypto::chacha8_key& key, Common::IInputStream& source) {
   CryptoNote::BinaryInputStreamSerializer s(source);
@@ -443,7 +447,9 @@ void WalletSerializerV1::loadSecretKey(Common::IInputStream& source, CryptoConte
   cryptoContext.incIv();
 }
 
-void WalletSerializerV1::checkKeys() { throwIfKeysMismatch(m_viewSecretKey, m_viewPublicKey); }
+void WalletSerializerV1::checkKeys() {
+  throwIfKeysMismatch(m_viewSecretKey, m_viewPublicKey);
+}
 
 void WalletSerializerV1::loadFlags(bool& details, bool& cache, Common::IInputStream& source,
                                    CryptoContext& cryptoContext) {

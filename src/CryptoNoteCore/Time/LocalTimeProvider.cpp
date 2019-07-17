@@ -32,4 +32,6 @@ Xi::Result<CryptoNote::PosixTimestamp> CryptoNote::LocalRealTimeProvider::posixN
   }
 }
 
-CryptoNote::LocalTime CryptoNote::LocalRealTimeProvider::localNow() const { return std::chrono::system_clock::now(); }
+CryptoNote::LocalTime CryptoNote::LocalRealTimeProvider::localNow() const {
+  return std::chrono::system_clock::now();
+}

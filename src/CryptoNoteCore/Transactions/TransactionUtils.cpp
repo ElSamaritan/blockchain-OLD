@@ -37,7 +37,8 @@ bool checkInputsKeyimagesDiff(const CryptoNote::TransactionPrefix& tx) {
   std::unordered_set<Crypto::KeyImage> ki;
   for (const auto& in : tx.inputs) {
     if (auto keyInput = std::get_if<KeyInput>(&in)) {
-      if (!ki.insert(keyInput->keyImage).second) return false;
+      if (!ki.insert(keyInput->keyImage).second)
+        return false;
     }
   }
 
@@ -67,7 +68,9 @@ uint64_t getTransactionInputAmount(const Transaction& transaction) {
                          [](uint64_t acc, const auto& input) { return acc + getTransactionInputAmount(input); });
 }
 
-uint64_t getTransactionOutputAmount(const TransactionOutput& out) { return out.amount; }
+uint64_t getTransactionOutputAmount(const TransactionOutput& out) {
+  return out.amount;
+}
 
 uint64_t getTransactionOutputAmount(const Transaction& transaction) {
   return std::accumulate(transaction.outputs.begin(), transaction.outputs.end(), 0ULL,
@@ -102,7 +105,9 @@ PublicKey getTransactionOutputKey(const TransactionOutputTarget& target) {
   }
 }
 
-PublicKey getTransactionOutputKey(const TransactionOutput& output) { return getTransactionOutputKey(output.target); }
+PublicKey getTransactionOutputKey(const TransactionOutput& output) {
+  return getTransactionOutputKey(output.target);
+}
 
 std::vector<PublicKey> getTransactionOutputKeys(const Transaction& transaction) {
   std::vector<PublicKey> keys;
@@ -211,7 +216,8 @@ bool findOutputsToAccount(const CryptoNote::TransactionPrefix& transaction, cons
 
 std::vector<uint32_t> getTransactionInputIndices(const KeyInput& input) {
   std::vector<uint32_t> indices{};
-  if (input.outputIndices.empty()) return indices;
+  if (input.outputIndices.empty())
+    return indices;
   indices.resize(input.outputIndices.size());
   indices[0] = input.outputIndices[0];
   for (size_t i = 1; i < input.outputIndices.size(); ++i) {

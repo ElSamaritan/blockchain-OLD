@@ -59,7 +59,9 @@ class MesageQueueGuard {
     container.addMessageQueue(messageQueue);
   }
 
-  ~MesageQueueGuard() { container.removeMessageQueue(messageQueue); }
+  ~MesageQueueGuard() {
+    container.removeMessageQueue(messageQueue);
+  }
 
  private:
   MessageQueueContainer& container;
@@ -68,7 +70,8 @@ class MesageQueueGuard {
 
 template <class MessageType>
 MessageQueue<MessageType>::MessageQueue(System::Dispatcher& dispatch)
-    : dispatcher(dispatch), event(dispatch), stopped(false) {}
+    : dispatcher(dispatch), event(dispatch), stopped(false) {
+}
 
 template <class MessageType>
 void MessageQueue<MessageType>::wait() {

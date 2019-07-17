@@ -29,7 +29,9 @@ class DataBaseErrorCategory : public std::error_category {
  public:
   static DataBaseErrorCategory INSTANCE;
 
-  virtual const char* name() const throw() override { return "DataBaseErrorCategory"; }
+  virtual const char* name() const throw() override {
+    return "DataBaseErrorCategory";
+  }
 
   virtual std::error_condition default_error_condition(int ev) const throw() override {
     return std::error_condition(ev, *this);
@@ -51,7 +53,8 @@ class DataBaseErrorCategory : public std::error_category {
   }
 
  private:
-  DataBaseErrorCategory() {}
+  DataBaseErrorCategory() {
+  }
 };
 
 }  // namespace error

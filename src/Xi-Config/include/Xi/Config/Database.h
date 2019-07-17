@@ -30,14 +30,28 @@
 namespace Xi {
 namespace Config {
 namespace Database {
-inline std::string blocksFilename() { return "blocks"; }
-inline std::string blockIndicesFilename() { return "block-indices"; }
-inline std::string pooldataFilename() { return "transaction-pool"; }
+inline std::string blocksFilename() {
+  return "blocks";
+}
+inline std::string blockIndicesFilename() {
+  return "block-indices";
+}
+inline std::string pooldataFilename() {
+  return "transaction-pool";
+}
 
-inline constexpr uint64_t writeBufferSize() { return 256_MB; }
-inline constexpr uint64_t readBufferSize() { return 10_MB; }
-inline constexpr uint16_t maximumOpenFiles() { return 100; }
-inline constexpr uint16_t backgroundThreads() { return 2; }
+inline constexpr uint64_t writeBufferSize() {
+  return 256_MB;
+}
+inline constexpr uint64_t readBufferSize() {
+  return 10_MB;
+}
+inline constexpr uint16_t maximumOpenFiles() {
+  return 100;
+}
+inline constexpr uint16_t backgroundThreads() {
+  return 2;
+}
 }  // namespace Database
 }  // namespace Config
 }  // namespace Xi

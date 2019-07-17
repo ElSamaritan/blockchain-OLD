@@ -116,7 +116,8 @@ struct TransactionsInBlockInfo {
 
 class IWallet {
  public:
-  virtual ~IWallet() {}
+  virtual ~IWallet() {
+  }
 
   virtual void initialize(const std::string& path, const std::string& password) = 0;
   virtual void initializeWithViewKey(const std::string& path, const std::string& password,

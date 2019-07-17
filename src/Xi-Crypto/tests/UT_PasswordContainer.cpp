@@ -49,7 +49,9 @@ class XI_TESTSUITE : public ::testing::Test {
   }
 };
 
-TEST_F(XI_TESTSUITE, AcceptsPassword) { EXPECT_TRUE(container->validate(password)); }
+TEST_F(XI_TESTSUITE, AcceptsPassword) {
+  EXPECT_TRUE(container->validate(password));
+}
 
 TEST_F(XI_TESTSUITE, DeclinesPassword) {
   EXPECT_FALSE(container->validate(std::string{password.rbegin(), password.rend()}));

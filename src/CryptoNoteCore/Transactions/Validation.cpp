@@ -44,7 +44,9 @@ Error CryptoNote::validateExtra(const CryptoNote::Transaction &tx) {
   return Error::VALIDATION_SUCCESS;
 }
 
-bool CryptoNote::validateExtraSize(const CryptoNote::Transaction &tx) { return tx.extra.size() <= TX_EXTRA_MAX_SIZE; }
+bool CryptoNote::validateExtraSize(const CryptoNote::Transaction &tx) {
+  return tx.extra.size() <= TX_EXTRA_MAX_SIZE;
+}
 
 bool CryptoNote::validateExtraPublicKeys(const std::vector<TransactionExtraField> &fields) {
   const auto isPublicKey = [](const auto &field) { return field.type() == typeid(TransactionExtraPublicKey); };

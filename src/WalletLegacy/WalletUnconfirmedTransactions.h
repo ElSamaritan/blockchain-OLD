@@ -51,7 +51,8 @@ struct hash<CryptoNote::TransactionOutputId> {
 namespace CryptoNote {
 
 struct UnconfirmedTransferDetails {
-  UnconfirmedTransferDetails() : amount(0), sentTime(0), transactionId(WALLET_LEGACY_INVALID_TRANSACTION_ID) {}
+  UnconfirmedTransferDetails() : amount(0), sentTime(0), transactionId(WALLET_LEGACY_INVALID_TRANSACTION_ID) {
+  }
 
   CryptoNote::Transaction tx;
   uint64_t amount;

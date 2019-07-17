@@ -33,96 +33,94 @@ static const xi_byte_t xi_leb_negative_mask = 0x40;
 static const xi_byte_t xi_leb_negative_shift = 6;
 static const xi_byte_t xi_leb_first_byte_mask = 0xC0;
 
-size_t xi_encoding_varint_decode_int8(const xi_byte_t *source, const size_t count, int8_t *out)
-{
-    if (count < 1) {
-      return XI_VARINT_DECODE_OUT_OF_MEMORY;
-    }
+size_t xi_encoding_varint_decode_int8(const xi_byte_t *source, const size_t count, int8_t *out) {
+  if (count < 1) {
+    return XI_VARINT_DECODE_OUT_OF_MEMORY;
+  }
 
-    xi_byte_t byte = source[0];
+  xi_byte_t byte = source[0];
 
-    if (byte == xi_leb_negative_mask) {
-      *out = CHAR_MIN;
-      return 1;
-    }
+  if (byte == xi_leb_negative_mask) {
+    *out = CHAR_MIN;
+    return 1;
+  }
 
-    *out = (int8_t)((byte & (~xi_leb_first_byte_mask)));
-    size_t i = 1;
+  *out = (int8_t)((byte & (~xi_leb_first_byte_mask)));
+  size_t i = 1;
 
-    if ((byte & xi_leb_next_mask) != 0) {
-      for (size_t shift = xi_leb_negative_shift; 1; shift += xi_leb_next_shift) {
-        if (i >= count) {
-          return XI_VARINT_DECODE_OUT_OF_MEMORY;
-        } else if (shift > 7) {
-          return XI_VARINT_DECODE_OVERFLOW;
-        }
-        byte = source[i++];
-        if (byte == 0) {
-            if(i == 2 && source[0] == xi_leb_next_mask) {
-              *out = CHAR_MAX;
-              return 2;
-            } else {
-              return XI_VARINT_DECODE_NONE_CANONICAL;
-            }
-        }
-        const size_t bitsLeft = 7 - shift;
-        if(bitsLeft < 8) {
-          if(byte & (0xFF << (8 - bitsLeft))) {
-            return XI_VARINT_DECODE_NONE_CANONICAL;
-          }
-        }
-        *out |= ((int8_t)((byte & (~xi_leb_next_mask))) << shift);
-        if ((byte & xi_leb_next_mask) == 0) {
-          break;
-        }
-      }
-    }
-
-    if ((source[0] & xi_leb_negative_mask) != 0) {
-      *out *= -1;
-    }
-
-    if(*out == CHAR_MAX || *out == CHAR_MIN) {
-      return XI_VARINT_DECODE_NONE_CANONICAL;
-    }
-    return i;
-}
-
-size_t xi_encoding_varint_decode_uint8(const xi_byte_t *source, const size_t count, uint8_t *out)
-{
-    *out = 0;
-    size_t i = 0;
-    for (size_t shift = 0; 1; shift += xi_leb_next_shift) {
+  if ((byte & xi_leb_next_mask) != 0) {
+    for (size_t shift = xi_leb_negative_shift; 1; shift += xi_leb_next_shift) {
       if (i >= count) {
         return XI_VARINT_DECODE_OUT_OF_MEMORY;
-      } else if (shift > 8) {
+      } else if (shift > 7) {
         return XI_VARINT_DECODE_OVERFLOW;
       }
-      xi_byte_t byte = source[i++];
-      if (byte == 0 && shift != 0) {
-          if(i == 2 && source[0] == xi_leb_next_mask) {
-            *out = UCHAR_MAX;
-            return 2;
-          } else {
-            return XI_VARINT_DECODE_NONE_CANONICAL;
-          }
-      }
-      const size_t bitsLeft = 8 - shift;
-      if(bitsLeft < 8) {
-        if(byte & (0xFF << (8 - bitsLeft))) {
+      byte = source[i++];
+      if (byte == 0) {
+        if (i == 2 && source[0] == xi_leb_next_mask) {
+          *out = CHAR_MAX;
+          return 2;
+        } else {
           return XI_VARINT_DECODE_NONE_CANONICAL;
         }
       }
-      *out |= ((uint8_t)((byte & (~xi_leb_next_mask))) << shift);
+      const size_t bitsLeft = 7 - shift;
+      if (bitsLeft < 8) {
+        if (byte & (0xFF << (8 - bitsLeft))) {
+          return XI_VARINT_DECODE_NONE_CANONICAL;
+        }
+      }
+      *out |= ((int8_t)((byte & (~xi_leb_next_mask))) << shift);
       if ((byte & xi_leb_next_mask) == 0) {
         break;
       }
     }
+  }
 
-    if(*out == UCHAR_MAX) {
-      return XI_VARINT_DECODE_NONE_CANONICAL;
+  if ((source[0] & xi_leb_negative_mask) != 0) {
+    *out *= -1;
+  }
+
+  if (*out == CHAR_MAX || *out == CHAR_MIN) {
+    return XI_VARINT_DECODE_NONE_CANONICAL;
+  }
+  return i;
+}
+
+size_t xi_encoding_varint_decode_uint8(const xi_byte_t *source, const size_t count, uint8_t *out) {
+  *out = 0;
+  size_t i = 0;
+  for (size_t shift = 0; 1; shift += xi_leb_next_shift) {
+    if (i >= count) {
+      return XI_VARINT_DECODE_OUT_OF_MEMORY;
+    } else if (shift > 8) {
+      return XI_VARINT_DECODE_OVERFLOW;
     }
-    return i;
+    xi_byte_t byte = source[i++];
+    if (byte == 0 && shift != 0) {
+      if (i == 2 && source[0] == xi_leb_next_mask) {
+        *out = UCHAR_MAX;
+        return 2;
+      } else {
+        return XI_VARINT_DECODE_NONE_CANONICAL;
+      }
+    }
+    const size_t bitsLeft = 8 - shift;
+    if (bitsLeft < 8) {
+      if (byte & (0xFF << (8 - bitsLeft))) {
+        return XI_VARINT_DECODE_NONE_CANONICAL;
+      }
+    }
+    *out |= ((uint8_t)((byte & (~xi_leb_next_mask))) << shift);
+    if ((byte & xi_leb_next_mask) == 0) {
+      break;
+    }
+  }
+
+  if (*out == UCHAR_MAX) {
+    return XI_VARINT_DECODE_NONE_CANONICAL;
+  }
+  return i;
 }
 
 size_t xi_encoding_varint_decode_int16(const xi_byte_t *source, const size_t count, int16_t *out) {
@@ -149,7 +147,7 @@ size_t xi_encoding_varint_decode_int16(const xi_byte_t *source, const size_t cou
       }
       byte = source[i++];
       if (byte == 0) {
-        if(i == 2 && source[0] == xi_leb_next_mask) {
+        if (i == 2 && source[0] == xi_leb_next_mask) {
           *out = SHRT_MAX;
           return 2;
         } else {
@@ -157,8 +155,8 @@ size_t xi_encoding_varint_decode_int16(const xi_byte_t *source, const size_t cou
         }
       }
       const size_t bitsLeft = 15 - shift;
-      if(bitsLeft < 8) {
-        if(byte & (0xFF << (8 - bitsLeft))) {
+      if (bitsLeft < 8) {
+        if (byte & (0xFF << (8 - bitsLeft))) {
           return XI_VARINT_DECODE_NONE_CANONICAL;
         }
       }
@@ -173,14 +171,13 @@ size_t xi_encoding_varint_decode_int16(const xi_byte_t *source, const size_t cou
     *out *= -1;
   }
 
-  if(*out == SHRT_MAX || *out == SHRT_MIN) {
+  if (*out == SHRT_MAX || *out == SHRT_MIN) {
     return XI_VARINT_DECODE_NONE_CANONICAL;
   }
   return i;
 }
 
-size_t xi_encoding_varint_decode_uint16(const xi_byte_t *source, const size_t count,
-                                        uint16_t *out) {
+size_t xi_encoding_varint_decode_uint16(const xi_byte_t *source, const size_t count, uint16_t *out) {
   *out = 0;
   size_t i = 0;
   for (size_t shift = 0; 1; shift += xi_leb_next_shift) {
@@ -191,16 +188,16 @@ size_t xi_encoding_varint_decode_uint16(const xi_byte_t *source, const size_t co
     }
     xi_byte_t byte = source[i++];
     if (byte == 0 && shift != 0) {
-        if(i == 2 && source[0] == xi_leb_next_mask) {
-          *out = USHRT_MAX;
-          return 2;
-        } else {
-          return XI_VARINT_DECODE_NONE_CANONICAL;
-        }
+      if (i == 2 && source[0] == xi_leb_next_mask) {
+        *out = USHRT_MAX;
+        return 2;
+      } else {
+        return XI_VARINT_DECODE_NONE_CANONICAL;
+      }
     }
     const size_t bitsLeft = 16 - shift;
-    if(bitsLeft < 8) {
-      if(byte & (0xFF << (8 - bitsLeft))) {
+    if (bitsLeft < 8) {
+      if (byte & (0xFF << (8 - bitsLeft))) {
         return XI_VARINT_DECODE_NONE_CANONICAL;
       }
     }
@@ -210,7 +207,7 @@ size_t xi_encoding_varint_decode_uint16(const xi_byte_t *source, const size_t co
     }
   }
 
-  if(*out == USHRT_MAX) {
+  if (*out == USHRT_MAX) {
     return XI_VARINT_DECODE_NONE_CANONICAL;
   }
   return i;
@@ -240,16 +237,16 @@ size_t xi_encoding_varint_decode_int32(const xi_byte_t *source, const size_t cou
       }
       byte = source[i++];
       if (byte == 0) {
-          if(i == 2 && source[0] == xi_leb_next_mask) {
-            *out = INT_MAX;
-            return 2;
-          } else {
-            return XI_VARINT_DECODE_NONE_CANONICAL;
-          }
+        if (i == 2 && source[0] == xi_leb_next_mask) {
+          *out = INT_MAX;
+          return 2;
+        } else {
+          return XI_VARINT_DECODE_NONE_CANONICAL;
+        }
       }
       const size_t bitsLeft = 31 - shift;
-      if(bitsLeft < 8) {
-        if(byte & (0xFF << (8 - bitsLeft))) {
+      if (bitsLeft < 8) {
+        if (byte & (0xFF << (8 - bitsLeft))) {
           return XI_VARINT_DECODE_NONE_CANONICAL;
         }
       }
@@ -264,14 +261,13 @@ size_t xi_encoding_varint_decode_int32(const xi_byte_t *source, const size_t cou
     *out *= -1;
   }
 
-  if(*out == INT_MAX || *out == INT_MIN) {
+  if (*out == INT_MAX || *out == INT_MIN) {
     return XI_VARINT_DECODE_NONE_CANONICAL;
   }
   return i;
 }
 
-size_t xi_encoding_varint_decode_uint32(const xi_byte_t *source, const size_t count,
-                                        uint32_t *out) {
+size_t xi_encoding_varint_decode_uint32(const xi_byte_t *source, const size_t count, uint32_t *out) {
   *out = 0;
   size_t i = 0;
   for (size_t shift = 0; 1; shift += xi_leb_next_shift) {
@@ -282,7 +278,7 @@ size_t xi_encoding_varint_decode_uint32(const xi_byte_t *source, const size_t co
     }
     xi_byte_t byte = source[i++];
     if (byte == 0 && shift != 0) {
-      if(i == 2 && source[0] == xi_leb_next_mask) {
+      if (i == 2 && source[0] == xi_leb_next_mask) {
         *out = UINT_MAX;
         return 2;
       } else {
@@ -290,8 +286,8 @@ size_t xi_encoding_varint_decode_uint32(const xi_byte_t *source, const size_t co
       }
     }
     const size_t bitsLeft = 32 - shift;
-    if(bitsLeft < 8) {
-      if(byte & (0xFF << (8 - bitsLeft))) {
+    if (bitsLeft < 8) {
+      if (byte & (0xFF << (8 - bitsLeft))) {
         return XI_VARINT_DECODE_NONE_CANONICAL;
       }
     }
@@ -301,7 +297,7 @@ size_t xi_encoding_varint_decode_uint32(const xi_byte_t *source, const size_t co
     }
   }
 
-  if(*out == UINT_MAX) {
+  if (*out == UINT_MAX) {
     return XI_VARINT_DECODE_NONE_CANONICAL;
   }
   return i;
@@ -330,7 +326,7 @@ size_t xi_encoding_varint_decode_int64(const xi_byte_t *source, const size_t cou
       }
       byte = source[i++];
       if (byte == 0) {
-        if(i == 2 && source[0] == xi_leb_next_mask) {
+        if (i == 2 && source[0] == xi_leb_next_mask) {
           *out = LLONG_MAX;
           return 2;
         } else {
@@ -338,8 +334,8 @@ size_t xi_encoding_varint_decode_int64(const xi_byte_t *source, const size_t cou
         }
       }
       const size_t bitsLeft = 63 - shift;
-      if(bitsLeft < 8) {
-        if(byte & (0xFF << (8 - bitsLeft))) {
+      if (bitsLeft < 8) {
+        if (byte & (0xFF << (8 - bitsLeft))) {
           return XI_VARINT_DECODE_NONE_CANONICAL;
         }
       }
@@ -354,14 +350,13 @@ size_t xi_encoding_varint_decode_int64(const xi_byte_t *source, const size_t cou
     *out *= -1;
   }
 
-  if(*out == LLONG_MAX || *out == LLONG_MIN) {
+  if (*out == LLONG_MAX || *out == LLONG_MIN) {
     return XI_VARINT_DECODE_NONE_CANONICAL;
   }
   return i;
 }
 
-size_t xi_encoding_varint_decode_uint64(const xi_byte_t *source, const size_t count,
-                                        uint64_t *out) {
+size_t xi_encoding_varint_decode_uint64(const xi_byte_t *source, const size_t count, uint64_t *out) {
   *out = 0;
   size_t i = 0;
   for (size_t shift = 0; 1; shift += xi_leb_next_shift) {
@@ -373,7 +368,7 @@ size_t xi_encoding_varint_decode_uint64(const xi_byte_t *source, const size_t co
     xi_byte_t byte = source[i++];
 
     if (byte == 0 && shift != 0) {
-      if(i == 2 && source[0] == xi_leb_next_mask) {
+      if (i == 2 && source[0] == xi_leb_next_mask) {
         *out = ULLONG_MAX;
         return 2;
       } else {
@@ -381,8 +376,8 @@ size_t xi_encoding_varint_decode_uint64(const xi_byte_t *source, const size_t co
       }
     }
     const size_t bitsLeft = 64 - shift;
-    if(bitsLeft < 8) {
-      if(byte & (0xFF << (8 - bitsLeft))) {
+    if (bitsLeft < 8) {
+      if (byte & (0xFF << (8 - bitsLeft))) {
         return XI_VARINT_DECODE_NONE_CANONICAL;
       }
     }
@@ -392,82 +387,79 @@ size_t xi_encoding_varint_decode_uint64(const xi_byte_t *source, const size_t co
     }
   }
 
-  if(*out == ULLONG_MAX) {
+  if (*out == ULLONG_MAX) {
     return XI_VARINT_DECODE_NONE_CANONICAL;
   }
   return i;
 }
 
-size_t xi_encoding_varint_encode_int8(int8_t value, xi_byte_t *dest, const size_t count)
-{
-    if (count < 1) {
+size_t xi_encoding_varint_encode_int8(int8_t value, xi_byte_t *dest, const size_t count) {
+  if (count < 1) {
+    return XI_VARINT_ENCODE_OUT_OF_MEMORY;
+  }
+
+  if (value == CHAR_MIN) {
+    dest[0] = xi_leb_negative_mask;
+    return 1;
+  } else if (value == CHAR_MAX) {
+    if (count < 2) {
+      return XI_VARINT_ENCODE_OUT_OF_MEMORY;
+    } else {
+      dest[0] = xi_leb_next_mask;
+      dest[1] = 0;
+      return 2;
+    }
+  }
+
+  if (value < 0) {
+    dest[0] = xi_leb_negative_mask;
+    value *= -1;
+  } else {
+    dest[0] = 0;
+  }
+
+  size_t i = 0;
+  if (value >= xi_leb_negative_mask) {
+    dest[i++] |= (((xi_byte_t)value) & (~xi_leb_first_byte_mask)) | xi_leb_next_mask;
+    value >>= xi_leb_negative_shift;
+  } else {
+    dest[i++] |= ((xi_byte_t)value);
+    return i;
+  }
+
+  while (value >= xi_leb_next_mask) {
+    if (i + 1 >= count) {
       return XI_VARINT_ENCODE_OUT_OF_MEMORY;
     }
-
-    if (value == CHAR_MIN) {
-      dest[0] = xi_leb_negative_mask;
-      return 1;
-    } else if(value == CHAR_MAX) {
-      if(count < 2) {
-        return XI_VARINT_ENCODE_OUT_OF_MEMORY;
-      } else {
-        dest[0] = xi_leb_next_mask;
-        dest[1] = 0;
-        return 2;
-      }
-    }
-
-    if (value < 0) {
-      dest[0] = xi_leb_negative_mask;
-      value *= -1;
-    } else {
-      dest[0] = 0;
-    }
-
-    size_t i = 0;
-    if (value >= xi_leb_negative_mask) {
-      dest[i++] |= (((xi_byte_t)value) & (~xi_leb_first_byte_mask)) | xi_leb_next_mask;
-      value >>= xi_leb_negative_shift;
-    } else {
-      dest[i++] |= ((xi_byte_t)value);
-      return i;
-    }
-
-    while (value >= xi_leb_next_mask) {
-      if (i + 1 >= count) {
-        return XI_VARINT_ENCODE_OUT_OF_MEMORY;
-      }
-      dest[i++] = ((xi_byte_t)value) | xi_leb_next_mask;
-      value >>= xi_leb_next_shift;
-    }
-    dest[i++] = (xi_byte_t)value;
-    return i;
+    dest[i++] = ((xi_byte_t)value) | xi_leb_next_mask;
+    value >>= xi_leb_next_shift;
+  }
+  dest[i++] = (xi_byte_t)value;
+  return i;
 }
 
-size_t xi_encoding_varint_encode_uint8(uint8_t value, xi_byte_t *dest, const size_t count)
-{
-    if(value == UCHAR_MAX) {
-      if(count < 2) {
-        return XI_VARINT_ENCODE_OUT_OF_MEMORY;
-      } else {
-        dest[0] = xi_leb_next_mask;
-        dest[1] = 0;
-        return 2;
-      }
+size_t xi_encoding_varint_encode_uint8(uint8_t value, xi_byte_t *dest, const size_t count) {
+  if (value == UCHAR_MAX) {
+    if (count < 2) {
+      return XI_VARINT_ENCODE_OUT_OF_MEMORY;
+    } else {
+      dest[0] = xi_leb_next_mask;
+      dest[1] = 0;
+      return 2;
     }
+  }
 
-    size_t i = 0;
-    while (value >= xi_leb_next_mask) {
-      if (i + 1 >= count) {
-        return XI_VARINT_ENCODE_OUT_OF_MEMORY;
-      }
-      dest[i++] = ((xi_byte_t)value) | xi_leb_next_mask;
-      value >>= xi_leb_next_shift;
+  size_t i = 0;
+  while (value >= xi_leb_next_mask) {
+    if (i + 1 >= count) {
+      return XI_VARINT_ENCODE_OUT_OF_MEMORY;
     }
-    dest[i++] = (xi_byte_t)value;
-    return i;
+    dest[i++] = ((xi_byte_t)value) | xi_leb_next_mask;
+    value >>= xi_leb_next_shift;
+  }
+  dest[i++] = (xi_byte_t)value;
+  return i;
 }
-
 
 size_t xi_encoding_varint_encode_int16(int16_t value, xi_byte_t *dest, const size_t count) {
   if (count < 1) {
@@ -477,8 +469,8 @@ size_t xi_encoding_varint_encode_int16(int16_t value, xi_byte_t *dest, const siz
   if (value == SHRT_MIN) {
     dest[0] = xi_leb_negative_mask;
     return 1;
-  } else if(value == SHRT_MAX) {
-    if(count < 2) {
+  } else if (value == SHRT_MAX) {
+    if (count < 2) {
       return XI_VARINT_ENCODE_OUT_OF_MEMORY;
     } else {
       dest[0] = xi_leb_next_mask;
@@ -515,8 +507,8 @@ size_t xi_encoding_varint_encode_int16(int16_t value, xi_byte_t *dest, const siz
 }
 
 size_t xi_encoding_varint_encode_uint16(uint16_t value, xi_byte_t *dest, const size_t count) {
-  if(value == USHRT_MAX) {
-    if(count < 2) {
+  if (value == USHRT_MAX) {
+    if (count < 2) {
       return XI_VARINT_ENCODE_OUT_OF_MEMORY;
     } else {
       dest[0] = xi_leb_next_mask;
@@ -545,8 +537,8 @@ size_t xi_encoding_varint_encode_int32(int32_t value, xi_byte_t *dest, const siz
   if (value == INT_MIN) {
     dest[0] = xi_leb_negative_mask;
     return 1;
-  } else if(value == INT_MAX) {
-    if(count < 2) {
+  } else if (value == INT_MAX) {
+    if (count < 2) {
       return XI_VARINT_ENCODE_OUT_OF_MEMORY;
     } else {
       dest[0] = xi_leb_next_mask;
@@ -583,8 +575,8 @@ size_t xi_encoding_varint_encode_int32(int32_t value, xi_byte_t *dest, const siz
 }
 
 size_t xi_encoding_varint_encode_uint32(uint32_t value, xi_byte_t *dest, const size_t count) {
-  if(value == UINT_MAX) {
-    if(count < 2) {
+  if (value == UINT_MAX) {
+    if (count < 2) {
       return XI_VARINT_ENCODE_OUT_OF_MEMORY;
     } else {
       dest[0] = xi_leb_next_mask;
@@ -592,7 +584,6 @@ size_t xi_encoding_varint_encode_uint32(uint32_t value, xi_byte_t *dest, const s
       return 2;
     }
   }
-
 
   size_t i = 0;
   while (value >= xi_leb_next_mask) {
@@ -614,8 +605,8 @@ size_t xi_encoding_varint_encode_int64(int64_t value, xi_byte_t *dest, const siz
   if (value == LLONG_MIN) {
     dest[0] = xi_leb_negative_mask;
     return 1;
-  } else if(value == LLONG_MAX) {
-    if(count < 2) {
+  } else if (value == LLONG_MAX) {
+    if (count < 2) {
       return XI_VARINT_ENCODE_OUT_OF_MEMORY;
     } else {
       dest[0] = xi_leb_next_mask;
@@ -652,8 +643,8 @@ size_t xi_encoding_varint_encode_int64(int64_t value, xi_byte_t *dest, const siz
 }
 
 size_t xi_encoding_varint_encode_uint64(uint64_t value, xi_byte_t *dest, const size_t count) {
-  if(value == ULLONG_MAX) {
-    if(count < 2) {
+  if (value == ULLONG_MAX) {
+    if (count < 2) {
       return XI_VARINT_ENCODE_OUT_OF_MEMORY;
     } else {
       dest[0] = xi_leb_next_mask;
@@ -681,5 +672,3 @@ int xi_encoding_varint_has_successor(xi_byte_t current) {
     return XI_TRUE;
   }
 }
-
-

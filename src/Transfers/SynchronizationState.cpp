@@ -35,14 +35,16 @@ SynchronizationState::ShortHistory SynchronizationState::getShortHistory(BlockHe
   uint32_t current_multiplier = 1;
   uint32_t sz = std::min(static_cast<uint32_t>(m_blockchain.size()), localHeight.native());
 
-  if (!sz) return history;
+  if (!sz)
+    return history;
 
   uint32_t current_back_offset = 1;
   bool genesis_included = false;
 
   while (current_back_offset < sz) {
     history.push_back(m_blockchain[sz - current_back_offset]);
-    if (sz - current_back_offset == 0) genesis_included = true;
+    if (sz - current_back_offset == 0)
+      genesis_included = true;
     if (i < 10) {
       ++current_back_offset;
     } else {
@@ -101,7 +103,8 @@ void SynchronizationState::addBlocks(const Crypto::Hash* blockHashes, BlockHeigh
   if (size) {
   }
   // Dummy fix for simplewallet or walletd when sync
-  if (height.isNull()) height = BlockHeight::fromIndex(0);
+  if (height.isNull())
+    height = BlockHeight::fromIndex(0);
   assert(size == height.native());
   m_blockchain.insert(m_blockchain.end(), blockHashes, blockHashes + count);
 }
@@ -110,7 +113,9 @@ BlockHeight SynchronizationState::getHeight() const {
   return BlockHeight::fromNative(static_cast<BlockHeight::value_type>(m_blockchain.size()));
 }
 
-const std::vector<Crypto::Hash>& SynchronizationState::getKnownBlockHashes() const { return m_blockchain; }
+const std::vector<Crypto::Hash>& SynchronizationState::getKnownBlockHashes() const {
+  return m_blockchain;
+}
 
 bool SynchronizationState::save(std::ostream& os) {
   StdOutputStream stream(os);

@@ -27,7 +27,8 @@
 #include <limits>
 
 CryptoNote::TransactionValidationResult::TransactionValidationResult(CryptoNote::EligibleIndex index)
-    : m_transactions{}, m_elgibileIndex{index} {}
+    : m_transactions{}, m_elgibileIndex{index} {
+}
 
 CryptoNote::TransactionValidationResult::TransactionValidationResult(CryptoNote::CachedTransaction &&transaction,
                                                                      EligibleIndex index)
@@ -38,7 +39,9 @@ CryptoNote::TransactionValidationResult::TransactionValidationResult(CryptoNote:
   m_transactions.emplace_back(std::move(transaction));
 }
 
-CryptoNote::EligibleIndex CryptoNote::TransactionValidationResult::eligibleIndex() const { return m_elgibileIndex; }
+CryptoNote::EligibleIndex CryptoNote::TransactionValidationResult::eligibleIndex() const {
+  return m_elgibileIndex;
+}
 
 Xi::Result<void> CryptoNote::TransactionValidationResult::emplace(CryptoNote::TransactionValidationResult &&other) {
   for (const auto &keyImage : other.m_keyImages) {

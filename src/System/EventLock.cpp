@@ -28,6 +28,8 @@ EventLock::EventLock(Event& event) : event(event) {
   event.clear();
 }
 
-EventLock::~EventLock() { event.set(); }
+EventLock::~EventLock() {
+  event.set();
+}
 
 }  // namespace System

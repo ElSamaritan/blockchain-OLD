@@ -114,9 +114,12 @@ struct PaymentIdTransactionHashPair {
 
 class UseGenesis {
  public:
-  explicit UseGenesis(bool u) : use(u) {}
+  explicit UseGenesis(bool u) : use(u) {
+  }
   // emulate boolean flag
-  operator bool() { return use; }
+  operator bool() {
+    return use;
+  }
 
  private:
   bool use = false;

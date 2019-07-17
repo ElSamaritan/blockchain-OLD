@@ -29,9 +29,11 @@
 
 namespace System {
 
-Ipv4Resolver::Ipv4Resolver() : dispatcher(nullptr) {}
+Ipv4Resolver::Ipv4Resolver() : dispatcher(nullptr) {
+}
 
-Ipv4Resolver::Ipv4Resolver(Dispatcher& dispatcher) : dispatcher(&dispatcher) {}
+Ipv4Resolver::Ipv4Resolver(Dispatcher& dispatcher) : dispatcher(&dispatcher) {
+}
 
 Ipv4Resolver::Ipv4Resolver(Ipv4Resolver&& other) : dispatcher(other.dispatcher) {
   if (dispatcher != nullptr) {
@@ -39,7 +41,8 @@ Ipv4Resolver::Ipv4Resolver(Ipv4Resolver&& other) : dispatcher(other.dispatcher) 
   }
 }
 
-Ipv4Resolver::~Ipv4Resolver() {}
+Ipv4Resolver::~Ipv4Resolver() {
+}
 
 Ipv4Resolver& Ipv4Resolver::operator=(Ipv4Resolver&& other) {
   dispatcher = other.dispatcher;

@@ -27,7 +27,8 @@ namespace CryptoNote {
 
 class MemoryStream : public Common::IOutputStream {
  public:
-  MemoryStream() : m_writePos(0) {}
+  MemoryStream() : m_writePos(0) {
+  }
 
   virtual size_t writeSome(const void* data, size_t size) override {
     if (size == 0) {
@@ -43,9 +44,13 @@ class MemoryStream : public Common::IOutputStream {
     return size;
   }
 
-  size_t size() { return m_buffer.size(); }
+  size_t size() {
+    return m_buffer.size();
+  }
 
-  const uint8_t* data() { return m_buffer.data(); }
+  const uint8_t* data() {
+    return m_buffer.data();
+  }
 
   void clear() {
     m_writePos = 0;

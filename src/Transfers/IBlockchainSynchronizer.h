@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
+﻿// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -41,14 +41,17 @@ class IBlockchainSynchronizerObserver {
   virtual void synchronizationProgressUpdated(uint32_t processedBlockCount, uint32_t totalBlockCount) {
     XI_UNUSED(processedBlockCount, totalBlockCount);
   }
-  virtual void synchronizationCompleted(std::error_code result) { XI_UNUSED(result); }
+  virtual void synchronizationCompleted(std::error_code result) {
+    XI_UNUSED(result);
+  }
 };
 
 class IBlockchainConsumerObserver;
 
 class IBlockchainConsumer : public IObservable<IBlockchainConsumerObserver> {
  public:
-  virtual ~IBlockchainConsumer() {}
+  virtual ~IBlockchainConsumer() {
+  }
   virtual SynchronizationStart getSyncStart() = 0;
   virtual const std::unordered_set<Crypto::Hash>& getKnownPoolTxIds() const = 0;
   virtual void onBlockchainDetach(BlockHeight height) = 0;

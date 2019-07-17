@@ -38,39 +38,68 @@ P2pNodeConfig::P2pNodeConfig(const Xi::Config::Network::Configuration& network)
       expectedOutgoingConnectionsCount(Xi::Config::P2P::connectionsCount()),
       whiteListConnectionsPercent(Xi::Config::P2P::whiteListPreferenceThreshold()),
       peerListConnectRange(P2P_DEFAULT_CONNECT_RANGE),
-      peerListGetTryCount(P2P_DEFAULT_PEERLIST_GET_TRY_COUNT) {}
+      peerListGetTryCount(P2P_DEFAULT_PEERLIST_GET_TRY_COUNT) {
+}
 
 // getters
 
-std::chrono::nanoseconds P2pNodeConfig::getTimedSyncInterval() const { return timedSyncInterval; }
+std::chrono::nanoseconds P2pNodeConfig::getTimedSyncInterval() const {
+  return timedSyncInterval;
+}
 
-std::chrono::nanoseconds P2pNodeConfig::getHandshakeTimeout() const { return handshakeTimeout; }
+std::chrono::nanoseconds P2pNodeConfig::getHandshakeTimeout() const {
+  return handshakeTimeout;
+}
 
-std::chrono::nanoseconds P2pNodeConfig::getConnectInterval() const { return connectInterval; }
+std::chrono::nanoseconds P2pNodeConfig::getConnectInterval() const {
+  return connectInterval;
+}
 
-std::chrono::nanoseconds P2pNodeConfig::getConnectTimeout() const { return connectTimeout; }
+std::chrono::nanoseconds P2pNodeConfig::getConnectTimeout() const {
+  return connectTimeout;
+}
 
-size_t P2pNodeConfig::getExpectedOutgoingConnectionsCount() const { return expectedOutgoingConnectionsCount; }
+size_t P2pNodeConfig::getExpectedOutgoingConnectionsCount() const {
+  return expectedOutgoingConnectionsCount;
+}
 
-size_t P2pNodeConfig::getWhiteListConnectionsPercent() const { return whiteListConnectionsPercent; }
+size_t P2pNodeConfig::getWhiteListConnectionsPercent() const {
+  return whiteListConnectionsPercent;
+}
 
-boost::uuids::uuid P2pNodeConfig::getNetworkId() const { return networkId; }
+boost::uuids::uuid P2pNodeConfig::getNetworkId() const {
+  return networkId;
+}
 
-size_t P2pNodeConfig::getPeerListConnectRange() const { return peerListConnectRange; }
+size_t P2pNodeConfig::getPeerListConnectRange() const {
+  return peerListConnectRange;
+}
 
-size_t P2pNodeConfig::getPeerListGetTryCount() const { return peerListGetTryCount; }
+size_t P2pNodeConfig::getPeerListGetTryCount() const {
+  return peerListGetTryCount;
+}
 
 // setters
 
-void P2pNodeConfig::setTimedSyncInterval(std::chrono::nanoseconds interval) { timedSyncInterval = interval; }
+void P2pNodeConfig::setTimedSyncInterval(std::chrono::nanoseconds interval) {
+  timedSyncInterval = interval;
+}
 
-void P2pNodeConfig::setHandshakeTimeout(std::chrono::nanoseconds timeout) { handshakeTimeout = timeout; }
+void P2pNodeConfig::setHandshakeTimeout(std::chrono::nanoseconds timeout) {
+  handshakeTimeout = timeout;
+}
 
-void P2pNodeConfig::setConnectInterval(std::chrono::nanoseconds interval) { connectInterval = interval; }
+void P2pNodeConfig::setConnectInterval(std::chrono::nanoseconds interval) {
+  connectInterval = interval;
+}
 
-void P2pNodeConfig::setConnectTimeout(std::chrono::nanoseconds timeout) { connectTimeout = timeout; }
+void P2pNodeConfig::setConnectTimeout(std::chrono::nanoseconds timeout) {
+  connectTimeout = timeout;
+}
 
-void P2pNodeConfig::setExpectedOutgoingConnectionsCount(size_t count) { expectedOutgoingConnectionsCount = count; }
+void P2pNodeConfig::setExpectedOutgoingConnectionsCount(size_t count) {
+  expectedOutgoingConnectionsCount = count;
+}
 
 void P2pNodeConfig::setWhiteListConnectionsPercent(size_t percent) {
   if (percent > 100) {
@@ -80,10 +109,16 @@ void P2pNodeConfig::setWhiteListConnectionsPercent(size_t percent) {
   whiteListConnectionsPercent = percent;
 }
 
-void P2pNodeConfig::setNetworkId(const boost::uuids::uuid& id) { networkId = id; }
+void P2pNodeConfig::setNetworkId(const boost::uuids::uuid& id) {
+  networkId = id;
+}
 
-void P2pNodeConfig::setPeerListConnectRange(size_t range) { peerListConnectRange = range; }
+void P2pNodeConfig::setPeerListConnectRange(size_t range) {
+  peerListConnectRange = range;
+}
 
-void P2pNodeConfig::setPeerListGetTryCount(size_t count) { peerListGetTryCount = count; }
+void P2pNodeConfig::setPeerListGetTryCount(size_t count) {
+  peerListGetTryCount = count;
+}
 
 }  // namespace CryptoNote

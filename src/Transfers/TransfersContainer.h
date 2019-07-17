@@ -69,7 +69,9 @@ class SpentOutputDescriptor {
 };
 
 struct SpentOutputDescriptorHasher {
-  size_t operator()(const SpentOutputDescriptor& descriptor) const { return descriptor.hash(); }
+  size_t operator()(const SpentOutputDescriptor& descriptor) const {
+    return descriptor.hash();
+  }
 };
 
 struct TransactionOutputInformationIn : public TransactionOutputInformation {
@@ -82,8 +84,12 @@ struct TransactionOutputInformationEx : public TransactionOutputInformationIn {
   uint32_t transactionIndex;
   bool visible;
 
-  SpentOutputDescriptor getSpentOutputDescriptor() const { return SpentOutputDescriptor(*this); }
-  const Crypto::Hash& getTransactionHash() const { return transactionHash; }
+  SpentOutputDescriptor getSpentOutputDescriptor() const {
+    return SpentOutputDescriptor(*this);
+  }
+  const Crypto::Hash& getTransactionHash() const {
+    return transactionHash;
+  }
 
   KV_BEGIN_SERIALIZATION
   XI_RETURN_EC_IF_NOT(s(reinterpret_cast<uint8_t&>(type), "type"), false);
@@ -122,7 +128,9 @@ struct SpentTransactionOutput : TransactionOutputInformationEx {
   Crypto::Hash spendingTransactionHash;
   uint32_t inputInTransaction;
 
-  const Crypto::Hash& getSpendingTransactionHash() const { return spendingTransactionHash; }
+  const Crypto::Hash& getSpendingTransactionHash() const {
+    return spendingTransactionHash;
+  }
 
   KV_BEGIN_SERIALIZATION
   KV_BASE(TransactionOutputInformationEx)

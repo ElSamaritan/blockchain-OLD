@@ -47,7 +47,8 @@ CachedTransaction::CachedTransaction()
       paymentId{boost::none},
       inputAmount{boost::none},
       outputAmount{boost::none},
-      transactionFee{boost::none} {}
+      transactionFee{boost::none} {
+}
 
 Xi::Result<CachedTransaction> CachedTransaction::fromBinaryArray(const BinaryArray& blob) {
   Transaction transaction{};
@@ -75,7 +76,9 @@ CachedTransaction::CachedTransaction(const BinaryArray& transactionBinaryArray) 
   }
 }
 
-const Transaction& CachedTransaction::getTransaction() const { return transaction; }
+const Transaction& CachedTransaction::getTransaction() const {
+  return transaction;
+}
 
 const Crypto::Hash& CachedTransaction::getTransactionHash() const {
   if (!transactionHash.is_initialized()) {
@@ -174,7 +177,9 @@ uint64_t CachedTransaction::getTransactionFee() const {
   return transactionFee.get();
 }
 
-bool CachedTransaction::isCoinbase() const { return getInputAmount() == 0; }
+bool CachedTransaction::isCoinbase() const {
+  return getInputAmount() == 0;
+}
 
 void CachedTransaction::prune() {
   getTransaction();
@@ -182,4 +187,6 @@ void CachedTransaction::prune() {
   transactionBinaryArray = boost::none;
 }
 
-CachedTransaction CryptoNote::cache(Transaction transaction) { return CachedTransaction{std::move(transaction)}; }
+CachedTransaction CryptoNote::cache(Transaction transaction) {
+  return CachedTransaction{std::move(transaction)};
+}

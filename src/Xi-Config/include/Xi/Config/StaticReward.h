@@ -56,7 +56,9 @@ class Configuration {
   KV_MEMBER_RENAME(address(), address)
   KV_END_SERIALIZATION
 
-  bool isEnabled() const { return !this->address().empty(); }
+  bool isEnabled() const {
+    return !this->address().empty();
+  }
 };
 
 using Container = VersionContainer<StaticReward::Configuration>;

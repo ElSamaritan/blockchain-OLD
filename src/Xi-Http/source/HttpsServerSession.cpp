@@ -37,7 +37,8 @@ Xi::Http::HttpsServerSession::HttpsServerSession(Xi::Http::ServerSession::socket
                                                  boost::asio::ssl::context &ctx,
                                                  std::shared_ptr<Xi::Http::RequestHandler> handler,
                                                  Xi::Concurrent::IDispatcher &dispatcher)
-    : ServerSession(std::move(socket), std::move(buffer), handler, dispatcher), m_stream{m_socket, ctx} {}
+    : ServerSession(std::move(socket), std::move(buffer), handler, dispatcher), m_stream{m_socket, ctx} {
+}
 
 void Xi::Http::HttpsServerSession::run() {
   m_stream.async_handshake(
@@ -87,7 +88,9 @@ void Xi::Http::HttpsServerSession::doWriteResponse(Response &&response) {
                                                      std::placeholders::_1, std::placeholders::_2)));
 }
 
-void Xi::Http::HttpsServerSession::doOnResponseWritten() { close(); }
+void Xi::Http::HttpsServerSession::doOnResponseWritten() {
+  close();
+}
 
 void Xi::Http::HttpsServerSession::doClose() {
   m_stream.async_shutdown(boost::asio::bind_executor(

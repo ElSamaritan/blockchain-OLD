@@ -40,9 +40,11 @@ struct TcpConnectorContextExt : public OperationContext {
 
 }  // namespace
 
-TcpConnector::TcpConnector() : dispatcher(nullptr) {}
+TcpConnector::TcpConnector() : dispatcher(nullptr) {
+}
 
-TcpConnector::TcpConnector(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {}
+TcpConnector::TcpConnector(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {
+}
 
 TcpConnector::TcpConnector(TcpConnector&& other) : dispatcher(other.dispatcher) {
   if (other.dispatcher != nullptr) {
@@ -52,7 +54,8 @@ TcpConnector::TcpConnector(TcpConnector&& other) : dispatcher(other.dispatcher) 
   }
 }
 
-TcpConnector::~TcpConnector() {}
+TcpConnector::~TcpConnector() {
+}
 
 TcpConnector& TcpConnector::operator=(TcpConnector&& other) {
   dispatcher = other.dispatcher;

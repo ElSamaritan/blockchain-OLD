@@ -34,8 +34,11 @@ using HttpClient = Xi::Http::Client;
 
 class INodeRpcProxyObserver {
  public:
-  virtual ~INodeRpcProxyObserver() {}
-  virtual void connectionStatusUpdated(bool connected) { XI_UNUSED(connected); }
+  virtual ~INodeRpcProxyObserver() {
+  }
+  virtual void connectionStatusUpdated(bool connected) {
+    XI_UNUSED(connected);
+  }
 };
 
 class NodeRpcProxy : public CryptoNote::INode {
@@ -103,8 +106,12 @@ class NodeRpcProxy : public CryptoNote::INode {
 
   virtual std::optional<FeeAddress> feeAddress() const override;
 
-  unsigned int rpcTimeout() const { return m_rpcTimeout; }
-  void rpcTimeout(unsigned int val) { m_rpcTimeout = val; }
+  unsigned int rpcTimeout() const {
+    return m_rpcTimeout;
+  }
+  void rpcTimeout(unsigned int val) {
+    m_rpcTimeout = val;
+  }
 
   void setPollUpdatesEnabled(bool enabled);
   bool pollUpdatesEnabled() const;

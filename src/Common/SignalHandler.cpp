@@ -59,7 +59,9 @@ BOOL WINAPI winHandler(DWORD type) {
 
 #else
 
-void posixHandler(int /*type*/) { handleSignal(); }
+void posixHandler(int /*type*/) {
+  handleSignal();
+}
 #endif
 
 }  // namespace

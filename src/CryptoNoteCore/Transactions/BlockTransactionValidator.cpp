@@ -27,7 +27,8 @@ CryptoNote::BlockTransactionValidator::BlockTransactionValidator(const CryptoNot
                                                                  const Checkpoints &checkpoints,
                                                                  const IBlockchainCache &chain,
                                                                  const Currency &currency)
-    : TransactionValidator(info.Header.version, chain, currency), m_block{info}, m_checkpoints{checkpoints} {}
+    : TransactionValidator(info.Header.version, chain, currency), m_block{info}, m_checkpoints{checkpoints} {
+}
 
 bool CryptoNote::BlockTransactionValidator::checkIfAnySpent(const Crypto::KeyImageSet &keyImages) const {
   return chain().checkIfAnySpent(keyImages, m_block.previousBlockIndex);

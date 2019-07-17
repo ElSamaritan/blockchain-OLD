@@ -54,14 +54,20 @@ class FileMappedVector : public EnableIfPod<T>::type {
     typedef const T* pointer;
     typedef const T& reference;
 
-    const_iterator() : m_fileMappedVector(nullptr) {}
+    const_iterator() : m_fileMappedVector(nullptr) {
+    }
 
     const_iterator(const FileMappedVector* fileMappedVector, size_t index)
-        : m_fileMappedVector(fileMappedVector), m_index(index) {}
+        : m_fileMappedVector(fileMappedVector), m_index(index) {
+    }
 
-    const T& operator*() const { return (*m_fileMappedVector)[m_index]; }
+    const T& operator*() const {
+      return (*m_fileMappedVector)[m_index];
+    }
 
-    const T* operator->() const { return &(*m_fileMappedVector)[m_index]; }
+    const T* operator->() const {
+      return &(*m_fileMappedVector)[m_index];
+    }
 
     const_iterator& operator++() {
       ++m_index;
@@ -90,7 +96,9 @@ class FileMappedVector : public EnableIfPod<T>::type {
       return *this;
     }
 
-    const_iterator operator+(difference_type n) const { return const_iterator(m_fileMappedVector, m_index + n); }
+    const_iterator operator+(difference_type n) const {
+      return const_iterator(m_fileMappedVector, m_index + n);
+    }
 
     friend const_iterator operator+(difference_type n, const const_iterator& i) {
       return const_iterator(i.m_fileMappedVector, n + i.m_index);
@@ -101,25 +109,45 @@ class FileMappedVector : public EnableIfPod<T>::type {
       return *this;
     }
 
-    const_iterator operator-(difference_type n) const { return const_iterator(m_fileMappedVector, m_index - n); }
+    const_iterator operator-(difference_type n) const {
+      return const_iterator(m_fileMappedVector, m_index - n);
+    }
 
-    difference_type operator-(const const_iterator& other) const { return m_index - other.m_index; }
+    difference_type operator-(const const_iterator& other) const {
+      return m_index - other.m_index;
+    }
 
-    const T& operator[](difference_type offset) const { return (*m_fileMappedVector)[m_index + offset]; }
+    const T& operator[](difference_type offset) const {
+      return (*m_fileMappedVector)[m_index + offset];
+    }
 
-    bool operator==(const const_iterator& other) const { return m_index == other.m_index; }
+    bool operator==(const const_iterator& other) const {
+      return m_index == other.m_index;
+    }
 
-    bool operator!=(const const_iterator& other) const { return m_index != other.m_index; }
+    bool operator!=(const const_iterator& other) const {
+      return m_index != other.m_index;
+    }
 
-    bool operator<(const const_iterator& other) const { return m_index < other.m_index; }
+    bool operator<(const const_iterator& other) const {
+      return m_index < other.m_index;
+    }
 
-    bool operator>(const const_iterator& other) const { return m_index > other.m_index; }
+    bool operator>(const const_iterator& other) const {
+      return m_index > other.m_index;
+    }
 
-    bool operator<=(const const_iterator& other) const { return m_index <= other.m_index; }
+    bool operator<=(const const_iterator& other) const {
+      return m_index <= other.m_index;
+    }
 
-    bool operator>=(const const_iterator& other) const { return m_index >= other.m_index; }
+    bool operator>=(const const_iterator& other) const {
+      return m_index >= other.m_index;
+    }
 
-    size_t index() const { return m_index; }
+    size_t index() const {
+      return m_index;
+    }
 
    protected:
     const FileMappedVector* m_fileMappedVector;
@@ -134,13 +162,19 @@ class FileMappedVector : public EnableIfPod<T>::type {
     typedef T* pointer;
     typedef T& reference;
 
-    iterator() : const_iterator() {}
+    iterator() : const_iterator() {
+    }
 
-    iterator(const FileMappedVector* fileMappedVector, size_t index) : const_iterator(fileMappedVector, index) {}
+    iterator(const FileMappedVector* fileMappedVector, size_t index) : const_iterator(fileMappedVector, index) {
+    }
 
-    T& operator*() const { return const_cast<T&>((*const_iterator::m_fileMappedVector)[const_iterator::m_index]); }
+    T& operator*() const {
+      return const_cast<T&>((*const_iterator::m_fileMappedVector)[const_iterator::m_index]);
+    }
 
-    T* operator->() const { return const_cast<T*>(&(*const_iterator::m_fileMappedVector)[const_iterator::m_index]); }
+    T* operator->() const {
+      return const_cast<T*>(&(*const_iterator::m_fileMappedVector)[const_iterator::m_index]);
+    }
 
     iterator& operator++() {
       ++const_iterator::m_index;
@@ -186,7 +220,9 @@ class FileMappedVector : public EnableIfPod<T>::type {
       return iterator(const_iterator::m_fileMappedVector, const_iterator::m_index - n);
     }
 
-    difference_type operator-(const iterator& other) const { return const_iterator::m_index - other.m_index; }
+    difference_type operator-(const iterator& other) const {
+      return const_iterator::m_index - other.m_index;
+    }
 
     T& operator[](difference_type offset) const {
       return (*const_iterator::m_fileMappedVector)[const_iterator::m_index + offset];
@@ -296,7 +332,8 @@ class FileMappedVector : public EnableIfPod<T>::type {
 };
 
 template <class T>
-FileMappedVector<T>::FileMappedVector() : m_autoFlush(true) {}
+FileMappedVector<T>::FileMappedVector() : m_autoFlush(true) {
+}
 
 template <class T>
 FileMappedVector<T>::FileMappedVector(const std::string& path, FileMappedVectorOpenMode mode, uint64_t prefixSize)

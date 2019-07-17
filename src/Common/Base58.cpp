@@ -140,17 +140,20 @@ bool decode_block(const char* block, size_t size, char* res) {
   assert(1 <= size && size <= full_encoded_block_size);
 
   int res_size = decoded_block_sizes::instance(size);
-  if (res_size <= 0) return false;  // Invalid block size
+  if (res_size <= 0)
+    return false;  // Invalid block size
 
   uint64_t res_num = 0;
   uint64_t order = 1;
   for (size_t i = size - 1; i < size; --i) {
     int digit = reverse_alphabet::instance(block[i]);
-    if (digit < 0) return false;  // Invalid symbol
+    if (digit < 0)
+      return false;  // Invalid symbol
 
     uint64_t product_hi;
     uint64_t tmp = res_num + mul128(order, digit, &product_hi);
-    if (tmp < res_num || 0 != product_hi) return false;  // Overflow
+    if (tmp < res_num || 0 != product_hi)
+      return false;  // Overflow
 
     res_num = tmp;
     order *= alphabet_size;  // Never overflows, 58^10 < 2^64
@@ -166,7 +169,8 @@ bool decode_block(const char* block, size_t size, char* res) {
 }  // namespace
 
 std::string encode(const std::string& data) {
-  if (data.empty()) return std::string();
+  if (data.empty())
+    return std::string();
 
   size_t full_block_count = data.size() / full_block_size;
   size_t last_block_size = data.size() % full_block_size;
@@ -194,7 +198,8 @@ bool decode(const std::string& enc, std::string& data) {
   size_t full_block_count = enc.size() / full_encoded_block_size;
   size_t last_block_size = enc.size() % full_encoded_block_size;
   int last_block_decoded_size = decoded_block_sizes::instance(last_block_size);
-  if (last_block_decoded_size < 0) return false;  // Invalid enc length
+  if (last_block_decoded_size < 0)
+    return false;  // Invalid enc length
   size_t data_size = full_block_count * full_block_size + last_block_decoded_size;
 
   data.resize(data_size, 0);
@@ -224,8 +229,10 @@ std::string encode_addr(uint64_t tag, const std::string& data) {
 bool decode_addr(const std::string& addr, uint64_t& tag, std::string& data) {
   std::string addr_data;
   bool r = decode(addr, addr_data);
-  if (!r) return false;
-  if (addr_data.size() <= addr_checksum_size) return false;
+  if (!r)
+    return false;
+  if (addr_data.size() <= addr_checksum_size)
+    return false;
 
   std::string checksum(addr_checksum_size, '\0');
   checksum = addr_data.substr(addr_data.size() - addr_checksum_size);
@@ -236,10 +243,12 @@ bool decode_addr(const std::string& addr, uint64_t& tag, std::string& data) {
     return false;
   }
   std::string expected_checksum(reinterpret_cast<const char*>(hashResult.value().data()), addr_checksum_size);
-  if (expected_checksum != checksum) return false;
+  if (expected_checksum != checksum)
+    return false;
 
   int read = Tools::read_varint(addr_data.begin(), addr_data.end(), tag);
-  if (read <= 0) return false;
+  if (read <= 0)
+    return false;
 
   data = addr_data.substr(read);
   return true;

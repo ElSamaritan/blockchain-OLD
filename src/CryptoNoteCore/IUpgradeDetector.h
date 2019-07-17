@@ -30,7 +30,8 @@ class IUpgradeDetector {
   virtual Xi::Blockchain::Block::Version targetVersion() const = 0;
   virtual uint32_t upgradeIndex() const = 0;
   virtual bool isFork() const = 0;
-  virtual ~IUpgradeDetector() {}
+  virtual ~IUpgradeDetector() {
+  }
 };
 
 std::unique_ptr<IUpgradeDetector> makeUpgradeDetector(Xi::Blockchain::Block::Version targetVersion,

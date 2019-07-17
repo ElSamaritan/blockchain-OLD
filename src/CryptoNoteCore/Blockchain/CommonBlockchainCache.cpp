@@ -32,7 +32,8 @@ using namespace Xi;
 using Logging::Level;
 
 CryptoNote::CommonBlockchainCache::CommonBlockchainCache(Logging::ILogger& logger, const Currency& currency)
-    : m_logger(logger, "CommonBlockchainCache"), m_currency(currency) {}
+    : m_logger(logger, "CommonBlockchainCache"), m_currency(currency) {
+}
 
 bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlocked(uint64_t unlockTime) const {
   return isTransactionSpendTimeUnlocked(unlockTime, getTopBlockIndex());

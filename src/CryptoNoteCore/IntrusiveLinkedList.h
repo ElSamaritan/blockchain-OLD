@@ -69,7 +69,8 @@ class IntrusiveLinkedList {
 };
 
 template <class Value>
-IntrusiveLinkedList<Value>::IntrusiveLinkedList() : head(nullptr), tail(nullptr) {}
+IntrusiveLinkedList<Value>::IntrusiveLinkedList() : head(nullptr), tail(nullptr) {
+}
 
 template <class Value>
 bool IntrusiveLinkedList<Value>::insert(Value& value) {
@@ -152,10 +153,12 @@ typename IntrusiveLinkedList<Value>::iterator IntrusiveLinkedList<Value>::end() 
 }
 
 template <class Value>
-IntrusiveLinkedList<Value>::hook::hook() : prev(nullptr), next(nullptr), used(false) {}
+IntrusiveLinkedList<Value>::hook::hook() : prev(nullptr), next(nullptr), used(false) {
+}
 
 template <class Value>
-IntrusiveLinkedList<Value>::iterator::iterator(Value* value) : currentElement(value) {}
+IntrusiveLinkedList<Value>::iterator::iterator(Value* value) : currentElement(value) {
+}
 
 template <class Value>
 bool IntrusiveLinkedList<Value>::iterator::operator!=(

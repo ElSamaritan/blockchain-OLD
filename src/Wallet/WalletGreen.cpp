@@ -57,7 +57,9 @@ using namespace Logging;
 
 namespace {
 
-void asyncRequestCompletion(System::Event& requestFinished) { requestFinished.set(); }
+void asyncRequestCompletion(System::Event& requestFinished) {
+  requestFinished.set();
+}
 
 CryptoNote::WalletEvent makeTransactionUpdatedEvent(size_t id) {
   CryptoNote::WalletEvent event;
@@ -98,7 +100,9 @@ CryptoNote::WalletEvent makeSyncCompletedEvent() {
   return event;
 }
 
-size_t getTransactionSize(const ITransactionReader& transaction) { return transaction.getTransactionData().size(); }
+size_t getTransactionSize(const ITransactionReader& transaction) {
+  return transaction.getTransactionData().size();
+}
 
 uint64_t calculateDonationAmount(uint64_t freeAmount, uint64_t donationThreshold) {
   std::vector<uint64_t> decomposedAmounts;
@@ -764,7 +768,8 @@ void WalletGreen::deleteOrphanTransactions(const std::unordered_set<Crypto::Publ
 }
 
 void WalletGreen::loadSpendKeys() {
-  if (m_containerStorage.empty()) return;
+  if (m_containerStorage.empty())
+    return;
   bool isTrackingMode = false;
   for (size_t i = 0; i < m_containerStorage.size(); ++i) {
     WalletRecord wallet;
@@ -1800,9 +1805,13 @@ size_t WalletGreen::doTransfer(const TransactionParameters& transactionParameter
                                         true);
 }
 
-size_t WalletGreen::getTxSize(const PreparedTransaction& p) { return p.transaction->getTransactionData().size(); }
+size_t WalletGreen::getTxSize(const PreparedTransaction& p) {
+  return p.transaction->getTransactionData().size();
+}
 
-bool WalletGreen::txIsTooLarge(const PreparedTransaction& p) { return getTxSize(p) > getMaxTxSize(); }
+bool WalletGreen::txIsTooLarge(const PreparedTransaction& p) {
+  return getTxSize(p) > getMaxTxSize();
+}
 
 PreparedTransaction WalletGreen::formTransaction(const TransactionParameters& sendingTransaction) {
   System::EventLock lk(m_readyEvent);
@@ -2608,7 +2617,8 @@ void WalletGreen::prepareInputs(
         globalOutput.outputIndex = static_cast<uint32_t>(fakeOut.global_amount_index);
         globalOutput.targetKey = reinterpret_cast<PublicKey&>(fakeOut.out_key);
         keyInfo.outputs.push_back(std::move(globalOutput));
-        if (keyInfo.outputs.size() >= mixIn) break;
+        if (keyInfo.outputs.size() >= mixIn)
+          break;
       }
     }
 
@@ -3823,6 +3833,8 @@ void WalletGreen::deleteFromUncommitedTransactions(const std::vector<size_t>& de
    tx sizes, but prevents anything getting stuck in the pool.
 
 */
-size_t WalletGreen::getMaxTxSize() { return m_currency.maxTxSize(m_node.getLastKnownBlockVersion()); }
+size_t WalletGreen::getMaxTxSize() {
+  return m_currency.maxTxSize(m_node.getLastKnownBlockVersion());
+}
 
 }  // namespace CryptoNote

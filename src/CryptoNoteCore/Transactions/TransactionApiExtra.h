@@ -26,8 +26,11 @@ namespace CryptoNote {
 
 class TransactionExtra {
  public:
-  TransactionExtra() {}
-  TransactionExtra(const std::vector<uint8_t>& extra) { parse(extra); }
+  TransactionExtra() {
+  }
+  TransactionExtra(const std::vector<uint8_t>& extra) {
+    parse(extra);
+  }
 
   bool parse(const std::vector<uint8_t>& extra) {
     fields.clear();

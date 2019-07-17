@@ -29,7 +29,8 @@
 namespace Xi {
 namespace Rpc {
 
-ServiceProviderCollection::ServiceProviderCollection(Logging::ILogger &logger) : IServiceProvider(logger) {}
+ServiceProviderCollection::ServiceProviderCollection(Logging::ILogger &logger) : IServiceProvider(logger) {
+}
 
 const std::string &ServiceProviderCollection::prefix() const {
   XI_CONCURRENT_LOCK_READ(m_guard);

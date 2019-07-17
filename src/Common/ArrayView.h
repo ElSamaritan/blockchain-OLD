@@ -70,11 +70,14 @@ class ArrayView {
   // Performs default action - bitwise copying of source object.
   // The behavior is undefined unless 'other' 'ArrayView' is in defined state, that is 'data' != 'nullptr' || 'size' ==
   // 0
-  ArrayView(const ArrayView& other) : data(other.data), size(other.size) { assert(data != nullptr || size == 0); }
+  ArrayView(const ArrayView& other) : data(other.data), size(other.size) {
+    assert(data != nullptr || size == 0);
+  }
 
   // Destructor.
   // No special action is performed.
-  ~ArrayView() {}
+  ~ArrayView() {
+  }
 
   // Copy assignment operator.
   // The behavior is undefined unless 'other' 'ArrayView' is in defined state, that is 'data' != 'nullptr' || 'size' ==

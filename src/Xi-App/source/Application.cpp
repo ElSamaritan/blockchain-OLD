@@ -83,13 +83,21 @@ int Xi::App::Application::exec(int argc, char **argv) {
   }
 }
 
-const std::string Xi::App::Application::name() const { return m_name; }
+const std::string Xi::App::Application::name() const {
+  return m_name;
+}
 
-const std::string Xi::App::Application::description() const { return m_description; }
+const std::string Xi::App::Application::description() const {
+  return m_description;
+}
 
-Logging::LoggerManager &Xi::App::Application::logger() { return *m_logger; }
+Logging::LoggerManager &Xi::App::Application::logger() {
+  return *m_logger;
+}
 
-System::Dispatcher &Xi::App::Application::dispatcher() { return m_dispatcher; }
+System::Dispatcher &Xi::App::Application::dispatcher() {
+  return m_dispatcher;
+}
 
 CryptoNote::RpcRemoteConfiguration Xi::App::Application::remoteConfiguration() const {
   return m_remoteRpcOptions->getConfig(m_sslConfig);
@@ -163,13 +171,15 @@ void Xi::App::Application::makeOptions(cxxopts::Options &options) {
 
 #undef XI_APP_CONDITIONAL_OPTION_INIT
 
-#define XI_APP_CONDITIONAL_OPTION_EVAL(MEMBER)                       \
-  if (MEMBER) {                                                      \
-    if (MEMBER->evaluateParsedOptions(options, result)) return true; \
+#define XI_APP_CONDITIONAL_OPTION_EVAL(MEMBER)          \
+  if (MEMBER) {                                         \
+    if (MEMBER->evaluateParsedOptions(options, result)) \
+      return true;                                      \
   }
 
 bool Xi::App::Application::evaluateParsedOptions(const cxxopts::Options &options, const cxxopts::ParseResult &result) {
-  if (CommonCLI::handleCLIOptions(options, result)) return true;
+  if (CommonCLI::handleCLIOptions(options, result))
+    return true;
   XI_APP_CONDITIONAL_OPTION_EVAL(m_logOptions)
   XI_APP_CONDITIONAL_OPTION_EVAL(m_dbOptions)
   XI_APP_CONDITIONAL_OPTION_EVAL(m_remoteRpcOptions)
@@ -188,16 +198,20 @@ bool Xi::App::Application::evaluateParsedOptions(const cxxopts::Options &options
   return false;
 }
 
-void Xi::App::Application::setUp() { initializeLogger(); }
+void Xi::App::Application::setUp() {
+  initializeLogger();
+}
 
 void Xi::App::Application::tearDown() {
-  if (m_remoteNode) m_remoteNode->shutdown();
+  if (m_remoteNode)
+    m_remoteNode->shutdown();
   if (m_core) {
     if (!m_core->save() && m_ologger) {
       (*m_ologger)(Logging::Fatal) << "Core routine save procedure failed.";
     }
   }
-  if (m_database) m_database->shutdown();
+  if (m_database)
+    m_database->shutdown();
 }
 
 #undef XI_APP_CONDITIONAL_OPTION_EVAL
@@ -251,9 +265,13 @@ void Xi::App::Application::useCore() {
   m_coreRequied = true;
 }
 
-bool Xi::App::Application::isSSLClientRequired() const { return m_remoteRpcOptions.get() != nullptr; }
+bool Xi::App::Application::isSSLClientRequired() const {
+  return m_remoteRpcOptions.get() != nullptr;
+}
 
-bool Xi::App::Application::isSSLServerRequired() const { return false; }
+bool Xi::App::Application::isSSLServerRequired() const {
+  return false;
+}
 
 void Xi::App::Application::initializeLogger() {
   if (m_logOptions) {

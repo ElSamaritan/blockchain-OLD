@@ -67,19 +67,36 @@ struct WalletLegacyTransaction {
 
 class IWalletLegacyObserver {
  public:
-  virtual ~IWalletLegacyObserver() {}
+  virtual ~IWalletLegacyObserver() {
+  }
 
-  virtual void initCompleted(std::error_code result) { XI_UNUSED(result); }
-  virtual void saveCompleted(std::error_code result) { XI_UNUSED(result); }
-  virtual void synchronizationProgressUpdated(uint32_t current, uint32_t total) { XI_UNUSED(current, total); }
-  virtual void synchronizationCompleted(std::error_code result) { XI_UNUSED(result); }
-  virtual void actualBalanceUpdated(uint64_t actualBalance) { XI_UNUSED(actualBalance); }
-  virtual void pendingBalanceUpdated(uint64_t pendingBalance) { XI_UNUSED(pendingBalance); }
-  virtual void externalTransactionCreated(TransactionId transactionId) { XI_UNUSED(transactionId); }
+  virtual void initCompleted(std::error_code result) {
+    XI_UNUSED(result);
+  }
+  virtual void saveCompleted(std::error_code result) {
+    XI_UNUSED(result);
+  }
+  virtual void synchronizationProgressUpdated(uint32_t current, uint32_t total) {
+    XI_UNUSED(current, total);
+  }
+  virtual void synchronizationCompleted(std::error_code result) {
+    XI_UNUSED(result);
+  }
+  virtual void actualBalanceUpdated(uint64_t actualBalance) {
+    XI_UNUSED(actualBalance);
+  }
+  virtual void pendingBalanceUpdated(uint64_t pendingBalance) {
+    XI_UNUSED(pendingBalance);
+  }
+  virtual void externalTransactionCreated(TransactionId transactionId) {
+    XI_UNUSED(transactionId);
+  }
   virtual void sendTransactionCompleted(TransactionId transactionId, std::error_code result) {
     XI_UNUSED(transactionId, result);
   }
-  virtual void transactionUpdated(TransactionId transactionId) { XI_UNUSED(transactionId); }
+  virtual void transactionUpdated(TransactionId transactionId) {
+    XI_UNUSED(transactionId);
+  }
 };
 
 class IWalletLegacy {

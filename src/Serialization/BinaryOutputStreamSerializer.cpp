@@ -41,18 +41,26 @@ template <typename _IntegerT>
 
 namespace CryptoNote {
 
-ISerializer::SerializerType BinaryOutputStreamSerializer::type() const { return ISerializer::OUTPUT; }
+ISerializer::SerializerType BinaryOutputStreamSerializer::type() const {
+  return ISerializer::OUTPUT;
+}
 
-bool BinaryOutputStreamSerializer::useVarInt() { return m_useVarInt; }
+bool BinaryOutputStreamSerializer::useVarInt() {
+  return m_useVarInt;
+}
 
-void BinaryOutputStreamSerializer::setUseVarInt(bool use) { m_useVarInt = use; }
+void BinaryOutputStreamSerializer::setUseVarInt(bool use) {
+  m_useVarInt = use;
+}
 
 bool BinaryOutputStreamSerializer::beginObject(Common::StringView name) {
   XI_UNUSED(name);
   return true;
 }
 
-bool BinaryOutputStreamSerializer::endObject() { return true; }
+bool BinaryOutputStreamSerializer::endObject() {
+  return true;
+}
 
 bool BinaryOutputStreamSerializer::beginArray(size_t& size, Common::StringView name) {
   XI_UNUSED(name);
@@ -64,7 +72,9 @@ bool BinaryOutputStreamSerializer::beginStaticArray(const size_t size, StringVie
   return true;
 }
 
-bool BinaryOutputStreamSerializer::endArray() { return true; }
+bool BinaryOutputStreamSerializer::endArray() {
+  return true;
+}
 
 bool BinaryOutputStreamSerializer::operator()(uint8_t& value, Common::StringView name) {
   XI_UNUSED(name);
@@ -122,7 +132,9 @@ bool BinaryOutputStreamSerializer::binary(void* value, size_t size, Common::Stri
   return true;
 }
 
-bool BinaryOutputStreamSerializer::binary(std::string& value, Common::StringView name) { return (*this)(value, name); }
+bool BinaryOutputStreamSerializer::binary(std::string& value, Common::StringView name) {
+  return (*this)(value, name);
+}
 
 bool BinaryOutputStreamSerializer::binary(Xi::ByteVector& value, StringView name) {
   size_t size = value.size();
@@ -134,7 +146,9 @@ bool BinaryOutputStreamSerializer::binary(Xi::ByteVector& value, StringView name
   }
 }
 
-bool BinaryOutputStreamSerializer::maybe(bool& value, Common::StringView name) { return this->operator()(value, name); }
+bool BinaryOutputStreamSerializer::maybe(bool& value, Common::StringView name) {
+  return this->operator()(value, name);
+}
 
 bool BinaryOutputStreamSerializer::typeTag(TypeTag& tag, Common::StringView name) {
   XI_RETURN_EC_IF(tag.binary() == TypeTag::NoBinaryTag, false);
@@ -158,6 +172,8 @@ bool BinaryOutputStreamSerializer::operator()(double& value, Common::StringView 
   throw std::runtime_error("double serialization is not supported in BinaryOutputStreamSerializer");
 }
 
-void BinaryOutputStreamSerializer::checkedWrite(const char* buf, size_t size) { write(stream, buf, size); }
+void BinaryOutputStreamSerializer::checkedWrite(const char* buf, size_t size) {
+  write(stream, buf, size);
+}
 
 }  // namespace CryptoNote

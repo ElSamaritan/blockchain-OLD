@@ -15,7 +15,9 @@ static_assert(
     static_cast<uint8_t>(Xi::Config::Network::Type::LocalTestNet) == 4,
     "Their values are used as offset for fundamental configurations, changing those will break the entire chain.");
 
-std::string Xi::to_string(Xi::Config::Network::Type type) { return toString(type); }
+std::string Xi::to_string(Xi::Config::Network::Type type) {
+  return toString(type);
+}
 
 namespace Xi {
 template <>

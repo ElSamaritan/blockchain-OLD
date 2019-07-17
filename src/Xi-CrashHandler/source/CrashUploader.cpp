@@ -29,9 +29,11 @@
 #include <Xi/Http/MultipartFormDataBuilder.h>
 
 Xi::CrashUploader::CrashUploader(const std::string& breapkpadHost, uint16_t port)
-    : m_host{breapkpadHost}, m_port{port} {}
+    : m_host{breapkpadHost}, m_port{port} {
+}
 
-Xi::CrashUploader::~CrashUploader() {}
+Xi::CrashUploader::~CrashUploader() {
+}
 
 boost::optional<std::string> Xi::CrashUploader::upload(const std::string& file, const std::string& application) {
   try {

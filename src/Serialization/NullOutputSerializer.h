@@ -27,34 +27,80 @@ namespace CryptoNote {
 
 class NullOutputSerializer final : public ISerializer {
  public:
-  NullOutputSerializer() {}
-  virtual ~NullOutputSerializer() override {}
+  NullOutputSerializer() {
+  }
+  virtual ~NullOutputSerializer() override {
+  }
 
-  inline ISerializer::SerializerType type() const override { return ISerializer::OUTPUT; }
+  inline ISerializer::SerializerType type() const override {
+    return ISerializer::OUTPUT;
+  }
 
-  [[nodiscard]] inline bool beginObject(Common::StringView) override { return true; }
-  [[nodiscard]] inline bool endObject() override { return true; }
+  [[nodiscard]] inline bool beginObject(Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool endObject() override {
+    return true;
+  }
 
-  [[nodiscard]] inline bool beginArray(size_t&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool beginStaticArray(const size_t, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool endArray() override { return true; }
+  [[nodiscard]] inline bool beginArray(size_t&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool beginStaticArray(const size_t, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool endArray() override {
+    return true;
+  }
 
-  [[nodiscard]] inline bool operator()(uint8_t&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool operator()(int16_t&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool operator()(uint16_t&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool operator()(int32_t&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool operator()(uint32_t&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool operator()(int64_t&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool operator()(uint64_t&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool operator()(double&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool operator()(bool&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool operator()(std::string&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool binary(void*, size_t, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool binary(std::string&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool binary(Xi::ByteVector&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool maybe(bool&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool typeTag(TypeTag&, Common::StringView) override { return true; }
-  [[nodiscard]] inline bool flag(std::vector<TypeTag>&, Common::StringView) override { return true; }
+  [[nodiscard]] inline bool operator()(uint8_t&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool operator()(int16_t&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool operator()(uint16_t&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool operator()(int32_t&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool operator()(uint32_t&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool operator()(int64_t&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool operator()(uint64_t&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool operator()(double&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool operator()(bool&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool operator()(std::string&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool binary(void*, size_t, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool binary(std::string&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool binary(Xi::ByteVector&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool maybe(bool&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool typeTag(TypeTag&, Common::StringView) override {
+    return true;
+  }
+  [[nodiscard]] inline bool flag(std::vector<TypeTag>&, Common::StringView) override {
+    return true;
+  }
 
   template <typename T>
   [[nodiscard]] bool operator()(T& value, Common::StringView name) {

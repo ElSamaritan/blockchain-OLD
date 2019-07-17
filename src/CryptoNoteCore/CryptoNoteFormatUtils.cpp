@@ -63,9 +63,11 @@ bool generate_key_image_helper(const AccountKeys& ack, const PublicKey& tx_publi
 }
 
 uint64_t power_integral(uint64_t a, uint64_t b) {
-  if (b == 0) return 1;
+  if (b == 0)
+    return 1;
   uint64_t total = a;
-  for (uint64_t i = 1; i != b; i++) total *= a;
+  for (uint64_t i = 1; i != b; i++)
+    total *= a;
   return total;
 }
 
@@ -93,18 +95,21 @@ bool get_tx_fee(const Transaction& tx, uint64_t& fee) {
 
 uint64_t get_tx_fee(const Transaction& tx) {
   uint64_t r = 0;
-  if (!get_tx_fee(tx, r)) return 0;
+  if (!get_tx_fee(tx, r))
+    return 0;
   return r;
 }
 
 std::vector<uint32_t> relativeOutputOffsetsToAbsolute(const std::vector<uint32_t>& off) {
   std::vector<uint32_t> res = off;
-  for (size_t i = 1; i < res.size(); i++) res[i] += res[i - 1];
+  for (size_t i = 1; i < res.size(); i++)
+    res[i] += res[i - 1];
   return res;
 }
 
 std::vector<uint32_t> absolute_output_offsets_to_relative(const std::vector<uint32_t>& off) {
-  if (off.empty()) return {};
+  if (off.empty())
+    return {};
   auto copy = off;
   for (size_t i = 1; i < copy.size(); ++i) {
     copy[i] = off[i] - off[i - 1];
@@ -299,7 +304,9 @@ bool checkOutsValid(const TransactionPrefix& tx, std::string* error) {
   return true;
 }
 
-bool checkMoneyOverflow(const TransactionPrefix& tx) { return checkInputsOverflow(tx) && checkOutsOverflow(tx); }
+bool checkMoneyOverflow(const TransactionPrefix& tx) {
+  return checkInputsOverflow(tx) && checkOutsOverflow(tx);
+}
 
 bool checkInputsOverflow(const TransactionPrefix& tx) {
   uint64_t money = 0;
@@ -311,7 +318,8 @@ bool checkInputsOverflow(const TransactionPrefix& tx) {
       amount = keyInput->amount;
     }
 
-    if (money > amount + money) return false;
+    if (money > amount + money)
+      return false;
 
     money += amount;
   }
@@ -321,7 +329,8 @@ bool checkInputsOverflow(const TransactionPrefix& tx) {
 bool checkOutsOverflow(const TransactionPrefix& tx) {
   uint64_t money = 0;
   for (const auto& o : tx.outputs) {
-    if (money > o.amount + money) return false;
+    if (money > o.amount + money)
+      return false;
     money += o.amount;
   }
   return true;
@@ -361,7 +370,8 @@ bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const Publi
 bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, std::vector<size_t>& outs,
                      uint64_t& money_transfered) {
   PublicKey transactionPublicKey = getTransactionPublicKeyFromExtra(tx.extra);
-  if (transactionPublicKey == PublicKey::Null) return false;
+  if (transactionPublicKey == PublicKey::Null)
+    return false;
   return lookup_acc_outs(acc, tx, transactionPublicKey, outs, money_transfered);
 }
 

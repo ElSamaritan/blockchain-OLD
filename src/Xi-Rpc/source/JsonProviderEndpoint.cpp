@@ -60,11 +60,16 @@ namespace Rpc {
 
 using Json = Common::JsonValue;
 
-JsonProviderEndpoint::JsonProviderEndpoint(SharedIServiceProvider service) : m_service{service} {}
+JsonProviderEndpoint::JsonProviderEndpoint(SharedIServiceProvider service) : m_service{service} {
+}
 
-std::chrono::microseconds JsonProviderEndpoint::timeout() const { return std::chrono::seconds{1}; }
+std::chrono::microseconds JsonProviderEndpoint::timeout() const {
+  return std::chrono::seconds{1};
+}
 
-uint32_t JsonProviderEndpoint::batchLimit() const { return 10; }
+uint32_t JsonProviderEndpoint::batchLimit() const {
+  return 10;
+}
 
 bool JsonProviderEndpoint::acceptsRequest(const Http::Request &request) {
   XI_RETURN_EC_IF_NOT(request.method() == Http::Method::Post || request.method() == Http::Method::Options, false);
@@ -288,7 +293,9 @@ Http::Response JsonProviderEndpoint::doMakeNotFound(const std::string &why) {
   return makeJsonResponse(makeError(ErrorCode::NotFound, why));
 }
 
-Http::Response JsonProviderEndpoint::doMakeNotImplemented() { return makeJsonResponse(makeError(ErrorCode::NotFound)); }
+Http::Response JsonProviderEndpoint::doMakeNotImplemented() {
+  return makeJsonResponse(makeError(ErrorCode::NotFound));
+}
 
 Http::Response JsonProviderEndpoint::doMakeInternalServerError(const std::string &why) {
   return makeJsonResponse(makeError(ErrorCode::InternalServerError, why));

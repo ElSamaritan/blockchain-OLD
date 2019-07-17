@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -37,7 +37,9 @@ namespace Crypto {
 struct PublicKey : Xi::ByteArray<32> {
   using array_type = Xi::ByteArray<32>;
   static const PublicKey Null;
-  static inline constexpr size_t bytes() { return 32; }
+  static inline constexpr size_t bytes() {
+    return 32;
+  }
   static Xi::Result<PublicKey> fromString(const std::string& hex);
 
   PublicKey();

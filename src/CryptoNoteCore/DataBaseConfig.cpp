@@ -34,7 +34,8 @@ DataBaseConfig::DataBaseConfig()
       maxOpenFiles(Xi::Config::Database::maximumOpenFiles()),
       writeBufferSize(Xi::Config::Database::writeBufferSize()),
       readCacheSize(Xi::Config::Database::readBufferSize()),
-      compression(Compression::LZ4) {}
+      compression(Compression::LZ4) {
+}
 
 bool DataBaseConfig::init(const std::string dataDirectory, const uint16_t backgroundThreads, const uint16_t openFiles,
                           const uint64_t writeBuffer, const uint64_t readCache) {
@@ -51,35 +52,61 @@ bool DataBaseConfig::init(const std::string dataDirectory, const uint16_t backgr
   return true;
 }
 
-bool DataBaseConfig::isConfigFolderDefaulted() const { return configFolderDefaulted; }
+bool DataBaseConfig::isConfigFolderDefaulted() const {
+  return configFolderDefaulted;
+}
 
-std::string DataBaseConfig::getDataDir() const { return dataDir; }
+std::string DataBaseConfig::getDataDir() const {
+  return dataDir;
+}
 
-uint16_t DataBaseConfig::getBackgroundThreadsCount() const { return backgroundThreadsCount; }
+uint16_t DataBaseConfig::getBackgroundThreadsCount() const {
+  return backgroundThreadsCount;
+}
 
-uint32_t DataBaseConfig::getMaxOpenFiles() const { return maxOpenFiles; }
+uint32_t DataBaseConfig::getMaxOpenFiles() const {
+  return maxOpenFiles;
+}
 
-uint64_t DataBaseConfig::getWriteBufferSize() const { return writeBufferSize; }
+uint64_t DataBaseConfig::getWriteBufferSize() const {
+  return writeBufferSize;
+}
 
-uint64_t DataBaseConfig::getReadCacheSize() const { return readCacheSize; }
+uint64_t DataBaseConfig::getReadCacheSize() const {
+  return readCacheSize;
+}
 
-DataBaseConfig::Compression DataBaseConfig::getCompression() const { return compression; }
+DataBaseConfig::Compression DataBaseConfig::getCompression() const {
+  return compression;
+}
 
-void DataBaseConfig::setConfigFolderDefaulted(bool defaulted) { configFolderDefaulted = defaulted; }
+void DataBaseConfig::setConfigFolderDefaulted(bool defaulted) {
+  configFolderDefaulted = defaulted;
+}
 
-void DataBaseConfig::setDataDir(const std::string &_dataDir) { this->dataDir = _dataDir; }
+void DataBaseConfig::setDataDir(const std::string &_dataDir) {
+  this->dataDir = _dataDir;
+}
 
 void DataBaseConfig::setBackgroundThreadsCount(uint16_t _backgroundThreadsCount) {
   this->backgroundThreadsCount = _backgroundThreadsCount;
 }
 
-void DataBaseConfig::setMaxOpenFiles(uint32_t _maxOpenFiles) { this->maxOpenFiles = _maxOpenFiles; }
+void DataBaseConfig::setMaxOpenFiles(uint32_t _maxOpenFiles) {
+  this->maxOpenFiles = _maxOpenFiles;
+}
 
-void DataBaseConfig::setWriteBufferSize(uint64_t _writeBufferSize) { this->writeBufferSize = _writeBufferSize; }
+void DataBaseConfig::setWriteBufferSize(uint64_t _writeBufferSize) {
+  this->writeBufferSize = _writeBufferSize;
+}
 
-void DataBaseConfig::setReadCacheSize(uint64_t _readCacheSize) { this->readCacheSize = _readCacheSize; }
+void DataBaseConfig::setReadCacheSize(uint64_t _readCacheSize) {
+  this->readCacheSize = _readCacheSize;
+}
 
-void DataBaseConfig::setCompression(DataBaseConfig::Compression _compression) { compression = _compression; }
+void DataBaseConfig::setCompression(DataBaseConfig::Compression _compression) {
+  compression = _compression;
+}
 
 namespace Common {
 template <>

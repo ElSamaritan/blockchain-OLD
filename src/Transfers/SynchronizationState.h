@@ -21,8 +21,6 @@
 #include <map>
 #include <string>
 
-
-
 #include "CommonTypes.h"
 #include "Common/IStreamSerializable.h"
 #include "Serialization/ISerializer.h"
@@ -40,7 +38,9 @@ class SynchronizationState : public IStreamSerializable {
 
   typedef std::vector<Crypto::Hash> ShortHistory;
 
-  explicit SynchronizationState(const Crypto::Hash& genesisBlockHash) { m_blockchain.push_back(genesisBlockHash); }
+  explicit SynchronizationState(const Crypto::Hash& genesisBlockHash) {
+    m_blockchain.push_back(genesisBlockHash);
+  }
   ~SynchronizationState() override = default;
 
   ShortHistory getShortHistory(BlockHeight localHeight) const;

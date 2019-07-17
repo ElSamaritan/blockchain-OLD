@@ -41,6 +41,8 @@ P2pContext& P2pContextOwner::get() {
   return *contextIterator->get();
 }
 
-P2pContext* P2pContextOwner::operator->() { return &get(); }
+P2pContext* P2pContextOwner::operator->() {
+  return &get();
+}
 
 }  // namespace CryptoNote

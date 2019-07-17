@@ -31,7 +31,8 @@
 
 namespace System {
 
-TcpConnection::TcpConnection() : dispatcher(nullptr) {}
+TcpConnection::TcpConnection() : dispatcher(nullptr) {
+}
 
 TcpConnection::TcpConnection(TcpConnection&& other) : dispatcher(other.dispatcher) {
   if (other.dispatcher != nullptr) {

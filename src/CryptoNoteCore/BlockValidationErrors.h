@@ -65,7 +65,9 @@ class BlockValidationErrorCategory : public std::error_category {
  public:
   static BlockValidationErrorCategory INSTANCE;
 
-  virtual const char* name() const noexcept { return "BlockValidationErrorCategory"; }
+  virtual const char* name() const noexcept {
+    return "BlockValidationErrorCategory";
+  }
 
   virtual std::error_condition default_error_condition(int ev) const noexcept {
     return std::error_condition(ev, *this);
@@ -135,7 +137,8 @@ class BlockValidationErrorCategory : public std::error_category {
   }
 
  private:
-  BlockValidationErrorCategory() {}
+  BlockValidationErrorCategory() {
+  }
 };
 
 inline std::error_code make_error_code(CryptoNote::error::BlockValidationError e) {

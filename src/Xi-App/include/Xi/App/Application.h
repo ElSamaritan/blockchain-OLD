@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -139,7 +139,9 @@ class Application {
 }  // namespace App
 }  // namespace Xi
 
-#define XI_DECLARE_APP(APP) \
-  std::unique_ptr<Xi::App::Application> Xi::App::Application::makeInstance() { return std::make_unique<APP>(); }
+#define XI_DECLARE_APP(APP)                                                    \
+  std::unique_ptr<Xi::App::Application> Xi::App::Application::makeInstance() { \
+    return std::make_unique<APP>();                                            \
+  }
 
 #define XI_APP() Xi::App::Application::instance()

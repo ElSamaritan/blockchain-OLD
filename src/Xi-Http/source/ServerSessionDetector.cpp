@@ -32,7 +32,8 @@ Xi::Http::ServerSessionDetector::ServerSessionDetector(boost::asio::ip::tcp::soc
                                                        boost::asio::ssl::context &ctx,
                                                        std::shared_ptr<IServerSessionBuilder> builder)
     : m_socket{std::move(socket)}, m_ctx{ctx}, m_strand{m_socket.get_executor()}, m_builder{builder} {
-  if (m_builder.get() == nullptr) throw std::invalid_argument{"builder cannot be a nullptr"};
+  if (m_builder.get() == nullptr)
+    throw std::invalid_argument{"builder cannot be a nullptr"};
 }
 
 void Xi::Http::ServerSessionDetector::run() {

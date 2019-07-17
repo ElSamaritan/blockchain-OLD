@@ -106,10 +106,12 @@ void Xi::Http::HeaderContainer::setBasicAuthorization(const Xi::Http::BasicCrede
 }
 
 void Xi::Http::HeaderContainer::setAllow(std::initializer_list<Method> method) {
-  if (method.size() == 0) throw std::invalid_argument{"you need to support at least one method."};
+  if (method.size() == 0)
+    throw std::invalid_argument{"you need to support at least one method."};
   std::stringstream builder{};
   builder << to_string(*method.begin());
-  for (auto it = std::next(method.begin()); it != method.end(); ++it) builder << ", " << to_string(*it);
+  for (auto it = std::next(method.begin()); it != method.end(); ++it)
+    builder << ", " << to_string(*it);
   set(Allow, builder.str());
 }
 
@@ -132,10 +134,12 @@ void Xi::Http::HeaderContainer::setContentType(Xi::Http::ContentType _contentTyp
 
 void Xi::Http::HeaderContainer::setAcceptedContentEncodings(
     std::initializer_list<Xi::Http::ContentEncoding> encodings) {
-  if (encodings.size() == 0) throw std::invalid_argument{"you need to support at least one encoding."};
+  if (encodings.size() == 0)
+    throw std::invalid_argument{"you need to support at least one encoding."};
   std::stringstream builder{};
   builder << to_string(*encodings.begin());
-  for (auto it = std::next(encodings.begin()); it != encodings.end(); ++it) builder << ", " << to_string(*it);
+  for (auto it = std::next(encodings.begin()); it != encodings.end(); ++it)
+    builder << ", " << to_string(*it);
   set(AcceptEncoding, builder.str());
 }
 
@@ -151,7 +155,8 @@ boost::optional<std::vector<Xi::Http::ContentEncoding> > Xi::Http::HeaderContain
     }
     std::vector<std::string> supportedEncodings;
     boost::split(supportedEncodings, *search, boost::is_any_of(","));
-    for (auto &encoding : supportedEncodings) boost::trim(encoding);
+    for (auto &encoding : supportedEncodings)
+      boost::trim(encoding);
     std::vector<Xi::Http::ContentEncoding> reval;
     std::transform(supportedEncodings.begin(), supportedEncodings.end(), std::back_inserter(reval),
                    lexical_cast<Xi::Http::ContentEncoding>);
@@ -197,9 +202,13 @@ boost::optional<std::string> Xi::Http::HeaderContainer::location() const {
     return boost::optional<std::string>{search->second};
 }
 
-Xi::Http::HeaderContainer::const_iterator Xi::Http::HeaderContainer::begin() const { return m_rawHeaders.begin(); }
+Xi::Http::HeaderContainer::const_iterator Xi::Http::HeaderContainer::begin() const {
+  return m_rawHeaders.begin();
+}
 
-Xi::Http::HeaderContainer::const_iterator Xi::Http::HeaderContainer::end() const { return m_rawHeaders.end(); }
+Xi::Http::HeaderContainer::const_iterator Xi::Http::HeaderContainer::end() const {
+  return m_rawHeaders.end();
+}
 
 boost::optional<std::string> Xi::Http::HeaderContainer::get(Xi::Http::HeaderContainer::Header header) const {
   auto search = m_rawHeaders.find(header);
@@ -210,10 +219,12 @@ boost::optional<std::string> Xi::Http::HeaderContainer::get(Xi::Http::HeaderCont
 }
 
 void Xi::Http::HeaderContainer::setAccessControlRequestMethods(std::initializer_list<Xi::Http::Method> methods) {
-  if (methods.size() == 0) throw std::invalid_argument{"you need to support at least one method."};
+  if (methods.size() == 0)
+    throw std::invalid_argument{"you need to support at least one method."};
   std::stringstream builder{};
   builder << to_string(*methods.begin());
-  for (auto it = std::next(methods.begin()); it != methods.end(); ++it) builder << ", " << to_string(*it);
+  for (auto it = std::next(methods.begin()); it != methods.end(); ++it)
+    builder << ", " << to_string(*it);
   set(AccessControlAllowMethods, builder.str());
 }
 

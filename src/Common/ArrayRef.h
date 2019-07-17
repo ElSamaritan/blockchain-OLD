@@ -67,11 +67,14 @@ class ArrayRef {
   // Copy constructor.
   // Performs default action - bitwise copying of source object.
   // The behavior is undefined unless 'other' 'ArrayRef' is in defined state, that is 'data' != 'nullptr' || 'size' == 0
-  ArrayRef(const ArrayRef& other) : data(other.data), size(other.size) { assert(data != nullptr || size == 0); }
+  ArrayRef(const ArrayRef& other) : data(other.data), size(other.size) {
+    assert(data != nullptr || size == 0);
+  }
 
   // Destructor.
   // No special action is performed.
-  ~ArrayRef() {}
+  ~ArrayRef() {
+  }
 
   // Copy assignment operator.
   // The behavior is undefined unless 'other' 'ArrayRef' is in defined state, that is 'data' != 'nullptr' || 'size' == 0
@@ -82,7 +85,9 @@ class ArrayRef {
     return *this;
   }
 
-  operator ArrayView<Object, Size>() const { return ArrayView<Object, Size>(data, size); }
+  operator ArrayView<Object, Size>() const {
+    return ArrayView<Object, Size>(data, size);
+  }
 
   Object* getData() const {
     assert(data != nullptr || size == 0);

@@ -107,7 +107,8 @@ void Xi::Http::BeastConversion::copyHeaders(const Xi::Http::HeaderContainer &hea
                                             Xi::Http::BeastConversion::beast_request_t &request) const {
   for (auto header : headersToCopy) {
     const auto content = headers.get(header);
-    if (content) request.set(static_cast<boost::beast::http::field>(header), content);
+    if (content)
+      request.set(static_cast<boost::beast::http::field>(header), content);
   }
 }
 
@@ -115,7 +116,8 @@ void Xi::Http::BeastConversion::copyHeaders(const Xi::Http::HeaderContainer &hea
                                             Xi::Http::BeastConversion::beast_response_t &response) const {
   for (auto header : headersToCopy) {
     const auto content = headers.get(header);
-    if (content) response.set(static_cast<boost::beast::http::field>(header), content);
+    if (content)
+      response.set(static_cast<boost::beast::http::field>(header), content);
   }
 }
 
@@ -123,7 +125,8 @@ void Xi::Http::BeastConversion::copyHeaders(const Xi::Http::BeastConversion::bea
                                             Xi::Http::HeaderContainer &headers) const {
   for (const auto &header : headersToCopy) {
     auto search = request.find(static_cast<boost::beast::http::field>(header));
-    if (search != request.end()) headers.set(header, std::string{search->value()});
+    if (search != request.end())
+      headers.set(header, std::string{search->value()});
   }
 }
 
@@ -131,7 +134,8 @@ void Xi::Http::BeastConversion::copyHeaders(const Xi::Http::BeastConversion::bea
                                             Xi::Http::HeaderContainer &headers) const {
   for (const auto &header : headersToCopy) {
     auto search = response.find(static_cast<boost::beast::http::field>(header));
-    if (search != response.end()) headers.set(header, std::string{search->value()});
+    if (search != response.end())
+      headers.set(header, std::string{search->value()});
   }
 }
 

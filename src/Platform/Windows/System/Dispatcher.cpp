@@ -214,7 +214,9 @@ NativeContext* Dispatcher::getCurrentContext() const {
   return currentContext;
 }
 
-void Dispatcher::interrupt() { interrupt(currentContext); }
+void Dispatcher::interrupt() {
+  interrupt(currentContext);
+}
 
 void Dispatcher::interrupt(NativeContext* context) {
   assert(GetCurrentThreadId() == threadId);
@@ -354,7 +356,9 @@ void Dispatcher::addTimer(uint64_t time, NativeContext* context) {
   timers.insert(std::make_pair(time, context));
 }
 
-void* Dispatcher::getCompletionPort() const { return completionPort; }
+void* Dispatcher::getCompletionPort() const {
+  return completionPort;
+}
 
 NativeContext& Dispatcher::getReusableContext() {
   if (firstReusableContext == nullptr) {

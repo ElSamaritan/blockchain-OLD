@@ -492,7 +492,9 @@ bool BlockchainCache::checkIfAnySpent(const Crypto::KeyImageSet& keyImages, uint
   });
 }
 
-uint32_t BlockchainCache::getBlockCount() const { return static_cast<uint32_t>(blockInfos.size()); }
+uint32_t BlockchainCache::getBlockCount() const {
+  return static_cast<uint32_t>(blockInfos.size());
+}
 
 bool BlockchainCache::hasBlock(const Crypto::Hash& blockHash) const {
   return blockInfos.get<BlockHashTag>().count(blockHash) != 0;
@@ -557,11 +559,17 @@ std::vector<Crypto::Hash> BlockchainCache::getBlockHashes(uint32_t startBlockInd
   return hashes;
 }
 
-IBlockchainCache* BlockchainCache::getParent() const { return parent; }
+IBlockchainCache* BlockchainCache::getParent() const {
+  return parent;
+}
 
-void BlockchainCache::setParent(IBlockchainCache* p) { parent = p; }
+void BlockchainCache::setParent(IBlockchainCache* p) {
+  parent = p;
+}
 
-uint32_t BlockchainCache::getStartBlockIndex() const { return startIndex; }
+uint32_t BlockchainCache::getStartBlockIndex() const {
+  return startIndex;
+}
 
 size_t BlockchainCache::getKeyOutputsCountForAmount(uint64_t amount, uint32_t blockIndex) const {
   auto it = keyOutputsGlobalIndexes.find(amount);
@@ -782,7 +790,9 @@ void BlockchainCache::getRawTransactions(const std::vector<Crypto::Hash>& reques
   }
 }
 
-size_t BlockchainCache::getChildCount() const { return children.size(); }
+size_t BlockchainCache::getChildCount() const {
+  return children.size();
+}
 
 void BlockchainCache::addChild(IBlockchainCache* child) {
   assert(std::find(children.begin(), children.end(), child) == children.end());

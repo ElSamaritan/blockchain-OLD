@@ -36,7 +36,8 @@ class WalletRequest {
                              boost::optional<std::shared_ptr<WalletRequest>>& nextRequest, std::error_code ec)>
       Callback;
 
-  virtual ~WalletRequest() {}
+  virtual ~WalletRequest() {
+  }
 
   virtual void perform(INode& node, std::function<void(WalletRequest::Callback, std::error_code)> cb) = 0;
 };
@@ -45,9 +46,11 @@ class WalletGetRandomOutsByAmountsRequest : public WalletRequest {
  public:
   WalletGetRandomOutsByAmountsRequest(const std::vector<uint64_t>& amounts, uint64_t outsCount,
                                       std::shared_ptr<SendTransactionContext> context, Callback cb)
-      : m_amounts(amounts), m_outsCount(outsCount), m_context(context), m_cb(cb) {}
+      : m_amounts(amounts), m_outsCount(outsCount), m_context(context), m_cb(cb) {
+  }
 
-  virtual ~WalletGetRandomOutsByAmountsRequest() override {}
+  virtual ~WalletGetRandomOutsByAmountsRequest() override {
+  }
 
   virtual void perform(INode& node, std::function<void(WalletRequest::Callback, std::error_code)> cb) override {
     std::map<uint64_t, uint64_t> amounts{};
@@ -66,8 +69,10 @@ class WalletGetRandomOutsByAmountsRequest : public WalletRequest {
 
 class WalletRelayTransactionRequest : public WalletRequest {
  public:
-  WalletRelayTransactionRequest(const CryptoNote::Transaction& tx, Callback cb) : m_tx(tx), m_cb(cb) {}
-  virtual ~WalletRelayTransactionRequest() override {}
+  WalletRelayTransactionRequest(const CryptoNote::Transaction& tx, Callback cb) : m_tx(tx), m_cb(cb) {
+  }
+  virtual ~WalletRelayTransactionRequest() override {
+  }
 
   virtual void perform(INode& node, std::function<void(WalletRequest::Callback, std::error_code)> cb) override {
     node.relayTransaction(m_tx, std::bind(cb, m_cb, std::placeholders::_1));

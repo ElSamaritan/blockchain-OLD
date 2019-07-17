@@ -24,11 +24,16 @@ using namespace Logging;
 
 namespace CryptoNote {
 //---------------------------------------------------------------------------
-Checkpoints::Checkpoints(Logging::ILogger &log) : logger(log, "checkpoints") {}
+Checkpoints::Checkpoints(Logging::ILogger &log) : logger(log, "checkpoints") {
+}
 
-bool Checkpoints::isEnabled() const { return m_enabled; }
+bool Checkpoints::isEnabled() const {
+  return m_enabled;
+}
 
-void Checkpoints::setEnabled(bool useCheckpoints) { m_enabled = useCheckpoints; }
+void Checkpoints::setEnabled(bool useCheckpoints) {
+  m_enabled = useCheckpoints;
+}
 //---------------------------------------------------------------------------
 bool Checkpoints::addCheckpoint(uint32_t index, const std::string &hash_str) {
   auto hashParseResult = Crypto::Hash::fromString(hash_str);
@@ -110,7 +115,8 @@ bool Checkpoints::checkBlock(uint32_t index, const Crypto::Hash &h, bool &isChec
   }
   auto it = points.find(index);
   isCheckpoint = it != points.end();
-  if (!isCheckpoint) return true;
+  if (!isCheckpoint)
+    return true;
 
   if (it->second == h) {
     if (index % 100 == 0) {
@@ -155,7 +161,9 @@ std::vector<uint32_t> Checkpoints::getCheckpointHeights() const {
   return checkpointHeights;
 }
 
-std::size_t Checkpoints::size() const { return points.size(); }
+std::size_t Checkpoints::size() const {
+  return points.size();
+}
 
 uint32_t Checkpoints::topCheckpointIndex() const {
   if (points.empty()) {

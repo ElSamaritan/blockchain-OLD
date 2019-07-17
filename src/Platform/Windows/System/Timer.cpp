@@ -40,9 +40,11 @@ struct TimerContext {
 
 }  // namespace
 
-Timer::Timer() : dispatcher(nullptr) {}
+Timer::Timer() : dispatcher(nullptr) {
+}
 
-Timer::Timer(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {}
+Timer::Timer(Dispatcher& dispatcher) : dispatcher(&dispatcher), context(nullptr) {
+}
 
 Timer::Timer(Timer&& other) : dispatcher(other.dispatcher) {
   if (dispatcher != nullptr) {
@@ -52,7 +54,9 @@ Timer::Timer(Timer&& other) : dispatcher(other.dispatcher) {
   }
 }
 
-Timer::~Timer() { assert(dispatcher == nullptr || context == nullptr); }
+Timer::~Timer() {
+  assert(dispatcher == nullptr || context == nullptr);
+}
 
 Timer& Timer::operator=(Timer&& other) {
   assert(dispatcher == nullptr || context == nullptr);

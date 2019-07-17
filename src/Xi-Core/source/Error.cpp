@@ -26,9 +26,12 @@
 #include <stdexcept>
 #include <cassert>
 
-Xi::Error::Error() : m_error{Error::not_initialized_tag{}} {}
-Xi::Error::Error(std::exception_ptr e) : m_error{e} {}
-Xi::Error::Error(std::error_code ec) : m_error{ec} {}
+Xi::Error::Error() : m_error{Error::not_initialized_tag{}} {
+}
+Xi::Error::Error(std::exception_ptr e) : m_error{e} {
+}
+Xi::Error::Error(std::error_code ec) : m_error{ec} {
+}
 
 std::string Xi::Error::message() const {
   if (isException()) {
@@ -47,11 +50,19 @@ std::string Xi::Error::message() const {
   }
 }
 
-bool Xi::Error::isException() const { return std::holds_alternative<std::exception_ptr>(m_error); }
-std::exception_ptr Xi::Error::exception() const { return std::get<std::exception_ptr>(m_error); }
+bool Xi::Error::isException() const {
+  return std::holds_alternative<std::exception_ptr>(m_error);
+}
+std::exception_ptr Xi::Error::exception() const {
+  return std::get<std::exception_ptr>(m_error);
+}
 
-bool Xi::Error::isErrorCode() const { return std::holds_alternative<std::error_code>(m_error); }
-std::error_code Xi::Error::errorCode() const { return std::get<std::error_code>(m_error); }
+bool Xi::Error::isErrorCode() const {
+  return std::holds_alternative<std::error_code>(m_error);
+}
+std::error_code Xi::Error::errorCode() const {
+  return std::get<std::error_code>(m_error);
+}
 
 void Xi::Error::throwException() const {
   if (isException()) {
@@ -64,4 +75,6 @@ void Xi::Error::throwException() const {
   }
 }
 
-bool Xi::Error::isNotInitialized() const { return std::holds_alternative<not_initialized_tag>(m_error); }
+bool Xi::Error::isNotInitialized() const {
+  return std::holds_alternative<not_initialized_tag>(m_error);
+}

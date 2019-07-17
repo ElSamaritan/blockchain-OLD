@@ -112,7 +112,9 @@ class TransactionValidationErrorCategory : public std::error_category {
  public:
   static TransactionValidationErrorCategory INSTANCE;
 
-  virtual const char* name() const noexcept { return "TransactionValidationErrorCategory"; }
+  virtual const char* name() const noexcept {
+    return "TransactionValidationErrorCategory";
+  }
 
   virtual std::error_condition default_error_condition(int ev) const noexcept {
     return std::error_condition(ev, *this);
@@ -240,7 +242,8 @@ class TransactionValidationErrorCategory : public std::error_category {
   }
 
  private:
-  TransactionValidationErrorCategory() {}
+  TransactionValidationErrorCategory() {
+  }
 };
 
 inline std::error_code make_error_code(CryptoNote::error::TransactionValidationError e) {

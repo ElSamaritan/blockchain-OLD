@@ -31,13 +31,17 @@ MainChainStorage::MainChainStorage(const std::string& blocksFilename, const std:
   }
 }
 
-MainChainStorage::~MainChainStorage() { storage.close(); }
+MainChainStorage::~MainChainStorage() {
+  storage.close();
+}
 
 void MainChainStorage::pushBlock(const RawBlock& rawBlock, const uint64_t blobSize) {
   storage.push_back(Entity{rawBlock, blobSize});
 }
 
-void MainChainStorage::popBlock() { storage.pop_back(); }
+void MainChainStorage::popBlock() {
+  storage.pop_back();
+}
 
 RawBlock MainChainStorage::getBlockByIndex(uint32_t index) const {
   if (index >= storage.size()) {
@@ -57,9 +61,13 @@ uint64_t MainChainStorage::getBlobSizeByIndex(uint32_t index) const {
   return storage[index].blobSize;
 }
 
-uint32_t MainChainStorage::getBlockCount() const { return static_cast<uint32_t>(storage.size()); }
+uint32_t MainChainStorage::getBlockCount() const {
+  return static_cast<uint32_t>(storage.size());
+}
 
-void MainChainStorage::clear() { storage.clear(); }
+void MainChainStorage::clear() {
+  storage.clear();
+}
 
 std::unique_ptr<IMainChainStorage> createSwappedMainChainStorage(const std::string& dataDir, const Currency& currency) {
   boost::filesystem::path blocksFilename = boost::filesystem::path(dataDir) / currency.blocksFileName();

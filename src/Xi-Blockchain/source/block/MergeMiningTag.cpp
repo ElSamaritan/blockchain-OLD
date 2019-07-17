@@ -27,9 +27,13 @@ namespace Xi {
 namespace Blockchain {
 namespace Block {
 
-uint64_t MergeMiningTag::size() const { return prefix.size() + postfix.size(); }
+uint64_t MergeMiningTag::size() const {
+  return prefix.size() + postfix.size();
+}
 
-uint64_t MergeMiningTag::binarySize() const { return size() * ::Crypto::Hash::bytes(); }
+uint64_t MergeMiningTag::binarySize() const {
+  return size() * ::Crypto::Hash::bytes();
+}
 
 }  // namespace Block
 }  // namespace Blockchain

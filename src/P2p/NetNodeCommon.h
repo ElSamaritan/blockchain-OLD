@@ -66,7 +66,9 @@ struct p2p_endpoint_stub : public IP2pEndpoint {
       std::function<void(CryptoNote::CryptoNoteConnectionContext&, PeerIdType)> f) override {
     XI_UNUSED(f);
   }
-  virtual uint64_t get_connections_count() override { return 0; }
+  virtual uint64_t get_connections_count() override {
+    return 0;
+  }
   virtual void externalRelayNotifyToAll(int command, const BinaryArray& data_buff,
                                         const net_connection_id* excludeConnection) override {
     XI_UNUSED(command, data_buff, excludeConnection);
@@ -76,7 +78,9 @@ struct p2p_endpoint_stub : public IP2pEndpoint {
     XI_UNUSED(ip, penalty);
     return false;
   }
-  virtual void report_success(const uint32_t ip) override { XI_UNUSED(ip); }
+  virtual void report_success(const uint32_t ip) override {
+    XI_UNUSED(ip);
+  }
 
   virtual bool is_ip_address_blocked(const uint32_t ip) override {
     XI_UNUSED(ip);

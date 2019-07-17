@@ -47,20 +47,32 @@ struct KeyPrefix {
     this->Prefix[1] = 0xFF;
   }
 
-  bool operator==(const KeyPrefix& rhs) const { return Prefix == rhs.Prefix; }
-  bool operator!=(const KeyPrefix& rhs) const { return Prefix != rhs.Prefix; }
+  bool operator==(const KeyPrefix& rhs) const {
+    return Prefix == rhs.Prefix;
+  }
+  bool operator!=(const KeyPrefix& rhs) const {
+    return Prefix != rhs.Prefix;
+  }
 };
-static inline KeyPrefix makePrefix(const Xi::Byte prefix) { return KeyPrefix{prefix}; }
+static inline KeyPrefix makePrefix(const Xi::Byte prefix) {
+  return KeyPrefix{prefix};
+}
 
 struct NoKey {
   KV_BEGIN_SERIALIZATION
   XI_UNUSED(s)
   KV_END_SERIALIZATION
 
-  bool operator==(const NoKey&) const { return true; }
-  bool operator!=(const NoKey&) const { return false; }
+  bool operator==(const NoKey&) const {
+    return true;
+  }
+  bool operator!=(const NoKey&) const {
+    return false;
+  }
 };
-static inline NoKey noKey() { return NoKey{}; }
+static inline NoKey noKey() {
+  return NoKey{};
+}
 
 const KeyPrefix BLOCK_INDEX_TO_KEY_IMAGE_PREFIX = makePrefix(0x01);
 const KeyPrefix BLOCK_INDEX_TO_TX_HASHES_PREFIX = makePrefix(0x02);

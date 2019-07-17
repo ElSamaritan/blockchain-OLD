@@ -34,7 +34,9 @@ namespace Xi {
 namespace Concurrent {
 struct ReadersWriterLock {
   mutable boost::shared_mutex mutex;
-  operator boost::shared_mutex&() const { return mutex; }
+  operator boost::shared_mutex&() const {
+    return mutex;
+  }
 };
 
 #define XI_CONCURRENT_LOCK_READ(X)                               \

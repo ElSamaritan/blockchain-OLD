@@ -56,7 +56,8 @@ Xi::Http::Listener::Listener(boost::asio::ip::tcp::endpoint endpoint) : io{}, m_
 }
 
 void Xi::Http::Listener::run() {
-  if (!m_acceptor.is_open()) return;
+  if (!m_acceptor.is_open())
+    return;
   doAccept();
 }
 
@@ -96,6 +97,10 @@ void Xi::Http::Listener::onAccept(boost::beast::error_code ec) {
   doAccept();
 }
 
-void Xi::Http::Listener::onError(boost::beast::error_code ec, const std::string &what) { XI_UNUSED(ec, what); }
+void Xi::Http::Listener::onError(boost::beast::error_code ec, const std::string &what) {
+  XI_UNUSED(ec, what);
+}
 
-void Xi::Http::Listener::onError(std::exception_ptr ex) { XI_UNUSED(ex); }
+void Xi::Http::Listener::onError(std::exception_ptr ex) {
+  XI_UNUSED(ex);
+}

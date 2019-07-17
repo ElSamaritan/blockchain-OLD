@@ -24,7 +24,8 @@ namespace Logging {
 
 using Common::Console::Color;
 
-ConsoleLogger::ConsoleLogger(Level level) : CommonLogger(level) {}
+ConsoleLogger::ConsoleLogger(Level level) : CommonLogger(level) {
+}
 
 void ConsoleLogger::doLogString(const std::string& message) {
   std::lock_guard<std::mutex> lock(mutex);

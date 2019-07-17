@@ -34,7 +34,8 @@ namespace CryptoNote {
 
 class ITransactionReader {
  public:
-  virtual ~ITransactionReader() {}
+  virtual ~ITransactionReader() {
+  }
 
   virtual Crypto::Hash getTransactionHash() const = 0;
   virtual Crypto::Hash getTransactionPrefixHash() const = 0;

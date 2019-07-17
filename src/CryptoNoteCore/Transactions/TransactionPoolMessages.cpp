@@ -22,10 +22,12 @@
 namespace CryptoNote {
 
 TransactionPoolMessage::TransactionPoolMessage(AddTransaction at)
-    : type(TransactionMessageType::AddTransactionType), data(std::move(at)) {}
+    : type(TransactionMessageType::AddTransactionType), data(std::move(at)) {
+}
 
 TransactionPoolMessage::TransactionPoolMessage(DeleteTransaction dt)
-    : type(TransactionMessageType::DeleteTransactionType), data(std::move(dt)) {}
+    : type(TransactionMessageType::DeleteTransactionType), data(std::move(dt)) {
+}
 
 // pattern match
 void TransactionPoolMessage::match(std::function<void(const AddTransaction&)>&& addTxVisitor,
@@ -41,7 +43,9 @@ void TransactionPoolMessage::match(std::function<void(const AddTransaction&)>&& 
 }
 
 // API with explicit type handling
-TransactionMessageType TransactionPoolMessage::getType() const { return type; }
+TransactionMessageType TransactionPoolMessage::getType() const {
+  return type;
+}
 
 const AddTransaction& TransactionPoolMessage::getAddTransaction() const {
   assert(getType() == TransactionMessageType::AddTransactionType);
@@ -61,8 +65,10 @@ TransactionPoolMessage makeDelTransaction(const Crypto::Hash& hash) {
   return TransactionPoolMessage{DeleteTransaction{hash}};
 }
 
-AddTransaction::AddTransaction(Crypto::Hash _hash) : hash{std::move(_hash)} {}
+AddTransaction::AddTransaction(Crypto::Hash _hash) : hash{std::move(_hash)} {
+}
 
-DeleteTransaction::DeleteTransaction(Crypto::Hash _hash) : hash{std::move(_hash)} {}
+DeleteTransaction::DeleteTransaction(Crypto::Hash _hash) : hash{std::move(_hash)} {
+}
 
 }  // namespace CryptoNote

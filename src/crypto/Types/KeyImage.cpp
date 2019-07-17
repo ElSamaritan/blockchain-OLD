@@ -47,17 +47,27 @@ Xi::Result<Crypto::KeyImage> Crypto::KeyImage::fromString(const std::string &hex
   XI_ERROR_CATCH();
 }
 
-Crypto::KeyImage::KeyImage() { nullify(); }
+Crypto::KeyImage::KeyImage() {
+  nullify();
+}
 
-Crypto::KeyImage::KeyImage(Crypto::KeyImage::array_type raw) : array_type(std::move(raw)) {}
+Crypto::KeyImage::KeyImage(Crypto::KeyImage::array_type raw) : array_type(std::move(raw)) {
+}
 
-Crypto::KeyImage::~KeyImage() {}
+Crypto::KeyImage::~KeyImage() {
+}
 
-std::string Crypto::KeyImage::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+std::string Crypto::KeyImage::toString() const {
+  return Common::toHex(data(), size() * sizeof(value_type));
+}
 
-Xi::ConstByteSpan Crypto::KeyImage::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
+Xi::ConstByteSpan Crypto::KeyImage::span() const {
+  return Xi::ConstByteSpan{data(), bytes()};
+}
 
-Xi::ByteSpan Crypto::KeyImage::span() { return Xi::ByteSpan{data(), bytes()}; }
+Xi::ByteSpan Crypto::KeyImage::span() {
+  return Xi::ByteSpan{data(), bytes()};
+}
 
 bool Crypto::KeyImage::isValid() const {
   ge_p3 point;
@@ -68,9 +78,13 @@ bool Crypto::KeyImage::isValid() const {
   XI_RETURN_SC(true);
 }
 
-bool Crypto::KeyImage::isNull() const { return (*this) == Null; }
+bool Crypto::KeyImage::isNull() const {
+  return (*this) == Null;
+}
 
-void Crypto::KeyImage::nullify() { fill(0); }
+void Crypto::KeyImage::nullify() {
+  fill(0);
+}
 
 bool Crypto::serialize(Crypto::KeyImage &keyImage, Common::StringView name, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(keyImage.data(), KeyImage::bytes(), name), false);

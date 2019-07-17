@@ -28,7 +28,8 @@
 CryptoNote::PoolTransactionValidator::PoolTransactionValidator(const CryptoNote::ITransactionPool &pool,
                                                                BlockVersion blockVersion, const IBlockchainCache &chain,
                                                                const Currency &currency)
-    : TransactionValidator(blockVersion, chain, currency), m_pool{pool} {}
+    : TransactionValidator(blockVersion, chain, currency), m_pool{pool} {
+}
 
 Xi::Result<CryptoNote::EligibleIndex> CryptoNote::PoolTransactionValidator::doValidate(
     const CryptoNote::CachedTransaction &transaction) const {

@@ -137,7 +137,9 @@ CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency& currency, S
   }
 }
 
-size_t CryptoNoteProtocolHandler::getPeerCount() const { return m_peersCount; }
+size_t CryptoNoteProtocolHandler::getPeerCount() const {
+  return m_peersCount;
+}
 
 void CryptoNoteProtocolHandler::set_p2p_endpoint(IP2pEndpoint* p2p) {
   if (p2p)
@@ -146,9 +148,13 @@ void CryptoNoteProtocolHandler::set_p2p_endpoint(IP2pEndpoint* p2p) {
     m_p2p = &m_p2p_stub;
 }
 
-bool CryptoNoteProtocolHandler::isLightNode() const { return m_core.isPruned(); }
+bool CryptoNoteProtocolHandler::isLightNode() const {
+  return m_core.isPruned();
+}
 
-void CryptoNoteProtocolHandler::onConnectionOpened(CryptoNoteConnectionContext& context) { XI_UNUSED(context); }
+void CryptoNoteProtocolHandler::onConnectionOpened(CryptoNoteConnectionContext& context) {
+  XI_UNUSED(context);
+}
 
 void CryptoNoteProtocolHandler::onConnectionClosed(CryptoNoteConnectionContext& context) {
   bool updated = false;
@@ -172,7 +178,9 @@ void CryptoNoteProtocolHandler::onConnectionClosed(CryptoNoteConnectionContext& 
   }
 }
 
-void CryptoNoteProtocolHandler::stop() { m_stop = true; }
+void CryptoNoteProtocolHandler::stop() {
+  m_stop = true;
+}
 
 bool CryptoNoteProtocolHandler::start_sync(CryptoNoteConnectionContext& context) {
   m_logger(Logging::Trace) << context << "Starting synchronization";
@@ -190,7 +198,9 @@ bool CryptoNoteProtocolHandler::start_sync(CryptoNoteConnectionContext& context)
   return true;
 }
 
-CoreStatistics CryptoNoteProtocolHandler::getStatistics() { return m_core.getCoreStatistics(); }
+CoreStatistics CryptoNoteProtocolHandler::getStatistics() {
+  return m_core.getCoreStatistics();
+}
 
 void CryptoNoteProtocolHandler::log_connections() {
   std::stringstream ss;
@@ -212,7 +222,9 @@ void CryptoNoteProtocolHandler::log_connections() {
   m_logger(Info) << "Connections: " << ENDL << ss.str();
 }
 
-std::string CryptoNoteProtocolHandler::updateDownloadUrl() const { return m_currency.general().downloadUrl(); }
+std::string CryptoNoteProtocolHandler::updateDownloadUrl() const {
+  return m_currency.general().downloadUrl();
+}
 
 BlockHeight CryptoNoteProtocolHandler::get_current_blockchain_height() {
   return BlockHeight::fromIndex(m_core.getTopBlockIndex());
@@ -220,7 +232,8 @@ BlockHeight CryptoNoteProtocolHandler::get_current_blockchain_height() {
 
 bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& hshd,
                                                           CryptoNoteConnectionContext& context, bool is_initial) {
-  if (context.m_state == CryptoNoteConnectionContext::state_befor_handshake && !is_initial) return true;
+  if (context.m_state == CryptoNoteConnectionContext::state_befor_handshake && !is_initial)
+    return true;
   context.m_is_light_node = hshd.is_light_node;
 
   if (context.m_state == CryptoNoteConnectionContext::state_synchronizing) {
@@ -355,7 +368,8 @@ int CryptoNoteProtocolHandler::handle_notify_new_transactions(int command, NOTIF
   XI_UNUSED(command);
   m_logger(Logging::Trace) << context << "NOTIFY_NEW_TRANSACTIONS";
 
-  if (context.m_state != CryptoNoteConnectionContext::state_normal) return 1;
+  if (context.m_state != CryptoNoteConnectionContext::state_normal)
+    return 1;
 
   if (m_suspiciousGuard.pushAndInspect(context, arg)) {
     m_p2p->report_failure(context.m_remote_ip, P2pPenalty::SuspiciousRequestSequence);
@@ -763,7 +777,8 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized() {
     m_logger(Info) << " Use the \"backup\" command in " + WalletConfig::walletName +
                           " to display your keys/seed for restoring a corrupted wallet."
                    << ENDL;
-    m_logger(Info) << " If you need more assistance, you can contact us for support at " + m_core.currency().general().contactUrl()
+    m_logger(Info) << " If you need more assistance, you can contact us for support at " +
+                          m_core.currency().general().contactUrl()
                    << ENDL;
     m_logger(Info, BRIGHT_MAGENTA) << "===================================================" << ENDL << ENDL;
 

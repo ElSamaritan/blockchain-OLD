@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -45,10 +45,12 @@
     return seed;                                                                                            \
   }
 
-#define XI_MAKE_GENERIC_HASH_OVERLOAD(_NS, _T)                                       \
-  namespace std {                                                                    \
-  template <>                                                                        \
-  struct hash<_NS::_T> {                                                             \
-    size_t operator()(const _NS::_T& value) const { return _NS::hash_value(value); } \
-  };                                                                                 \
+#define XI_MAKE_GENERIC_HASH_OVERLOAD(_NS, _T)      \
+  namespace std {                                   \
+  template <>                                       \
+  struct hash<_NS::_T> {                            \
+    size_t operator()(const _NS::_T& value) const { \
+      return _NS::hash_value(value);                \
+    }                                               \
+  };                                                \
   }

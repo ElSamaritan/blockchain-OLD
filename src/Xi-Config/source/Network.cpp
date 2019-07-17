@@ -14,9 +14,13 @@ Xi::Config::Network::Type Xi::Config::Network::defaultNetworkType() {
 #endif
 }
 
-std::string Xi::Config::Network::breakpadServer() { return "207.180.240.156"; }
+std::string Xi::Config::Network::breakpadServer() {
+  return "207.180.240.156";
+}
 
-std::string Xi::Config::Network::defaultNetworkName() { return "Galaxia"; }
+std::string Xi::Config::Network::defaultNetworkName() {
+  return "Galaxia";
+}
 
 std::string Xi::Config::Network::defaultNetworkIdentifier() {
   return defaultNetworkName() + "." + toString(defaultNetworkType());

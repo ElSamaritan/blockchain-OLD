@@ -114,7 +114,8 @@ std::ostream& operator<<(std::ostream& os, CryptoNote::WalletGreen::WalletTracki
 
 TransferListFormatter::TransferListFormatter(const CryptoNote::Currency& currency,
                                              const WalletGreen::TransfersRange& range)
-    : m_currency(currency), m_range(range) {}
+    : m_currency(currency), m_range(range) {
+}
 
 void TransferListFormatter::print(std::ostream& os) const {
   for (auto it = m_range.first; it != m_range.second; ++it) {
@@ -131,7 +132,8 @@ std::ostream& operator<<(std::ostream& os, const TransferListFormatter& formatte
 
 WalletOrderListFormatter::WalletOrderListFormatter(const CryptoNote::Currency& currency,
                                                    const std::vector<CryptoNote::WalletOrder>& walletOrderList)
-    : m_currency(currency), m_walletOrderList(walletOrderList) {}
+    : m_currency(currency), m_walletOrderList(walletOrderList) {
+}
 
 void WalletOrderListFormatter::print(std::ostream& os) const {
   os << '{';

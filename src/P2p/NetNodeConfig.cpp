@@ -114,60 +114,116 @@ bool NetNodeConfig::init(const Xi::Config::Network::Configuration& netConfig, co
   return true;
 }
 
-std::string NetNodeConfig::getP2pStateFilename() const { return "p2p"; }
+std::string NetNodeConfig::getP2pStateFilename() const {
+  return "p2p";
+}
 
-std::string NetNodeConfig::getBindIp() const { return bindIp; }
+std::string NetNodeConfig::getBindIp() const {
+  return bindIp;
+}
 
-uint16_t NetNodeConfig::getBindPort() const { return bindPort; }
+uint16_t NetNodeConfig::getBindPort() const {
+  return bindPort;
+}
 
-uint16_t NetNodeConfig::getExternalPort() const { return externalPort; }
+uint16_t NetNodeConfig::getExternalPort() const {
+  return externalPort;
+}
 
-bool NetNodeConfig::getAllowLocalIp() const { return allowLocalIp; }
+bool NetNodeConfig::getAllowLocalIp() const {
+  return allowLocalIp;
+}
 
-std::vector<PeerlistEntry> NetNodeConfig::getPeers() const { return peers; }
+std::vector<PeerlistEntry> NetNodeConfig::getPeers() const {
+  return peers;
+}
 
-std::vector<NetworkAddress> NetNodeConfig::getPriorityNodes() const { return priorityNodes; }
+std::vector<NetworkAddress> NetNodeConfig::getPriorityNodes() const {
+  return priorityNodes;
+}
 
-std::vector<NetworkAddress> NetNodeConfig::getExclusiveNodes() const { return exclusiveNodes; }
+std::vector<NetworkAddress> NetNodeConfig::getExclusiveNodes() const {
+  return exclusiveNodes;
+}
 
-std::vector<NetworkAddress> NetNodeConfig::getSeedNodes() const { return seedNodes; }
+std::vector<NetworkAddress> NetNodeConfig::getSeedNodes() const {
+  return seedNodes;
+}
 
-bool NetNodeConfig::getHideMyPort() const { return hideMyPort; }
+bool NetNodeConfig::getHideMyPort() const {
+  return hideMyPort;
+}
 
-std::string NetNodeConfig::getConfigFolder() const { return configFolder; }
+std::string NetNodeConfig::getConfigFolder() const {
+  return configFolder;
+}
 
-std::chrono::seconds NetNodeConfig::getBlockDuration() const { return m_blockDuration; }
+std::chrono::seconds NetNodeConfig::getBlockDuration() const {
+  return m_blockDuration;
+}
 
-bool NetNodeConfig::getAutoBlock() const { return m_autoBlock; }
+bool NetNodeConfig::getAutoBlock() const {
+  return m_autoBlock;
+}
 
-const std::string& NetNodeConfig::appIdentifier() const { return m_appid; }
+const std::string& NetNodeConfig::appIdentifier() const {
+  return m_appid;
+}
 
-const Xi::Config::Network::Configuration& NetNodeConfig::network() const { return m_netConfig; }
+const Xi::Config::Network::Configuration& NetNodeConfig::network() const {
+  return m_netConfig;
+}
 
-void NetNodeConfig::setP2pStateFilename(const std::string& filename) { p2pStateFilename = filename; }
+void NetNodeConfig::setP2pStateFilename(const std::string& filename) {
+  p2pStateFilename = filename;
+}
 
-void NetNodeConfig::setBindIp(const std::string& ip) { bindIp = ip; }
+void NetNodeConfig::setBindIp(const std::string& ip) {
+  bindIp = ip;
+}
 
-void NetNodeConfig::setBindPort(uint16_t port) { bindPort = port; }
+void NetNodeConfig::setBindPort(uint16_t port) {
+  bindPort = port;
+}
 
-void NetNodeConfig::setExternalPort(uint16_t port) { externalPort = port; }
+void NetNodeConfig::setExternalPort(uint16_t port) {
+  externalPort = port;
+}
 
-void NetNodeConfig::setAllowLocalIp(bool allow) { allowLocalIp = allow; }
+void NetNodeConfig::setAllowLocalIp(bool allow) {
+  allowLocalIp = allow;
+}
 
-void NetNodeConfig::setPeers(const std::vector<PeerlistEntry>& peerList) { peers = peerList; }
+void NetNodeConfig::setPeers(const std::vector<PeerlistEntry>& peerList) {
+  peers = peerList;
+}
 
-void NetNodeConfig::setPriorityNodes(const std::vector<NetworkAddress>& addresses) { priorityNodes = addresses; }
+void NetNodeConfig::setPriorityNodes(const std::vector<NetworkAddress>& addresses) {
+  priorityNodes = addresses;
+}
 
-void NetNodeConfig::setExclusiveNodes(const std::vector<NetworkAddress>& addresses) { exclusiveNodes = addresses; }
+void NetNodeConfig::setExclusiveNodes(const std::vector<NetworkAddress>& addresses) {
+  exclusiveNodes = addresses;
+}
 
-void NetNodeConfig::setSeedNodes(const std::vector<NetworkAddress>& addresses) { seedNodes = addresses; }
+void NetNodeConfig::setSeedNodes(const std::vector<NetworkAddress>& addresses) {
+  seedNodes = addresses;
+}
 
-void NetNodeConfig::setHideMyPort(bool hide) { hideMyPort = hide; }
+void NetNodeConfig::setHideMyPort(bool hide) {
+  hideMyPort = hide;
+}
 
-void NetNodeConfig::setConfigFolder(const std::string& folder) { configFolder = folder; }
+void NetNodeConfig::setConfigFolder(const std::string& folder) {
+  configFolder = folder;
+}
 
-void NetNodeConfig::setBlockDuration(std::chrono::seconds duration) { m_blockDuration = duration; }
+void NetNodeConfig::setBlockDuration(std::chrono::seconds duration) {
+  m_blockDuration = duration;
+}
 
-void NetNodeConfig::setAutoBlock(bool enabled) { m_autoBlock = enabled; }
+void NetNodeConfig::setAutoBlock(bool enabled) {
+  m_autoBlock = enabled;
+}
 
 }  // namespace CryptoNote

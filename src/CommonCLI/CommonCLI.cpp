@@ -190,7 +190,8 @@ void* CommonCLI::make_crash_dumper(const std::string& applicationId) {
 #if defined(XI_USE_BREAKPAD)
   if (BreakpadConfig.IsEnabled) {
     BreakpadConfig.Application = applicationId;
-    if (!isDevVersion()) BreakpadConfig.IsUploadEnabled = false;
+    if (!isDevVersion())
+      BreakpadConfig.IsUploadEnabled = false;
     return new Xi::CrashHandler(BreakpadConfig);
   }
 #else

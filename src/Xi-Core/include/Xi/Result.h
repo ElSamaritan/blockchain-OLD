@@ -63,22 +63,40 @@ class [[nodiscard]] Result {
   std::variant<Error, value_t> m_result;
 
  public:
-  explicit Result() : m_result{std::in_place_index<0>, Error{}} {}
-  explicit Result(result_failure) : m_result{std::in_place_index<0>, Error{}} {}
-  /* implicit */ Result(const Error& err) : m_result{std::in_place_index<0>, err} {}
-  Result(result_success, value_t value) : m_result{std::in_place_index<1>, std::forward<value_t>(value)} {}
+  explicit Result() : m_result{std::in_place_index<0>, Error{}} {
+  }
+  explicit Result(result_failure) : m_result{std::in_place_index<0>, Error{}} {
+  }
+  /* implicit */ Result(const Error& err) : m_result{std::in_place_index<0>, err} {
+  }
+  Result(result_success, value_t value) : m_result{std::in_place_index<1>, std::forward<value_t>(value)} {
+  }
 
   ~Result() = default;
 
-  bool isError() const { return this->m_result.index() == 0; }
-  bool isValue() const { return this->m_result.index() == 1; }
+  bool isError() const {
+    return this->m_result.index() == 0;
+  }
+  bool isValue() const {
+    return this->m_result.index() == 1;
+  }
 
-  const Error& error() const { return std::get<Error>(m_result); }
+  const Error& error() const {
+    return std::get<Error>(m_result);
+  }
 
-  const value_t& value() const { return std::get<1>(m_result); }
-  const value_t& operator*() const { return std::get<1>(m_result); }
-  value_t& value() { return std::get<1>(m_result); }
-  value_t& operator*() { return std::get<1>(m_result); }
+  const value_t& value() const {
+    return std::get<1>(m_result);
+  }
+  const value_t& operator*() const {
+    return std::get<1>(m_result);
+  }
+  value_t& value() {
+    return std::get<1>(m_result);
+  }
+  value_t& operator*() {
+    return std::get<1>(m_result);
+  }
 
   value_t take() {
     static_assert(std::is_move_constructible<value_t>::value, "You can only take move constructible types.");
@@ -105,8 +123,12 @@ class [[nodiscard]] Result {
     return this->take();
   }
 
-  const value_t* operator->() const { return std::get_if<value_t>(&this->m_result); }
-  value_t* operator->() { return std::get_if<value_t>(&this->m_result); }
+  const value_t* operator->() const {
+    return std::get_if<value_t>(&this->m_result);
+  }
+  value_t* operator->() {
+    return std::get_if<value_t>(&this->m_result);
+  }
 };
 
 template <>
@@ -115,16 +137,23 @@ class [[nodiscard]] Result<void> {
   std::optional<Error> m_error;
 
  public:
-  explicit Result() : m_error{Error{}} {}
-  explicit Result(result_success) : m_error{std::nullopt} {}
-  /* implicit */ Result(const Error& err) : m_error{err} {}
+  explicit Result() : m_error{Error{}} {
+  }
+  explicit Result(result_success) : m_error{std::nullopt} {
+  }
+  /* implicit */ Result(const Error& err) : m_error{err} {
+  }
   XI_DEFAULT_COPY(Result);
   XI_DEFAULT_MOVE(Result);
   ~Result() = default;
 
-  bool isError() const { return m_error.has_value(); }
+  bool isError() const {
+    return m_error.has_value();
+  }
 
-  const Error& error() const { return *m_error; }
+  const Error& error() const {
+    return *m_error;
+  }
 
   void throwOnError() {
     if (isError()) {
@@ -133,8 +162,12 @@ class [[nodiscard]] Result<void> {
   }
 };
 
-inline Error failure(std::exception_ptr e) { return makeError(e); }
-inline Error failure(std::error_code e) { return makeError(e); }
+inline Error failure(std::exception_ptr e) {
+  return makeError(e);
+}
+inline Error failure(std::error_code e) {
+  return makeError(e);
+}
 
 template <typename _ValueT>
 inline Result<std::decay_t<_ValueT>> success(_ValueT&& val) {
@@ -147,7 +180,9 @@ inline Result<std::decay_t<_ValueT>> emplaceSuccess(_ArgsT&&... args) {
                                        typename Result<_ValueT>::value_t{std::forward<_ArgsT>(args)...}};
 }
 
-inline Result<void> success() { return Result<void>{result_success{}}; }
+inline Result<void> success() {
+  return Result<void>{result_success{}};
+}
 
 }  // namespace Xi
 

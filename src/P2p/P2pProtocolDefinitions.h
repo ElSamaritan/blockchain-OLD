@@ -23,7 +23,9 @@
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 
 namespace CryptoNote {
-inline bool serialize(uuid& v, Common::StringView name, ISerializer& s) { return s.binary(&v, sizeof(v), name); }
+inline bool serialize(uuid& v, Common::StringView name, ISerializer& s) {
+  return s.binary(&v, sizeof(v), name);
+}
 
 struct network_config {
   uint32_t connections_count;

@@ -38,7 +38,9 @@ namespace Crypto {
 struct Signature : Xi::ByteArray<64> {
   using array_type = Xi::ByteArray<64>;
   static const Signature Null;
-  static inline constexpr size_t bytes() { return 64; }
+  static inline constexpr size_t bytes() {
+    return 64;
+  }
   static Xi::Result<Signature> fromString(const std::string& hex);
 
   Signature();

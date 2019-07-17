@@ -32,16 +32,22 @@ SwappedBlockchainStorage::SwappedBlockchainStorage(const std::string& indexFileN
   }
 }
 
-SwappedBlockchainStorage::~SwappedBlockchainStorage() { blocks.close(); }
+SwappedBlockchainStorage::~SwappedBlockchainStorage() {
+  blocks.close();
+}
 
-void SwappedBlockchainStorage::pushBlock(RawBlock&& rawBlock) { blocks.push_back(rawBlock); }
+void SwappedBlockchainStorage::pushBlock(RawBlock&& rawBlock) {
+  blocks.push_back(rawBlock);
+}
 
 RawBlock SwappedBlockchainStorage::getBlockByIndex(uint32_t index) const {
   assert(index < getBlockCount());
   return blocks[index];
 }
 
-uint32_t SwappedBlockchainStorage::getBlockCount() const { return static_cast<uint32_t>(blocks.size()); }
+uint32_t SwappedBlockchainStorage::getBlockCount() const {
+  return static_cast<uint32_t>(blocks.size());
+}
 
 // Returns MemoryBlockchainStorage with elements from [splitIndex, blocks.size() - 1].
 // Original SwappedBlockchainStorage will contain elements from [0, splitIndex - 1].

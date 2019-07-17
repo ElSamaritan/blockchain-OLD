@@ -309,18 +309,25 @@ class DbOutputConstIterator
   DbOutputConstIterator(
       std::function<PackedOutIndex(IBlockchainCache::Amount amount, uint32_t globalOutputIndex)> retriever_,
       IBlockchainCache::Amount amount_, uint32_t globalOutputIndex_)
-      : retriever(retriever_), amount(amount_), globalOutputIndex(globalOutputIndex_) {}
+      : retriever(retriever_), amount(amount_), globalOutputIndex(globalOutputIndex_) {
+  }
 
   const PackedOutIndex& dereference() const {
     cachedValue = retriever(amount, globalOutputIndex);
     return cachedValue;
   }
 
-  bool equal(const DbOutputConstIterator& other) const { return globalOutputIndex == other.globalOutputIndex; }
+  bool equal(const DbOutputConstIterator& other) const {
+    return globalOutputIndex == other.globalOutputIndex;
+  }
 
-  void increment() { ++globalOutputIndex; }
+  void increment() {
+    ++globalOutputIndex;
+  }
 
-  void decrement() { --globalOutputIndex; }
+  void decrement() {
+    --globalOutputIndex;
+  }
 
   void advance(difference_type n) {
     assert(n >= -static_cast<difference_type>(globalOutputIndex));
@@ -399,9 +406,12 @@ const std::string DB_VERSION_KEY = "db_scheme_version";
 
 class DatabaseVersionReadBatch : public IReadBatch {
  public:
-  virtual ~DatabaseVersionReadBatch() override {}
+  virtual ~DatabaseVersionReadBatch() override {
+  }
 
-  virtual std::vector<std::string> getRawKeys() const override { return {DB_VERSION_KEY}; }
+  virtual std::vector<std::string> getRawKeys() const override {
+    return {DB_VERSION_KEY};
+  }
 
   virtual void submitRawResult(const std::vector<std::string>& values, const std::vector<bool>& resultStates) override {
     assert(values.size() == 1);
@@ -414,7 +424,9 @@ class DatabaseVersionReadBatch : public IReadBatch {
     version = static_cast<uint32_t>(std::atoi(values[0].c_str()));
   }
 
-  boost::optional<uint32_t> getDbSchemeVersion() { return version; }
+  boost::optional<uint32_t> getDbSchemeVersion() {
+    return version;
+  }
 
  private:
   boost::optional<uint32_t> version;
@@ -422,14 +434,18 @@ class DatabaseVersionReadBatch : public IReadBatch {
 
 class DatabaseVersionWriteBatch : public IWriteBatch {
  public:
-  DatabaseVersionWriteBatch(uint32_t version) : schemeVersion(version) {}
-  virtual ~DatabaseVersionWriteBatch() {}
+  DatabaseVersionWriteBatch(uint32_t version) : schemeVersion(version) {
+  }
+  virtual ~DatabaseVersionWriteBatch() {
+  }
 
   virtual std::vector<std::pair<std::string, std::string>> extractRawDataToInsert() override {
     return {make_pair(DB_VERSION_KEY, std::to_string(schemeVersion))};
   }
 
-  virtual std::vector<std::string> extractRawKeysToRemove() override { return {}; }
+  virtual std::vector<std::string> extractRawKeysToRemove() override {
+    return {};
+  }
 
  private:
   uint32_t schemeVersion;
@@ -1195,7 +1211,9 @@ BlockVersion DatabaseBlockchainCache::getTopBlockVersion() const {
   }
   return *topBlockVersion;
 }
-uint32_t DatabaseBlockchainCache::getBlockCount() const { return getTopBlockIndex() + 1; }
+uint32_t DatabaseBlockchainCache::getBlockCount() const {
+  return getTopBlockIndex() + 1;
+}
 
 bool DatabaseBlockchainCache::hasBlock(const Crypto::Hash& blockHash) const {
   auto batch = BlockchainReadBatch().requestBlockIndexByBlockHash(blockHash);
@@ -1405,9 +1423,13 @@ std::vector<Crypto::Hash> DatabaseBlockchainCache::getBlockHashes(uint32_t start
   return hashes;
 }
 
-IBlockchainCache* DatabaseBlockchainCache::getParent() const { return nullptr; }
+IBlockchainCache* DatabaseBlockchainCache::getParent() const {
+  return nullptr;
+}
 
-uint32_t DatabaseBlockchainCache::getStartBlockIndex() const { return 0; }
+uint32_t DatabaseBlockchainCache::getStartBlockIndex() const {
+  return 0;
+}
 
 size_t DatabaseBlockchainCache::getKeyOutputsCountForAmount(uint64_t amount, uint32_t blockIndex) const {
   uint32_t outputsCount = requestKeyOutputGlobalIndexesCountForAmount(amount, database);
@@ -1479,11 +1501,17 @@ uint32_t DatabaseBlockchainCache::getBlockIndexContainingTx(const Crypto::Hash& 
   return result.getCachedTransactions().at(transactionHash).blockIndex;
 }
 
-size_t DatabaseBlockchainCache::getChildCount() const { return children.size(); }
+size_t DatabaseBlockchainCache::getChildCount() const {
+  return children.size();
+}
 
-bool DatabaseBlockchainCache::save() { return true; }
+bool DatabaseBlockchainCache::save() {
+  return true;
+}
 
-bool DatabaseBlockchainCache::load() { return true; }
+bool DatabaseBlockchainCache::load() {
+  return true;
+}
 
 std::vector<BinaryArray> DatabaseBlockchainCache::getRawTransactions(
     const std::vector<Crypto::Hash>& transactions, std::vector<Crypto::Hash>& missedTransactions) const {

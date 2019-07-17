@@ -78,7 +78,9 @@ void crypto_ops::generate_keys(PublicKey &pub, SecretKey &sec) {
   ge_p3_tobytes(pub.data(), &point);
 }
 
-void crypto_ops::generate_keys(SecretKey &sec) { random_scalar(reinterpret_cast<EllipticCurveScalar &>(sec)); }
+void crypto_ops::generate_keys(SecretKey &sec) {
+  random_scalar(reinterpret_cast<EllipticCurveScalar &>(sec));
+}
 
 void crypto_ops::generate_deterministic_keys(PublicKey &pub, SecretKey &sec, Xi::ConstByteSpan seed) {
   generate_deterministic_keys(sec, seed);

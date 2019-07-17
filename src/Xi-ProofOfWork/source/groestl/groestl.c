@@ -166,7 +166,8 @@ static void Transform(groestl_hash_state *ctx, const uint8_t *input, int msglen)
 
     /* increment block counter */
     ctx->block_counter1++;
-    if (ctx->block_counter1 == 0) ctx->block_counter2++;
+    if (ctx->block_counter1 == 0)
+      ctx->block_counter2++;
   }
 }
 
@@ -290,7 +291,8 @@ void groestl_final(groestl_hash_state *ctx, BitSequence *output) {
 
   /* length padding */
   ctx->block_counter1++;
-  if (ctx->block_counter1 == 0) ctx->block_counter2++;
+  if (ctx->block_counter1 == 0)
+    ctx->block_counter2++;
   ctx->buf_ptr = SIZE512;
 
   while (ctx->buf_ptr > SIZE512 - (int)sizeof(uint32_t)) {

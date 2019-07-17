@@ -40,7 +40,8 @@ class TransactionReaderListFormatter {
  public:
   explicit TransactionReaderListFormatter(
       const std::vector<std::unique_ptr<CryptoNote::ITransactionReader>>& transactionList)
-      : m_transactionList(transactionList) {}
+      : m_transactionList(transactionList) {
+  }
 
   void print(std::ostream& os) const {
     os << '{';
@@ -74,9 +75,12 @@ BlockchainSynchronizer::BlockchainSynchronizer(INode& node, const Currency& curr
       m_currency(currency),
       m_genesisBlockHash(currency.genesisBlockHash()),
       m_currentState(State::stopped),
-      m_futureState(State::stopped) {}
+      m_futureState(State::stopped) {
+}
 
-BlockchainSynchronizer::~BlockchainSynchronizer() { stop(); }
+BlockchainSynchronizer::~BlockchainSynchronizer() {
+  stop();
+}
 
 void BlockchainSynchronizer::addConsumer(IBlockchainConsumer* consumer) {
   assert(consumer != nullptr);

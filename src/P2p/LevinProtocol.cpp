@@ -43,9 +43,12 @@ struct bucket_head2 {
 
 }  // namespace
 
-bool LevinProtocol::Command::needReply() const { return !(isNotify || isResponse); }
+bool LevinProtocol::Command::needReply() const {
+  return !(isNotify || isResponse);
+}
 
-LevinProtocol::LevinProtocol(System::TcpConnection& connection) : m_conn(connection) {}
+LevinProtocol::LevinProtocol(System::TcpConnection& connection) : m_conn(connection) {
+}
 
 void LevinProtocol::sendMessage(uint32_t command, const BinaryArray& out, bool needResponse) {
   bucket_head2 head = {0};

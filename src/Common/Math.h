@@ -24,9 +24,11 @@ namespace Common {
 
 template <class T>
 T medianValue(std::vector<T> &v) {
-  if (v.empty()) return T();
+  if (v.empty())
+    return T();
 
-  if (v.size() == 1) return v[0];
+  if (v.size() == 1)
+    return v[0];
 
   auto n = (v.size()) / 2;
   std::sort(v.begin(), v.end());

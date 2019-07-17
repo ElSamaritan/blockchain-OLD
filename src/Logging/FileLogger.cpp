@@ -19,7 +19,8 @@
 
 namespace Logging {
 
-FileLogger::FileLogger(Level level) : StreamLogger(level) {}
+FileLogger::FileLogger(Level level) : StreamLogger(level) {
+}
 
 void FileLogger::init(const std::string& fileName) {
   fileStream.open(fileName, std::ios::app);

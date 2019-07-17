@@ -31,7 +31,8 @@ inline TransactionOutputId getOutputId(const TransactionOutputInformation& out) 
 }
 
 WalletUnconfirmedTransactions::WalletUnconfirmedTransactions(uint64_t uncofirmedTransactionsLiveTime)
-    : m_uncofirmedTransactionsLiveTime(uncofirmedTransactionsLiveTime) {}
+    : m_uncofirmedTransactionsLiveTime(uncofirmedTransactionsLiveTime) {
+}
 
 bool WalletUnconfirmedTransactions::serialize(ISerializer& s) {
   XI_RETURN_EC_IF_NOT(s(m_unconfirmedTxs, "transactions"), false);
@@ -93,7 +94,8 @@ void WalletUnconfirmedTransactions::updateTransactionId(const Hash& hash, Transa
 uint64_t WalletUnconfirmedTransactions::countUnconfirmedOutsAmount() const {
   uint64_t amount = 0;
 
-  for (auto& utx : m_unconfirmedTxs) amount += utx.second.outsAmount;
+  for (auto& utx : m_unconfirmedTxs)
+    amount += utx.second.outsAmount;
 
   return amount;
 }
@@ -101,7 +103,8 @@ uint64_t WalletUnconfirmedTransactions::countUnconfirmedOutsAmount() const {
 uint64_t WalletUnconfirmedTransactions::countUnconfirmedTransactionsAmount() const {
   uint64_t amount = 0;
 
-  for (auto& utx : m_unconfirmedTxs) amount += utx.second.amount;
+  for (auto& utx : m_unconfirmedTxs)
+    amount += utx.second.amount;
 
   return amount;
 }

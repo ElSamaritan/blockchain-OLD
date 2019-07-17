@@ -39,7 +39,8 @@ class StringBuffer {
 
   // Default constructor.
   // After construction, 'StringBuffer' is empty, that is 'size' == 0
-  StringBuffer() : size(0) {}
+  StringBuffer() : size(0) {
+  }
 
   // Direct constructor.
   // Copies string from 'stringData' to 'StringBuffer'.
@@ -72,11 +73,14 @@ class StringBuffer {
 
   // Copy constructor.
   // Copies string from 'other' to 'StringBuffer'.
-  StringBuffer(const StringBuffer& other) : size(other.size) { memcpy(data, other.data, size); }
+  StringBuffer(const StringBuffer& other) : size(other.size) {
+    memcpy(data, other.data, size);
+  }
 
   // Destructor.
   // No special action is performed.
-  ~StringBuffer() {}
+  ~StringBuffer() {
+  }
 
   // Copy assignment operator.
   StringBuffer& operator=(const StringBuffer& other) {
@@ -95,18 +99,30 @@ class StringBuffer {
     return *this;
   }
 
-  operator StringView() const { return StringView(data, size); }
+  operator StringView() const {
+    return StringView(data, size);
+  }
 
-  explicit operator std::string() const { return std::string(data, size); }
+  explicit operator std::string() const {
+    return std::string(data, size);
+  }
 
-  Object* getData() { return data; }
+  Object* getData() {
+    return data;
+  }
 
-  const Object* getData() const { return data; }
+  const Object* getData() const {
+    return data;
+  }
 
-  Size getSize() const { return size; }
+  Size getSize() const {
+    return size;
+  }
 
   // Return false if 'StringView' is not EMPTY.
-  bool isEmpty() const { return size == 0; }
+  bool isEmpty() const {
+    return size == 0;
+  }
 
   // Get 'StringBuffer' element by index.
   // The behavior is undefined unless 'index' < 'size'.
@@ -151,16 +167,24 @@ class StringBuffer {
   }
 
   // Return a pointer to the first element.
-  Object* begin() { return data; }
+  Object* begin() {
+    return data;
+  }
 
   // Return a pointer to the first element.
-  const Object* begin() const { return data; }
+  const Object* begin() const {
+    return data;
+  }
 
   // Return a pointer after the last element.
-  Object* end() { return data + size; }
+  Object* end() {
+    return data + size;
+  }
 
   // Return a pointer after the last element.
-  const Object* end() const { return data + size; }
+  const Object* end() const {
+    return data + size;
+  }
 
   // Compare elements of two strings, return false if there is a difference.
   bool operator==(StringView other) const {
@@ -180,7 +204,9 @@ class StringBuffer {
   }
 
   // Compare elements two strings, return false if there is no difference.
-  bool operator!=(StringView other) const { return !(*this == other); }
+  bool operator!=(StringView other) const {
+    return !(*this == other);
+  }
 
   // Compare two strings character-wise.
   bool operator<(StringView other) const {
@@ -201,13 +227,19 @@ class StringBuffer {
   }
 
   // Compare two strings character-wise.
-  bool operator<=(StringView other) const { return !(other < *this); }
+  bool operator<=(StringView other) const {
+    return !(other < *this);
+  }
 
   // Compare two strings character-wise.
-  bool operator>(StringView other) const { return other < *this; }
+  bool operator>(StringView other) const {
+    return other < *this;
+  }
 
   // Compare two strings character-wise.
-  bool operator>=(StringView other) const { return !(*this < other); }
+  bool operator>=(StringView other) const {
+    return !(*this < other);
+  }
 
   // Return false if 'StringView' does not contain 'object' at the beginning.
   bool beginsWith(const Object& object) const {

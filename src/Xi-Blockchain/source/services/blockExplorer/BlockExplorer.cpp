@@ -69,7 +69,9 @@ std::shared_ptr<BlockExplorer> BlockExplorer::create(std::shared_ptr<Explorer::I
   return reval;
 }
 
-const Limits &BlockExplorer::limits() { return m_limits; }
+const Limits &BlockExplorer::limits() {
+  return m_limits;
+}
 
 BlockExplorer::BlockExplorer(std::shared_ptr<Explorer::IExplorer> explorer, Logging::ILogger &logger)
     : ServiceProviderCollection(logger),
@@ -334,8 +336,12 @@ Rpc::ServiceError BlockExplorer::process(std::string_view, const SearchRequest &
   }
 }
 
-bool BlockExplorer::check(const Block::Height &height) const { return !height.isNull(); }
-bool BlockExplorer::check(const Block::Hash &hash) const { return !hash.isNull(); }
+bool BlockExplorer::check(const Block::Height &height) const {
+  return !height.isNull();
+}
+bool BlockExplorer::check(const Block::Hash &hash) const {
+  return !hash.isNull();
+}
 bool BlockExplorer::check(Block::ConstHeightSpan heights, uint32_t limit) const {
   XI_RETURN_EC_IF(heights.size() > limit, false);
   return !heights.empty() &&

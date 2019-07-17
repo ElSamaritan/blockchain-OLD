@@ -1304,7 +1304,8 @@ void ge_double_scalarmult_base_vartime(ge_p2 *r, const unsigned char *a, const g
   ge_p2_0(r);
 
   for (i = 255; i >= 0; --i) {
-    if (aslide[i] || bslide[i]) break;
+    if (aslide[i] || bslide[i])
+      break;
   }
 
   for (; i >= 0; --i) {
@@ -2229,7 +2230,8 @@ void ge_double_scalarmult_precomp_vartime(ge_p2 *r, const unsigned char *a, cons
   ge_p2_0(r);
 
   for (i = 255; i >= 0; --i) {
-    if (aslide[i] || bslide[i]) break;
+    if (aslide[i] || bslide[i])
+      break;
   }
 
   for (; i >= 0; --i) {
@@ -3484,7 +3486,9 @@ void sc_mulsub(unsigned char *s, const unsigned char *a, const unsigned char *b,
 }
 
 /* Assumes that a != INT64_MIN */
-static int64_t signum(int64_t a) { return (a >> 63) - ((-a) >> 63); }
+static int64_t signum(int64_t a) {
+  return (a >> 63) - ((-a) >> 63);
+}
 
 int sc_check(const unsigned char *s) {
   int64_t s0 = (int64_t)(load_4(s));
@@ -3510,14 +3514,12 @@ int sc_isnonzero(const unsigned char *s) {
          1;
 }
 
-int sc_less_32(const unsigned char *lhs, const unsigned char *rhs)
-{
-  for (size_t i = 0; i < 32; ++i)
-  {
+int sc_less_32(const unsigned char *lhs, const unsigned char *rhs) {
+  for (size_t i = 0; i < 32; ++i) {
     const size_t n = 31 - i;
-    if(lhs[n] < rhs[n]) {
+    if (lhs[n] < rhs[n]) {
       return XI_TRUE;
-    } else if(lhs[n] > rhs[n]) {
+    } else if (lhs[n] > rhs[n]) {
       return XI_FALSE;
     }
   }
@@ -4075,4 +4077,3 @@ int ge_check_subgroup_precomp_vartime(const ge_dsmp p) {
   fe_sub(t.Y, t.Y, t.T);
   return fe_isnonzero(t.Y);
 }
-

@@ -101,8 +101,12 @@ class crypto_ops {
 
 /* Generate a new key pair
  */
-inline void generate_keys(PublicKey &pub, SecretKey &sec) { crypto_ops::generate_keys(pub, sec); }
-inline void generate_keys(SecretKey &sec) { crypto_ops::generate_keys(sec); }
+inline void generate_keys(PublicKey &pub, SecretKey &sec) {
+  crypto_ops::generate_keys(pub, sec);
+}
+inline void generate_keys(SecretKey &sec) {
+  crypto_ops::generate_keys(sec);
+}
 inline void generate_deterministic_keys(PublicKey &pub, SecretKey &sec, Xi::ConstByteSpan seed) {
   crypto_ops::generate_deterministic_keys(pub, sec, seed);
 }
@@ -117,7 +121,9 @@ inline SecretKey generate_m_keys(PublicKey &pub, SecretKey &sec, const SecretKey
 
 /* Check a public key. Returns true if it is valid, false otherwise.
  */
-inline bool check_key(const PublicKey &key) { return crypto_ops::check_key(key); }
+inline bool check_key(const PublicKey &key) {
+  return crypto_ops::check_key(key);
+}
 
 /* Checks a private key and computes the corresponding public key.
  */
@@ -196,7 +202,9 @@ inline void generate_key_image(const PublicKey &pub, const SecretKey &sec, KeyIm
   crypto_ops::generate_key_image(pub, sec, image);
 }
 
-inline KeyImage scalarmultKey(const KeyImage &P, const KeyImage &a) { return crypto_ops::scalarmultKey(P, a); }
+inline KeyImage scalarmultKey(const KeyImage &P, const KeyImage &a) {
+  return crypto_ops::scalarmultKey(P, a);
+}
 
 inline void hash_data_to_ec(const uint8_t *data, std::size_t len, PublicKey &key) {
   crypto_ops::hash_data_to_ec(data, len, key);

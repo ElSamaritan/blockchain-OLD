@@ -20,9 +20,11 @@
 namespace CryptoNote {
 
 MemoryBlockchainCacheFactory::MemoryBlockchainCacheFactory(const std::string& filename, Logging::ILogger& logger)
-    : filename(filename), logger(logger) {}
+    : filename(filename), logger(logger) {
+}
 
-MemoryBlockchainCacheFactory::~MemoryBlockchainCacheFactory() {}
+MemoryBlockchainCacheFactory::~MemoryBlockchainCacheFactory() {
+}
 
 std::shared_ptr<IBlockchainCache> MemoryBlockchainCacheFactory::createRootBlockchainCache(const Currency& currency) {
   return createBlockchainCache(currency, nullptr, 0);

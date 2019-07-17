@@ -51,9 +51,13 @@ class TransactionPoolErrorCategory : public std::error_category {
  public:
   static TransactionPoolErrorCategory INSTANCE;
 
-  virtual const char* name() const throw() { return "TransactionValidationErrorCategory"; }
+  virtual const char* name() const throw() {
+    return "TransactionValidationErrorCategory";
+  }
 
-  virtual std::error_condition default_error_condition(int ev) const throw() { return std::error_condition(ev, *this); }
+  virtual std::error_condition default_error_condition(int ev) const throw() {
+    return std::error_condition(ev, *this);
+  }
 
   virtual std::string message(int ev) const {
     TransactionPoolError code = static_cast<TransactionPoolError>(ev);
@@ -88,7 +92,9 @@ inline std::error_code make_error_code(CryptoNote::error::TransactionPoolError e
 }  // namespace CryptoNote
 
 namespace Xi {
-inline Error make_error(CryptoNote::error::TransactionPoolError e) { return Error{make_error_code(e)}; }
+inline Error make_error(CryptoNote::error::TransactionPoolError e) {
+  return Error{make_error_code(e)};
+}
 }  // namespace Xi
 
 namespace std {

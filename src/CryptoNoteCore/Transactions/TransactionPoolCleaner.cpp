@@ -25,7 +25,8 @@ TransactionPoolCleanWrapper::TransactionPoolCleanWrapper(std::unique_ptr<ITransa
   assert(this->timeProvider);
 }
 
-TransactionPoolCleanWrapper::~TransactionPoolCleanWrapper() {}
+TransactionPoolCleanWrapper::~TransactionPoolCleanWrapper() {
+}
 
 void TransactionPoolCleanWrapper::addObserver(ITransactionPoolObserver* observer) {
   transactionPool->addObserver(observer);
@@ -35,17 +36,29 @@ void TransactionPoolCleanWrapper::removeObserver(ITransactionPoolObserver* obser
   transactionPool->removeObserver(observer);
 }
 
-std::size_t TransactionPoolCleanWrapper::size() const { return transactionPool->size(); }
+std::size_t TransactionPoolCleanWrapper::size() const {
+  return transactionPool->size();
+}
 
-std::size_t TransactionPoolCleanWrapper::cumulativeSize() const { return transactionPool->cumulativeSize(); }
+std::size_t TransactionPoolCleanWrapper::cumulativeSize() const {
+  return transactionPool->cumulativeSize();
+}
 
-std::size_t TransactionPoolCleanWrapper::cumulativeFees() const { return transactionPool->cumulativeFees(); }
+std::size_t TransactionPoolCleanWrapper::cumulativeFees() const {
+  return transactionPool->cumulativeFees();
+}
 
-Crypto::Hash TransactionPoolCleanWrapper::stateHash() const { return transactionPool->stateHash(); }
+Crypto::Hash TransactionPoolCleanWrapper::stateHash() const {
+  return transactionPool->stateHash();
+}
 
-size_t TransactionPoolCleanWrapper::forceFlush() { return transactionPool->forceFlush(); }
+size_t TransactionPoolCleanWrapper::forceFlush() {
+  return transactionPool->forceFlush();
+}
 
-bool TransactionPoolCleanWrapper::forceErasure(const Crypto::Hash& hash) { return transactionPool->forceErasure(hash); }
+bool TransactionPoolCleanWrapper::forceErasure(const Crypto::Hash& hash) {
+  return transactionPool->forceErasure(hash);
+}
 
 Xi::Result<void> TransactionPoolCleanWrapper::pushTransaction(BinaryArray transactionBlob) {
   return transactionPool->pushTransaction(std::move(transactionBlob));
@@ -67,7 +80,9 @@ std::vector<Crypto::Hash> TransactionPoolCleanWrapper::sanityCheck(const uint64_
   return transactionPool->sanityCheck(timeout);
 }
 
-bool TransactionPoolCleanWrapper::serialize(ISerializer& serializer) { return transactionPool->serialize(serializer); }
+bool TransactionPoolCleanWrapper::serialize(ISerializer& serializer) {
+  return transactionPool->serialize(serializer);
+}
 
 ITransactionPool::TransactionQueryResult TransactionPoolCleanWrapper::queryTransaction(const Crypto::Hash& hash) const {
   return transactionPool->queryTransaction(hash);

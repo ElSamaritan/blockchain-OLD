@@ -54,7 +54,8 @@ uint8_t readUint8(const std::string& source, size_t& offset) {
 
 }  // namespace
 
-Ipv4Address::Ipv4Address(uint32_t value) : value(value) {}
+Ipv4Address::Ipv4Address(uint32_t value) : value(value) {
+}
 
 Ipv4Address::Ipv4Address(const std::string& dottedDecimal) {
   size_t offset = 0;
@@ -82,11 +83,17 @@ Ipv4Address::Ipv4Address(const std::string& dottedDecimal) {
   }
 }
 
-bool Ipv4Address::operator!=(const Ipv4Address& other) const { return value != other.value; }
+bool Ipv4Address::operator!=(const Ipv4Address& other) const {
+  return value != other.value;
+}
 
-bool Ipv4Address::operator==(const Ipv4Address& other) const { return value == other.value; }
+bool Ipv4Address::operator==(const Ipv4Address& other) const {
+  return value == other.value;
+}
 
-uint32_t Ipv4Address::getValue() const { return value; }
+uint32_t Ipv4Address::getValue() const {
+  return value;
+}
 
 std::string Ipv4Address::toDottedDecimal() const {
   std::string result;

@@ -67,13 +67,17 @@ inline bool operator<(const NetworkAddress& a, const NetworkAddress& b) {
   return std::tie(a.ip, a.port) < std::tie(b.ip, b.port);
 }
 
-inline bool operator==(const NetworkAddress& a, const NetworkAddress& b) { return memcmp(&a, &b, sizeof(a)) == 0; }
+inline bool operator==(const NetworkAddress& a, const NetworkAddress& b) {
+  return memcmp(&a, &b, sizeof(a)) == 0;
+}
 
 inline std::ostream& operator<<(std::ostream& s, const NetworkAddress& na) {
   return s << Common::ipAddressToString(na.ip) << ":" << std::to_string(na.port);
 }
 
-inline uint32_t hostToNetwork(uint32_t n) { return (n << 24) | (n & 0xff00) << 8 | (n & 0xff0000) >> 8 | (n >> 24); }
+inline uint32_t hostToNetwork(uint32_t n) {
+  return (n << 24) | (n & 0xff00) << 8 | (n & 0xff0000) >> 8 | (n >> 24);
+}
 
 inline uint32_t networkToHost(uint32_t n) {
   return hostToNetwork(n);  // the same

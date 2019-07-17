@@ -39,7 +39,9 @@ namespace Crypto {
 struct KeyImage : Xi::ByteArray<32> {
   using array_type = Xi::ByteArray<32>;
   static const KeyImage Null;
-  static inline constexpr size_t bytes() { return 32; }
+  static inline constexpr size_t bytes() {
+    return 32;
+  }
   static Xi::Result<KeyImage> fromString(const std::string& hex);
 
   KeyImage();

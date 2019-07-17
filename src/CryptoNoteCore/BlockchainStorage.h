@@ -29,7 +29,8 @@ class BlockchainStorage {
  public:
   class IBlockchainStorageInternal {
    public:
-    virtual ~IBlockchainStorageInternal() {}
+    virtual ~IBlockchainStorageInternal() {
+    }
 
     virtual void pushBlock(RawBlock&& rawBlock) = 0;
 

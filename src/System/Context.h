@@ -66,7 +66,9 @@ class Context {
     return *reinterpret_cast<ResultType*>(resultStorage);
   }
 
-  void interrupt() { dispatcher.interrupt(&bindingContext); }
+  void interrupt() {
+    dispatcher.interrupt(&bindingContext);
+  }
 
   void wait() {
     for (;;) {
@@ -129,7 +131,9 @@ class Context<void> {
     }
   }
 
-  void interrupt() { dispatcher.interrupt(&bindingContext); }
+  void interrupt() {
+    dispatcher.interrupt(&bindingContext);
+  }
 
   void wait() {
     for (;;) {

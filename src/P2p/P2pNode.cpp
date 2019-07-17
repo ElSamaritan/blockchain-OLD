@@ -38,7 +38,9 @@ namespace {
 
 class PeerIndexGenerator {
  public:
-  PeerIndexGenerator(size_t maxIndex) : maxIndex(maxIndex), randCount(0) { assert(maxIndex > 0); }
+  PeerIndexGenerator(size_t maxIndex) : maxIndex(maxIndex), randCount(0) {
+    assert(maxIndex > 0);
+  }
 
   bool generate(size_t& num) {
     while (randCount < (maxIndex + 1) * 3) {
@@ -443,7 +445,9 @@ bool P2pNode::handleRemotePeerList(const std::list<PeerlistEntry>& peerlist, tim
   return m_peerlist.merge_peerlist(fixTimeDelta(peerlist, remoteTime));
 }
 
-const CORE_SYNC_DATA& P2pNode::getGenesisPayload() const { return m_genesisPayload; }
+const CORE_SYNC_DATA& P2pNode::getGenesisPayload() const {
+  return m_genesisPayload;
+}
 
 std::list<PeerlistEntry> P2pNode::getLocalPeerList() const {
   std::list<PeerlistEntry> peerlist;
@@ -467,7 +471,9 @@ basic_node_data P2pNode::getNodeData() const {
   return nodeData;
 }
 
-PeerIdType P2pNode::getPeerId() const { return m_myPeerId; }
+PeerIdType P2pNode::getPeerId() const {
+  return m_myPeerId;
+}
 
 size_t P2pNode::getOutgoingConnectionsCount() const {
   size_t count = 0;

@@ -19,7 +19,8 @@
 
 namespace Common {
 
-StdOutputStream::StdOutputStream(std::ostream& out) : out(out) {}
+StdOutputStream::StdOutputStream(std::ostream& out) : out(out) {
+}
 
 size_t StdOutputStream::writeSome(const void* data, size_t size) {
   out.write(static_cast<const char*>(data), size);

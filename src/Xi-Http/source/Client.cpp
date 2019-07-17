@@ -48,10 +48,15 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
   boost::asio::io_context io;
   boost::asio::ssl::context ctx{boost::asio::ssl::context::sslv23_client};
 
-  _Worker() {}
+  _Worker() {
+  }
 
-  void run() { thread = std::thread{std::bind(&_Worker::operator(), shared_from_this())}; }
-  void stop() { keepRunning = false; }
+  void run() {
+    thread = std::thread{std::bind(&_Worker::operator(), shared_from_this())};
+  }
+  void stop() {
+    keepRunning = false;
+  }
 
   void operator()() {
     while (keepRunning) {
@@ -59,7 +64,8 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
         boost::system::error_code ec;
         auto tasksHandled = io.run(ec);
         io.reset();
-        if (tasksHandled == 0) std::this_thread::sleep_for(std::chrono::milliseconds{20});
+        if (tasksHandled == 0)
+          std::this_thread::sleep_for(std::chrono::milliseconds{20});
       } catch (...) {
         // TODO Logging
       }
@@ -80,15 +86,23 @@ Xi::Http::Client::Client(const std::string &host, uint16_t port, SSLConfiguratio
   m_worker->run();
 }
 
-Xi::Http::Client::~Client() { m_worker->stop(); }
+Xi::Http::Client::~Client() {
+  m_worker->stop();
+}
 
-const std::string Xi::Http::Client::host() const { return m_host; }
+const std::string Xi::Http::Client::host() const {
+  return m_host;
+}
 
-uint16_t Xi::Http::Client::port() const { return m_port; }
+uint16_t Xi::Http::Client::port() const {
+  return m_port;
+}
 
 std::future<Xi::Http::Response> Xi::Http::Client::send(Xi::Http::Request &&request) {
-  if (request.host().empty()) request.setHost(host());
-  if (request.port() == 0) request.setPort(port());
+  if (request.host().empty())
+    request.setHost(host());
+  if (request.port() == 0)
+    request.setPort(port());
   request.headers().setAcceptedContentEncodings(
       {ContentEncoding::Gzip, ContentEncoding::Deflate, ContentEncoding::Identity});
   // TODO: request type should be determined on schema not config.

@@ -30,7 +30,8 @@ using namespace Crypto;
 namespace CryptoNote {
 
 WalletUserTransactionsCache::WalletUserTransactionsCache(uint64_t mempoolTxLiveTime)
-    : m_unconfirmedTransactions(mempoolTxLiveTime) {}
+    : m_unconfirmedTransactions(mempoolTxLiveTime) {
+}
 
 bool WalletUserTransactionsCache::serialize(CryptoNote::ISerializer& s) {
   if (s.type() == CryptoNote::ISerializer::INPUT) {
@@ -61,9 +62,13 @@ uint64_t WalletUserTransactionsCache::unconfrimedOutsAmount() const {
   return m_unconfirmedTransactions.countUnconfirmedOutsAmount();
 }
 
-size_t WalletUserTransactionsCache::getTransactionCount() const { return m_transactions.size(); }
+size_t WalletUserTransactionsCache::getTransactionCount() const {
+  return m_transactions.size();
+}
 
-size_t WalletUserTransactionsCache::getTransferCount() const { return m_transfers.size(); }
+size_t WalletUserTransactionsCache::getTransferCount() const {
+  return m_transfers.size();
+}
 
 TransactionId WalletUserTransactionsCache::addNewTransaction(uint64_t amount, uint64_t fee, const std::string& extra,
                                                              const std::vector<WalletLegacyTransfer>& transfers,
@@ -181,19 +186,23 @@ TransactionId WalletUserTransactionsCache::findTransactionByTransferId(TransferI
   for (id = 0; id < m_transactions.size(); ++id) {
     const WalletLegacyTransaction& tx = m_transactions[id];
 
-    if (tx.firstTransferId == WALLET_LEGACY_INVALID_TRANSFER_ID || tx.transferCount == 0) continue;
+    if (tx.firstTransferId == WALLET_LEGACY_INVALID_TRANSFER_ID || tx.transferCount == 0)
+      continue;
 
-    if (transferId >= tx.firstTransferId && transferId < (tx.firstTransferId + tx.transferCount)) break;
+    if (transferId >= tx.firstTransferId && transferId < (tx.firstTransferId + tx.transferCount))
+      break;
   }
 
-  if (id == m_transactions.size()) return WALLET_LEGACY_INVALID_TRANSACTION_ID;
+  if (id == m_transactions.size())
+    return WALLET_LEGACY_INVALID_TRANSACTION_ID;
 
   return id;
 }
 
 bool WalletUserTransactionsCache::getTransaction(TransactionId transactionId,
                                                  WalletLegacyTransaction& transaction) const {
-  if (transactionId >= m_transactions.size()) return false;
+  if (transactionId >= m_transactions.size())
+    return false;
 
   transaction = m_transactions[transactionId];
 
@@ -201,7 +210,8 @@ bool WalletUserTransactionsCache::getTransaction(TransactionId transactionId,
 }
 
 bool WalletUserTransactionsCache::getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) const {
-  if (transferId >= m_transfers.size()) return false;
+  if (transferId >= m_transfers.size())
+    return false;
 
   transfer = m_transfers[transferId];
 
@@ -217,7 +227,8 @@ TransactionId WalletUserTransactionsCache::findTransactionByHash(const Hash& has
   auto it = std::find_if(m_transactions.begin(), m_transactions.end(),
                          [&hash](const WalletLegacyTransaction& tx) { return tx.hash == hash; });
 
-  if (it == m_transactions.end()) return CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID;
+  if (it == m_transactions.end())
+    return CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID;
 
   return std::distance(m_transactions.begin(), it);
 }

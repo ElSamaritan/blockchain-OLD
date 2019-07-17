@@ -81,7 +81,8 @@ class TransactionPrefixImpl : public ITransactionReader {
   Hash m_txHash;
 };
 
-TransactionPrefixImpl::TransactionPrefixImpl() {}
+TransactionPrefixImpl::TransactionPrefixImpl() {
+}
 
 TransactionPrefixImpl::TransactionPrefixImpl(const TransactionPrefix& prefix, const Hash& transactionHash) {
   m_extra.parse(prefix.extra);
@@ -90,9 +91,13 @@ TransactionPrefixImpl::TransactionPrefixImpl(const TransactionPrefix& prefix, co
   m_txHash = transactionHash;
 }
 
-Hash TransactionPrefixImpl::getTransactionHash() const { return m_txHash; }
+Hash TransactionPrefixImpl::getTransactionHash() const {
+  return m_txHash;
+}
 
-Hash TransactionPrefixImpl::getTransactionPrefixHash() const { return m_txPrefix.prefixHash(); }
+Hash TransactionPrefixImpl::getTransactionPrefixHash() const {
+  return m_txPrefix.prefixHash();
+}
 
 PublicKey TransactionPrefixImpl::getTransactionPublicKey() const {
   Crypto::PublicKey pk(PublicKey::Null);
@@ -100,7 +105,9 @@ PublicKey TransactionPrefixImpl::getTransactionPublicKey() const {
   return pk;
 }
 
-uint64_t TransactionPrefixImpl::getUnlockTime() const { return m_txPrefix.unlockTime; }
+uint64_t TransactionPrefixImpl::getUnlockTime() const {
+  return m_txPrefix.unlockTime;
+}
 
 bool TransactionPrefixImpl::getPaymentId(PaymentId& hash) const {
   BinaryArray nonce;
@@ -127,9 +134,13 @@ bool TransactionPrefixImpl::getExtraNonce(BinaryArray& nonce) const {
   return false;
 }
 
-BinaryArray TransactionPrefixImpl::getExtra() const { return m_txPrefix.extra; }
+BinaryArray TransactionPrefixImpl::getExtra() const {
+  return m_txPrefix.extra;
+}
 
-size_t TransactionPrefixImpl::getInputCount() const { return m_txPrefix.inputs.size(); }
+size_t TransactionPrefixImpl::getInputCount() const {
+  return m_txPrefix.inputs.size();
+}
 
 uint64_t TransactionPrefixImpl::getInputTotalAmount() const {
   return std::accumulate(m_txPrefix.inputs.begin(), m_txPrefix.inputs.end(), 0ULL,
@@ -144,7 +155,9 @@ void TransactionPrefixImpl::getInput(size_t index, KeyInput& input) const {
   input = std::get<KeyInput>(getInputChecked(m_txPrefix, index, TransactionTypes::InputType::Key));
 }
 
-size_t TransactionPrefixImpl::getOutputCount() const { return m_txPrefix.outputs.size(); }
+size_t TransactionPrefixImpl::getOutputCount() const {
+  return m_txPrefix.outputs.size();
+}
 
 uint64_t TransactionPrefixImpl::getOutputTotalAmount() const {
   return std::accumulate(m_txPrefix.outputs.begin(), m_txPrefix.outputs.end(), 0ULL,
@@ -184,7 +197,9 @@ bool TransactionPrefixImpl::validateSignatures() const {
                           "Validating signatures is not supported for transaction prefix");
 }
 
-BinaryArray TransactionPrefixImpl::getTransactionData() const { return toBinaryArray(m_txPrefix); }
+BinaryArray TransactionPrefixImpl::getTransactionData() const {
+  return toBinaryArray(m_txPrefix);
+}
 
 bool TransactionPrefixImpl::getTransactionSecretKey(SecretKey& key) const {
   XI_UNUSED(key);

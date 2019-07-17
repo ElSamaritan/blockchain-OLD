@@ -81,14 +81,17 @@ static std::wstring to_wstring(const std::string str) {
   size_t length = 0;
   auto err = mbstowcs_s(&length, &wstr[0], wstr.size(), str.data(), str.size());
   wstr.resize(length);
-  if (err != 0) throw std::runtime_error{std::string{"Unable to convert '"} + str + "' to wide string."};
+  if (err != 0)
+    throw std::runtime_error{std::string{"Unable to convert '"} + str + "' to wide string."};
   return wstr;
 }
 
 static std::string to_string(const std::wstring wstr) {
-  if (wstr.empty()) return std::string();
+  if (wstr.empty())
+    return std::string();
   int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
-  if (size_needed < 0) return std::string{};
+  if (size_needed < 0)
+    return std::string{};
   std::string strTo(static_cast<size_t>(size_needed), 0);
   WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
   return strTo;
@@ -108,7 +111,8 @@ static bool dumpCallback(const wchar_t* dump_path, const wchar_t* minidump_id, v
   if (succeeded) {
     std::cout << "Dump file created: " << file << std::endl;
     Xi::_CrashHandler_Impl* impl = static_cast<Xi::_CrashHandler_Impl*>(context);
-    if (impl->config.IsUploadEnabled) upload(file, impl->config.Application);
+    if (impl->config.IsUploadEnabled)
+      upload(file, impl->config.Application);
   } else
     std::cout << "Dump file creation failed.";
   return succeeded;
@@ -120,7 +124,8 @@ static bool dumpCallback(const google_breakpad::MinidumpDescriptor& descriptor, 
   if (succeeded) {
     std::cout << "Dump file created: " << descriptor.path() << std::endl;
     const auto impl = static_cast<Xi::_CrashHandler_Impl*>(context);
-    if (impl->config.IsUploadEnabled) upload(descriptor.path(), impl->config.Application);
+    if (impl->config.IsUploadEnabled)
+      upload(descriptor.path(), impl->config.Application);
   } else {
     std::cout << "Dump file creation failed.";
   }
@@ -134,7 +139,8 @@ static bool dumpCallback(const char* dump_dir, const char* minidump_id, void* co
   if (succeeded) {
     std::cout << "Dump file created: " << file << std::endl;
     const auto impl = static_cast<Xi::_CrashHandler_Impl*>(context);
-    if (impl->config.IsUploadEnabled) upload(file, impl->config.Application);
+    if (impl->config.IsUploadEnabled)
+      upload(file, impl->config.Application);
   } else {
     std::cout << "Dump file creation failed.";
   }

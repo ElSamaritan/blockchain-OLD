@@ -43,7 +43,8 @@
 #include "HttpClientSession.h"
 
 Xi::Http::ClientSession::ClientSession(boost::asio::io_context &io, std::shared_ptr<IClientSessionBuilder> builder)
-    : m_io{io}, m_resolver{io}, m_redirectionCounter{0}, m_sslRequired{false}, m_builder{builder} {}
+    : m_io{io}, m_resolver{io}, m_redirectionCounter{0}, m_sslRequired{false}, m_builder{builder} {
+}
 
 Xi::Http::ClientSession::future_t Xi::Http::ClientSession::run(Xi::Http::Request &&request) {
   m_request = m_conversion(request);
@@ -104,26 +105,33 @@ void Xi::Http::ClientSession::onShutdown(boost::beast::error_code ec) {
       // http://stackoverflow.com/questions/25587403/boost-asio-ssl-async-shutdown-always-finishes-with-an-error
       ec.assign(0, ec.category());
     }
-    if (ec != boost::beast::errc::not_connected) swallowErrorCode(ec);
+    if (ec != boost::beast::errc::not_connected)
+      swallowErrorCode(ec);
     doOnShutdown();
   } catch (...) {
     // TODO Logging
   }
 }
 
-void Xi::Http::ClientSession::swallowErrorCode(const boost::beast::error_code &ec) { XI_UNUSED(ec); }
-
-void Xi::Http::ClientSession::checkErrorCode(const boost::beast::error_code &ec) {
-  if (ec) throw std::runtime_error{ec.message()};
+void Xi::Http::ClientSession::swallowErrorCode(const boost::beast::error_code &ec) {
+  XI_UNUSED(ec);
 }
 
-void Xi::Http::ClientSession::fail(const std::exception_ptr &ex) { m_promise.set_exception(ex); }
+void Xi::Http::ClientSession::checkErrorCode(const boost::beast::error_code &ec) {
+  if (ec)
+    throw std::runtime_error{ec.message()};
+}
+
+void Xi::Http::ClientSession::fail(const std::exception_ptr &ex) {
+  m_promise.set_exception(ex);
+}
 
 void Xi::Http::ClientSession::run() {
   doPrepareRun();
 
   const auto host = m_request.find(boost::beast::http::field::host);
-  if (host == m_request.end()) throw std::runtime_error{"request has no host"};
+  if (host == m_request.end())
+    throw std::runtime_error{"request has no host"};
 
   m_resolver.async_resolve(
       std::string{host->value()}, m_port.c_str(),
@@ -138,7 +146,8 @@ void Xi::Http::ClientSession::redirect(boost::optional<std::string> location) {
 
   const Uri uri{*location};
   bool isSSL = m_sslRequired;
-  if (!uri.host().empty()) m_request.set(boost::beast::http::field::host, uri.host());
+  if (!uri.host().empty())
+    m_request.set(boost::beast::http::field::host, uri.host());
   if (uri.port() > 0)
     m_port = std::to_string(static_cast<uint64_t>(uri.port()));
   else if (uri.scheme() == "http") {
@@ -152,7 +161,8 @@ void Xi::Http::ClientSession::redirect(boost::optional<std::string> location) {
   }
   m_request.target(uri.toString());
 
-  if (m_builder.get() == nullptr) throw std::runtime_error{"no session builder, unable to redirect session"};
+  if (m_builder.get() == nullptr)
+    throw std::runtime_error{"no session builder, unable to redirect session"};
 
   std::shared_ptr<ClientSession> redirectedSession =
       isSSL ? m_builder->makeHttpsSession() : m_builder->makeHttpSession();

@@ -32,6 +32,7 @@ void makecontext(uctx *ucp, void (*func)(void), intptr_t arg) {
 }
 
 int swapcontext(uctx *oucp, const uctx *ucp) {
-  if (getcontext(oucp) == 0) setcontext(ucp);
+  if (getcontext(oucp) == 0)
+    setcontext(ucp);
   return 0;
 }

@@ -50,6 +50,10 @@ void genericOverflowTest() {
 
 }  // namespace
 
-TEST(XI_UNIT_TEST_SUITE, OverflowUInt32) { genericOverflowTest<uint32_t>(); }
+TEST(XI_UNIT_TEST_SUITE, OverflowUInt32) {
+  genericOverflowTest<uint32_t>();
+}
 
-TEST(XI_UNIT_TEST_SUITE, OverflowUInt64) { genericOverflowTest<uint64_t>(); }
+TEST(XI_UNIT_TEST_SUITE, OverflowUInt64) {
+  genericOverflowTest<uint64_t>();
+}

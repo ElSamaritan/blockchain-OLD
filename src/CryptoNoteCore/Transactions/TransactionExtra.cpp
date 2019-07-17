@@ -35,7 +35,8 @@ namespace CryptoNote {
 bool parseTransactionExtra(const std::vector<uint8_t>& transactionExtra,
                            std::vector<TransactionExtraField>& transactionExtraFields) {
   transactionExtraFields.clear();
-  if (transactionExtra.empty()) return true;
+  if (transactionExtra.empty())
+    return true;
 
   try {
     MemoryInputStream iss(transactionExtra.data(), transactionExtra.size());
@@ -80,7 +81,8 @@ bool parseTransactionExtra(const std::vector<uint8_t>& transactionExtra,
 struct ExtraSerializerVisitor : public boost::static_visitor<bool> {
   std::vector<uint8_t>& extra;
 
-  ExtraSerializerVisitor(std::vector<uint8_t>& tx_extra) : extra(tx_extra) {}
+  ExtraSerializerVisitor(std::vector<uint8_t>& tx_extra) : extra(tx_extra) {
+  }
 
   bool operator()(const TransactionExtraPadding& t) {
     if (t.size > TX_EXTRA_PADDING_MAX_COUNT) {
@@ -90,9 +92,13 @@ struct ExtraSerializerVisitor : public boost::static_visitor<bool> {
     return true;
   }
 
-  bool operator()(const TransactionExtraPublicKey& t) { return addTransactionPublicKeyToExtra(extra, t.publicKey); }
+  bool operator()(const TransactionExtraPublicKey& t) {
+    return addTransactionPublicKeyToExtra(extra, t.publicKey);
+  }
 
-  bool operator()(const TransactionExtraNonce& t) { return addExtraNonceToTransactionExtra(extra, t.nonce); }
+  bool operator()(const TransactionExtraNonce& t) {
+    return addExtraNonceToTransactionExtra(extra, t.nonce);
+  }
 };
 
 bool writeTransactionExtra(std::vector<uint8_t>& tx_extra, const std::vector<TransactionExtraField>& tx_extra_fields) {
@@ -109,10 +115,12 @@ bool writeTransactionExtra(std::vector<uint8_t>& tx_extra, const std::vector<Tra
 
 PublicKey getTransactionPublicKeyFromExtra(const std::vector<uint8_t>& tx_extra) {
   std::vector<TransactionExtraField> tx_extra_fields;
-  if (!parseTransactionExtra(tx_extra, tx_extra_fields)) return PublicKey::Null;
+  if (!parseTransactionExtra(tx_extra, tx_extra_fields))
+    return PublicKey::Null;
 
   TransactionExtraPublicKey pub_key_field;
-  if (!findTransactionExtraFieldByType(tx_extra_fields, pub_key_field)) return PublicKey::Null;
+  if (!findTransactionExtraFieldByType(tx_extra_fields, pub_key_field))
+    return PublicKey::Null;
 
   return pub_key_field.publicKey;
 }
@@ -150,8 +158,10 @@ void setPaymentIdToTransactionExtraNonce(std::vector<uint8_t>& extra_nonce, cons
 }
 
 bool getPaymentIdFromTransactionExtraNonce(const std::vector<uint8_t>& extra_nonce, PaymentId& payment_id) {
-  if (PublicKey::bytes() + 1 != extra_nonce.size()) return false;
-  if (TX_EXTRA_NONCE_PAYMENT_ID != extra_nonce[0]) return false;
+  if (PublicKey::bytes() + 1 != extra_nonce.size())
+    return false;
+  if (TX_EXTRA_NONCE_PAYMENT_ID != extra_nonce[0])
+    return false;
   payment_id = PaymentId::Null;
   std::memcpy(payment_id.data(), extra_nonce.data() + 1, PublicKey::bytes());
   if (!payment_id.isValid()) {

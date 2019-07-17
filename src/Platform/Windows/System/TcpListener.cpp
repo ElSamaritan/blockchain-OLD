@@ -44,7 +44,8 @@ LPFN_ACCEPTEX acceptEx = nullptr;
 
 }  // namespace
 
-TcpListener::TcpListener() : dispatcher(nullptr) {}
+TcpListener::TcpListener() : dispatcher(nullptr) {
+}
 
 TcpListener::TcpListener(Dispatcher& dispatcher, const Ipv4Address& address, uint16_t port) : dispatcher(&dispatcher) {
   std::string message;

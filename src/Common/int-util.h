@@ -31,19 +31,29 @@ static inline uint32_t rol32(uint32_t x, int r) {
   return _rotl(x, r);
 }
 
-static inline uint64_t rol64(uint64_t x, int r) { return _rotl64(x, r); }
+static inline uint64_t rol64(uint64_t x, int r) {
+  return _rotl64(x, r);
+}
 
 #else
 
-static inline uint32_t rol32(uint32_t x, int r) { return (x << (r & 31)) | (x >> (-r & 31)); }
+static inline uint32_t rol32(uint32_t x, int r) {
+  return (x << (r & 31)) | (x >> (-r & 31));
+}
 
-static inline uint64_t rol64(uint64_t x, int r) { return (x << (r & 63)) | (x >> (-r & 63)); }
+static inline uint64_t rol64(uint64_t x, int r) {
+  return (x << (r & 63)) | (x >> (-r & 63));
+}
 
 #endif
 
-static inline uint64_t hi_dword(uint64_t val) { return val >> 32; }
+static inline uint64_t hi_dword(uint64_t val) {
+  return val >> 32;
+}
 
-static inline uint64_t lo_dword(uint64_t val) { return val & 0xFFFFFFFF; }
+static inline uint64_t lo_dword(uint64_t val) {
+  return val & 0xFFFFFFFF;
+}
 
 static inline uint64_t mul128(uint64_t multiplier, uint64_t multiplicand, uint64_t *product_hi) {
   // multiplier   = ab = a * 2^32 + b
@@ -108,8 +118,12 @@ static inline uint32_t div128_32(uint64_t dividend_hi, uint64_t dividend_lo, uin
    (((uint64_t)(x)&0x000000ff00000000) >> 8) | (((uint64_t)(x)&0x0000ff0000000000) >> 24) |  \
    (((uint64_t)(x)&0x00ff000000000000) >> 40) | (((uint64_t)(x)&0xff00000000000000) >> 56))
 
-static inline uint32_t ident32(uint32_t x) { return x; }
-static inline uint64_t ident64(uint64_t x) { return x; }
+static inline uint32_t ident32(uint32_t x) {
+  return x;
+}
+static inline uint64_t ident64(uint64_t x) {
+  return x;
+}
 
 static inline uint32_t swap32(uint32_t x) {
   x = ((x & 0x00ff00ff) << 8) | ((x & 0xff00ff00) >> 8);
@@ -145,8 +159,12 @@ static inline void mem_inplace_swap64(void *mem, size_t n) {
   }
 }
 
-static inline void memcpy_ident32(void *dst, const void *src, size_t n) { memcpy(dst, src, 4 * n); }
-static inline void memcpy_ident64(void *dst, const void *src, size_t n) { memcpy(dst, src, 8 * n); }
+static inline void memcpy_ident32(void *dst, const void *src, size_t n) {
+  memcpy(dst, src, 4 * n);
+}
+static inline void memcpy_ident64(void *dst, const void *src, size_t n) {
+  memcpy(dst, src, 8 * n);
+}
 
 static inline void memcpy_swap32(void *dst, const void *src, size_t n) {
   size_t i;

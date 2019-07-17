@@ -303,13 +303,15 @@ static void F8(jh_hash_state *state) {
   uint64 i;
 
   /*xor the 512-bit message with the fist half of the 1024-bit hash state*/
-  for (i = 0; i < 8; i++) state->x[i >> 1][i & 1] ^= ((uint64 *)state->buffer)[i];
+  for (i = 0; i < 8; i++)
+    state->x[i >> 1][i & 1] ^= ((uint64 *)state->buffer)[i];
 
   /*the bijective function E8 */
   E8(state);
 
   /*xor the 512-bit message with the second half of the 1024-bit hash state*/
-  for (i = 0; i < 8; i++) state->x[(8 + i) >> 1][(8 + i) & 1] ^= ((uint64 *)state->buffer)[i];
+  for (i = 0; i < 8; i++)
+    state->x[(8 + i) >> 1][(8 + i) & 1] ^= ((uint64 *)state->buffer)[i];
 }
 
 /*before hashing a message, initialize the hash state as H0 */
@@ -407,9 +409,11 @@ HashReturn jh_final(jh_hash_state *state, BitSequence *hashval) {
   } else {
     /*set the rest of the bytes in the buffer to 0*/
     if ((state->datasize_in_buffer & 7) == 0)
-      for (i = (state->databitlen & 0x1ff) >> 3; i < 64; i++) state->buffer[i] = 0;
+      for (i = (state->databitlen & 0x1ff) >> 3; i < 64; i++)
+        state->buffer[i] = 0;
     else
-      for (i = ((state->databitlen & 0x1ff) >> 3) + 1; i < 64; i++) state->buffer[i] = 0;
+      for (i = ((state->databitlen & 0x1ff) >> 3) + 1; i < 64; i++)
+        state->buffer[i] = 0;
 
     /*pad and process the partial block when databitlen is not multiple of 512 bits, then hash the padded blocks*/
     state->buffer[((state->databitlen & 0x1ff) >> 3)] |= 1 << (7 - (state->databitlen & 7));

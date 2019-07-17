@@ -26,7 +26,8 @@ class Currency;
 
 class IBlockchainCacheFactory {
  public:
-  virtual ~IBlockchainCacheFactory() {}
+  virtual ~IBlockchainCacheFactory() {
+  }
 
   virtual std::shared_ptr<IBlockchainCache> createRootBlockchainCache(const Currency& currency) = 0;
   virtual std::shared_ptr<IBlockchainCache> createBlockchainCache(const Currency& currency, IBlockchainCache* parent,

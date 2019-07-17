@@ -46,7 +46,9 @@ XI_DECLARE_SPANS_STRUCT(Hash)
 struct Hash : Xi::ByteArray<XI_HASH_FAST_HASH_SIZE> {
   using array_type = Xi::ByteArray<XI_HASH_FAST_HASH_SIZE>;
   static const Hash Null;
-  static inline constexpr size_t bytes() { return XI_HASH_FAST_HASH_SIZE; }
+  static inline constexpr size_t bytes() {
+    return XI_HASH_FAST_HASH_SIZE;
+  }
   static Xi::Result<Hash> fromString(const std::string& hex);
 
   static Xi::Result<Hash> compute(Xi::ConstByteSpan data);

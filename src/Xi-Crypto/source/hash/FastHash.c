@@ -29,42 +29,36 @@
 
 #include "Xi/Crypto/Hash/Keccak.hh"
 
-xi_crypto_hash_fast_hash_state *xi_crypto_hash_fast_hash_create(void)
-{
-  return (xi_crypto_hash_fast_hash_state*)malloc(sizeof(xi_crypto_hash_fast_hash_state));
+xi_crypto_hash_fast_hash_state *xi_crypto_hash_fast_hash_create(void) {
+  return (xi_crypto_hash_fast_hash_state *)malloc(sizeof(xi_crypto_hash_fast_hash_state));
 }
 
-int xi_crypto_hash_fast_hash_init(xi_crypto_hash_fast_hash_state *state)
-{
+int xi_crypto_hash_fast_hash_init(xi_crypto_hash_fast_hash_state *state) {
   return xi_crypto_hash_keccak_init(state);
 }
 
-int xi_crypto_hash_fast_hash_update(xi_crypto_hash_fast_hash_state *state, const xi_byte_t* data, size_t length)
-{
-  if(state == NULL) {
+int xi_crypto_hash_fast_hash_update(xi_crypto_hash_fast_hash_state *state, const xi_byte_t *data, size_t length) {
+  if (state == NULL) {
     return XI_RETURN_CODE_NO_SUCCESS;
   } else {
     return xi_crypto_hash_keccak_update(state, data, length);
   }
 }
 
-int xi_crypto_hash_fast_hash_finalize(xi_crypto_hash_fast_hash_state *state, xi_crypto_hash_fast out)
-{
-  if(state == NULL) {
+int xi_crypto_hash_fast_hash_finalize(xi_crypto_hash_fast_hash_state *state, xi_crypto_hash_fast out) {
+  if (state == NULL) {
     return XI_RETURN_CODE_NO_SUCCESS;
   } else {
     return xi_crypto_hash_fast_hash_finalize(state, out);
   }
 }
 
-void xi_crypto_hash_fast_hash_destroy(xi_crypto_hash_fast_hash_state *state)
-{
-  if(state != NULL) {
+void xi_crypto_hash_fast_hash_destroy(xi_crypto_hash_fast_hash_state *state) {
+  if (state != NULL) {
     free(state);
   }
 }
 
-int xi_crypto_hash_fast_hash(const xi_byte_t *data, size_t length, xi_crypto_hash_fast out)
-{
+int xi_crypto_hash_fast_hash(const xi_byte_t *data, size_t length, xi_crypto_hash_fast out) {
   return xi_crypto_hash_keccak_256(data, length, out);
 }

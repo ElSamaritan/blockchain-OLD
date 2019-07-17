@@ -28,9 +28,12 @@ using namespace System;
 namespace CryptoNote {
 
 P2pConnectionProxy::P2pConnectionProxy(P2pContextOwner&& ctx, IP2pNodeInternal& node)
-    : m_contextOwner(std::move(ctx)), m_context(m_contextOwner.get()), m_node(node) {}
+    : m_contextOwner(std::move(ctx)), m_context(m_contextOwner.get()), m_node(node) {
+}
 
-P2pConnectionProxy::~P2pConnectionProxy() { m_context.stop(); }
+P2pConnectionProxy::~P2pConnectionProxy() {
+  m_context.stop();
+}
 
 bool P2pConnectionProxy::processIncomingHandshake() {
   LevinProtocol::Command cmd;
@@ -91,7 +94,9 @@ void P2pConnectionProxy::ban() {
   // not implemented
 }
 
-void P2pConnectionProxy::stop() { m_context.stop(); }
+void P2pConnectionProxy::stop() {
+  m_context.stop();
+}
 
 void P2pConnectionProxy::writeHandshake(const P2pMessage& message) {
   CORE_SYNC_DATA coreSync;

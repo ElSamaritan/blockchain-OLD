@@ -39,7 +39,8 @@ class Future {
  public:
   // Create a new thread, and run `operation` in it.
   explicit Future(std::function<T()>&& operation)
-      : procedure(std::move(operation)), state(State::STARTED), worker{[this] { asyncOp(); }} {}
+      : procedure(std::move(operation)), state(State::STARTED), worker{[this] { asyncOp(); }} {
+  }
 
   // Wait for async op to complete, then if thread wasn't detached, join it.
   ~Future() {
@@ -103,7 +104,8 @@ class Future<void> {
  public:
   // Create a new thread, and run `operation` in it.
   explicit Future(std::function<void()>&& operation)
-      : procedure(std::move(operation)), state(State::STARTED), worker{[this] { asyncOp(); }} {}
+      : procedure(std::move(operation)), state(State::STARTED), worker{[this] { asyncOp(); }} {
+  }
 
   // Wait for async op to complete, then if thread wasn't detached, join it.
   ~Future() {

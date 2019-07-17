@@ -26,7 +26,9 @@
 
 namespace System {
 
-std::string lastErrorMessage() { return errorMessage(GetLastError()); }
+std::string lastErrorMessage() {
+  return errorMessage(GetLastError());
+}
 
 std::string errorMessage(int error) {
   struct Buffer {

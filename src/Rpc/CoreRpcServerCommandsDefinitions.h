@@ -234,7 +234,8 @@ struct COMMAND_RPC_SEND_RAW_TX {
   struct request {
     Transaction transaction;
 
-    request() {}
+    request() {
+    }
     explicit request(const Transaction &);
 
     KV_BEGIN_SERIALIZATION KV_MEMBER(transaction) KV_END_SERIALIZATION

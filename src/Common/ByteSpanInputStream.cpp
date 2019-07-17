@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -26,7 +26,8 @@
 #include <algorithm>
 #include <cstring>
 
-Common::ByteSpanInputStream::ByteSpanInputStream(Xi::ConstByteSpan input) : m_input{input} {}
+Common::ByteSpanInputStream::ByteSpanInputStream(Xi::ConstByteSpan input) : m_input{input} {
+}
 
 size_t Common::ByteSpanInputStream::readSome(void *data, size_t size) {
   const auto maxSize = std::min(size, m_input.size_bytes());
@@ -35,4 +36,6 @@ size_t Common::ByteSpanInputStream::readSome(void *data, size_t size) {
   return maxSize;
 }
 
-bool Common::ByteSpanInputStream::isEndOfStream() const { return m_input.size() == 0; }
+bool Common::ByteSpanInputStream::isEndOfStream() const {
+  return m_input.size() == 0;
+}

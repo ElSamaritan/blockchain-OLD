@@ -145,29 +145,77 @@ void generic_overflow_test() {
 }
 }  // namespace
 
-TEST(XI_TEST_SUITE, DecodeEncodeInt8) { generic_decode_encode_test<int8_t>(); }
-TEST(XI_TEST_SUITE, DecodeEncodeUInt8) { generic_decode_encode_test<uint8_t>(); }
-TEST(XI_TEST_SUITE, DecodeEncodeInt16) { generic_decode_encode_test<int16_t>(); }
-TEST(XI_TEST_SUITE, DecodeEncodeUInt16) { generic_decode_encode_test<uint16_t>(); }
-TEST(XI_TEST_SUITE, DecodeEncodeInt32) { generic_decode_encode_test<int32_t>(); }
-TEST(XI_TEST_SUITE, DecodeEncodeUInt32) { generic_decode_encode_test<uint32_t>(); }
-TEST(XI_TEST_SUITE, DecodeEncodeInt64) { generic_decode_encode_test<int64_t>(); }
-TEST(XI_TEST_SUITE, DecodeEncodeUInt64) { generic_decode_encode_test<uint64_t>(); }
+TEST(XI_TEST_SUITE, DecodeEncodeInt8) {
+  generic_decode_encode_test<int8_t>();
+}
+TEST(XI_TEST_SUITE, DecodeEncodeUInt8) {
+  generic_decode_encode_test<uint8_t>();
+}
+TEST(XI_TEST_SUITE, DecodeEncodeInt16) {
+  generic_decode_encode_test<int16_t>();
+}
+TEST(XI_TEST_SUITE, DecodeEncodeUInt16) {
+  generic_decode_encode_test<uint16_t>();
+}
+TEST(XI_TEST_SUITE, DecodeEncodeInt32) {
+  generic_decode_encode_test<int32_t>();
+}
+TEST(XI_TEST_SUITE, DecodeEncodeUInt32) {
+  generic_decode_encode_test<uint32_t>();
+}
+TEST(XI_TEST_SUITE, DecodeEncodeInt64) {
+  generic_decode_encode_test<int64_t>();
+}
+TEST(XI_TEST_SUITE, DecodeEncodeUInt64) {
+  generic_decode_encode_test<uint64_t>();
+}
 
-TEST(XI_TEST_SUITE, OutOfMemoryInt8) { generic_out_of_memory_test<int8_t>(); }
-TEST(XI_TEST_SUITE, OutOfMemoryUInt8) { generic_out_of_memory_test<uint8_t>(); }
-TEST(XI_TEST_SUITE, OutOfMemoryInt16) { generic_out_of_memory_test<int16_t>(); }
-TEST(XI_TEST_SUITE, OutOfMemoryUInt16) { generic_out_of_memory_test<uint16_t>(); }
-TEST(XI_TEST_SUITE, OutOfMemoryInt32) { generic_out_of_memory_test<int32_t>(); }
-TEST(XI_TEST_SUITE, OutOfMemoryUInt32) { generic_out_of_memory_test<uint32_t>(); }
-TEST(XI_TEST_SUITE, OutOfMemoryInt64) { generic_out_of_memory_test<int64_t>(); }
-TEST(XI_TEST_SUITE, OutOfMemoryUInt64) { generic_out_of_memory_test<uint64_t>(); }
+TEST(XI_TEST_SUITE, OutOfMemoryInt8) {
+  generic_out_of_memory_test<int8_t>();
+}
+TEST(XI_TEST_SUITE, OutOfMemoryUInt8) {
+  generic_out_of_memory_test<uint8_t>();
+}
+TEST(XI_TEST_SUITE, OutOfMemoryInt16) {
+  generic_out_of_memory_test<int16_t>();
+}
+TEST(XI_TEST_SUITE, OutOfMemoryUInt16) {
+  generic_out_of_memory_test<uint16_t>();
+}
+TEST(XI_TEST_SUITE, OutOfMemoryInt32) {
+  generic_out_of_memory_test<int32_t>();
+}
+TEST(XI_TEST_SUITE, OutOfMemoryUInt32) {
+  generic_out_of_memory_test<uint32_t>();
+}
+TEST(XI_TEST_SUITE, OutOfMemoryInt64) {
+  generic_out_of_memory_test<int64_t>();
+}
+TEST(XI_TEST_SUITE, OutOfMemoryUInt64) {
+  generic_out_of_memory_test<uint64_t>();
+}
 
-TEST(XI_TEST_SUITE, OverflowInt8) { generic_overflow_test<int8_t>(); }
-TEST(XI_TEST_SUITE, OverflowUInt8) { generic_overflow_test<uint8_t>(); }
-TEST(XI_TEST_SUITE, OverflowInt16) { generic_overflow_test<int16_t>(); }
-TEST(XI_TEST_SUITE, OverflowUInt16) { generic_overflow_test<uint16_t>(); }
-TEST(XI_TEST_SUITE, OverflowInt32) { generic_overflow_test<int32_t>(); }
-TEST(XI_TEST_SUITE, OverflowUInt32) { generic_overflow_test<uint32_t>(); }
-TEST(XI_TEST_SUITE, OverflowInt64) { generic_overflow_test<int64_t>(); }
-TEST(XI_TEST_SUITE, OverflowUInt64) { generic_overflow_test<uint64_t>(); }
+TEST(XI_TEST_SUITE, OverflowInt8) {
+  generic_overflow_test<int8_t>();
+}
+TEST(XI_TEST_SUITE, OverflowUInt8) {
+  generic_overflow_test<uint8_t>();
+}
+TEST(XI_TEST_SUITE, OverflowInt16) {
+  generic_overflow_test<int16_t>();
+}
+TEST(XI_TEST_SUITE, OverflowUInt16) {
+  generic_overflow_test<uint16_t>();
+}
+TEST(XI_TEST_SUITE, OverflowInt32) {
+  generic_overflow_test<int32_t>();
+}
+TEST(XI_TEST_SUITE, OverflowUInt32) {
+  generic_overflow_test<uint32_t>();
+}
+TEST(XI_TEST_SUITE, OverflowInt64) {
+  generic_overflow_test<int64_t>();
+}
+TEST(XI_TEST_SUITE, OverflowUInt64) {
+  generic_overflow_test<uint64_t>();
+}

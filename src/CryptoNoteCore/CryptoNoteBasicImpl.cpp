@@ -89,4 +89,6 @@ bool parseAccountAddressString(uint64_t& prefix, AccountPublicAddress& adr, cons
 }  // namespace CryptoNote
 
 //--------------------------------------------------------------------------------
-bool parse_hash256(const std::string& str_hash, Crypto::Hash& hash) { return Common::podFromHex(str_hash, hash); }
+bool parse_hash256(const std::string& str_hash, Crypto::Hash& hash) {
+  return Common::podFromHex(str_hash, hash);
+}

@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -27,12 +27,11 @@
 #include <Windows.h>
 #endif
 
-void xi_memory_secure_clear(xi_byte_t *data, size_t length)
-{
+void xi_memory_secure_clear(xi_byte_t *data, size_t length) {
 #if defined(_WIN32)
   SecureZeroMemory(data, length);
 #else
-  volatile xi_byte_t *volatile pointer = (volatile xi_byte_t *volatile)data;
+  volatile xi_byte_t *volatile pointer = (volatile xi_byte_t * volatile) data;
   size_t i = (size_t)0U;
   while (i < length) {
     pointer[i++] = 0U;

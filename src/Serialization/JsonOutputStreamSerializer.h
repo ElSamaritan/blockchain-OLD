@@ -62,8 +62,12 @@ class JsonOutputStreamSerializer : public ISerializer {
     return ISerializer::operator()(value, name);
   }
 
-  Common::JsonValue& getValue() { return root; }
-  const Common::JsonValue& getValue() const { return root; }
+  Common::JsonValue& getValue() {
+    return root;
+  }
+  const Common::JsonValue& getValue() const {
+    return root;
+  }
 
   friend std::ostream& operator<<(std::ostream& out, const JsonOutputStreamSerializer& enumerator);
 

@@ -60,7 +60,8 @@ struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
             Concurrent::IDispatcher& _dispatcher)
       : Listener(boost::asio::ip::tcp::endpoint{boost::asio::ip::make_address(address), port}),
         handler{_handler},
-        dispatcher{_dispatcher} {}
+        dispatcher{_dispatcher} {
+  }
 
   void run(uint16_t numThreads) {
     loopGuard = std::make_shared<LoopGuard>(io);
@@ -116,13 +117,19 @@ struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
   }
 };
 
-void Xi::Http::Server::setHandler(std::shared_ptr<Xi::Http::RequestHandler> handler) { m_handler = handler; }
+void Xi::Http::Server::setHandler(std::shared_ptr<Xi::Http::RequestHandler> handler) {
+  m_handler = handler;
+}
 
-std::shared_ptr<Xi::Http::RequestHandler> Xi::Http::Server::handler() const { return m_handler; }
+std::shared_ptr<Xi::Http::RequestHandler> Xi::Http::Server::handler() const {
+  return m_handler;
+}
 
 void Xi::Http::Server::start(const std::string& address, uint16_t port) {
-  if (m_listener.get() != nullptr) throw std::runtime_error{"server is already running, stop it first"};
-  if (m_handler.get() == nullptr) throw std::runtime_error{"you must provide a handler in order to start the server"};
+  if (m_listener.get() != nullptr)
+    throw std::runtime_error{"server is already running, stop it first"};
+  if (m_handler.get() == nullptr)
+    throw std::runtime_error{"you must provide a handler in order to start the server"};
   m_listener = std::make_shared<_Listener>(address, port, handler(), *dispatcher());
 
   m_sslConfig.initializeServerContext(m_listener->ctx);
@@ -138,14 +145,22 @@ void Xi::Http::Server::stop() {
   }
 }
 
-const std::string& Xi::Http::Server::host() const { return m_host; }
+const std::string& Xi::Http::Server::host() const {
+  return m_host;
+}
 
 void Xi::Http::Server::setDispatcher(std::shared_ptr<Xi::Concurrent::IDispatcher> dispatcher) {
   m_dispatcher = dispatcher;
 }
 
-std::shared_ptr<Xi::Concurrent::IDispatcher> Xi::Http::Server::dispatcher() const { return m_dispatcher; }
+std::shared_ptr<Xi::Concurrent::IDispatcher> Xi::Http::Server::dispatcher() const {
+  return m_dispatcher;
+}
 
-Xi::Http::SSLConfiguration Xi::Http::Server::sslConfiguration() const { return m_sslConfig; }
+Xi::Http::SSLConfiguration Xi::Http::Server::sslConfiguration() const {
+  return m_sslConfig;
+}
 
-void Xi::Http::Server::setSSLConfiguration(SSLConfiguration config) { m_sslConfig = config; }
+void Xi::Http::Server::setSSLConfiguration(SSLConfiguration config) {
+  m_sslConfig = config;
+}

@@ -27,7 +27,8 @@
 namespace CryptoNote {
 
 inline void throwIf(bool expr, CryptoNote::error::WalletErrorCodes ec) {
-  if (expr) throw std::system_error(make_error_code(ec));
+  if (expr)
+    throw std::system_error(make_error_code(ec));
 }
 
 inline std::ostream& operator<<(std::ostream& ostr, const Crypto::Hash& hash) {

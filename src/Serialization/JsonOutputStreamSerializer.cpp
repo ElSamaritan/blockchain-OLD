@@ -47,11 +47,16 @@ void insertOrPush(JsonValue& js, Common::StringView name, const T& value) {
 
 }  // namespace
 
-JsonOutputStreamSerializer::JsonOutputStreamSerializer() : root(JsonValue::OBJECT) { chain.push_back(&root); }
+JsonOutputStreamSerializer::JsonOutputStreamSerializer() : root(JsonValue::OBJECT) {
+  chain.push_back(&root);
+}
 
-JsonOutputStreamSerializer::~JsonOutputStreamSerializer() {}
+JsonOutputStreamSerializer::~JsonOutputStreamSerializer() {
+}
 
-ISerializer::SerializerType JsonOutputStreamSerializer::type() const { return ISerializer::OUTPUT; }
+ISerializer::SerializerType JsonOutputStreamSerializer::type() const {
+  return ISerializer::OUTPUT;
+}
 
 bool JsonOutputStreamSerializer::beginObject(Common::StringView name) {
   XI_RETURN_EC_IF(chain.empty(), false);

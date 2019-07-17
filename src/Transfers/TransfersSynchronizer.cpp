@@ -25,7 +25,8 @@ const uint32_t TRANSFERS_STORAGE_ARCHIVE_VERSION = 0;
 
 TransfersSyncronizer::TransfersSyncronizer(const CryptoNote::Currency& currency, Logging::ILogger& logger,
                                            IBlockchainSynchronizer& sync, INode& node)
-    : m_currency(currency), m_logger(logger, "TransfersSyncronizer"), m_sync(sync), m_node(node) {}
+    : m_currency(currency), m_logger(logger, "TransfersSyncronizer"), m_sync(sync), m_node(node) {
+}
 
 TransfersSyncronizer::~TransfersSyncronizer() {
   m_sync.stop();
@@ -57,7 +58,8 @@ ITransfersSubscription& TransfersSyncronizer::addSubscription(const AccountSubsc
 
 bool TransfersSyncronizer::removeSubscription(const AccountPublicAddress& acc) {
   auto it = m_consumers.find(acc.viewPublicKey);
-  if (it == m_consumers.end()) return false;
+  if (it == m_consumers.end())
+    return false;
 
   if (it->second->removeSubscription(acc)) {
     m_sync.removeConsumer(it->second.get());

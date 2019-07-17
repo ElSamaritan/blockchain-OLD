@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -37,7 +37,8 @@ struct ChainRequest {
 
 CryptoNote::CryptoNoteProtocolSuspiciousRequestsDetector::CryptoNoteProtocolSuspiciousRequestsDetector(
     Logging::ILogger &logger)
-    : m_logger{logger, "P2pSuspicious"} {}
+    : m_logger{logger, "P2pSuspicious"} {
+}
 
 bool CryptoNote::CryptoNoteProtocolSuspiciousRequestsDetector::pushAndInspect(
     CryptoNote::CryptoNoteConnectionContext &ctx, const CryptoNote::NOTIFY_NEW_TRANSACTIONS_request &request) {

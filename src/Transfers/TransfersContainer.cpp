@@ -68,7 +68,9 @@ class TransferIteratorList {
     return *this;
   }
 
-  void sort() { std::sort(m_list.begin(), m_list.end(), &TransferIteratorList::lessTIterator); }
+  void sort() {
+    std::sort(m_list.begin(), m_list.end(), &TransferIteratorList::lessTIterator);
+  }
 
   TIterator findFirstByAmount(uint64_t amount) const {
     auto listIt =
@@ -98,7 +100,8 @@ TransferIteratorList<TIterator> createTransferIteratorList(const std::pair<TIter
 }
 }  // namespace
 
-SpentOutputDescriptor::SpentOutputDescriptor() : m_type(TransactionTypes::OutputType::Invalid) {}
+SpentOutputDescriptor::SpentOutputDescriptor() : m_type(TransactionTypes::OutputType::Invalid) {
+}
 
 SpentOutputDescriptor::SpentOutputDescriptor(const TransactionOutputInformationIn& transactionInfo)
     : m_type(transactionInfo.type), m_data{0, 0} {
@@ -109,14 +112,18 @@ SpentOutputDescriptor::SpentOutputDescriptor(const TransactionOutputInformationI
   }
 }
 
-SpentOutputDescriptor::SpentOutputDescriptor(const KeyImage* keyImage) { assign(keyImage); }
+SpentOutputDescriptor::SpentOutputDescriptor(const KeyImage* keyImage) {
+  assign(keyImage);
+}
 
 void SpentOutputDescriptor::assign(const KeyImage* keyImage) {
   m_type = TransactionTypes::OutputType::Key;
   m_keyImage = keyImage;
 }
 
-bool SpentOutputDescriptor::isValid() const { return m_type != TransactionTypes::OutputType::Invalid; }
+bool SpentOutputDescriptor::isValid() const {
+  return m_type != TransactionTypes::OutputType::Invalid;
+}
 
 bool SpentOutputDescriptor::operator==(const SpentOutputDescriptor& other) const {
   if (m_type == TransactionTypes::OutputType::Key) {
@@ -141,7 +148,8 @@ TransfersContainer::TransfersContainer(const Currency& currency, Logging::ILogge
     : m_currentHeight(BlockHeight::Genesis),
       m_currency(currency),
       m_logger(logger, "TransfersContainer"),
-      m_transactionSpendableAge(transactionSpendableAge) {}
+      m_transactionSpendableAge(transactionSpendableAge) {
+}
 
 bool TransfersContainer::addTransaction(const TransactionBlockInfo& block, const ITransactionReader& tx,
                                         const std::vector<TransactionOutputInformationIn>& transfers) {

@@ -48,23 +48,40 @@ Xi::Result<Crypto::SecretKey> Crypto::SecretKey::fromString(const std::string &h
   XI_ERROR_CATCH();
 }
 
-Crypto::SecretKey::SecretKey() { nullify(); }
+Crypto::SecretKey::SecretKey() {
+  nullify();
+}
 
-Crypto::SecretKey::SecretKey(Crypto::SecretKey::array_type raw) : array_type(std::move(raw)) {}
+Crypto::SecretKey::SecretKey(Crypto::SecretKey::array_type raw) : array_type(std::move(raw)) {
+}
 
-Crypto::SecretKey::~SecretKey() { Xi::Memory::secureClear(span()); }
+Crypto::SecretKey::~SecretKey() {
+  Xi::Memory::secureClear(span());
+}
 
-std::string Crypto::SecretKey::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+std::string Crypto::SecretKey::toString() const {
+  return Common::toHex(data(), size() * sizeof(value_type));
+}
 
-bool Crypto::SecretKey::isNull() const { return *this == SecretKey::Null; }
+bool Crypto::SecretKey::isNull() const {
+  return *this == SecretKey::Null;
+}
 
-bool Crypto::SecretKey::isValid() const { return sc_check(data()) == 0; }
+bool Crypto::SecretKey::isValid() const {
+  return sc_check(data()) == 0;
+}
 
-Xi::ConstByteSpan Crypto::SecretKey::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
+Xi::ConstByteSpan Crypto::SecretKey::span() const {
+  return Xi::ConstByteSpan{data(), bytes()};
+}
 
-Xi::ByteSpan Crypto::SecretKey::span() { return Xi::ByteSpan{data(), bytes()}; }
+Xi::ByteSpan Crypto::SecretKey::span() {
+  return Xi::ByteSpan{data(), bytes()};
+}
 
-void Crypto::SecretKey::nullify() { fill(0); }
+void Crypto::SecretKey::nullify() {
+  fill(0);
+}
 
 bool Crypto::serialize(Crypto::SecretKey &secretKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(secretKey.data(), SecretKey::bytes(), name), false);

@@ -47,23 +47,39 @@ Xi::Result<Crypto::Signature> Crypto::Signature::fromString(const std::string &h
   XI_ERROR_CATCH();
 }
 
-Crypto::Signature::Signature() { nullify(); }
+Crypto::Signature::Signature() {
+  nullify();
+}
 
-Crypto::Signature::Signature(Crypto::Signature::array_type raw) : array_type(std::move(raw)) {}
+Crypto::Signature::Signature(Crypto::Signature::array_type raw) : array_type(std::move(raw)) {
+}
 
-Crypto::Signature::~Signature() {}
+Crypto::Signature::~Signature() {
+}
 
-std::string Crypto::Signature::toString() const { return Common::toHex(data(), size() * sizeof(value_type)); }
+std::string Crypto::Signature::toString() const {
+  return Common::toHex(data(), size() * sizeof(value_type));
+}
 
-bool Crypto::Signature::isValid() const { return sc_check(data()) == 0 && sc_check(data() + 32) == 0; }
+bool Crypto::Signature::isValid() const {
+  return sc_check(data()) == 0 && sc_check(data() + 32) == 0;
+}
 
-bool Crypto::Signature::isNull() const { return (*this) == Null; }
+bool Crypto::Signature::isNull() const {
+  return (*this) == Null;
+}
 
-Xi::ConstByteSpan Crypto::Signature::span() const { return Xi::ConstByteSpan{data(), bytes()}; }
+Xi::ConstByteSpan Crypto::Signature::span() const {
+  return Xi::ConstByteSpan{data(), bytes()};
+}
 
-Xi::ByteSpan Crypto::Signature::span() { return Xi::ByteSpan{data(), bytes()}; }
+Xi::ByteSpan Crypto::Signature::span() {
+  return Xi::ByteSpan{data(), bytes()};
+}
 
-void Crypto::Signature::nullify() { fill(0); }
+void Crypto::Signature::nullify() {
+  fill(0);
+}
 
 bool Crypto::serialize(Crypto::Signature &signature, Common::StringView name, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(signature.data(), Signature::bytes(), name), false);

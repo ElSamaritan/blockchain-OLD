@@ -30,7 +30,8 @@ template <typename _IterT>
 bool is_unique(_IterT begin, _IterT end) {
   std::set<typename _IterT::value_type> set{};
   for (; begin != end; ++begin) {
-    if (!set.insert(*begin).second) return false;
+    if (!set.insert(*begin).second)
+      return false;
   }
   return true;
 }

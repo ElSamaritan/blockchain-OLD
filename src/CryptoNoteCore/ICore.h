@@ -65,7 +65,8 @@ using SegmentReferenceVector = std::vector<SegmentReference<_IdentifierT>>;
 
 class ICore : public IBlockchain {
  public:
-  virtual ~ICore() {}
+  virtual ~ICore() {
+  }
 
   virtual Xi::Concurrent::RecursiveLock::lock_t lock() const = 0;
 

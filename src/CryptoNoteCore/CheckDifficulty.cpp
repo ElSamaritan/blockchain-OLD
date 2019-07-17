@@ -42,13 +42,19 @@ static inline void mul(uint64_t a, uint64_t b, uint64_t &low, uint64_t &high) {
 
 #else
 
-static inline void mul(uint64_t a, uint64_t b, uint64_t &low, uint64_t &high) { low = mul128(a, b, &high); }
+static inline void mul(uint64_t a, uint64_t b, uint64_t &low, uint64_t &high) {
+  low = mul128(a, b, &high);
+}
 
 #endif
 
-static inline bool cadd(uint64_t a, uint64_t b) { return a + b < a; }
+static inline bool cadd(uint64_t a, uint64_t b) {
+  return a + b < a;
+}
 
-static inline bool cadc(uint64_t a, uint64_t b, bool c) { return a + b < a || (c && a + b == (uint64_t)-1); }
+static inline bool cadc(uint64_t a, uint64_t b, bool c) {
+  return a + b < a || (c && a + b == (uint64_t)-1);
+}
 
 bool check_hash(const Crypto::Hash &hash, uint64_t difficulty) {
   uint64_t low, high, top, cur;

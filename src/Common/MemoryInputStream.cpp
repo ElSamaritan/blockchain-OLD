@@ -23,11 +23,16 @@
 namespace Common {
 
 MemoryInputStream::MemoryInputStream(const void* buffer, size_t bufferSize)
-    : buffer(static_cast<const char*>(buffer)), bufferSize(bufferSize), position(0) {}
+    : buffer(static_cast<const char*>(buffer)), bufferSize(bufferSize), position(0) {
+}
 
-size_t MemoryInputStream::getPosition() const { return position; }
+size_t MemoryInputStream::getPosition() const {
+  return position;
+}
 
-bool MemoryInputStream::endOfStream() const { return position == bufferSize; }
+bool MemoryInputStream::endOfStream() const {
+  return position == bufferSize;
+}
 
 size_t MemoryInputStream::readSome(void* data, size_t size) {
   assert(position <= bufferSize);

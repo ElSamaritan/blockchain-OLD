@@ -34,7 +34,9 @@ P2pContext::Message::Message(P2pMessage&& msg, Type messageType, uint32_t return
   data = std::move(msg.data);
 }
 
-size_t P2pContext::Message::size() const { return data.size(); }
+size_t P2pContext::Message::size() const {
+  return data.size();
+}
 
 P2pContext::P2pContext(Dispatcher& dispatcher, TcpConnection&& conn, bool isIncoming,
                        const NetworkAddress& remoteAddress, std::chrono::nanoseconds timedSyncInterval,
@@ -66,13 +68,21 @@ P2pContext::~P2pContext() {
   writeEvent.wait();
 }
 
-PeerIdType P2pContext::getPeerId() const { return peerId; }
+PeerIdType P2pContext::getPeerId() const {
+  return peerId;
+}
 
-uint16_t P2pContext::getPeerPort() const { return peerPort; }
+uint16_t P2pContext::getPeerPort() const {
+  return peerPort;
+}
 
-const NetworkAddress& P2pContext::getRemoteAddress() const { return remoteAddress; }
+const NetworkAddress& P2pContext::getRemoteAddress() const {
+  return remoteAddress;
+}
 
-bool P2pContext::isIncoming() const { return incoming; }
+bool P2pContext::isIncoming() const {
+  return incoming;
+}
 
 void P2pContext::setPeerInfo(uint8_t protocolVersion, PeerIdType id, uint16_t port) {
   version = protocolVersion;
@@ -162,6 +172,8 @@ P2pContext::Message makeRequest(uint32_t command, const BinaryArray& data) {
   return P2pContext::Message(P2pMessage{command, data}, P2pContext::Message::REQUEST);
 }
 
-std::ostream& operator<<(std::ostream& s, const P2pContext& conn) { return s << "[" << conn.getRemoteAddress() << "]"; }
+std::ostream& operator<<(std::ostream& s, const P2pContext& conn) {
+  return s << "[" << conn.getRemoteAddress() << "]";
+}
 
 }  // namespace CryptoNote

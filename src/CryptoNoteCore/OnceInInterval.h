@@ -24,7 +24,8 @@ namespace CryptoNote {
 class OnceInInterval {
  public:
   OnceInInterval(unsigned interval, bool startNow = true)
-      : m_interval(interval), m_lastCalled(startNow ? 0 : time(nullptr)) {}
+      : m_interval(interval), m_lastCalled(startNow ? 0 : time(nullptr)) {
+  }
 
   template <class F>
   bool call(F func) {

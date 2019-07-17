@@ -37,7 +37,9 @@
 
 const CryptoNote::Transaction CryptoNote::Transaction::Null{};
 
-CryptoNote::Transaction::Transaction() { nullify(); }
+CryptoNote::Transaction::Transaction() {
+  nullify();
+}
 
 Crypto::Hash CryptoNote::Transaction::hash() const {
   if (auto pruned = std::get_if<TransactionSignaturePruned>(std::addressof(signatures))) {
@@ -59,7 +61,9 @@ Crypto::Hash CryptoNote::Transaction::hash() const {
   }
 }
 
-uint64_t CryptoNote::Transaction::binarySize() const { return prefixBinarySize() + signaturesBinarySize(); }
+uint64_t CryptoNote::Transaction::binarySize() const {
+  return prefixBinarySize() + signaturesBinarySize();
+}
 
 uint64_t CryptoNote::Transaction::signaturesBinarySize() const {
   if (auto pruned = std::get_if<TransactionSignaturePruned>(std::addressof(signatures))) {
@@ -85,7 +89,9 @@ uint64_t CryptoNote::TransactionPrefix::prefixBinarySize() const {
   return toBinaryArray<TransactionPrefix>(*this).size();
 }
 
-bool CryptoNote::Transaction::isNull() const { return version == 0; }
+bool CryptoNote::Transaction::isNull() const {
+  return version == 0;
+}
 
 void CryptoNote::Transaction::nullify() {
   version = 0;

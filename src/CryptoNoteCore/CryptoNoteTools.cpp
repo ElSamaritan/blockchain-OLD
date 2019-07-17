@@ -35,7 +35,8 @@ struct AmountDecompositionUnit {
   const uint8_t Digit;
 
   AmountDecompositionUnit(uint64_t amount, uint8_t decadeIndex, uint8_t digit)
-      : Amount{amount}, DecadeIndex{decadeIndex}, Digit{digit} {}
+      : Amount{amount}, DecadeIndex{decadeIndex}, Digit{digit} {
+  }
 };
 
 class AmountDecompositions {

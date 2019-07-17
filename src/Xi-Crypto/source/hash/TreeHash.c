@@ -36,8 +36,7 @@
 
 #include "Xi/Crypto/Hash/Keccak.hh"
 
-size_t xi_crypto_hash_tree_depth(size_t count)
-{
+size_t xi_crypto_hash_tree_depth(size_t count) {
   size_t i;
   size_t depth = 0;
   assert(count > 0);
@@ -50,15 +49,15 @@ size_t xi_crypto_hash_tree_depth(size_t count)
   return depth;
 }
 
-int xi_crypto_hash_tree_hash(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE], size_t count, xi_crypto_hash_fast rootHash)
-{
+int xi_crypto_hash_tree_hash(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE], size_t count,
+                             xi_crypto_hash_fast rootHash) {
   XI_RETURN_EC_IF_NOT(count > 0, XI_RETURN_CODE_NO_SUCCESS);
   int ec = XI_RETURN_CODE_SUCCESS;
   if (count == 1) {
     memcpy(rootHash, hashes, XI_HASH_FAST_HASH_SIZE);
     return XI_RETURN_CODE_SUCCESS;
   } else if (count == 2) {
-    ec = xi_crypto_hash_keccak_256((const xi_byte_t*)hashes, 2 * XI_HASH_FAST_HASH_SIZE, rootHash);
+    ec = xi_crypto_hash_keccak_256((const xi_byte_t *)hashes, 2 * XI_HASH_FAST_HASH_SIZE, rootHash);
     XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
     return XI_RETURN_CODE_SUCCESS;
   } else {
@@ -90,8 +89,7 @@ int xi_crypto_hash_tree_hash(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE], 
 }
 
 int xi_crypto_hash_tree_branch(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE], size_t count,
-                               xi_byte_t (*branch)[XI_HASH_FAST_HASH_SIZE])
-{
+                               xi_byte_t (*branch)[XI_HASH_FAST_HASH_SIZE]) {
   size_t i, j;
   size_t cnt = 1;
   size_t depth = 0;
@@ -127,8 +125,7 @@ int xi_crypto_hash_tree_branch(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE]
 }
 
 int xi_crypto_hashtree_hash_from_branch(const xi_byte_t (*branch)[XI_HASH_FAST_HASH_SIZE], size_t depth,
-                                        const xi_byte_t *leaf, const xi_byte_t *path, xi_byte_t *root_hash)
-{
+                                        const xi_byte_t *leaf, const xi_byte_t *path, xi_byte_t *root_hash) {
   if (depth == 0) {
     memcpy(root_hash, leaf, XI_HASH_FAST_HASH_SIZE);
     return XI_RETURN_CODE_SUCCESS;
@@ -150,12 +147,12 @@ int xi_crypto_hashtree_hash_from_branch(const xi_byte_t (*branch)[XI_HASH_FAST_H
         memcpy(leaf_path, leaf, XI_HASH_FAST_HASH_SIZE);
         from_leaf = 0;
       } else {
-        ec = xi_crypto_hash_keccak_256((const xi_byte_t*)buffer, 2 * XI_HASH_FAST_HASH_SIZE, leaf_path);
+        ec = xi_crypto_hash_keccak_256((const xi_byte_t *)buffer, 2 * XI_HASH_FAST_HASH_SIZE, leaf_path);
         XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
       }
       memcpy(branch_path, branch[depth], XI_HASH_FAST_HASH_SIZE);
     }
-    ec = xi_crypto_hash_keccak_256((const xi_byte_t*)buffer, 2 * XI_HASH_FAST_HASH_SIZE, root_hash);
+    ec = xi_crypto_hash_keccak_256((const xi_byte_t *)buffer, 2 * XI_HASH_FAST_HASH_SIZE, root_hash);
     XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
     return XI_RETURN_CODE_SUCCESS;
   }

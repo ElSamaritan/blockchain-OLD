@@ -38,8 +38,11 @@ namespace CryptoNote {
 
 class ContextCounterHolder {
  public:
-  explicit ContextCounterHolder(BlockchainExplorer::AsyncContextCounter& counter) : counter(counter) {}
-  ~ContextCounterHolder() { counter.delAsyncContext(); }
+  explicit ContextCounterHolder(BlockchainExplorer::AsyncContextCounter& counter) : counter(counter) {
+  }
+  ~ContextCounterHolder() {
+    counter.delAsyncContext();
+  }
 
  private:
   BlockchainExplorer::AsyncContextCounter& counter;
@@ -47,7 +50,8 @@ class ContextCounterHolder {
 
 class NodeRequest {
  public:
-  explicit NodeRequest(const std::function<void(const INode::Callback&)>& request) : requestFunc(request) {}
+  explicit NodeRequest(const std::function<void(const INode::Callback&)>& request) : requestFunc(request) {
+  }
 
   std::error_code performBlocking() {
     std::promise<std::error_code> promise;
@@ -63,7 +67,9 @@ class NodeRequest {
   }
 
  private:
-  void blockingCompleteionCallback(std::promise<std::error_code> promise, std::error_code ec) { promise.set_value(ec); }
+  void blockingCompleteionCallback(std::promise<std::error_code> promise, std::error_code ec) {
+    promise.set_value(ec);
+  }
 
   static void asyncCompleteionCallback(const INode::Callback& callback,
                                        BlockchainExplorer::AsyncContextCounter& asyncContextCounter,
@@ -79,7 +85,8 @@ class NodeRequest {
   const std::function<void(const INode::Callback&)> requestFunc;
 };
 
-BlockchainExplorer::PoolUpdateGuard::PoolUpdateGuard() : m_state(State::NONE) {}
+BlockchainExplorer::PoolUpdateGuard::PoolUpdateGuard() : m_state(State::NONE) {
+}
 
 bool BlockchainExplorer::PoolUpdateGuard::beginUpdate() {
   auto _state = m_state.load();
@@ -120,7 +127,8 @@ bool BlockchainExplorer::PoolUpdateGuard::endUpdate() {
 
 class ScopeExitHandler {
  public:
-  explicit ScopeExitHandler(std::function<void()>&& handler) : m_handler(std::move(handler)), m_cancelled(false) {}
+  explicit ScopeExitHandler(std::function<void()>&& handler) : m_handler(std::move(handler)), m_cancelled(false) {
+  }
 
   ~ScopeExitHandler() {
     if (!m_cancelled) {
@@ -128,7 +136,9 @@ class ScopeExitHandler {
     }
   }
 
-  void reset() { m_cancelled = true; }
+  void reset() {
+    m_cancelled = true;
+  }
 
  private:
   std::function<void()> m_handler;
@@ -144,7 +154,8 @@ BlockchainExplorer::BlockchainExplorer(INode& node, Logging::ILogger& _logger)
   /* */
 }
 
-BlockchainExplorer::~BlockchainExplorer() {}
+BlockchainExplorer::~BlockchainExplorer() {
+}
 
 bool BlockchainExplorer::addObserver(IBlockchainObserver* observer) {
   if (state.load() != INITIALIZED) {
@@ -165,8 +176,12 @@ bool BlockchainExplorer::removeObserver(IBlockchainObserver* observer) {
 }
 
 struct StateRollback {
-  explicit StateRollback(std::atomic<State>& s) : state(s) { state.store(INITIALIZED); }
-  void commit() { done = true; }
+  explicit StateRollback(std::atomic<State>& s) : state(s) {
+    state.store(INITIALIZED);
+  }
+  void commit() {
+    done = true;
+  }
   ~StateRollback() {
     if (!done) {
       state.store(NOT_INITIALIZED);
@@ -302,7 +317,9 @@ bool BlockchainExplorer::getBlocks(uint64_t timestampBegin, uint64_t timestampEn
   return getBlocks(blockHashes, blocks);
 }
 
-bool BlockchainExplorer::getBlockchainTop(BlockDetails& topBlock) { return getBlockchainTop(topBlock, true); }
+bool BlockchainExplorer::getBlockchainTop(BlockDetails& topBlock) {
+  return getBlockchainTop(topBlock, true);
+}
 
 bool BlockchainExplorer::getBlockchainTop(BlockDetails& topBlock, bool checkInitialization) {
   if (checkInitialization && state.load() != INITIALIZED) {

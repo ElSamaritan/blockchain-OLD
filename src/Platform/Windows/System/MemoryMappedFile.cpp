@@ -27,7 +27,8 @@
 namespace System {
 
 MemoryMappedFile::MemoryMappedFile()
-    : m_fileHandle(INVALID_HANDLE_VALUE), m_mappingHandle(INVALID_HANDLE_VALUE), m_size(0), m_data(nullptr) {}
+    : m_fileHandle(INVALID_HANDLE_VALUE), m_mappingHandle(INVALID_HANDLE_VALUE), m_size(0), m_data(nullptr) {
+}
 
 MemoryMappedFile::~MemoryMappedFile() {
   std::error_code ignore;
@@ -58,7 +59,9 @@ uint8_t* MemoryMappedFile::data() {
   return m_data;
 }
 
-bool MemoryMappedFile::isOpened() const { return m_data != nullptr; }
+bool MemoryMappedFile::isOpened() const {
+  return m_data != nullptr;
+}
 
 void MemoryMappedFile::create(const std::string& path, uint64_t size, bool overwrite, std::error_code& ec) {
   if (isOpened()) {

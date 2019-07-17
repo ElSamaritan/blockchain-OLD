@@ -52,16 +52,21 @@ class SwappedMap {
 
     const_iterator(SwappedMap* swappedMap,
                    typename std::unordered_map<Key, Descriptor>::const_iterator descriptorsIterator)
-        : m_swappedMap(swappedMap), m_descriptorsIterator(descriptorsIterator) {}
+        : m_swappedMap(swappedMap), m_descriptorsIterator(descriptorsIterator) {
+    }
 
     const_iterator& operator++() {
       ++m_descriptorsIterator;
       return *this;
     }
 
-    bool operator!=(const_iterator other) const { return m_descriptorsIterator != other.m_descriptorsIterator; }
+    bool operator!=(const_iterator other) const {
+      return m_descriptorsIterator != other.m_descriptorsIterator;
+    }
 
-    bool operator==(const_iterator other) const { return m_descriptorsIterator == other.m_descriptorsIterator; }
+    bool operator==(const_iterator other) const {
+      return m_descriptorsIterator == other.m_descriptorsIterator;
+    }
 
     const std::pair<const Key, T>& operator*() const {
       return *m_swappedMap->load(m_descriptorsIterator->first, m_descriptorsIterator->second.offset);
@@ -71,7 +76,9 @@ class SwappedMap {
       return m_swappedMap->load(m_descriptorsIterator->first, m_descriptorsIterator->second.offset);
     }
 
-    typename std::unordered_map<Key, Descriptor>::const_iterator innerIterator() const { return m_descriptorsIterator; }
+    typename std::unordered_map<Key, Descriptor>::const_iterator innerIterator() const {
+      return m_descriptorsIterator;
+    }
 
    private:
     SwappedMap* m_swappedMap;
@@ -116,7 +123,8 @@ class SwappedMap {
 };
 
 template <class Key, class T>
-SwappedMap<Key, T>::SwappedMap() {}
+SwappedMap<Key, T>::SwappedMap() {
+}
 
 template <class Key, class T>
 SwappedMap<Key, T>::~SwappedMap() {

@@ -94,9 +94,12 @@ WalletTransactionSender::WalletTransactionSender(const Currency& currency,
       m_isStoping(false),
       m_keys(keys),
       m_transferDetails(transfersContainer),
-      m_upperTransactionSizeLimit(0) {}
+      m_upperTransactionSizeLimit(0) {
+}
 
-void WalletTransactionSender::stop() { m_isStoping = true; }
+void WalletTransactionSender::stop() {
+  m_isStoping = true;
+}
 
 bool WalletTransactionSender::validateDestinationAddress(const std::string& address) {
   AccountPublicAddress ignore;
@@ -178,7 +181,8 @@ void WalletTransactionSender::sendTransactionRandomOutsByAmount(
   }
 
   std::shared_ptr<WalletRequest> req = doSendTransaction(context, events);
-  if (req) nextRequest = req;
+  if (req)
+    nextRequest = req;
 }
 
 std::shared_ptr<WalletRequest> WalletTransactionSender::doSendTransaction(
@@ -286,12 +290,14 @@ void WalletTransactionSender::prepareInputs(
                   return a.global_amount_index < b.global_amount_index;
                 });
       for (auto& daemon_oe : outs[i].outs) {
-        if (td.globalOutputIndex == daemon_oe.global_amount_index) continue;
+        if (td.globalOutputIndex == daemon_oe.global_amount_index)
+          continue;
         TransactionSourceEntry::OutputEntry oe;
         oe.first = static_cast<uint32_t>(daemon_oe.global_amount_index);
         oe.second = daemon_oe.out_key;
         src.outputs.push_back(oe);
-        if (src.outputs.size() >= mixIn) break;
+        if (src.outputs.size() >= mixIn)
+          break;
       }
     }
 

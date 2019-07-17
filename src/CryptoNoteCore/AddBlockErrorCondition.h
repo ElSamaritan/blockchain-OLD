@@ -39,7 +39,9 @@ class AddBlockErrorConditionCategory : public std::error_category {
  public:
   static AddBlockErrorConditionCategory INSTANCE;
 
-  virtual const char* name() const throw() override { return "AddBlockErrorCondition"; }
+  virtual const char* name() const throw() override {
+    return "AddBlockErrorCondition";
+  }
 
   virtual std::error_condition default_error_condition(int ev) const throw() override {
     return std::error_condition(ev, *this);

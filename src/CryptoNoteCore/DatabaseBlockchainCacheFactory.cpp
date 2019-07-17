@@ -25,9 +25,11 @@
 namespace CryptoNote {
 
 DatabaseBlockchainCacheFactory::DatabaseBlockchainCacheFactory(IDataBase& database, Logging::ILogger& logger)
-    : database(database), logger(logger) {}
+    : database(database), logger(logger) {
+}
 
-DatabaseBlockchainCacheFactory::~DatabaseBlockchainCacheFactory() {}
+DatabaseBlockchainCacheFactory::~DatabaseBlockchainCacheFactory() {
+}
 
 std::shared_ptr<IBlockchainCache> DatabaseBlockchainCacheFactory::createRootBlockchainCache(const Currency& currency) {
   return std::shared_ptr<IBlockchainCache>(new DatabaseBlockchainCache(currency, database, *this, logger));

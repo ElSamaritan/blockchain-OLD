@@ -41,11 +41,18 @@ using Error = CryptoNote::error::TransactionValidationError;
 
 CryptoNote::TransactionValidator::TransactionValidator(BlockVersion _blockVersion, const IBlockchainCache &chain,
                                                        const Currency &currency)
-    : m_blockVersion{_blockVersion}, m_chain{chain}, m_currency{currency} {}
+    : m_blockVersion{_blockVersion}, m_chain{chain}, m_currency{currency} {
+}
 
-CryptoNote::BlockVersion CryptoNote::TransactionValidator::blockVersion() const { return m_blockVersion; }
-const CryptoNote::IBlockchainCache &CryptoNote::TransactionValidator::chain() const { return m_chain; }
-const CryptoNote::Currency &CryptoNote::TransactionValidator::currency() const { return m_currency; }
+CryptoNote::BlockVersion CryptoNote::TransactionValidator::blockVersion() const {
+  return m_blockVersion;
+}
+const CryptoNote::IBlockchainCache &CryptoNote::TransactionValidator::chain() const {
+  return m_chain;
+}
+const CryptoNote::Currency &CryptoNote::TransactionValidator::currency() const {
+  return m_currency;
+}
 
 Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValidate(
     const CachedTransaction &transaction) const {

@@ -33,8 +33,10 @@ Common::JsonValue getJsonValueFromStreamHelper(std::istream& stream) {
 }  // namespace
 
 JsonInputStreamSerializer::JsonInputStreamSerializer(std::istream& stream)
-    : JsonInputValueSerializer(getJsonValueFromStreamHelper(stream)) {}
+    : JsonInputValueSerializer(getJsonValueFromStreamHelper(stream)) {
+}
 
-JsonInputStreamSerializer::~JsonInputStreamSerializer() {}
+JsonInputStreamSerializer::~JsonInputStreamSerializer() {
+}
 
 }  // namespace CryptoNote

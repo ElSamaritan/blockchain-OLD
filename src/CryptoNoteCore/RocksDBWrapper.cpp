@@ -27,9 +27,11 @@
 using namespace CryptoNote;
 using namespace Logging;
 
-RocksDBWrapper::RocksDBWrapper(Logging::ILogger& logger) : logger(logger, "RocksDBWrapper"), state(NOT_INITIALIZED) {}
+RocksDBWrapper::RocksDBWrapper(Logging::ILogger& logger) : logger(logger, "RocksDBWrapper"), state(NOT_INITIALIZED) {
+}
 
-RocksDBWrapper::~RocksDBWrapper() {}
+RocksDBWrapper::~RocksDBWrapper() {
+}
 
 void RocksDBWrapper::init(const DataBaseConfig& config) {
   if (state.load() != NOT_INITIALIZED) {
@@ -223,4 +225,6 @@ rocksdb::Options RocksDBWrapper::getDBOptions(const DataBaseConfig& config) {
   return rocksdb::Options(dbOptions, fOptions);
 }
 
-std::string RocksDBWrapper::getDataDir(const DataBaseConfig& config) { return config.getDataDir() + "/rocksdb"; }
+std::string RocksDBWrapper::getDataDir(const DataBaseConfig& config) {
+  return config.getDataDir() + "/rocksdb";
+}
