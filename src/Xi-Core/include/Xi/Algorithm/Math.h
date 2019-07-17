@@ -66,9 +66,22 @@ bool hasAdditionOverflow(const _IntegerT lhs, const _IntegerT rhs, _IntegerT* re
 #endif
 }
 
+template <typename _IntegerT>
+static inline constexpr _IntegerT log2(_IntegerT n) {
+  return (n > 1) ? 1 + log2(n >> 1) : 0;
+}
+
 }  // namespace Xi
 
-static inline constexpr uint64_t operator"" _k(unsigned long long kilo) { return kilo * Xi::pow(10, 3); }
-static inline constexpr uint64_t operator"" _M(unsigned long long mega) { return mega * Xi::pow(10, 6); }
-static inline constexpr uint64_t operator"" _G(unsigned long long giga) { return giga * Xi::pow(10, 9); }
-static inline constexpr uint64_t operator"" _T(unsigned long long tera) { return tera * Xi::pow(10, 12); }
+static inline constexpr uint64_t operator"" _k(unsigned long long kilo) {
+  return kilo * Xi::pow(10, 3);
+}
+static inline constexpr uint64_t operator"" _M(unsigned long long mega) {
+  return mega * Xi::pow(10, 6);
+}
+static inline constexpr uint64_t operator"" _G(unsigned long long giga) {
+  return giga * Xi::pow(10, 9);
+}
+static inline constexpr uint64_t operator"" _T(unsigned long long tera) {
+  return tera * Xi::pow(10, 12);
+}

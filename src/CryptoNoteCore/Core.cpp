@@ -201,16 +201,28 @@ Core::~Core() {
   contextGroup.wait();
 }
 
-Xi::Concurrent::RecursiveLock::lock_t Core::lock() const { return Xi::Concurrent::RecursiveLock::lock_t{m_access}; }
+Xi::Concurrent::RecursiveLock::lock_t Core::lock() const {
+  return Xi::Concurrent::RecursiveLock::lock_t{m_access};
+}
 
-bool Core::addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) { return queueList.insert(messageQueue); }
+bool Core::addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
+  return queueList.insert(messageQueue);
+}
 
-bool Core::removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) { return queueList.remove(messageQueue); }
+bool Core::removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
+  return queueList.remove(messageQueue);
+}
 
-void Core::addObserver(IBlockchainObserver* observer) { m_blockchainObservers.add(observer); }
-void Core::removeObserver(IBlockchainObserver* observer) { m_blockchainObservers.remove(observer); }
+void Core::addObserver(IBlockchainObserver* observer) {
+  m_blockchainObservers.add(observer);
+}
+void Core::removeObserver(IBlockchainObserver* observer) {
+  m_blockchainObservers.remove(observer);
+}
 
-const Currency& Core::currency() const { return getCurrency(); }
+const Currency& Core::currency() const {
+  return getCurrency();
+}
 
 const IBlockchainCache* Core::mainChain() const {
   if (!initialized || chainsLeaves.empty())
@@ -219,9 +231,15 @@ const IBlockchainCache* Core::mainChain() const {
     return chainsLeaves[0];
 }
 
-const IUpgradeManager& Core::upgradeManager() const { return currency().upgradeManager(); }
-const ITimeProvider& Core::timeProvider() const { return *m_timeProvider; }
-bool Core::isInitialized() const { return initialized; }
+const IUpgradeManager& Core::upgradeManager() const {
+  return currency().upgradeManager();
+}
+const ITimeProvider& Core::timeProvider() const {
+  return *m_timeProvider;
+}
+bool Core::isInitialized() const {
+  return initialized;
+}
 
 void Core::transactionDeletedFromPool(const Hash& hash, ITransactionPoolObserver::DeletionReason reason) {
   using Reason = ITransactionPoolObserver::DeletionReason;
@@ -367,6 +385,7 @@ std::optional<CoreBlockInfo> Core::getBlockByHash(const Crypto::Hash& blockHash)
 
 std::vector<Crypto::Hash> Core::buildSparseChain() const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
   Crypto::Hash topBlockHash = chainsLeaves[0]->getTopBlockHash();
   return doBuildSparseChain(topBlockHash);
 }
@@ -436,7 +455,8 @@ bool Core::queryBlocks(const std::vector<Crypto::Hash>& blockHashes, uint64_t ti
     currentIndex = mainChain->getTopBlockIndex();
 
     auto startIndexResult = findBlockchainSupplement(blockHashes);
-    if (startIndexResult.isError()) return false;
+    if (startIndexResult.isError())
+      return false;
     startIndex = startIndexResult.value();
 
     fullOffset = mainChain->getTimestampLowerBoundBlockIndex(timestamp);
@@ -474,7 +494,8 @@ bool Core::queryBlocksLite(const std::vector<Crypto::Hash>& knownBlockHashes, ui
     currentIndex = mainChain->getTopBlockIndex();
 
     auto startIndexResult = findBlockchainSupplement(knownBlockHashes);
-    if (startIndexResult.isError()) return false;
+    if (startIndexResult.isError())
+      return false;
     startIndex = startIndexResult.value();
 
     // Stops bug where wallets fail to sync, because timestamps have been adjusted after syncronisation.
@@ -526,7 +547,8 @@ bool Core::queryBlocksDetailed(const std::vector<Crypto::Hash>& knownBlockHashes
     currentIndex = mainChain->getTopBlockIndex();
 
     auto startIndexResult = findBlockchainSupplement(knownBlockHashes);
-    if (startIndexResult.isError()) return false;
+    if (startIndexResult.isError())
+      return false;
     startIndex = startIndexResult.value();
 
     // Stops bug where wallets fail to sync, because timestamps have been adjusted after syncronisation.
@@ -645,7 +667,8 @@ Xi::Result<std::vector<Crypto::Hash>> Core::findBlockchainSupplement(const std::
   totalBlockCount = getTopBlockIndex() + 1;
   startBlockIndex = (uint32_t)-1;
   auto startIndexResult = findBlockchainSupplement(remoteBlockIds);
-  if (startIndexResult.isError()) return startIndexResult.error();
+  if (startIndexResult.isError())
+    return startIndexResult.error();
   startBlockIndex = startIndexResult.value();
 
   return success(getBlockHashes(startBlockIndex, static_cast<uint32_t>(maxCount)));
@@ -1380,7 +1403,9 @@ CoreStatistics Core::getCoreStatistics() const {
   return result;
 }
 
-bool Core::isPruned() const { return m_isLightNode; }
+bool Core::isPruned() const {
+  return m_isLightNode;
+}
 
 size_t Core::getBlockchainTransactionCount() const {
   throwIfNotInitialized();
@@ -1413,7 +1438,8 @@ std::vector<BlockTemplate> Core::getAlternativeBlocks() const {
 
   std::vector<BlockTemplate> alternativeBlocks;
   for (auto& cache : chainsStorage) {
-    if (mainChainSet.count(cache.get())) continue;
+    if (mainChainSet.count(cache.get()))
+      continue;
     for (auto index = cache->getStartBlockIndex(); index <= cache->getTopBlockIndex(); ++index) {
       // TODO: optimize
       alternativeBlocks.push_back(fromBinaryArray<BlockTemplate>(cache->getBlockByIndex(index).blockTemplate));
@@ -1598,9 +1624,13 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   return error::TransactionValidationError::VALIDATION_SUCCESS;
 }
 
-uint64_t CryptoNote::Core::getAdjustedTime() const { return m_timeProvider->posixNow().valueOrThrow(); }
+uint64_t CryptoNote::Core::getAdjustedTime() const {
+  return m_timeProvider->posixNow().valueOrThrow();
+}
 
-const Currency& Core::getCurrency() const { return m_currency; }
+const Currency& Core::getCurrency() const {
+  return m_currency;
+}
 
 bool Core::save() {
   try {
@@ -1735,9 +1765,13 @@ bool Core::importBlocksFromStorage() {
   return true;
 }
 
-bool Core::importTransactionPool() { return false; }
+bool Core::importTransactionPool() {
+  return false;
+}
 
-bool Core::exportTransactionPool() { return false; }
+bool Core::exportTransactionPool() {
+  return false;
+}
 
 void Core::cutSegment(IBlockchainCache& segment, uint32_t startIndex) {
   if (segment.getTopBlockIndex() < startIndex) {
@@ -1843,21 +1877,21 @@ BlockTemplate Core::restoreBlockTemplate(IBlockchainCache* blockchainCache, uint
 }
 
 std::vector<Crypto::Hash> Core::doBuildSparseChain(const Crypto::Hash& blockHash) const {
+  XI_CONCURRENT_RLOCK(m_access);
   IBlockchainCache* chain = findSegmentContainingBlock(blockHash);
 
   uint32_t blockIndex = chain->getBlockIndex(blockHash);
 
-  // TODO reserve ceil(log(blockIndex))
   std::vector<Crypto::Hash> sparseChain;
-  sparseChain.push_back(blockHash);
+  sparseChain.reserve(Xi::log2(blockIndex) + 1);
 
   for (uint32_t i = 1; i < blockIndex; i *= 2) {
-    sparseChain.push_back(chain->getBlockHash(blockIndex - i));
+    sparseChain.emplace_back(chain->getBlockHash(blockIndex - i));
   }
 
   auto genesisBlockHash = chain->getBlockHash(0);
   if (sparseChain[0] != genesisBlockHash) {
-    sparseChain.push_back(genesisBlockHash);
+    sparseChain.emplace_back(genesisBlockHash);
   }
 
   return sparseChain;
@@ -2707,9 +2741,15 @@ BlockHeight Core::get_current_blockchain_height() const {
   return BlockHeight::fromIndex(getTopBlockIndex());
 }
 
-std::time_t Core::getStartTime() const { return start_time; }
+std::time_t Core::getStartTime() const {
+  return start_time;
+}
 
-const ITransactionPool& Core::transactionPool() const { return *m_transactionPool; }
-ITransactionPool& Core::transactionPool() { return *m_transactionPool; }
+const ITransactionPool& Core::transactionPool() const {
+  return *m_transactionPool;
+}
+ITransactionPool& Core::transactionPool() {
+  return *m_transactionPool;
+}
 
 }  // namespace CryptoNote
