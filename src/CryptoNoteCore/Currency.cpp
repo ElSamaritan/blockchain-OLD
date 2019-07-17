@@ -162,7 +162,9 @@ uint64_t Currency::maximumMergeMiningSize(BlockVersion version) const {
   }
 }
 
-uint64_t Currency::maximumCoinbaseSize(BlockVersion version) const { return minerReward(version).reservedSize(); }
+uint64_t Currency::maximumCoinbaseSize(BlockVersion version) const {
+  return minerReward(version).reservedSize();
+}
 
 uint64_t Currency::maxBlockSize(BlockVersion version, uint32_t index) const {
   auto scaled = maxBlockSizeInitial(version) +
@@ -170,7 +172,9 @@ uint64_t Currency::maxBlockSize(BlockVersion version, uint32_t index) const {
   return std::min(scaled, limit(version).maximum());
 }
 
-uint64_t Currency::maxBlockSizeInitial(BlockVersion version) const { return limit(version).initial(); }
+uint64_t Currency::maxBlockSizeInitial(BlockVersion version) const {
+  return limit(version).initial();
+}
 
 uint64_t Currency::maxBlockSizeGrowthSpeedNumerator(BlockVersion version) const {
   return limit(version).increaseRate();
@@ -196,11 +200,17 @@ size_t Currency::fusionTxMinInOutCountRatio(BlockVersion blockVersion) const {
   return m_transaction(blockVersion)->fusion().ratioLimit();
 }
 
-const Xi::Config::General::Configuration& Currency::general() const { return m_general; }
+const Xi::Config::General::Configuration& Currency::general() const {
+  return m_general;
+}
 
-const Xi::Config::Coin::Configuration& Currency::coin() const { return m_coin; }
+const Xi::Config::Coin::Configuration& Currency::coin() const {
+  return m_coin;
+}
 
-const Xi::Config::Network::Configuration& Currency::network() const { return m_network; }
+const Xi::Config::Network::Configuration& Currency::network() const {
+  return m_network;
+}
 
 const Xi::Config::Transaction::Configuration& Currency::transaction(BlockVersion version) const {
   return *m_transaction(version);
@@ -214,9 +224,13 @@ const Xi::Config::StaticReward::Configuration* Currency::staticReward(BlockVersi
   return m_staticReward(version);
 }
 
-const Xi::Config::Time::Configuration& Currency::time(BlockVersion version) const { return *m_time(version); }
+const Xi::Config::Time::Configuration& Currency::time(BlockVersion version) const {
+  return *m_time(version);
+}
 
-const Xi::Config::Limits::Configuration& Currency::limit(BlockVersion version) const { return *m_limit(version); }
+const Xi::Config::Limits::Configuration& Currency::limit(BlockVersion version) const {
+  return *m_limit(version);
+}
 
 const Xi::Config::Difficulty::Configuration& Currency::difficulty(BlockVersion version) const {
   return *m_difficulty(version);
@@ -226,7 +240,9 @@ const Xi::Config::MergeMining::Configuration* Currency::mergeMining(BlockVersion
   return m_mergeMining(version);
 }
 
-const IUpgradeManager& Currency::upgradeManager() const { return *m_upgradeManager; }
+const IUpgradeManager& Currency::upgradeManager() const {
+  return *m_upgradeManager;
+}
 
 const Difficulty::IDifficultyAlgorithm& Currency::difficultyAlgorithm(BlockVersion version) const {
   return *m_difficultyAlgorithms[version.native() - 1];
@@ -252,11 +268,17 @@ size_t Currency::maxTxSize(BlockVersion blockVersion) const {
   return maxSize - reservedSize;
 }
 
-uint32_t Currency::minedMoneyUnlockWindow() const { return coin().rewardUnlockTime() / coin().blockTime(); }
+uint32_t Currency::minedMoneyUnlockWindow() const {
+  return coin().rewardUnlockTime() / coin().blockTime();
+}
 
-const IAmountFormatter& Currency::amountFormatter() const { return *m_amountFormatter; }
+const IAmountFormatter& Currency::amountFormatter() const {
+  return *m_amountFormatter;
+}
 
-unsigned int Currency::emissionSpeedFactor() const { return coin().emissionSpeed(); }
+unsigned int Currency::emissionSpeedFactor() const {
+  return coin().emissionSpeed();
+}
 
 size_t Currency::rewardBlocksWindowByBlockVersion(BlockVersion blockVersion) const {
   return minerReward(blockVersion).windowSize();
@@ -279,7 +301,9 @@ bool Currency::isTransferVersionSupported(BlockVersion blockVersion, uint16_t tr
   return std::find(supportedVersions.begin(), supportedVersions.end(), transferVersion) != supportedVersions.end();
 }
 
-uint64_t Currency::minimumFee(BlockVersion version) const { return m_transaction(version)->transfer().minimumFee(); }
+uint64_t Currency::minimumFee(BlockVersion version) const {
+  return m_transaction(version)->transfer().minimumFee();
+}
 
 uint64_t Currency::minimumFee(BlockVersion version, uint64_t canonicialBuckets) const {
   const auto& transfer = m_transaction(version)->transfer();
@@ -297,13 +321,21 @@ size_t Currency::minerTxBlobReservedSize(BlockVersion blockVersion) const {
   return minerReward(blockVersion).reservedSize();
 }
 
-std::string Currency::blocksFileName() const { return m_blocksFileName; }
+std::string Currency::blocksFileName() const {
+  return m_blocksFileName;
+}
 
-std::string Currency::blockIndexesFileName() const { return m_blockIndexesFileName; }
+std::string Currency::blockIndexesFileName() const {
+  return m_blockIndexesFileName;
+}
 
-std::string Currency::txPoolFileName() const { return m_txPoolFileName; }
+std::string Currency::txPoolFileName() const {
+  return m_txPoolFileName;
+}
 
-const std::vector<CheckpointData>& Currency::integratedCheckpoints() const { return m_integratedCheckpointData; }
+const std::vector<CheckpointData>& Currency::integratedCheckpoints() const {
+  return m_integratedCheckpointData;
+}
 
 const BlockTemplate& Currency::genesisBlock() const {
   if (m_cachedGenesisBlock.get() == nullptr) {
@@ -555,8 +587,12 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const
   return constructStaticRewardTx(cblock);
 }
 
-bool Currency::isLockedBasedOnTimestamp(uint64_t unlock) const { return !isLockedBasedOnBlockIndex(unlock); }
-bool Currency::isLockedBasedOnBlockIndex(uint64_t unlock) const { return unlock <= BlockHeight::max().toIndex(); }
+bool Currency::isLockedBasedOnTimestamp(uint64_t unlock) const {
+  return !isLockedBasedOnBlockIndex(unlock);
+}
+bool Currency::isLockedBasedOnBlockIndex(uint64_t unlock) const {
+  return unlock <= BlockHeight::max().toIndex();
+}
 
 bool Currency::isUnlockSatisfied(uint64_t unlock, uint32_t blockIndex, uint64_t timestamp) const {
   if (isLockedBasedOnBlockIndex(unlock)) {
@@ -716,7 +752,8 @@ size_t Currency::getApproximateMaximumInputCount(size_t transactionSize, size_t 
   return (transactionSize - headerSize - outputsSize) / inputSize;
 }
 
-Currency::Currency(ILogger& log) : logger(log, "currency"), m_upgradeManager{std::make_shared<UpgradeManager>()} {}
+Currency::Currency(ILogger& log) : logger(log, "currency"), m_upgradeManager{std::make_shared<UpgradeManager>()} {
+}
 
 Currency::Currency(Currency&& currency)
     : m_mempoolTxLiveTime(currency.m_mempoolTxLiveTime),
@@ -745,7 +782,8 @@ Currency::Currency(Currency&& currency)
       m_upgradeManager{std::move(currency.m_upgradeManager)},
 
       m_difficultyAlgorithms{std::move(currency.m_difficultyAlgorithms)},
-      m_proofOfWorkAlgorithms{std::move(currency.m_proofOfWorkAlgorithms)} {}
+      m_proofOfWorkAlgorithms{std::move(currency.m_proofOfWorkAlgorithms)} {
+}
 
 CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log), m_networkDir{"./config"} {
   mempoolTxLiveTime(static_cast<uint64_t>(Xi::Config::Limits::maximumTransactionLivetimeSpan().count()));
@@ -860,8 +898,9 @@ CurrencyBuilder& CurrencyBuilder::network(std::string netId) {
         m_currency.logger(Info) << "Configuration not found in network directory: " << (rootDir / filePath).string();
       } else {
         filePath = rootDir / filePath;
-        if (!Xi::Config::Registry::addConfigJsonFile(netId, filePath.c_str())) {
-          m_currency.logger(Fatal) << "Unable to load " << filePath.c_str();
+        std::string sfilepath = filePath.string();
+        if (!Xi::Config::Registry::addConfigJsonFile(netId, sfilepath)) {
+          m_currency.logger(Fatal) << "Unable to load " << sfilepath;
           Xi::exceptional<Xi::NotFoundError>();
         }
         return configuration(*Xi::Config::Registry::searchByName(netId));
@@ -871,8 +910,9 @@ CurrencyBuilder& CurrencyBuilder::network(std::string netId) {
         m_currency.logger(Error) << "Configuration not found in working directory: " << filePath.string();
         Xi::exceptional<Xi::NotFoundError>();
       } else {
-        if (!Xi::Config::Registry::addConfigJsonFile(netId, filePath.c_str())) {
-          m_currency.logger(Fatal) << "Unable to load " << filePath.c_str();
+        std::string sfilepath = filePath.string();
+        if (!Xi::Config::Registry::addConfigJsonFile(netId, sfilepath)) {
+          m_currency.logger(Fatal) << "Unable to load " << sfilepath;
           Xi::exceptional<Xi::NotFoundError>();
         }
         return configuration(*Xi::Config::Registry::searchByName(netId));
@@ -882,8 +922,9 @@ CurrencyBuilder& CurrencyBuilder::network(std::string netId) {
         m_currency.logger(Error) << "Configuration file not found: " << filePath.string();
         Xi::exceptional<Xi::NotFoundError>();
       } else {
-        if (!Xi::Config::Registry::addConfigJsonFile(netId, filePath.c_str())) {
-          m_currency.logger(Fatal) << "Unable to load " << filePath.c_str();
+        std::string sfilepath = filePath.string();
+        if (!Xi::Config::Registry::addConfigJsonFile(netId, sfilepath)) {
+          m_currency.logger(Fatal) << "Unable to load " << sfilepath;
           Xi::exceptional<Xi::NotFoundError>();
         }
         return configuration(*Xi::Config::Registry::searchByName(netId));
@@ -897,6 +938,8 @@ CurrencyBuilder& CurrencyBuilder::networkDir(std::string dir) {
   return *this;
 }
 
-const Currency& CurrencyBuilder::immediateState() const { return this->m_currency; }
+const Currency& CurrencyBuilder::immediateState() const {
+  return this->m_currency;
+}
 
 }  // namespace CryptoNote
