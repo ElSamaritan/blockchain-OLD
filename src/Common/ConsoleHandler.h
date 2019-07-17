@@ -25,8 +25,9 @@
 #include <vector>
 #include <utility>
 
-#include "BlockingQueue.h"
 #include "ConsoleTools.h"
+
+#include <Serialization/ISerializer.h>
 
 #ifndef _WIN32
 #include <sys/select.h>
@@ -46,6 +47,19 @@ class ConsoleHandler {
   bool runCommand(const std::vector<std::string>& cmdAndArgs);
 
   void run(const std::string& prompt, const std::string& datadir);
+
+  virtual std::unique_ptr<CryptoNote::ISerializer> makeOutputSerialiizer() const;
+
+  template <typename _ValueT>
+  bool printObject(const _ValueT& object, Common::StringView name = "") {
+    auto serializer = this->makeOutputSerialiizer();
+    std::cout << "\n";
+    XI_RETURN_EC_IF_NOT(serializer->beginObject(""), false);
+    XI_RETURN_EC_IF_NOT((*serializer)(const_cast<_ValueT&>(object), name), false);
+    XI_RETURN_EC_IF_NOT(serializer->endObject(), false);
+    std::cout << std::endl;
+    XI_RETURN_SC(true);
+  }
 
  protected:
   virtual void printError(std::string error);

@@ -48,7 +48,7 @@ class MinerManager : public UpdateMonitor::Observer, MinerWorker::Observer {
     virtual ~Observer() = default;
 
     virtual void onSuccessfulBlockSubmission(Crypto::Hash hash) = 0;
-    virtual void onBlockTemplateChanged(Crypto::Hash hash) = 0;
+    virtual void onBlockTemplateChanged(MinerBlockTemplate block) = 0;
   };
 
  public:

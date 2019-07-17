@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -31,18 +31,22 @@
 
 namespace XiMiner {
 struct MinerStatus {
-  double CurrentHashrate;
-  double AverageHashrate;
-  uint32_t BlocksMined;
-  uint32_t Threads;
-  Crypto::Hash TopBlockHash;
+  double current_hashrate;
+  double average_hashrate;
+  uint32_t blocks_mined;
+  uint32_t active_threads;
+  Crypto::Hash top_block;
+  uint64_t difficulty;
+  std::string algorithm;
 
   KV_BEGIN_SERIALIZATION
-  KV_MEMBER(CurrentHashrate)
-  KV_MEMBER(AverageHashrate)
-  KV_MEMBER(BlocksMined)
-  KV_MEMBER(Threads)
-  KV_MEMBER(TopBlockHash)
+  KV_MEMBER(current_hashrate)
+  KV_MEMBER(average_hashrate)
+  KV_MEMBER(blocks_mined)
+  KV_MEMBER(active_threads)
+  KV_MEMBER(top_block)
+  KV_MEMBER(difficulty)
+  KV_MEMBER(algorithm)
   KV_END_SERIALIZATION
 };
 }  // namespace XiMiner

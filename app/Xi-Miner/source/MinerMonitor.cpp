@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -49,12 +49,14 @@ void XiMiner::MinerMonitor::onSuccessfulBlockSubmission(Crypto::Hash hash) {
   }
 }
 
-void XiMiner::MinerMonitor::onBlockTemplateChanged(Crypto::Hash hash) {
+void XiMiner::MinerMonitor::onBlockTemplateChanged(MinerBlockTemplate block) {
   m_lastBlockUpdate = std::chrono::system_clock::now();
   {
     std::lock_guard<std::mutex> lck{m_statusAccess};
     XI_UNUSED(lck);
-    m_status.TopBlockHash = hash;
+    m_status.top_block = block.Template.previousBlockHash;
+    m_status.difficulty = block.Difficutly;
+    m_status.algorithm = block.Algorithm;
   }
 }
 
@@ -131,14 +133,14 @@ void XiMiner::MinerMonitor::monitorLoop() {
 void XiMiner::MinerMonitor::reportHashrate() {
   std::string color = Logging::CYAN;
   const auto stats = status();
-  const auto abs = (stats.CurrentHashrate - stats.AverageHashrate) / stats.AverageHashrate;
+  const auto abs = (stats.current_hashrate - stats.average_hashrate) / stats.average_hashrate;
   if (abs >= -0.01)
     color = Logging::GREEN;
   else if (abs < -0.2)
     color = Logging::RED;
   else if (abs < -0.08)
     color = Logging::YELLOW;
-  m_logger(Logging::Trace, color) << status().AverageHashrate << " H/s";
+  m_logger(Logging::Trace, color) << status().average_hashrate << " H/s";
 }
 
 void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
@@ -149,21 +151,21 @@ void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
     if (m_hrTimeline.size() > 600) {
       m_hrTimeline.pop_front();
     }
-    m_status.AverageHashrate =
+    m_status.average_hashrate =
         std::accumulate(m_hrTimeline.rbegin(), m_hrTimeline.rend(), 0.0,
                         [](auto acc, const auto& iCheckpoint) { return acc + iCheckpoint.Hashrate; }) /
         (double)m_hrTimeline.size();
     if (m_hrTimeline.size() > 0) {
-      m_status.CurrentHashrate = m_hrTimeline.rbegin()->Hashrate;
+      m_status.current_hashrate = m_hrTimeline.rbegin()->Hashrate;
     }
-    m_status.BlocksMined = m_blocksMined;
-    m_status.Threads = m_miner.threads();
+    m_status.blocks_mined = m_blocksMined;
+    m_status.active_threads = m_miner.threads();
     if (m_hrTimeline.size() == 600) {
       const double shortAverage =
           std::accumulate(m_hrTimeline.rbegin(), m_hrTimeline.rbegin() + 60, 0.0,
                           [](auto acc, const auto& iCheckpoint) { return acc + iCheckpoint.Hashrate; }) /
           (double)m_hrTimeline.size();
-      const auto abs = (shortAverage - m_status.AverageHashrate) / m_status.AverageHashrate;
+      const auto abs = (shortAverage - m_status.average_hashrate) / m_status.average_hashrate;
       if ((abs < -0.5 || shortAverage < 0.1) && isPanicExitEnabled()) {
         m_logger(Logging::Fatal) << "Hashrate stall detected, panic out.";
         std::exit(EXIT_FAILURE);  // sorry

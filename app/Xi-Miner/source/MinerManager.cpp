@@ -42,7 +42,7 @@ void XiMiner::MinerManager::onTemplateChanged(MinerBlockTemplate newTemplate) {
     auto iWorker = m_worker[i];
     iWorker->setTemplate(newTemplate);
   }
-  m_observer.notify(&MinerManager::Observer::onBlockTemplateChanged, newTemplate.Template.previousBlockHash);
+  m_observer.notify(&MinerManager::Observer::onBlockTemplateChanged, newTemplate);
 }
 
 void XiMiner::MinerManager::onBlockFound(CryptoNote::BlockTemplate block) {

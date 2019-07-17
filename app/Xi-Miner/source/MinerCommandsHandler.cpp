@@ -112,14 +112,16 @@ bool XiMiner::MinerCommandsHandler::status(const std::vector<std::string> &args)
   };
 
   auto minerStatus = m_minerMonitor.status();
-  builder << Logging::DEFAULT << "Current Hashrate  "
-          << colorForHrDiff(minerStatus.CurrentHashrate, minerStatus.AverageHashrate) << minerStatus.CurrentHashrate
+  builder << Logging::DEFAULT << "Current Hashrate   "
+          << colorForHrDiff(minerStatus.current_hashrate, minerStatus.average_hashrate) << minerStatus.current_hashrate
           << "H/s\n";
-  builder << Logging::DEFAULT << "Average Hashrate  " << minerStatus.AverageHashrate << "H/s\n\n";
-  builder << Logging::DEFAULT << "Threads In Use    " << minerStatus.Threads << "\n";
-  builder << Logging::DEFAULT << "Latest Block Hash " << minerStatus.TopBlockHash.toString() << "\n\n";
-  builder << Logging::YELLOW << "Blocks Mined      " << (minerStatus.BlocksMined > 0 ? Logging::GREEN : Logging::WHITE)
-          << minerStatus.BlocksMined;
+  builder << Logging::DEFAULT << "Average Hashrate   " << minerStatus.average_hashrate << "H/s\n\n";
+  builder << Logging::DEFAULT << "Threads In Use     " << minerStatus.active_threads << "\n\n";
+  builder << Logging::DEFAULT << "Latest Block Hash  " << minerStatus.top_block.toString() << "\n";
+  builder << Logging::DEFAULT << "Current Difficulty " << minerStatus.difficulty << "\n";
+  builder << Logging::DEFAULT << "Current Algorithm  " << minerStatus.algorithm << "\n\n";
+  builder << Logging::YELLOW << "Blocks Mined       "
+          << (minerStatus.blocks_mined > 0 ? Logging::GREEN : Logging::WHITE) << minerStatus.blocks_mined;
   m_logger(Logging::Info, Logging::DEFAULT) << builder.str();
   return true;
 }

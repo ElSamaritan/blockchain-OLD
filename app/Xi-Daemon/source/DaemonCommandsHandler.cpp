@@ -30,20 +30,6 @@
 #include "Common/StringTools.h"
 
 namespace {
-std::unique_ptr<CryptoNote::ISerializer> makeConsoleOutputSerializer() {
-  return std::make_unique<CryptoNote::ConsoleOutputSerializer>(std::cout);
-}
-
-template <typename T>
-static bool printObject(const T& obj) {
-  std::cout << "\n";
-  auto serializer = makeConsoleOutputSerializer();
-  XI_RETURN_EC_IF_NOT(serializer->beginObject(""), false);
-  XI_RETURN_EC_IF_NOT((*serializer)(const_cast<T&>(obj), "result"), false);
-  XI_RETURN_EC_IF_NOT(serializer->endObject(), false);
-  std::cout << std::endl;
-  XI_RETURN_SC(true);
-}
 
 std::string printTransactionShortInfo(const CryptoNote::CachedTransaction& transaction) {
   std::stringstream ss;
@@ -387,15 +373,8 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
 
 bool DaemonCommandsHandler::info(const std::vector<std::string>& args) {
   XI_RETURN_EC_IF_NOT(args.empty(), false);
-  std::cout << "\n";
-  auto serializer = makeConsoleOutputSerializer();
-  // clang-format off
-  XI_RETURN_EC_IF_NOT(serializer->beginObject("Info"), false);
-  XI_RETURN_EC_IF_NOT((*serializer)(const_cast<Xi::Config::General::Configuration&>(m_core.currency().general()), "general"), false);
-  XI_RETURN_EC_IF_NOT((*serializer)(const_cast<Xi::Config::Coin::Configuration&>(m_core.currency().coin()), "coin"), false);
-  XI_RETURN_EC_IF_NOT(serializer->endObject(), false);
-  // clang-format on
-  std::cout << std::endl;
+  XI_RETURN_EC_IF_NOT(printObject(m_core.currency().general()), false);
+  XI_RETURN_EC_IF_NOT(printObject(m_core.currency().coin()), false);
   XI_RETURN_SC(true);
 }
 

@@ -37,6 +37,8 @@
 #include <boost/bind.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Serialization/ConsoleOutputSerializer.hpp>
+
 using Common::Console::Color;
 
 namespace Common {
@@ -90,6 +92,10 @@ void ConsoleHandler::run(const std::string& prompt, const std::string& datadir) 
 
   linenoise::SetCompletionCallback([](const char*, std::vector<std::string>&) {});
   linenoise::SaveHistory(historyFile.c_str());
+}
+
+std::unique_ptr<CryptoNote::ISerializer> ConsoleHandler::makeOutputSerialiizer() const {
+  return std::make_unique<CryptoNote::ConsoleOutputSerializer>(std::cout);
 }
 
 void ConsoleHandler::printError(std::string error) {

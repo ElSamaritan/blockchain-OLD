@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -45,7 +45,7 @@ class MinerMonitor : public MinerManager::Observer {
   MinerMonitor(MinerManager& miner, Logging::ILogger& logger);
 
   void onSuccessfulBlockSubmission(Crypto::Hash hash) override;
-  void onBlockTemplateChanged(Crypto::Hash hash) override;
+  void onBlockTemplateChanged(MinerBlockTemplate block) override;
 
   void run();
   void shutdown();
