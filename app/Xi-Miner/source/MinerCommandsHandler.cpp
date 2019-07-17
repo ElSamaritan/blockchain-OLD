@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -49,7 +49,6 @@ XiMiner::MinerCommandsHandler::MinerCommandsHandler(MinerManager &miner, UpdateM
       m_logger{m_clogger, ""},
       m_appLogger{logger},
       m_minerMonitor{miner, m_monitorlogger} {
-  MINER_COMMAND_DEFINE(exit, "shuts down the miner gracefully");
   MINER_COMMAND_DEFINE(help, "prints a summary of all commands");
   MINER_COMMAND_DEFINE(version, "prints version information");
 
@@ -77,13 +76,6 @@ void XiMiner::MinerCommandsHandler::showHashrate() { m_monitorlogger.setMaxLevel
 void XiMiner::MinerCommandsHandler::hideHashrate() { m_appLogger.setMaxLevel(Logging::None); }
 
 #undef MINER_COMMAND_DEFINE
-
-bool XiMiner::MinerCommandsHandler::exit(const std::vector<std::string> &args) {
-  XI_UNUSED(args);
-  requestStop();
-  m_miner.shutdown();
-  return true;
-}
 
 bool XiMiner::MinerCommandsHandler::help(const std::vector<std::string> &args) {
   XI_UNUSED(args);

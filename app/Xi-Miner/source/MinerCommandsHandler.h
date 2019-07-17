@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -44,7 +44,6 @@ class MinerCommandsHandler : public Common::ConsoleHandler {
   void hideHashrate();
 
  private:
-  bool exit(const std::vector<std::string>& args);
   bool help(const std::vector<std::string>& args);
   bool version(const std::vector<std::string>& args);
 

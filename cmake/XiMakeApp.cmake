@@ -1,4 +1,4 @@
-# ============================================================================================== #
+﻿# ============================================================================================== #
 #                                                                                                #
 #                                     Galaxia Blockchain                                         #
 #                                                                                                #
@@ -63,6 +63,7 @@ function(xi_make_app dir name bin)
   add_executable(${name} ${app_source_files} ${app_bin_files})
   target_include_directories(${name} PRIVATE ${app_include_dirs})
   target_link_libraries(${name} PRIVATE ${XI_MAKE_APP_LINK_LIBRARIES})
+  target_compile_definitions(${name} PRIVATE XI_APP_NAME=${app_bin_name})
   set_property(TARGET ${name} PROPERTY OUTPUT_NAME ${app_bin_name})
   set_property(TARGET ${name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 

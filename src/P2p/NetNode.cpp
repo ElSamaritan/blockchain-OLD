@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <fstream>
 #include <cinttypes>
+#include <thread>
+#include <future>
 
 #include <boost/foreach.hpp>
 #include <boost/uuid/random_generator.hpp>
@@ -55,7 +57,8 @@ namespace {
 
 size_t get_random_index_with_fixed_probability(size_t max_index) {
   // divide by zero workaround
-  if (!max_index) return 0;
+  if (!max_index)
+    return 0;
   size_t x = 0;
   XI_RETURN_EC_IF_NOT(
       Xi::Crypto::Random::generate(Xi::asByteSpan(&x, sizeof(size_t))) == Xi::Crypto::Random::RandomError::Success, 0);
@@ -207,7 +210,8 @@ NodeServer::NodeServer(System::Dispatcher& dispatcher, const Xi::Config::Network
       // m_peer_handshake_idle_maker_interval(CryptoNote::P2P_DEFAULT_HANDSHAKE_INTERVAL),
       m_connections_maker_interval(1),
       m_peerlist_store_interval(60 * 30, false),
-      m_fails_before_block{20} {}
+      m_fails_before_block{20} {
+}
 
 bool NodeServer::serialize(ISerializer& s) {
   uint8_t version = 2;
@@ -375,9 +379,13 @@ void NodeServer::externalRelayNotifyToAll(int command, const BinaryArray& data_b
 bool CryptoNote::NodeServer::report_failure(const uint32_t ip, CryptoNote::P2pPenalty penality) {
   return add_host_fail(ip, penality);
 }
-void NodeServer::report_success(const uint32_t ip) { add_host_success(ip); }
+void NodeServer::report_success(const uint32_t ip) {
+  add_host_success(ip);
+}
 
-bool NodeServer::is_ip_address_blocked(const uint32_t ip) { return evaluate_blocked_connection(ip); }
+bool NodeServer::is_ip_address_blocked(const uint32_t ip) {
+  return evaluate_blocked_connection(ip);
+}
 
 //-----------------------------------------------------------------------------------
 bool NodeServer::make_default_config() {
@@ -465,7 +473,8 @@ bool NodeServer::init(const NetNodeConfig& config) {
     return false;
   }
 
-  for (auto& p : m_command_line_peers) m_peerlist.append_with_peer_white(p);
+  for (auto& p : m_command_line_peers)
+    m_peerlist.append_with_peer_white(p);
 
   // only in case if we really sure that we have external visible ip
   m_have_address = true;
@@ -488,7 +497,8 @@ bool NodeServer::init(const NetNodeConfig& config) {
 
   logger(Info) << "Net service binded on " << m_bind_ip << ":" << m_listeningPort;
 
-  if (m_external_port) logger(Info) << "External port defined as " << m_external_port;
+  if (m_external_port)
+    logger(Info) << "External port defined as " << m_external_port;
 
   addPortMapping(logger, config.appIdentifier(), m_listeningPort, m_external_port ? m_external_port : m_listeningPort);
 
@@ -496,33 +506,51 @@ bool NodeServer::init(const NetNodeConfig& config) {
 }
 //-----------------------------------------------------------------------------------
 
-CryptoNote::CryptoNoteProtocolHandler& NodeServer::get_payload_object() { return m_payload_handler; }
+CryptoNote::CryptoNoteProtocolHandler& NodeServer::get_payload_object() {
+  return m_payload_handler;
+}
 //-----------------------------------------------------------------------------------
 
 bool NodeServer::run() {
+  m_currentState.store(Initializing, std::memory_order_release);
   logger(Info) << "Starting node_server";
 
   m_workingContextGroup.spawn(std::bind(&NodeServer::acceptLoop, this));
   m_workingContextGroup.spawn(std::bind(&NodeServer::onIdle, this));
   m_workingContextGroup.spawn(std::bind(&NodeServer::timedSyncLoop, this));
   m_workingContextGroup.spawn(std::bind(&NodeServer::timeoutLoop, this));
+  m_currentState.store(Running, std::memory_order_release);
 
   m_stopEvent.wait();
 
+  m_currentState.store(ShuttingDown, std::memory_order_release);
   logger(Info) << "Stopping NodeServer and its " << m_connections.size() << " connections...";
   safeInterrupt(m_workingContextGroup);
   m_workingContextGroup.wait();
 
   logger(Info) << "NodeServer loop stopped";
+  m_currentState.store(Stopped, std::memory_order_release);
   return true;
+}
+
+std::future<void> NodeServer::runAsync() {
+  return std::async(std::launch::async, [this]() {
+    if (!this->run()) {
+      throw std::runtime_error{"Node server returned none success code."};
+    }
+  });
 }
 
 //-----------------------------------------------------------------------------------
 
-uint64_t NodeServer::get_connections_count() { return m_connections.size(); }
+uint64_t NodeServer::get_connections_count() {
+  return m_connections.size();
+}
 //-----------------------------------------------------------------------------------
 
-bool NodeServer::deinit() { return store_config(); }
+bool NodeServer::deinit() {
+  return store_config();
+}
 
 //-----------------------------------------------------------------------------------
 
@@ -560,6 +588,10 @@ bool NodeServer::sendStopSignal() {
   logger(Info, BRIGHT_YELLOW)
       << "Stop signal sent, please only EXIT or CTRL+C one time to avoid stalling the shutdown process.";
   return true;
+}
+
+uint32_t NodeServer::get_this_peer_port() {
+  return m_listeningPort;
 }
 
 //-----------------------------------------------------------------------------------
@@ -690,7 +722,8 @@ void NodeServer::forEachConnection(std::function<void(P2pConnectionContext&)> ac
 
 //-----------------------------------------------------------------------------------
 bool NodeServer::is_peer_used(const PeerlistEntry& peer) {
-  if (m_config.m_peer_id == peer.id) return true;  // dont make connections to ourself
+  if (m_config.m_peer_id == peer.id)
+    return true;  // dont make connections to ourself
 
   for (const auto& kv : m_connections) {
     const auto& cntxt = kv.second;
@@ -815,7 +848,8 @@ bool NodeServer::try_to_connect_and_handshake_with_new_peer(const NetworkAddress
 //-----------------------------------------------------------------------------------
 bool NodeServer::make_new_connection_from_peerlist(bool use_white_list) {
   size_t local_peers_count = use_white_list ? m_peerlist.get_white_peers_count() : m_peerlist.get_gray_peers_count();
-  if (!local_peers_count) return false;  // no peers
+  if (!local_peers_count)
+    return false;  // no peers
 
   size_t max_random_index = std::min<uint64_t>(local_peers_count - 1, 20);
 
@@ -831,7 +865,8 @@ bool NodeServer::make_new_connection_from_peerlist(bool use_white_list) {
       return false;
     }
 
-    if (tried_peers.count(random_index)) continue;
+    if (tried_peers.count(random_index))
+      continue;
 
     tried_peers.insert(random_index);
     PeerlistEntry pe = boost::value_initialized<PeerlistEntry>();
@@ -844,13 +879,15 @@ bool NodeServer::make_new_connection_from_peerlist(bool use_white_list) {
 
     ++try_count;
 
-    if (is_peer_used(pe)) continue;
+    if (is_peer_used(pe))
+      continue;
 
     logger(Debugging) << "Selected peer: " << pe.id << " " << pe.address << " [white=" << use_white_list
                       << "] last_seen: "
                       << (pe.last_seen ? Common::timeIntervalToString(time(NULL) - pe.last_seen) : "never");
 
-    if (!try_to_connect_and_handshake_with_new_peer(pe.address, false, pe.last_seen, use_white_list)) continue;
+    if (!try_to_connect_and_handshake_with_new_peer(pe.address, false, pe.last_seen, use_white_list))
+      continue;
 
     return true;
   }
@@ -885,11 +922,13 @@ bool NodeServer::connections_maker() {
         logger(Error) << "Failed to connect to any of seed peers, continuing without seeds";
         break;
       }
-      if (++current_index >= m_seed_nodes.size()) current_index = 0;
+      if (++current_index >= m_seed_nodes.size())
+        current_index = 0;
     }
   }
 
-  if (!connect_to_peerlist(m_priority_peers)) return false;
+  if (!connect_to_peerlist(m_priority_peers))
+    return false;
 
   size_t expected_white_connections =
       (m_config.m_net_config.connections_count * Xi::Config::P2P::whiteListPreferenceThreshold()) / 100;
@@ -898,14 +937,18 @@ bool NodeServer::connections_maker() {
   if (conn_count < m_config.m_net_config.connections_count) {
     if (conn_count < expected_white_connections) {
       // start from white list
-      if (!make_expected_connections_count(true, expected_white_connections)) return false;
+      if (!make_expected_connections_count(true, expected_white_connections))
+        return false;
       // and then do grey list
-      if (!make_expected_connections_count(false, m_config.m_net_config.connections_count)) return false;
+      if (!make_expected_connections_count(false, m_config.m_net_config.connections_count))
+        return false;
     } else {
       // start from grey list
-      if (!make_expected_connections_count(false, m_config.m_net_config.connections_count)) return false;
+      if (!make_expected_connections_count(false, m_config.m_net_config.connections_count))
+        return false;
       // and then do white list
-      if (!make_expected_connections_count(true, m_config.m_net_config.connections_count)) return false;
+      if (!make_expected_connections_count(true, m_config.m_net_config.connections_count))
+        return false;
     }
   }
 
@@ -917,9 +960,11 @@ bool NodeServer::make_expected_connections_count(bool white_list, size_t expecte
   size_t conn_count = get_outgoing_connections_count();
   // add new connections from white peers
   while (conn_count < expected_connections) {
-    if (m_stopEvent.get()) return false;
+    if (m_stopEvent.get())
+      return false;
 
-    if (!make_new_connection_from_peerlist(white_list)) break;
+    if (!make_new_connection_from_peerlist(white_list))
+      break;
     conn_count = get_outgoing_connections_count();
   }
   return true;
@@ -929,7 +974,8 @@ bool NodeServer::make_expected_connections_count(bool white_list, size_t expecte
 size_t NodeServer::get_outgoing_connections_count() {
   size_t count = 0;
   for (const auto& cntxt : m_connections) {
-    if (!cntxt.second.m_is_income) ++count;
+    if (!cntxt.second.m_is_income)
+      ++count;
   }
   return count;
 }
@@ -969,7 +1015,8 @@ bool NodeServer::handle_remote_peerlist(const std::list<PeerlistEntry>& peerlist
                                         const CryptoNoteConnectionContext& context) {
   int64_t delta = 0;
   std::list<PeerlistEntry> peerlist_ = peerlist;
-  if (!fix_time_delta(peerlist_, local_time, delta)) return false;
+  if (!fix_time_delta(peerlist_, local_time, delta))
+    return false;
   logger(Logging::Trace) << context << "REMOTE PEERLIST: TIME_DELTA: " << delta
                          << ", remote peerlist size=" << peerlist_.size();
   logger(Logging::Trace) << context << "REMOTE PEERLIST: " << print_peerlist_to_string(peerlist_);
@@ -1290,7 +1337,9 @@ std::string NodeServer::print_connections_container() {
 }
 //-----------------------------------------------------------------------------------
 
-void NodeServer::on_connection_new(P2pConnectionContext& context) { m_payload_handler.onConnectionOpened(context); }
+void NodeServer::on_connection_new(P2pConnectionContext& context) {
+  m_payload_handler.onConnectionOpened(context);
+}
 //-----------------------------------------------------------------------------------
 
 void NodeServer::on_connection_close(P2pConnectionContext& context) {
@@ -1419,7 +1468,8 @@ bool NodeServer::block_host(const uint32_t address_ip, std::chrono::seconds seco
   });
   for (const auto& c_id : conns) {
     auto c = m_connections.find(c_id);
-    if (c != m_connections.end()) c->second.m_state = CryptoNoteConnectionContext::state_shutdown;
+    if (c != m_connections.end())
+      c->second.m_state = CryptoNoteConnectionContext::state_shutdown;
   }
 
   logger(Info) << "Host " << Common::ipAddressToString(address_ip) << " blocked.";
@@ -1429,7 +1479,8 @@ bool NodeServer::block_host(const uint32_t address_ip, std::chrono::seconds seco
 bool NodeServer::unblock_host(const uint32_t address_ip) {
   XI_CONCURRENT_RLOCK(m_block_access);
   auto i = m_blocked_hosts.find(address_ip);
-  if (i == m_blocked_hosts.end()) return false;
+  if (i == m_blocked_hosts.end())
+    return false;
   m_blocked_hosts.erase(i);
   auto penaltySearch = m_host_fails_score.find(address_ip);
   if (penaltySearch != m_host_fails_score.end()) {
@@ -1563,9 +1614,13 @@ size_t NodeServer::resetPenalties() {
   return count;
 }
 
-bool NodeServer::isAutoBlockEnabled() const { return m_auto_block.load(); }
+bool NodeServer::isAutoBlockEnabled() const {
+  return m_auto_block.load();
+}
 
-void NodeServer::setAutoBlockEnabled(const bool isEnabled) { m_auto_block.store(isEnabled); }
+void NodeServer::setAutoBlockEnabled(const bool isEnabled) {
+  m_auto_block.store(isEnabled);
+}
 
 void NodeServer::timedSyncLoop() {
   try {
@@ -1706,6 +1761,10 @@ void NodeServer::safeInterrupt(T& obj) {
   } catch (...) {
     logger(Warning) << "interrupt() throws unknown exception";
   }
+}
+
+NodeServer::State NodeServer::currentState() const {
+  return m_currentState.load(std::memory_order_consume);
 }
 
 }  // namespace CryptoNote

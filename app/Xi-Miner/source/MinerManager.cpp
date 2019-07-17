@@ -80,10 +80,11 @@ void XiMiner::MinerManager::run() {
     iWorker->run();
     m_worker.emplace_back(std::move(iWorker));
   }
+}
 
-  while (m_running) {
-    std::this_thread::sleep_for(std::chrono::seconds{1});
-  }
+void XiMiner::MinerManager::shutdown() {
+  m_shutdownRequest.store(true);
+  m_running.store(false);
 
   std::vector<std::future<void>> shutdowns;
   for (auto& worker : m_worker) {
@@ -97,11 +98,6 @@ void XiMiner::MinerManager::run() {
     }
   }
   m_worker.clear();
-}
-
-void XiMiner::MinerManager::shutdown() {
-  m_shutdownRequest.store(true);
-  m_running.store(false);
 }
 
 void XiMiner::MinerManager::addObserver(XiMiner::MinerManager::Observer* observer) { m_observer.add(observer); }

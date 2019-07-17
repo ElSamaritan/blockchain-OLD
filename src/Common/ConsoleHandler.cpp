@@ -31,151 +31,82 @@
 #include <stdio.h>
 #endif
 
+#include <Xi/ExternalIncludePush.h>
+#include <linenoise.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/bind.hpp>
+#include <Xi/ExternalIncludePop.h>
 
 using Common::Console::Color;
 
 namespace Common {
 
 /////////////////////////////////////////////////////////////////////////////
-// AsyncConsoleReader
-/////////////////////////////////////////////////////////////////////////////
-AsyncConsoleReader::AsyncConsoleReader() : m_stop(true) {}
-
-AsyncConsoleReader::~AsyncConsoleReader() { stop(); }
-
-void AsyncConsoleReader::start() {
-  m_stop = false;
-  m_thread = std::thread(std::bind(&AsyncConsoleReader::consoleThread, this));
-}
-
-bool AsyncConsoleReader::getline(std::string& line) { return m_queue.pop(line); }
-
-void AsyncConsoleReader::pause() {
-  if (m_stop) {
-    return;
-  }
-
-  m_stop = true;
-
-  if (m_thread.joinable()) {
-    m_thread.join();
-  }
-
-  m_thread = std::thread();
-}
-
-void AsyncConsoleReader::unpause() { start(); }
-
-void AsyncConsoleReader::stop() {
-  if (m_stop) {
-    return;  // already stopping/stopped
-  }
-
-  m_stop = true;
-  m_queue.close();
-#ifdef _WIN32
-  ::CloseHandle(::GetStdHandle(STD_INPUT_HANDLE));
-#endif
-
-  if (m_thread.joinable()) {
-    m_thread.join();
-  }
-
-  m_thread = std::thread();
-}
-
-bool AsyncConsoleReader::stopped() const { return m_stop; }
-
-void AsyncConsoleReader::consoleThread() {
-  while (waitInput()) {
-    std::string line;
-
-    if (!std::getline(std::cin, line)) {
-      break;
-    }
-
-    if (!m_queue.push(line)) {
-      break;
-    }
-  }
-}
-
-bool AsyncConsoleReader::waitInput() {
-#ifndef _WIN32
-  int stdin_fileno = ::fileno(stdin);
-
-  while (!m_stop) {
-    fd_set read_set;
-    FD_ZERO(&read_set);
-    FD_SET(stdin_fileno, &read_set);
-
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 100 * 1000;
-
-    int retval = ::select(stdin_fileno + 1, &read_set, NULL, NULL, &tv);
-
-    if (retval == -1 && errno == EINTR) {
-      continue;
-    }
-
-    if (retval < 0) {
-      return false;
-    }
-
-    if (retval > 0) {
-      return true;
-    }
-  }
-#endif
-
-  return !m_stop;
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // ConsoleHandler
 /////////////////////////////////////////////////////////////////////////////
-ConsoleHandler::~ConsoleHandler() { stop(); }
-
-void ConsoleHandler::start(bool startThread, const std::string& prompt, Console::Color promptColor) {
-  m_prompt = prompt;
-  m_promptColor = promptColor;
-  m_consoleReader.start();
-
-  if (startThread) {
-    m_thread = std::thread(std::bind(&ConsoleHandler::handlerThread, this));
-  } else {
-    handlerThread();
-  }
+ConsoleHandler::ConsoleHandler() {
+  setHandler(
+      "quit", [](const auto&) { return true; }, "Shuts down the application gracefully.");
+  setHandler(
+      "clear",
+      [this](const auto&) {
+        this->clear();
+        return true;
+      },
+      "Clears the screen.");
 }
 
-void ConsoleHandler::stop() {
-  requestStop();
-  wait();
+ConsoleHandler::~ConsoleHandler() {
+  /* */
 }
 
-void ConsoleHandler::pause() { m_consoleReader.pause(); }
+void ConsoleHandler::run(const std::string& prompt, const std::string& datadir) {
+  auto historyFile = datadir + std::string{"/"} + prompt + std::string{".history"};
+  linenoise::LoadHistory(historyFile.c_str());
+  linenoise::SetHistoryMaxLen(128);
+  linenoise::SetCompletionCallback(
+      std::bind(&ConsoleHandler::completionCallback, this, std::placeholders::_1, std::placeholders::_2));
 
-void ConsoleHandler::unpause() { m_consoleReader.unpause(); }
+  const auto prefix = prompt + std::string{" > "};
+  std::string line{};
+  while (!linenoise::Readline(prefix.c_str(), line)) {
+    try {
+      boost::algorithm::trim(line);
 
-void ConsoleHandler::printError(std::string error) { std::cerr << error << std::endl; }
+      if (line == "quit") {
+        quit();
+        break;
+      }
 
-void ConsoleHandler::printWarning(std::string warn) { std::cout << warn << std::endl; }
+      if (!line.empty()) {
+        handleCommand(line);
+      }
 
-void ConsoleHandler::printMessage(std::string msg) { std::cout << msg << std::endl; }
-
-void ConsoleHandler::wait() {
-  try {
-    if (m_thread.joinable()) {
-      m_thread.join();
+    } catch (std::exception& e) {
+      printError(e.what());
     }
-  } catch (std::exception& e) {
-    printError(std::string{"Exception in ConsoleHandler::wait - "} + e.what());
+    line.clear();
   }
+
+  linenoise::SetCompletionCallback([](const char*, std::vector<std::string>&) {});
+  linenoise::SaveHistory(historyFile.c_str());
 }
 
-void ConsoleHandler::requestStop() { m_consoleReader.stop(); }
+void ConsoleHandler::printError(std::string error) {
+  std::cerr << error << std::endl;
+}
+
+void ConsoleHandler::printWarning(std::string warn) {
+  std::cout << warn << std::endl;
+}
+
+void ConsoleHandler::printMessage(std::string msg) {
+  std::cout << msg << std::endl;
+}
+
+void ConsoleHandler::doQuit() {
+  /* */
+}
 
 std::string ConsoleHandler::getUsage() const {
   if (m_handlers.empty()) {
@@ -221,47 +152,32 @@ bool ConsoleHandler::runCommand(const std::vector<std::string>& cmdAndArgs) {
 }
 
 void ConsoleHandler::handleCommand(const std::string& cmd) {
+  linenoise::AddHistory(cmd.c_str());
   std::vector<std::string> args;
   boost::split(args, cmd, boost::is_any_of(" "), boost::token_compress_on);
   runCommand(args);
 }
 
-void ConsoleHandler::handlerThread() {
-  std::string line;
-
-  while (!m_consoleReader.stopped()) {
-    try {
-      if (!m_prompt.empty()) {
-        if (m_promptColor != Color::Default) {
-          Console::setTextColor(m_promptColor);
-        }
-
-        std::cout << m_prompt;
-
-        if (m_promptColor != Color::Default) {
-          Console::setTextColor(Color::Yellow);
-        }
-
-        std::cout << " > ";
-        std::cout.flush();
-
-        if (m_promptColor != Color::Default) {
-          Console::setTextColor(Color::Default);
-        }
-      }
-
-      if (!m_consoleReader.getline(line)) {
-        break;
-      }
-
-      boost::algorithm::trim(line);
-      if (!line.empty()) {
-        handleCommand(line);
-      }
-
-    } catch (std::exception& e) {
-      printError(e.what());
+void ConsoleHandler::completionCallback(const char* buf, std::vector<std::string>& out) {
+  for (const auto& handler : m_handlers) {
+    const auto& cmd = handler.first;
+    if (!strcasecmp(buf, cmd.c_str())) {
+      out.push_back(cmd);
     }
   }
 }
+
+void ConsoleHandler::quit() {
+  try {
+    linenoise::AddHistory("quit");
+    doQuit();
+  } catch (...) {
+    /* swallow */
+  }
+}
+
+void ConsoleHandler::clear() {
+  linenoise::linenoiseClearScreen();
+}
+
 }  // namespace Common

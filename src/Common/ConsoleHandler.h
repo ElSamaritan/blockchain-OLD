@@ -34,61 +34,35 @@
 
 namespace Common {
 
-class AsyncConsoleReader {
- public:
-  AsyncConsoleReader();
-  ~AsyncConsoleReader();
-
-  void start();
-  bool getline(std::string& line);
-  void stop();
-  bool stopped() const;
-  void pause();
-  void unpause();
-
- private:
-  void consoleThread();
-  bool waitInput();
-
-  std::atomic<bool> m_stop;
-  std::thread m_thread;
-  BlockingQueue<std::string> m_queue;
-};
-
 class ConsoleHandler {
  public:
+  ConsoleHandler();
   virtual ~ConsoleHandler();
 
   typedef std::function<bool(const std::vector<std::string>&)> ConsoleCommandHandler;
 
   std::string getUsage() const;
   void setHandler(const std::string& command, const ConsoleCommandHandler& handler, const std::string& usage = "");
-  void requestStop();
   bool runCommand(const std::vector<std::string>& cmdAndArgs);
 
-  void start(bool startThread = true, const std::string& prompt = "",
-             Console::Color promptColor = Console::Color::Default);
-  void stop();
-  void wait();
-  void pause();
-  void unpause();
+  void run(const std::string& prompt, const std::string& datadir);
 
  protected:
   virtual void printError(std::string error);
   virtual void printWarning(std::string warn);
   virtual void printMessage(std::string msg);
 
+  virtual void doQuit();
+
  private:
   typedef std::map<std::string, std::pair<ConsoleCommandHandler, std::string>> CommandHandlersMap;
 
-  virtual void handleCommand(const std::string& cmd);
+  void handleCommand(const std::string& cmd);
+  void completionCallback(const char*, std::vector<std::string>&);
+  void quit();
+  void clear();
 
-  void handlerThread();
-
-  std::thread m_thread;
   std::string m_prompt;
-  Console::Color m_promptColor = Console::Color::Default;
   CommandHandlersMap m_handlers;
-  AsyncConsoleReader m_consoleReader;
 };
 }  // namespace Common

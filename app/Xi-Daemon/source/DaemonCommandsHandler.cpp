@@ -65,8 +65,7 @@ std::string printTransactionFullInfo(const CryptoNote::CachedTransaction& transa
 
 }  // namespace
 
-#define DAEMON_COMMAND_DEFINE(NAME, HELP) \
-  m_consoleHandler.setHandler(#NAME, boost::bind(&DaemonCommandsHandler::NAME, this, _1), HELP)
+#define DAEMON_COMMAND_DEFINE(NAME, HELP) setHandler(#NAME, boost::bind(&DaemonCommandsHandler::NAME, this, _1), HELP)
 
 DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote::NodeServer& srv,
                                              Logging::LoggerManager& log, CryptoNote::RpcServer* prpc_server)
@@ -74,7 +73,6 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
   m_explorer = std::make_shared<Xi::Blockchain::Explorer::CoreExplorer>(core);
   m_explorerService = Xi::Blockchain::Services::BlockExplorer::BlockExplorer::create(m_explorer, log);
 
-  DAEMON_COMMAND_DEFINE(exit, "Shutdown the daemon");
   DAEMON_COMMAND_DEFINE(help, "Show this help");
   DAEMON_COMMAND_DEFINE(version, "Shows version information about the running daemon");
   DAEMON_COMMAND_DEFINE(print_pl, "Print peer list");
@@ -122,19 +120,11 @@ std::string DaemonCommandsHandler::get_commands_str() {
   std::stringstream ss;
   ss << m_core.currency().coin().name() << " v" << APP_VERSION << ENDL;
   ss << "Commands: " << ENDL;
-  std::string usage = m_consoleHandler.getUsage();
+  std::string usage = getUsage();
   boost::replace_all(usage, "\n", "\n  ");
   usage.insert(0, "  ");
   ss << usage << ENDL;
   return ss.str();
-}
-
-//--------------------------------------------------------------------------------
-bool DaemonCommandsHandler::exit(const std::vector<std::string>& args) {
-  XI_UNUSED(args);
-  m_consoleHandler.requestStop();
-  m_srv.sendStopSignal();
-  return true;
 }
 
 //--------------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -77,16 +77,17 @@ int XiMiner::MinerApplication::run() {
     cli.hideHashrate();
   }
 
-  cli.start(true, "xi-miner", Common::Console::Color::Cyan);
-  Tools::SignalHandler::install([&miner] { miner.shutdown(); });
   monitor->addObserver(&miner);
   miner.setThreads(Options.Threads);
   cli.minerMonitor().run();
   miner.run();
+
+  // Tools::SignalHandler::install([&miner] { miner.shutdown(); });
+  cli.run(name(), "./");
+
+  miner.shutdown();
   cli.minerMonitor().shutdown();
   monitor->removeObserver(&miner);
-  cli.requestStop();
-  cli.stop();
   monitor->shutdown();
   return 0;
 }

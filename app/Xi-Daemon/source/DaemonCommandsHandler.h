@@ -24,20 +24,12 @@ class Core;
 class NodeServer;
 }  // namespace CryptoNote
 
-class DaemonCommandsHandler {
+class DaemonCommandsHandler : public Common::ConsoleHandler {
  public:
   DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log,
                         CryptoNote::RpcServer* prpc_server);
 
-  bool start_handling() {
-    m_consoleHandler.start();
-    return true;
-  }
-
-  void stop_handling() { m_consoleHandler.stop(); }
-
  private:
-  Common::ConsoleHandler m_consoleHandler;
   CryptoNote::Core& m_core;
   CryptoNote::NodeServer& m_srv;
   Logging::LoggerRef logger;
@@ -51,7 +43,6 @@ class DaemonCommandsHandler {
   bool print_block_by_height(CryptoNote::BlockHeight height);
   bool print_block_by_hash(const std::string& arg);
 
-  bool exit(const std::vector<std::string>& args);
   bool help(const std::vector<std::string>& args);
   bool version(const std::vector<std::string>& args);
   bool print_pl(const std::vector<std::string>& args);

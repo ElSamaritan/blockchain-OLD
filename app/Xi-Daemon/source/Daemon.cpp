@@ -281,7 +281,6 @@ int main(int argc, char* argv[]) {
     if (!config.enableCors.empty()) rpcServer->enableCors(config.enableCors);
 
     cprotocol.set_p2p_endpoint(&p2psrv);
-    DaemonCommandsHandler dch(ccore, p2psrv, logManager, rpcServer.get());
     logger(Info) << "Initializing p2p server...";
     if (!p2psrv.init(netNodeConfig)) {
       logger(Error) << "Failed to initialize p2p server.";
@@ -289,10 +288,6 @@ int main(int argc, char* argv[]) {
     }
 
     logger(Info) << "P2p server initialized OK";
-
-    if (!config.noConsole) {
-      dch.start_handling();
-    }
 
     // Fire up the RPC Server
     logger(Info) << "Starting core rpc server on address " << config.rpcInterface << ":" << config.rpcPort;
@@ -313,18 +308,26 @@ int main(int argc, char* argv[]) {
       logger(Info) << "Core rpc server disabled";
     }
 
-    Tools::SignalHandler::install([&dch, &p2psrv] {
-      dch.stop_handling();
-      p2psrv.sendStopSignal();
-    });
-
     logger(Info) << "Starting p2p net loop...";
-    if (!p2psrv.run()) {
-      logger(Fatal) << "p2p server initialization failed";
+    auto p2pRun = p2psrv.runAsync();
+    while (p2psrv.currentState() != NodeServer::Running) {
+      if (p2pRun.wait_for(std::chrono::milliseconds{100}) != std::future_status::timeout) {
+        logger(Fatal) << "p2p server initialization failed";
+        p2pRun.get();
+      }
     }
-    logger(Info) << "p2p net loop stopped";
 
-    dch.stop_handling();
+    if (!config.noConsole) {
+      DaemonCommandsHandler dch(ccore, p2psrv, logManager, rpcServer.get());
+      dch.run("xi-daemon", config.dataDirectory);
+      p2psrv.sendStopSignal();
+      p2pRun.get();
+    } else {
+      Tools::SignalHandler::install([&p2psrv] { p2psrv.sendStopSignal(); });
+      p2pRun.get();
+    }
+
+    logger(Info) << "p2p net loop stopped";
 
     // stop components
     if (!config.disableRpc) {

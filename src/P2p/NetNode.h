@@ -11,6 +11,7 @@
 #include <vector>
 #include <list>
 #include <atomic>
+#include <future>
 
 #include <boost/functional/hash.hpp>
 
@@ -50,12 +51,16 @@ struct P2pMessage {
   enum Type { COMMAND, REPLY, NOTIFY };
 
   P2pMessage(Type type, uint32_t command, const BinaryArray& buffer, int32_t returnCode = 0)
-      : type(type), command(command), buffer(buffer), returnCode(returnCode) {}
+      : type(type), command(command), buffer(buffer), returnCode(returnCode) {
+  }
 
   P2pMessage(P2pMessage&& msg)
-      : type(msg.type), command(msg.command), buffer(std::move(msg.buffer)), returnCode(msg.returnCode) {}
+      : type(msg.type), command(msg.command), buffer(std::move(msg.buffer)), returnCode(msg.returnCode) {
+  }
 
-  size_t size() { return buffer.size(); }
+  size_t size() {
+    return buffer.size();
+  }
 
   Type type;
   uint32_t command;
@@ -78,7 +83,8 @@ struct P2pConnectionContext : public CryptoNoteConnectionContext {
         connection(std::move(conn)),
         logger(log, "node_server"),
         queueEvent(dispatcher),
-        stopped(false) {}
+        stopped(false) {
+  }
 
   P2pConnectionContext(P2pConnectionContext&& ctx)
       : CryptoNoteConnectionContext(std::move(ctx)),
@@ -87,7 +93,8 @@ struct P2pConnectionContext : public CryptoNoteConnectionContext {
         connection(std::move(ctx.connection)),
         logger(ctx.logger.getLogger(), "node_server"),
         queueEvent(std::move(ctx.queueEvent)),
-        stopped(std::move(ctx.stopped)) {}
+        stopped(std::move(ctx.stopped)) {
+  }
 
   bool pushMessage(P2pMessage&& msg);
   std::vector<P2pMessage> popBuffer();
@@ -106,14 +113,26 @@ struct P2pConnectionContext : public CryptoNoteConnectionContext {
 
 class NodeServer : public IP2pEndpoint {
  public:
+  enum [[nodiscard]] State{
+      Initializing,
+      Running,
+      ShuttingDown,
+      Stopped,
+  };
+
+ public:
   NodeServer(System::Dispatcher& dispatcher, const Xi::Config::Network::Configuration& network,
              CryptoNote::CryptoNoteProtocolHandler& payload_handler, Logging::ILogger& log);
 
   [[nodiscard]] bool run();
+  [[nodiscard]] std::future<void> runAsync();
   [[nodiscard]] bool init(const NetNodeConfig& config);
   [[nodiscard]] bool deinit();
+
+  State currentState() const;
+
   bool sendStopSignal();
-  uint32_t get_this_peer_port() { return m_listeningPort; }
+  uint32_t get_this_peer_port();
   CryptoNote::CryptoNoteProtocolHandler& get_payload_object();
 
   [[nodiscard]] bool serialize(ISerializer& s);
@@ -124,7 +143,9 @@ class NodeServer : public IP2pEndpoint {
   virtual uint64_t get_connections_count() override;
   size_t get_outgoing_connections_count();
 
-  CryptoNote::PeerlistManager& getPeerlistManager() { return m_peerlist; }
+  CryptoNote::PeerlistManager& getPeerlistManager() {
+    return m_peerlist;
+  }
 
  private:
   int handleCommand(const LevinProtocol::Command& cmd, BinaryArray& buff_out, P2pConnectionContext& context,
@@ -239,6 +260,7 @@ class NodeServer : public IP2pEndpoint {
   bool m_allow_local_ip;
   bool m_hide_my_port;
   std::string m_p2p_state_filename;
+  std::atomic<State> m_currentState;
 
   System::Dispatcher& m_dispatcher;
   System::ContextGroup m_workingContextGroup;
