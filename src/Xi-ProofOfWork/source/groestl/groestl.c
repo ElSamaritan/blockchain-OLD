@@ -8,8 +8,8 @@
  *
  */
 
-#include "groestl.h"
-#include "groestl_tables.h"
+#include "groestl/groestl.h"
+#include "groestl/groestl_tables.h"
 
 #define P_TYPE 0
 #define Q_TYPE 1
@@ -159,7 +159,7 @@ static void F512(uint32_t *h, const uint32_t *m) {
 }
 
 /* digest up to msglen bytes of input (full blocks only) */
-static void Transform(hashState *ctx, const uint8_t *input, int msglen) {
+static void Transform(groestl_hash_state *ctx, const uint8_t *input, int msglen) {
   /* digest message, one block at a time */
   for (; msglen >= SIZE512; msglen -= SIZE512, input += SIZE512) {
     F512(ctx->chaining, (uint32_t *)input);
@@ -171,7 +171,7 @@ static void Transform(hashState *ctx, const uint8_t *input, int msglen) {
 }
 
 /* given state h, do h <- P(h)+h */
-static void OutputTransformation(hashState *ctx) {
+static void OutputTransformation(groestl_hash_state *ctx) {
   int j;
   uint32_t temp[2 * COLS512];
   uint32_t y[2 * COLS512];
@@ -196,7 +196,7 @@ static void OutputTransformation(hashState *ctx) {
 }
 
 /* initialise context */
-static void Init(hashState *ctx) {
+void groestl_init(groestl_hash_state *ctx) {
   unsigned int i = 0;
   /* allocate memory for state and data buffer */
 
@@ -215,7 +215,7 @@ static void Init(hashState *ctx) {
 }
 
 /* update state with databitlen bits of input */
-static void Update(hashState *ctx, const BitSequence *input, DataLength databitlen) {
+void groestl_update(groestl_hash_state *ctx, const BitSequence *input, DataLength databitlen) {
   int index = 0;
   int msglen = (int)(databitlen / 8);
   int rem = (int)(databitlen % 8);
@@ -262,7 +262,7 @@ static void Update(hashState *ctx, const BitSequence *input, DataLength databitl
 
 /* finalise: process remaining data (including padding), perform
    output transformation, and write hash result to 'output' */
-static void Final(hashState *ctx, BitSequence *output) {
+void groestl_final(groestl_hash_state *ctx, BitSequence *output) {
   int i, j = 0, hashbytelen = HASH_BIT_LEN / 8;
   uint8_t *s = (BitSequence *)ctx->chaining;
 
@@ -322,16 +322,16 @@ static void Final(hashState *ctx, BitSequence *output) {
 
 /* hash bit sequence */
 void groestl(const BitSequence *data, DataLength databitlen, BitSequence *hashval) {
-  hashState context;
+  groestl_hash_state context;
 
   /* initialise */
-  Init(&context);
+  groestl_init(&context);
 
   /* process message */
-  Update(&context, data, databitlen);
+  groestl_update(&context, data, databitlen);
 
   /* finalise */
-  Final(&context, hashval);
+  groestl_final(&context, hashval);
 }
 /*
 static int crypto_hash(unsigned char *out,

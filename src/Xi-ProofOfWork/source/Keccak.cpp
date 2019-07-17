@@ -21,12 +21,16 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/ProofOfWork/Keccak.hpp"
 
-#include <cinttypes>
+#include <Xi/Crypto/Hash/Keccak.hh>
 
-namespace Crypto {
-namespace CNX {
-uint32_t get_soft_shell_index(uint32_t random);
+namespace Xi {
+namespace ProofOfWork {
+
+void Keccak::operator()(ConstByteSpan blob, ::Crypto::Hash &hash) const {
+  (void)xi_crypto_hash_keccak_256(blob.data(), blob.size_bytes(), hash.data());
 }
-}  // namespace Crypto
+
+}  // namespace ProofOfWork
+}  // namespace Xi

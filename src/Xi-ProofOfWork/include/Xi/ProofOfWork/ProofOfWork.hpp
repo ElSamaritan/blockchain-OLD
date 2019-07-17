@@ -23,36 +23,19 @@
 
 #pragma once
 
-#if defined(__cplusplus)
-extern "C" {
-#endif  // defined(__cplusplus)
+#include <memory>
+#include <string>
+#include <string_view>
 
-#include <stddef.h>
-#include <inttypes.h>
+#include <Xi/Global.hh>
 
-enum {
-  CNX_HASH_SIZE = 32,         ///< The size in bytes of the generated hash
-  CNX_INDIRECTIONS_MAX = 16,  ///< The maximum amount of stored 128bit scratchpad values used for indirections
-  CNX_INDICES_SIZE = 256,     ///< The amount of random indices expected in the config
-  CNX_INDICES_MAX = 128 / 8,  ///<< The maximum index expected (AES Block Size / Bits per Byte)
-};
+#include "Xi/ProofOfWork/IAlgorithm.hpp"
 
-enum {
-  CNX_FLAGS_HARDWARE_AES =
-      1 << 0,  ///< Useds as a flag for the config to indicate hardware accelerated aes computation should be used.
-};
+namespace Xi {
+namespace ProofOfWork {
 
-typedef struct cnx_hash_config cnx_hash_config;
-struct cnx_hash_config {
-  uint32_t scratchpad_size;
-  uint32_t iterations;
-  uint8_t* salt;
-  uint32_t salt_size;
-  int8_t flags;
-};
+std::shared_ptr<IAlgorithm> makeAlgorithm(std::string_view id);
+std::vector<std::string> supportedAlgorithms();
 
-void cnx_hash(const uint8_t* data, const size_t length, const cnx_hash_config* config, uint8_t* hash);
-
-#if defined(__cplusplus)
-}
-#endif  // defined(__cplusplus)
+}  // namespace ProofOfWork
+}  // namespace Xi

@@ -68,7 +68,7 @@ bool Currency::init() {
       logger(Fatal) << "Difficulty algorithm unknown: " << difficulty(current).algorithm();
       XI_RETURN_EC(false);
     }
-    m_proofOfWorkAlgorithms[i - 1] = Hashes::makeProofOfWorkAlgorithm(difficulty(current).proofOfWorkAlgorithm());
+    m_proofOfWorkAlgorithms[i - 1] = Xi::ProofOfWork::makeAlgorithm(difficulty(current).proofOfWorkAlgorithm());
     if (m_proofOfWorkAlgorithms[i - 1].get() == nullptr) {
       logger(Fatal) << "Proof of Work algorithm unknown: " << difficulty(current).proofOfWorkAlgorithm();
       XI_RETURN_EC(false);
@@ -248,7 +248,7 @@ const Difficulty::IDifficultyAlgorithm& Currency::difficultyAlgorithm(BlockVersi
   return *m_difficultyAlgorithms[version.native() - 1];
 }
 
-const Hashes::IProofOfWorkAlgorithm& Currency::proofOfWorkAlgorithm(BlockVersion version) const {
+const Xi::ProofOfWork::IAlgorithm& Currency::proofOfWorkAlgorithm(BlockVersion version) const {
   return *m_proofOfWorkAlgorithms[version.native() - 1];
 }
 

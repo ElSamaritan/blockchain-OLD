@@ -23,17 +23,20 @@
 
 #pragma once
 
+#include <Xi/Global.hh>
 #include <Xi/Byte.hh>
 
 #include <crypto/Types/Hash.h>
-#include "crypto/cnx/configuration.h"
 
-namespace Crypto {
-namespace CNX {
+namespace Xi {
+namespace ProofOfWork {
 
-struct Hash_v1 : Configuration<64, 16_kB, 64_kB> {
-  void operator()(const void *data, size_t length, Hash &hash, bool forceSoftwareAES = false) const;
+class IAlgorithm {
+ public:
+  virtual ~IAlgorithm() = default;
+
+  virtual void operator()(Xi::ConstByteSpan blob, ::Crypto::Hash& hash) const = 0;
 };
 
-}  // namespace CNX
-}  // namespace Crypto
+}  // namespace ProofOfWork
+}  // namespace Xi

@@ -23,16 +23,18 @@
 
 #include <benchmark/benchmark.h>
 
-#include "HashBasedBenchmark.h"
-#include "crypto/cnx/cnx.h"
+#include <Xi/ProofOfWork/Cnx.hpp>
 
-using HashAlgorithm = Crypto::CNX::Hash_v1;
+#include "HashBasedBenchmark.h"
+
+using HashAlgorithm = Xi::ProofOfWork::CNX_v1;
 
 BENCHMARK_DEFINE_F(HashBasedBenchmark, BM_CryptoNightX)(benchmark::State& state) {
   unsigned char const* data = HashBasedBenchmark::data();
   for (auto _ : state) {
     (void)_;
-    for (std::size_t i = 0; i < BlockCount; ++i) HashAlgorithm{}(data + i * BlockSize, BlockSize, HashPlaceholder);
+    for (std::size_t i = 0; i < BlockCount; ++i)
+      HashAlgorithm{}(Xi::ConstByteSpan{data + i * BlockSize, BlockSize}, HashPlaceholder);
   }
 }
 

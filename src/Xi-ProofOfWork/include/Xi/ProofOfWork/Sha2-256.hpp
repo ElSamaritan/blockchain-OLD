@@ -21,29 +21,19 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#if defined(__cplusplus)
-extern "C" {
-#endif  // __cplusplus
+#pragma once
 
-#include <inttypes.h>
+#include <Xi/Global.hh>
 
-/*!
- * \brief allocate the scratch buffer using OS support for huge pages, if available
- *
- * This function tries to allocate the scratch buffer using a single "huge page" (instead of the usual 4KB page sizes)
- * to reduce TLB misses during the random accesses to the scratch buffer.  This is one of the important speed
- * optimizations needed to make CryptoNight faster.
- *
- * \param pageSize The required memory for the scratchpad
- * \return a thread local pointer to the memory allocated, with at least pageSize memory
- */
-uint8_t* xi_hash_allocate_state(uint32_t pageSize);
+#include "Xi/ProofOfWork/IAlgorithm.hpp"
 
-/*!
- * \brief frees the thread local allocated scratch buffer
- */
-void xi_hash_free_state(void);
+namespace Xi {
+namespace ProofOfWork {
 
-#if defined(__cplusplus)
-}
-#endif  // __cplusplus
+struct SHA2_256 : IAlgorithm {
+  ~SHA2_256() override;
+  void operator()(Xi::ConstByteSpan blob, ::Crypto::Hash& hash) const override;
+};
+
+}  // namespace ProofOfWork
+}  // namespace Xi

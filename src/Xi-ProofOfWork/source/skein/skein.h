@@ -1,5 +1,9 @@
-﻿#ifndef _SKEIN_H_
-#define _SKEIN_H_ 1
+﻿#pragma once
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 /**************************************************************************
 **
 ** Interface declarations and internal definitions for Skein hashing.
@@ -27,7 +31,7 @@
 **                                1: return SKEIN_FAIL to flag errors
 **
 ***************************************************************************/
-#include "skein_port.h" /* get platform-specific definitions */
+#include "skein/skein_port.h" /* get platform-specific definitions */
 
 typedef enum {
   SKEIN_SUCCESS = 0, /* return codes from Skein calls */
@@ -41,4 +45,6 @@ typedef u08b_t BitSequence; /* bit stream type */
 /* "all-in-one" call */
 HashReturn skein_hash(int hashbitlen, const BitSequence *data, DataLength databitlen, BitSequence *hashval);
 
-#endif /* ifndef _SKEIN_H_ */
+#if defined(__cplusplus)
+}
+#endif

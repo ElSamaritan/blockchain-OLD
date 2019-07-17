@@ -13,17 +13,20 @@
 #include <Common/Varint.h>
 
 #include "CryptoNoteTools.h"
-#include "crypto/cnx/cnx.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 
 using namespace Crypto;
 using namespace CryptoNote;
 
-CachedBlock::CachedBlock(const BlockTemplate& _block) : block(_block) {}
+CachedBlock::CachedBlock(const BlockTemplate& _block) : block(_block) {
+}
 
-CachedBlock::CachedBlock(BlockTemplate&& _block) : block(std::move(_block)) {}
+CachedBlock::CachedBlock(BlockTemplate&& _block) : block(std::move(_block)) {
+}
 
-const BlockTemplate& CachedBlock::getBlock() const { return block; }
+const BlockTemplate& CachedBlock::getBlock() const {
+  return block;
+}
 
 const BlockProofOfWork& CachedBlock::getProofOfWorkBlob() const {
   if (!blockProofOfWork.is_initialized()) {
@@ -106,7 +109,9 @@ uint32_t CachedBlock::getBlockIndex() const {
   return blockIndex.get();
 }
 
-uint32_t CachedBlock::getNonceOffset() const { return 0; }
+uint32_t CachedBlock::getNonceOffset() const {
+  return 0;
+}
 
 const CachedTransaction& CachedBlock::coinbase() const {
   if (!baseTransaction.is_initialized()) {
@@ -115,9 +120,13 @@ const CachedTransaction& CachedBlock::coinbase() const {
   return *baseTransaction;
 }
 
-bool CachedBlock::hasStaticReward() const { return getBlock().staticRewardHash.has_value(); }
+bool CachedBlock::hasStaticReward() const {
+  return getBlock().staticRewardHash.has_value();
+}
 
-BlockHeight CachedBlock::height() const { return BlockHeight::fromIndex(getBlockIndex()); }
+BlockHeight CachedBlock::height() const {
+  return BlockHeight::fromIndex(getBlockIndex());
+}
 
 void CachedBlock::prune() {
   if (std::holds_alternative<NoMergeMiningTag>(block.mergeMiningTag)) {

@@ -30,9 +30,8 @@
 #include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Crypto/Random/Random.hh>
-#include <crypto/cnx/cnx.h>
+#include <Xi/ProofOfWork/ProofOfWork.hpp>
 #include <CryptoNoteCore/CheckDifficulty.h>
-#include <CryptoNoteCore/HashAlgorithms.h>
 
 XiMiner::MinerWorker::MinerWorker() {}
 
@@ -91,8 +90,7 @@ XiMiner::HashrateSummary XiMiner::MinerWorker::resetHashrateSummary() {
 void XiMiner::MinerWorker::mineLoop() {
   resetHashrateSummary();
   auto block = acquireTemplate();
-  std::shared_ptr<CryptoNote::Hashes::IProofOfWorkAlgorithm> algo =
-      CryptoNote::Hashes::makeProofOfWorkAlgorithm(block.Algorithm);
+  auto algo = Xi::ProofOfWork::makeAlgorithm(block.Algorithm);
 
   while (!m_shutdownRequest.load()) {
     if (m_paused.load()) {
@@ -102,7 +100,7 @@ void XiMiner::MinerWorker::mineLoop() {
 
     if (m_swapTemplate.load()) {
       block = acquireTemplate();
-      algo = CryptoNote::Hashes::makeProofOfWorkAlgorithm(block.Algorithm);
+      algo = Xi::ProofOfWork::makeAlgorithm(block.Algorithm);
     }
 
     if (!block.ProofOfWork.has_value()) {

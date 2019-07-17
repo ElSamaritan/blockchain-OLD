@@ -24,13 +24,13 @@
 #include <iostream>
 #include <string>
 
-#include <crypto/cnx/cnx.h>
+#include <Xi/ProofOfWork/Cnx.hpp>
 #include <Common/StringTools.h>
 
-std::string makeHash(std::string data, bool forceSoftwareAES) {
-  Crypto::CNX::Hash_v1 hashFn;
+std::string makeHash(std::string data) {
+  Xi::ProofOfWork::CNX_v1 hashFn;
   Crypto::Hash hash;
-  hashFn(data.c_str(), data.length(), hash, forceSoftwareAES);
+  hashFn(Xi::asByteSpan(data), hash);
   std::string hashString;
   hashString.resize(sizeof(hash));
   for (std::size_t i = 0; i < sizeof(hash); ++i) hashString[i] = reinterpret_cast<char*>(&hash)[i];
@@ -43,7 +43,6 @@ int main(int, char**) {
     std::getline(std::cin, currentLine, '\n');
     if (currentLine.empty()) continue;
     std::string data = Common::base64Decode(currentLine);
-    std::cout << makeHash(data, true) << std::endl;
-    std::cout << makeHash(data, false) << std::endl;
+    std::cout << makeHash(data) << std::endl;
   }
 }

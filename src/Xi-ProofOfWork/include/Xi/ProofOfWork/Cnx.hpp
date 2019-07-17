@@ -23,22 +23,17 @@
 
 #pragma once
 
-#if defined(__cplusplus)
-extern "C" {
-#endif  // __cplusplus
+#include <Xi/Global.hh>
 
-#include <inttypes.h>
+#include "Xi/ProofOfWork/IAlgorithm.hpp"
 
-void hash_extra_blake(const void *data, size_t length, char *hash);
-void hash_extra_groestl(const void *data, size_t length, char *hash);
-void hash_extra_jh(const void *data, size_t length, char *hash);
-void hash_extra_skein(const void *data, size_t length, char *hash);
+namespace Xi {
+namespace ProofOfWork {
 
-typedef void (*hashExtraFunction)(const void *data, size_t length, char *hash);
+struct CNX_v1 : IAlgorithm {
+  ~CNX_v1() override = default;
+  void operator()(Xi::ConstByteSpan blob, ::Crypto::Hash& hash) const override;
+};
 
-static const hashExtraFunction hash_extra_functions[4] = {hash_extra_blake, hash_extra_groestl, hash_extra_jh,
-                                                          hash_extra_skein};
-
-#if defined(__cplusplus)
-}
-#endif  // __cplusplus
+}  // namespace ProofOfWork
+}  // namespace Xi

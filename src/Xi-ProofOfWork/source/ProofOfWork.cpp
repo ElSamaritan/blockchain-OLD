@@ -21,24 +21,34 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/ProofOfWork/ProofOfWork.hpp"
 
-#if defined(__cplusplus)
-extern "C" {
-#endif  // defined(__cplusplus)
+#include "Xi/ProofOfWork/Cnx.hpp"
+#include "Xi/ProofOfWork/Sha2-256.hpp"
+#include "Xi/ProofOfWork/Keccak.hpp"
 
-/*!
- * \brief check_aes_hardware_support queries the cpu information to check for built in aes support
- * \return true if the cpu has built in aes support
- */
-int check_aes_hardware_support(void);
+namespace Xi {
+namespace ProofOfWork {
 
-/*!
- * \brief check_aes_hardware_disabled checks wheter the environment variable XI_USE_SOFTWARE_AES is set
- * \return true if the environment variable XI_USE_SOFTWARE_AES is set, otherwise false
- */
-int check_aes_hardware_disabled(void);
-
-#if defined(__cplusplus)
+std::shared_ptr<IAlgorithm> makeAlgorithm(std::string_view id) {
+  if (id == "CNX-v1") {
+    return std::make_shared<CNX_v1>();
+  } else if (id == "SHA2-256") {
+    return std::make_shared<SHA2_256>();
+  } else if (id == "Keccak") {
+    return std::make_shared<Keccak>();
+  } else {
+    return nullptr;
+  }
 }
-#endif  // defined(__cplusplus)
+
+std::vector<std::string> supportedAlgorithms() {
+  return {
+      "CNX-v1",
+      "SHA2-256",
+      "Keccak",
+  };
+}
+
+}  // namespace ProofOfWork
+}  // namespace Xi

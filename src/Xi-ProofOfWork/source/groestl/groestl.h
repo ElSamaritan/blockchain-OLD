@@ -1,10 +1,14 @@
-﻿#ifndef __hash_h
-#define __hash_h
+﻿#pragma once
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 /*
-#include "crypto_uint8.h"
-#include "crypto_uint32.h"
-#include "crypto_uint64.h"
-#include "crypto_hash.h"
+#include "primitves_uint8.h"
+#include "primitves_uint32.h"
+#include "primitves_uint64.h"
+#include "primitves_hash.h"
 
 typedef crypto_uint8 uint8_t;
 typedef crypto_uint32 uint32_t;
@@ -38,11 +42,11 @@ typedef struct {
   int buf_ptr;                                   /* data buffer pointer */
   int bits_in_last_byte;                         /* no. of message bits in last byte of
                                                     data buffer */
-} hashState;
+} groestl_hash_state;
 
-/*void Init(hashState*);
-void Update(hashState*, const BitSequence*, DataLength);
-void Final(hashState*, BitSequence*); */
+void groestl_init(groestl_hash_state*);
+void groestl_update(groestl_hash_state*, const BitSequence*, DataLength);
+void groestl_final(groestl_hash_state*, BitSequence*);
 void groestl(const BitSequence*, DataLength, BitSequence*);
 /* NIST API end   */
 
@@ -52,4 +56,6 @@ int crypto_hash(unsigned char *out,
                 unsigned long long len);
 */
 
-#endif /* __hash_h */
+#if defined(__cplusplus)
+}
+#endif

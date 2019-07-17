@@ -21,36 +21,20 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/ProofOfWork/Sha2-256.hpp"
 
-#include <cinttypes>
+#include <Xi/Crypto/Hash/Sha2.hh>
 
-namespace Crypto {
-namespace CNX {
+namespace Xi {
+namespace ProofOfWork {
 
-template <uint32_t _WindowSize, uint32_t _MinScratchpadSize, uint32_t _MaxScratchpadSize>
-struct Configuration {
-  static constexpr uint32_t windowSize() { return _WindowSize; }
+SHA2_256::~SHA2_256() {
+  /* */
+}
 
-  static constexpr uint32_t minScratchpadSize() { return _MinScratchpadSize; }
-  static constexpr uint32_t maxScratchpadSize() { return _MaxScratchpadSize; }
-  static constexpr uint32_t slopeScratchpadSize() { return (maxScratchpadSize() - minScratchpadSize()) / windowSize(); }
-  static constexpr uint32_t scratchpadSizeForOffset(uint32_t offset) {
-    return minScratchpadSize() + offset * slopeScratchpadSize();
-  }
+void SHA2_256::operator()(ConstByteSpan blob, ::Crypto::Hash &hash) const {
+  (void)xi_crypto_hash_sha2_256(blob.data(), blob.size_bytes(), hash.data());
+}
 
-  static_assert(scratchpadSizeForOffset(0) == minScratchpadSize(), "");
-  static_assert(scratchpadSizeForOffset(windowSize()) == maxScratchpadSize(), "");
-  static_assert((scratchpadSizeForOffset(0) % (8 * 16)) == 0,
-                "Memory size must always algin with INIT_SIZE_BULK * AES_KEY_SIZE");
-  static_assert((slopeScratchpadSize() % (8 * 16)) == 0,
-                "Memory size must always algin with INIT_SIZE_BULK * AES_KEY_SIZE");
-
-  static constexpr uint32_t offsetForHeight(uint32_t height) { return height % (windowSize() + 1); }
-
-  static_assert(offsetForHeight(0) == 0, "");
-  static_assert(offsetForHeight(windowSize()) == windowSize(), "");
-};
-
-}  // namespace CNX
-}  // namespace Crypto
+}  // namespace ProofOfWork
+}  // namespace Xi

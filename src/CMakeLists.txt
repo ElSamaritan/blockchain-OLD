@@ -121,6 +121,20 @@ xi_make_library(
     boost
 )
 
+xi_make_library(
+  Xi-ProofOfWork
+
+  PUBLIC_LIBRARIES
+    Xi::Core
+    Xi::Endianess
+    Xi::Crypto
+
+    Serialization
+    crypto
+
+  PRIVATE_LIBRARIES
+)
+
 
 xi_make_library(
   Xi-Http

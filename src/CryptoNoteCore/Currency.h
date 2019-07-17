@@ -14,6 +14,7 @@
 #include <Xi/Exceptional.hpp>
 #include <Xi/Result.h>
 #include <Xi/Config.h>
+#include <Xi/ProofOfWork/ProofOfWork.hpp>
 #include "Logging/LoggerRef.h"
 
 #include "CryptoNoteCore/CryptoNoteBasic.h"
@@ -21,7 +22,6 @@
 #include "CryptoNoteCore/Checkpoints.h"
 #include "CryptoNoteCore/IAmountFormatter.hpp"
 #include "CryptoNoteCore/Difficulty.h"
-#include "CryptoNoteCore/HashAlgorithms.h"
 #include "CryptoNoteCore/UpgradeManager.h"
 
 namespace CryptoNote {
@@ -52,7 +52,7 @@ class Currency {
   const IUpgradeManager& upgradeManager() const;
 
   const Difficulty::IDifficultyAlgorithm& difficultyAlgorithm(BlockVersion version) const;
-  const Hashes::IProofOfWorkAlgorithm& proofOfWorkAlgorithm(BlockVersion version) const;
+  const Xi::ProofOfWork::IAlgorithm& proofOfWorkAlgorithm(BlockVersion version) const;
 
   std::string networkUniqueName() const;
 
@@ -86,9 +86,15 @@ class Currency {
   uint64_t maxBlockSizeGrowthSpeedNumerator(BlockVersion version) const;
   uint64_t maxBlockSizeGrowthSpeedDenominator(BlockVersion version) const;
 
-  uint64_t mempoolTxLiveTime() const { return m_mempoolTxLiveTime; }
-  uint64_t mempoolTxFromAltBlockLiveTime() const { return m_mempoolTxFromAltBlockLiveTime; }
-  uint64_t numberOfPeriodsToForgetTxDeletedFromPool() const { return m_numberOfPeriodsToForgetTxDeletedFromPool; }
+  uint64_t mempoolTxLiveTime() const {
+    return m_mempoolTxLiveTime;
+  }
+  uint64_t mempoolTxFromAltBlockLiveTime() const {
+    return m_mempoolTxFromAltBlockLiveTime;
+  }
+  uint64_t numberOfPeriodsToForgetTxDeletedFromPool() const {
+    return m_numberOfPeriodsToForgetTxDeletedFromPool;
+  }
 
   size_t fusionTxMaxSize(BlockVersion blockVersion) const;
   size_t fusionTxMinInputCount(BlockVersion blockVersion) const;
@@ -186,7 +192,7 @@ class Currency {
   std::shared_ptr<IUpgradeManager> m_upgradeManager;
 
   std::vector<std::shared_ptr<Difficulty::IDifficultyAlgorithm>> m_difficultyAlgorithms;
-  std::vector<std::shared_ptr<Hashes::IProofOfWorkAlgorithm>> m_proofOfWorkAlgorithms;
+  std::vector<std::shared_ptr<Xi::ProofOfWork::IAlgorithm>> m_proofOfWorkAlgorithms;
 
   friend class CurrencyBuilder;
 };

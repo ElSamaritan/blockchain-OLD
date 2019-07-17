@@ -47,8 +47,7 @@
 #include <Logging/ConsoleLogger.h>
 #include <Logging/LoggerRef.h>
 #include <Serialization/JsonOutputStreamSerializer.h>
-#include <crypto/cnx/cnx.h>
-#include <CryptoNoteCore/HashAlgorithms.h>
+#include <Xi/ProofOfWork/ProofOfWork.hpp>
 
 #include "BenchmarkResult.h"
 #include "BenchmarkSerialization.h"
@@ -123,8 +122,6 @@ std::vector<uint16_t> generate_random_blocks(size_t count, size_t size) {
 }
 }  // namespace
 
-using HashAlgorithm = Crypto::CNX::Hash_v1;
-
 int main(int argc, char** argv) {
   try {
     using namespace ::XiBenchmark;
@@ -161,10 +158,10 @@ int main(int argc, char** argv) {
       return 0;
     }
 
-    auto hashAlgo = CryptoNote::Hashes::makeProofOfWorkAlgorithm(algo);
+    auto hashAlgo = Xi::ProofOfWork::makeAlgorithm(algo);
     if (!hashAlgo) {
       std::string supported{};
-      for (const auto& iAlgo : CryptoNote::Hashes::supportedProofOfWorkAlgorithms()) {
+      for (const auto& iAlgo : Xi::ProofOfWork::supportedAlgorithms()) {
         supported += iAlgo + ", ";
       }
       throw std::runtime_error{std::string{"unkown hash algorithm '"} + algo + "'. Supported: " + supported};
