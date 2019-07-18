@@ -152,6 +152,7 @@ std::vector<Crypto::Hash> TransactionPool::sanityCheck(const uint64_t timeout) {
 
     m_keyImageReferences.clear();
     m_transactions.clear();
+    m_partiallyMixed.clear();
     m_paymentIds.clear();
 
     transactions.erase(std::remove_if(transactions.begin(), transactions.end(),
@@ -292,14 +293,40 @@ void TransactionPool::mainChainSwitched(const IBlockchainCache& previous, const 
   for (uint32_t i = splitIndex; i <= current.getTopBlockIndex(); ++i) {
     pushBlock(current.getBlockByIndex(i));
   }
-  evaluateBlockVersionUpgradeConstraints();
+  sanityCheck(std::numeric_limits<uint64_t>::max());
   m_logger(Logging::Trace) << "Main chain switch finished";
 }
 
 void TransactionPool::pushBlock(RawBlock block) {
   m_logger(Logging::Trace) << "Processing incoming block";
+  std::map<uint64_t, uint64_t> newAmounts{};
   for (auto& transactionBlob : block.transactions) {
-    pushBlockTransaction(std::move(transactionBlob));
+    pushBlockTransaction(std::move(transactionBlob), newAmounts);
+  }
+
+  Crypto::HashSet departedTransactions{};
+  for (const auto& amountUsage : newAmounts) {
+    auto search = m_partiallyMixed.find(amountUsage.first);
+    if (search == m_partiallyMixed.end()) {
+      continue;
+    }
+    for (const auto& partiallyMixedTransactionHash : search->second) {
+      auto txSearch = m_transactions.find(partiallyMixedTransactionHash);
+      assert(txSearch != m_transactions.end());
+      const auto tx = txSearch->second;
+      assert(tx.get() != nullptr);
+      const auto thresholdLeft = tx->eligibleIndex().MixinUpgrades.find(amountUsage.first);
+      assert(thresholdLeft != tx->eligibleIndex().MixinUpgrades.end());
+      if (thresholdLeft->second <= amountUsage.second) {
+        departedTransactions.insert(tx->transaction().getTransactionHash());
+      } else {
+        tx->eligibleIndex().MixinUpgrades[amountUsage.first] -= amountUsage.second;
+      }
+    }
+  }
+
+  for (const auto& departedTransaction : departedTransactions) {
+    removeTransaction(departedTransaction, Deletion::MixinUpgrade);
   }
 }
 
@@ -310,7 +337,7 @@ void TransactionPool::popBlock(RawBlock block) {
   }
 }
 
-void TransactionPool::pushBlockTransaction(BinaryArray transactionBlob) {
+void TransactionPool::pushBlockTransaction(BinaryArray transactionBlob, std::map<uint64_t, uint64_t> newAmounts) {
   auto transaction = CachedTransaction::fromBinaryArray(transactionBlob);
   if (transaction.isError()) {
     m_logger(Logging::Error) << "Failed to deserialized block transaction: " << transaction.error().message();
@@ -324,6 +351,9 @@ void TransactionPool::pushBlockTransaction(BinaryArray transactionBlob) {
     if (keyImageSearch != m_keyImageReferences.end()) {
       removeTransaction(keyImageSearch->second, Deletion::KeyImageUsedInMainChain);
     }
+  }
+  for (const auto& amountCount : transaction->getAmountsUsedCount()) {
+    newAmounts[amountCount.first] += amountCount.second;
   }
 }
 
@@ -354,6 +384,7 @@ bool TransactionPool::removeTransaction(const Crypto::Hash& hash, ITransactionPo
           m_keyImageReferences.erase(keyImageSearch->first);
         }
       }
+
       auto paymentId = nfo.transaction().getPaymentId();
       if (paymentId.has_value()) {
         auto paymentIdSearch = m_paymentIds.find(*paymentId);
@@ -365,6 +396,19 @@ bool TransactionPool::removeTransaction(const Crypto::Hash& hash, ITransactionPo
           }
         }
       }
+
+      for (const auto& amountUsed : nfo.transaction().getAmountsUsed()) {
+        auto partiallyMixedSearch = m_partiallyMixed.find(amountUsed);
+        if (partiallyMixedSearch == m_partiallyMixed.end()) {
+          continue;
+        }
+
+        auto partiallyTxMixedSearch = partiallyMixedSearch->second.find(nfo.transaction().getTransactionHash());
+        if (partiallyTxMixedSearch != partiallyMixedSearch->second.end()) {
+          partiallyMixedSearch->second.erase(nfo.transaction().getTransactionHash());
+        }
+      }
+
       m_cumulativeSize -= nfo.transaction().getBlobSize();
       m_cumulativeFees -= nfo.transaction().getTransactionFee();
     }
@@ -432,6 +476,10 @@ Xi::Result<void> TransactionPool::insertTransaction(CachedTransaction transactio
     for (const auto& keyImage : transaction.getKeyImages()) {
       m_keyImageReferences.insert(std::make_pair(keyImage, transactionHash));
     }
+    for (const auto& partiallyMixed : validation.eligibleIndex().MixinUpgrades) {
+      m_partiallyMixed[partiallyMixed.first].insert(transaction.getTransactionHash());
+    }
+
     m_cumulativeSize += transaction.getBlobSize();
     m_cumulativeFees += transaction.getTransactionFee();
     auto nfo =

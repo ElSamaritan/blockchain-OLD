@@ -47,6 +47,7 @@ class ITransactionPoolObserver {
                               ///< transaction does not satisfy anymore
     PoolCleanupProcedure,     ///< Transaction was in pool but got outdated or invalid while remaining there.
     Forced,                   ///< The user forced the deletion of the transaction
+    MixinUpgrade,             ///< Required mixins upgraded, transaction is no longer valid to be mined.
     SkipNotification,         ///< Skips the notification of observers.
   };
 

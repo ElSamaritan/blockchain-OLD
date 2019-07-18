@@ -1374,9 +1374,6 @@ void WalletGreen::deleteAddress(const std::string& address) {
 }
 
 const Currency& WalletGreen::currency() const {
-  throwIfNotInitialized();
-  throwIfStopped();
-
   return m_currency;
 }
 

@@ -24,6 +24,7 @@
 #pragma once
 
 #include <cinttypes>
+#include <map>
 
 #include <Xi/Global.hh>
 
@@ -46,6 +47,7 @@ struct EligibleIndex {
 
   uint32_t Height;     ///< The minimum blockchain height for all transaction inputs to be valid.
   uint64_t Timestamp;  ///< The minimum timestamp for all all transaciton inputs to be valid.
+  std::map<uint64_t, uint64_t> MixinUpgrades;  ///< Number of outputs left until mixin usage is unsatisfied.
 
   /*!
    * \brief EligibleIndex constructs a default index with no requirements (Height = 0, Teimstamp = 0)).

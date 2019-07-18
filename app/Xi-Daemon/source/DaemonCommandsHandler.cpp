@@ -333,6 +333,12 @@ bool DaemonCommandsHandler::print_pool_sh(const std::vector<std::string>& args) 
   return true;
 }
 
+bool DaemonCommandsHandler::pool_check(const std::vector<std::string>& args) {
+  DAEMON_COMMAND_EXPECTED_ARGS(0, "No argument expected.");
+  auto departed = m_core.transactionPool().sanityCheck(std::numeric_limits<uint64_t>::max());
+  return printObject(departed, "Cleared Transaction");
+}
+
 bool DaemonCommandsHandler::pool_flush(const std::vector<std::string>& args) {
   DAEMON_COMMAND_EXPECTED_ARGS(0, "No argument expected.");
 

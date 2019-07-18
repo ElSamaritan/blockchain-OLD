@@ -1049,7 +1049,7 @@ bool DatabaseBlockchainCache::checkIfAnySpent(const Crypto::KeyImageSet& keyImag
   }
 
   auto readResult = batch.extractResult();
-  const auto spentKeyImages = readResult.getBlockIndexesBySpentKeyImages();
+  const auto& spentKeyImages = readResult.getBlockIndexesBySpentKeyImages();
 
   return std::any_of(spentKeyImages.begin(), spentKeyImages.end(),
                      [blockIndex](const auto& spentKeyImage) { return blockIndex <= spentKeyImage.second; });

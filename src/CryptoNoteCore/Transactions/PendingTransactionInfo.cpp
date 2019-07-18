@@ -33,7 +33,11 @@ const CryptoNote::CachedTransaction &CryptoNote::PendingTransactionInfo::transac
   return *m_transaction;
 }
 
-CryptoNote::EligibleIndex CryptoNote::PendingTransactionInfo::eligibleIndex() const {
+const CryptoNote::EligibleIndex &CryptoNote::PendingTransactionInfo::eligibleIndex() const {
+  return m_eligibleIndex;
+}
+
+CryptoNote::EligibleIndex &CryptoNote::PendingTransactionInfo::eligibleIndex() {
   return m_eligibleIndex;
 }
 

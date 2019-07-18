@@ -33,7 +33,7 @@
 namespace {
 using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, uint16_t>;
 
-using HashFn = Xi::ProofOfWork::CNX_v1;
+using HashFn = Xi::ProofOfWork::CNX_v1_Light;
 }  // namespace
 
 TEST(CryptoNightX, HashConsistency) {

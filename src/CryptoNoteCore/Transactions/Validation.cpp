@@ -251,13 +251,12 @@ std::error_code CryptoNote::postValidateTransfer(const CryptoNote::CachedTransac
   return Error::VALIDATION_SUCCESS;
 }
 
-CryptoNote::TransferValidationInfo CryptoNote::makeTransferValidationInfo(
-    const IBlockchainCache &segment, const TransferValidationContext &context,
-    const std::unordered_map<Amount, GlobalOutputIndexSet> &refs, uint32_t blockIndex) {
-  TransferValidationInfo info{};
+void CryptoNote::makeTransferValidationInfo(const IBlockchainCache &segment, const TransferValidationContext &context,
+                                            const std::unordered_map<Amount, GlobalOutputIndexSet> &refs,
+                                            uint32_t blockIndex, CryptoNote::TransferValidationInfo &info) {
   info.outputs = segment.extractKeyOutputs(refs, blockIndex);
   const auto queryMixinThreshold = context.maximumMixin * context.upgradeMixin + 1;
-  for (const auto &inputUsed : info.outputs) {
+  for (const auto &inputUsed : refs) {
     const auto amount = inputUsed.first;
     const auto availableMixins = segment.getAvailableMixinsCount(amount, blockIndex, queryMixinThreshold);
     const auto requiredMixins = availableMixins / context.upgradeMixin;

@@ -119,6 +119,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
   /*!
    * \brief pushBlockTransaction updates the internal state based on an mined transaction, considered to be valid
    * \param transactionBlob The binary representation of the transaction contained in the block
+   * \param newAmounts Gathers new amounts available to batch update partially mixed transactions
    *
    * Once a transaction is mined on the main chain and accepted by the blockchain the transactions are considered as
    * valid. Thus we need to update the internal state of transactions. There are generally two cases that can happen.
@@ -130,7 +131,7 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
    * as they could reference the same inputs. We need to check whether transaction may conflict with the newly mined one
    * and delete them.
    */
-  void pushBlockTransaction(BinaryArray transactionBlob);
+  void pushBlockTransaction(BinaryArray transactionBlob, std::map<uint64_t, uint64_t> newAmounts);
 
   /*!
    * \brief popBlockTransaction tries to recover a transaction that was processed in the previous main chain that was
@@ -215,6 +216,8 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
       m_transactions;  ///< general info about transactions in the pool (TransactionHash -> Info)
   _hash_map<PaymentId, std::vector<Crypto::Hash>>
       m_paymentIds;  ///< transactions using a payment id (PaymentId -> TransactionHash[])
+  _hash_map<Amount, Crypto::HashSet>
+      m_partiallyMixed;  ///< references not fully mixed transactions (Amount -> TransactionHash)
 
   // Deprecated BEGIN
  public:

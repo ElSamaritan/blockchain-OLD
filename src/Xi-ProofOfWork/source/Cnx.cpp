@@ -239,10 +239,7 @@ struct NodePredicate {
   }
 };
 
-}  // namespace Cnx
-
-void CNX_v1::operator()(ConstByteSpan blob, ::Crypto::Hash& hash) const {
-  using namespace Cnx;
+void cnx(ConstByteSpan blob, ::Crypto::Hash& hash, const size_t insertions) {
   const ReversePredicate revpred{};
   const ReversePredicate rngpred{};
   const NodePredicate nodepred{};
@@ -252,7 +249,6 @@ void CNX_v1::operator()(ConstByteSpan blob, ::Crypto::Hash& hash) const {
 
   set_t hashTree{};
   auto previousInsertion = hashTree.insert(nodepred(blob)).first;
-  const size_t insertions = 1024;
 
   for (size_t i = 0; i < insertions;) {
     auto iNode = nodepred(*previousInsertion);
@@ -317,6 +313,20 @@ void CNX_v1::operator()(ConstByteSpan blob, ::Crypto::Hash& hash) const {
     xi_crypto_hash_keccak_update(std::addressof(finalState), iHash->hash().data(), ::Crypto::Hash::bytes());
   }
   xi_crypto_hash_keccak_finish(std::addressof(finalState), hash.data());
+}
+
+}  // namespace Cnx
+
+void CNX_v1_Light::operator()(ConstByteSpan blob, ::Crypto::Hash& hash) const {
+  Cnx::cnx(blob, hash, 64);
+}
+
+void CNX_v1::operator()(ConstByteSpan blob, ::Crypto::Hash& hash) const {
+  Cnx::cnx(blob, hash, 256);
+}
+
+void CNX_v1_Heavy::operator()(ConstByteSpan blob, ::Crypto::Hash& hash) const {
+  Cnx::cnx(blob, hash, 1024);
 }
 
 }  // namespace ProofOfWork

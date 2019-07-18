@@ -26,6 +26,8 @@
 #include <array>
 #include <string>
 #include <memory>
+#include <set>
+#include <vector>
 
 #include <Xi/Global.hh>
 #include <Xi/Result.h>
@@ -96,6 +98,7 @@ XI_MAKE_GENERIC_COMPARISON(Hash)
 [[nodiscard]] bool serialize(Hash& hash, Common::StringView name, CryptoNote::ISerializer& serializer);
 
 using HashVector = std::vector<Hash>;
+using HashSet = std::set<Hash>;
 
 }  // namespace Crypto
 

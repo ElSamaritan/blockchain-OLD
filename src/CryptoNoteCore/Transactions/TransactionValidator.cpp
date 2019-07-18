@@ -75,9 +75,8 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValida
     return Xi::makeError(make_error_code(Error::INPUT_KEYIMAGE_ALREADY_SPENT));
   }
 
-  TransferValidationInfo info =
-      makeTransferValidationInfo(chain(), context, state.globalOutputIndicesUsed, chain().getTopBlockIndex());
-  info.outputs = chain().extractKeyOutputs(state.globalOutputIndicesUsed, context.previousBlockIndex);
+  TransferValidationInfo info{};
+  makeTransferValidationInfo(chain(), context, state.globalOutputIndicesUsed, chain().getTopBlockIndex(), info);
 
   if (const auto ec = postValidateTransfer(transaction, context, cache, info)) {
     return Xi::makeError(ec);
@@ -106,6 +105,10 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValida
       const auto maxUnlockDiff = currency().transaction(blockVersion()).futureUnlockLimit();
       eligibleIndex.Timestamp = std::max(eligibleIndex.Timestamp, unlock - maxUnlockDiff + 1);
     }
+  }
+
+  for (const auto &mixinThreshold : info.mixinsUpgradeThreshold) {
+    eligibleIndex.MixinUpgrades[mixinThreshold.first] = mixinThreshold.second;
   }
 
   return Xi::success(eligibleIndex);

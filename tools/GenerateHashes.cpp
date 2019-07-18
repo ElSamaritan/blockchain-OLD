@@ -28,7 +28,7 @@
 #include <Common/StringTools.h>
 
 std::string makeHash(std::string data) {
-  Xi::ProofOfWork::CNX_v1 hashFn;
+  Xi::ProofOfWork::CNX_v1_Light hashFn;
   Crypto::Hash hash;
   hashFn(Xi::asByteSpan(data), hash);
   std::string hashString;

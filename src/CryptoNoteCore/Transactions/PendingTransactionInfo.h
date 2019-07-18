@@ -54,7 +54,12 @@ class PendingTransactionInfo {
   /*!
    * \brief eligibleIndex The minimum blockchain index for the transaction to be eligibale to be mined.
    */
-  EligibleIndex eligibleIndex() const;
+  const EligibleIndex& eligibleIndex() const;
+
+  /*!
+   * \brief eligibleIndex The minimum blockchain index for the transaction to be eligibale to be mined.
+   */
+  EligibleIndex& eligibleIndex();
 
   /*!
    * \brief receiveTime UTC time the transaction has been recieved.

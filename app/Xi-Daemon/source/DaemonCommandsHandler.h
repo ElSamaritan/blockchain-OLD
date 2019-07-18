@@ -69,6 +69,7 @@ class DaemonCommandsHandler : public Common::ConsoleHandler {
   /* ------------------------------------------------- Pool Commands ----------------------------------------------- */
   bool print_pool(const std::vector<std::string>& args);
   bool print_pool_sh(const std::vector<std::string>& args);
+  bool pool_check(const std::vector<std::string>& args);
   bool pool_flush(const std::vector<std::string>& args);
   bool pool_remove(const std::vector<std::string>& args);
   /* ------------------------------------------------- Pool Commands ----------------------------------------------- */

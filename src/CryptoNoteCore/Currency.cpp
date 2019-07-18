@@ -357,14 +357,6 @@ bool Currency::getBlockReward(BlockVersion blockVersion, size_t medianSize, size
   assert(alreadyGeneratedCoins <= coin().totalSupply());
   assert(coin().emissionSpeed() > 0 && coin().emissionSpeed() <= 8 * sizeof(uint64_t));
 
-  const uint64_t penalizedFee = getPenalizedAmount(fee, medianSize, currentBlockSize);
-
-  if (alreadyGeneratedCoins >= coin().totalSupply()) {
-    reward = penalizedFee;
-    emissionChange = 0;
-    return true;
-  }
-
   uint64_t baseReward = (coin().totalSupply() - alreadyGeneratedCoins) >> coin().emissionSpeed();
   if (alreadyGeneratedCoins == 0 && coin().premine() != 0) {
     XI_RETURN_EC_IF_NOT(blockVersion == BlockVersion::Genesis, false);
@@ -381,6 +373,7 @@ bool Currency::getBlockReward(BlockVersion blockVersion, size_t medianSize, size
   }
 
   const uint64_t penalizedBaseReward = getPenalizedAmount(baseReward, medianSize, currentBlockSize);
+  const uint64_t penalizedFee = getPenalizedAmount(fee, medianSize, currentBlockSize);
   const uint64_t staticReward = staticRewardAmountForBlockVersion(blockVersion);
   const uint64_t cuttedReward = cutDigitsFromAmount(penalizedBaseReward, rewardCutOffByBlockVersion(blockVersion));
 
@@ -467,7 +460,7 @@ bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_
 
   tx.version = 1;
   // lock
-  tx.unlockTime = index + coin().rewardUnlockTime();
+  tx.unlockTime = index + minedMoneyUnlockWindow();
   tx.inputs.push_back(in);
   return true;
 }

@@ -30,6 +30,6 @@
 #include <Xi/ExternalIncludePop.h>
 
 void Xi::Crypto::Chacha8::generate_key(const std::string &password, uint8_t *data, size_t len) {
-  PKCS5_PBKDF2_HMAC(password.data(), static_cast<int>(password.size()), NULL, 0, std::numeric_limits<uint16_t>::max(),
-                    EVP_sha512(), static_cast<int>(len), data);
+  PKCS5_PBKDF2_HMAC_SHA1(password.data(), static_cast<int>(password.size()), NULL, 0,
+                         std::numeric_limits<uint16_t>::max(), static_cast<int>(len), data);
 }

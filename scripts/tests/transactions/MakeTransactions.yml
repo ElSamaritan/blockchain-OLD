@@ -5,17 +5,17 @@ Wallets:
   - Host: 127.0.0.1
     Port: 38071
     Password: passwd
-  - Host: 127.0.0.1
-    Port: 38072
-    Password: passwd
-  - Host: 127.0.0.1
-    Port: 38073
-    Password: passwd
+  # - Host: 127.0.0.1
+  #   Port: 38072
+  #   Password: passwd
+  # - Host: 127.0.0.1
+  #   Port: 38073
+  #   Password: passwd
 
 MinimumFee: 1000
-MaximumFee: 2000
+MaximumFee: 1000
 
-MinimumAmount: 999
+MinimumAmount: 1000
 MaximumAmount: 1000
 
 MinAnonymity: 0

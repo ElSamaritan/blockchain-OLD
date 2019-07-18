@@ -24,6 +24,8 @@
 #pragma once
 
 #include <vector>
+#include <set>
+#include <map>
 
 #include <crypto/CryptoTypes.h>
 
@@ -65,6 +67,8 @@ class CachedTransaction {
   uint64_t getInputAmount() const;
   uint64_t getOutputAmount() const;
   uint64_t getTransactionFee() const;
+  const std::set<uint64_t>& getAmountsUsed() const;
+  const std::map<uint64_t, uint64_t>& getAmountsUsedCount() const;
   bool isCoinbase() const;
   void prune();
 
@@ -80,6 +84,8 @@ class CachedTransaction {
   mutable bool paymentIdEvaluated;  ///< using optional<optional<<>> seems not to be a good idea
   mutable boost::optional<PaymentId> paymentId;
   mutable boost::optional<uint64_t> inputAmount;
+  mutable boost::optional<std::set<uint64_t>> amountsUsed;
+  mutable boost::optional<std::map<uint64_t, uint64_t>> amountsUsedCount;
   mutable boost::optional<uint64_t> outputAmount;
   mutable boost::optional<uint64_t> transactionFee;
   mutable boost::optional<uint64_t> transactionBlobSize;

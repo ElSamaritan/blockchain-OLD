@@ -177,6 +177,30 @@ uint64_t CachedTransaction::getTransactionFee() const {
   return transactionFee.get();
 }
 
+const std::set<uint64_t>& CachedTransaction::getAmountsUsed() const {
+  if (!amountsUsed.is_initialized()) {
+    amountsUsed = boost::value_initialized<std::set<uint64_t>>();
+    for (const auto& input : transaction.inputs) {
+      if (const auto keyInput = std::get_if<KeyInput>(std::addressof(input))) {
+        amountsUsed->insert(keyInput->amount);
+      }
+    }
+  }
+  return amountsUsed.get();
+}
+
+const std::map<uint64_t, uint64_t>& CachedTransaction::getAmountsUsedCount() const {
+  if (!amountsUsedCount.is_initialized()) {
+    amountsUsedCount = boost::value_initialized<std::map<uint64_t, uint64_t>>();
+    for (const auto& input : transaction.inputs) {
+      if (const auto keyInput = std::get_if<KeyInput>(std::addressof(input))) {
+        (*amountsUsedCount)[keyInput->amount] += 1;
+      }
+    }
+  }
+  return amountsUsedCount.get();
+}
+
 bool CachedTransaction::isCoinbase() const {
   return getInputAmount() == 0;
 }

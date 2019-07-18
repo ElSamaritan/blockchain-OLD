@@ -248,6 +248,7 @@ void Core::transactionDeletedFromPool(const Hash& hash, ITransactionPoolObserver
     case Reason::PoolCleanupProcedure:
     case Reason::BlockVersionUpgrade:
     case Reason::Forced:
+    case Reason::MixinUpgrade:
       notifyObservers(makeDelTransactionMessage({hash}, Messages::DeleteTransaction::Reason::NotActual));
       break;
     case Reason::AddedToMainChain:
@@ -852,8 +853,8 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     XI_RETURN_EC_IF(cache->checkIfAnySpent(validatorState.spentKeyImages, previousBlockIndex),
                     error::BlockValidationError::DOUBLE_SPENDING);
 
-    TransferValidationInfo transfersInfo =
-        makeTransferValidationInfo(*cache, transferContext, globalOutputReferences, previousBlockIndex);
+    TransferValidationInfo transfersInfo{};
+    makeTransferValidationInfo(*cache, transferContext, globalOutputReferences, previousBlockIndex, transfersInfo);
 
     async::parallel_for(async::irange(0ULL, transactions.size()), [&](auto i) {
       const auto ec = postValidateTransfer(transactions[i], transferContext, transferCaches[i], transfersInfo);
@@ -876,6 +877,9 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
           Xi::merge(validatorState.spentKeyImages, std::move(transferValidation.usedKeyImages)) == additionSize,
           error::BlockValidationError::DOUBLE_SPENDING);
     }
+
+    XI_RETURN_EC_IF(cache->checkIfAnySpent(validatorState.spentKeyImages, previousBlockIndex),
+                    error::BlockValidationError::DOUBLE_SPENDING);
   }
 
   uint64_t reward = 0;

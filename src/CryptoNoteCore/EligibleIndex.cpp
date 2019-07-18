@@ -34,9 +34,10 @@ CryptoNote::EligibleIndex CryptoNote::EligibleIndex::lowerBound(const CryptoNote
   return EligibleIndex{std::max(lhs.Height, rhs.Height), std::max(lhs.Timestamp, rhs.Timestamp)};
 }
 
-CryptoNote::EligibleIndex::EligibleIndex() : Height{0}, Timestamp{0} {
+CryptoNote::EligibleIndex::EligibleIndex() : Height{0}, Timestamp{0}, MixinUpgrades{} {
 }
-CryptoNote::EligibleIndex::EligibleIndex(uint32_t height, uint64_t timestamp) : Height{height}, Timestamp{timestamp} {
+CryptoNote::EligibleIndex::EligibleIndex(uint32_t height, uint64_t timestamp)
+    : Height{height}, Timestamp{timestamp}, MixinUpgrades{} {
 }
 
 bool CryptoNote::EligibleIndex::isSatisfiedByIndex(const CryptoNote::EligibleIndex &index) const {

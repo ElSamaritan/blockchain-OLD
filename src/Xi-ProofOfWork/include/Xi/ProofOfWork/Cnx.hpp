@@ -30,8 +30,18 @@
 namespace Xi {
 namespace ProofOfWork {
 
+struct CNX_v1_Light : IAlgorithm {
+  ~CNX_v1_Light() override = default;
+  void operator()(Xi::ConstByteSpan blob, ::Crypto::Hash& hash) const override;
+};
+
 struct CNX_v1 : IAlgorithm {
   ~CNX_v1() override = default;
+  void operator()(Xi::ConstByteSpan blob, ::Crypto::Hash& hash) const override;
+};
+
+struct CNX_v1_Heavy : IAlgorithm {
+  ~CNX_v1_Heavy() override = default;
   void operator()(Xi::ConstByteSpan blob, ::Crypto::Hash& hash) const override;
 };
 

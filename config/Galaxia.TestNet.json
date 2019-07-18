@@ -97,7 +97,7 @@
         "algorithm": "LWMA-v2",
         "window_size": 128,
         "initial": 1000,
-        "proof_of_work": "CNX-v1"
+        "proof_of_work": "CNX-v1-Light"
       },
 
       "limit": {

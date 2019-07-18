@@ -31,8 +31,12 @@ namespace Xi {
 namespace ProofOfWork {
 
 std::shared_ptr<IAlgorithm> makeAlgorithm(std::string_view id) {
-  if (id == "CNX-v1") {
+  if (id == "CNX-v1-Light") {
+    return std::make_shared<CNX_v1_Light>();
+  } else if (id == "CNX-v1") {
     return std::make_shared<CNX_v1>();
+  } else if (id == "CNX-v1-Heavy") {
+    return std::make_shared<CNX_v1_Heavy>();
   } else if (id == "SHA2-256") {
     return std::make_shared<SHA2_256>();
   } else if (id == "Keccak") {
@@ -44,9 +48,7 @@ std::shared_ptr<IAlgorithm> makeAlgorithm(std::string_view id) {
 
 std::vector<std::string> supportedAlgorithms() {
   return {
-      "CNX-v1",
-      "SHA2-256",
-      "Keccak",
+      "CNX-v1-Light", "CNX-v1", "CNX-v1-Heavy", "SHA2-256", "Keccak",
   };
 }
 

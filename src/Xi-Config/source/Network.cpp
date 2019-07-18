@@ -1,5 +1,7 @@
 ﻿#include "Xi/Config/Network.h"
 
+#include <cstdio>
+
 #include <Xi/Version/BuildInfo.h>
 
 Xi::Config::Network::Type Xi::Config::Network::defaultNetworkType() {
@@ -23,5 +25,10 @@ std::string Xi::Config::Network::defaultNetworkName() {
 }
 
 std::string Xi::Config::Network::defaultNetworkIdentifier() {
-  return defaultNetworkName() + "." + toString(defaultNetworkType());
+  std::string env{"XI_NETWORK"};
+  if (auto envSearch = std::getenv(env.c_str())) {
+    return std::string{envSearch};
+  } else {
+    return defaultNetworkName() + "." + toString(defaultNetworkType());
+  }
 }

@@ -1,0 +1,19 @@
+Genesis:
+  address: gxi1Pn2KKmgDKQQ5iXyNEYXVAMoH47hsKAb37PjUqCSwU9Xo8HaqhQs4fyHuPNW7qUPevhofDUffPAX1Qusnn2ZP1SoXuFNfwn
+  public_keys:
+    view_key: 0475514c5815f3f0aa12822b6b8770548ea223034238e68dcca3c319120bbd43
+    spend_key: aad476ec2749a3ec708f5453c5b642d9fc40cbc1a63950e13a46660d5ca24d44
+  secret_keys:
+    view_key: 31c69c797d139c7c2b86b3eaafdf440ec159914d6af0a771eb7b8c0b6f6ab60a
+    spend_key: 1a961e89451c2fc5f463521b934c721a8111c0a61549568b1dd2115bf11b5103
+  mnemonics: enjoy hefty upcoming richly yearbook scrub donuts nowhere python dilute afield bounced jamming noises earth hubcaps nostril brunt mugged jolted space hire items jester jester
+
+StaticReward:
+  address: gxi1Z2WWxE4ALqUZ71M7cVWEjiBsshnnQhGTHvDmHef8fXTJxhzsWpPW6fKU7rMnpV2UqpUu24GdAagLzkEPrdY51BK36Q4PfA
+  public_keys:
+    view_key: 4e1f9bd570adf6924bc4b428c608d9386bd5915595c95988eb1c276a8204b0f2
+    spend_key: fcd0d4bfa937da26391ef1e942aecbad245cd6b33df0bcbf41146786d7e65388
+  secret_keys:
+    view_key: a8abda126cd23414dff4a70421e9447a507aac1ca8d625f11629e497ad5a8b0d
+    spend_key: bb3fc27d6ffd1e147bcc0dde2cd8cacb111606dbf74c7b5c0f12a24b30b6ed04
+  mnemonics: nurse opposite bifocals truth myriad oxygen haunted jubilee fuzzy bunch ghost building efficient bays vowels addicted tribal eccentric bacon akin gaze goblet orbit pamphlet bifocals

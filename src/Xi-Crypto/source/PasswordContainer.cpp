@@ -43,9 +43,9 @@ bool Xi::Crypto::PasswordContainer::validate(const std::string &password) const 
 
 Xi::Crypto::PasswordContainer::hash_t Xi::Crypto::PasswordContainer::computeHash(const std::string &password) const {
   hash_t hash;
-  PKCS5_PBKDF2_HMAC(password.data(), static_cast<int>(password.size()),
-                    reinterpret_cast<const uint8_t *>(m_salt.data()), static_cast<int>(m_salt.size()),
-                    static_cast<int>(m_iterations), EVP_sha512(), static_cast<int>(hash.size()), hash.data());
+  PKCS5_PBKDF2_HMAC_SHA1(password.data(), static_cast<int>(password.size()),
+                         reinterpret_cast<const uint8_t *>(m_salt.data()), static_cast<int>(m_salt.size()),
+                         static_cast<int>(m_iterations), static_cast<int>(hash.size()), hash.data());
   return hash;
 }
 

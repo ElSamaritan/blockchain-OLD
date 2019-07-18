@@ -94,9 +94,8 @@ std::error_code preValidateTransfer(const CachedTransaction& transaction, const 
 std::error_code postValidateTransfer(const CachedTransaction& transaction, const TransferValidationContext& context,
                                      TransferValidationCache& cache, const TransferValidationInfo& info);
 
-TransferValidationInfo makeTransferValidationInfo(const IBlockchainCache& segment,
-                                                  const TransferValidationContext& context,
-                                                  const std::unordered_map<Amount, GlobalOutputIndexSet>& refs,
-                                                  uint32_t blockIndex);
+void makeTransferValidationInfo(const IBlockchainCache& segment, const TransferValidationContext& context,
+                                const std::unordered_map<Amount, GlobalOutputIndexSet>& refs, uint32_t blockIndex,
+                                TransferValidationInfo& info);
 
 }  // namespace CryptoNote

@@ -27,7 +27,7 @@
 
 #include "HashBasedBenchmark.h"
 
-using HashAlgorithm = Xi::ProofOfWork::CNX_v1;
+using HashAlgorithm = Xi::ProofOfWork::CNX_v1_Light;
 
 BENCHMARK_DEFINE_F(HashBasedBenchmark, BM_CryptoNightX)(benchmark::State& state) {
   unsigned char const* data = HashBasedBenchmark::data();
