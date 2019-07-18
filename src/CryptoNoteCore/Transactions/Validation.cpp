@@ -254,7 +254,26 @@ std::error_code CryptoNote::postValidateTransfer(const CryptoNote::CachedTransac
 void CryptoNote::makeTransferValidationInfo(const IBlockchainCache &segment, const TransferValidationContext &context,
                                             const std::unordered_map<Amount, GlobalOutputIndexSet> &refs,
                                             uint32_t blockIndex, CryptoNote::TransferValidationInfo &info) {
-  info.outputs = segment.extractKeyOutputs(refs, blockIndex);
+  // Currently disabled due to an issue of outputs not found by the in memory cache.
+  // info.outputs = segment.extractKeyOutputs(refs, blockIndex);
+  for (const auto &iAmountRefs : refs) {
+    GlobalOutputIndexVector indices{};
+    indices.reserve(iAmountRefs.second.size());
+    std::copy(iAmountRefs.second.begin(), iAmountRefs.second.end(), std::back_inserter(indices));
+    segment.extractKeyOutputs(iAmountRefs.first, context.previousBlockIndex,
+                              Common::ArrayView<GlobalOutputIndex>{indices.data(), indices.size()},
+                              [&](const CachedTransactionInfo &txinfo, PackedOutIndex index, uint32_t globalIndex) {
+                                KeyOutputInfo iInfo{};
+                                iInfo.index = index;
+                                iInfo.transactionHash = txinfo.transactionHash;
+                                iInfo.unlockTime = txinfo.unlockTime;
+                                const auto &keyOutput = std::get<KeyOutput>(txinfo.outputs[index.data.outputIndex]);
+                                iInfo.publicKey = keyOutput.key;
+                                info.outputs[iAmountRefs.first].emplace(std::make_pair(globalIndex, std::move(iInfo)));
+                                return ExtractOutputKeysResult::SUCCESS;
+                              });
+  }
+
   const auto queryMixinThreshold = context.maximumMixin * context.upgradeMixin + 1;
   for (const auto &inputUsed : refs) {
     const auto amount = inputUsed.first;

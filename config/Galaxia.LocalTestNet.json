@@ -21,7 +21,7 @@
         "premine": 1100000000000,
 
         "block_time": 5,
-        "reward_unlock_time": 10,
+        "reward_unlock_time": 0,
         "emission_speed": 21,
 
         "start_timestamp": 1558439939,

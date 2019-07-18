@@ -1134,9 +1134,7 @@ BlockchainCache::extractKeyOutputs(const std::unordered_map<IBlockchainCache::Am
 
       const auto txSearch =
           transactionsTag.find(boost::make_tuple(txOutputIndex.data.blockIndex, txOutputIndex.data.transactionIndex));
-      if (txSearch == transactionsTag.end()) {
-        continue;
-      }
+      assert(txSearch != transactionsTag.end());
 
       assert(txOutputIndex.data.outputIndex < txSearch->outputs.size());
       assert(std::holds_alternative<KeyOutput>(txSearch->outputs[txOutputIndex.data.outputIndex]));
