@@ -69,10 +69,12 @@ class Mixin {
  public:
   XI_PROPERTY(uint8_t, minimum)
   XI_PROPERTY(uint8_t, maximum)
+  XI_PROPERTY(uint64_t, upgradeSize)
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER_RENAME(minimum(), min)
   KV_MEMBER_RENAME(maximum(), max)
+  KV_MEMBER_RENAME(upgradeSize(), upgrade_size)
   KV_END_SERIALIZATION
 };
 

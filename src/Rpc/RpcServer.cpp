@@ -449,6 +449,7 @@ bool RpcServer::on_get_random_outs(const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOU
   for (const auto& amount : req.amounts) {
     std::vector<uint32_t> globalIndexes;
     std::vector<Crypto::PublicKey> publicKeys;
+
     if (!m_core.getRandomOutputs(amount.amount, static_cast<uint16_t>(amount.count), globalIndexes, publicKeys)) {
       res.status = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
       return true;

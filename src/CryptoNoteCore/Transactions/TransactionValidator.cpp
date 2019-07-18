@@ -61,6 +61,7 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValida
   TransferValidationContext context{currency(), chain()};
   context.minimumMixin = currency().mixinLowerBound(blockVersion());
   context.maximumMixin = currency().mixinUpperBound(blockVersion());
+  context.upgradeMixin = currency().transaction(blockVersion()).mixin().upgradeSize();
   fillContext(context);
 
   TransferValidationState state{};
@@ -74,7 +75,8 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValida
     return Xi::makeError(make_error_code(Error::INPUT_KEYIMAGE_ALREADY_SPENT));
   }
 
-  TransferValidationInfo info{};
+  TransferValidationInfo info =
+      makeTransferValidationInfo(chain(), context, state.globalOutputIndicesUsed, chain().getTopBlockIndex());
   info.outputs = chain().extractKeyOutputs(state.globalOutputIndicesUsed, context.previousBlockIndex);
 
   if (const auto ec = postValidateTransfer(transaction, context, cache, info)) {

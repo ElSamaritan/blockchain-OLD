@@ -57,6 +57,7 @@ struct TransferValidationContext {
 
   uint8_t minimumMixin = 0;
   uint8_t maximumMixin = 0;
+  uint64_t upgradeMixin = 0;
 
   explicit TransferValidationContext(const Currency& _currency, const IBlockchainCache& _segment)
       : currency{_currency}, segment{_segment} {
@@ -83,6 +84,8 @@ struct TransferValidationCache {
 /// batch.
 struct TransferValidationInfo {
   std::map<Amount, std::map<GlobalOutputIndex, KeyOutputInfo>> outputs;
+  std::map<Amount, uint64_t> mixinsUpgradeThreshold;
+  std::map<Amount, uint64_t> requiredMixins;
 };
 
 std::error_code preValidateTransfer(const CachedTransaction& transaction, const TransferValidationContext& context,
@@ -90,5 +93,10 @@ std::error_code preValidateTransfer(const CachedTransaction& transaction, const 
 
 std::error_code postValidateTransfer(const CachedTransaction& transaction, const TransferValidationContext& context,
                                      TransferValidationCache& cache, const TransferValidationInfo& info);
+
+TransferValidationInfo makeTransferValidationInfo(const IBlockchainCache& segment,
+                                                  const TransferValidationContext& context,
+                                                  const std::unordered_map<Amount, GlobalOutputIndexSet>& refs,
+                                                  uint32_t blockIndex);
 
 }  // namespace CryptoNote

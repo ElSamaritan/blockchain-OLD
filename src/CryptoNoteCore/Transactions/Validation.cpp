@@ -214,8 +214,14 @@ std::error_code CryptoNote::postValidateTransfer(const CryptoNote::CachedTransac
     const auto &inputSignatures = signatures[i];
     assert(std::holds_alternative<KeyInput>(input));
     const auto &keyInput = std::get<KeyInput>(input);
-    assert(inputSignatures.size() == keyInput.outputIndices.size());
 
+    auto requiredMixinSearch = info.requiredMixins.find(keyInput.amount);
+    assert(requiredMixinSearch != info.requiredMixins.end());
+    const auto requiredRingSize = requiredMixinSearch->second + 1;
+    XI_RETURN_EC_IF(keyInput.outputIndices.size() < requiredRingSize, Error::INPUT_MIXIN_TOO_LOW);
+    XI_RETURN_EC_IF(keyInput.outputIndices.size() > requiredRingSize, Error::INPUT_MIXIN_TOO_HIGH);
+
+    assert(inputSignatures.size() == keyInput.outputIndices.size());
     std::vector<const Crypto::PublicKey *> publicKeysReferenced{};
     publicKeysReferenced.reserve(keyInput.outputIndices.size());
 
@@ -236,7 +242,6 @@ std::error_code CryptoNote::postValidateTransfer(const CryptoNote::CachedTransac
       publicKeysReferenced.emplace_back(std::addressof(referencedPublicKeySearch->second.publicKey));
     }
 
-    // Key images is already checked in pre validation.
     XI_RETURN_EC_IF_NOT(
         Crypto::check_ring_signature(transaction.getTransactionPrefixHash(), keyInput.keyImage,
                                      publicKeysReferenced.data(), publicKeysReferenced.size(), inputSignatures.data()),
@@ -244,4 +249,26 @@ std::error_code CryptoNote::postValidateTransfer(const CryptoNote::CachedTransac
   }
 
   return Error::VALIDATION_SUCCESS;
+}
+
+CryptoNote::TransferValidationInfo CryptoNote::makeTransferValidationInfo(
+    const IBlockchainCache &segment, const TransferValidationContext &context,
+    const std::unordered_map<Amount, GlobalOutputIndexSet> &refs, uint32_t blockIndex) {
+  TransferValidationInfo info{};
+  info.outputs = segment.extractKeyOutputs(refs, blockIndex);
+  const auto queryMixinThreshold = context.maximumMixin * context.upgradeMixin + 1;
+  for (const auto &inputUsed : info.outputs) {
+    const auto amount = inputUsed.first;
+    const auto availableMixins = segment.getAvailableMixinsCount(amount, blockIndex, queryMixinThreshold);
+    const auto requiredMixins = availableMixins / context.upgradeMixin;
+    if (requiredMixins >= context.maximumMixin) {
+      info.requiredMixins[amount] = context.maximumMixin;
+    } else if (requiredMixins < context.minimumMixin) {
+      info.requiredMixins[amount] = 0;
+      info.mixinsUpgradeThreshold[amount] = context.minimumMixin * context.upgradeMixin - availableMixins;
+    } else {
+      info.requiredMixins[amount] = requiredMixins;
+      info.mixinsUpgradeThreshold[amount] = (requiredMixins + 1) * context.upgradeMixin - availableMixins;
+    }
+  }
 }

@@ -809,6 +809,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   transferContext.inCheckpointRange = checkpoints.isInCheckpointZone(blockIndex);
   transferContext.minimumMixin = currency().mixinLowerBound(blockTemplate.version);
   transferContext.maximumMixin = currency().mixinUpperBound(blockTemplate.version);
+  transferContext.upgradeMixin = currency().transaction(blockTemplate.version).mixin().upgradeSize();
   std::vector<TransferValidationState> transferValidations{};
   transferValidations.resize(transactions.size(), TransferValidationState{});
   std::vector<TransferValidationCache> transferCaches{};
@@ -851,8 +852,8 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     XI_RETURN_EC_IF(cache->checkIfAnySpent(validatorState.spentKeyImages, previousBlockIndex),
                     error::BlockValidationError::DOUBLE_SPENDING);
 
-    TransferValidationInfo transfersInfo{};
-    transfersInfo.outputs = cache->extractKeyOutputs(globalOutputReferences, previousBlockIndex);
+    TransferValidationInfo transfersInfo =
+        makeTransferValidationInfo(*cache, transferContext, globalOutputReferences, previousBlockIndex);
 
     async::parallel_for(async::irange(0ULL, transactions.size()), [&](auto i) {
       const auto ec = postValidateTransfer(transactions[i], transferContext, transferCaches[i], transfersInfo);

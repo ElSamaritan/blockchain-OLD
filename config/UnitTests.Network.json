@@ -85,7 +85,8 @@
 
             "mixin": {
                 "min": 0,
-                "max": 0
+                "max": 0,
+                "upgrade_size": 0
             }
         },
 
