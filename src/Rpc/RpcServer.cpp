@@ -227,6 +227,8 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
         {"getblockheaderbyheight", {makeMemberMethod(&RpcServer::on_get_block_header_by_height), false, true}},
 
         // clang-format off
+        {COMMAND_RPC_GET_REQUIRED_MIXIN_FOR_AMOUNTS::identifier(), {makeMemberMethod(&RpcServer::on_get_mixins_required), false, false}},
+
         {RpcCommands::GetBlockTemplate::identifier(), {makeMemberMethod(&RpcServer::on_get_block_template), false, false}},
         {RpcCommands::GetBlockTemplateState::identifier(), {makeMemberMethod(&RpcServer::on_get_block_template_state), false, false}},
         {RpcCommands::SubmitBlock::identifier(), {makeMemberMethod(&RpcServer::on_submit_block), false, false}},
@@ -464,6 +466,28 @@ bool RpcServer::on_get_random_outs(const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOU
 
   for (auto& iReval : reval) {
     res.outs.emplace_back(std::move(iReval.second));
+  }
+
+  res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
+
+#define RPC_WRONG_PARAM_IF(COND)                                   \
+  if (COND) {                                                      \
+    throw JsonRpc::JsonRpcError{JsonRpc::errInvalidParams, #COND}; \
+  }                                                                \
+  do {                                                             \
+  } while (false)
+
+#define RPC_WRONG_PARAM_IF_NOT(COND) RPC_WRONG_PARAM_IF(!(COND))
+
+bool RpcServer::on_get_mixins_required(const COMMAND_RPC_GET_REQUIRED_MIXIN_FOR_AMOUNTS::request& req,
+                                       COMMAND_RPC_GET_REQUIRED_MIXIN_FOR_AMOUNTS::response& res) {
+  RPC_WRONG_PARAM_IF(req.empty());
+  RPC_WRONG_PARAM_IF(req.size() > 128);
+
+  for (const auto amount : req) {
+    res.requiredMixins[amount] = m_core.getCurrentRequiredMixin(amount);
   }
 
   res.status = CORE_RPC_STATUS_OK;

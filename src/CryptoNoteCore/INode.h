@@ -128,6 +128,8 @@ class INode {
       std::map<uint64_t, uint64_t>&& amounts,
       std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result,
       const Callback& callback) = 0;
+  virtual void getRequiredMixinByAmounts(std::set<uint64_t>&& amounts, std::map<uint64_t, uint64_t>& out,
+                                         const Callback& callback) = 0;
   virtual void getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<RawBlock>& newBlocks,
                             BlockHeight& startHeight, const Callback& callback) = 0;
   virtual void getTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,

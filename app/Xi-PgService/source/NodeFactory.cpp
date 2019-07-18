@@ -42,7 +42,7 @@ class NodeRpcStub final : public CryptoNote::INode {
 
   void getFeeInfo() override {}
   const CryptoNote::Currency& currency() const override { Xi::exceptional<Xi::NotInitializedError>(); }
-  std::error_code ping() override { return make_error_code(CryptoNote::error::NOT_INITIALIZED); }
+  std::error_code ping() override { return std::error_code{}; }
 
   void getLastBlockHeaderInfo(CryptoNote::BlockHeaderInfo& info, const Callback& callback) override {
     XI_UNUSED(info);
@@ -74,6 +74,11 @@ class NodeRpcStub final : public CryptoNote::INode {
       const Callback& callback) override {
     XI_UNUSED(amounts, result, callback);
   }
+  virtual void getRequiredMixinByAmounts(std::set<uint64_t>&& amounts, std::map<uint64_t, uint64_t>& out,
+                                         const Callback& callback) override {
+    XI_UNUSED(amounts, out, callback);
+  }
+
   void getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
                     CryptoNote::BlockHeight& startHeight, const Callback& callback) override {
     XI_UNUSED(knownBlockIds);

@@ -118,6 +118,7 @@ class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
                                            std::vector<uint32_t>& globalIndexes) const override;
   virtual bool getRandomOutputs(uint64_t amount, uint16_t count, std::vector<uint32_t>& globalIndexes,
                                 std::vector<Crypto::PublicKey>& publicKeys) const override;
+  virtual uint64_t getCurrentRequiredMixin(uint64_t amount) const override;
 
   virtual std::vector<Crypto::Hash> getPoolTransactionHashes() const override;
   virtual bool getPoolChanges(const Crypto::Hash& lastBlockHash, const std::vector<Crypto::Hash>& knownHashes,

@@ -179,9 +179,9 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
       XI_RETURN_EC_IF(keyInput.outputIndices.size() > static_cast<size_t>(context.maximumMixin + 1),
                       Error::INPUT_MIXIN_TOO_HIGH);
     }
+    XI_RETURN_EC_IF_NOT(out.usedKeyImages.insert(keyInput.keyImage).second, Error::INPUT_IDENTICAL_KEYIMAGES);
     cache.globalIndicesForInput.emplace_back(relativeOutputOffsetsToAbsolute(keyInput.outputIndices));
     for (const auto &globalOutputIndex : cache.globalIndicesForInput.back()) {
-      XI_RETURN_EC_IF_NOT(out.usedKeyImages.insert(keyInput.keyImage).second, Error::INPUT_IDENTICAL_KEYIMAGES);
       XI_RETURN_EC_IF_NOT(out.globalOutputIndicesUsed[keyInput.amount].insert(globalOutputIndex).second,
                           Error::INPUT_IDENTICAL_OUTPUT_INDEXES);
     }

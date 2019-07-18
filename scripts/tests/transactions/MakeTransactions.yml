@@ -15,15 +15,15 @@ Wallets:
 MinimumFee: 1000
 MaximumFee: 1000
 
-MinimumAmount: 1000
-MaximumAmount: 1000
+MinimumAmount: 1000000
+MaximumAmount: 10000000
 
 MinAnonymity: 0
 MaxAnonymity: 0
 
 MinFusionThreshold: 1000
 MaxFusionThreshold: 100000
-FusionPropability: 10
+FusionPropability: 20
 
 TransactionsPerMinute: 100
 ResetOnStart: false

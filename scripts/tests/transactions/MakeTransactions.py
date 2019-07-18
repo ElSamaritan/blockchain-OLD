@@ -6,12 +6,14 @@ import requests
 from random import randint
 from time import sleep
 
+
 class Transfer:
     Address = ''
     Amount = 0
 
     def __str__(self):
         return "%.6f XIG to '%s'" % (prettyAmount(self.Amount), self.Address)
+
 
 class Transaction:
     Transfers = []
@@ -20,10 +22,12 @@ class Transaction:
     UnlockTime = 0
 
     def __str__(self):
-        _str = "\n\tFee: %.6f\n\tAnonymity: %d\n\tTransfers:" % (prettyAmount(self.Fee), self.Anonymity)
+        _str = "\n\tFee: %.6f\n\tAnonymity: %d\n\tTransfers:" % (
+            prettyAmount(self.Fee), self.Anonymity)
         for transfer in self.Transfers:
             _str += ("\n\t\t%s" % transfer)
         return _str
+
 
 class FusionTransaction:
     Threshold = 10000000000000000
@@ -31,6 +35,7 @@ class FusionTransaction:
 
     def __str__(self):
         return "\n\tDustThreshold: %.6f\n\tAnonymity: %d\n" % (prettyAmount(self.Threshold), self.Anonymity)
+
 
 class Balance:
     Available = 0
@@ -42,7 +47,7 @@ class Balance:
         self.Locked = locked
 
     def __str__(self):
-     return "Availabe '%.6f', Locked '%.6f', Total '%.6f'" % (prettyAmount(self.Available), prettyAmount(self.Locked), prettyAmount(self.Total))
+        return "Availabe '%.6f', Locked '%.6f', Total '%.6f'" % (prettyAmount(self.Available), prettyAmount(self.Locked), prettyAmount(self.Total))
 
 
 class PGService:
@@ -76,7 +81,7 @@ class PGService:
             'anonymity': transaction.Anonymity,
             'fee': transaction.Fee,
             'unlock_time': transaction.UnlockTime
-            })
+        })
 
     def sendFusionTransaction(self, transaction: FusionTransaction):
         return self.makeCall("sendFusionTransaction", {
@@ -84,7 +89,7 @@ class PGService:
             'anonymity': transaction.Anonymity
         })
 
-    def makeCall(self, method, params = {}):
+    def makeCall(self, method, params={}):
         payload = {
             'jsonrpc': '2.0',
             'method': method,
@@ -96,9 +101,9 @@ class PGService:
         # print(endpoint)
         # print(json.dumps(payload))
         response = requests.post(
-            endpoint, 
-            data = json.dumps(payload), 
-            headers = {
+            endpoint,
+            data=json.dumps(payload),
+            headers={
                 'Content-Type': 'application/json'
             }).json()
         # print(response)
@@ -106,8 +111,10 @@ class PGService:
             raise ValueError(response['error'])
         return response
 
+
 def prettyAmount(amount):
     return float(amount) / 1000000.0
+
 
 class Wallet:
     Host = ''
@@ -130,18 +137,22 @@ class Wallet:
     def updateBalance(self):
         jsonResult = self.Api.getBalance()
         self.Balance = Balance(
-            jsonResult['result']['available_balance'], 
+            jsonResult['result']['available_balance'],
             jsonResult['result']['locked_amount'])
 
     def sendTransaction(self, transaction: Transaction):
-        print("\nSending transaction from %s...%s" % (self.Address, transaction))
+        print("\nSending transaction from %s...%s" %
+              (self.Address, transaction))
         jsonResult = self.Api.sendTransaction(transaction)
-        print("Transaction sent: %s" % jsonResult['result']['transaction_hash'])
+        print("Transaction sent: %s" %
+              jsonResult['result']['transaction_hash'])
 
     def sendFusionTransaction(self, transaction: FusionTransaction):
-        print("\nSending fusion transaction from %s...%s" % (self.Address, transaction))
+        print("\nSending fusion transaction from %s...%s" %
+              (self.Address, transaction))
         jsonResult = self.Api.sendFusionTransaction(transaction)
-        print("Fusion Transaction sent: %s" % jsonResult['result']['transaction_hash'])
+        print("Fusion Transaction sent: %s" %
+              jsonResult['result']['transaction_hash'])
 
     def initialize(self, reset: bool):
         self.Address = self.Api.getAddress()['result']['addresses'][0]
@@ -154,17 +165,17 @@ class Wallet:
 with open("MakeTransactions.yml", 'r') as ymlfile:
     config = yaml.load(ymlfile)
 
-MinFee                  = config['MinimumFee']
-MaxFee                  = config['MaximumFee']
-MinAmount               = config['MinimumAmount']
-MaxAmount               = config['MaximumAmount']
-MinMixin                = config['MinAnonymity']
-MaxMixin                = config['MaxAnonymity']
-MinFusionThreshold      = config['MinFusionThreshold']
-MaxFusionThreshold      = config['MaxFusionThreshold']
-FusionPropability       = config['FusionPropability']
-ResetOnStart            = config['ResetOnStart']
-TPM                     = config['TransactionsPerMinute']
+MinFee = config['MinimumFee']
+MaxFee = config['MaximumFee']
+MinAmount = config['MinimumAmount']
+MaxAmount = config['MaximumAmount']
+MinMixin = config['MinAnonymity']
+MaxMixin = config['MaxAnonymity']
+MinFusionThreshold = config['MinFusionThreshold']
+MaxFusionThreshold = config['MaxFusionThreshold']
+FusionPropability = config['FusionPropability']
+ResetOnStart = config['ResetOnStart']
+TPM = config['TransactionsPerMinute']
 
 wallets = []
 for wallet in config['Wallets']:
@@ -176,10 +187,12 @@ for wallet in wallets:
 if len(wallets) < 2:
     raise ValueError('The script expects at least 2 wallets.')
 
+
 def makeRandomTransaction():
     transaction = Transaction()
     transaction.Transfers = []
-    sortedWallets = sorted(wallets, key=lambda x: x.Balance.Available, reverse=True)
+    sortedWallets = sorted(
+        wallets, key=lambda x: x.Balance.Available, reverse=True)
     senderIndex = 0
     recieverIndex = len(sortedWallets) - 1
     senderWallet = sortedWallets[senderIndex]
@@ -198,12 +211,14 @@ def makeRandomTransaction():
         totalAmount += transfer.Amount
 
     if totalAmount > senderWallet.Balance.Available:
-        print("Not enough balance. Required: %.6f Available: %.6f" % (prettyAmount(totalAmount), prettyAmount(senderWallet.Balance.Available)))
-    else:    
+        print("Not enough balance. Required: %.6f Available: %.6f" % (
+            prettyAmount(totalAmount), prettyAmount(senderWallet.Balance.Available)))
+    else:
         try:
             senderWallet.sendTransaction(transaction)
         except ValueError as error:
             print("Error sending transaction: '%s'" % error)
+
 
 def makeRandomFusionTransaction():
     transaction = FusionTransaction()
@@ -214,6 +229,7 @@ def makeRandomFusionTransaction():
         wallet.sendFusionTransaction(transaction)
     except ValueError as error:
         print("Error sending fusion transaction: '%s'" % error)
+
 
 while True:
     if randint(0, 99) < FusionPropability:

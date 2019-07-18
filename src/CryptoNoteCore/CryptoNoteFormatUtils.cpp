@@ -111,6 +111,7 @@ std::vector<uint32_t> absolute_output_offsets_to_relative(const std::vector<uint
   if (off.empty())
     return {};
   auto copy = off;
+  std::sort(copy.begin(), copy.end());
   for (size_t i = 1; i < copy.size(); ++i) {
     copy[i] = off[i] - off[i - 1];
   }

@@ -103,7 +103,7 @@ template <typename MapT, typename ReserveOp>
       XI_RETURN_EC_IF_NOT(serializer(key, "key"), false);
       XI_RETURN_EC_IF_NOT(serializer(v, "value"), false);
       XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
-
+      XI_RETURN_EC_IF_NOT(value.find(key) == value.end(), false);
       value.insert(std::make_pair(std::move(key), std::move(v)));
     }
   } else {
@@ -135,7 +135,7 @@ template <typename SetT>
     for (size_t i = 0; i < size; ++i) {
       typename SetT::value_type key;
       XI_RETURN_EC_IF_NOT(serializer(key, ""), false);
-      value.insert(std::move(key));
+      XI_RETURN_EC_IF_NOT(value.insert(std::move(key)).second, false);
     }
   } else {
     for (auto& key : value) {

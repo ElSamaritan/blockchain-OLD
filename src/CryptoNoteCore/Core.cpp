@@ -1237,6 +1237,23 @@ bool Core::getRandomOutputs(uint64_t amount, uint16_t count, std::vector<uint32_
   return false;
 }
 
+uint64_t Core::getCurrentRequiredMixin(uint64_t amount) const {
+  throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
+
+  const auto& mixinConfig = currency().transaction(getTopBlockVersion()).mixin();
+  const auto threshold = mixinConfig.maximum() * mixinConfig.upgradeSize() + 1;
+  const auto available = mainChain()->getAvailableMixinsCount(amount, getTopBlockIndex(), threshold);
+  const auto required = available / mixinConfig.upgradeSize();
+  if (required < mixinConfig.minimum()) {
+    return 0;
+  } else if (required > mixinConfig.maximum()) {
+    return mixinConfig.maximum();
+  } else {
+    return required;
+  }
+}
+
 std::vector<Crypto::Hash> Core::getPoolTransactionHashes() const {
   throwIfNotInitialized();
 

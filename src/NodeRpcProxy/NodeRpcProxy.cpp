@@ -520,6 +520,17 @@ void NodeRpcProxy::getRandomOutsByAmounts(
                   callback);
 }
 
+void NodeRpcProxy::getRequiredMixinByAmounts(std::set<uint64_t>&& amounts, std::map<uint64_t, uint64_t>& outs,
+                                             const Callback& callback) {
+  if (m_state != STATE_INITIALIZED) {
+    callback(make_error_code(error::NOT_INITIALIZED));
+    return;
+  }
+
+  scheduleRequest(std::bind(&NodeRpcProxy::doGetRequiredMixinByAmounts, this, std::move(amounts), std::ref(outs)),
+                  callback);
+}
+
 void NodeRpcProxy::getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
                                 BlockHeight& startHeight, const Callback& callback) {
   std::lock_guard<std::mutex> lock(m_mutex);
@@ -671,6 +682,17 @@ std::error_code NodeRpcProxy::doGetRandomOutsByAmounts(
   m_logger(Trace) << "Send getrandom_outs request";
   XI_TRY_RPC_COMMAND(jsonCommand("/getrandom_outs", req, rsp));
   outs = std::move(rsp.outs);
+  return std::error_code{};
+}
+
+std::error_code NodeRpcProxy::doGetRequiredMixinByAmounts(std::set<uint64_t>& amounts,
+                                                          std::map<uint64_t, uint64_t>& out) {
+  COMMAND_RPC_GET_REQUIRED_MIXIN_FOR_AMOUNTS::request req = std::move(amounts);
+  COMMAND_RPC_GET_REQUIRED_MIXIN_FOR_AMOUNTS::response res = AUTO_VAL_INIT(res);
+
+  m_logger(Trace) << "Send get required mixin by amounts request";
+  XI_TRY_RPC_COMMAND(jsonRpcCommand(COMMAND_RPC_GET_REQUIRED_MIXIN_FOR_AMOUNTS::identifier(), req, res));
+  out = std::move(res.requiredMixins);
   return std::error_code{};
 }
 

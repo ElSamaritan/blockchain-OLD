@@ -1533,7 +1533,7 @@ uint64_t WalletGreen::getBalanceMinusDust(const std::vector<std::string>& addres
 }
 
 void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets, const std::vector<WalletOrder>& orders,
-                                     uint64_t fee, uint16_t mixIn, const std::string& extra, uint64_t unlockTimestamp,
+                                     uint64_t fee, const std::string& extra, uint64_t unlockTimestamp,
                                      const DonationSettings& donation,
                                      const CryptoNote::AccountPublicAddress& changeDestination,
                                      PreparedTransaction& preparedTransaction) {
@@ -1551,14 +1551,12 @@ void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets, const st
   }
 
   typedef CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount outs_for_amount;
-  std::vector<outs_for_amount> mixinResult;
-
-  if (mixIn != 0) {
-    requestMixinOuts(selectedTransfers, mixIn, mixinResult);
-  }
+  std::vector<outs_for_amount> mixinResult{};
+  std::map<uint64_t, uint64_t> mixinRequirement{};
+  requestMixinOuts(selectedTransfers, mixinResult, mixinRequirement);
 
   std::vector<InputInfo> keysInfo;
-  prepareInputs(selectedTransfers, mixinResult, mixIn, keysInfo);
+  prepareInputs(selectedTransfers, mixinResult, mixinRequirement, keysInfo);
 
   uint64_t donationAmount = pushDonationTransferIfPossible(donation, foundMoney - preparedTransaction.neededMoney,
                                                            preparedTransaction.destinations);
@@ -1795,8 +1793,8 @@ size_t WalletGreen::doTransfer(const TransactionParameters& transactionParameter
 
   PreparedTransaction preparedTransaction;
   prepareTransaction(std::move(wallets), transactionParameters.destinations, transactionParameters.fee,
-                     transactionParameters.mixIn, transactionParameters.extra, transactionParameters.unlockTimestamp,
-                     transactionParameters.donation, changeDestination, preparedTransaction);
+                     transactionParameters.extra, transactionParameters.unlockTimestamp, transactionParameters.donation,
+                     changeDestination, preparedTransaction);
 
   return validateSaveAndSendTransaction(*preparedTransaction.transaction, preparedTransaction.destinations, false,
                                         true);
@@ -1829,8 +1827,8 @@ PreparedTransaction WalletGreen::formTransaction(const TransactionParameters& se
 
   PreparedTransaction preparedTransaction;
   prepareTransaction(std::move(wallets), sendingTransaction.destinations, sendingTransaction.fee,
-                     sendingTransaction.mixIn, sendingTransaction.extra, sendingTransaction.unlockTimestamp,
-                     sendingTransaction.donation, changeDestination, preparedTransaction);
+                     sendingTransaction.extra, sendingTransaction.unlockTimestamp, sendingTransaction.donation,
+                     changeDestination, preparedTransaction);
 
   return preparedTransaction;
 }
@@ -1876,8 +1874,8 @@ size_t WalletGreen::makeTransaction(const TransactionParameters& sendingTransact
 
   PreparedTransaction preparedTransaction;
   prepareTransaction(std::move(wallets), sendingTransaction.destinations, sendingTransaction.fee,
-                     sendingTransaction.mixIn, sendingTransaction.extra, sendingTransaction.unlockTimestamp,
-                     sendingTransaction.donation, changeDestination, preparedTransaction);
+                     sendingTransaction.extra, sendingTransaction.unlockTimestamp, sendingTransaction.donation,
+                     changeDestination, preparedTransaction);
 
   id = validateSaveAndSendTransaction(*preparedTransaction.transaction, preparedTransaction.destinations, false, false);
   return id;
@@ -2341,6 +2339,7 @@ std::unique_ptr<CryptoNote::ITransactionBuilder> WalletGreen::makeTransaction(
                       << m_currency.amountFormatter()(tx->getInputTotalAmount()) << ", outputs "
                       << m_currency.amountFormatter()(tx->getOutputTotalAmount()) << ", fee "
                       << m_currency.amountFormatter()(tx->getInputTotalAmount() - tx->getOutputTotalAmount());
+
   return tx;
 }
 
@@ -2439,42 +2438,73 @@ AccountKeys WalletGreen::makeAccountKeys(const WalletRecord& wallet) const {
 }
 
 void WalletGreen::requestMixinOuts(
-    const std::vector<OutputToTransfer>& selectedTransfers, uint16_t mixIn,
-    std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& mixinResult) {
-  std::vector<uint64_t> amounts;
-  for (const auto& out : selectedTransfers) {
-    amounts.push_back(out.out.amount);
+    const std::vector<OutputToTransfer>& selectedTransfers,
+    std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& mixinResult,
+    std::map<uint64_t, uint64_t>& requiredMixins) {
+  {
+    throwIfStopped();
+
+    System::Event requestFinished(m_dispatcher);
+    std::error_code mixinError;
+
+    m_logger(Debugging) << "Request required mixins for specific amounts.";
+    System::RemoteContext<void> getOutputsContext(m_dispatcher, [this, &requiredMixins, &requestFinished, &mixinError,
+                                                                 &selectedTransfers]() mutable {
+      std::set<uint64_t> amountsUsed{};
+      for (const auto& transfer : selectedTransfers) {
+        amountsUsed.insert(transfer.out.amount);
+      }
+
+      m_node.getRequiredMixinByAmounts(
+          std::move(amountsUsed), requiredMixins, [&requestFinished, &mixinError, this](std::error_code ec) mutable {
+            mixinError = ec;
+            m_dispatcher.remoteSpawn(std::bind(asyncRequestCompletion, std::ref(requestFinished)));
+          });
+    });
+    getOutputsContext.get();
+    requestFinished.wait();
+
+    if (mixinError) {
+      m_logger(Error) << "Failed to get required mixins: " << mixinError << ", " << mixinError.message();
+      throw std::system_error(mixinError);
+    }
   }
 
-  System::Event requestFinished(m_dispatcher);
-  std::error_code mixinError;
+  const bool anyRequired =
+      std::any_of(requiredMixins.begin(), requiredMixins.end(), [](const auto& pair) { return pair.second > 0; });
 
-  throwIfStopped();
+  if (!requiredMixins.empty() && anyRequired) {
+    throwIfStopped();
 
-  uint16_t requestMixinCount = mixIn + 1;  //+1 to allow to skip real output
+    System::Event requestFinished(m_dispatcher);
+    std::error_code mixinError;
 
-  m_logger(Debugging) << "Requesting random outputs";
-  System::RemoteContext<void> getOutputsContext(
-      m_dispatcher,
-      [this, amounts, requestMixinCount, &mixinResult, &requestFinished, &mixinError, &selectedTransfers]() mutable {
-        std::map<uint64_t, uint64_t> meowmounts{};
-        for (const auto& transfer : selectedTransfers) {
-          meowmounts[transfer.out.amount] += requestMixinCount;
+    m_logger(Debugging) << "Requesting random outputs";
+    System::RemoteContext<void> getOutputsContext(m_dispatcher, [&, this]() mutable {
+      std::map<uint64_t, uint64_t> mixinsRequired{};
+      for (const auto& transfer : selectedTransfers) {
+        const auto amount = transfer.out.amount;
+        auto searchRequirement = requiredMixins.find(amount);
+        if (searchRequirement == requiredMixins.end() || searchRequirement->second == 0) {
+          continue;
+        } else {
+          mixinsRequired[amount] += searchRequirement->second + 1;
         }
-        m_node.getRandomOutsByAmounts(
-            std::move(meowmounts), mixinResult, [&requestFinished, &mixinError, this](std::error_code ec) mutable {
-              mixinError = ec;
-              m_dispatcher.remoteSpawn(std::bind(asyncRequestCompletion, std::ref(requestFinished)));
-            });
-      });
-  getOutputsContext.get();
-  requestFinished.wait();
+      }
 
-  // checkIfEnoughMixins(mixinResult, requestMixinCount);
+      m_node.getRandomOutsByAmounts(
+          std::move(mixinsRequired), mixinResult, [&requestFinished, &mixinError, this](std::error_code ec) mutable {
+            mixinError = ec;
+            m_dispatcher.remoteSpawn(std::bind(asyncRequestCompletion, std::ref(requestFinished)));
+          });
+    });
+    getOutputsContext.get();
+    requestFinished.wait();
 
-  if (mixinError) {
-    m_logger(Error) << "Failed to get random outputs: " << mixinError << ", " << mixinError.message();
-    throw std::system_error(mixinError);
+    if (mixinError) {
+      m_logger(Error) << "Failed to get random outputs: " << mixinError << ", " << mixinError.message();
+      throw std::system_error(mixinError);
+    }
   }
 
   m_logger(Debugging) << "Random outputs received";
@@ -2572,10 +2602,8 @@ CryptoNote::WalletGreen::ReceiverAmounts WalletGreen::splitAmount(uint64_t amoun
 
 void WalletGreen::prepareInputs(
     const std::vector<OutputToTransfer>& selectedTransfers,
-    std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& mixinResult, uint16_t mixIn,
-    std::vector<InputInfo>& keysInfo) {
-  typedef CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::out_entry out_entry;
-
+    std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& mixinResult,
+    const std::map<uint64_t, uint64_t>& mixRequirement, std::vector<InputInfo>& keysInfo) {
   // Gather Real Outputs Used As Input
   std::set<uint64_t> globalRealOutputIndices{};
   std::transform(selectedTransfers.begin(), selectedTransfers.end(),
@@ -2586,37 +2614,44 @@ void WalletGreen::prepareInputs(
   std::transform(mixinResult.begin(), mixinResult.end(), std::inserter(mixinLookup, mixinLookup.begin()),
                  [](auto& iMixinResult) { return std::make_pair(iMixinResult.amount, std::move(iMixinResult.outs)); });
 
-  // Erase Mixins That Are Actually Used By This Transfer
+  // Erase Mixins That Are Actually Used By This Transfer & Shuffle
+  std::random_device rd;
+  std::mt19937 g(rd());
+
   for (auto& iMixinLookup : mixinLookup) {
-    iMixinLookup.second.erase(std::remove_if(
-        iMixinLookup.second.begin(), iMixinLookup.second.end(), [&globalRealOutputIndices](const auto& iMixin) {
-          return globalRealOutputIndices.find(iMixin.global_amount_index) != globalRealOutputIndices.end();
-        }));
+    iMixinLookup.second.erase(std::remove_if(iMixinLookup.second.begin(), iMixinLookup.second.end(),
+                                             [&globalRealOutputIndices](const auto& iMixin) {
+                                               return globalRealOutputIndices.find(iMixin.global_amount_index) !=
+                                                      globalRealOutputIndices.end();
+                                             }),
+                              iMixinLookup.second.end());
+    std::shuffle(iMixinLookup.second.begin(), iMixinLookup.second.end(), g);
   }
 
-  std::vector<std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_out_entry>> mixinDistribution{};
-  mixinDistribution.resize(selectedTransfers.size());
-
-  size_t i = 0;
   for (const auto& input : selectedTransfers) {
     TransactionTypes::InputKeyInfo keyInfo;
-    keyInfo.amount = input.out.amount;
+    const auto amount = keyInfo.amount = input.out.amount;
 
-    if (mixinResult.size()) {
-      std::sort(mixinResult[i].outs.begin(), mixinResult[i].outs.end(),
-                [](const out_entry& a, const out_entry& b) { return a.global_amount_index < b.global_amount_index; });
-      for (auto& fakeOut : mixinResult[i].outs) {
-        if (input.out.globalOutputIndex == fakeOut.global_amount_index) {
-          continue;
+    auto searchRequiredMixin = mixRequirement.find(keyInfo.amount);
+    if (searchRequiredMixin != mixRequirement.end() && searchRequiredMixin->second > 0) {
+      auto& iMixinLookup = mixinLookup[amount];
+      while (keyInfo.outputs.size() != searchRequiredMixin->second) {
+        if (iMixinLookup.empty()) {
+          throw std::runtime_error{"insufficient mixins required"};
         }
+
+        auto& fakeOut = iMixinLookup.back();
 
         TransactionTypes::GlobalOutput globalOutput;
         globalOutput.outputIndex = static_cast<uint32_t>(fakeOut.global_amount_index);
-        globalOutput.targetKey = reinterpret_cast<PublicKey&>(fakeOut.out_key);
+        globalOutput.targetKey = std::move(fakeOut.out_key);
         keyInfo.outputs.push_back(std::move(globalOutput));
-        if (keyInfo.outputs.size() >= mixIn)
-          break;
+
+        iMixinLookup.pop_back();
       }
+
+      std::sort(keyInfo.outputs.begin(), keyInfo.outputs.end(),
+                [](const auto& lhs, const auto& rhs) { return lhs.outputIndex <= rhs.outputIndex; });
     }
 
     // paste real transaction to the random index
@@ -2639,7 +2674,6 @@ void WalletGreen::prepareInputs(
     inputInfo.keyInfo = std::move(keyInfo);
     inputInfo.walletRecord = input.wallet;
     keysInfo.push_back(std::move(inputInfo));
-    ++i;
   }
 }
 
@@ -3303,10 +3337,10 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, const std::vecto
 
   System::EventLock lk(m_readyEvent);
 
-  const auto mixin = m_node.currency().mixinUpperBound(m_node.getLastKnownBlockVersion());
+  const auto upperMixinBound = m_node.currency().mixinUpperBound(m_node.getLastKnownBlockVersion());
   m_logger(Info) << "createFusionTransaction"
                  << ", from " << Common::makeContainerFormatter(sourceAddresses) << ", to '" << destinationAddress
-                 << '\'' << ", threshold " << m_currency.amountFormatter()(threshold) << ", mixin " << mixin;
+                 << '\'' << ", threshold " << m_currency.amountFormatter()(threshold) << ", mixin " << upperMixinBound;
 
   throwIfNotInitialized();
   throwIfTrackingMode();
@@ -3323,10 +3357,11 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, const std::vecto
     throw std::runtime_error("You must have at least one address");
   }
 
-  size_t estimatedFusionInputsCount =
-      m_currency.getApproximateMaximumInputCount(m_currency.fusionTxMaxSize(blockVersion), fusionRatio, mixin);
+  // TODO: This could be solved much better with a linear optimization problem solver
+  size_t estimatedFusionInputsCount = m_currency.getApproximateMaximumInputCount(
+      m_currency.fusionTxMaxSize(blockVersion), fusionRatio, upperMixinBound);
   if (estimatedFusionInputsCount < m_currency.fusionTxMinInputCount(blockVersion)) {
-    m_logger(Error) << "Fusion transaction mixin is too big " << mixin;
+    m_logger(Error) << "Fusion transaction mixin is too big " << upperMixinBound;
     throw std::system_error(make_error_code(error::MIXIN_COUNT_TOO_BIG));
   }
 
@@ -3340,13 +3375,12 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, const std::vecto
   }
 
   typedef CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount outs_for_amount;
-  std::vector<outs_for_amount> mixinResult;
-  if (mixin != 0) {
-    requestMixinOuts(fusionInputs, mixin, mixinResult);
-  }
+  std::vector<outs_for_amount> mixinResult{};
+  std::map<uint64_t, uint64_t> mixinRequirement{};
+  requestMixinOuts(fusionInputs, mixinResult, mixinRequirement);
 
   std::vector<InputInfo> keysInfo;
-  prepareInputs(fusionInputs, mixinResult, mixin, keysInfo);
+  prepareInputs(fusionInputs, mixinResult, mixinRequirement, keysInfo);
 
   AccountPublicAddress destination = getChangeDestination(destinationAddress, sourceAddresses);
   m_logger(Debugging) << "Destination address " << m_currency.accountAddressAsString(destination);

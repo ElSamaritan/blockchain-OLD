@@ -70,6 +70,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
   DAEMON_COMMAND_DEFINE(set_log, "set_log <level> - Change current log level, <level> is a number 0-5");
   DAEMON_COMMAND_DEFINE(status, "Show daemon status");
 
+  // clang-format off
   /* ----------------------------------------------- Explorer Commands --------------------------------------------- */
   DAEMON_COMMAND_DEFINE(info, "Prints general informations about the curring blockchain");
   DAEMON_COMMAND_DEFINE(search, "Searches for a block height/hash or transaction hash");
@@ -81,6 +82,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
   DAEMON_COMMAND_DEFINE(print_pool, "Print transaction pool (long format)");
   DAEMON_COMMAND_DEFINE(print_pool_sh, "Print transaction pool (short format)");
   DAEMON_COMMAND_DEFINE(pool_flush, "Removes all pool transactions");
+  DAEMON_COMMAND_DEFINE(pool_check, "Performs a sanity check on the current pool state, deletes all failing transactions");
   DAEMON_COMMAND_DEFINE(pool_remove, "Removes a transaction with given hash from the pool <transaction_hash>");
 
   /* -------------------------------------------------- P2P Commands ----------------------------------------------- */
@@ -89,6 +91,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
   DAEMON_COMMAND_DEFINE(p2p_ban_ip, "Adds given ips to the ban list.  '<ip> [<ip> ]*'");
   DAEMON_COMMAND_DEFINE(p2p_unban_ip, "Removes given ips from the ban list. '<ip> [<ip> ]*'");
   DAEMON_COMMAND_DEFINE(p2p_unban_all, "Removes all banned peers from the ban list.");
+  // clang-format on
 }
 
 #undef DAEMON_COMMAND_DEFINE

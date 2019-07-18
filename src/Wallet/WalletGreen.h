@@ -261,8 +261,7 @@ class WalletGreen : public IWallet,
   bool isFusionTransaction(const WalletTransaction& walletTx) const;
 
   void prepareTransaction(std::vector<WalletOuts>&& wallets, const std::vector<WalletOrder>& orders, uint64_t fee,
-                          uint16_t mixIn, const std::string& extra, uint64_t unlockTimestamp,
-                          const DonationSettings& donation,
+                          const std::string& extra, uint64_t unlockTimestamp, const DonationSettings& donation,
                           const CryptoNote::AccountPublicAddress& changeDestinationAddress,
                           PreparedTransaction& preparedTransaction);
 
@@ -284,12 +283,13 @@ class WalletGreen : public IWallet,
   void validateTransactionParameters(const TransactionParameters& transactionParameters) const;
 
   void requestMixinOuts(
-      const std::vector<OutputToTransfer>& selectedTransfers, uint16_t mixIn,
-      std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& mixinResult);
+      const std::vector<OutputToTransfer>& selectedTransfers,
+      std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& mixinResult,
+      std::map<uint64_t, uint64_t>& requiredMixins);
 
   void prepareInputs(const std::vector<OutputToTransfer>& selectedTransfers,
                      std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& mixinResult,
-                     uint16_t mixIn, std::vector<InputInfo>& keysInfo);
+                     const std::map<uint64_t, uint64_t>& mixRequirement, std::vector<InputInfo>& keysInfo);
 
   uint64_t selectTransfers(uint64_t needeMoney, std::vector<WalletOuts>&& wallets,
                            std::vector<OutputToTransfer>& selectedTransfers);

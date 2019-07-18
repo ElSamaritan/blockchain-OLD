@@ -82,6 +82,9 @@ class NodeRpcProxy : public CryptoNote::INode {
   virtual void getRandomOutsByAmounts(std::map<uint64_t, uint64_t>&& amounts,
                                       std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result,
                                       const Callback& callback) override;
+  virtual void getRequiredMixinByAmounts(std::set<uint64_t>&& amounts, std::map<uint64_t, uint64_t>& out,
+                                         const Callback& callback) override;
+
   virtual void getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
                             BlockHeight& startHeight, const Callback& callback) override;
   virtual void getTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,
@@ -136,6 +139,7 @@ class NodeRpcProxy : public CryptoNote::INode {
   std::error_code doGetRandomOutsByAmounts(
       std::map<uint64_t, uint64_t>& amounts,
       std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result);
+  std::error_code doGetRequiredMixinByAmounts(std::set<uint64_t>& amounts, std::map<uint64_t, uint64_t>& out);
   std::error_code doGetNewBlocks(std::vector<Crypto::Hash>& knownBlockIds, std::vector<CryptoNote::RawBlock>& newBlocks,
                                  BlockHeight& startHeight);
   std::error_code doGetTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,

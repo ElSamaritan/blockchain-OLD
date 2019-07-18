@@ -229,6 +229,24 @@ struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS {
   typedef COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount outs_for_amount;
 };
 
+struct COMMAND_RPC_GET_REQUIRED_MIXIN_FOR_AMOUNTS {
+  static inline std::string identifier() {
+    static const std::string __Identifier{"get_required_mixin_for_amounts"};
+    return __Identifier;
+  }
+
+  using request = std::set<uint64_t>;
+  struct response {
+    std::string status;
+    std::map<uint64_t, uint64_t> requiredMixins{};
+
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(status)
+    KV_MEMBER_RENAME(requiredMixins, required_mixins)
+    KV_END_SERIALIZATION
+  };
+};
+
 //-----------------------------------------------
 struct COMMAND_RPC_SEND_RAW_TX {
   struct request {
