@@ -37,6 +37,7 @@
 #include "CryptoNoteCore/Transactions/TransactionPool.h"
 #include "CryptoNoteCore/Transactions/TransactionPoolCleaner.h"
 #include "CryptoNoteCore/Transactions/TransactionApi.h"
+#include "CryptoNoteCore/Transactions/BlockTransactionValidator.h"
 #include "CryptoNoteCore/UpgradeManager.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandlerCommon.h"
 
@@ -2120,6 +2121,9 @@ void Core::fillBlockTemplate(BlockTemplate& block, uint32_t index, size_t fullRe
   // We assume eligible transactions are ordered, such that the first transactions are most profitible. Using this
   // we now implement a greedy search algorithm to fill the transaction.
   std::vector<CachedTransaction> poolTransactions = m_transactionPool->eligiblePoolTransactions(blockIndex);
+  BlockInfo nfo{block, index - 1};
+  BlockTransactionValidator sanity{nfo, checkpoints, *mainChain(), currency()};
+  size_t departedTransactions = 0;
 
   // Assumption Reward(iter) >= Reward(iter++), TransactionPriorityComperator
   for (auto iter = poolTransactions.begin(); iter != poolTransactions.end(); ++iter) {
@@ -2143,11 +2147,21 @@ void Core::fillBlockTemplate(BlockTemplate& block, uint32_t index, size_t fullRe
       }
     }
 
+    if (const auto ec = sanity.validate(iter->getTransaction()); ec.isError()) {
+      logger(Logging::Warning) << "A pool transaction is not valid to be mined: " << iter->getTransactionHash();
+      departedTransactions += 1;
+      continue;
+    }
+
     // If we land here all checks have passed and we can add the transaction
     fee += iFee;
     cumulativeSize += iSize;
     block.transactionHashes.emplace_back(iter->getTransactionHash());
     transactionsSize += iter->getTransactionBinaryArray().size();
+  }
+
+  if (departedTransactions > 0) {
+    m_transactionPool->sanityCheck(std::numeric_limits<uint64_t>::max());
   }
 }
 
