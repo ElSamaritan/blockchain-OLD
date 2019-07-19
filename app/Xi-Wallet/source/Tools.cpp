@@ -95,7 +95,7 @@ std::string getPaymentIDFromExtra(const std::string &extra) {
 }
 
 std::string unixTimeToDate(const uint64_t timestamp) {
-  if (timestamp > std::numeric_limits<std::time_t>::max()) {
+  if (timestamp > static_cast<uint64_t>(std::numeric_limits<std::time_t>::max())) {
     return "INVALID";
   }
   const std::time_t time = static_cast<std::time_t>(timestamp);

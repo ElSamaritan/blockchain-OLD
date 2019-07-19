@@ -61,7 +61,7 @@ template <>
 
 template <class T>
 [[nodiscard]] T fromBinaryArray(const BinaryArray& binaryArray) {
-  T object;
+  T object = boost::value_initialized<T>();
   Common::MemoryInputStream stream(binaryArray.data(), binaryArray.size());
   BinaryInputStreamSerializer serializer(stream);
   if (!serializer(object, "")) {

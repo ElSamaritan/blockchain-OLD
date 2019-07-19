@@ -21,6 +21,10 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#if defined(_MSC_VER)
+#define _DISABLE_EXTENDED_ALIGNED_STORAGE 1
+#endif
+
 #include "Xi/ProofOfWork/Cnx.hpp"
 
 #include <memory>
@@ -166,7 +170,7 @@ class JhNode final : public INode {
     std::memcpy(std::addressof(m_state), std::addressof(state), sizeof(jh_hash_state));
   }
   JhNode() {
-    jh_init(std::addressof(m_state), ::Crypto::Hash::bytes());
+    jh_init(std::addressof(m_state), static_cast<int>(::Crypto::Hash::bytes()));
   }
 
   void doUpdate(ConstByteSpan blob) override {
@@ -197,7 +201,7 @@ struct ReversePredicate {
 };
 
 struct RangePredicate {
-  std::ptrdiff_t operator()(const std::shared_ptr<INode>& node) const {
+  size_t operator()(const std::shared_ptr<INode>& node) const {
     return (node->hash()[::Crypto::Hash::bytes() - 1] & 0b11) + 1;
   }
 };
@@ -239,9 +243,13 @@ struct NodePredicate {
   }
 };
 
+#if defined(_MSC_VER) && _MSC_VER > 19000
+
+#endif
+
 void cnx(ConstByteSpan blob, ::Crypto::Hash& hash, const size_t insertions) {
   const ReversePredicate revpred{};
-  const ReversePredicate rngpred{};
+  const RangePredicate rngpred{};
   const NodePredicate nodepred{};
 
   using set_t = std::set<std::shared_ptr<INode>, NodeComparator>;
@@ -274,18 +282,20 @@ void cnx(ConstByteSpan blob, ::Crypto::Hash& hash, const size_t insertions) {
       } else {
         end = previousInsertion;
         auto j = begin = std::prev(previousInsertion);
-        for (std::ptrdiff_t k = 0; k < range; std::advance(j, -1), k++) {
+        for (size_t k = 0; k < range; ++k) {
           previousNodes.push_back(*j);
           if (j == hashTree.begin()) {
             break;
           }
+          std::advance(j, -1);
         }
         begin = j;
       }
     } else {
       auto l = begin = std::next(previousInsertion);
-      for (std::ptrdiff_t k = 0; l != hashTree.end() && k < range; std::advance(l, 1), k++) {
+      for (size_t k = 0; l != hashTree.end() && k < range; ++k) {
         previousNodes.push_back(*l);
+        std::advance(l, 1);
       }
       end = l;
     }

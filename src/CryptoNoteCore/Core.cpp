@@ -819,14 +819,27 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   std::vector<std::error_code> transferResults{};
   transferResults.resize(transactions.size(), std::error_code{});
 
-  async::parallel_for(async::irange(0ULL, transactions.size()), [&](auto i) {
-    const auto ec = preValidateTransfer(transactions[i], transferContext, transferCaches[i], transferValidations[i]);
-    if (ec) {
-      logger(Logging::Debugging) << "Failed to validate transaction " << transactions[i].getTransactionHash() << ": "
-                                 << ec.message();
-    }
-    transferResults[i] = ec;
-  });
+#if defined(XI_EXPERIMENTAL_PARALLEL_TRANSFER_VALIDATION)
+  async::parallel_for(async::irange(0ULL, transactions.size()),
+                      [&](auto i)
+#else
+  for (size_t i = 0; i < transactions.size(); ++i)
+#endif
+                      {
+                        const auto ec = preValidateTransfer(transactions[i], transferContext, transferCaches[i],
+                                                            transferValidations[i]);
+                        if (ec) {
+                          logger(Logging::Debugging) << "Failed to validate transaction "
+                                                     << transactions[i].getTransactionHash() << ": " << ec.message();
+#if !defined(XI_EXPERIMENTAL_PARALLEL_TRANSFER_VALIDATION)
+                          return ec;
+#endif
+                        }
+                        transferResults[i] = ec;
+                      }
+#if defined(XI_EXPERIMENTAL_PARALLEL_TRANSFER_VALIDATION)
+  );
+#endif
 
   uint64_t cumulativeFee = 0;
   for (size_t i = 0; i < transactions.size(); ++i) {
@@ -857,14 +870,27 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     TransferValidationInfo transfersInfo{};
     makeTransferValidationInfo(*cache, transferContext, globalOutputReferences, previousBlockIndex, transfersInfo);
 
-    async::parallel_for(async::irange(0ULL, transactions.size()), [&](auto i) {
-      const auto ec = postValidateTransfer(transactions[i], transferContext, transferCaches[i], transfersInfo);
-      if (ec) {
-        logger(Logging::Debugging) << "Failed to validate transaction " << transactions[i].getTransactionHash() << ": "
-                                   << ec.message();
-      }
-      transferResults[i] = ec;
-    });
+#if defined(XI_EXPERIMENTAL_PARALLEL_TRANSFER_VALIDATION)
+    async::parallel_for(async::irange(0ULL, transactions.size()),
+                        [&](auto i)
+#else
+    for (size_t i = 0; i < transactions.size(); ++i)
+#endif
+                        {
+                          const auto ec =
+                              postValidateTransfer(transactions[i], transferContext, transferCaches[i], transfersInfo);
+                          if (ec) {
+                            logger(Logging::Debugging) << "Failed to validate transaction "
+                                                       << transactions[i].getTransactionHash() << ": " << ec.message();
+#if !defined(XI_EXPERIMENTAL_PARALLEL_TRANSFER_VALIDATION)
+                            return ec;
+#endif
+                          }
+                          transferResults[i] = ec;
+                        }
+#if defined(XI_EXPERIMENTAL_PARALLEL_TRANSFER_VALIDATION)
+    );
+#endif
 
     for (size_t i = 0; i < transactions.size(); ++i) {
       if (transferResults[i] != error::TransactionValidationError::VALIDATION_SUCCESS) {
@@ -1025,7 +1051,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   notifyOnSuccess(ret, previousBlockIndex, cachedBlock, *cache);
 
   return ret;
-}
+}  // namespace CryptoNote
 
 void Core::switchMainChainStorage(uint32_t splitBlockIndex, IBlockchainCache& newChain) {
   XI_CONCURRENT_RLOCK(m_access);
