@@ -130,7 +130,7 @@ template <typename T>
   try {
     auto js = Common::JsonValue::fromString(buf);
     loadFromJsonValue(v, js);
-  } catch (std::exception&) {
+  } catch (...) {
     return false;
   }
   return true;

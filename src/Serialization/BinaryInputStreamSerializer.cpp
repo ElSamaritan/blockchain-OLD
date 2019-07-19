@@ -67,7 +67,9 @@ bool BinaryInputStreamSerializer::endObject() {
 
 bool BinaryInputStreamSerializer::beginArray(size_t& size, Common::StringView name) {
   XI_UNUSED(name);
-  readInteger(stream, size, useVarInt());
+  uint64_t _ = size;
+  readInteger(stream, _, useVarInt());
+  size = _;
   return true;
 }
 
@@ -166,7 +168,7 @@ bool BinaryInputStreamSerializer::binary(std::string& value, Common::StringView 
 }
 
 bool BinaryInputStreamSerializer::binary(Xi::ByteVector& value, StringView name) {
-  size_t size = 0;
+  uint64_t size = 0;
   readInteger(stream, size, useVarInt());
   if (size > 0) {
     value.resize(size);

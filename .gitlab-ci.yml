@@ -117,11 +117,11 @@ Windows 10 - Build:
   variables:
     CI_TARGET_OS: "Windows 10"
 
-# macOS - Build:
-#   <<: *generic_build_definition
-#   tags: ["macOS"]
-#   variables:
-#     CI_TARGET_OS: "macOS"
+macOS - Build:
+  <<: *generic_build_definition
+  tags: ["macOS"]
+  variables:
+    CI_TARGET_OS: "macOS"
 
 # ================================================================================================================== #
 #                                                                                                                    #
@@ -178,7 +178,7 @@ Packages:
     # - "openSuse Leap - Build"
     # - "alpine 3.10 - Build"
     - "Windows 10 - Build"
-    # - "macOS - Build"
+    - "macOS - Build"
   script:
     - pwsh -File ./scripts/ci/DeployPackages.ps1
     - pwsh -File ./scripts/ci/NotifyRelease.ps1

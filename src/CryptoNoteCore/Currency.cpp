@@ -185,7 +185,7 @@ uint64_t Currency::maxBlockSizeGrowthSpeedDenominator(BlockVersion version) cons
 }
 
 size_t Currency::fusionTxMaxSize(BlockVersion blockVersion) const {
-  const auto rewardZone = blockGrantedFullRewardZoneByBlockVersion(blockVersion);
+  const uint64_t rewardZone = blockGrantedFullRewardZoneByBlockVersion(blockVersion);
   const auto maxSize = std::min(rewardZone, m_transaction(blockVersion)->fusion().maximumSize());
   const auto reservedSize = minerTxBlobReservedSize(blockVersion);
   assert(maxSize > reservedSize);
@@ -261,7 +261,7 @@ std::string Currency::networkUniqueName() const {
 }
 
 size_t Currency::maxTxSize(BlockVersion blockVersion) const {
-  const auto rewardZone = blockGrantedFullRewardZoneByBlockVersion(blockVersion);
+  const uint64_t rewardZone = blockGrantedFullRewardZoneByBlockVersion(blockVersion);
   const auto maxSize = std::min(rewardZone, m_transaction(blockVersion)->transfer().maximumSize());
   const auto reservedSize = minerTxBlobReservedSize(blockVersion);
   assert(maxSize > reservedSize);

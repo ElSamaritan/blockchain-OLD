@@ -72,7 +72,7 @@ ExternalProject_Add(
     -DWITH_LZ4=ON
     ${ROCKSB_EXTRA_CMAKE_ARGS}
 
-  INSTALL_COMMAND cmake -DCOMPONENT=devel -P cmake_install.cmake
+  INSTALL_COMMAND ${CMAKE_COMMAND} -DCOMPONENT=devel -P cmake_install.cmake
 )
 add_dependencies(facebook-rocksdb lz4-lz4)
 

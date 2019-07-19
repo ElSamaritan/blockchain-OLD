@@ -64,7 +64,8 @@ bool BinaryOutputStreamSerializer::endObject() {
 
 bool BinaryOutputStreamSerializer::beginArray(size_t& size, Common::StringView name) {
   XI_UNUSED(name);
-  return writeInteger(stream, size, useVarInt());
+  uint64_t _ = size;
+  return writeInteger(stream, _, useVarInt());
 }
 
 bool BinaryOutputStreamSerializer::beginStaticArray(const size_t size, StringView name) {
@@ -120,7 +121,7 @@ bool BinaryOutputStreamSerializer::operator()(bool& value, Common::StringView na
 
 bool BinaryOutputStreamSerializer::operator()(std::string& value, Common::StringView name) {
   XI_UNUSED(name);
-  auto size = value.size();
+  uint64_t size = value.size();
   XI_RETURN_EC_IF_NOT(writeInteger(stream, size, useVarInt()), false);
   checkedWrite(value.data(), value.size());
   return true;

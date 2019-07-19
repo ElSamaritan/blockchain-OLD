@@ -883,7 +883,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   res.block.block_size = blkDetails.blockSize;
   res.block.orphan_status = blkDetails.isAlternative;
 
-  size_t blockGrantedFullRewardZone =
+  uint64_t blockGrantedFullRewardZone =
       m_core.getCurrency().blockGrantedFullRewardZoneByBlockVersion(block_header.version);
   res.block.median_effective_size = std::max(res.block.median_size, blockGrantedFullRewardZone);
 
@@ -1135,7 +1135,7 @@ bool RpcServer::f_getMixin(const Transaction& transaction, uint64_t& mixin) {
   mixin = 0;
   for (const TransactionInput& txin : transaction.inputs) {
     if (auto keyInput = std::get_if<KeyInput>(&txin)) {
-      mixin = std::max(mixin, keyInput->outputIndices.empty() ? 0 : keyInput->outputIndices.size() - 1);
+      mixin = std::max(mixin, keyInput->outputIndices.empty() ? 0ULL : keyInput->outputIndices.size() - 1);
     }
   }
   return true;

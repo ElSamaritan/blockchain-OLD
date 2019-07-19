@@ -370,7 +370,7 @@ bool WalletSerializerV2::loadUnlockTransactionsJobs(CryptoNote::ISerializer& ser
     auto& index = m_unlockHeightTransactions.get<TransactionHashIndex>();
     auto& walletsIndex = m_walletsContainer.get<KeysIndex>();
 
-    uint64_t jobsCount = 0;
+    size_t jobsCount = 0;
     XI_RETURN_EC_IF_NOT(serializer.beginArray(jobsCount, "unlockHeightTransactionsJobsCount"), false);
 
     for (uint64_t i = 0; i < jobsCount; ++i) {
@@ -394,7 +394,7 @@ bool WalletSerializerV2::loadUnlockTransactionsJobs(CryptoNote::ISerializer& ser
     auto& index = m_unlockTimestampTransactions.get<TransactionHashIndex>();
     auto& walletsIndex = m_walletsContainer.get<KeysIndex>();
 
-    uint64_t jobsCount = 0;
+    size_t jobsCount = 0;
     XI_RETURN_EC_IF_NOT(serializer.beginArray(jobsCount, "unlockTimestampTransactionsJobsCount"), false);
 
     for (uint64_t i = 0; i < jobsCount; ++i) {
@@ -422,7 +422,7 @@ bool WalletSerializerV2::saveUnlockTransactionsJobs(CryptoNote::ISerializer& ser
     auto& index = m_unlockHeightTransactions.get<TransactionHashIndex>();
     auto& wallets = m_walletsContainer.get<TransfersContainerIndex>();
 
-    uint64_t jobsCount = index.size();
+    size_t jobsCount = index.size();
     XI_RETURN_EC_IF_NOT(serializer.beginArray(jobsCount, "unlockHeightTransactionsJobsCount"), false);
 
     for (const auto& j : index) {
@@ -446,7 +446,7 @@ bool WalletSerializerV2::saveUnlockTransactionsJobs(CryptoNote::ISerializer& ser
     auto& index = m_unlockTimestampTransactions.get<TransactionHashIndex>();
     auto& wallets = m_walletsContainer.get<TransfersContainerIndex>();
 
-    uint64_t jobsCount = index.size();
+    size_t jobsCount = index.size();
     XI_RETURN_EC_IF_NOT(serializer.beginArray(jobsCount, "unlockTimestampTransactionsJobsCount"), false);
 
     for (const auto& j : index) {

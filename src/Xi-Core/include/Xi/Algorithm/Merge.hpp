@@ -32,7 +32,7 @@ namespace Xi {
 
 template <typename _ValueT>
 size_t merge(std::set<_ValueT>& out, std::set<_ValueT>&& values) {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__APPLE__)
   size_t actualInserted = 0;
   for (auto&& iValue : values) {
     if (out.insert(std::move(iValue)).second) {
@@ -49,7 +49,7 @@ size_t merge(std::set<_ValueT>& out, std::set<_ValueT>&& values) {
 
 template <typename _ValueT>
 size_t merge(std::unordered_set<_ValueT>& out, std::unordered_set<_ValueT>&& values) {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__APPLE__)
   size_t actualInserted = 0;
   for (auto&& iValue : values) {
     if (out.insert(std::move(iValue)).second) {

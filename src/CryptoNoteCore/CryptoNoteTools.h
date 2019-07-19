@@ -49,7 +49,7 @@ template <class T>
 [[nodiscard]] bool toBinaryArray(const T& object, BinaryArray& binaryArray) {
   try {
     binaryArray = toBinaryArray<T>(object);
-  } catch (std::exception&) {
+  } catch (...) {
     return false;
   }
 
@@ -79,7 +79,7 @@ template <class T>
 [[nodiscard]] bool fromBinaryArray(T& object, const BinaryArray& binaryArray) {
   try {
     object = fromBinaryArray<T>(binaryArray);
-  } catch (std::exception&) {
+  } catch (...) {
     return false;
   }
 
