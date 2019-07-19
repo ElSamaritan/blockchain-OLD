@@ -24,13 +24,13 @@
     "reward_unlock_time": 600,
     "emission_speed": 21,
 
-    "start_timestamp": 1563481463,
-    "genesis_transaction": "010a0101010180f0efe8812001f0d5cfd8dd80412a15b95e38d5956f95b3beee7c36a799306e43de4db6f7c387210118b94aa5be09d291adbe9362c2bac77a4289e06c8107d29721800aed49868f8c"
+    "start_timestamp": 1563538772,
+    "genesis_transaction": "010a0101010280d0dbc3f40201600ce2eea6c875fd14603ec6c71d6f481c94587f300c8278c9c9c67db742b79480a094a58d1d017ac941286aae1f3c8196207b0c5852531b0e8daf401fe5cf5d36fead313949a12101f3807a1fa19db02f59a6d712bb2717071ad2753c9f3385b547a395e821663a1c"
   },
 
   "network": {
     "type": "testing",
-    "identifier": "dc5803666df55b0fb83889cb40d91f2e",
+    "identifier": "e0de64029a62b4e23b3aeb60a8735535",
     "seeds": [
       "207.180.228.241:22868",
       "207.180.224.162:22868"
@@ -47,18 +47,18 @@
 
       "miner_reward": {
         "window_size": 128,
-        "zone": 134217728,
+        "zone": 524288,
         "cut_off": 4,
-        "reserved_size": 600
+        "reserved_size": 300
       },
 
       "merge_mining": {
-        "max": 4
+        "max": 3
       },
 
       "static_reward": {
         "amount": 1000000,
-        "address": "gxi1D8NCRbEVtADk1AjdHz4AJLkicPwPhddn2VotETtjVw6cDkdP5WHCq5Gr5d7Tm68iQDHhs5bfyTPXK3y2YZMe69FCQXiLNZ"
+        "address": "gxi19i8ftBBFUGKsHWDEf14xSvTngy4JFW1PhY1ghXwdRD15pPavU8dgSjXjw86NMbZLt61RYtP2nNYxV53E3Lqg8bNwnH7Cc2"
       },
 
       "time": {
@@ -73,7 +73,7 @@
         ],
 
         "transfer": {
-          "max_size": 268435456,
+          "max_size": 32768,
           "min_fee": 1000,
           "free_buckets": 2,
           "rate_nominator": 1,
@@ -81,15 +81,15 @@
         },
 
         "fusion": {
-          "max_size": 33554432,
+          "max_size": 8192,
           "min_input": 12,
           "ratio_limit": 4
         },
 
         "mixin": {
-          "min": 0,
-          "max": 0,
-          "upgrade_size": 100
+          "min": 2,
+          "max": 5,
+          "upgrade_size": 60
         }
       },
 
@@ -97,22 +97,18 @@
         "algorithm": "LWMA-v1",
         "window_size": 90,
         "initial": 20000,
-        "proof_of_work": "CNX-v1-Light"
+        "proof_of_work": "CNX-v1"
       },
 
       "limit": {
         "maximum": 2097152,
-        "initial": 524288,
+        "initial": 1048576,
         "window_size": 1440,
         "increase_rate": 1024
       }
     },
     {
       "height": 2,
-      "fork": false
-    },
-    {
-      "height": 3,
       "fork": false
     }
   ]
