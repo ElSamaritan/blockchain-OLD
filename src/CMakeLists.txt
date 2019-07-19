@@ -130,7 +130,7 @@ xi_make_library(
     Xi::Crypto
 
     Serialization
-    crypto
+    Crypto
 
   PRIVATE_LIBRARIES
 )
