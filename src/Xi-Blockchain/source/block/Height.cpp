@@ -38,7 +38,7 @@ Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::min() {
 }
 
 Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::max() {
-  return Height{50'000'000};
+  return Height{500'000'000};
 }
 
 Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::fromIndex(
