@@ -14,6 +14,8 @@
 
 #include <Xi/Concurrent/RecursiveLock.h>
 #include <Xi/TypeSafe/Flag.hpp>
+#include <Xi/Crypto/PasswordContainer.h>
+#include <Xi/Concurrent/ReadersWriterLock.h>
 #include <Xi/Http/RequestHandler.h>
 #include <Xi/Http/Server.h>
 #include <Xi/Http/Router.h>
@@ -54,8 +56,13 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
 
   typedef std::function<bool(RpcServer*, const HttpRequest& request, HttpResponse& response)> HandlerFunction;
   bool enableCors(const std::string& domain);
+
   bool setFeeAddress(const std::string fee_address);
+  bool setFeeViewKey(const std::string viewKey);
   bool setFeeAmount(const uint64_t fee_amount);
+
+  void setAccessToken(const std::string& access_token);
+
   const std::string& getCorsDomain();
 
   bool isBlockexplorer() const;
@@ -181,8 +188,14 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   NodeServer& m_p2p;
   ICryptoNoteProtocolHandler& m_protocol;
   std::string m_cors;
+
   std::optional<AccountPublicAddress> m_fee_address = std::nullopt;
+  std::optional<Crypto::SecretKey> m_fee_view_key = std::nullopt;
   uint64_t m_fee_amount = 0;
+
+  std::unique_ptr<Xi::Crypto::PasswordContainer> m_access_token{};
+  Xi::Concurrent::ReadersWriterLock m_access_token_guard{};
+
   bool m_isBlockexplorer;
   bool m_isBlockexplorerOnly;
   Xi::Concurrent::RecursiveLock m_submissionAccess;

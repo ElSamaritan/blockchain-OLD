@@ -28,10 +28,68 @@
 #include <Xi/ExternalIncludePop.h>
 
 #include <CryptoNoteCore/Currency.h>
+#include <Serialization/ISerializer.h>
 
 #include <string>
 
 namespace CommonCLI {
+
+struct VersionInformation {
+  std::string version;
+  std::string copyright;
+
+  struct Build {
+    std::string channel;
+    std::string type;
+    bool dev;
+
+    struct Compiler {
+      std::string cc;
+      std::string cxx;
+
+      KV_BEGIN_SERIALIZATION
+      KV_MEMBER(cc)
+      KV_MEMBER(cxx)
+      KV_END_SERIALIZATION
+    } compiler;
+
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(channel)
+    KV_MEMBER(type)
+    KV_MEMBER(dev)
+    KV_MEMBER(compiler)
+    KV_END_SERIALIZATION
+
+  } build;
+
+  struct Git {
+    std::string commit;
+    std::string branch;
+
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(commit)
+    KV_MEMBER(branch)
+    KV_END_SERIALIZATION
+  } git;
+
+  struct External {
+    std::string boost;
+    std::string openssl;
+
+    KV_BEGIN_SERIALIZATION
+    KV_MEMBER(boost)
+    KV_MEMBER(openssl)
+    KV_END_SERIALIZATION
+  } external;
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER(version)
+  KV_MEMBER(build)
+  KV_MEMBER(git)
+  KV_MEMBER(external)
+  KV_MEMBER(copyright)
+  KV_END_SERIALIZATION
+};
 
 /*!
  * \brief header returns an appropiate header to display including a message telling you you are
@@ -61,6 +119,11 @@ std::string insecureServerWarning();
  * \brief verboseVersionInformation returns a verbose version information string about this build.
  */
 std::string verboseVersionInformation();
+
+/*!
+ * \brief versionInformation returns structured verbose version information.
+ */
+VersionInformation versionInformation();
 
 /*!
  * \brief emplaceCLIOptions will add common options for CLI applications to the option parser interface

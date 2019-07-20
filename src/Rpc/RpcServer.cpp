@@ -25,6 +25,7 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteCore/Transactions/TransactionExtra.h"
+#include "CryptoNoteCore/Transactions/TransactionApi.h"
 #include <Xi/Config.h>
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandlerCommon.h"
 #include "P2p/NetNode.h"
@@ -169,6 +170,19 @@ RpcServer::RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, Core
 }
 
 Xi::Http::Response RpcServer::doHandleRequest(const Xi::Http::Request& request) {
+  {
+    XI_CONCURRENT_LOCK_READ(m_access_token_guard);
+    if (m_access_token) {
+      try {
+        const auto bearer = request.headers().bearerAuthorization();
+        XI_RETURN_EC_IF_NOT(bearer.has_value(), makeUnauthorized("no bearer access token provided."));
+        XI_RETURN_EC_IF_NOT(m_access_token->validate(bearer->token()), makeUnauthorized("invalid access token"));
+      } catch (...) {
+        return makeUnauthorized("invalid authorization format");
+      }
+    }
+  }
+
   if (request.target() == "/rpc") {
     if (!m_isBlockexplorer) {
       return makeNotFound("endpoint disabled");
@@ -268,12 +282,47 @@ bool RpcServer::setFeeAddress(const std::string fee_address) {
   AccountPublicAddress addr{};
   XI_RETURN_EC_IF_NOT(currency().parseAccountAddressString(fee_address, addr), false);
   m_fee_address = addr;
-  return true;
+  if (m_fee_view_key) {
+    try {
+      return m_fee_view_key->toPublicKey() == m_fee_address->viewPublicKey;
+    } catch (...) {
+      return false;
+    }
+  } else {
+    return true;
+  }
+}
+
+bool RpcServer::setFeeViewKey(const std::string viewKey) {
+  if (auto ec = Crypto::SecretKey::fromString(viewKey); ec.isError()) {
+    logger(Error) << "Invalid secret view key for node fees.";
+    return false;
+  } else {
+    m_fee_view_key = ec.take();
+    if (m_fee_address) {
+      try {
+        return m_fee_view_key->toPublicKey() == m_fee_address->viewPublicKey;
+      } catch (...) {
+        return false;
+      }
+    } else {
+      return true;
+    }
+  }
 }
 
 bool RpcServer::setFeeAmount(const uint64_t fee_amount) {
   m_fee_amount = fee_amount;
   return true;
+}
+
+void RpcServer::setAccessToken(const std::string& access_token) {
+  XI_CONCURRENT_LOCK_WRITE(m_access_token_guard);
+  if (access_token.empty()) {
+    m_access_token.reset(nullptr);
+  } else {
+    m_access_token = std::make_unique<Xi::Crypto::PasswordContainer>(access_token);
+  }
 }
 
 bool RpcServer::enableCors(const std::string& domain) {
@@ -654,7 +703,7 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   XI_UNUSED(req);
   res.height = BlockHeight::fromIndex(m_core.getTopBlockIndex());
   res.difficulty = m_core.getDifficultyForNextBlock();
-  res.tx_count = m_core.getBlockchainTransactionCount() - res.height.native();  // without coinbase, but static reward
+  res.tx_count = m_core.getBlockchainTransactionCount();
   res.tx_pool_size = m_core.transactionPool().size();
   res.tx_pool_state = m_core.transactionPool().stateHash();
   res.version = m_core.getTopBlockVersion();
@@ -726,6 +775,18 @@ bool RpcServer::on_get_transactions(const COMMAND_RPC_GET_TRANSACTIONS::request&
 }
 
 bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMMAND_RPC_SEND_RAW_TX::response& res) {
+  if (m_fee_address && m_fee_view_key) {
+    auto reader = createTransactionPrefix(req.transaction);
+    [[maybe_unused]] std::vector<uint32_t> indices{};
+    uint64_t totalOut = 0;
+    reader->findOutputsToAccount(*m_fee_address, *m_fee_view_key, indices, totalOut);
+    if (totalOut < m_fee_amount) {
+      logger(Debugging) << "Transaction has insufficient node fees.";
+      res.status = "Insufficient node fees.";
+      return true;
+    }
+  }
+
   auto txPushResult = m_core.transactionPool().pushTransaction(req.transaction);
   if (txPushResult.isError()) {
     logger(Debugging) << "[on_send_raw_tx]: tx verification failed (" << txPushResult.error().message() << ")";
@@ -1135,7 +1196,10 @@ bool RpcServer::f_getMixin(const Transaction& transaction, uint64_t& mixin) {
   mixin = 0;
   for (const TransactionInput& txin : transaction.inputs) {
     if (auto keyInput = std::get_if<KeyInput>(&txin)) {
-      mixin = std::max(mixin, keyInput->outputIndices.empty() ? 0ULL : keyInput->outputIndices.size() - 1);
+      uint64_t ringSize = keyInput->outputIndices.size();
+      if (ringSize > 0) {
+        mixin = std::max(mixin, ringSize - 1);
+      }
     }
   }
   return true;

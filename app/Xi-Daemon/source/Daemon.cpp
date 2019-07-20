@@ -34,6 +34,7 @@
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
 
+#include <Xi/Exceptions.hpp>
 #include <Xi/Algorithm/String.h>
 #include <Xi/FileSystem.h>
 #include <CryptoNoteCore/Checkpoints.h>
@@ -120,6 +121,8 @@ void pause_for_input(int argc) {
 }
 
 int main(int argc, char* argv[]) {
+  using namespace Xi;
+
   DaemonConfiguration config = initConfiguration(argv[0]);
 
 #ifdef WIN32
@@ -266,7 +269,7 @@ int main(int argc, char* argv[]) {
       Common::StdInputStream poolInputStream{poolFileStream};
       BinaryInputStreamSerializer poolSerializer(poolInputStream);
       if (!ccore.transactionPool().serialize(poolSerializer)) {
-        logger(Error) << "Transaction pool load failed, cleaning state...";
+        logger(Level::Error) << "Transaction pool load failed, cleaning state...";
         ccore.transactionPool().forceFlush();
       } else {
         logger(Info) << "Imported " << ccore.transactionPool().size() << " pending pool transactions.";
@@ -283,7 +286,7 @@ int main(int argc, char* argv[]) {
     cprotocol.set_p2p_endpoint(&p2psrv);
     logger(Info) << "Initializing p2p server...";
     if (!p2psrv.init(netNodeConfig)) {
-      logger(Error) << "Failed to initialize p2p server.";
+      logger(Level::Error) << "Failed to initialize p2p server.";
       return 1;
     }
 
@@ -293,13 +296,27 @@ int main(int argc, char* argv[]) {
     logger(Info) << "Starting core rpc server on address " << config.rpcInterface << ":" << config.rpcPort;
     rpcServer->setHandler(rpcServer);
     rpcServer->setSSLConfiguration(config.ssl);
-    if (!config.feeAddress.empty()) {
-      rpcServer->setFeeAddress(config.feeAddress);
-      rpcServer->setFeeAmount(config.feeAmount);
+    if (!config.fees.address.empty()) {
+      if (config.fees.amount == 0) {
+        logger(Level::Error) << "Fee address set but fees are empty.";
+        exceptional<RuntimeError>("invalid fee config.");
+      }
+      if (!rpcServer->setFeeAddress(config.fees.address)) {
+        logger(Level::Error) << "Invalid fee address.";
+        exceptional<RuntimeError>("invalid fee config.");
+      }
+      if (!config.fees.view_key.empty()) {
+        if (!rpcServer->setFeeViewKey(config.fees.view_key)) {
+          logger(Level::Error) << "Invalid fee view key.";
+          exceptional<RuntimeError>("invalid fee config.");
+        }
+      }
+      rpcServer->setFeeAmount(config.fees.amount);
     }
     rpcServer->enableCors(config.enableCors);
     rpcServer->setBlockexplorer(config.enableBlockExplorer | config.onlyBlockExplorer);
     rpcServer->setBlockexplorerOnly(config.onlyBlockExplorer);
+    rpcServer->setAccessToken(config.rpcAccessToken);
 
     if (!config.disableRpc) {
       rpcServer->start(config.rpcInterface, config.rpcPort);
@@ -309,22 +326,25 @@ int main(int argc, char* argv[]) {
     }
 
     logger(Info) << "Starting p2p net loop...";
-    auto p2pRun = p2psrv.runAsync();
-    while (p2psrv.currentState() != NodeServer::Running) {
-      if (p2pRun.wait_for(std::chrono::milliseconds{100}) != std::future_status::timeout) {
-        logger(Fatal) << "p2p server initialization failed";
-        p2pRun.get();
-      }
+
+    std::future<void> consoleThread{};
+    if (!config.noConsole) {
+      consoleThread = std::async(std::launch::async, [&]() {
+        DaemonCommandsHandler dch(ccore, p2psrv, logManager, rpcServer.get());
+        dch.run("xi-daemon", config.dataDirectory);
+        p2psrv.sendStopSignal();
+      });
+    } else {
+      Tools::SignalHandler::install([&p2psrv] { p2psrv.sendStopSignal(); });
+    }
+
+    if (!p2psrv.run()) {
+      logger(Level::Fatal) << "p2p startup failed.";
+      exceptional<RuntimeError>("p2p startup failed");
     }
 
     if (!config.noConsole) {
-      DaemonCommandsHandler dch(ccore, p2psrv, logManager, rpcServer.get());
-      dch.run("xi-daemon", config.dataDirectory);
-      p2psrv.sendStopSignal();
-      p2pRun.get();
-    } else {
-      Tools::SignalHandler::install([&p2psrv] { p2psrv.sendStopSignal(); });
-      p2pRun.get();
+      consoleThread.get();
     }
 
     logger(Info) << "p2p net loop stopped";
@@ -349,7 +369,7 @@ int main(int argc, char* argv[]) {
       Common::StdOutputStream poolInputStream{poolFileStream};
       BinaryOutputStreamSerializer poolSerializer(poolInputStream);
       if (!ccore.transactionPool().serialize(poolSerializer)) {
-        logger(Error)
+        logger(Level::Error)
             << "Transaction pool save failed, your transaction pool may be corrupted and discarded on next start";
       }
       logger(Info) << "Exported " << ccore.transactionPool().size() << " pending pool transactions.";
@@ -363,7 +383,7 @@ int main(int argc, char* argv[]) {
     }
 
   } catch (const std::exception& e) {
-    logger(Error) << "Exception: " << e.what();
+    logger(Level::Error) << "Exception: " << e.what();
     throw e;
   }
 

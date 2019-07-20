@@ -49,16 +49,15 @@ class MinerCommandsHandler : public Common::ConsoleHandler {
 
   bool status(const std::vector<std::string>& args);
 
-  bool set_poll_interval(const std::vector<std::string>& args);
-  bool set_threads(const std::vector<std::string>& args);
+  bool poll_interval_set(const std::vector<std::string>& args);
+  bool threads_set(const std::vector<std::string>& args);
 
-  bool set_log(const std::vector<std::string>& args);
-  bool hide_log(const std::vector<std::string>& args);
+  bool log_set(const std::vector<std::string>& args);
+  bool log_hide(const std::vector<std::string>& args);
 
-  bool hide_hashrate(const std::vector<std::string>& args);
-  bool show_hashrate(const std::vector<std::string>& args);
-
-  bool set_report_interval(const std::vector<std::string>& args);
+  bool hashrate_hide(const std::vector<std::string>& args);
+  bool hashrate_show(const std::vector<std::string>& args);
+  bool hashrate_interval_set(const std::vector<std::string>& args);
 
  protected:
   void printError(std::string error) override;

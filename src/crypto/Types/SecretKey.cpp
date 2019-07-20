@@ -24,9 +24,11 @@
 #include <stdexcept>
 #include <utility>
 
+#include <Xi/Exceptions.hpp>
 #include <Xi/Memory/Clear.hh>
 #include <Common/StringTools.h>
 #include <crypto/crypto-ops.h>
+#include <crypto/crypto.h>
 
 #include "crypto/Types/SecretKey.h"
 
@@ -57,6 +59,13 @@ Crypto::SecretKey::SecretKey(Crypto::SecretKey::array_type raw) : array_type(std
 
 Crypto::SecretKey::~SecretKey() {
   Xi::Memory::secureClear(span());
+}
+
+Crypto::PublicKey Crypto::SecretKey::toPublicKey() const {
+  PublicKey reval{};
+  Xi::exceptional_if_not<Xi::InvalidArgumentError>(secret_key_to_public_key(*this, reval), "invalid secret key");
+  Xi::exceptional_if_not<Xi::InvalidArgumentError>(reval.isValid(), "invalid secret key");
+  return reval;
 }
 
 std::string Crypto::SecretKey::toString() const {

@@ -7,6 +7,10 @@
 #include <algorithm>
 #include <cctype>
 
+#include <Xi/ExternalIncludePush.h>
+#include <boost/algorithm/string.hpp>
+#include <Xi/ExternalIncludePop.h>
+
 bool Xi::starts_with(const std::string &str, const std::string &prefix) {
   if (prefix.empty())
     return true;
@@ -74,6 +78,14 @@ std::string to_string(time_t timestamp) {
   char buff[20];
   strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&timestamp));
   return buff;
+}
+
+std::string replace(std::string_view str, std::string_view toReplace, std::string_view replacement) {
+  std::string reval{str};
+  std::string stoReplace{toReplace};
+  std::string sreplacement{replacement};
+  boost::replace_all(reval, toReplace, replacement);
+  return reval;
 }
 
 }  // namespace Xi

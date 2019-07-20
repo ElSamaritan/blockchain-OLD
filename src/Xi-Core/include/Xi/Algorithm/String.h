@@ -62,6 +62,8 @@ std::string to_lower(const std::string& str);
  */
 std::string to_upper(const std::string& str);
 
+std::string replace(std::string_view str, std::string_view toReplace, std::string_view replacement);
+
 /*!
  * Parses a string representation into a corresponding data structure.
  *

@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -21,31 +21,39 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Http/AuthenticationType.h"
+#pragma once
 
+#include <string>
 #include <stdexcept>
 
-std::string Xi::to_string(Xi::Http::AuthenticationType status) {
-  switch (status) {
-    case (Xi::Http::AuthenticationType::Basic):
-      return "Basic";
-    case (Xi::Http::AuthenticationType::Bearer):
-      return "Bearer";
-    case (Xi::Http::AuthenticationType::Unsupported):
-      return "Unsupported";
-    default:
-      throw std::runtime_error{"invalid authentication type provided"};
-  }
-}
+#include <Xi/Global.hh>
+#include <Xi/Algorithm/String.h>
 
 namespace Xi {
+namespace Http {
+/*!
+ * \brief The BearerCredentials class wraps a bearer token authentication schema.
+ */
+class BearerCredentials final {
+ public:
+  XI_DEFAULT_COPY(BearerCredentials);
+  XI_DEFAULT_MOVE(BearerCredentials);
+
+  /*!
+   * \brief BearerCredentials construct authentication credentials required for bearer http authorization
+   * \param token The access token to use.
+   */
+  explicit BearerCredentials(const std::string& token = "");
+  ~BearerCredentials() = default;
+
+  void setToken(const std::string& token);
+  const std::string& token() const;
+
+ private:
+  std::string m_token;
+};
+}  // namespace Http
+std::string to_string(const Http::BearerCredentials& bearer);
 template <>
-Xi::Http::AuthenticationType lexical_cast<Xi::Http::AuthenticationType>(const std::string &value) {
-  if (value == to_string(Xi::Http::AuthenticationType::Basic))
-    return Xi::Http::AuthenticationType::Basic;
-  if (value == to_string(Xi::Http::AuthenticationType::Bearer))
-    return Xi::Http::AuthenticationType::Bearer;
-  else
-    return Xi::Http::AuthenticationType::Unsupported;
-}
+Xi::Http::BearerCredentials lexical_cast<Xi::Http::BearerCredentials>(const std::string& value);
 }  // namespace Xi

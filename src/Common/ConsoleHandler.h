@@ -58,7 +58,7 @@ class ConsoleHandler {
     XI_RETURN_EC_IF_NOT(serializer->beginObject(""), false);
     XI_RETURN_EC_IF_NOT((*serializer)(const_cast<_ValueT&>(object), name), false);
     XI_RETURN_EC_IF_NOT(serializer->endObject(), false);
-    std::cout << std::endl;
+    std::cout << "\n" << std::endl;
     XI_RETURN_SC(true);
   }
 
@@ -72,7 +72,8 @@ class ConsoleHandler {
  private:
   typedef std::map<std::string, std::pair<ConsoleCommandHandler, std::string>> CommandHandlersMap;
 
-  void handleCommand(const std::string& cmd);
+  void handleCommand(std::string cmd);
+  void handleUnknownCommand(const std::string& cmd);
   void completionCallback(const char*, std::vector<std::string>&);
   void quit();
   void clear();

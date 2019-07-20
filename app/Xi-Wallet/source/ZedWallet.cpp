@@ -122,8 +122,11 @@ int main(int argc, char **argv) {
   System::Dispatcher *dispatcher = &localDispatcher;
 
   /* Our connection to xi-daemon */
-  std::unique_ptr<CryptoNote::INode> node(
+  std::unique_ptr<CryptoNote::NodeRpcProxy> node(
       new CryptoNote::NodeRpcProxy(config.host, config.port, config.ssl, currency, logger.getLogger()));
+  if (!config.remoteRpcAccessToken.empty()) {
+    node->httpClient().useAuthorization(Xi::Http::BearerCredentials{config.remoteRpcAccessToken});
+  }
 
   std::promise<std::error_code> errorPromise;
 

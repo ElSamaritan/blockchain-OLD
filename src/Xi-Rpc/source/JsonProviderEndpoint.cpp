@@ -293,6 +293,10 @@ Http::Response JsonProviderEndpoint::doMakeNotFound(const std::string &why) {
   return makeJsonResponse(makeError(ErrorCode::NotFound, why));
 }
 
+Http::Response JsonProviderEndpoint::doMakeUnauthorized(const std::string &why) {
+  return makeJsonResponse(makeError(ErrorCode::Unauthorized, why));
+}
+
 Http::Response JsonProviderEndpoint::doMakeNotImplemented() {
   return makeJsonResponse(makeError(ErrorCode::NotFound));
 }

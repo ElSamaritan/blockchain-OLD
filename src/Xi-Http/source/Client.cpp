@@ -81,7 +81,7 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
 };
 
 Xi::Http::Client::Client(const std::string &host, uint16_t port, SSLConfiguration config)
-    : m_host{host}, m_port{port}, m_sslConfig{config}, m_worker{new _Worker} {
+    : m_host{host}, m_port{port}, m_sslConfig{config}, m_credentials{null}, m_worker{new _Worker} {
   m_sslConfig.initializeClientContext(m_worker->ctx);
   m_worker->run();
 }
@@ -98,11 +98,39 @@ uint16_t Xi::Http::Client::port() const {
   return m_port;
 }
 
+void Xi::Http::Client::useAuthorization(Xi::Null) {
+  XI_CONCURRENT_LOCK_WRITE(m_credentials_guard);
+  m_credentials = null;
+}
+
+void Xi::Http::Client::useAuthorization(const Xi::Http::BasicCredentials &credentials) {
+  XI_CONCURRENT_LOCK_WRITE(m_credentials_guard);
+  m_credentials = BasicCredentials{credentials};
+}
+
+void Xi::Http::Client::useAuthorization(const Xi::Http::BearerCredentials &credentials) {
+  XI_CONCURRENT_LOCK_WRITE(m_credentials_guard);
+  m_credentials = credentials;
+}
+
 std::future<Xi::Http::Response> Xi::Http::Client::send(Xi::Http::Request &&request) {
   if (request.host().empty())
     request.setHost(host());
   if (request.port() == 0)
     request.setPort(port());
+  {
+    XI_CONCURRENT_LOCK_READ(m_credentials_guard);
+    if (!std::holds_alternative<Null>(m_credentials)) {
+      if (const auto basic = std::get_if<BasicCredentials>(std::addressof(m_credentials))) {
+        request.headers().setBasicAuthorization(*basic);
+      } else if (const auto bearer = std::get_if<BearerCredentials>(std::addressof(m_credentials))) {
+        request.headers().setBearerAuthorization(*bearer);
+      } else {
+        exceptional<InvalidVariantTypeError>();
+      }
+    }
+  }
+
   request.headers().setAcceptedContentEncodings(
       {ContentEncoding::Gzip, ContentEncoding::Deflate, ContentEncoding::Identity});
   // TODO: request type should be determined on schema not config.

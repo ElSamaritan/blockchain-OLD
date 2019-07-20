@@ -10,7 +10,12 @@
 #include <Xi/Config.h>
 #include "CryptoNoteCore/Core.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
+
+#include <Xi/ExternalIncludePush.h>
 #include <boost/format.hpp>
+#include <rang.hpp>
+#include <yaml-cpp/yaml.h>
+#include <Xi/ExternalIncludePop.h>
 
 namespace Common {
 
@@ -180,6 +185,88 @@ std::string get_status_string(const CryptoNote::COMMAND_RPC_GET_INFO::response& 
   }
 
   return ss.str();
+}
+
+void printStatus(const CryptoNote::COMMAND_RPC_GET_INFO::response& iresp, const CryptoNote::Currency& currency,
+                 std::ostream& stream) {
+  const auto currentTime = std::time(nullptr);
+  const auto startTime = static_cast<std::time_t>(iresp.start_time);
+  const auto upTime = currentTime - startTime;
+
+  const auto upMinutes = upTime / 60;
+  const auto upHours = upMinutes / 60;
+  const auto upDays = upHours / 24;
+
+  const auto syncPercentage = get_sync_percentage(iresp.height, iresp.network_height);
+  const auto forkStatus =
+      get_fork_status(iresp.network_height, iresp.upgrade_heights, iresp.supported_height, currency);
+
+  YAML::Emitter emitter{stream};
+  stream << rang::bg::reset << rang::fg::reset << rang::style::reset;
+  emitter << YAML::BeginMap;
+  {
+    stream << rang::fg::green;
+    emitter << YAML::Key << "height";
+
+    std::stringstream builder{};
+    builder << iresp.height.native() << "/" << iresp.network_height.native();
+    stream << rang::fg::reset;
+    emitter << YAML::Value << builder.str();
+
+    if (iresp.height < iresp.network_height) {
+      stream << rang::fg::yellow << rang::style::italic;
+      stream << " (" << syncPercentage << "%) SYNCING";
+      stream << rang::fg::reset << rang::style::reset;
+    } else if (iresp.height > iresp.network_height.next(1)) {
+      stream << rang::fg::red << rang::style::bold;
+      stream << " DETACHED";
+      stream << rang::fg::reset << rang::style::reset;
+    } else {
+      stream << rang::fg::green;
+      stream << " SYNCED";
+      stream << rang::fg::reset;
+    }
+  }
+  {
+    stream << rang::fg::green;
+    emitter << YAML::Key << "network";
+    stream << rang::fg::reset;
+    emitter << YAML::Value << iresp.network;
+  }
+  {
+    stream << rang::fg::green;
+    emitter << YAML::Key << "update status";
+    stream << rang::fg::reset;
+    if (forkStatus == ForkStatus::ForkLater) {
+    } else if (forkStatus == ForkStatus::ForkSoonReady) {
+      stream << rang::fg::green << rang::style::italic;
+    } else if (forkStatus == ForkStatus::ForkSoonNotReady) {
+      stream << rang::fg::red << rang::style::bold;
+    } else if (forkStatus == ForkStatus::OutOfDate) {
+      stream << rang::fg::red << rang::style::bold << rang::bg::yellow;
+
+    } else if (forkStatus == ForkStatus::UpToDate) {
+      stream << rang::fg::green << rang::style::underline;
+    }
+    emitter << YAML::Value
+            << get_update_status(forkStatus, iresp.network_height, iresp.upgrade_heights, currency).substr(1);
+    stream << rang::fg::reset << rang::style::reset;
+  }
+  {
+    stream << rang::fg::green;
+    emitter << YAML::Key << "hashrate";
+    stream << rang::fg::reset;
+    emitter << YAML::Value << get_mining_speed(iresp.hashrate);
+  }
+  {
+    stream << rang::fg::green;
+    emitter << YAML::Key << "uptime";
+    stream << rang::fg::reset;
+    std::stringstream builder{};
+    builder << upDays << "d+" << upHours % 24 << ":" << upMinutes % 60;
+    emitter << YAML::Value << builder.str();
+  }
+  emitter << YAML::EndMap;
 }
 
 }  // namespace Common

@@ -146,6 +146,19 @@ template <>
               << std::endl;                                                                                 \
     return false;                                                                                           \
   }
+
+#define KV_PUSH_VIRTUAL_OBJECT(NAME)                                                                           \
+  if (!s.beginObject(#NAME)) {                                                                                 \
+    std::cout << "[" << __FILE__ << ":" << __LINE__ << "] virtual object push serialization failed: " << #NAME \
+              << std::endl;                                                                                    \
+    return false;                                                                                              \
+  }
+
+#define KV_POP_VIRTUAL_OBJECT()                                                                                   \
+  if (!s.endObject()) {                                                                                           \
+    std::cout << "[" << __FILE__ << ":" << __LINE__ << "] virtual object pop serialization failed." << std::endl; \
+    return false;                                                                                                 \
+  }
 #else
 #define KV_MEMBER(member)    \
   if (!s(member, #member)) { \
@@ -160,6 +173,16 @@ template <>
 #define KV_BASE(BASE_CLASS)              \
   if (!this->BASE_CLASS::serialize(s)) { \
     return false;                        \
+  }
+
+#define KV_PUSH_VIRTUAL_OBJECT(NAME) \
+  if (!s.beginObject(#NAME)) {       \
+    return false;                    \
+  }
+
+#define KV_POP_VIRTUAL_OBJECT() \
+  if (!s.endObject()) {         \
+    return false;               \
   }
 
 #endif

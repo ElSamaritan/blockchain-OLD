@@ -54,6 +54,10 @@ Xi::Http::Response Xi::Http::RequestHandler::makeNotFound(const std::string &why
   return doMakeNotFound(why);
 }
 
+Xi::Http::Response Xi::Http::RequestHandler::makeUnauthorized(const std::string &why) {
+  return doMakeUnauthorized(why);
+}
+
 Xi::Http::Response Xi::Http::RequestHandler::makeNotImplemented() {
   return doMakeNotImplemented();
 }
@@ -68,6 +72,10 @@ Xi::Http::Response Xi::Http::RequestHandler::doMakeBadRequest(const std::string 
 
 Xi::Http::Response Xi::Http::RequestHandler::doMakeNotFound(const std::string &why) {
   return Response{StatusCode::NotFound, why};
+}
+
+Xi::Http::Response Xi::Http::RequestHandler::doMakeUnauthorized(const std::string &why) {
+  return Response{StatusCode::Unauthorized, why};
 }
 
 Xi::Http::Response Xi::Http::RequestHandler::doMakeNotImplemented() {

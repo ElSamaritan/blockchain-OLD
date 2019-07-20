@@ -125,7 +125,6 @@ class NodeServer : public IP2pEndpoint {
              CryptoNote::CryptoNoteProtocolHandler& payload_handler, Logging::ILogger& log);
 
   [[nodiscard]] bool run();
-  [[nodiscard]] std::future<void> runAsync();
   [[nodiscard]] bool init(const NetNodeConfig& config);
   [[nodiscard]] bool deinit();
 

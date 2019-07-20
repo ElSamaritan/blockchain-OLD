@@ -105,6 +105,15 @@ void Xi::Http::HeaderContainer::setBasicAuthorization(const Xi::Http::BasicCrede
   set(Authorization, to_string(AuthenticationType::Basic) + " " + Base64::encode(to_string(credentials)));
 }
 
+void Xi::Http::HeaderContainer::setBearerAuthorization(const std::string &token) {
+  BearerCredentials cred{token};
+  setBearerAuthorization(cred);
+}
+
+void Xi::Http::HeaderContainer::setBearerAuthorization(const Xi::Http::BearerCredentials &bearer) {
+  set(Authorization, to_string(AuthenticationType::Bearer) + " " + bearer.token());
+}
+
 void Xi::Http::HeaderContainer::setAllow(std::initializer_list<Method> method) {
   if (method.size() == 0)
     throw std::invalid_argument{"you need to support at least one method."};
@@ -119,13 +128,27 @@ boost::optional<Xi::Http::BasicCredentials> Xi::Http::HeaderContainer::basicAuth
   const auto search = get(Authorization);
   if (search) {
     const std::string authPrefix = to_string(AuthenticationType::Basic) + " ";
-    if (!Xi::starts_with(*search, authPrefix))
-      throw std::runtime_error{"invalid basic authentication scheme provided."};
+    if (!Xi::starts_with(*search, authPrefix)) {
+      return boost::optional<BasicCredentials>{};
+    }
     const std::string encodedAuth = search->substr(authPrefix.size());
     const std::string decodedAuth = Base64::decode(encodedAuth);
     return lexical_cast<BasicCredentials>(decodedAuth);
   } else
     return boost::optional<BasicCredentials>{};
+}
+
+std::optional<Xi::Http::BearerCredentials> Xi::Http::HeaderContainer::bearerAuthorization() const {
+  const auto search = get(Authorization);
+  if (search) {
+    const std::string authPrefix = to_string(AuthenticationType::Bearer) + " ";
+    if (!Xi::starts_with(*search, authPrefix)) {
+      return std::nullopt;
+    }
+    const std::string auth = search->substr(authPrefix.size());
+    return lexical_cast<BearerCredentials>(auth);
+  } else
+    return std::nullopt;
 }
 
 void Xi::Http::HeaderContainer::setContentType(Xi::Http::ContentType _contentType) {
@@ -160,7 +183,7 @@ boost::optional<std::vector<Xi::Http::ContentEncoding> > Xi::Http::HeaderContain
     std::vector<Xi::Http::ContentEncoding> reval;
     std::transform(supportedEncodings.begin(), supportedEncodings.end(), std::back_inserter(reval),
                    lexical_cast<Xi::Http::ContentEncoding>);
-    return reval;
+    return std::move(reval);
   } else
     return boost::optional<std::vector<Xi::Http::ContentEncoding> >{};
 }

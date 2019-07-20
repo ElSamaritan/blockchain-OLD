@@ -25,17 +25,27 @@
 #define _DISABLE_EXTENDED_ALIGNED_STORAGE 1
 #endif
 
+// #define DEBUG_GENERATED_HASHES
+
+#if defined(DEBUG_GENERATED_HASHES)
+#include <iostream>
+#define PRINT_HASH_FN(NAME, HASH) std::cout << #NAME << ": " << HASH.toString() << "\n"
+#else
+#define PRINT_HASH_FN(NAME, HASH)
+#endif
+
 #include "Xi/ProofOfWork/Cnx.hpp"
 
 #include <memory>
 #include <vector>
+
+#include <openssl/sha.h>
 
 #include <Xi/Crypto/Hash/Keccak.hh>
 #include <Xi/Crypto/Hash/Sha2.hh>
 
 #include "groestl/groestl.h"
 #include "blake/blake256.h"
-#include "jh/jh.h"
 
 #include <iostream>
 
@@ -101,6 +111,7 @@ class KeccakNode final : public INode {
     xi_crypto_hash_keccak_state state{};
     std::memcpy(std::addressof(state), std::addressof(m_state), sizeof(xi_crypto_hash_keccak_state));
     xi_crypto_hash_keccak_finish(std::addressof(state), out.data());
+    PRINT_HASH_FN(Keccak, out);
   }
 };
 
@@ -129,6 +140,7 @@ class GroestlNode final : public INode {
     groestl_hash_state state{};
     std::memcpy(std::addressof(state), std::addressof(m_state), sizeof(groestl_hash_state));
     groestl_final(std::addressof(state), out.data());
+    PRINT_HASH_FN(Groestl, out);
   }
 };
 
@@ -157,40 +169,42 @@ class BlakeNode final : public INode {
     blake_state state{};
     std::memcpy(std::addressof(state), std::addressof(m_state), sizeof(blake_state));
     blake256_final(std::addressof(state), out.data());
+    PRINT_HASH_FN(Blake, out);
   }
 };
 
-class JhNode final : public INode {
+class ShaNode final : public INode {
  private:
-  jh_hash_state m_state;
+  SHA256_CTX m_state;
 
  public:
-  ~JhNode() override = default;
-  explicit JhNode(const jh_hash_state& state) {
-    std::memcpy(std::addressof(m_state), std::addressof(state), sizeof(jh_hash_state));
+  ~ShaNode() override = default;
+  explicit ShaNode(const SHA256_CTX& state) {
+    std::memcpy(std::addressof(m_state), std::addressof(state), sizeof(SHA256_CTX));
   }
-  JhNode() {
-    jh_init(std::addressof(m_state), static_cast<int>(::Crypto::Hash::bytes()));
+  ShaNode() {
+    SHA256_Init(std::addressof(m_state));
   }
 
   void doUpdate(ConstByteSpan blob) override {
-    jh_update(std::addressof(m_state), blob.data(), blob.size_bytes());
+    SHA256_Update(std::addressof(m_state), blob.data(), blob.size_bytes());
   }
 
   std::shared_ptr<INode> doCopy() const override {
-    return std::make_shared<JhNode>(m_state);
+    return std::make_shared<ShaNode>(m_state);
   }
 
   void doFinal(::Crypto::Hash& out) const override {
-    jh_hash_state state{};
-    std::memcpy(std::addressof(state), std::addressof(m_state), sizeof(jh_hash_state));
-    jh_final(std::addressof(state), out.data());
+    SHA256_CTX state{};
+    std::memcpy(std::addressof(state), std::addressof(m_state), sizeof(SHA256_CTX));
+    SHA256_Final(out.data(), std::addressof(state));
+    PRINT_HASH_FN(Sha, out);
   }
 };
 
 struct NodeComparator {
   bool operator()(const std::shared_ptr<INode>& lhs, const std::shared_ptr<INode>& rhs) const {
-    return std::memcmp(lhs->hash().data(), rhs->hash().data(), ::Crypto::Hash::bytes()) <= 0;
+    return std::memcmp(lhs->hash().data(), rhs->hash().data(), ::Crypto::Hash::bytes()) < 0;
   }
 };
 
@@ -220,7 +234,7 @@ struct NodePredicate {
         reval = std::make_shared<BlakeNode>();
         break;
       default:
-        reval = std::make_shared<JhNode>();
+        reval = std::make_shared<ShaNode>();
         break;
     }
     return reval;

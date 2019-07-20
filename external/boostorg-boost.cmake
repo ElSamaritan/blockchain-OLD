@@ -69,7 +69,6 @@ endif()
 cmake_policy(POP)
 
 add_library(boost INTERFACE IMPORTED GLOBAL)
-target_include_directories(boost INTERFACE ${Boost_INCLUDE_DIR})
 target_link_libraries(boost INTERFACE Boost::boost)
 
 if(MSVC)

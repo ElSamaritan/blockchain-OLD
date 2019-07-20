@@ -64,6 +64,19 @@ Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::fromSize(size_t nat
   }
 }
 
+Xi::Blockchain::Block::Height Xi::Blockchain::Block::Height::fromString(const std::string &str) {
+  try {
+    const auto parsed = std::stoul(str);
+    if (std::to_string(parsed) != str) {
+      return Height::Null;
+    } else {
+      return Height::fromNative(parsed);
+    }
+  } catch (...) {
+    return Height::Null;
+  }
+}
+
 Xi::Blockchain::Block::Height::Height() : m_height{Null.native()} {
 }
 

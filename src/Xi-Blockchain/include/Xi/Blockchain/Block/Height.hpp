@@ -56,6 +56,7 @@ class Height {
   static Height fromIndex(value_type index);
   static Height fromNative(value_type native);
   static Height fromSize(size_t native);
+  static Height fromString(const std::string& str);
 
  public:
   Height();

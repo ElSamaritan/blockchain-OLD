@@ -54,16 +54,16 @@ XiMiner::MinerCommandsHandler::MinerCommandsHandler(MinerManager &miner, UpdateM
 
   MINER_COMMAND_DEFINE(status, "prints the current miner status");
 
-  MINER_COMMAND_DEFINE(set_poll_interval, "sets the block template polling interval in milliseconds");
-  MINER_COMMAND_DEFINE(set_threads, "sets the number of threads to use for mining");
+  MINER_COMMAND_DEFINE(poll_interval_set, "sets the block template polling interval in milliseconds");
+  MINER_COMMAND_DEFINE(threads_set, "sets the number of threads to use for mining");
 
-  MINER_COMMAND_DEFINE(set_log, "sets the maximum log level");
-  MINER_COMMAND_DEFINE(hide_log, "hides application log, except for this interface");
+  MINER_COMMAND_DEFINE(log_set, "sets the maximum log level");
+  MINER_COMMAND_DEFINE(log_hide, "hides application log, except for this interface");
 
-  MINER_COMMAND_DEFINE(show_hashrate, "prints the current hashrate to the console");
-  MINER_COMMAND_DEFINE(hide_hashrate, "disables printing the current hashrate to the console");
+  MINER_COMMAND_DEFINE(hashrate_show, "prints the current hashrate to the console");
+  MINER_COMMAND_DEFINE(hashrate_hide, "disables printing the current hashrate to the console");
 
-  MINER_COMMAND_DEFINE(set_report_interval, "sets the status report interval of the miner monitor");
+  MINER_COMMAND_DEFINE(hashrate_interval_set, "sets the status report interval of the miner monitor");
 
   m_clogger.setPattern("");
   m_monitorlogger.setPattern("");
@@ -91,7 +91,7 @@ bool XiMiner::MinerCommandsHandler::help(const std::vector<std::string> &args) {
 
 bool XiMiner::MinerCommandsHandler::version(const std::vector<std::string> &args) {
   XI_UNUSED(args);
-  m_logger(Logging::Info) << CommonCLI::verboseVersionInformation();
+  printObject(CommonCLI::versionInformation(), "Version");
   return true;
 }
 
@@ -126,7 +126,7 @@ bool XiMiner::MinerCommandsHandler::status(const std::vector<std::string> &args)
   return true;
 }
 
-bool XiMiner::MinerCommandsHandler::set_poll_interval(const std::vector<std::string> &args) {
+bool XiMiner::MinerCommandsHandler::poll_interval_set(const std::vector<std::string> &args) {
   if (args.size() != 1) {
     return false;
   }
@@ -148,7 +148,7 @@ bool XiMiner::MinerCommandsHandler::set_poll_interval(const std::vector<std::str
   return true;
 }
 
-bool XiMiner::MinerCommandsHandler::set_threads(const std::vector<std::string> &args) {
+bool XiMiner::MinerCommandsHandler::threads_set(const std::vector<std::string> &args) {
   if (args.size() != 1) {
     return false;
   }
@@ -177,7 +177,7 @@ bool XiMiner::MinerCommandsHandler::set_threads(const std::vector<std::string> &
   return true;
 }
 
-bool XiMiner::MinerCommandsHandler::set_log(const std::vector<std::string> &args) {
+bool XiMiner::MinerCommandsHandler::log_set(const std::vector<std::string> &args) {
   if (args.size() != 1) {
     return false;
   }
@@ -194,25 +194,25 @@ bool XiMiner::MinerCommandsHandler::set_log(const std::vector<std::string> &args
   return true;
 }
 
-bool XiMiner::MinerCommandsHandler::hide_log(const std::vector<std::string> &args) {
+bool XiMiner::MinerCommandsHandler::log_hide(const std::vector<std::string> &args) {
   XI_UNUSED(args);
   hideHashrate();
   return true;
 }
 
-bool XiMiner::MinerCommandsHandler::hide_hashrate(const std::vector<std::string> &args) {
+bool XiMiner::MinerCommandsHandler::hashrate_hide(const std::vector<std::string> &args) {
   XI_UNUSED(args);
   m_monitorlogger.setMaxLevel(Logging::Info);
   return true;
 }
 
-bool XiMiner::MinerCommandsHandler::show_hashrate(const std::vector<std::string> &args) {
+bool XiMiner::MinerCommandsHandler::hashrate_show(const std::vector<std::string> &args) {
   XI_UNUSED(args);
   showHashrate();
   return true;
 }
 
-bool XiMiner::MinerCommandsHandler::set_report_interval(const std::vector<std::string> &args) {
+bool XiMiner::MinerCommandsHandler::hashrate_interval_set(const std::vector<std::string> &args) {
   if (args.size() != 1) {
     return false;
   }

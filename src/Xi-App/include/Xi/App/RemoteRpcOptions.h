@@ -45,10 +45,12 @@ namespace App {
 struct RemoteRpcOptions : public IOptions {
   std::string Address = "127.0.0.1";
   uint16_t Port = Xi::Config::Network::Configuration::rpcDefaultPort();
+  std::string AccessToken = "";
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(Address)
   KV_MEMBER(Port)
+  KV_MEMBER(AccessToken)
   KV_END_SERIALIZATION
 
   void emplaceOptions(cxxopts::Options& options) override;

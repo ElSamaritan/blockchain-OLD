@@ -62,6 +62,8 @@ struct Config {
 
   /* The daemon host */
   std::string host = "127.0.0.1";
+  /* The daemon host access token, if required */
+  std::string remoteRpcAccessToken = "";
 
   /* The network to connect to, ie. MainNet/StageNet ... */
   std::string network = Xi::Config::Network::defaultNetworkIdentifier();

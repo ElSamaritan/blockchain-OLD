@@ -37,6 +37,12 @@ using nlohmann::json;
 
 namespace {
 struct DaemonConfiguration {
+  struct PublicNodeFees {
+    std::string address = "";
+    std::string view_key = "";
+    uint64_t amount = 0;
+  };
+
   std::string dataDirectory;
   std::string logFile;
   std::string p2pInterface;
@@ -50,7 +56,6 @@ struct DaemonConfiguration {
   bool p2pAutoBan = false;
 
   int logLevel;
-  uint64_t feeAmount;
   bool lightNode = false;
 
   std::string network;
@@ -74,7 +79,9 @@ struct DaemonConfiguration {
   bool disableRpc = false;
   uint16_t rpcPort;
   std::string rpcInterface;
-  std::string feeAddress;
+  std::string rpcAccessToken;
+
+  PublicNodeFees fees{/* */};
 
   bool localIp;
   bool hideMyPort;
@@ -124,6 +131,7 @@ DaemonConfiguration initConfiguration() {
   config.p2pBanDurationMinutes = 24 * 60;
   config.p2pAutoBan = false;
   config.rpcInterface = "127.0.0.1";
+  config.rpcAccessToken = "";
   config.rpcPort = Xi::Config::Network::Configuration::rpcDefaultPort();
   config.noConsole = false;
   config.enableBlockExplorer = false;
@@ -174,6 +182,7 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     ("enable-cors", "Adds header 'Access-Control-Allow-Origin' to the RPC responses using the <domain>. Uses the value specified as the domain. Use * for all.",
       cxxopts::value<std::string>()->implicit_value("*"), "<domain>")
     ("fee-address", "Sets the convenience charge <address> for light wallets that use the daemon", cxxopts::value<std::string>(), "<address>")
+    ("fee-view-key", "Fee address private view key to validate fees are payed.", cxxopts::value<std::string>(), "<private-key>")
     ("fee-amount", "Sets the convenience charge amount for light wallets that use the daemon", cxxopts::value<int>()->default_value("0"), "#");
 
   options.add_options("Network")
@@ -190,7 +199,8 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     ("p2p-ban-auto-mode", "Enables autonomous banning of peers, if they exceed a certain penalty score.", cxxopts::value<bool>(config.p2pAutoBan)->default_value("false"))
     ("p2p-external-port", "External TCP port for the P2P service (NAT port forward)", cxxopts::value<uint16_t>()->default_value(std::to_string(config.p2pExternalPort)), "#")
     ("rpc-bind-ip", "Interface IP address for the RPC service", cxxopts::value<std::string>()->default_value(config.rpcInterface), "<ip>")
-    ("rpc-bind-port", "TCP port for the RPC service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.rpcPort)), "#");
+    ("rpc-bind-port", "TCP port for the RPC service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.rpcPort)), "#")
+    ("rpc-access-token", "Sets an access token required to access the rpc interface", cxxopts::value<std::string>()->default_value(config.rpcAccessToken), "<token>");
 
   options.add_options("Peer")
     ("add-exclusive-node", "Manually add a peer to the local peer list ONLY attempt connections to it. [ip:port]", cxxopts::value<std::vector<std::string>>(), "<ip:port>")
@@ -311,6 +321,10 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
       config.rpcInterface = cli["rpc-bind-ip"].as<std::string>();
     }
 
+    if (cli.count("rpc-access-token") > 0) {
+      config.rpcAccessToken = cli["rpc-access-token"].as<std::string>();
+    }
+
     if (cli.count("rpc-bind-port") > 0) {
       config.rpcPort = cli["rpc-bind-port"].as<uint16_t>();
     }
@@ -340,11 +354,15 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     }
 
     if (cli.count("fee-address") > 0) {
-      config.feeAddress = cli["fee-address"].as<std::string>();
+      config.fees.address = cli["fee-address"].as<std::string>();
+    }
+
+    if (cli.count("fee-view-key") > 0) {
+      config.fees.view_key = cli["fee-view-key"].as<std::string>();
     }
 
     if (cli.count("fee-amount") > 0) {
-      config.feeAmount = cli["fee-amount"].as<uint64_t>();
+      config.fees.amount = cli["fee-amount"].as<uint64_t>();
     }
 
     if (CommonCLI::handleCLIOptions(options, cli)) exit(0);
@@ -454,6 +472,10 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
     config.rpcInterface = j["rpc-bind-ip"].get<std::string>();
   }
 
+  if (j.find("rpc-access-token") != j.end()) {
+    config.rpcAccessToken = j["rpc-access-token"].get<std::string>();
+  }
+
   if (j.find("rpc-bind-port") != j.end()) {
     config.rpcPort = j["rpc-bind-port"].get<uint16_t>();
   }
@@ -491,11 +513,15 @@ void handleSettings(const std::string configFile, DaemonConfiguration& config) {
   }
 
   if (j.find("fee-address") != j.end()) {
-    config.feeAddress = j["fee-address"].get<std::string>();
+    config.fees.address = j["fee-address"].get<std::string>();
+  }
+
+  if (j.find("fee-view-key") != j.end()) {
+    config.fees.view_key = j["fee-view-key"].get<std::string>();
   }
 
   if (j.find("fee-amount") != j.end()) {
-    config.feeAmount = j["fee-amount"].get<uint64_t>();
+    config.fees.amount = j["fee-amount"].get<uint64_t>();
   }
 
   if (j.find("ssl") != j.end()) {
@@ -530,6 +556,7 @@ json asJSON(const DaemonConfiguration& config) {
                 {"p2p-ban-duration", config.p2pBanDurationMinutes},
                 {"p2p-ban-auto-mode", config.p2pAutoBan},
                 {"rpc-bind-ip", config.rpcInterface},
+                {"rpc-access-token", config.rpcAccessToken},
                 {"rpc-bind-port", config.rpcPort},
                 {"no-rpc", config.disableRpc},
                 {"add-exclusive-node", config.exclusiveNodes},
@@ -539,8 +566,9 @@ json asJSON(const DaemonConfiguration& config) {
                 {"enable-blockexplorer", config.enableBlockExplorer},
                 {"only-blockexplorer", config.onlyBlockExplorer},
                 {"enable-cors", config.enableCors},
-                {"fee-address", config.feeAddress},
-                {"fee-amount", config.feeAmount},
+                {"fee-address", config.fees.address},
+                {"fee-view-key", config.fees.view_key},
+                {"fee-amount", config.fees.amount},
                 {"ssl", CryptoNote::storeToJson(config.ssl)}};
 
   return j;

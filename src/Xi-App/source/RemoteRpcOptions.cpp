@@ -41,6 +41,7 @@ void Xi::App::RemoteRpcOptions::emplaceOptions(cxxopts::Options &options) {
     ("rpc-remote-address", "remote ip address running the rpc server.", cxxopts::value<std::string>(Address)->default_value(Address), "#.#.#.#")
     ("rpc-remote-port", "remote port the rpc server is listening on.", cxxopts::value<uint16_t>(Port)->default_value(std::to_string(Port)), "#")
     ("rpc-remote-host", "unified ip address and port of the remote rpc server", cxxopts::value<std::string>(), "#.#.#.#:#")
+    ("rpc-remote-access-token", "access token required by the rpc server", cxxopts::value<std::string>(AccessToken)->default_value(AccessToken), "<token>")
   ;
   // clang-format on
 }
@@ -77,6 +78,7 @@ CryptoNote::RpcRemoteConfiguration Xi::App::RemoteRpcOptions::getConfig(
   CryptoNote::RpcRemoteConfiguration cfg{};
   cfg.Host = Address;
   cfg.Port = Port;
+  cfg.AccessToken = AccessToken;
   cfg.Ssl = sslConfig;
   return cfg;
 }

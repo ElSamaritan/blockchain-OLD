@@ -533,14 +533,6 @@ bool NodeServer::run() {
   return true;
 }
 
-std::future<void> NodeServer::runAsync() {
-  return std::async(std::launch::async, [this]() {
-    if (!this->run()) {
-      throw std::runtime_error{"Node server returned none success code."};
-    }
-  });
-}
-
 //-----------------------------------------------------------------------------------
 
 uint64_t NodeServer::get_connections_count() {

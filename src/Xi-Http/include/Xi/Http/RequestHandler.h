@@ -68,6 +68,14 @@ class RequestHandler {
   Response makeNotFound(const std::string& why = "");
 
   /*!
+   * \brief makeNotFound returns a not authorized repsone
+   * \param why the message to display to the user
+   *
+   * \attention \param why should never contain any sensible data about what happened on the server.
+   */
+  Response makeUnauthorized(const std::string& why = "");
+
+  /*!
    * \brief makeNotImplemented returns a not implemented response
    * \param why the message to display to the user
    *
@@ -96,6 +104,7 @@ class RequestHandler {
 
   virtual Response doMakeBadRequest(const std::string& why);
   virtual Response doMakeNotFound(const std::string& why);
+  virtual Response doMakeUnauthorized(const std::string& why);
   virtual Response doMakeNotImplemented();
   virtual Response doMakeInternalServerError(const std::string& why);
 

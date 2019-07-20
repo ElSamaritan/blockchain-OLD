@@ -133,6 +133,7 @@ xi_make_library(
     Crypto
 
   PRIVATE_LIBRARIES
+    openssl
 )
 
 
@@ -284,6 +285,7 @@ target_link_libraries(Rpc PUBLIC CryptoNoteCore boost json linenoise BlockchainE
 target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Serialization CryptoNoteCore System Logging Common Crypto boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(BlockchainExplorer PUBLIC boost json linenoise Crypto ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Common PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
+target_link_libraries(Common PRIVATE rang::rang yaml::yaml-cpp)
 target_link_libraries(CommonCLI PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Crypto PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Logging PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})

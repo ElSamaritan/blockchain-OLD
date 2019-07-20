@@ -33,8 +33,9 @@ enum NodeErrorCodes {
   REQUEST_ERROR = 6,
   RESPONSE_ERROR = 8,
   CONNECT_ERROR = 7,
+  NOT_AUTHORIZED = 9,
 
-  __Num = 9
+  __Num = 10
 };
 
 // custom category:
@@ -68,6 +69,8 @@ class NodeErrorCategory : public std::error_category {
         return "Error parsing a response";
       case CONNECT_ERROR:
         return "Can't connect to daemon";
+      case NOT_AUTHORIZED:
+        return "Authorization failed.";
       default:
         return "Unknown error";
     }

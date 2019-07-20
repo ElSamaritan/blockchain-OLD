@@ -13,6 +13,7 @@
 #include <iostream>
 
 #include <Xi/Global.hh>
+#include <Xi/Exceptions.hpp>
 #include <System/ContextGroup.h>
 #include <System/Dispatcher.h>
 #include <System/Event.h>
@@ -46,6 +47,9 @@ using namespace System;
 namespace CryptoNote {
 
 namespace {
+
+XI_DECLARE_EXCEPTIONAL_CATEGORY(NodeRpcProxy)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(Unauthorized, "invocation failed due to authorization failure", NodeRpcProxy)
 
 std::error_code interpretResponseStatus(const std::string& status) {
   if (CORE_RPC_STATUS_BUSY == status) {
@@ -395,6 +399,14 @@ void NodeRpcProxy::setPollUpdatesEnabled(bool enabled) {
 
 bool NodeRpcProxy::pollUpdatesEnabled() const {
   return m_pollUpdates.load();
+}
+
+const Xi::Http::Client& NodeRpcProxy::httpClient() const {
+  return *m_httpClient;
+}
+
+Xi::Http::Client& NodeRpcProxy::httpClient() {
+  return *m_httpClient;
 }
 
 std::vector<Crypto::Hash> NodeRpcProxy::getKnownTxsVector() const {
@@ -939,7 +951,11 @@ void invokeJsonCommand(HttpClient& client, const std::string& url, const Request
 
   const auto response = client.postSync(url, Xi::Http::ContentType::Json, std::move(body));
   if (response.status() != StatusCode::Ok) {
-    throw std::runtime_error("HTTP status: " + Xi::to_string(response.status()));
+    if (response.status() == StatusCode::Unauthorized) {
+      Xi::exceptional<UnauthorizedError>();
+    } else {
+      throw std::runtime_error("HTTP status: " + Xi::to_string(response.status()));
+    }
   }
 
   if constexpr (!std::is_same_v<Response, CryptoNote::Null>) {
@@ -960,6 +976,9 @@ std::error_code NodeRpcProxy::jsonCommand(const std::string& url, const Request&
     m_logger(Trace) << "Send " << url << " JSON request";
     invokeJsonCommand(*m_httpClient, url, req, res);
     ec = interpretResponseStatus(res.status);
+  } catch (const UnauthorizedError& e) {
+    m_logger(Error) << "Rpc authorization failed: " << e.what();
+    ec = make_error_code(error::NOT_AUTHORIZED);
   } catch (const std::exception& e) {
     m_logger(Error) << url << " JSON response deserialization failed: " << e.what();
     ec = make_error_code(error::NETWORK_ERROR);
@@ -995,14 +1014,21 @@ std::error_code NodeRpcProxy::jsonRpcCommand(const std::string& method, const Re
       if (jsRes.getResult(res)) {
         ec = interpretResponseStatus(res.status);
       }
+    } else if (httpRes.status() == StatusCode::Unauthorized) {
+      ec = make_error_code(error::NOT_AUTHORIZED);
+    } else {
+      ec = make_error_code(error::NETWORK_ERROR);
     }
+  } catch (const UnauthorizedError& e) {
+    m_logger(Error) << "Rpc authorization failed: " << e.what();
+    ec = make_error_code(error::NOT_AUTHORIZED);
   } catch (const std::exception& e) {
     m_logger(Error) << "Exception on json rpc request: " << e.what();
     ec = make_error_code(error::NETWORK_ERROR);
   }
 
   if (ec) {
-    m_logger(Trace) << method << " JSON RPC request failed: " << ec << ", " << ec.message();
+    m_logger(Error) << method << " JSON RPC request failed: " << ec << ", " << ec.message();
   } else {
     m_logger(Trace) << method << " JSON RPC request compete";
   }

@@ -28,13 +28,19 @@
 #include <vector>
 #include <utility>
 #include <future>
+#include <optional>
+#include <variant>
 
 #include <System/Dispatcher.h>
 
 #include <Xi/Global.hh>
+#include <Xi/Concurrent/ReadersWriterLock.h>
 
 #include "Xi/Http/Request.h"
 #include "Xi/Http/Response.h"
+#include "Xi/Http/SSLConfiguration.h"
+#include "Xi/Http/BasicCredentials.h"
+#include "Xi/Http/BearerCredentials.h"
 #include "Xi/Http/SSLConfiguration.h"
 
 namespace Xi {
@@ -55,6 +61,10 @@ class Client {
 
   const std::string host() const;
   uint16_t port() const;
+
+  void useAuthorization(Null);
+  void useAuthorization(const BasicCredentials& credentials);
+  void useAuthorization(const BearerCredentials& credentials);
 
   /*!
    * \brief send sends the request to the server asynchroniously
@@ -84,6 +94,11 @@ class Client {
   const std::string m_host;
   const uint16_t m_port;
   SSLConfiguration m_sslConfig;
+
+  using credentials_type = std::variant<Null, BasicCredentials, BearerCredentials>;
+  credentials_type m_credentials{null};
+
+  Concurrent::ReadersWriterLock m_credentials_guard{};
 
   struct _Worker;
   std::shared_ptr<_Worker> m_worker;

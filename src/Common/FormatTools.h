@@ -7,6 +7,7 @@
 #pragma once
 
 #include <string>
+#include <ostream>
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "CryptoNoteCore/Currency.h"
 
@@ -16,4 +17,7 @@ std::string get_sync_percentage(CryptoNote::BlockHeight height, CryptoNote::Bloc
 std::string get_upgrade_time(CryptoNote::BlockHeight height, CryptoNote::BlockHeight upgrade_height);
 std::string get_status_string(const CryptoNote::COMMAND_RPC_GET_INFO::response& iresp,
                               const CryptoNote::Currency& currency);
+
+void printStatus(const CryptoNote::COMMAND_RPC_GET_INFO::response& iresp, const CryptoNote::Currency& currency,
+                 std::ostream& stream);
 }  // namespace Common

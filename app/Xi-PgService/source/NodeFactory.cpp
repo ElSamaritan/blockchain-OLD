@@ -161,10 +161,13 @@ NodeFactory::NodeFactory() {}
 NodeFactory::~NodeFactory() {}
 
 CryptoNote::INode* NodeFactory::createNode(const std::string& daemonAddress, uint16_t daemonPort,
-                                           Xi::Http::SSLConfiguration sslConfig, const CryptoNote::Currency& currency,
-                                           Logging::ILogger& logger) {
-  std::unique_ptr<CryptoNote::INode> node(
+                                           std::string rpcAccessToken, Xi::Http::SSLConfiguration sslConfig,
+                                           const CryptoNote::Currency& currency, Logging::ILogger& logger) {
+  std::unique_ptr<CryptoNote::NodeRpcProxy> node(
       new CryptoNote::NodeRpcProxy(daemonAddress, daemonPort, sslConfig, currency, logger));
+  if (!rpcAccessToken.empty()) {
+    node->httpClient().useAuthorization(Xi::Http::BearerCredentials{rpcAccessToken});
+  }
 
   NodeInitObserver initObserver;
   node->init(std::bind(&NodeInitObserver::initCompleted, &initObserver, std::placeholders::_1));

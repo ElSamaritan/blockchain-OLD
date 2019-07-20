@@ -37,6 +37,7 @@
 #include <boost/bind.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Algorithm/String.h>
 #include <Serialization/ConsoleOutputSerializer.hpp>
 
 using Common::Console::Color;
@@ -136,7 +137,7 @@ std::string ConsoleHandler::getUsage() const {
 
 void ConsoleHandler::setHandler(const std::string& command, const ConsoleCommandHandler& handler,
                                 const std::string& usage) {
-  m_handlers[command] = std::make_pair(handler, usage);
+  m_handlers[Xi::replace(command, "_", " ")] = std::make_pair(handler, usage);
 }
 
 bool ConsoleHandler::runCommand(const std::vector<std::string>& cmdAndArgs) {
@@ -157,11 +158,31 @@ bool ConsoleHandler::runCommand(const std::vector<std::string>& cmdAndArgs) {
   return true;
 }
 
-void ConsoleHandler::handleCommand(const std::string& cmd) {
+void ConsoleHandler::handleCommand(std::string cmd) {
   linenoise::AddHistory(cmd.c_str());
-  std::vector<std::string> args;
-  boost::split(args, cmd, boost::is_any_of(" "), boost::token_compress_on);
-  runCommand(args);
+  std::string bestMatch{};
+  for (const auto& handler : m_handlers) {
+    if (Xi::starts_with(cmd, handler.first) && handler.first.size() > bestMatch.size()) {
+      bestMatch = handler.first;
+    }
+  }
+  if (bestMatch.empty()) {
+    handleUnknownCommand(cmd);
+  } else {
+    cmd.erase(0, bestMatch.size());
+    std::vector<std::string> args;
+    boost::split(args, cmd, boost::is_any_of(" "), boost::token_compress_on);
+    args.insert(args.begin(), bestMatch);
+    for (auto& arg : args) {
+      arg = Xi::trim(arg);
+    }
+    args.erase(std::remove_if(args.begin(), args.end(), [](const auto& arg) { return arg.empty(); }), args.end());
+    runCommand(args);
+  }
+}
+
+void ConsoleHandler::handleUnknownCommand(const std::string& cmd) {
+  printWarning(std::string{"Unknown command: "} + cmd);
 }
 
 void ConsoleHandler::completionCallback(const char* buf, std::vector<std::string>& out) {

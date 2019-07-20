@@ -77,7 +77,10 @@ Config parseArguments(int argc, char** argv) {
 
   options.add_options("Daemon")
     ("r,remote-daemon", "The daemon <host:port> combination to use for node operations.",
-      cxxopts::value<std::string>(remoteDaemon)->default_value(defaultRemoteDaemon.str()), "<host:port>");
+      cxxopts::value<std::string>(remoteDaemon)->default_value(defaultRemoteDaemon.str()), "<host:port>")
+    ("rpc-remote-access-token", "access token required by the rpc server",
+      cxxopts::value<std::string>(config.remoteRpcAccessToken)->default_value(config.remoteRpcAccessToken), "<token>")
+  ;
 
   options.add_options("Wallet")
     ("w,wallet-file", "Open the wallet <file>", cxxopts::value<std::string>(config.walletFile), "<file>")

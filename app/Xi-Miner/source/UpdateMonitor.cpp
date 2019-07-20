@@ -58,6 +58,10 @@ XiMiner::UpdateMonitor::UpdateMonitor(std::string address, CryptoNote::Currency 
     throw std::runtime_error{"invalid account address"};
   }
 
+  if (!remote.AccessToken.empty()) {
+    m_http.useAuthorization(Xi::Http::BearerCredentials{remote.AccessToken});
+  }
+
   m_pollThread = std::thread{[&, this] { this->updateLoop(); }};
   m_logger(Logging::Info) << "starting update monitor";
 }

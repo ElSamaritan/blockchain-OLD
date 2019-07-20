@@ -27,6 +27,7 @@
 #include <vector>
 #include <map>
 #include <stdexcept>
+#include <optional>
 #include <initializer_list>
 
 #include <boost/optional.hpp>
@@ -37,6 +38,7 @@
 #include "Xi/Http/ContentType.h"
 #include "Xi/Http/ContentEncoding.h"
 #include "Xi/Http/BasicCredentials.h"
+#include "Xi/Http/BearerCredentials.h"
 #include "Xi/Http/Method.h"
 
 namespace Xi {
@@ -104,6 +106,18 @@ class HeaderContainer final {
   void setBasicAuthorization(const BasicCredentials& credentials);
 
   /*!
+   * \brief setBaererAuthorization Sets the bearer header type and token value.
+   * \param token The token to be used to authenticate
+   */
+  void setBearerAuthorization(const std::string& token);
+
+  /*!
+   * \brief setBaererAuthorization Sets the bearer header type and token value.
+   * \param bearer The bearer credentials to be used to authenticate
+   */
+  void setBearerAuthorization(const BearerCredentials& bearer);
+
+  /*!
    * \brief setAllow sets the allowed method to quer
    */
   void setAllow(std::initializer_list<Method> method);
@@ -113,6 +127,11 @@ class HeaderContainer final {
    * thrown
    */
   boost::optional<BasicCredentials> basicAuthorization() const;
+
+  /*!
+   * \brief bearerAuthorization returns the bearer credentials, if set.
+   */
+  std::optional<BearerCredentials> bearerAuthorization() const;
 
   void setContentType(::Xi::Http::ContentType contentType);
 

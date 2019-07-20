@@ -52,6 +52,7 @@ class JsonProviderEndpoint : public Http::Endpoint {
     Timeout = -32000,         /// Operation timed out.
     NotInitialized = -32001,  /// Underlying service is not initialized.
     LimitReached = -32002,    /// Number of batches exceeded limitation.
+    Unauthorized = -32003,    /// Authorization failed.
     // Last usable user defined error code: -32299
   };
 
@@ -82,6 +83,7 @@ class JsonProviderEndpoint : public Http::Endpoint {
 
   Http::Response doMakeBadRequest(const std::string& why) override;
   Http::Response doMakeNotFound(const std::string& why) override;
+  Http::Response doMakeUnauthorized(const std::string& why) override;
   Http::Response doMakeNotImplemented() override;
   Http::Response doMakeInternalServerError(const std::string& why) override;
 

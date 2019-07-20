@@ -219,3 +219,19 @@ std::string CommonCLI::verboseVersionInformation() {
   // clang-format on
   return str.str();
 }
+
+CommonCLI::VersionInformation CommonCLI::versionInformation() {
+  VersionInformation reval{};
+  reval.version = APP_VERSION;
+  reval.copyright = PROJECT_COPYRIGHT;
+  reval.build.channel = BUILD_CHANNEL;
+  reval.build.type = BUILD_TYPE;
+  reval.build.dev = isDevVersion();
+  reval.build.compiler.cc = BUILD_C_COMPILER_INFO;
+  reval.build.compiler.cxx = BUILD_CXX_COMPILER_INFO;
+  reval.git.commit = BUILD_COMMIT_ID;
+  reval.git.branch = BUILD_BRANCH;
+  reval.external.boost = BUILD_BOOST_VERSION;
+  reval.external.openssl = BUILD_OPENSSL_VERSION;
+  return reval;
+}

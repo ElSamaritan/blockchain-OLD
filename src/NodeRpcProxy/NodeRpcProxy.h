@@ -119,6 +119,9 @@ class NodeRpcProxy : public CryptoNote::INode {
   void setPollUpdatesEnabled(bool enabled);
   bool pollUpdatesEnabled() const;
 
+  const Xi::Http::Client& httpClient() const;
+  Xi::Http::Client& httpClient();
+
  private:
   void resetInternalState();
   void workerThread(const Callback& initialized_callback);

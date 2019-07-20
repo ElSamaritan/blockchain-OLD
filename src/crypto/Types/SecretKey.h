@@ -33,6 +33,8 @@
 #include <Xi/Algorithm/GenericHash.h>
 #include <Xi/Algorithm/GenericComparison.h>
 
+#include "crypto/Types/PublicKey.h"
+
 namespace Crypto {
 struct SecretKey : Xi::ByteArray<32> {
   using array_type = Xi::ByteArray<32>;
@@ -47,6 +49,13 @@ struct SecretKey : Xi::ByteArray<32> {
   XI_DEFAULT_COPY(SecretKey);
   XI_DEFAULT_MOVE(SecretKey);
   ~SecretKey();
+
+  /*!
+   * \brief toPublicKey converts the secret key to its corresponding public key.
+   * \return the public key counter part for this secret key.
+   * \throws InvalidArgumentError iff this secret key is invalid.
+   */
+  PublicKey toPublicKey() const;
 
   std::string toString() const;
   bool isNull() const;
