@@ -235,6 +235,19 @@ void printStatus(const CryptoNote::COMMAND_RPC_GET_INFO::response& iresp, const 
   }
   {
     stream << rang::fg::green;
+    emitter << YAML::Key << "p2p";
+    emitter << YAML::Value << YAML::BeginMap;
+    emitter << YAML::Key << "outgoing connections";
+    stream << rang::fg::reset;
+    emitter << YAML::Value << iresp.outgoing_connections_count;
+    stream << rang::fg::green;
+    emitter << YAML::Key << "incoming connections";
+    stream << rang::fg::reset;
+    emitter << YAML::Value << iresp.incoming_connections_count;
+    emitter << YAML::EndMap;
+  }
+  {
+    stream << rang::fg::green;
     emitter << YAML::Key << "update status";
     stream << rang::fg::reset;
     if (forkStatus == ForkStatus::ForkLater) {
@@ -267,6 +280,7 @@ void printStatus(const CryptoNote::COMMAND_RPC_GET_INFO::response& iresp, const 
     emitter << YAML::Value << builder.str();
   }
   emitter << YAML::EndMap;
+  stream << rang::bg::reset << rang::fg::reset << rang::style::reset;
 }
 
 }  // namespace Common
