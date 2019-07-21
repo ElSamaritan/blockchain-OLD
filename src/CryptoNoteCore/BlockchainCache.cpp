@@ -1162,8 +1162,11 @@ uint64_t BlockchainCache::getAvailableMixinsCount(IBlockchainCache::Amount amoun
   }
 
   auto& outs = it->second.outputs;
-  auto end = std::lower_bound(outs.begin(), outs.end(),
-                              [&](PackedOutIndex index) { return index.data.blockIndex <= blockIndex; });
+  PackedOutIndex upperBound{};
+  upperBound.data.blockIndex = blockIndex + 1;
+  auto end = std::upper_bound(outs.begin(), outs.end(), upperBound, [&](PackedOutIndex index, PackedOutIndex rhs) {
+    return index.data.blockIndex < rhs.data.blockIndex;
+  });
   uint64_t dist = static_cast<uint64_t>(std::distance(outs.begin(), end));
   if (dist >= threshold) {
     return dist;
