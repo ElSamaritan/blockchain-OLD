@@ -191,7 +191,7 @@ void printSyncStatus(CryptoNote::BlockHeight localHeight, CryptoNote::BlockHeigh
 void printSyncSummary(CryptoNote::BlockHeight localHeight, CryptoNote::BlockHeight remoteHeight,
                       CryptoNote::BlockHeight walletHeight) {
   if (localHeight.isNull() && remoteHeight.isNull()) {
-    std::cout << WarningMsg("Uh oh, it looks like you don't have ") << WarningMsg(WalletConfig::daemonName)
+    std::cout << WarningMsg("It looks like you don't have ") << WarningMsg(WalletConfig::daemonName)
               << WarningMsg(" open!") << std::endl;
   } else if (walletHeight.next(10) < remoteHeight && localHeight == remoteHeight) {
     std::cout << InformationMsg(
@@ -201,12 +201,9 @@ void printSyncSummary(CryptoNote::BlockHeight localHeight, CryptoNote::BlockHeig
               << std::endl
               << "Balances might be incorrect whilst this is ongoing." << std::endl;
   } else if (localHeight == remoteHeight) {
-    std::cout << SuccessMsg("Yay! You are synced!") << std::endl;
+    std::cout << SuccessMsg("You are synced to the network.") << std::endl;
   } else {
-    std::cout << WarningMsg(
-                     "Be patient, you are still syncing with the "
-                     "network!")
-              << std::endl;
+    std::cout << WarningMsg("You are syncing with the network.") << std::endl;
   }
 }
 
