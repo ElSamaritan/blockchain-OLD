@@ -1518,8 +1518,8 @@ bool Core::extractTransactions(const std::vector<BinaryArray>& rawTransactions,
         return false;
       }
 
-      cumulativeSize += rawTransaction.size();
       transactions.push_back(CachedTransaction{rawTransaction});
+      cumulativeSize += transactions.back().getBlobSize();
     }
   } catch (std::runtime_error& e) {
     logger(Logging::Info) << e.what();
@@ -2154,7 +2154,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, uint32_t index, size_t fullRe
   // Assumption Reward(iter) >= Reward(iter++), TransactionPriorityComperator
   for (auto iter = poolTransactions.begin(); iter != poolTransactions.end(); ++iter) {
     // The transation binary array is included in the body and the hash in the header, both are part of the block size
-    const size_t iSize = iter->getTransactionBinaryArray().size();
+    const size_t iSize = iter->getBlobSize();
     if (cumulativeSize + iSize > maxCumulativeSize) {
       break;
     }
