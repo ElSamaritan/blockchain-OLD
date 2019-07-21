@@ -49,6 +49,9 @@ struct ShortPoolInfo {
   KV_BEGIN_SERIALIZATION
 
   KV_MEMBER(state_hash)
+  KV_MEMBER(count)
+  KV_MEMBER(cumulative_size)
+  KV_MEMBER(cumulative_fees)
 
   KV_END_SERIALIZATION
 };
