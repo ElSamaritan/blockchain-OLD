@@ -57,6 +57,7 @@ enum WalletErrorCodes {
   BAD_TRANSACTION_EXTRA,
   MIXIN_BELOW_THRESHOLD,
   MIXIN_ABOVE_THRESHOLD,
+  MIXIN_INSUFFICIENT,
   CONFLICTING_PAYMENT_IDS,
   EXCEPTIONAL,
 };
@@ -138,6 +139,8 @@ class WalletErrorCategory : public std::error_category {
         return "Mixin below minimum allowed threshold";
       case MIXIN_ABOVE_THRESHOLD:
         return "Mixin above maximum allowed threshold";
+      case MIXIN_INSUFFICIENT:
+        return "Not enough mixins found.";
       case CONFLICTING_PAYMENT_IDS:
         return "Multiple conflicting payment ID's were specified via the use of integrated addresses";
       case EXCEPTIONAL:

@@ -479,6 +479,10 @@ void sendTX(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::TransactionParam
   /* Lets handle the error and possibly resend the transaction */
   catch (const std::system_error &e) {
     handleTransferError(e);
+  } catch (const std::exception &e) {
+    std::cout << WarningMsg("Exceptional behavious sending transaction: ") << WarningMsg(e.what());
+  } catch (...) {
+    std::cout << WarningMsg("Exceptional behavious sending transaction: UNKNOWN");
   }
 }
 
@@ -701,8 +705,7 @@ bool parseFee(std::string feeString, const uint64_t minFee, const CryptoNote::Cu
                      "Failed to parse fee! Ensure you entered the "
                      "value correctly.")
               << std::endl
-              << "Please note, you can only use " << currency.coin().decimals() << " decimal places."
-              << std::endl;
+              << "Please note, you can only use " << currency.coin().decimals() << " decimal places." << std::endl;
 
     return false;
   } else if (fee < minFee) {

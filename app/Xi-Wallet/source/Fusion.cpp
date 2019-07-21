@@ -42,7 +42,12 @@ size_t makeFusionTransaction(CryptoNote::WalletGreen &wallet, uint64_t threshold
     return wallet.createFusionTransaction(bestThreshold, {}, wallet.getAddress(0));
   } catch (const std::runtime_error &e) {
     std::cout << WarningMsg("Failed to send fusion transaction: ") << WarningMsg(e.what()) << std::endl;
-
+    return CryptoNote::WALLET_INVALID_TRANSACTION_ID;
+  } catch (const std::exception &e) {
+    std::cout << WarningMsg("Failed to send fusion transaction: ") << WarningMsg(e.what()) << std::endl;
+    return CryptoNote::WALLET_INVALID_TRANSACTION_ID;
+  } catch (...) {
+    std::cout << WarningMsg("Failed to send fusion transaction: UNKNOWN") << std::endl;
     return CryptoNote::WALLET_INVALID_TRANSACTION_ID;
   }
 }
