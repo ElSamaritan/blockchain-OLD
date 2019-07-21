@@ -1162,9 +1162,8 @@ uint64_t BlockchainCache::getAvailableMixinsCount(IBlockchainCache::Amount amoun
   }
 
   auto& outs = it->second.outputs;
-  auto end = std::find_if(outs.rbegin(), outs.rend(), [&](PackedOutIndex index) {
-               return index.data.blockIndex <= blockIndex - currency.minedMoneyUnlockWindow();
-             }).base();
+  auto end = std::lower_bound(outs.begin(), outs.end(),
+                              [&](PackedOutIndex index) { return index.data.blockIndex <= blockIndex; });
   uint64_t dist = static_cast<uint64_t>(std::distance(outs.begin(), end));
   if (dist >= threshold) {
     return dist;
