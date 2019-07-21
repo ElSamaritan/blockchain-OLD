@@ -49,7 +49,7 @@
         "window_size": 128,
         "zone": 524288,
         "cut_off": 4,
-        "reserved_size": 300
+        "reserved_size": 600
       },
 
       "merge_mining": {
