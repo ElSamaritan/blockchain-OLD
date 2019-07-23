@@ -211,9 +211,11 @@ boost::optional<Xi::Http::ContentEncoding> Xi::Http::HeaderContainer::contentEnc
 
 boost::optional<Xi::Http::ContentType> Xi::Http::HeaderContainer::contentType() const {
   const auto search = get(ContentType);
-  if (search)
-    return lexical_cast<Xi::Http::ContentType>(*search);
-  else
+  if (search) {
+    const auto raw = *search;
+    auto seperator = std::find(raw.begin(), raw.end(), ';');
+    return lexical_cast<Xi::Http::ContentType>(std::string{raw.begin(), seperator});
+  } else
     return boost::optional<Xi::Http::ContentType>{};
 }
 
