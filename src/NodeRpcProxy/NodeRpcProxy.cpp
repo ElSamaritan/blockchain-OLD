@@ -434,7 +434,12 @@ size_t NodeRpcProxy::getPeerCount() const {
 }
 
 BlockVersion NodeRpcProxy::getLastKnownBlockVersion() const {
-  return BlockVersion{m_networkVersion.load(std::memory_order_consume)};
+  const BlockVersion netVersion{m_networkVersion.load(std::memory_order_consume)};
+  if (netVersion.isNull()) {
+    return BlockVersion::Genesis;
+  } else {
+    return netVersion;
+  }
 }
 
 BlockHeight NodeRpcProxy::getLastLocalBlockHeight() const {

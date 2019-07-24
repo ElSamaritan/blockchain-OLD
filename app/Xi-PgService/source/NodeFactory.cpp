@@ -32,7 +32,7 @@ class NodeRpcStub final : public CryptoNote::INode {
   bool shutdown() override { return true; }
 
   size_t getPeerCount() const override { return 0; }
-  CryptoNote::BlockVersion getLastKnownBlockVersion() const override { return CryptoNote::BlockVersion::Null; }
+  CryptoNote::BlockVersion getLastKnownBlockVersion() const override { return CryptoNote::BlockVersion::Genesis; }
   CryptoNote::BlockHeight getLastLocalBlockHeight() const override { return CryptoNote::BlockHeight::Null; }
   CryptoNote::BlockHeight getLastKnownBlockHeight() const override { return CryptoNote::BlockHeight::Null; }
   uint32_t getLocalBlockCount() const override { return 0; }
