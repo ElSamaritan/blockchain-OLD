@@ -352,7 +352,7 @@ void TransactionPool::pushBlockTransaction(BinaryArray transactionBlob, std::map
       removeTransaction(keyImageSearch->second, Deletion::KeyImageUsedInMainChain);
     }
   }
-  for (const auto& amountCount : transaction->getAmountsUsedCount()) {
+  for (const auto& amountCount : transaction->getAmountsGeneratedCount()) {
     newAmounts[amountCount.first] += amountCount.second;
   }
 }

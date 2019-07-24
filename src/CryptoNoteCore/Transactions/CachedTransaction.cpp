@@ -201,6 +201,16 @@ const std::map<uint64_t, uint64_t>& CachedTransaction::getAmountsUsedCount() con
   return amountsUsedCount.get();
 }
 
+const std::map<uint64_t, uint64_t>& CachedTransaction::getAmountsGeneratedCount() const {
+  if (!amountsGeneratedCount.is_initialized()) {
+    amountsGeneratedCount = boost::value_initialized<std::map<uint64_t, uint64_t>>();
+    for (const auto& output : transaction.outputs) {
+      (*amountsGeneratedCount)[output.amount] += 1;
+    }
+  }
+  return amountsGeneratedCount.get();
+}
+
 bool CachedTransaction::isCoinbase() const {
   return getInputAmount() == 0;
 }

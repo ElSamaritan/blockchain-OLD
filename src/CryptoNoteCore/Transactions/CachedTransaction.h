@@ -69,6 +69,7 @@ class CachedTransaction {
   uint64_t getTransactionFee() const;
   const std::set<uint64_t>& getAmountsUsed() const;
   const std::map<uint64_t, uint64_t>& getAmountsUsedCount() const;
+  const std::map<uint64_t, uint64_t>& getAmountsGeneratedCount() const;
   bool isCoinbase() const;
   void prune();
 
@@ -86,6 +87,7 @@ class CachedTransaction {
   mutable boost::optional<uint64_t> inputAmount;
   mutable boost::optional<std::set<uint64_t>> amountsUsed;
   mutable boost::optional<std::map<uint64_t, uint64_t>> amountsUsedCount;
+  mutable boost::optional<std::map<uint64_t, uint64_t>> amountsGeneratedCount;
   mutable boost::optional<uint64_t> outputAmount;
   mutable boost::optional<uint64_t> transactionFee;
   mutable boost::optional<uint64_t> transactionBlobSize;
