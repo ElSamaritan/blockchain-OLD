@@ -1,0 +1,115 @@
+{
+    "general": {
+        "homepage": "https://galaixia-project.com",
+        "description": "An evolving framework for blockchain-based applications.",
+        "copyright": "(c) 2018-2019 Xi Project Developers",
+        "contact_url": "https://chat.galaxia-project.com",
+        "license_url": "https://gitlab.com/galaxia-project/blockchain/blob/develop/LICENSE",
+        "download_url": "https://releases.galaxia-project.com"
+    },
+
+    "coin": {
+        "name": "Galaxia",
+        "ticker": "GLX",
+        "prefix": {
+            "text": "gxi",
+            "base58": 1897582
+        },
+
+        "decimals": 6,
+        "total_supply": 55000000000000,
+        "premine": 1100000000000,
+
+        "block_time": 60,
+        "reward_unlock_time": 600,
+        "emission_speed": 21,
+
+        "start_timestamp": 1563974600,
+        "genesis_transaction": "010a0101010280d0dbc3f402015bcdad1f7f26ab9e4b733a87ddf8f1ca14bd2cdea1f45e22f18fd20ef05c7d3c80a094a58d1d0145c9cccfb214839edba30aa2e67fd7918a54ecd1e20b739f012ff826550277022101b8a956b2498c8f69ec1033f2cf23d24e27758aa317bbbb2184afef612db2f0d8"
+    },
+
+    "network": {
+        "type": "staging",
+        "identifier": "2f8ba7902c86299b494ac91e8534c309",
+        "seeds": [
+            "207.180.228.241:22868",
+            "207.180.224.162:22868"
+        ],
+
+        "p2p_port": 22868,
+        "rpc_port": 22869,
+        "pgservice_port": 38070
+    },
+
+    "upgrades": [{
+            "height": 1,
+            "fork": false,
+
+            "miner_reward": {
+                "window_size": 128,
+                "zone": 262144,
+                "cut_off": 4,
+                "reserved_size": 600
+            },
+
+            "merge_mining": {
+                "max": 3
+            },
+
+            "static_reward": {
+                "amount": 1000000,
+                "address": "gxi1Lb3sw2kF2K5asH964PAG4GzcuysMXbBuUzie7yBRHjRGL5cSMexXToQHSTdPhwiDtWVWBe12Ki8GL3dZXHKd1Zk8Ho8ND5"
+            },
+
+            "time": {
+                "window_size": 128,
+                "future_limit": 300
+            },
+
+            "transaction": {
+                "future_unlock_limit": 15768000,
+                "supported_versions": [
+                    1
+                ],
+
+                "transfer": {
+                    "max_size": 16384,
+                    "min_fee": 1000,
+                    "free_buckets": 2,
+                    "rate_nominator": 1,
+                    "rate_denominator": 10
+                },
+
+                "fusion": {
+                    "max_size": 8192,
+                    "min_input": 12,
+                    "ratio_limit": 4
+                },
+
+                "mixin": {
+                    "min": 2,
+                    "max": 5,
+                    "upgrade_size": 20
+                }
+            },
+
+            "difficulty": {
+                "algorithm": "LWMA-v1",
+                "window_size": 90,
+                "initial": 20000,
+                "proof_of_work": "CNX-v1"
+            },
+
+            "limit": {
+                "maximum": 1048576,
+                "initial": 524288,
+                "window_size": 1440,
+                "increase_rate": 512
+            }
+        },
+        {
+            "height": 2,
+            "fork": false
+        }
+    ]
+}
