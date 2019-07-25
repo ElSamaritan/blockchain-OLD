@@ -27,13 +27,12 @@
 #include <set>
 #include <map>
 
-#include <crypto/CryptoTypes.h>
-
 #include <Xi/ExternalIncludePush.h>
 #include <boost/optional.hpp>
 #include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Result.h>
+#include <Xi/Crypto/KeyImage.hpp>
 
 #include "CryptoNoteCore/CryptoNote.h"
 

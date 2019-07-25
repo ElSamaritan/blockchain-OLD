@@ -15,8 +15,12 @@
 
 #include <Xi/Exceptional.hpp>
 #include <Xi/Crypto/Random/Random.hh>
-
-#include "crypto/CryptoTypes.h"
+#include <Xi/Crypto/PublicKey.hpp>
+#include <Xi/Crypto/SecretKey.hpp>
+#include <Xi/Crypto/KeyImage.hpp>
+#include <Xi/Crypto/KeyDerivation.hpp>
+#include <Xi/Crypto/Signature.hpp>
+#include <Xi/Crypto/FastHash.hpp>
 
 namespace Crypto {
 

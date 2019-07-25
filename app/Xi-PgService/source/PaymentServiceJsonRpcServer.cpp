@@ -11,7 +11,8 @@
 
 #include <Xi/Global.hh>
 
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/PublicKey.hpp>
+#include <Xi/Crypto/FastHash.hpp>
 
 #include "PaymentServiceJsonRpcMessages.h"
 #include "ConfigurationManager.h"

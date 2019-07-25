@@ -26,7 +26,7 @@
 #include <Xi/Global.hh>
 #include <Xi/Byte.hh>
 
-#include <crypto/Types/Hash.h>
+#include <Xi/Crypto/FastHash.hpp>
 
 namespace Xi {
 namespace ProofOfWork {

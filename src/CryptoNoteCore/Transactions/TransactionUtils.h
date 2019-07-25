@@ -30,6 +30,9 @@
 #include <boost/optional.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Crypto/PublicKey.hpp>
+#include <Xi/Crypto/KeyDerivation.hpp>
+
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
 

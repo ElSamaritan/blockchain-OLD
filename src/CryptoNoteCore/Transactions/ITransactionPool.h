@@ -25,7 +25,8 @@
 #include <Xi/Result.h>
 #include <Xi/Concurrent/RecursiveLock.h>
 
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/FastHash.hpp>
+#include <Xi/Crypto/KeyImage.hpp>
 #include <Serialization/ISerializer.h>
 
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"

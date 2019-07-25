@@ -9,7 +9,9 @@
 #include <iostream>
 #include <fstream>
 
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/FastHash.hpp>
+#include <Xi/Crypto/PublicKey.hpp>
+#include <Xi/Crypto/SecretKey.hpp>
 #include <Xi/Config.h>
 
 #include "Common/CommandLine.h"

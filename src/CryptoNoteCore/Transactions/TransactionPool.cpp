@@ -30,7 +30,6 @@
 
 #include <Common/int-util.h>
 #include <Common/StringTools.h>
-#include <crypto/CryptoTypes.h>
 
 #include <Serialization/SerializationTools.h>
 

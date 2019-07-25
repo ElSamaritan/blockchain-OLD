@@ -30,11 +30,14 @@
 #include <crypto/crypto-ops.h>
 #include <crypto/crypto.h>
 
-#include "crypto/Types/SecretKey.h"
+#include "Xi/Crypto/SecretKey.hpp"
 
-const Crypto::SecretKey Crypto::SecretKey::Null{};
+namespace Xi {
+namespace Crypto {
 
-Xi::Result<Crypto::SecretKey> Crypto::SecretKey::fromString(const std::string &hex) {
+const SecretKey SecretKey::Null{};
+
+Result<SecretKey> SecretKey::fromString(const std::string &hex) {
   XI_ERROR_TRY();
   SecretKey reval;
   if (SecretKey::bytes() * 2 != hex.size()) {
@@ -50,49 +53,58 @@ Xi::Result<Crypto::SecretKey> Crypto::SecretKey::fromString(const std::string &h
   XI_ERROR_CATCH();
 }
 
-Crypto::SecretKey::SecretKey() {
+SecretKey::SecretKey() {
   nullify();
 }
 
-Crypto::SecretKey::SecretKey(Crypto::SecretKey::array_type raw) : array_type(std::move(raw)) {
+SecretKey::SecretKey(SecretKey::array_type raw) : array_type(std::move(raw)) {
+  Memory::secureClear(raw);
 }
 
-Crypto::SecretKey::~SecretKey() {
-  Xi::Memory::secureClear(span());
+SecretKey::~SecretKey() {
+  Memory::secureClear(span());
 }
 
-Crypto::PublicKey Crypto::SecretKey::toPublicKey() const {
+PublicKey SecretKey::toPublicKey() const {
   PublicKey reval{};
-  Xi::exceptional_if_not<Xi::InvalidArgumentError>(secret_key_to_public_key(*this, reval), "invalid secret key");
-  Xi::exceptional_if_not<Xi::InvalidArgumentError>(reval.isValid(), "invalid secret key");
+  exceptional_if_not<InvalidArgumentError>(::Crypto::secret_key_to_public_key(*this, reval), "invalid secret key");
+  exceptional_if_not<InvalidArgumentError>(reval.isValid(), "invalid secret key");
   return reval;
 }
 
-std::string Crypto::SecretKey::toString() const {
+std::string SecretKey::toString() const {
   return Common::toHex(data(), size() * sizeof(value_type));
 }
 
-bool Crypto::SecretKey::isNull() const {
+bool SecretKey::isNull() const {
   return *this == SecretKey::Null;
 }
 
-bool Crypto::SecretKey::isValid() const {
+bool SecretKey::isValid() const {
   return sc_check(data()) == 0;
 }
 
-Xi::ConstByteSpan Crypto::SecretKey::span() const {
-  return Xi::ConstByteSpan{data(), bytes()};
+ConstByteSpan SecretKey::span() const {
+  return ConstByteSpan{data(), bytes()};
 }
 
-Xi::ByteSpan Crypto::SecretKey::span() {
-  return Xi::ByteSpan{data(), bytes()};
+ByteSpan SecretKey::span() {
+  return ByteSpan{data(), bytes()};
 }
 
-void Crypto::SecretKey::nullify() {
+void SecretKey::nullify() {
   fill(0);
 }
 
-bool Crypto::serialize(Crypto::SecretKey &secretKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
+std::ostream &operator<<(std::ostream &stream, const SecretKey &rhs) {
+  return stream << rhs.toString();
+}
+
+}  // namespace Crypto
+
+bool Crypto::serialize(SecretKey &secretKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(secretKey.data(), SecretKey::bytes(), name), false);
   return true;
 }
+
+}  // namespace Xi

@@ -28,7 +28,7 @@
 #include <map>
 
 #include <Serialization/ISerializer.h>
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/FastHash.hpp>
 #include <CryptoNoteCore/CryptoNoteSerialization.h>
 
 namespace XiSync {

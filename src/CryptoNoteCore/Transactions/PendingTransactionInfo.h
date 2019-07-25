@@ -28,8 +28,6 @@
 
 #include <Xi/Global.hh>
 
-#include <crypto/CryptoTypes.h>
-
 #include "CryptoNoteCore/Time/Time.h"
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"
 #include "CryptoNoteCore/Transactions/TransactionValidationResult.h"

@@ -26,50 +26,50 @@
 
 #include <Common/StringTools.h>
 
-#include "crypto/Types/KeyImage.h"
+#include "Xi/Crypto/KeyDerivation.hpp"
 #include "crypto/crypto-ops.h"
 
-const Crypto::KeyImage Crypto::KeyImage::Null{};
+namespace Xi {
+namespace Crypto {
 
-Xi::Result<Crypto::KeyImage> Crypto::KeyImage::fromString(const std::string &hex) {
+const KeyDerivation KeyDerivation::Null{};
+
+Result<Crypto::KeyDerivation> KeyDerivation::fromString(const std::string &hex) {
   XI_ERROR_TRY();
-  KeyImage reval;
-  if (KeyImage::bytes() * 2 != hex.size()) {
+  KeyDerivation reval;
+  if (KeyDerivation::bytes() * 2 != hex.size()) {
     throw std::runtime_error{"wrong hex size"};
   }
   if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
     throw std::runtime_error{"invalid hex string"};
   }
   if (!reval.isValid()) {
-    throw std::runtime_error{"key image is invalid"};
+    throw std::runtime_error{"key invalid"};
   }
+
   return success(std::move(reval));
   XI_ERROR_CATCH();
 }
 
-Crypto::KeyImage::KeyImage() {
+KeyDerivation::KeyDerivation() {
   nullify();
 }
 
-Crypto::KeyImage::KeyImage(Crypto::KeyImage::array_type raw) : array_type(std::move(raw)) {
+KeyDerivation::KeyDerivation(KeyDerivation::array_type raw) : array_type(std::move(raw)) {
 }
 
-Crypto::KeyImage::~KeyImage() {
+KeyDerivation::~KeyDerivation() {
 }
 
-std::string Crypto::KeyImage::toString() const {
+std::string KeyDerivation::toString() const {
   return Common::toHex(data(), size() * sizeof(value_type));
 }
 
-Xi::ConstByteSpan Crypto::KeyImage::span() const {
-  return Xi::ConstByteSpan{data(), bytes()};
+bool KeyDerivation::isNull() const {
+  return (*this) == Null;
 }
 
-Xi::ByteSpan Crypto::KeyImage::span() {
-  return Xi::ByteSpan{data(), bytes()};
-}
-
-bool Crypto::KeyImage::isValid() const {
+bool KeyDerivation::isValid() const {
   ge_p3 point;
   XI_RETURN_EC_IF_NOT(ge_frombytes_vartime(&point, data()) == 0, false);
   ge_dsmp image_dsm;
@@ -78,15 +78,28 @@ bool Crypto::KeyImage::isValid() const {
   XI_RETURN_SC(true);
 }
 
-bool Crypto::KeyImage::isNull() const {
-  return (*this) == Null;
+Xi::ConstByteSpan KeyDerivation::span() const {
+  return Xi::ConstByteSpan{data(), bytes()};
 }
 
-void Crypto::KeyImage::nullify() {
+Xi::ByteSpan KeyDerivation::span() {
+  return Xi::ByteSpan{data(), bytes()};
+}
+
+void KeyDerivation::nullify() {
   fill(0);
 }
 
-bool Crypto::serialize(Crypto::KeyImage &keyImage, Common::StringView name, CryptoNote::ISerializer &serializer) {
-  XI_RETURN_EC_IF_NOT(serializer.binary(keyImage.data(), KeyImage::bytes(), name), false);
+std::ostream &operator<<(std::ostream &stream, const KeyDerivation &rhs) {
+  return stream << rhs.toString();
+}
+
+}  // namespace Crypto
+
+bool Crypto::serialize(Crypto::KeyDerivation &keyDerivation, Common::StringView name,
+                       CryptoNote::ISerializer &serializer) {
+  XI_RETURN_EC_IF_NOT(serializer.binary(keyDerivation.data(), KeyDerivation::bytes(), name), false);
   return true;
 }
+
+}  // namespace Xi

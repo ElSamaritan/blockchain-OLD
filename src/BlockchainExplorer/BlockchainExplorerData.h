@@ -22,7 +22,8 @@
 #include <vector>
 
 #include <Xi/Blockchain/Explorer/Data/Data.hpp>
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/FastHash.hpp>
+#include <Xi/Crypto/PublicKey.hpp>
 #include <Serialization/VariantSerialization.hpp>
 #include <CryptoNoteCore/CryptoNote.h>
 

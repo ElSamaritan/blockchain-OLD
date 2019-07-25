@@ -26,14 +26,13 @@
 #include <vector>
 
 #include <Xi/Global.hh>
+#include <Xi/Crypto/FastHash.hpp>
 
 #include "Xi/Blockchain/Block/Nonce.hpp"
 #include "Xi/Blockchain/Block/Offset.hpp"
 #include "Xi/Blockchain/Block/Header.hpp"
 #include "Xi/Blockchain/Block/Height.hpp"
 #include "Xi/Blockchain/Block/Version.hpp"
-
-#include <crypto/Types/Hash.h>
 
 namespace Xi {
 namespace Blockchain {

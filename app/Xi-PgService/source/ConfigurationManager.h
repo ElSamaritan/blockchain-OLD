@@ -10,7 +10,6 @@
 
 #include <Xi/Crypto/PasswordContainer.h>
 
-#include <crypto/CryptoTypes.h>
 #include "WalletServiceConfiguration.h"
 #include "P2p/NetNodeConfig.h"
 

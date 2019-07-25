@@ -26,7 +26,7 @@
 #include <cinttypes>
 #include <optional>
 
-#include <crypto/Types/Hash.h>
+#include <Xi/Crypto/FastHash.hpp>
 
 #include "Xi/Blockchain/Block/Version.hpp"
 #include "Xi/Blockchain/Block/Nonce.hpp"
@@ -41,14 +41,14 @@ struct Header {
   Version upgradeVote;
   Nonce nonce;
   uint64_t timestamp;
-  ::Crypto::Hash previousBlockHash;
+  Crypto::FastHash previousBlockHash;
   PrunableMergeMiningTag mergeMiningTag;
 
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
 
-  ::Crypto::Hash headerHash() const;
-  ::Crypto::Hash proofOfWorkPrefix() const;
-  ::Crypto::Hash proofOfWorkHash(const ::Crypto::Hash& transactionTreeHash) const;
+  Crypto::FastHash headerHash() const;
+  Crypto::FastHash proofOfWorkPrefix() const;
+  Crypto::FastHash proofOfWorkHash(const Crypto::FastHash& transactionTreeHash) const;
 
  private:
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer, bool isPoWPrefix);

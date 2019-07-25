@@ -28,14 +28,17 @@
 #include <Xi/Crypto/Hash/TreeHash.hh>
 #include <Common/StringTools.h>
 
-#include "crypto/Types/Hash.h"
+#include "Xi/Crypto/FastHash.hpp"
 
-const Crypto::Hash Crypto::Hash::Null{};
+namespace Xi {
+namespace Crypto {
 
-Xi::Result<Crypto::Hash> Crypto::Hash::fromString(const std::string &hex) {
+const FastHash FastHash::Null{};
+
+Result<FastHash> FastHash::fromString(const std::string &hex) {
   XI_ERROR_TRY();
-  Hash reval;
-  if (Hash::bytes() * 2 != hex.size()) {
+  FastHash reval;
+  if (FastHash::bytes() * 2 != hex.size()) {
     throw std::runtime_error{"wrong hex size"};
   }
   if (Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type)) != reval.size() * sizeof(value_type)) {
@@ -45,97 +48,104 @@ Xi::Result<Crypto::Hash> Crypto::Hash::fromString(const std::string &hex) {
   XI_ERROR_CATCH();
 }
 
-Xi::Result<Crypto::Hash> Crypto::Hash::compute(Xi::ConstByteSpan data) {
+Result<FastHash> FastHash::compute(Xi::ConstByteSpan data) {
   XI_ERROR_TRY();
-  Hash reval{};
+  FastHash reval{};
   compute(data, reval).throwOnError();
   return success(std::move(reval));
   XI_ERROR_CATCH();
 }
 
-Xi::Result<void> Crypto::Hash::compute(Xi::ConstByteSpan data, Crypto::Hash &out) {
+Result<void> FastHash::compute(Xi::ConstByteSpan data, FastHash &out) {
   XI_ERROR_TRY();
-  Xi::Crypto::Hash::fastHash(data, out.span());
+  Hash::fastHash(data, out.span());
   return Xi::success();
   XI_ERROR_CATCH();
 }
 
-Xi::Result<void> Crypto::Hash::compute(Xi::ConstByteSpan data, Xi::ByteSpan out) {
+Result<void> FastHash::compute(Xi::ConstByteSpan data, Xi::ByteSpan out) {
   XI_ERROR_TRY();
-  Xi::Crypto::Hash::fastHash(data, out);
+  Hash::fastHash(data, out);
   return Xi::success();
   XI_ERROR_CATCH();
 }
 
-Xi::Result<Crypto::Hash> Crypto::Hash::computeMerkleTree(Xi::ConstByteSpan data, size_t count) {
+Result<FastHash> FastHash::computeMerkleTree(Xi::ConstByteSpan data, size_t count) {
   XI_ERROR_TRY();
-  Hash reval{};
+  FastHash reval{};
   computeMerkleTree(data, count, reval).throwOnError();
   return success(std::move(reval));
   XI_ERROR_CATCH();
 }
 
-Xi::Result<void> Crypto::Hash::computeMerkleTree(Xi::ConstByteSpan data, size_t count, Crypto::Hash &out) {
+Result<void> FastHash::computeMerkleTree(Xi::ConstByteSpan data, size_t count, FastHash &out) {
   XI_ERROR_TRY();
-  Xi::Crypto::Hash::treeHash(data, count, out.span());
+  Hash::treeHash(data, count, out.span());
   return Xi::success();
   XI_ERROR_CATCH();
 }
 
-Xi::Result<Crypto::Hash> Crypto::Hash::computeMerkleTree(ConstHashSpan data) {
+Result<FastHash> FastHash::computeMerkleTree(ConstFastHashSpan data) {
   XI_ERROR_TRY();
-  Hash reval{};
+  FastHash reval{};
   computeMerkleTree(data, reval).throwOnError();
   return success(std::move(reval));
   XI_ERROR_CATCH();
 }
 
-Xi::Result<void> Crypto::Hash::computeMerkleTree(ConstHashSpan data, Crypto::Hash &out) {
+Result<void> FastHash::computeMerkleTree(ConstFastHashSpan data, FastHash &out) {
   XI_ERROR_TRY();
-  Xi::Crypto::Hash::treeHash(
-      Xi::ConstByteSpan{reinterpret_cast<const Xi::Byte *>(data.data()), data.size() * Crypto::Hash::bytes()},
-      data.size(), out.span());
+  Hash::treeHash(Xi::ConstByteSpan{reinterpret_cast<const Xi::Byte *>(data.data()), data.size() * FastHash::bytes()},
+                 data.size(), out.span());
   return Xi::success();
   XI_ERROR_CATCH();
 }
 
-Crypto::Hash::Hash() {
+FastHash::FastHash() {
   nullify();
 }
 
-Crypto::Hash::Hash(Crypto::Hash::array_type raw) : array_type(std::move(raw)) {
+FastHash::FastHash(FastHash::array_type raw) : array_type(std::move(raw)) {
 }
 
-Crypto::Hash::~Hash() {
+FastHash::~FastHash() {
 }
 
-bool Crypto::Hash::isNull() const {
-  return *this == Hash::Null;
+bool FastHash::isNull() const {
+  return *this == FastHash::Null;
 }
 
-std::string Crypto::Hash::toString() const {
+std::string FastHash::toString() const {
   return Common::toHex(data(), size());
 }
 
-std::string Crypto::Hash::toShortString() const {
+std::string FastHash::toShortString() const {
   std::string res = toString();
   res.erase(8, 48);
   res.insert(8, "....");
   return res;
 }
 
-Xi::ConstByteSpan Crypto::Hash::span() const {
+Xi::ConstByteSpan FastHash::span() const {
   return Xi::ConstByteSpan{data(), bytes()};
 }
 
-Xi::ByteSpan Crypto::Hash::span() {
+Xi::ByteSpan FastHash::span() {
   return Xi::ByteSpan{data(), bytes()};
 }
 
-void Crypto::Hash::nullify() {
+void FastHash::nullify() {
   fill(0);
 }
 
-bool Crypto::serialize(Crypto::Hash &hash, Common::StringView name, CryptoNote::ISerializer &serializer) {
-  return serializer.binary(hash.data(), Hash::bytes(), name);
+}  // namespace Crypto
+
+bool Crypto::serialize(FastHash &hash, Common::StringView name, CryptoNote::ISerializer &serializer) {
+  return serializer.binary(hash.data(), FastHash::bytes(), name);
 }
+
+std::ostream &Crypto::operator<<(std::ostream &stream, const Xi::Crypto::FastHash &hash) {
+  return stream << hash.toString();
+}
+
+}  // namespace Xi

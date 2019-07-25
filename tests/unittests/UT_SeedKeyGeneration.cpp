@@ -26,7 +26,8 @@
 #include <random>
 #include <unordered_set>
 
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/PublicKey.hpp>
+#include <Xi/Crypto/SecretKey.hpp>
 #include <crypto/crypto.h>
 #include <CryptoNoteCore/CryptoNoteBasic.h>
 

@@ -21,67 +21,67 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <stdexcept>
-#include <utility>
+#pragma once
 
-#include <Common/StringTools.h>
+#include <array>
+#include <string>
+#include <vector>
+#include <ostream>
 
-#include "crypto/Types/PublicKey.h"
-#include "crypto/crypto.h"
+#include <Xi/Global.hh>
+#include <Xi/Result.h>
+#include <Xi/Byte.hh>
+#include <Xi/Span.hpp>
+#include <Serialization/ISerializer.h>
+#include <Xi/Algorithm/GenericHash.h>
+#include <Xi/Algorithm/GenericComparison.h>
 
-const Crypto::PublicKey Crypto::PublicKey::Null{};
-
-Xi::Result<Crypto::PublicKey> Crypto::PublicKey::fromString(const std::string &hex) {
-  XI_ERROR_TRY();
-  PublicKey reval;
-  if (PublicKey::bytes() * 2 != hex.size()) {
-    throw std::runtime_error{"wrong hex size"};
+namespace Xi {
+namespace Crypto {
+struct PublicKey : Xi::ByteArray<32> {
+  using array_type = Xi::ByteArray<32>;
+  static const PublicKey Null;
+  static inline constexpr size_t bytes() {
+    return 32;
   }
-  if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
-    throw std::runtime_error{"invalid hex string"};
-  }
-  if (!reval.isValid()) {
-    throw std::runtime_error{"public key is invalid"};
-  }
-  return success(std::move(reval));
-  XI_ERROR_CATCH();
-}
+  static Xi::Result<PublicKey> fromString(const std::string& hex);
 
-Crypto::PublicKey::PublicKey() {
-  nullify();
-}
+  PublicKey();
+  explicit PublicKey(array_type raw);
+  XI_DEFAULT_COPY(PublicKey);
+  XI_DEFAULT_MOVE(PublicKey);
+  ~PublicKey();
 
-Crypto::PublicKey::PublicKey(Crypto::PublicKey::array_type raw) : array_type(std::move(raw)) {
-}
+  std::string toString() const;
+  bool isNull() const;
 
-Crypto::PublicKey::~PublicKey() {
-}
+  Xi::ConstByteSpan span() const;
+  Xi::ByteSpan span();
 
-std::string Crypto::PublicKey::toString() const {
-  return Common::toHex(data(), size() * sizeof(value_type));
-}
+  /*
+   * \brief checks that this is indeed a valid ecc point and has the right order.
+   */
+  bool isValid() const;
 
-bool Crypto::PublicKey::isNull() const {
-  return *this == PublicKey::Null;
-}
+  void nullify();
+};
 
-Xi::ConstByteSpan Crypto::PublicKey::span() const {
-  return Xi::ConstByteSpan{data(), bytes()};
-}
+XI_MAKE_GENERIC_HASH_FUNC(PublicKey)
+XI_MAKE_GENERIC_COMPARISON(PublicKey)
 
-Xi::ByteSpan Crypto::PublicKey::span() {
-  return Xi::ByteSpan{data(), bytes()};
-}
+[[nodiscard]] bool serialize(PublicKey& publicKey, Common::StringView name, CryptoNote::ISerializer& serializer);
 
-bool Crypto::PublicKey::isValid() const {
-  return check_key(*this) && !isNull();
-}
+std::ostream& operator<<(std::ostream& stream, const PublicKey& key);
 
-void Crypto::PublicKey::nullify() {
-  fill(0);
-}
+}  // namespace Crypto
+}  // namespace Xi
 
-bool Crypto::serialize(Crypto::PublicKey &publicKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
-  XI_RETURN_EC_IF_NOT(serializer.binary(publicKey.data(), PublicKey::bytes(), name), false);
-  XI_RETURN_SC(true);
-}
+XI_MAKE_GENERIC_HASH_OVERLOAD(Xi::Crypto, PublicKey)
+
+namespace Crypto {
+
+using PublicKey = Xi::Crypto::PublicKey;
+using PublicKeyVector = std::vector<PublicKey>;
+XI_DECLARE_SPANS(PublicKey)
+
+}  // namespace Crypto

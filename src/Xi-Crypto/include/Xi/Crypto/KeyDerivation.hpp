@@ -25,34 +25,37 @@
 
 #include <array>
 #include <string>
-#include <initializer_list>
+#include <vector>
+#include <ostream>
 
 #include <Xi/Global.hh>
 #include <Xi/Result.h>
 #include <Xi/Byte.hh>
+#include <Xi/Span.hpp>
 #include <Serialization/ISerializer.h>
 #include <Xi/Algorithm/GenericHash.h>
 #include <Xi/Algorithm/GenericComparison.h>
 
+namespace Xi {
 namespace Crypto {
-struct Signature : Xi::ByteArray<64> {
-  using array_type = Xi::ByteArray<64>;
-  static const Signature Null;
+struct KeyDerivation : Xi::ByteArray<32> {
+  using array_type = Xi::ByteArray<32>;
+  static const KeyDerivation Null;
   static inline constexpr size_t bytes() {
-    return 64;
+    return 32;
   }
-  static Xi::Result<Signature> fromString(const std::string& hex);
+  static Xi::Result<KeyDerivation> fromString(const std::string& hex);
 
-  Signature();
-  explicit Signature(array_type raw);
-  XI_DEFAULT_COPY(Signature);
-  XI_DEFAULT_MOVE(Signature);
-  ~Signature();
+  KeyDerivation();
+  explicit KeyDerivation(array_type raw);
+  XI_DEFAULT_COPY(KeyDerivation);
+  XI_DEFAULT_MOVE(KeyDerivation);
+  ~KeyDerivation();
 
   std::string toString() const;
 
-  bool isValid() const;
   bool isNull() const;
+  bool isValid() const;
 
   Xi::ConstByteSpan span() const;
   Xi::ByteSpan span();
@@ -60,11 +63,23 @@ struct Signature : Xi::ByteArray<64> {
   void nullify();
 };
 
-XI_MAKE_GENERIC_HASH_FUNC(Signature)
-XI_MAKE_GENERIC_COMPARISON(Signature)
+XI_MAKE_GENERIC_HASH_FUNC(KeyDerivation)
+XI_MAKE_GENERIC_COMPARISON(KeyDerivation)
 
-[[nodiscard]] bool serialize(Signature& signature, Common::StringView name, CryptoNote::ISerializer& serializer);
+[[nodiscard]] bool serialize(KeyDerivation& keyDerivation, Common::StringView name,
+                             CryptoNote::ISerializer& serializer);
+
+std::ostream& operator<<(std::ostream& stream, const KeyDerivation& rhs);
 
 }  // namespace Crypto
+}  // namespace Xi
 
-XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, Signature)
+XI_MAKE_GENERIC_HASH_OVERLOAD(Xi::Crypto, KeyDerivation)
+
+namespace Crypto {
+
+using KeyDerivation = Xi::Crypto::KeyDerivation;
+using KeyDerivationVector = std::vector<KeyDerivation>;
+XI_DECLARE_SPANS(KeyDerivation)
+
+}  // namespace Crypto

@@ -34,7 +34,7 @@
 #include <Xi/Error.h>
 #include <Xi/Result.h>
 
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/KeyImage.hpp>
 
 #include "CryptoNoteCore/EligibleIndex.h"
 #include "CryptoNoteCore/Transactions/CachedTransaction.h"

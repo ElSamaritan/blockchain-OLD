@@ -25,7 +25,7 @@
 
 #include <cinttypes>
 
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/FastHash.hpp>
 #include <Serialization/ISerializer.h>
 #include <CryptoNoteCore/CryptoNoteSerialization.h>
 

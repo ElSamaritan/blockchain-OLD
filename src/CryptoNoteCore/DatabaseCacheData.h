@@ -21,7 +21,8 @@
 #include <vector>
 #include <cinttypes>
 
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/PublicKey.hpp>
+#include <Xi/Crypto/FastHash.hpp>
 #include <Serialization/ISerializer.h>
 
 namespace CryptoNote {

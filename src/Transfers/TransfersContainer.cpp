@@ -136,7 +136,7 @@ bool SpentOutputDescriptor::operator==(const SpentOutputDescriptor& other) const
 
 size_t SpentOutputDescriptor::hash() const {
   if (m_type == TransactionTypes::OutputType::Key) {
-    return Crypto::hash_value(*m_keyImage);
+    return hash_value(*m_keyImage);
   } else {
     assert(false);
     return 0;

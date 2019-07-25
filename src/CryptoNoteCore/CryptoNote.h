@@ -29,6 +29,9 @@
 #include <Xi/Byte.hh>
 #include <Xi/Blob.hpp>
 #include <Xi/Crypto/Hash/Crc.hpp>
+#include <Xi/Crypto/PublicKey.hpp>
+#include <Xi/Crypto/SecretKey.hpp>
+#include <Xi/Crypto/FastHash.hpp>
 #include <Xi/Blockchain/Block/Header.hpp>
 #include <Xi/Blockchain/Block/Version.hpp>
 #include <Xi/Blockchain/Block/Height.hpp>
@@ -36,7 +39,6 @@
 #include <Xi/Algorithm/GenericComparison.h>
 #include <Xi/Algorithm/GenericHash.h>
 #include <Serialization/FlagSerialization.hpp>
-#include <crypto/CryptoTypes.h>
 
 #include "CryptoNoteCore/Transactions/Transaction.h"
 

@@ -26,7 +26,7 @@
 #include <vector>
 #include <cinttypes>
 
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/FastHash.hpp>
 #include <CryptoNoteCore/CryptoNote.h>
 
 #include "CryptoNoteProtocol/Commands/CryptoNoteProtocolCommand.h"

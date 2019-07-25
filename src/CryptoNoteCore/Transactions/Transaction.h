@@ -33,7 +33,11 @@
 
 #include <Xi/Blockchain/Block/Height.hpp>
 #include <Serialization/VariantSerialization.hpp>
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/PublicKey.hpp>
+#include <Xi/Crypto/SecretKey.hpp>
+#include <Xi/Crypto/FastHash.hpp>
+#include <Xi/Crypto/KeyImage.hpp>
+#include <Xi/Crypto/Signature.hpp>
 
 namespace CryptoNote {
 

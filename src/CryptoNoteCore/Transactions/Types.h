@@ -25,7 +25,7 @@
 
 #include <cinttypes>
 
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/PublicKey.hpp>
 
 namespace CryptoNote {
 

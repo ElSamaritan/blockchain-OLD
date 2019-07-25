@@ -18,10 +18,11 @@
 #pragma once
 
 #include <vector>
+
+#include <Xi/Crypto/FastHash.hpp>
 #include <CryptoNoteCore/CryptoNote.h>
 #include <CryptoNoteCore/Blockchain/RawBlock.h>
-#include <crypto/CryptoTypes.h>
-//#include <Serialization/ISerializer.h>
+#include <Serialization/ISerializer.h>
 
 namespace CryptoNote {
 

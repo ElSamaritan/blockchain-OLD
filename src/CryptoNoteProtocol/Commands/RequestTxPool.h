@@ -27,7 +27,7 @@
 
 #include <Serialization/ISerializer.h>
 #include <Serialization/SerializationOverloads.h>
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/FastHash.hpp>
 #include <CryptoNoteCore/CryptoNote.h>
 
 #include "CryptoNoteProtocol/Commands/CryptoNoteProtocolCommand.h"

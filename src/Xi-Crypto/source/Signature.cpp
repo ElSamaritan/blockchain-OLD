@@ -21,50 +21,79 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include <stdexcept>
+#include <utility>
 
-#include <array>
-#include <string>
+#include <Common/StringTools.h>
 
-#include <Xi/Global.hh>
-#include <Xi/Result.h>
-#include <Xi/Byte.hh>
-#include <Serialization/ISerializer.h>
-#include <Xi/Algorithm/GenericHash.h>
-#include <Xi/Algorithm/GenericComparison.h>
+#include "crypto/crypto-ops.h"
 
+#include "Xi/Crypto/Signature.hpp"
+
+namespace Xi {
 namespace Crypto {
-struct KeyDerivation : Xi::ByteArray<32> {
-  using array_type = Xi::ByteArray<32>;
-  static const KeyDerivation Null;
-  static inline constexpr size_t bytes() {
-    return 32;
+
+const Signature Signature::Null{};
+
+Result<Signature> Signature::fromString(const std::string &hex) {
+  XI_ERROR_TRY();
+  Signature reval;
+  if (Signature::bytes() * 2 != hex.size()) {
+    throw std::runtime_error{"wrong hex size"};
   }
-  static Xi::Result<KeyDerivation> fromString(const std::string& hex);
+  if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
+    throw std::runtime_error{"invalid hex string"};
+  }
+  if (!reval.isValid()) {
+    throw std::runtime_error{"signature is invalid"};
+  }
+  return success(std::move(reval));
+  XI_ERROR_CATCH();
+}
 
-  KeyDerivation();
-  explicit KeyDerivation(array_type raw);
-  XI_DEFAULT_COPY(KeyDerivation);
-  XI_DEFAULT_MOVE(KeyDerivation);
-  ~KeyDerivation();
+Signature::Signature() {
+  nullify();
+}
 
-  std::string toString() const;
+Signature::Signature(Signature::array_type raw) : array_type(std::move(raw)) {
+}
 
-  bool isNull() const;
-  bool isValid() const;
+Signature::~Signature() {
+}
 
-  Xi::ConstByteSpan span() const;
-  Xi::ByteSpan span();
+std::string Signature::toString() const {
+  return Common::toHex(data(), size() * sizeof(value_type));
+}
 
-  void nullify();
-};
+bool Signature::isValid() const {
+  return sc_check(data()) == 0 && sc_check(data() + 32) == 0;
+}
 
-XI_MAKE_GENERIC_HASH_FUNC(KeyDerivation)
-XI_MAKE_GENERIC_COMPARISON(KeyDerivation)
+bool Signature::isNull() const {
+  return (*this) == Null;
+}
 
-[[nodiscard]] bool serialize(KeyDerivation& keyDerivation, Common::StringView name,
-                             CryptoNote::ISerializer& serializer);
+ConstByteSpan Signature::span() const {
+  return ConstByteSpan{data(), bytes()};
+}
+
+ByteSpan Signature::span() {
+  return ByteSpan{data(), bytes()};
+}
+
+void Signature::nullify() {
+  fill(0);
+}
+
+std::ostream &operator<<(std::ostream &stream, const Signature &rhs) {
+  return stream << rhs.toString();
+}
 
 }  // namespace Crypto
 
-XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, KeyDerivation)
+bool Crypto::serialize(Signature &signature, Common::StringView name, CryptoNote::ISerializer &serializer) {
+  XI_RETURN_EC_IF_NOT(serializer.binary(signature.data(), Signature::bytes(), name), false);
+  return true;
+}
+
+}  // namespace Xi

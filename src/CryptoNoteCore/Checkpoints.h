@@ -23,7 +23,7 @@
 #include <cinttypes>
 
 #include <Logging/LoggerRef.h>
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/FastHash.hpp>
 
 #include "CryptoNoteBasicImpl.h"
 

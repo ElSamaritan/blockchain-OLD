@@ -24,7 +24,7 @@
 #pragma once
 
 #include <Xi/Global.hh>
-#include <crypto/Types/Hash.h>
+#include <Xi/Crypto/FastHash.hpp>
 #include <Serialization/ISerializer.h>
 #include <Serialization/SerializationOverloads.h>
 #include <Serialization/VariantSerialization.hpp>

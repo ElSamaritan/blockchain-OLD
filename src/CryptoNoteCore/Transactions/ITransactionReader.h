@@ -25,7 +25,8 @@
 
 #include <cinttypes>
 
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/FastHash.hpp>
+#include <Xi/Crypto/SecretKey.hpp>
 
 #include "CryptoNoteCore/CryptoNote.h"
 #include "CryptoNoteCore/Transactions/Types.h"

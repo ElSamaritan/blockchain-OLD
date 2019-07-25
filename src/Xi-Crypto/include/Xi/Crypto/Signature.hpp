@@ -24,8 +24,10 @@
 #pragma once
 
 #include <array>
-#include <unordered_set>
 #include <string>
+#include <vector>
+#include <initializer_list>
+#include <ostream>
 
 #include <Xi/Global.hh>
 #include <Xi/Result.h>
@@ -35,46 +37,50 @@
 #include <Xi/Algorithm/GenericHash.h>
 #include <Xi/Algorithm/GenericComparison.h>
 
+namespace Xi {
 namespace Crypto {
-struct KeyImage : Xi::ByteArray<32> {
-  using array_type = Xi::ByteArray<32>;
-  static const KeyImage Null;
-  static inline constexpr size_t bytes() {
-    return 32;
-  }
-  static Xi::Result<KeyImage> fromString(const std::string& hex);
 
-  KeyImage();
-  explicit KeyImage(array_type raw);
-  XI_DEFAULT_COPY(KeyImage);
-  XI_DEFAULT_MOVE(KeyImage);
-  ~KeyImage();
+struct Signature : Xi::ByteArray<64> {
+  using array_type = Xi::ByteArray<64>;
+  static const Signature Null;
+  static inline constexpr size_t bytes() {
+    return 64;
+  }
+  static Xi::Result<Signature> fromString(const std::string& hex);
+
+  Signature();
+  explicit Signature(array_type raw);
+  XI_DEFAULT_COPY(Signature);
+  XI_DEFAULT_MOVE(Signature);
+  ~Signature();
 
   std::string toString() const;
+
+  bool isValid() const;
+  bool isNull() const;
 
   Xi::ConstByteSpan span() const;
   Xi::ByteSpan span();
 
-  /*
-   * \brief isValid checks the domain of the image
-   *
-   * \return true if the key image is in the correct domain, otherwise false.
-   *
-   */
-  bool isValid() const;
-  bool isNull() const;
-
   void nullify();
 };
 
-using KeyImageSet = std::unordered_set<KeyImage>;
-XI_DECLARE_SPANS(KeyImage)
+XI_MAKE_GENERIC_HASH_FUNC(Signature)
+XI_MAKE_GENERIC_COMPARISON(Signature)
 
-XI_MAKE_GENERIC_HASH_FUNC(KeyImage)
-XI_MAKE_GENERIC_COMPARISON(KeyImage)
+[[nodiscard]] bool serialize(Signature& signature, Common::StringView name, CryptoNote::ISerializer& serializer);
 
-[[nodiscard]] bool serialize(KeyImage& keyImage, Common::StringView name, CryptoNote::ISerializer& serializer);
+std::ostream& operator<<(std::ostream& stream, const Signature& rhs);
 
 }  // namespace Crypto
+}  // namespace Xi
 
-XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, KeyImage)
+XI_MAKE_GENERIC_HASH_OVERLOAD(Xi::Crypto, Signature)
+
+namespace Crypto {
+
+using Signature = Xi::Crypto::Signature;
+using SignatureVector = std::vector<Signature>;
+XI_DECLARE_SPANS(Signature)
+
+}  // namespace Crypto

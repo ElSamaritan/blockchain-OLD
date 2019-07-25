@@ -21,67 +21,73 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <stdexcept>
-#include <utility>
+#pragma once
 
-#include <Common/StringTools.h>
+#include <array>
+#include <string>
+#include <vector>
+#include <ostream>
 
-#include "crypto/crypto-ops.h"
-#include "crypto/Types/Signature.h"
+#include <Xi/Global.hh>
+#include <Xi/Result.h>
+#include <Xi/Byte.hh>
+#include <Xi/Span.hpp>
+#include <Serialization/ISerializer.h>
+#include <Xi/Algorithm/GenericHash.h>
+#include <Xi/Algorithm/GenericComparison.h>
 
-const Crypto::Signature Crypto::Signature::Null{};
+#include "Xi/Crypto/PublicKey.hpp"
 
-Xi::Result<Crypto::Signature> Crypto::Signature::fromString(const std::string &hex) {
-  XI_ERROR_TRY();
-  Signature reval;
-  if (Signature::bytes() * 2 != hex.size()) {
-    throw std::runtime_error{"wrong hex size"};
+namespace Xi {
+namespace Crypto {
+struct SecretKey : Xi::ByteArray<32> {
+  using array_type = Xi::ByteArray<32>;
+  static const SecretKey Null;
+  static inline constexpr size_t bytes() {
+    return 32;
   }
-  if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
-    throw std::runtime_error{"invalid hex string"};
-  }
-  if (!reval.isValid()) {
-    throw std::runtime_error{"signature is invalid"};
-  }
-  return success(std::move(reval));
-  XI_ERROR_CATCH();
-}
+  static Xi::Result<SecretKey> fromString(const std::string& hex);
 
-Crypto::Signature::Signature() {
-  nullify();
-}
+  SecretKey();
+  explicit SecretKey(array_type raw);
+  XI_DEFAULT_COPY(SecretKey);
+  XI_DEFAULT_MOVE(SecretKey);
+  ~SecretKey();
 
-Crypto::Signature::Signature(Crypto::Signature::array_type raw) : array_type(std::move(raw)) {
-}
+  /*!
+   * \brief toPublicKey converts the secret key to its corresponding public key.
+   * \return the public key counter part for this secret key.
+   * \throws InvalidArgumentError iff this secret key is invalid.
+   */
+  PublicKey toPublicKey() const;
 
-Crypto::Signature::~Signature() {
-}
+  std::string toString() const;
+  bool isNull() const;
 
-std::string Crypto::Signature::toString() const {
-  return Common::toHex(data(), size() * sizeof(value_type));
-}
+  bool isValid() const;
 
-bool Crypto::Signature::isValid() const {
-  return sc_check(data()) == 0 && sc_check(data() + 32) == 0;
-}
+  Xi::ConstByteSpan span() const;
+  Xi::ByteSpan span();
 
-bool Crypto::Signature::isNull() const {
-  return (*this) == Null;
-}
+  void nullify();
+};
 
-Xi::ConstByteSpan Crypto::Signature::span() const {
-  return Xi::ConstByteSpan{data(), bytes()};
-}
+XI_MAKE_GENERIC_HASH_FUNC(SecretKey)
+XI_MAKE_GENERIC_COMPARISON(SecretKey)
 
-Xi::ByteSpan Crypto::Signature::span() {
-  return Xi::ByteSpan{data(), bytes()};
-}
+[[nodiscard]] bool serialize(SecretKey& secretKey, Common::StringView name, CryptoNote::ISerializer& serializer);
 
-void Crypto::Signature::nullify() {
-  fill(0);
-}
+std::ostream& operator<<(std::ostream& stream, const SecretKey& rhs);
 
-bool Crypto::serialize(Crypto::Signature &signature, Common::StringView name, CryptoNote::ISerializer &serializer) {
-  XI_RETURN_EC_IF_NOT(serializer.binary(signature.data(), Signature::bytes(), name), false);
-  return true;
-}
+}  // namespace Crypto
+}  // namespace Xi
+
+XI_MAKE_GENERIC_HASH_OVERLOAD(Xi::Crypto, SecretKey)
+
+namespace Crypto {
+
+using SecretKey = Xi::Crypto::SecretKey;
+using SecretKeyVector = std::vector<SecretKey>;
+XI_DECLARE_SPANS(SecretKey)
+
+}  // namespace Crypto

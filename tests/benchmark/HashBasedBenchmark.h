@@ -27,7 +27,7 @@
 
 #include <benchmark/benchmark.h>
 
-#include <crypto/Types/Hash.h>
+#include <Xi/Crypto/FastHash.hpp>
 
 class HashBasedBenchmark : public benchmark::Fixture {
  public:

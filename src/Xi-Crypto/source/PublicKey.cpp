@@ -21,58 +21,78 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include <stdexcept>
+#include <utility>
 
-#include <array>
-#include <string>
+#include <Common/StringTools.h>
 
-#include <Xi/Global.hh>
-#include <Xi/Result.h>
-#include <Xi/Byte.hh>
-#include <Serialization/ISerializer.h>
-#include <Xi/Algorithm/GenericHash.h>
-#include <Xi/Algorithm/GenericComparison.h>
+#include "Xi/Crypto/PublicKey.hpp"
+#include "crypto/crypto.h"
 
-#include "crypto/Types/PublicKey.h"
-
+namespace Xi {
 namespace Crypto {
-struct SecretKey : Xi::ByteArray<32> {
-  using array_type = Xi::ByteArray<32>;
-  static const SecretKey Null;
-  static inline constexpr size_t bytes() {
-    return 32;
+
+const PublicKey PublicKey::Null{};
+
+Result<PublicKey> PublicKey::fromString(const std::string &hex) {
+  XI_ERROR_TRY();
+  PublicKey reval;
+  if (PublicKey::bytes() * 2 != hex.size()) {
+    throw std::runtime_error{"wrong hex size"};
   }
-  static Xi::Result<SecretKey> fromString(const std::string& hex);
+  if (!Common::fromHex(hex, reval.data(), reval.size() * sizeof(value_type))) {
+    throw std::runtime_error{"invalid hex string"};
+  }
+  if (!reval.isValid()) {
+    throw std::runtime_error{"public key is invalid"};
+  }
+  return success(std::move(reval));
+  XI_ERROR_CATCH();
+}
 
-  SecretKey();
-  explicit SecretKey(array_type raw);
-  XI_DEFAULT_COPY(SecretKey);
-  XI_DEFAULT_MOVE(SecretKey);
-  ~SecretKey();
+PublicKey::PublicKey() {
+  nullify();
+}
 
-  /*!
-   * \brief toPublicKey converts the secret key to its corresponding public key.
-   * \return the public key counter part for this secret key.
-   * \throws InvalidArgumentError iff this secret key is invalid.
-   */
-  PublicKey toPublicKey() const;
+PublicKey::PublicKey(PublicKey::array_type raw) : array_type(std::move(raw)) {
+}
 
-  std::string toString() const;
-  bool isNull() const;
+PublicKey::~PublicKey() {
+}
 
-  bool isValid() const;
+std::string PublicKey::toString() const {
+  return Common::toHex(data(), size() * sizeof(value_type));
+}
 
-  Xi::ConstByteSpan span() const;
-  Xi::ByteSpan span();
+bool PublicKey::isNull() const {
+  return *this == PublicKey::Null;
+}
 
-  void nullify();
-};
+Xi::ConstByteSpan PublicKey::span() const {
+  return Xi::ConstByteSpan{data(), bytes()};
+}
 
-XI_MAKE_GENERIC_HASH_FUNC(SecretKey)
-XI_MAKE_GENERIC_COMPARISON(SecretKey)
+Xi::ByteSpan PublicKey::span() {
+  return Xi::ByteSpan{data(), bytes()};
+}
 
-[[nodiscard]] bool serialize(SecretKey& secretKey, Common::StringView name, CryptoNote::ISerializer& serializer);
+bool PublicKey::isValid() const {
+  return ::Crypto::check_key(*this) && !isNull();
+}
+
+void PublicKey::nullify() {
+  fill(0);
+}
 
 }  // namespace Crypto
 
-XI_MAKE_GENERIC_HASH_OVERLOAD(Crypto, SecretKey)
+std::ostream &Crypto::operator<<(std::ostream &stream, const Crypto::PublicKey &key) {
+  return stream << key.toString();
+}
+
+bool Crypto::serialize(PublicKey &publicKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
+  XI_RETURN_EC_IF_NOT(serializer.binary(publicKey.data(), PublicKey::bytes(), name), false);
+  XI_RETURN_SC(true);
+}
+
+}  // namespace Xi

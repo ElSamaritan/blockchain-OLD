@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <crypto/CryptoTypes.h>
+#include <Xi/Crypto/FastHash.hpp>
 
 #include "CryptoNoteCore/IBlockchainCache.h"
 

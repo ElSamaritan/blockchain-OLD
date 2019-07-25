@@ -29,10 +29,10 @@
 
 #include <Xi/Global.hh>
 #include <Xi/Result.h>
+#include <Xi/Crypto/FastHash.hpp>
 #include <Xi/Http/Client.h>
 #include <Logging/ILogger.h>
 #include <Logging/LoggerRef.h>
-#include <crypto/CryptoTypes.h>
 #include <Common/ObserverManager.h>
 #include <Rpc/RpcRemoteConfiguration.h>
 
