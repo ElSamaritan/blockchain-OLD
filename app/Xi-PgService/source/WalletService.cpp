@@ -406,21 +406,20 @@ void generateNewWallet(const CryptoNote::Currency& currency, const WalletConfigu
       return;
     } else {
       log(Logging::Info) << "Attemping to import wallet from keys";
-      Crypto::Hash private_spend_key_hash;
-      Crypto::Hash private_view_key_hash;
-      size_t size;
-      if (!Common::fromHex(conf.secretSpendKey, &private_spend_key_hash, sizeof(private_spend_key_hash), size) ||
-          size != sizeof(private_spend_key_hash)) {
-        log(Logging::Error) << "Invalid spend key";
+      Crypto::SecretKey private_spend_key{};
+      Crypto::SecretKey private_view_key{};
+      if (auto ec = Crypto::SecretKey::fromString(conf.secretSpendKey); ec.isError()) {
+        log(Logging::Error) << "Invalid spend key: " << ec.error().message();
         return;
+      } else {
+        private_spend_key = ec.take();
       }
-      if (!Common::fromHex(conf.secretViewKey, &private_view_key_hash, sizeof(private_view_key_hash), size) ||
-          size != sizeof(private_spend_key_hash)) {
-        log(Logging::Error) << "Invalid view key";
+      if (auto ec = Crypto::SecretKey::fromString(conf.secretViewKey); ec.isError()) {
+        log(Logging::Error) << "Invalid view key: " << ec.error().message();
         return;
+      } else {
+        private_view_key = ec.take();
       }
-      Crypto::SecretKey private_spend_key = *(struct Crypto::SecretKey*)&private_spend_key_hash;
-      Crypto::SecretKey private_view_key = *(struct Crypto::SecretKey*)&private_view_key_hash;
 
       wallet->initializeWithViewKey(conf.walletFile, conf.walletPassword, private_view_key, scanHeight, false);
       address = wallet->createAddress(private_spend_key, scanHeight, false);
