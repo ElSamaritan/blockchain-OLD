@@ -2488,8 +2488,12 @@ void WalletGreen::requestMixinOuts(
         if (searchRequirement == requiredMixins.end() || searchRequirement->second == 0) {
           continue;
         } else {
-          mixinsRequired[amount] += (searchRequirement->second * 10ULL) / 8ULL;
+          mixinsRequired[amount] += searchRequirement->second;
         }
+      }
+
+      for (auto& mixinRequired : mixinsRequired) {
+        mixinRequired.second = (mixinRequired.second * 10ULL) / 8ULL;
       }
 
       m_node.getRandomOutsByAmounts(
