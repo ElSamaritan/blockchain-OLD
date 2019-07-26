@@ -147,8 +147,9 @@ CryptoNote::INode *Xi::App::Application::rpcNode(bool pollUpdates, bool preferEm
   }
   if (!m_remoteNode) {
     if (!preferEmbbedded || !m_remoteRpcOptions) {
+      auto &crrcy = *currency();
       m_remoteNode = std::make_unique<CryptoNote::NodeRpcProxy>(m_remoteRpcOptions->Address, m_remoteRpcOptions->Port,
-                                                                m_sslConfig, *m_currency, logger());
+                                                                m_sslConfig, crrcy, logger());
       if (!m_remoteRpcOptions->AccessToken.empty()) {
         static_cast<CryptoNote::NodeRpcProxy *>(m_remoteNode.get())
             ->httpClient()
