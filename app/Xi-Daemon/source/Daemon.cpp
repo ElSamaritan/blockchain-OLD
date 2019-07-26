@@ -259,24 +259,10 @@ int main(int argc, char* argv[]) {
     }
     logger(Info) << "Core initialized OK";
 
-    // ------------------------------------------ Transaction Pool
-    logger(Info) << "Initializing transaction pool...";
-    const auto transactionPoolFile = path(config.dataDirectory) / currency.txPoolFileName();
-    if (!exists(transactionPoolFile)) {
-      logger(Info) << "no transaction pool file present, skipping import.";
-    } else {
-      std::ifstream poolFileStream{transactionPoolFile.string(), std::ios::in | std::ios::binary};
-      Common::StdInputStream poolInputStream{poolFileStream};
-      BinaryInputStreamSerializer poolSerializer(poolInputStream);
-      if (!ccore.transactionPool().serialize(poolSerializer)) {
-        logger(Level::Error) << "Transaction pool load failed, cleaning state...";
-        ccore.transactionPool().forceFlush();
-      } else {
-        logger(Info) << "Imported " << ccore.transactionPool().size() << " pending pool transactions.";
-      }
+    if (!ccore.transactionPool().load(config.dataDirectory)) {
+      logger(Fatal) << "Transaction pool initialization failed";
+      return EXIT_FAILURE;
     }
-    logger(Info) << "Transaction Pool initialized OK";
-    // ------------------------------------------ Transaction Pool
 
     CryptoNote::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
     CryptoNote::NodeServer p2psrv(dispatcher, currency.network(), cprotocol, logManager);
@@ -362,20 +348,9 @@ int main(int argc, char* argv[]) {
       logger(Fatal) << "p2p shutdown failed, p2p files may be corrupted.";
     }
 
-    // ------------------------------------------ Transaction Pool
-    logger(Info) << "Exporting transaction pool...";
-    {
-      std::ofstream poolFileStream{transactionPoolFile.string(), std::ios::out | std::ios::binary | std::ios::trunc};
-      Common::StdOutputStream poolInputStream{poolFileStream};
-      BinaryOutputStreamSerializer poolSerializer(poolInputStream);
-      if (!ccore.transactionPool().serialize(poolSerializer)) {
-        logger(Level::Error)
-            << "Transaction pool save failed, your transaction pool may be corrupted and discarded on next start";
-      }
-      logger(Info) << "Exported " << ccore.transactionPool().size() << " pending pool transactions.";
+    if (!ccore.transactionPool().save(config.dataDirectory)) {
+      logger(Level::Error) << "transaction pool export failed.";
     }
-    logger(Info) << "Transaction Pool epxported OK";
-    // ------------------------------------------ Transaction Pool
 
     cprotocol.set_p2p_endpoint(nullptr);
     if (!ccore.save()) {

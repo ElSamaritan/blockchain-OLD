@@ -84,6 +84,14 @@ bool TransactionPoolCleanWrapper::serialize(ISerializer& serializer) {
   return transactionPool->serialize(serializer);
 }
 
+bool TransactionPoolCleanWrapper::load(const std::string& dataDir) {
+  return transactionPool->load(dataDir);
+}
+
+bool TransactionPoolCleanWrapper::save(const std::string& dataDir) {
+  return transactionPool->save(dataDir);
+}
+
 ITransactionPool::TransactionQueryResult TransactionPoolCleanWrapper::queryTransaction(const Crypto::Hash& hash) const {
   return transactionPool->queryTransaction(hash);
 }

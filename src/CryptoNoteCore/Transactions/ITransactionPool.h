@@ -108,6 +108,20 @@ class ITransactionPool {
   [[nodiscard]] virtual bool serialize(ISerializer& serializer) = 0;
 
   /*!
+   * \brief load loads a previous transaction pool state from the transaction pool file in the given directory.
+   * \param dataDir The data directory used for the running network.
+   * \return true on success otherwise false.
+   */
+  [[nodiscard]] virtual bool load(const std::string& dataDir) = 0;
+
+  /*!
+   * \brief save stores the current transaction pool state to the transaction pool file in the given directory.
+   * \param dataDir The data directory used for the running network.
+   * \return true on success otherwise false.
+   */
+  [[nodiscard]] virtual bool save(const std::string& dataDir) = 0;
+
+  /*!
    * \brief eligiblePoolTransactions queries pool transactions ready to be mined and sorts them to prioratize more
    * profitable transactions.
    * \param index The eligble index of the blockchain the returned transactions must be eligible

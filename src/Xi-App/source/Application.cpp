@@ -241,6 +241,10 @@ void Xi::App::Application::tearDown() {
   if (m_remoteNode)
     m_remoteNode->shutdown();
   if (m_core) {
+    if (!m_core->transactionPool().save(m_dbOptions->DataDirectory)) {
+      (*m_ologger)(Logging::Fatal) << "transaction pool export failed.";
+    }
+
     if (!m_core->save() && m_ologger) {
       (*m_ologger)(Logging::Fatal) << "Core routine save procedure failed.";
     }
@@ -362,6 +366,11 @@ void Xi::App::Application::initializeCore() {
       (*m_ologger)(Logging::Fatal) << "Core loading procedure failed.";
       throw std::runtime_error("unable to load core");
     }
+  }
+
+  if (!m_core->transactionPool().load(m_dbOptions->DataDirectory)) {
+    (*m_ologger)(Logging::Fatal) << "Transaction pool loading procedure failed.";
+    throw std::runtime_error("unable to load core");
   }
 }
 

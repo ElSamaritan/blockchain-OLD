@@ -87,6 +87,9 @@ class TransactionPool : public ITransactionPool, private IBlockchainObserver {
    */
   [[nodiscard]] bool serialize(ISerializer& serializer) override;
 
+  [[nodiscard]] bool load(const std::string& dataDir) override;
+  [[nodiscard]] bool save(const std::string& dataDir) override;
+
   TransactionQueryResult queryTransaction(const Crypto::Hash& hash) const override;
   std::vector<CachedTransaction> eligiblePoolTransactions(EligibleIndex index) const override;
   Xi::Concurrent::RecursiveLock::lock_t acquireExclusiveAccess() const override;

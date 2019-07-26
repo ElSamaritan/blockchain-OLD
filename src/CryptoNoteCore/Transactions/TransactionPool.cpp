@@ -26,12 +26,20 @@
 #include <algorithm>
 #include <iterator>
 
+#include <Xi/ExternalIncludePush.h>
+#include <boost/filesystem.hpp>
+#include <Xi/ExternalIncludePop.h>
+
 #include <Xi/Exceptions.hpp>
 
 #include <Common/int-util.h>
 #include <Common/StringTools.h>
+#include <Common/StdInputStream.h>
+#include <Common/StdOutputStream.h>
 
 #include <Serialization/SerializationTools.h>
+#include <Serialization/BinaryInputStreamSerializer.h>
+#include <Serialization/BinaryOutputStreamSerializer.h>
 
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
@@ -230,6 +238,59 @@ bool TransactionPool::serialize(ISerializer& serializer) {
     }
   }
   return true;
+}
+
+bool TransactionPool::load(const std::string& dataDir) {
+  try {
+    const auto transactionPoolFile = boost::filesystem::path(dataDir) / m_blockchain.currency().txPoolFileName();
+    m_logger(Logging::Info) << "initializing transaction pool...";
+    if (!exists(transactionPoolFile)) {
+      m_logger(Logging::Info) << "no transaction pool file present, skipping import.";
+    } else {
+      std::ifstream poolFileStream{transactionPoolFile.string(), std::ios::in | std::ios::binary};
+      Common::StdInputStream poolInputStream{poolFileStream};
+      BinaryInputStreamSerializer poolSerializer(poolInputStream);
+      if (!serialize(poolSerializer)) {
+        m_logger(Logging::Warning) << "transaction pool load failed, cleaning state...";
+        forceFlush();
+      } else {
+        m_logger(Logging::Info) << "imported " << size() << " pending pool transactions.";
+      }
+    }
+    m_logger(Logging::Info) << "Transaction Pool initialized OK";
+    return true;
+  } catch (const std::exception& e) {
+    m_logger(Logging::Error) << "transaction pool threw on load: " << e.what();
+    XI_RETURN_EC(false);
+  } catch (...) {
+    m_logger(Logging::Error) << "transaction pool threw on load: UNKNOWN";
+    XI_RETURN_EC(false);
+  }
+}
+
+bool TransactionPool::save(const std::string& dataDir) {
+  try {
+    const auto transactionPoolFile = boost::filesystem::path(dataDir) / m_blockchain.currency().txPoolFileName();
+    m_logger(Logging::Info) << "exporting transaction pool...";
+    {
+      std::ofstream poolFileStream{transactionPoolFile.string(), std::ios::out | std::ios::binary | std::ios::trunc};
+      Common::StdOutputStream poolInputStream{poolFileStream};
+      BinaryOutputStreamSerializer poolSerializer(poolInputStream);
+      if (!serialize(poolSerializer)) {
+        m_logger(Logging::Error)
+            << "transaction pool save failed, your transaction pool may be corrupted and discarded on next start";
+      }
+      m_logger(Logging::Info) << "exported " << size() << " pending pool transactions.";
+    }
+    m_logger(Logging::Info) << "transaction pool exported OK";
+    return true;
+  } catch (const std::exception& e) {
+    m_logger(Logging::Error) << "transaction pool threw on save: " << e.what();
+    XI_RETURN_EC(false);
+  } catch (...) {
+    m_logger(Logging::Error) << "transaction pool threw on save: UNKNOWN";
+    XI_RETURN_EC(false);
+  }
 }
 
 ITransactionPool::TransactionQueryResult TransactionPool::queryTransaction(const Crypto::Hash& hash) const {
