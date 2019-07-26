@@ -301,6 +301,7 @@ void NodeInProcess::getRandomOutsByAmounts(
       ientry.out_key = std::move(pks[i]);
       iOuts.outs.emplace_back(std::move(ientry));
     }
+    result.emplace_back(std::move(iOuts));
   }
   NODE_SUCCESS
 }

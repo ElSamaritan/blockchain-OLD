@@ -118,8 +118,16 @@ ITransfersSubscription& TransfersConsumer::addSubscription(const AccountSubscrip
       m_syncStart = res->getSyncStart();
     } else {
       auto subStart = res->getSyncStart();
-      m_syncStart.height = std::min(m_syncStart.height, subStart.height);
+      if (m_syncStart.height.isNull()) {
+        m_syncStart.height = subStart.height;
+      } else if (!subStart.height.isNull()) {
+        m_syncStart.height = std::min(m_syncStart.height, subStart.height);
+      }
       m_syncStart.timestamp = std::min(m_syncStart.timestamp, subStart.timestamp);
+    }
+
+    if (m_syncStart.height.isNull()) {
+      m_syncStart.height = BlockHeight::Genesis;
     }
   }
 
@@ -161,21 +169,27 @@ void TransfersConsumer::initTransactionPool(const std::unordered_set<Crypto::Has
 void TransfersConsumer::updateSyncStart() {
   SynchronizationStart start;
 
-  start.height = BlockHeight::max();
+  start.height = BlockHeight::Null;
   start.timestamp = std::numeric_limits<uint64_t>::max();
 
   for (const auto& kv : m_subscriptions) {
     auto subStart = kv.second->getSyncStart();
-    start.height = std::min(start.height, subStart.height);
+    if (start.height.isNull()) {
+      start.height = subStart.height;
+    } else if (!subStart.height.isNull()) {
+      start.height = std::min(start.height, subStart.height);
+    }
     start.timestamp = std::min(start.timestamp, subStart.timestamp);
+  }
+
+  if (start.height.isNull()) {
+    start.height = BlockHeight::Genesis;
   }
 
   m_syncStart = start;
 }
 
 SynchronizationStart TransfersConsumer::getSyncStart() {
-  int affe = 4;
-  (void)affe;
   return m_syncStart;
 }
 

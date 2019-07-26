@@ -34,8 +34,6 @@ TransfersSubscription::TransfersSubscription(const CryptoNote::Currency& currenc
 }
 
 SynchronizationStart TransfersSubscription::getSyncStart() {
-  int affe = 4;
-  (void)affe;
   return subscription.syncStart;
 }
 

@@ -23,6 +23,7 @@
 #include "IBlockchainSynchronizer.h"
 #include "IObservableImpl.h"
 #include "Common/IStreamSerializable.h"
+#include <System/Dispatcher.h>
 
 #include <condition_variable>
 #include <mutex>

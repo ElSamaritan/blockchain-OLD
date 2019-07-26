@@ -21,6 +21,8 @@
 #include <iostream>
 #include <sstream>
 #include <unordered_set>
+#include <thread>
+#include <chrono>
 
 #include "Common/StreamTools.h"
 #include "Common/StringTools.h"
@@ -564,7 +566,7 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
       case UpdateConsumersResult::nothingChanged:
         if (m_node.getKnownBlockCount() != m_node.getLocalBlockCount()) {
           m_logger(Debugging) << "Blockchain updated, resume blockchain synchronization";
-          std::this_thread::sleep_for(std::chrono::milliseconds(100));
+          std::this_thread::sleep_for(std::chrono::milliseconds{50});
         } else {
           break;
         }
