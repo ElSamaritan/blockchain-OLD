@@ -819,6 +819,8 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   std::vector<std::error_code> transferResults{};
   transferResults.resize(transactions.size(), std::error_code{});
 
+#define XI_EXPERIMENTAL_PARALLEL_TRANSFER_VALIDATION 1
+
 #if defined(XI_EXPERIMENTAL_PARALLEL_TRANSFER_VALIDATION)
   async::parallel_for(async::irange(0ULL, transactions.size()),
                       [&](auto i)
