@@ -2781,7 +2781,7 @@ void Core::transactionPoolCleaningProcedure() {
           makeDelTransactionMessage(std::move(deletedTransactions), Messages::DeleteTransaction::Reason::Outdated));
     }
   } catch (System::InterruptedException&) {
-    logger(Logging::Debugging) << "transactionPoolCleaningProcedure has been interrupted";
+    /* */
   } catch (std::exception& e) {
     logger(Logging::Error) << "Error occurred while cleaning transactions pool: " << e.what();
   }
