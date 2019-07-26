@@ -1806,13 +1806,14 @@ std::vector<uint32_t> DatabaseBlockchainCache::getRandomOutsByAmount(uint64_t am
 
   ShuffleGenerator<uint32_t, Xi::Crypto::Random::Engine<uint32_t>> generator(outputsCount[amount]);
 
-  while (outputsToPick) {
+  uint64_t cumulativeTries = 0;
+  while (outputsToPick && cumulativeTries < outputsCount[amount]) {
     std::vector<uint32_t> globalIndexes;
     globalIndexes.reserve(outputsToPick);
 
     try {
-      for (uint32_t i = 0; i < outputsToPick; ++i, globalIndexes.push_back(generator())) /* */
-        ;
+      for (uint32_t i = 0; i < outputsToPick; ++i, globalIndexes.push_back(generator()))
+        /* */;
     } catch (const SequenceEnded&) {
       logger(Logging::Trace) << "getRandomOutsByAmount: generator reached sequence end";
       return resultOuts;
@@ -1839,14 +1840,14 @@ std::vector<uint32_t> DatabaseBlockchainCache::getRandomOutsByAmount(uint64_t am
     }
 
     for (size_t i = 0; i < transactions.size(); ++i) {
-      if (!isTransactionSpendTimeUnlocked(transactions[i].unlockTime, blockIndex) ||
-          transactions[i].blockIndex > uppperBlockIndex) {
+      if (!isTransactionSpendTimeUnlocked(transactions[i].unlockTime, blockIndex)) {
         continue;
       }
 
       resultOuts.push_back(globalIndexes[i]);
       --outputsToPick;
     }
+    cumulativeTries += transactions.size();
   }
 
   return resultOuts;

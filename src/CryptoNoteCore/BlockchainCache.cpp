@@ -892,7 +892,7 @@ std::vector<uint32_t> BlockchainCache::getRandomOutsByAmount(Amount amount, size
   uint32_t dist = static_cast<uint32_t>(std::distance(outs.begin(), end));
   dist = std::min(static_cast<uint32_t>(count), dist);
   ShuffleGenerator<uint32_t, Xi::Crypto::Random::Engine<uint32_t>> generator(dist);
-  while (dist--) {
+  while (dist-- && offs.size() < count) {
     auto offset = generator();
     auto& outIndex = it->second.outputs[offset];
     auto transactionIterator = transactions.get<TransactionInBlockTag>().find(
