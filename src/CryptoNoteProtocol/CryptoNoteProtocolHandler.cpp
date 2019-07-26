@@ -801,7 +801,7 @@ int CryptoNoteProtocolHandler::handle_response_chain_entry(int command, NOTIFY_R
     m_logger(Logging::Error) << context << "sent empty m_block_ids, dropping connection";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     m_p2p->report_failure(context.m_remote_ip, P2pPenalty::InvalidResponse);
-    return 1;
+    return XI_FALSE;
   }
 
   if (!m_core.hasBlock(arg.block_hashes.front())) {
@@ -809,7 +809,7 @@ int CryptoNoteProtocolHandler::handle_response_chain_entry(int command, NOTIFY_R
                              << Common::podToHex(arg.block_hashes.front()) << " , dropping connection";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     m_p2p->report_failure(context.m_remote_ip, P2pPenalty::InvalidResponse);
-    return 1;
+    return XI_FALSE;
   }
 
   context.m_remote_blockchain_height = arg.total_height;
@@ -822,12 +822,13 @@ int CryptoNoteProtocolHandler::handle_response_chain_entry(int command, NOTIFY_R
                              << "\r\nm_block_ids.size()=" << arg.block_hashes.size();
     m_p2p->report_failure(context.m_remote_ip, P2pPenalty::InvalidResponse);
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
+    return XI_FALSE;
   }
 
   std::copy_if(arg.block_hashes.begin(), arg.block_hashes.end(), std::back_inserter(context.m_needed_objects),
                [this](const auto& blockId) { return !this->m_core.hasBlock(blockId); });
   request_missing_objects(context, false);
-  return 1;
+  return XI_TRUE;
 }
 
 int CryptoNoteProtocolHandler::handleRequestTxPool(int command, NOTIFY_REQUEST_TX_POOL::request& arg,
@@ -1050,7 +1051,9 @@ void CryptoNoteProtocolHandler::recalculateMaxObservedHeight(const CryptoNoteCon
     }
   });
 
-  m_observedHeight = std::max(peerHeight, BlockHeight::fromIndex(m_core.getTopBlockIndex()));
+  if (!peerHeight.isNull()) {
+    m_observedHeight = std::max(peerHeight, BlockHeight::fromIndex(m_core.getTopBlockIndex()));
+  }
   if (context.m_state == CryptoNoteConnectionContext::state_normal) {
     m_observedHeight = BlockHeight::fromIndex(m_core.getTopBlockIndex());
   }
