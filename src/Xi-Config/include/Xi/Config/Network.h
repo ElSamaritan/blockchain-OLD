@@ -84,10 +84,18 @@ std::string defaultNetworkIdentifier();
 std::string breakpadServer();
 
 static inline constexpr uint64_t blockIdentifiersSynchronizationBatchSize() {
-  return 500;
+  return 1000;
 }
 static inline constexpr uint64_t blocksSynchronizationBatchSize() {
-  return 100;
+  return 500;
+}
+
+static inline constexpr uint64_t blocksP2pSynchronizationMaxBatchSize() {
+  return 1000;
+}
+
+static inline constexpr uint64_t blocksP2pSynchronizationMaxBlobSize() {
+  return 16 * 1024 * 1024;
 }
 }  // namespace Network
 }  // namespace Config

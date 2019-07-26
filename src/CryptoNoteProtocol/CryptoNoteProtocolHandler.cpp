@@ -436,9 +436,10 @@ int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_RE
     return 1;
   }
 
-  if (arg.blocks.size() > Xi::Config::Network::blocksSynchronizationBatchSize()) {
+  if (arg.blocks.size() > Xi::Config::Network::blocksP2pSynchronizationMaxBatchSize()) {
     m_logger(Logging::Debugging) << context << "NOTIFY_RESPONSE_GET_OBJECTS: request.block.size() > "
-                                 << Xi::Config::Network::blocksSynchronizationBatchSize() << " dropping connection";
+                                 << Xi::Config::Network::blocksP2pSynchronizationMaxBatchSize()
+                                 << " dropping connection";
     m_p2p->report_failure(context.m_remote_ip, P2pPenalty::InvalidRequest);
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
@@ -446,7 +447,7 @@ int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_RE
 
   rsp.current_blockchain_height = BlockHeight::fromIndex(m_core.getTopBlockIndex());
   std::vector<RawBlock> rawBlocks;
-  m_core.getBlocks(arg.blocks, rawBlocks, rsp.missed_ids);
+  m_core.getBlocks(arg.blocks, rawBlocks, rsp.missed_ids, Xi::Config::Network::blocksP2pSynchronizationMaxBlobSize());
 
   rsp.blocks = std::move(rawBlocks);
 
@@ -724,7 +725,8 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
     size_t count = 0;
     auto it = context.m_needed_objects.begin();
 
-    while (it != context.m_needed_objects.end() && count < Xi::Config::Network::blocksSynchronizationBatchSize()) {
+    while (it != context.m_needed_objects.end() &&
+           count < Xi::Config::Network::blocksP2pSynchronizationMaxBatchSize()) {
       if (!check_having_blocks || m_core.hasBlock(*it)) {
         req.blocks.push_back(*it);
         ++count;

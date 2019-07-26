@@ -89,6 +89,8 @@ class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
   virtual std::vector<RawBlock> getBlocks(uint32_t minIndex, uint32_t count) const override;
   virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<RawBlock>& blocks,
                          std::vector<Crypto::Hash>& missedHashes) const override;
+  virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<RawBlock>& blocks,
+                         std::vector<Crypto::Hash>& missedHashes, uint64_t maxBinarySize) const override;
   virtual bool queryBlocks(const std::vector<Crypto::Hash>& blockHashes, uint64_t timestamp, uint32_t& startIndex,
                            uint32_t& currentIndex, uint32_t& fullOffset,
                            std::vector<BlockFullInfo>& entries) const override;

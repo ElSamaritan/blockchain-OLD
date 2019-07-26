@@ -91,6 +91,8 @@ class ICore : public IBlockchain {
   virtual std::vector<RawBlock> getBlocks(uint32_t startIndex, uint32_t count) const = 0;
   virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<RawBlock>& blocks,
                          std::vector<Crypto::Hash>& missedHashes) const = 0;
+  virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<RawBlock>& blocks,
+                         std::vector<Crypto::Hash>& missedHashes, uint64_t maxBinarySize) const = 0;
 
   virtual SegmentReferenceVector<BlockHash> queryBlockSegments(ConstBlockHashSpan hashes) const = 0;
   virtual SegmentReferenceVector<BlockHeight> queryBlockSegments(ConstBlockHeightSpan hashes) const = 0;

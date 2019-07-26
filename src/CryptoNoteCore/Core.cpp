@@ -428,8 +428,14 @@ std::vector<RawBlock> Core::getBlocks(uint32_t minIndex, uint32_t count) const {
 
 void Core::getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<RawBlock>& blocks,
                      std::vector<Crypto::Hash>& missedHashes) const {
+  getBlocks(blockHashes, blocks, missedHashes, std::numeric_limits<uint64_t>::max());
+}
+
+void Core::getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<RawBlock>& blocks,
+                     std::vector<Crypto::Hash>& missedHashes, uint64_t maxBlobSize) const {
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
+  uint64_t cumulativeBlobSize = 0;
   blocks.reserve(blockHashes.size());
   for (const auto& hash : blockHashes) {
     IBlockchainCache* blockchainSegment = findSegmentContainingBlock(hash);
@@ -440,7 +446,16 @@ void Core::getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<R
       assert(blockIndex <= blockchainSegment->getTopBlockIndex());
       assert(hash == blockchainSegment->getBlockHash(blockIndex));
 
-      blocks.push_back(blockchainSegment->getBlockByIndex(blockIndex));
+      auto block = blockchainSegment->getBlockByIndex(blockIndex);
+      cumulativeBlobSize += block.blockTemplate.size();
+      for (const auto& txBlob : block.transactions) {
+        cumulativeBlobSize += txBlob.size();
+      }
+      if (cumulativeBlobSize > maxBlobSize) {
+        return;
+      } else {
+        blocks.emplace_back(std::move(block));
+      }
     }
   }
 }
