@@ -112,7 +112,7 @@ int WalletApplication::run() {
 
   if (!Options.useRemote()) {
     auto zedWalletRun = std::async(std::launch::async, [this, remote]() -> int {
-      const int ec = execZedWallet(*remote, Options, *currency(), logger());
+      const int ec = execZedWallet(nullptr, *remote, Options, *currency(), logger());
       node()->sendStopSignal();
       return ec;
     });
@@ -121,7 +121,7 @@ int WalletApplication::run() {
     }
     return zedWalletRun.get();
   } else {
-    return execZedWallet(*remote, Options, *currency(), logger());
+    return execZedWallet(std::addressof(dispatcher()), *remote, Options, *currency(), logger());
   }
 }
 

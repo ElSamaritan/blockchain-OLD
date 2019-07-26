@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <System/Dispatcher.h>
 #include <Logging/ILogger.h>
 #include <CryptoNoteCore/INode.h>
 #include <CryptoNoteCore/Currency.h>
@@ -11,7 +12,7 @@
 #include <Types.h>
 #include "WalletOptions.h"
 
-int execZedWallet(CryptoNote::INode& node, XiWallet::WalletOptions& options, const CryptoNote::Currency& currency,
-                  Logging::ILogger& logger);
+int execZedWallet(System::Dispatcher* dispatcher, CryptoNote::INode& node, XiWallet::WalletOptions& options,
+                  const CryptoNote::Currency& currency, Logging::ILogger& logger);
 
 int run(CryptoNote::WalletGreen& wallet, CryptoNote::INode& node, XiWallet::WalletOptions& config);

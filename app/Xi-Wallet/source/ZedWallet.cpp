@@ -35,9 +35,13 @@
 
 #include "CommonCLI.h"
 
-int execZedWallet(CryptoNote::INode& node, XiWallet::WalletOptions& config, const CryptoNote::Currency& currency,
-                  Logging::ILogger& logger) {
-  System::Dispatcher dispatcher{};
+int execZedWallet(System::Dispatcher* dispatcher, CryptoNote::INode& node, XiWallet::WalletOptions& config,
+                  const CryptoNote::Currency& currency, Logging::ILogger& logger) {
+  std::unique_ptr<System::Dispatcher> thisDispatcher{};
+  if (dispatcher == nullptr) {
+    thisDispatcher = std::make_unique<System::Dispatcher>();
+    dispatcher = thisDispatcher.get();
+  }
 
   std::promise<std::error_code> errorPromise;
 
@@ -98,7 +102,7 @@ int execZedWallet(CryptoNote::INode& node, XiWallet::WalletOptions& config, cons
   }
 
   /* Create the wallet instance */
-  CryptoNote::WalletGreen wallet(dispatcher, currency, node, logger);
+  CryptoNote::WalletGreen wallet(*dispatcher, currency, node, logger);
 
   /* Run the interactive wallet interface */
   return run(wallet, node, config);
