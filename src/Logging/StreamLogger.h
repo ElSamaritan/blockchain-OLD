@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <mutex>
 #include <string>
 #include <iostream>
 
@@ -36,9 +35,6 @@ class StreamLogger : public CommonLogger {
 
  protected:
   std::ostream* stream;
-
- private:
-  std::mutex mutex;
 };
 
 }  // namespace Logging

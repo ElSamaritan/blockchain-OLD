@@ -19,13 +19,33 @@
 
 #include <set>
 #include <string>
+#include <thread>
+#include <atomic>
+#include <queue>
+#include <mutex>
+
+#include <Xi/Concurrent/ReadersWriterLock.h>
 
 #include "ILogger.h"
 
 namespace Logging {
 
 class CommonLogger : public ILogger {
+ private:
+  struct LogContext {
+    std::string category;
+    Level level;
+    boost::posix_time::ptime time;
+    std::thread::id thread;
+    std::string body;
+
+    LogContext() = default;
+    ~LogContext() = default;
+  };
+
  public:
+  ~CommonLogger() override;
+
   virtual void operator()(const std::string& category, Level level, boost::posix_time::ptime time,
                           const std::string& body) override;
   virtual void enableCategory(const std::string& category);
@@ -36,11 +56,23 @@ class CommonLogger : public ILogger {
 
  protected:
   std::set<std::string> disabledCategories;
-  Level logLevel;
   std::string pattern;
+  Xi::Concurrent::ReadersWriterLock m_configGuard;
+
+  std::atomic<Level> logLevel;
+
+  std::thread m_detached{};
+  std::queue<LogContext> m_queue{};
+  std::atomic_bool m_shutdown{false};
+  std::mutex m_queueGuard;
 
   CommonLogger(Level level);
+
   virtual void doLogString(const std::string& message) = 0;
+
+ private:
+  void loopQueue();
+  void logContext(LogContext context);
 };
 
 }  // namespace Logging

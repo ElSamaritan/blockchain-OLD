@@ -28,12 +28,12 @@ StreamLogger::StreamLogger(std::ostream& stream, Level level) : CommonLogger(lev
 }
 
 void StreamLogger::attachToStream(std::ostream& _stream) {
+  XI_CONCURRENT_LOCK_WRITE(m_configGuard);
   this->stream = &_stream;
 }
 
 void StreamLogger::doLogString(const std::string& message) {
   if (stream != nullptr && stream->good()) {
-    std::lock_guard<std::mutex> lock(mutex);
     bool readingText = true;
     for (size_t charPos = 0; charPos < message.size(); ++charPos) {
       if (message[charPos] == ILogger::COLOR_DELIMETER) {

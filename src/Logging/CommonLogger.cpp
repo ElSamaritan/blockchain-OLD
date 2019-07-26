@@ -17,6 +17,11 @@
 
 #include "CommonLogger.h"
 
+#include <Xi/Global.hh>
+
+#include <chrono>
+#include <utility>
+
 namespace Logging {
 
 namespace {
@@ -58,36 +63,44 @@ std::string formatPattern(const std::string& pattern, const std::string& categor
 
 void CommonLogger::operator()(const std::string& category, Level level, boost::posix_time::ptime time,
                               const std::string& body) {
-  if (level == Logging::None || logLevel == Logging::None) {
+  if (level == Logging::None || logLevel.load(std::memory_order_consume) == Logging::None) {
     return;
   }
-  if (level <= logLevel && disabledCategories.count(category) == 0) {
-    std::string body2 = body;
-    if (!pattern.empty()) {
-      size_t insertPos = 0;
-      if (!body2.empty() && body2[0] == ILogger::COLOR_DELIMETER) {
-        size_t delimPos = body2.find(ILogger::COLOR_DELIMETER, 1);
-        if (delimPos != std::string::npos) {
-          insertPos = delimPos + 1;
-        }
-      }
 
-      body2.insert(insertPos, formatPattern(pattern, category, level, time));
-    }
+  if (level > logLevel.load(std::memory_order_consume)) {
+    return;
+  }
 
-    doLogString(body2);
+  if (m_shutdown.load(std::memory_order_consume)) {
+    return;
+  }
+
+  LogContext ctx{};
+  ctx.category = category;
+  ctx.level = level;
+  ctx.time = time;
+  ctx.thread = std::this_thread::get_id();
+  ctx.body = body;
+
+  {
+    std::lock_guard<std::mutex> _{m_queueGuard};
+    XI_UNUSED(_);
+    m_queue.emplace(std::move(ctx));
   }
 }
 
 void CommonLogger::setPattern(const std::string& _pattern) {
+  XI_CONCURRENT_LOCK_WRITE(m_configGuard);
   this->pattern = _pattern;
 }
 
 void CommonLogger::enableCategory(const std::string& category) {
+  XI_CONCURRENT_LOCK_WRITE(m_configGuard);
   disabledCategories.erase(category);
 }
 
 void CommonLogger::disableCategory(const std::string& category) {
+  XI_CONCURRENT_LOCK_WRITE(m_configGuard);
   disabledCategories.insert(category);
 }
 
@@ -95,7 +108,59 @@ void CommonLogger::setMaxLevel(Level level) {
   logLevel = level;
 }
 
-CommonLogger::CommonLogger(Level level) : logLevel(level), pattern("%D %T [%C] ") {
+CommonLogger::CommonLogger(Level level) : pattern("%D %T [%C] "), logLevel(level) {
+  m_detached = std::thread{[this]() { loopQueue(); }};
+}
+
+CommonLogger::~CommonLogger() {
+  try {
+    m_shutdown.store(true, std::memory_order_release);
+    m_detached.join();
+  } catch (...) {
+    /* */
+  }
+}
+
+void CommonLogger::loopQueue() {
+  while (!m_shutdown.load(std::memory_order_consume)) {
+    std::queue<LogContext> toLog;
+    {
+      std::lock_guard<std::mutex> _{m_queueGuard};
+      XI_UNUSED(_);
+      toLog = std::move(m_queue);
+      m_queue = std::queue<LogContext>{};
+    }
+    if (toLog.empty()) {
+      std::this_thread::sleep_for(std::chrono::milliseconds{10});
+    } else {
+      while (!toLog.empty()) {
+        logContext(std::move(toLog.front()));
+        toLog.pop();
+      }
+    }
+  }
+}
+
+void CommonLogger::logContext(CommonLogger::LogContext context) {
+  XI_CONCURRENT_LOCK_READ(m_configGuard);
+
+  if (disabledCategories.count(context.category) > 0) {
+    return;
+  }
+
+  if (!pattern.empty()) {
+    size_t insertPos = 0;
+    if (!context.body.empty() && context.body[0] == ILogger::COLOR_DELIMETER) {
+      size_t delimPos = context.body.find(ILogger::COLOR_DELIMETER, 1);
+      if (delimPos != std::string::npos) {
+        insertPos = delimPos + 1;
+      }
+    }
+
+    context.body.insert(insertPos, formatPattern(pattern, context.category, context.level, context.time));
+  }
+
+  doLogString(context.body);
 }
 
 }  // namespace Logging
