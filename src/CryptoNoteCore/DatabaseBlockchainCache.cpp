@@ -1834,11 +1834,6 @@ std::vector<uint32_t> DatabaseBlockchainCache::getRandomOutsByAmount(uint64_t am
 
     assert(globalIndexes.size() == transactions.size());
 
-    uint32_t uppperBlockIndex = 0;
-    if (blockIndex > currency.minedMoneyUnlockWindow()) {
-      uppperBlockIndex = blockIndex - currency.minedMoneyUnlockWindow();
-    }
-
     for (size_t i = 0; i < transactions.size(); ++i) {
       if (!isTransactionSpendTimeUnlocked(transactions[i].unlockTime, blockIndex)) {
         continue;
