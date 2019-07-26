@@ -579,7 +579,7 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
   }
 
   if (checkIfShouldStop()) {
-    m_logger(Warning) << "Block processing is interrupted";
+    m_logger(Debugging) << "Block processing is interrupted";
     m_observerManager.notify(&IBlockchainSynchronizerObserver::synchronizationCompleted,
                              std::make_error_code(std::errc::interrupted));
   }

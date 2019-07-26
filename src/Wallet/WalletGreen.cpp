@@ -2826,10 +2826,13 @@ void WalletGreen::synchronizationProgressUpdated(uint32_t processedBlockCount, u
 }
 
 void WalletGreen::synchronizationCompleted(std::error_code ec) {
-  if (ec)
-    m_logger(Error) << "Synchronization Completion error: " << ec << ", " << ec.message();
-  else
+  if (ec) {
+    if (ec != std::errc::interrupted) {
+      m_logger(Error) << "Synchronization Completion error: " << ec << ", " << ec.message();
+    }
+  } else {
     m_dispatcher.remoteSpawn([this]() { onSynchronizationCompleted(); });
+  }
 }
 
 void WalletGreen::onSynchronizationProgressUpdated(uint32_t processedBlockCount, uint32_t totalBlockCount) {
