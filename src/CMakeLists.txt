@@ -37,6 +37,7 @@ file(GLOB_RECURSE CryptoNoteProtocol CryptoNoteProtocol/*)
 file(GLOB_RECURSE Logging Logging/*)
 file(GLOB_RECURSE Mnemonics Mnemonics/*)
 file(GLOB_RECURSE NodeRpcProxy NodeRpcProxy/*)
+file(GLOB_RECURSE NodeInProcess NodeInProcess/*)
 file(GLOB_RECURSE P2p P2p/*)
 file(GLOB_RECURSE Rpc Rpc/*)
 file(GLOB_RECURSE Serialization Serialization/*)
@@ -57,7 +58,7 @@ else()
 endif()
 
 foreach(source_file ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol}
-                   ${JsonRpcServer} ${Logging} ${Mnemonics} ${NodeRpcProxy} ${P2p}
+                   ${JsonRpcServer} ${Logging} ${Mnemonics} ${NodeRpcProxy} ${NodeInProcess} ${P2p}
                    ${Rpc} ${Serialization} ${System} ${Transfers} ${Wallet} ${WalletLegacy}
                    ${BlockchainExplorer})
   if(XI_CXX_FLAGS)
@@ -73,6 +74,7 @@ add_library(CryptoNoteCore STATIC ${CryptoNoteCore})
 add_library(Logging STATIC ${Logging})
 add_library(Mnemonics STATIC ${Mnemonics})
 add_library(NodeRpcProxy STATIC ${NodeRpcProxy})
+add_library(NodeInProcess STATIC ${NodeInProcess})
 add_library(Rpc STATIC ${Rpc})
 add_library(P2P STATIC ${CryptoNoteProtocol} ${P2p})
 add_library(Serialization STATIC ${Serialization})
@@ -214,6 +216,7 @@ xi_make_library(
     CommonCLI
     CryptoNoteCore
     NodeRpcProxy
+    NodeInProcess
 )
 
 file(GLOB_RECURSE CommonCLI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI/*")
@@ -235,6 +238,7 @@ set(
       Logging
       Mnemonics
       NodeRpcProxy
+      NodeInProcess
       Rpc
       P2P
       Serialization
@@ -291,6 +295,7 @@ target_link_libraries(Crypto PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIE
 target_link_libraries(Logging PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Mnemonics PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(NodeRpcProxy PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
+target_link_libraries(NodeInProcess PUBLIC NodeRpcProxy boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(P2P PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Serialization PUBLIC boost json linenoise rang::rang yaml::yaml-cpp ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Transfers PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})

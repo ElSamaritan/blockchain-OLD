@@ -4,10 +4,14 @@
 
 #pragma once
 
-#include <NodeRpcProxy/NodeRpcProxy.h>
+#include <Logging/ILogger.h>
+#include <CryptoNoteCore/INode.h>
+#include <CryptoNoteCore/Currency.h>
 
 #include <Types.h>
+#include "WalletOptions.h"
 
-int main(int argc, char **argv);
+int execZedWallet(CryptoNote::INode& node, XiWallet::WalletOptions& options, const CryptoNote::Currency& currency,
+                  Logging::ILogger& logger);
 
-void run(CryptoNote::WalletGreen &wallet, CryptoNote::INode &node, Config &config);
+int run(CryptoNote::WalletGreen& wallet, CryptoNote::INode& node, XiWallet::WalletOptions& config);

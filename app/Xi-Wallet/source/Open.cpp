@@ -158,7 +158,7 @@ std::shared_ptr<WalletInfo> generateWallet(CryptoNote::WalletGreen &wallet) {
   return std::make_shared<WalletInfo>(walletFileName, walletPass, walletAddress, false, wallet);
 }
 
-std::shared_ptr<WalletInfo> openWallet(CryptoNote::WalletGreen &wallet, Config &config) {
+std::shared_ptr<WalletInfo> openWallet(CryptoNote::WalletGreen &wallet, XiWallet::WalletOptions &config) {
   const std::string walletFileName = getExistingWalletFileName(config);
 
   bool initial = true;
@@ -168,8 +168,8 @@ std::shared_ptr<WalletInfo> openWallet(CryptoNote::WalletGreen &wallet, Config &
 
     /* Only use the command line pass once, otherwise we will infinite
        loop if it is incorrect */
-    if (initial && config.passGiven) {
-      walletPass = config.walletPass;
+    if (initial && !config.password().empty()) {
+      walletPass = config.password();
     } else {
       walletPass = getWalletPassword(false, "Enter password: ");
     }
@@ -277,7 +277,6 @@ std::shared_ptr<WalletInfo> openWallet(CryptoNote::WalletGreen &wallet, Config &
 
 Crypto::SecretKey getPrivateKey(std::string msg) {
   const size_t privateKeyLen = 64;
-  size_t size;
 
   std::string privateKeyString;
   Crypto::Hash privateKeyHash;
@@ -296,16 +295,15 @@ Crypto::SecretKey getPrivateKey(std::string msg) {
                 << std::endl;
 
       continue;
-    } else if (!Common::fromHex(privateKeyString, &privateKeyHash, sizeof(privateKeyHash), size) ||
-               size != sizeof(privateKeyHash)) {
-      std::cout << WarningMsg("Invalid private key, it is not a valid ") << WarningMsg("hex string! Try again.")
-                << std::endl
+    } else if (auto ec = Crypto::SecretKey::fromString(privateKeyString); ec.isError()) {
+      std::cout << WarningMsg("Invalid private key, it is not a valid: ") << WarningMsg(ec.error().message())
+                << WarningMsg(" Try again...") << std::endl
                 << std::endl;
 
       continue;
+    } else {
+      privateKey = ec.take();
     }
-
-    privateKey = *(struct Crypto::SecretKey *)&privateKeyHash;
 
     /* Just used for verification purposes before we pass it to
        walletgreen */
@@ -322,15 +320,15 @@ Crypto::SecretKey getPrivateKey(std::string msg) {
   }
 }
 
-std::string getExistingWalletFileName(Config &config) {
+std::string getExistingWalletFileName(XiWallet::WalletOptions &options) {
   bool initial = true;
 
   std::string walletName;
 
   while (true) {
     /* Only use wallet file once in case it is incorrect */
-    if (config.walletGiven && initial) {
-      walletName = config.walletFile;
+    if (!options.wallet().empty() && initial) {
+      walletName = options.wallet();
     } else {
       std::cout << InformationMsg("What is the name of the wallet ") << InformationMsg("you want to open?: ");
 

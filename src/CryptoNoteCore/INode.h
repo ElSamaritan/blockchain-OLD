@@ -70,17 +70,17 @@ struct BlockShortEntry {
 };
 
 struct BlockHeaderInfo {
-  BlockHeight height;
-  BlockVersion version;
-  BlockVersion upgradeVote;
-  uint64_t timestamp;
-  Crypto::Hash hash;
-  Crypto::Hash prevHash;
-  BlockNonce nonce;
-  bool isAlternative;
-  uint32_t depth;  // last block index = current block index + depth
-  uint64_t difficulty;
-  uint64_t reward;
+  BlockHeight height = BlockHeight::Null;
+  BlockVersion version = BlockVersion::Null;
+  BlockVersion upgradeVote = BlockVersion::Null;
+  uint64_t timestamp = 0;
+  Crypto::Hash hash = Crypto::Hash::Null;
+  Crypto::Hash prevHash = Crypto::Hash::Null;
+  BlockNonce nonce = BlockNonce{};
+  bool isAlternative = true;
+  uint32_t depth = 0;  // last block index = current block index + depth
+  uint64_t difficulty = 0;
+  uint64_t reward = 0;
 };
 
 class INode {

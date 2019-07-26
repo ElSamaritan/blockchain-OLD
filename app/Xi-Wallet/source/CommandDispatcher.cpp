@@ -79,7 +79,7 @@ bool handleCommand(const std::string command, std::shared_ptr<WalletInfo> wallet
 }
 
 std::shared_ptr<WalletInfo> handleLaunchCommand(CryptoNote::WalletGreen &wallet, std::string launchCommand,
-                                                Config &config) {
+                                                XiWallet::WalletOptions &config) {
   if (launchCommand == "create") {
     return generateWallet(wallet);
   } else if (launchCommand == "open") {

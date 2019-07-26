@@ -45,7 +45,7 @@ void Xi::App::DatabaseOptions::emplaceOptions(cxxopts::Options &options) {
     ("db-write-buffer", "maximum buffer allocated for a write batch", cxxopts::value<uint64_t>(WriteBufferSize), "mega bytes")
     ("db-read-buffer", "maximum cache size allocated for reoccuring reads", cxxopts::value<uint64_t>(ReadCacheSize), "mega bytes")
     ("db-compression", "compression used to minimize database size", cxxopts::value<std::string>(), "none|lz4|lz4hc")
-    ("light-node", "prunes transaction signatures to sparse memory footpring", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+    ("light-node", "prunes transaction signatures to sparse memory footprint", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
   ;
   // clang-format on
 }

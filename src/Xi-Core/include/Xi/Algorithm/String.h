@@ -44,6 +44,14 @@ namespace Xi {
  */
 bool starts_with(const std::string& str, const std::string& prefix);
 
+/*!
+ * \brief ends_with checks if a given string ends with a suffix
+ * \param str the string to check against
+ * \param suffix the suffix thats expected for the string
+ * \return true if str ends with the suffix, otherwise false
+ */
+bool ends_with(const std::string& str, const std::string& suffix);
+
 std::string trim_left(std::string str);
 std::string trim_right(std::string str);
 std::string trim(std::string str);

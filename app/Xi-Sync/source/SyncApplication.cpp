@@ -97,6 +97,8 @@ void SyncApplication::localExport() {
 void SyncApplication::remoteExport() {
   auto writer = DumpWriter::open(Options.DumpFile).takeOrThrow();
   writer->setCheckpointsDensity(Options.CheckpointsDensity);
-  RemoteExporter exporter{*remoteNode(false), *writer, logger()};
+  auto rpc = rpcNode(false);
+  rpc->init().get().throwOnError();
+  RemoteExporter exporter{*rpc, *writer, logger()};
   exporter.exportBlocks(0, std::numeric_limits<uint32_t>::max(), Options.BatchSize).throwOnError();
 }

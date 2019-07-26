@@ -9,10 +9,12 @@
 
 #include <Types.h>
 
+#include "WalletOptions.h"
+
 std::shared_ptr<WalletInfo> importFromKeys(CryptoNote::WalletGreen &wallet, Crypto::SecretKey privateSpendKey,
                                            Crypto::SecretKey privateViewKey);
 
-std::shared_ptr<WalletInfo> openWallet(CryptoNote::WalletGreen &wallet, Config &config);
+std::shared_ptr<WalletInfo> openWallet(CryptoNote::WalletGreen &wallet, XiWallet::WalletOptions &config);
 
 std::shared_ptr<WalletInfo> createViewWallet(CryptoNote::WalletGreen &wallet);
 
@@ -28,7 +30,7 @@ Crypto::SecretKey getPrivateKey(std::string outputMsg);
 
 std::string getNewWalletFileName();
 
-std::string getExistingWalletFileName(Config &config);
+std::string getExistingWalletFileName(XiWallet::WalletOptions &options);
 
 std::string getWalletPassword(bool verifyPwd, std::string msg);
 

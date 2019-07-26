@@ -38,6 +38,7 @@
 #include <CryptoNoteCore/ICore.h>
 #include <CryptoNoteCore/Currency.h>
 #include <CryptoNoteCore/INode.h>
+#include <P2p/NetNode.h>
 #include <Rpc/RpcRemoteConfiguration.h>
 
 #include "Xi/App/LoggingOptions.h"
@@ -45,6 +46,7 @@
 #include "Xi/App/RemoteRpcOptions.h"
 #include "Xi/App/NetworkOptions.h"
 #include "Xi/App/CheckpointsOptions.h"
+#include "Xi/App/NodeOptions.h"
 
 namespace Xi {
 namespace App {
@@ -75,7 +77,8 @@ class Application {
   CryptoNote::Checkpoints* checkpoints();
   CryptoNote::Currency* currency();
   CryptoNote::ICore* core();
-  CryptoNote::INode* remoteNode(bool pollUpdates = false);
+  CryptoNote::INode* rpcNode(bool pollUpdates = false, bool preferEmbbedded = false);
+  CryptoNote::NodeServer* node();
   // --------------------------------------------- PreSetup ---------------------------------------------------
 
   // --------------------------------------------- Overrides --------------------------------------------------
@@ -97,6 +100,7 @@ class Application {
   void useCurrency();
   void useCheckpoints();
   void useCore();
+  void useNode();
   // ---------------------------------------------- Helper ----------------------------------------------------
 
  private:
@@ -108,6 +112,7 @@ class Application {
   void initializeCheckpoints();
   void initializeCurrency();
   void initializeCore();
+  void initializeNode();
 
  private:
   const std::string m_name;
@@ -126,6 +131,7 @@ class Application {
   std::unique_ptr<RemoteRpcOptions> m_remoteRpcOptions;
   std::unique_ptr<NetworkOptions> m_netOptions;
   std::unique_ptr<CheckpointsOptions> m_checkpointOptions;
+  std::unique_ptr<NodeOptions> m_nodeOptions;
   Xi::Http::SSLConfiguration m_sslConfig;
   bool m_coreRequied = false;
   bool m_currencyRequired = false;
@@ -135,6 +141,8 @@ class Application {
   std::unique_ptr<CryptoNote::ICore> m_core;
   std::unique_ptr<CryptoNote::Currency> m_currency;
   std::unique_ptr<CryptoNote::INode> m_remoteNode;
+  std::unique_ptr<CryptoNote::NodeServer> m_node;
+  std::unique_ptr<CryptoNote::CryptoNoteProtocolHandler> m_protocol;
 };
 }  // namespace App
 }  // namespace Xi

@@ -20,6 +20,16 @@ bool Xi::starts_with(const std::string &str, const std::string &prefix) {
     return std::mismatch(prefix.begin(), prefix.end(), str.begin()).first == prefix.end();
 }
 
+bool Xi::ends_with(const std::string &str, const std::string &suffix) {
+  if (suffix.empty())
+    return true;
+  else if (str.size() < suffix.size())
+    return false;
+  else
+    return std::mismatch(suffix.begin(), suffix.end(), std::next(str.begin(), str.size() - suffix.size())).first ==
+           suffix.end();
+}
+
 std::string Xi::trim_left(std::string str) {
   str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](char ch) { return !std::isspace(ch); }));
   return str;

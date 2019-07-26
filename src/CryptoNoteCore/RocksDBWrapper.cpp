@@ -17,6 +17,8 @@
 
 #include "RocksDBWrapper.h"
 
+#include <Xi/FileSystem.h>
+
 #include "rocksdb/cache.h"
 #include "rocksdb/table.h"
 #include "rocksdb/db.h"
@@ -39,6 +41,7 @@ void RocksDBWrapper::init(const DataBaseConfig& config) {
   }
 
   std::string dataDir = getDataDir(config);
+  Xi::FileSystem::ensureDirectoryExists(dataDir).throwOnError();
 
   logger(Info) << "Opening DB in " << dataDir;
 

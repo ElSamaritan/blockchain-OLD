@@ -29,6 +29,7 @@
 #include <cassert>
 
 #include <Xi/Exceptional.hpp>
+#include <Xi/FileSystem.h>
 #include <CommonCLI/CommonCLI.h>
 #include <Logging/ConsoleLogger.h>
 #include <Logging/FileLogger.h>
@@ -37,6 +38,11 @@
 #include <CryptoNoteCore/DatabaseBlockchainCacheFactory.h>
 #include <CryptoNoteCore/MainChainStorage.h>
 #include <NodeRpcProxy/NodeRpcProxy.h>
+#include <NodeInProcess/NodeInProcess.hpp>
+
+#if defined(_WIN32) && defined(NDEBUG)
+#include <Windows.h>
+#endif
 
 namespace {
 // clang-format off
@@ -58,6 +64,10 @@ Xi::App::Application::Application(std::string _name, std::string _description)
 }
 
 int Xi::App::Application::exec(int argc, char **argv) {
+#if defined(_WIN32) && defined(NDEBUG)
+  SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
+#endif
+
   XI_UNUSED(argc, argv);
   try {
     cxxopts::Options cliOptions{name(), description()};
@@ -131,26 +141,41 @@ CryptoNote::ICore *Xi::App::Application::core() {
   return m_core.get();
 }
 
-CryptoNote::INode *Xi::App::Application::remoteNode(bool pollUpdates) {
-  if (!m_remoteRpcOptions) {
+CryptoNote::INode *Xi::App::Application::rpcNode(bool pollUpdates, bool preferEmbbedded) {
+  if (!m_remoteRpcOptions && !m_nodeOptions) {
     return nullptr;
   }
   if (!m_remoteNode) {
-    m_remoteNode = std::make_unique<CryptoNote::NodeRpcProxy>(m_remoteRpcOptions->Address, m_remoteRpcOptions->Port,
-                                                              m_sslConfig, *m_currency, logger());
-    if (!m_remoteRpcOptions->AccessToken.empty()) {
-      static_cast<CryptoNote::NodeRpcProxy *>(m_remoteNode.get())
-          ->httpClient()
-          .useAuthorization(Xi::Http::BearerCredentials{m_remoteRpcOptions->AccessToken});
-    }
+    if (!preferEmbbedded || !m_remoteRpcOptions) {
+      m_remoteNode = std::make_unique<CryptoNote::NodeRpcProxy>(m_remoteRpcOptions->Address, m_remoteRpcOptions->Port,
+                                                                m_sslConfig, *m_currency, logger());
+      if (!m_remoteRpcOptions->AccessToken.empty()) {
+        static_cast<CryptoNote::NodeRpcProxy *>(m_remoteNode.get())
+            ->httpClient()
+            .useAuthorization(Xi::Http::BearerCredentials{m_remoteRpcOptions->AccessToken});
+      }
 
-    if (!pollUpdates) {
-      static_cast<CryptoNote::NodeRpcProxy *>(m_remoteNode.get())->setPollUpdatesEnabled(false);
+      if (!pollUpdates) {
+        static_cast<CryptoNote::NodeRpcProxy *>(m_remoteNode.get())->setPollUpdatesEnabled(false);
+      }
+    } else {
+      auto &internalNode = *node();
+      m_remoteNode = std::make_unique<CryptoNote::NodeInProcess>(internalNode, *m_protocol, *core(), logger());
     }
-
-    m_remoteNode->init().get().throwOnError();
   }
   return m_remoteNode.get();
+}
+
+CryptoNote::NodeServer *Xi::App::Application::node() {
+  if (!m_nodeOptions) {
+    return nullptr;
+  }
+
+  if (!m_node) {
+    initializeNode();
+  }
+
+  return m_node.get();
 }
 
 #define XI_APP_CONDITIONAL_OPTION_INIT(MEMBER) \
@@ -165,6 +190,7 @@ void Xi::App::Application::makeOptions(cxxopts::Options &options) {
   XI_APP_CONDITIONAL_OPTION_INIT(m_remoteRpcOptions)
   XI_APP_CONDITIONAL_OPTION_INIT(m_netOptions)
   XI_APP_CONDITIONAL_OPTION_INIT(m_checkpointOptions)
+  XI_APP_CONDITIONAL_OPTION_INIT(m_nodeOptions)
   if (isSSLClientRequired() || isSSLServerRequired()) {
     if (!isSSLClientRequired()) {
       m_sslConfig.emplaceOptions(options, Http::SSLConfiguration::Usage::Server);
@@ -192,6 +218,7 @@ bool Xi::App::Application::evaluateParsedOptions(const cxxopts::Options &options
   XI_APP_CONDITIONAL_OPTION_EVAL(m_remoteRpcOptions)
   XI_APP_CONDITIONAL_OPTION_EVAL(m_netOptions)
   XI_APP_CONDITIONAL_OPTION_EVAL(m_checkpointOptions)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_nodeOptions)
   if (isSSLClientRequired()) {
     if (m_sslConfig.isInsecure(Http::SSLConfiguration::Usage::Client)) {
       (*m_ologger)(Logging::Warning) << CommonCLI::insecureClientWarning();
@@ -272,6 +299,13 @@ void Xi::App::Application::useCore() {
   m_coreRequied = true;
 }
 
+void Xi::App::Application::useNode() {
+  useCore();
+  if (m_nodeOptions == nullptr) {
+    m_nodeOptions = std::make_unique<NodeOptions>();
+  }
+}
+
 bool Xi::App::Application::isSSLClientRequired() const {
   return m_remoteRpcOptions.get() != nullptr;
 }
@@ -298,6 +332,7 @@ void Xi::App::Application::initializeLogger() {
 void Xi::App::Application::initializeDatabase() {
   m_database = std::make_unique<CryptoNote::RocksDBWrapper>(logger());
   m_dbOptions->DataDirectory = m_dbOptions->DataDirectory + std::string{"/"} + currency()->networkUniqueName();
+  FileSystem::ensureDirectoryExists(m_dbOptions->DataDirectory).throwOnError();
   m_database->init(m_dbOptions->getConfig());
   if (!CryptoNote::DatabaseBlockchainCache::checkDBSchemeVersion(*m_database, logger())) {
     m_database->shutdown();
@@ -327,4 +362,13 @@ void Xi::App::Application::initializeCore() {
       throw std::runtime_error("unable to load core");
     }
   }
+}
+
+void Xi::App::Application::initializeNode() {
+  m_protocol =
+      std::make_unique<CryptoNote::CryptoNoteProtocolHandler>(*currency(), dispatcher(), *core(), nullptr, logger());
+  auto config = m_nodeOptions->getConfig(m_dbOptions->DataDirectory, *currency());
+  m_node = std::make_unique<CryptoNote::NodeServer>(dispatcher(), currency()->network(), *m_protocol, logger());
+  m_protocol->set_p2p_endpoint(m_node.get());
+  exceptional_if_not<RuntimeError>(m_node->init(config), "unable to initialize local node");
 }

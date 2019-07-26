@@ -1939,7 +1939,7 @@ std::vector<Crypto::Hash> Core::doBuildSparseChain(const Crypto::Hash& blockHash
   }
 
   auto genesisBlockHash = chain->getBlockHash(0);
-  if (sparseChain[0] != genesisBlockHash) {
+  if (sparseChain.empty() || sparseChain[0] != genesisBlockHash) {
     sparseChain.emplace_back(genesisBlockHash);
   }
 

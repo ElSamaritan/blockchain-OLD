@@ -76,8 +76,10 @@ Config parseArguments(int argc, char** argv) {
      "[MainNet|StageNet|TestNet|LocalTestNet]");
 
   options.add_options("Daemon")
-    ("r,remote-daemon", "The daemon <host:port> combination to use for node operations.",
-      cxxopts::value<std::string>(remoteDaemon)->default_value(defaultRemoteDaemon.str()), "<host:port>")
+    ("data-dir", "Data directory to store the blockchain.",
+      cxxopts::value<std::string>(config.dataDir)->default_value(config.dataDir))
+    ("r,remote-daemon", "The daemon <host:port> combination to use for node operations. Setting this option will implicitly disable the integrated node.",
+      cxxopts::value<std::string>(remoteDaemon)->default_value(defaultRemoteDaemon.str()), "<host:port> (ie. 127.0.0.1:22869)")
     ("rpc-remote-access-token", "access token required by the rpc server",
       cxxopts::value<std::string>(config.remoteRpcAccessToken)->default_value(config.remoteRpcAccessToken), "<token>")
   ;

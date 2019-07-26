@@ -84,7 +84,8 @@ std::string parseCommand(const std::vector<T> &printableCommands, const std::vec
   }
 }
 
-std::tuple<bool, std::shared_ptr<WalletInfo>> selectionScreen(Config &config, CryptoNote::WalletGreen &wallet,
+std::tuple<bool, std::shared_ptr<WalletInfo>> selectionScreen(XiWallet::WalletOptions &config,
+                                                              CryptoNote::WalletGreen &wallet,
                                                               CryptoNote::INode &node) {
   while (true) {
     /* Get the users action */
@@ -182,8 +183,8 @@ bool checkNodeStatus(CryptoNote::INode &node) {
   return true;
 }
 
-std::string getAction(Config &config) {
-  if (config.walletGiven || config.passGiven) {
+std::string getAction(XiWallet::WalletOptions &config) {
+  if (!config.wallet().empty() || !config.password().empty()) {
     return "open";
   }
 

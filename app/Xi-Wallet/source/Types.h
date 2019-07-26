@@ -15,6 +15,7 @@
 #include <Serialization/ISerializer.h>
 #include <Serialization/SerializationTools.h>
 #include <Common/JsonValue.h>
+#include <Common/Util.h>
 #include <Wallet/WalletGreen.h>
 
 struct WalletInfo {
@@ -60,8 +61,9 @@ struct Config {
   /* Enables verbose logging to standard output buffer */
   bool verbose = false;
 
+  std::string dataDir = Tools::getDefaultDataDirectory();
   /* The daemon host */
-  std::string host = "127.0.0.1";
+  std::string host = "";
   /* The daemon host access token, if required */
   std::string remoteRpcAccessToken = "";
 
