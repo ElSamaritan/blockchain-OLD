@@ -42,9 +42,17 @@
 #include "HttpClientSession.h"
 #include "HttpsClientSession.h"
 
+namespace {
+
+struct LoopGuard : public boost::asio::io_context::work {
+  using work::work;
+};
+
+}  // namespace
+
 struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_from_this<_Worker> {
+  std::shared_ptr<LoopGuard> loopGuard;  ///< Ensures the io context keeps idling.
   std::thread thread;
-  std::atomic_bool keepRunning{true};
   boost::asio::io_context io;
   boost::asio::ssl::context ctx{boost::asio::ssl::context::sslv23_client};
 
@@ -52,23 +60,21 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
   }
 
   void run() {
+    loopGuard = std::make_shared<LoopGuard>(io);
     thread = std::thread{std::bind(&_Worker::operator(), shared_from_this())};
   }
   void stop() {
-    keepRunning = false;
+    loopGuard.reset();
+    thread.join();
   }
 
   void operator()() {
-    while (keepRunning) {
-      try {
-        boost::system::error_code ec;
-        auto tasksHandled = io.run(ec);
-        io.reset();
-        if (tasksHandled == 0)
-          std::this_thread::sleep_for(std::chrono::milliseconds{20});
-      } catch (...) {
-        // TODO Logging
-      }
+    try {
+      boost::system::error_code ec;
+      io.run(ec);
+      // TODO Logging
+    } catch (...) {
+      // TODO Logging
     }
   }
 
