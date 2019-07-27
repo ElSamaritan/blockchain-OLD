@@ -28,9 +28,20 @@ namespace Logging {
 class LoggerRef {
  public:
   LoggerRef(ILogger& logger, const std::string& category);
+
   LoggerMessage operator()(Level level = Level::Info) const;
   LoggerMessage operator()(Level level, const std::string& color) const;
+
   ILogger& getLogger() const;
+
+ private:
+  void doObject(Level level, std::shared_ptr<ILogObject> object);
+
+ public:
+  template <typename _T>
+  void object(Level level, const _T& obj, const std::string& name = "") {
+    this->doObject(level, makeObjectLog(obj, name));
+  }
 
  private:
   ILogger* logger;

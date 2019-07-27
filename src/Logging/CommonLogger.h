@@ -23,6 +23,7 @@
 #include <atomic>
 #include <queue>
 #include <mutex>
+#include <variant>
 
 #include <Xi/Concurrent/ReadersWriterLock.h>
 
@@ -37,7 +38,7 @@ class CommonLogger : public ILogger {
     Level level;
     boost::posix_time::ptime time;
     std::thread::id thread;
-    std::string body;
+    std::variant<std::string, std::shared_ptr<ILogObject>> body;
 
     LogContext() = default;
     ~LogContext() = default;
@@ -48,6 +49,9 @@ class CommonLogger : public ILogger {
 
   virtual void operator()(const std::string& category, Level level, boost::posix_time::ptime time,
                           const std::string& body) override;
+  virtual void operator()(const std::string& category, Level level, boost::posix_time::ptime time,
+                          std::shared_ptr<ILogObject> obj) override;
+
   virtual void enableCategory(const std::string& category);
   virtual void disableCategory(const std::string& category);
   virtual void setMaxLevel(Level level);
@@ -68,12 +72,22 @@ class CommonLogger : public ILogger {
 
   CommonLogger(Level level);
 
+  std::string makeContextPrefix(const LogContext& context) const;
+
   virtual void doLogString(const std::string& message);
+  virtual void doLogString(LogContext context, const std::string& message);
+  virtual void doLogObject(LogContext context, ILogObject& object);
+  virtual void doLogObject(ILogObject& object);
   virtual void doLogContext(LogContext context);
 
  private:
+  bool isFiltered(Level level) const;
   void loopQueue();
   void logContext(LogContext context);
+  void logString(const std::string& str);
+  void logString(LogContext context, const std::string& str);
+  void logObject(LogContext context, ILogObject& object);
+  void logObject(ILogObject& object);
 };
 
 }  // namespace Logging

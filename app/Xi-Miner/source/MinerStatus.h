@@ -40,13 +40,20 @@ struct MinerStatus {
   std::string algorithm;
 
   KV_BEGIN_SERIALIZATION
-  KV_MEMBER(current_hashrate)
-  KV_MEMBER(average_hashrate)
-  KV_MEMBER(blocks_mined)
-  KV_MEMBER(active_threads)
-  KV_MEMBER(top_block)
+  KV_PUSH_VIRTUAL_OBJECT(hashrate)
+  KV_MEMBER_RENAME(current_hashrate, current)
+  KV_MEMBER_RENAME(average_hashrate, average)
+  KV_POP_VIRTUAL_OBJECT()
+
+  KV_PUSH_VIRTUAL_OBJECT(top)
+  KV_MEMBER_RENAME(top_block, block)
   KV_MEMBER(difficulty)
   KV_MEMBER(algorithm)
+  KV_POP_VIRTUAL_OBJECT()
+
+  KV_MEMBER(blocks_mined)
+  KV_MEMBER(active_threads)
+
   KV_END_SERIALIZATION
 };
 }  // namespace XiMiner

@@ -43,6 +43,15 @@ void LoggerGroup::operator()(const std::string& category, Level level, boost::po
   }
 }
 
+void LoggerGroup::operator()(const std::string& category, Level level, boost::posix_time::ptime time,
+                             std::shared_ptr<ILogObject> obj) {
+  if (level <= logLevel && disabledCategories.count(category) == 0) {
+    for (auto& logger : loggers) {
+      (*logger)(category, level, time, obj);
+    }
+  }
+}
+
 void LoggerGroup::doLogString(const std::string& message) {
   XI_UNUSED(message);
 }

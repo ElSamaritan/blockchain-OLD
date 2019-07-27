@@ -17,14 +17,16 @@
 
 #include "CommonLogger.h"
 
-#include <Xi/Global.hh>
-
 #include <chrono>
 #include <utility>
+#include <sstream>
 
 #if !defined(NDEBUG)
 #include <iostream>
 #endif
+
+#include <Xi/Global.hh>
+#include <Serialization/JsonOutputStreamSerializer.h>
 
 namespace Logging {
 
@@ -67,15 +69,7 @@ std::string formatPattern(const std::string& pattern, const std::string& categor
 
 void CommonLogger::operator()(const std::string& category, Level level, boost::posix_time::ptime time,
                               const std::string& body) {
-  if (level == Logging::None || logLevel.load(std::memory_order_consume) == Logging::None) {
-    return;
-  }
-
-  if (level > logLevel.load(std::memory_order_consume)) {
-    return;
-  }
-
-  if (m_shutdown.load(std::memory_order_consume)) {
+  if (isFiltered(level)) {
     return;
   }
 
@@ -85,6 +79,26 @@ void CommonLogger::operator()(const std::string& category, Level level, boost::p
   ctx.time = time;
   ctx.thread = std::this_thread::get_id();
   ctx.body = body;
+
+  {
+    std::lock_guard<std::mutex> _{m_queueGuard};
+    XI_UNUSED(_);
+    m_queue.emplace(std::move(ctx));
+  }
+}
+
+void CommonLogger::operator()(const std::string& category, Level level, boost::posix_time::ptime time,
+                              std::shared_ptr<ILogObject> obj) {
+  if (isFiltered(level)) {
+    return;
+  }
+
+  LogContext ctx{};
+  ctx.category = category;
+  ctx.level = level;
+  ctx.time = time;
+  ctx.thread = std::this_thread::get_id();
+  ctx.body = std::move(obj);
 
   {
     std::lock_guard<std::mutex> _{m_queueGuard};
@@ -116,8 +130,45 @@ CommonLogger::CommonLogger(Level level) : pattern("%D %T [%C] "), logLevel(level
   m_detached = std::thread{[this]() { loopQueue(); }};
 }
 
+std::string CommonLogger::makeContextPrefix(const CommonLogger::LogContext& context) const {
+  return formatPattern(pattern, context.category, context.level, context.time);
+}
+
 void CommonLogger::doLogString(const std::string& message) {
   XI_UNUSED(message);
+}
+
+void CommonLogger::doLogString(CommonLogger::LogContext context, const std::string& message) {
+  auto str = message;
+  if (!pattern.empty()) {
+    size_t insertPos = 0;
+    if (!str.empty() && str[0] == ILogger::COLOR_DELIMETER) {
+      size_t delimPos = str.find(ILogger::COLOR_DELIMETER, 1);
+      if (delimPos != std::string::npos) {
+        insertPos = delimPos + 1;
+      }
+    }
+
+    str.insert(insertPos, makeContextPrefix(context));
+  }
+
+  doLogString(str);
+}
+
+void CommonLogger::doLogObject(CommonLogger::LogContext context, ILogObject& object) {
+  CryptoNote::JsonOutputStreamSerializer ser{};
+  object.log(ser);
+  std::stringstream buf{};
+  buf << ser;
+  logString(std::move(context), buf.str());
+}
+
+void CommonLogger::doLogObject(ILogObject& object) {
+  CryptoNote::JsonOutputStreamSerializer ser{};
+  object.log(ser);
+  std::stringstream buf{};
+  buf << ser;
+  logString(buf.str());
 }
 
 void CommonLogger::doLogContext(CommonLogger::LogContext context) {
@@ -125,19 +176,31 @@ void CommonLogger::doLogContext(CommonLogger::LogContext context) {
     return;
   }
 
-  if (!pattern.empty()) {
-    size_t insertPos = 0;
-    if (!context.body.empty() && context.body[0] == ILogger::COLOR_DELIMETER) {
-      size_t delimPos = context.body.find(ILogger::COLOR_DELIMETER, 1);
-      if (delimPos != std::string::npos) {
-        insertPos = delimPos + 1;
-      }
+  if (auto message = std::get_if<std::string>(std::addressof(context.body))) {
+    auto cp = *message;
+    logString(std::move(context), cp);
+  } else if (auto obj = std::get_if<std::shared_ptr<ILogObject>>(std::addressof(context.body))) {
+    if (*obj) {
+      auto cp = *obj;
+      logObject(std::move(context), *cp);
     }
+  }
+}
 
-    context.body.insert(insertPos, formatPattern(pattern, context.category, context.level, context.time));
+bool CommonLogger::isFiltered(Level level) const {
+  if (level == Logging::None || logLevel.load(std::memory_order_consume) == Logging::None) {
+    return true;
   }
 
-  doLogString(context.body);
+  if (level > logLevel.load(std::memory_order_consume)) {
+    return true;
+  }
+
+  if (m_shutdown.load(std::memory_order_consume)) {
+    return true;
+  }
+
+  return false;
 }
 
 CommonLogger::~CommonLogger() {
@@ -172,7 +235,7 @@ void CommonLogger::loopQueue() {
 void CommonLogger::logContext(CommonLogger::LogContext context) {
   try {
     XI_CONCURRENT_LOCK_READ(m_configGuard);
-    doLogContext(context);
+    doLogContext(std::move(context));
   }
 #if !defined(NDEBUG)
   catch (std::exception& e) {
@@ -180,10 +243,27 @@ void CommonLogger::logContext(CommonLogger::LogContext context) {
   } catch (...) {
     std::cout << "log threw: UNKNOWN" << std::endl;
   }
-}
 #else
   catch (...) {
     /* */
   }
 #endif
+}
+
+void CommonLogger::logString(const std::string& str) {
+  doLogString(str);
+}
+
+void CommonLogger::logString(CommonLogger::LogContext context, const std::string& str) {
+  doLogString(std::move(context), str);
+}
+
+void CommonLogger::logObject(CommonLogger::LogContext context, ILogObject& object) {
+  doLogObject(std::move(context), object);
+}
+
+void CommonLogger::logObject(ILogObject& object) {
+  doLogObject(object);
+}
+
 }  // namespace Logging

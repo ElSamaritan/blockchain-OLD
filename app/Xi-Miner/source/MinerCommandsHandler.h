@@ -40,8 +40,8 @@ class MinerCommandsHandler : public Common::ConsoleHandler {
 
   MinerMonitor& minerMonitor();
 
-  void showHashrate();
-  void hideHashrate();
+  void reportShow();
+  void reportHide();
 
  private:
   bool help(const std::vector<std::string>& args);
@@ -55,9 +55,9 @@ class MinerCommandsHandler : public Common::ConsoleHandler {
   bool log_set(const std::vector<std::string>& args);
   bool log_hide(const std::vector<std::string>& args);
 
-  bool hashrate_hide(const std::vector<std::string>& args);
-  bool hashrate_show(const std::vector<std::string>& args);
-  bool hashrate_interval_set(const std::vector<std::string>& args);
+  bool report_hide(const std::vector<std::string>& args);
+  bool report_show(const std::vector<std::string>& args);
+  bool report_interval_set(const std::vector<std::string>& args);
 
  protected:
   void printError(std::string error) override;
@@ -67,7 +67,6 @@ class MinerCommandsHandler : public Common::ConsoleHandler {
  private:
   MinerManager& m_miner;
   UpdateMonitor& m_monitor;
-  Logging::ConsoleLogger m_monitorlogger;
   Logging::ConsoleLogger m_clogger;
   Logging::LoggerRef m_logger;
   Logging::LoggerManager& m_appLogger;

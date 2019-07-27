@@ -27,6 +27,8 @@
 #include <cassert>
 #include <iostream>
 
+#include <Serialization/ConsoleOutputSerializer.hpp>
+
 #include "Xi/Log/Discord/Embed.hpp"
 
 namespace Xi {
@@ -55,8 +57,8 @@ void DiscordLogger::setAuthor(const std::string& author) {
   m_author = author;
 }
 
-void DiscordLogger::doLogContext(Logging::CommonLogger::LogContext context) {
-  if (context.body.empty()) {
+void DiscordLogger::doLogString(Logging::CommonLogger::LogContext context, const std::string& message) {
+  if (message.empty()) {
     return;
   }
 
@@ -72,7 +74,7 @@ void DiscordLogger::doLogContext(Logging::CommonLogger::LogContext context) {
   // clang-format off
   embed
     .title(context.category)
-    .description(eraseColorEndcodings(context.body))
+    .description(eraseColorEndcodings(message))
     .timestamp(context.time)
     .color(logLevelColor(context.level))
   ;
@@ -96,8 +98,60 @@ void DiscordLogger::doLogContext(Logging::CommonLogger::LogContext context) {
   }
 
   if (auto reqBody = embed.toWebhookBody(); !reqBody.isError()) {
-    std::string jsonBody = replace(reqBody.take(), "\n", "\\n");
-    m_http->postSync(m_webhook, Http::ContentType::Json, std::move(jsonBody));
+    m_http->postSync(m_webhook, Http::ContentType::Json, reqBody.take());
+  }
+}
+
+void DiscordLogger::doLogObject(Logging::CommonLogger::LogContext context, Logging::ILogObject& object) {
+  Embed embed{};
+
+  std::string threadId{};
+  {
+    std::stringstream builder{};
+    builder << context.thread;
+    threadId = builder.str();
+  }
+
+  std::string objectString{};
+  {
+    std::stringstream builder{};
+    builder << "```yaml\n";
+    {
+      CryptoNote::ConsoleOutputSerializer ser{builder};
+      object.log(ser);
+    }
+    builder << "```";
+    objectString = builder.str();
+  }
+
+  // clang-format off
+  embed
+    .title(context.category)
+    .description(objectString)
+    .timestamp(context.time)
+    .color(logLevelColor(context.level))
+  ;
+
+  embed.addField()
+    .isInline(true)
+    .name("thread")
+    .value(threadId)
+  ;
+  embed.addField()
+    .isInline(true)
+    .name("level")
+    .value(toString(context.level))
+  ;
+  // clang-format on
+
+  if (!m_author.empty()) {
+    EmbedAuthor author{};
+    author.name(m_author);
+    embed.author(author);
+  }
+
+  if (auto reqBody = embed.toWebhookBody(); !reqBody.isError()) {
+    m_http->postSync(m_webhook, Http::ContentType::Json, reqBody.take());
   }
 }
 

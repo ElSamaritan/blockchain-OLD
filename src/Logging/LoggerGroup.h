@@ -33,6 +33,8 @@ class LoggerGroup : public CommonLogger {
   void removeLogger(ILogger& logger);
   virtual void operator()(const std::string& category, Level level, boost::posix_time::ptime time,
                           const std::string& body) override;
+  virtual void operator()(const std::string& category, Level level, boost::posix_time::ptime time,
+                          std::shared_ptr<ILogObject> obj) override;
 
  protected:
   void doLogString(const std::string& message) override;

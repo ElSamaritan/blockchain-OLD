@@ -881,7 +881,7 @@ CurrencyBuilder& CurrencyBuilder::configuration(const Xi::Config::Configuration&
 
 CurrencyBuilder& CurrencyBuilder::network(std::string netId) {
   if (const auto config = Xi::Config::Registry::searchByName(netId); config != nullptr) {
-    m_currency.logger(Info) << "Using built in configuration for: " << netId;
+    m_currency.logger(Debugging) << "Using built in configuration for: " << netId;
     return configuration(*config);
   } else {
     auto rootDir = boost::filesystem::path{m_networkDir};

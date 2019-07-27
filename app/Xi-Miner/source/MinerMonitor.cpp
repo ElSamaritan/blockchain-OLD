@@ -140,7 +140,9 @@ void XiMiner::MinerMonitor::reportHashrate() {
     color = Logging::RED;
   else if (abs < -0.08)
     color = Logging::YELLOW;
-  m_logger(Logging::Trace, color) << status().average_hashrate << " H/s";
+
+  auto currentStatus = status();
+  m_logger.object(Logging::Info, currentStatus, "status");
 }
 
 void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
@@ -154,7 +156,7 @@ void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
     m_status.average_hashrate =
         std::accumulate(m_hrTimeline.rbegin(), m_hrTimeline.rend(), 0.0,
                         [](auto acc, const auto& iCheckpoint) { return acc + iCheckpoint.Hashrate; }) /
-        (double)m_hrTimeline.size();
+        static_cast<double>(m_hrTimeline.size());
     if (m_hrTimeline.size() > 0) {
       m_status.current_hashrate = m_hrTimeline.rbegin()->Hashrate;
     }
@@ -164,7 +166,7 @@ void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
       const double shortAverage =
           std::accumulate(m_hrTimeline.rbegin(), m_hrTimeline.rbegin() + 60, 0.0,
                           [](auto acc, const auto& iCheckpoint) { return acc + iCheckpoint.Hashrate; }) /
-          (double)m_hrTimeline.size();
+          static_cast<double>(m_hrTimeline.size());
       const auto abs = (shortAverage - m_status.average_hashrate) / m_status.average_hashrate;
       if ((abs < -0.5 || shortAverage < 0.1) && isPanicExitEnabled()) {
         m_logger(Logging::Fatal) << "Hashrate stall detected, panic out.";

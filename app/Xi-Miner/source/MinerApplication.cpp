@@ -39,7 +39,7 @@ namespace XiMiner {
 class MinerApplication : public Application {
  public:
   MinerApplication() : Application("xi-miner", "mines blocks to progress the blockchain") {
-    useLogging(Logging::Error);
+    useLogging(Logging::Trace);
     useCurrency();
     useRemoteRpc();
   }
@@ -72,10 +72,10 @@ int XiMiner::MinerApplication::run() {
   cli.minerMonitor().setBlocksLimit(Options.BlockLimit);
   cli.minerMonitor().setReportInterval(std::chrono::seconds{Options.ReportInterval});
   cli.minerMonitor().setPanicExitEnabled(Options.Panic);
-  if (Options.ShowHashrate) {
-    cli.showHashrate();
+  if (Options.ReportShow) {
+    cli.reportShow();
   } else {
-    cli.hideHashrate();
+    cli.reportHide();
   }
 
   monitor->addObserver(&miner);

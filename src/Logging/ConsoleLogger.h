@@ -30,6 +30,7 @@ class ConsoleLogger : public CommonLogger {
 
  protected:
   virtual void doLogString(const std::string& message) override;
+  virtual void doLogObject(LogContext context, ILogObject& obj) override;
 
  private:
   std::mutex mutex;

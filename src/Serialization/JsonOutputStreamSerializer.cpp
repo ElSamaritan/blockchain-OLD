@@ -21,6 +21,7 @@
 #include <stdexcept>
 
 #include <Xi/Global.hh>
+#include <Xi/Algorithm/String.h>
 
 #include "Common/StringTools.h"
 
@@ -148,7 +149,13 @@ bool JsonOutputStreamSerializer::operator()(double& value, Common::StringView na
 
 bool JsonOutputStreamSerializer::operator()(std::string& value, Common::StringView name) {
   XI_RETURN_EC_IF(chain.empty(), false);
-  insertOrPush(*chain.back(), name, value);
+  if (isOutput()) {
+    auto cp = Xi::replace(value, "\n", "\\n");
+    insertOrPush(*chain.back(), name, cp);
+  } else {
+    insertOrPush(*chain.back(), name, value);
+    value = Xi::replace(value, "\\n", "\n");
+  }
   return true;
 }
 

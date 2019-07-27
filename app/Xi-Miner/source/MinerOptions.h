@@ -40,7 +40,7 @@ class MinerOptions {
   std::string Address = "";
   uint32_t Threads = static_cast<uint32_t>(std::thread::hardware_concurrency());
   uint16_t UpdateInterval = 2000;
-  bool ShowHashrate = false;
+  bool ReportShow = false;
   uint16_t ReportInterval = 5;  ///< Hashrate report interval in seconds.
   uint32_t BlockLimit = 0;
   bool Panic = false;  ///< Forces the application to abort if healthy checks fail.

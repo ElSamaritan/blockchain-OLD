@@ -20,6 +20,8 @@
 #include <unordered_map>
 #include <Common/ConsoleTools.h>
 
+#include <Serialization/ConsoleOutputSerializer.hpp>
+
 namespace Logging {
 
 using Common::Console::Color;
@@ -71,6 +73,14 @@ void ConsoleLogger::doLogString(const std::string& message) {
   if (changedColor) {
     Common::Console::setTextColor(Color::Default);
   }
+}
+
+void ConsoleLogger::doLogObject(CommonLogger::LogContext context, ILogObject& obj) {
+  doLogString(makeContextPrefix(context));
+  std::cout << "\n";
+  CryptoNote::ConsoleOutputSerializer ser{std::cout};
+  obj.log(ser);
+  std::cout << "\n";
 }
 
 }  // namespace Logging

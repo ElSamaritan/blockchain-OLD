@@ -44,11 +44,10 @@ XiMiner::MinerCommandsHandler::MinerCommandsHandler(MinerManager &miner, UpdateM
     : ConsoleHandler(),
       m_miner{miner},
       m_monitor{monitor},
-      m_monitorlogger{Logging::Info},
       m_clogger{Logging::Info},
       m_logger{m_clogger, ""},
       m_appLogger{logger},
-      m_minerMonitor{miner, m_monitorlogger} {
+      m_minerMonitor{miner, m_appLogger} {
   MINER_COMMAND_DEFINE(help, "prints a summary of all commands");
   MINER_COMMAND_DEFINE(version, "prints version information");
 
@@ -60,20 +59,18 @@ XiMiner::MinerCommandsHandler::MinerCommandsHandler(MinerManager &miner, UpdateM
   MINER_COMMAND_DEFINE(log_set, "sets the maximum log level");
   MINER_COMMAND_DEFINE(log_hide, "hides application log, except for this interface");
 
-  MINER_COMMAND_DEFINE(hashrate_show, "prints the current hashrate to the console");
-  MINER_COMMAND_DEFINE(hashrate_hide, "disables printing the current hashrate to the console");
-
-  MINER_COMMAND_DEFINE(hashrate_interval_set, "sets the status report interval of the miner monitor");
+  MINER_COMMAND_DEFINE(report_show, "prints the current status periodically");
+  MINER_COMMAND_DEFINE(report_hide, "disables printing the current status");
+  MINER_COMMAND_DEFINE(report_interval_set, "sets the status report interval");
 
   m_clogger.setPattern("");
-  m_monitorlogger.setPattern("");
 }
 
 XiMiner::MinerMonitor &XiMiner::MinerCommandsHandler::minerMonitor() { return m_minerMonitor; }
 
-void XiMiner::MinerCommandsHandler::showHashrate() { m_monitorlogger.setMaxLevel(Logging::Trace); }
+void XiMiner::MinerCommandsHandler::reportShow() { m_appLogger.setMaxLevel(Logging::Info); }
 
-void XiMiner::MinerCommandsHandler::hideHashrate() { m_appLogger.setMaxLevel(Logging::None); }
+void XiMiner::MinerCommandsHandler::reportHide() { m_appLogger.setMaxLevel(Logging::Warning); }
 
 #undef MINER_COMMAND_DEFINE
 
@@ -196,23 +193,23 @@ bool XiMiner::MinerCommandsHandler::log_set(const std::vector<std::string> &args
 
 bool XiMiner::MinerCommandsHandler::log_hide(const std::vector<std::string> &args) {
   XI_UNUSED(args);
-  hideHashrate();
+  reportHide();
   return true;
 }
 
-bool XiMiner::MinerCommandsHandler::hashrate_hide(const std::vector<std::string> &args) {
+bool XiMiner::MinerCommandsHandler::report_hide(const std::vector<std::string> &args) {
   XI_UNUSED(args);
-  m_monitorlogger.setMaxLevel(Logging::Info);
+  m_appLogger.setMaxLevel(Logging::Info);
   return true;
 }
 
-bool XiMiner::MinerCommandsHandler::hashrate_show(const std::vector<std::string> &args) {
+bool XiMiner::MinerCommandsHandler::report_show(const std::vector<std::string> &args) {
   XI_UNUSED(args);
-  showHashrate();
+  reportShow();
   return true;
 }
 
-bool XiMiner::MinerCommandsHandler::hashrate_interval_set(const std::vector<std::string> &args) {
+bool XiMiner::MinerCommandsHandler::report_interval_set(const std::vector<std::string> &args) {
   if (args.size() != 1) {
     return false;
   }

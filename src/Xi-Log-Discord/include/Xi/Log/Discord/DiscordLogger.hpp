@@ -42,7 +42,8 @@ class DiscordLogger final : public Logging::CommonLogger {
   void setAuthor(const std::string& author);
 
  protected:
-  void doLogContext(LogContext context) override;
+  void doLogString(LogContext context, const std::string& message) override;
+  void doLogObject(LogContext context, Logging::ILogObject& object) override;
 
  private:
   std::string eraseColorEndcodings(const std::string& message) const;

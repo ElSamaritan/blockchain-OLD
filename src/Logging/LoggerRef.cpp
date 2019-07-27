@@ -17,6 +17,13 @@
 
 #include "LoggerRef.h"
 
+#include <ctime>
+#include <utility>
+
+#include <Xi/ExternalIncludePush.h>
+#include <boost/date_time/posix_time/ptime.hpp>
+#include <Xi/ExternalIncludePop.h>
+
 namespace Logging {
 
 LoggerRef::LoggerRef(ILogger& logger, const std::string& category) : logger(&logger), category(category) {
@@ -32,6 +39,10 @@ LoggerMessage LoggerRef::operator()(Level level, const std::string& color) const
 
 ILogger& LoggerRef::getLogger() const {
   return *logger;
+}
+
+void LoggerRef::doObject(Level level, std::shared_ptr<ILogObject> object) {
+  getLogger()(category, level, boost::posix_time::from_time_t(std::time(nullptr)), std::move(object));
 }
 
 }  // namespace Logging
