@@ -34,7 +34,10 @@ void Xi::App::LoggingOptions::emplaceOptions(cxxopts::Options &options) {
         cxxopts::value<std::string>()->default_value(*trans.put_value(DefaultLogLevel)), acceptedLevels)
     ("log-console-level", "minimum log level for console logging", cxxopts::value<std::string>(), acceptedLevels)
     ("log-file-level", "minimum log level for file logging", cxxopts::value<std::string>(), acceptedLevels)
-    ("log-file", "file path writing logs to", cxxopts::value<std::string>(LogFilePath)->default_value(LogFilePath), "filepath")
+    ("log-file", "file path writing logs to", cxxopts::value<std::string>(LogFilePath)->default_value(LogFilePath), "<filepath>")
+    ("log-discord-level", "minimum log level for discord logging", cxxopts::value<std::string>(), acceptedLevels)
+    ("log-discord-webhook", "discord webhook url", cxxopts::value<std::string>(DiscordWebhook)->default_value(DiscordWebhook), "<url>")
+    ("log-discord-author", "author name for the discord posts", cxxopts::value<std::string>(DiscordAuthor)->default_value(DiscordAuthor), "<name>")
   ;
   // clang-format on
 }
@@ -65,6 +68,14 @@ bool Xi::App::LoggingOptions::evaluateParsedOptions(const cxxopts::Options &opti
       throw cxxopts::invalid_option_format_error{result["log-file-level"].as<std::string>() + " no recognized."};
     } else {
       FileLogLevel = *logLevel;
+    }
+  }
+  if (result.count("log-discord-level")) {
+    auto logLevel = trans.get_value(result["log-discord-level"].as<std::string>());
+    if (logLevel == boost::none) {
+      throw cxxopts::invalid_option_format_error{result["log-discord-level"].as<std::string>() + " no recognized."};
+    } else {
+      DiscordLogLevel = *logLevel;
     }
   }
   return false;

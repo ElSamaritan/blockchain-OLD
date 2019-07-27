@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -25,68 +25,88 @@
 
 #include <string>
 #include <optional>
+#include <cinttypes>
 
 #include <Xi/ExternalIncludePush.h>
-#include <cxxopts.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <Xi/ExternalIncludePop.h>
 
-#include <Logging/Level.h>
+#include <Xi/Global.hh>
+#include <Xi/Result.h>
 #include <Serialization/ISerializer.h>
 #include <Serialization/SerializationOverloads.h>
 #include <Serialization/OptionalSerialization.hpp>
 
-#include "Xi/App/IOptions.h"
-
 namespace Xi {
-namespace App {
-struct LoggingOptions : public IOptions {
-  /*!
-   * \brief DefaultLogLevel Log level applied if no logger specific level is specified.
-   */
-  Logging::Level DefaultLogLevel = Logging::Info;
+namespace Log {
+namespace Discord {
 
-  /*!
-   * \brief ConsoleLogLevel Minimum log level for console logging, if not provided the default log level is used.
-   */
-  std::optional<Logging::Level> ConsoleLogLevel = std::nullopt;
-
-  /*!
-   * \brief FileLogLevel Minimum log level for file logging, if not provided the default log level is used.
-   */
-  std::optional<Logging::Level> FileLogLevel = std::nullopt;
-
-  /*!
-   * \brief LogFilePath Path to store the log file, should be application dependent.
-   */
-  std::string LogFilePath;
-
-  /*!
-   * \brief FileLogLevel Minimum log level for file logging, if not provided the default warning level is used.
-   */
-  std::optional<Logging::Level> DiscordLogLevel = std::nullopt;
-
-  /*!
-   * \brief DiscordWebhook Your discord webhook url to send notifications.
-   */
-  std::string DiscordWebhook;
-
-  /*!
-   * \brief DiscordAuthor Is the author to be emplaced into the discord embed (if wanted)
-   */
-  std::string DiscordAuthor;
+class EmbedField {
+ public:
+  XI_PROPERTY(std::string, name, "")
+  XI_PROPERTY(std::string, value, "")
+  XI_PROPERTY(bool, isInline, false)
 
   KV_BEGIN_SERIALIZATION
-  KV_MEMBER(DefaultLogLevel)
-  KV_MEMBER(ConsoleLogLevel)
-  KV_MEMBER(FileLogLevel)
-  KV_MEMBER(LogFilePath)
-  KV_MEMBER(DiscordLogLevel)
-  KV_MEMBER(DiscordWebhook)
-  KV_MEMBER(DiscordAuthor)
+  KV_MEMBER_RENAME(name(), name)
+  KV_MEMBER_RENAME(value(), value)
+  KV_MEMBER_RENAME(isInline(), inline)
+  KV_END_SERIALIZATION
+};
+
+class EmbedUrl {
+ public:
+  XI_PROPERTY(std::string, url, "")
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(url(), url)
+  KV_END_SERIALIZATION
+};
+
+class EmbedAuthor {
+ public:
+  XI_PROPERTY(std::string, name, "")
+  XI_PROPERTY(std::optional<std::string>, url, std::nullopt)
+  XI_PROPERTY(std::optional<std::string>, icon, std::nullopt)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(name(), name)
+  KV_MEMBER_RENAME(url(), url)
+  KV_MEMBER_RENAME(icon(), icon_url)
+  KV_END_SERIALIZATION
+};
+
+class Embed {
+ public:
+  XI_PROPERTY(std::string, title, "")
+  XI_PROPERTY(std::string, description, "")
+  XI_PROPERTY(std::optional<std::string>, url, "")
+  XI_PROPERTY(uint32_t, color, 0)
+  XI_PROPERTY(std::optional<std::string>, timestamp, std::nullopt)
+  XI_PROPERTY(std::optional<EmbedUrl>, thumbnail, std::nullopt)
+  XI_PROPERTY(std::optional<EmbedUrl>, image, std::nullopt)
+  XI_PROPERTY(std::optional<EmbedAuthor>, author, std::nullopt)
+  XI_PROPERTY(std::vector<EmbedField>, fields, std::vector<EmbedField>{})
+
+  Embed& timestamp(boost::posix_time::ptime time);
+  EmbedField& addField();
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(title(), title)
+  KV_MEMBER_RENAME(description(), description)
+  KV_MEMBER_RENAME(url(), url)
+  KV_MEMBER_RENAME(color(), color)
+  KV_MEMBER_RENAME(timestamp(), timestamp)
+  KV_MEMBER_RENAME(thumbnail(), thumbnail)
+  KV_MEMBER_RENAME(image(), image)
+  KV_MEMBER_RENAME(author(), author)
+  KV_MEMBER_RENAME(fields(), fields)
   KV_END_SERIALIZATION
 
-  void emplaceOptions(cxxopts::Options& options) override;
-  bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
+  Result<std::string> toJson() const;
+  Result<std::string> toWebhookBody() const;
 };
-}  // namespace App
+
+}  // namespace Discord
+}  // namespace Log
 }  // namespace Xi

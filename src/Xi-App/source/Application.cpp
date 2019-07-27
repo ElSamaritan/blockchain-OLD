@@ -30,6 +30,7 @@
 
 #include <Xi/Exceptional.hpp>
 #include <Xi/FileSystem.h>
+#include <Xi/Log/Discord/Discord.hpp>
 #include <CommonCLI/CommonCLI.h>
 #include <Logging/ConsoleLogger.h>
 #include <Logging/FileLogger.h>
@@ -327,9 +328,21 @@ void Xi::App::Application::initializeLogger() {
     auto fileLogLevel = m_logOptions->ConsoleLogLevel.value_or(m_logOptions->DefaultLogLevel);
     if (fileLogLevel != Logging::None) {
       auto fileLogger = std::make_unique<Logging::FileLogger>(fileLogLevel);
+      auto filePath = m_logOptions->LogFilePath;
+      if (filePath.empty()) {
+        filePath = std::string{"./"} + name() + ".log";
+      }
       fileLogger->init(m_logOptions->LogFilePath);
       m_logger->addLogger(*fileLogger);
       m_fileLogger = std::move(fileLogger);
+    }
+
+    if (!m_logOptions->DiscordWebhook.empty()) {
+      auto discordLogger = std::make_unique<Xi::Log::Discord::DiscordLogger>(
+          m_logOptions->DiscordWebhook, m_logOptions->DiscordLogLevel.value_or(Logging::Warning));
+      discordLogger->setAuthor(m_logOptions->DiscordAuthor);
+      m_logger->addLogger(*discordLogger);
+      m_discordLogger = std::move(discordLogger);
     }
   }
 }

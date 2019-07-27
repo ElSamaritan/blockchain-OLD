@@ -139,12 +139,14 @@ std::future<Xi::Http::Response> Xi::Http::Client::send(Xi::Http::Request &&reque
 
   request.headers().setAcceptedContentEncodings(
       {ContentEncoding::Gzip, ContentEncoding::Deflate, ContentEncoding::Identity});
+
   // TODO: request type should be determined on schema not config.
   if (m_sslConfig.enabled()) {
     request.setSSLRequired(true);
     return m_worker->makeHttpsSession()->run(std::move(request));
-  } else
+  } else {
     return m_worker->makeHttpSession()->run(std::move(request));
+  }
 }
 
 std::future<Xi::Http::Response> Xi::Http::Client::send(const std::string &url, Xi::Http::Method method,

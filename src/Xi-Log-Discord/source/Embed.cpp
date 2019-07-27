@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -21,72 +21,41 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/Log/Discord/Embed.hpp"
 
-#include <string>
-#include <optional>
+#include <sstream>
 
-#include <Xi/ExternalIncludePush.h>
-#include <cxxopts.hpp>
-#include <Xi/ExternalIncludePop.h>
-
-#include <Logging/Level.h>
-#include <Serialization/ISerializer.h>
-#include <Serialization/SerializationOverloads.h>
-#include <Serialization/OptionalSerialization.hpp>
-
-#include "Xi/App/IOptions.h"
+#include <Serialization/JsonOutputStreamSerializer.h>
+#include <Serialization/SerializationTools.h>
 
 namespace Xi {
-namespace App {
-struct LoggingOptions : public IOptions {
-  /*!
-   * \brief DefaultLogLevel Log level applied if no logger specific level is specified.
-   */
-  Logging::Level DefaultLogLevel = Logging::Info;
+namespace Log {
+namespace Discord {
 
-  /*!
-   * \brief ConsoleLogLevel Minimum log level for console logging, if not provided the default log level is used.
-   */
-  std::optional<Logging::Level> ConsoleLogLevel = std::nullopt;
+Xi::Log::Discord::Embed &Xi::Log::Discord::Embed::timestamp(boost::posix_time::ptime time) {
+  return timestamp(boost::posix_time::to_iso_extended_string(time));
+}
 
-  /*!
-   * \brief FileLogLevel Minimum log level for file logging, if not provided the default log level is used.
-   */
-  std::optional<Logging::Level> FileLogLevel = std::nullopt;
+EmbedField &Embed::addField() {
+  fields().emplace_back();
+  return fields().back();
+}
 
-  /*!
-   * \brief LogFilePath Path to store the log file, should be application dependent.
-   */
-  std::string LogFilePath;
+Result<std::string> Embed::toJson() const {
+  XI_ERROR_TRY();
+  return success(CryptoNote::storeToJson(*this));
+  XI_ERROR_CATCH();
+}
 
-  /*!
-   * \brief FileLogLevel Minimum log level for file logging, if not provided the default warning level is used.
-   */
-  std::optional<Logging::Level> DiscordLogLevel = std::nullopt;
+Result<std::string> Embed::toWebhookBody() const {
+  XI_ERROR_TRY();
+  auto embedBody = toJson().takeOrThrow();
+  std::stringstream builder{};
+  builder << "{\"embeds\": [" << embedBody << "]}";
+  return success(std::string{builder.str()});
+  XI_ERROR_CATCH();
+}
 
-  /*!
-   * \brief DiscordWebhook Your discord webhook url to send notifications.
-   */
-  std::string DiscordWebhook;
-
-  /*!
-   * \brief DiscordAuthor Is the author to be emplaced into the discord embed (if wanted)
-   */
-  std::string DiscordAuthor;
-
-  KV_BEGIN_SERIALIZATION
-  KV_MEMBER(DefaultLogLevel)
-  KV_MEMBER(ConsoleLogLevel)
-  KV_MEMBER(FileLogLevel)
-  KV_MEMBER(LogFilePath)
-  KV_MEMBER(DiscordLogLevel)
-  KV_MEMBER(DiscordWebhook)
-  KV_MEMBER(DiscordAuthor)
-  KV_END_SERIALIZATION
-
-  void emplaceOptions(cxxopts::Options& options) override;
-  bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
-};
-}  // namespace App
+}  // namespace Discord
+}  // namespace Log
 }  // namespace Xi

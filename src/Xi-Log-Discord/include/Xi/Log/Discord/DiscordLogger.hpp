@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -24,69 +24,36 @@
 #pragma once
 
 #include <string>
-#include <optional>
+#include <memory>
 
-#include <Xi/ExternalIncludePush.h>
-#include <cxxopts.hpp>
-#include <Xi/ExternalIncludePop.h>
-
-#include <Logging/Level.h>
-#include <Serialization/ISerializer.h>
-#include <Serialization/SerializationOverloads.h>
-#include <Serialization/OptionalSerialization.hpp>
-
-#include "Xi/App/IOptions.h"
+#include <Xi/Global.hh>
+#include <Xi/Http/Client.h>
+#include <Logging/CommonLogger.h>
 
 namespace Xi {
-namespace App {
-struct LoggingOptions : public IOptions {
-  /*!
-   * \brief DefaultLogLevel Log level applied if no logger specific level is specified.
-   */
-  Logging::Level DefaultLogLevel = Logging::Info;
+namespace Log {
+namespace Discord {
 
-  /*!
-   * \brief ConsoleLogLevel Minimum log level for console logging, if not provided the default log level is used.
-   */
-  std::optional<Logging::Level> ConsoleLogLevel = std::nullopt;
+class DiscordLogger final : public Logging::CommonLogger {
+ public:
+  DiscordLogger(const std::string& webhook, Logging::Level level = Logging::Level::None);
+  ~DiscordLogger() override;
 
-  /*!
-   * \brief FileLogLevel Minimum log level for file logging, if not provided the default log level is used.
-   */
-  std::optional<Logging::Level> FileLogLevel = std::nullopt;
+  void setAuthor(const std::string& author);
 
-  /*!
-   * \brief LogFilePath Path to store the log file, should be application dependent.
-   */
-  std::string LogFilePath;
+ protected:
+  void doLogContext(LogContext context) override;
 
-  /*!
-   * \brief FileLogLevel Minimum log level for file logging, if not provided the default warning level is used.
-   */
-  std::optional<Logging::Level> DiscordLogLevel = std::nullopt;
+ private:
+  std::string eraseColorEndcodings(const std::string& message) const;
+  uint32_t logLevelColor(Logging::Level level) const;
 
-  /*!
-   * \brief DiscordWebhook Your discord webhook url to send notifications.
-   */
-  std::string DiscordWebhook;
-
-  /*!
-   * \brief DiscordAuthor Is the author to be emplaced into the discord embed (if wanted)
-   */
-  std::string DiscordAuthor;
-
-  KV_BEGIN_SERIALIZATION
-  KV_MEMBER(DefaultLogLevel)
-  KV_MEMBER(ConsoleLogLevel)
-  KV_MEMBER(FileLogLevel)
-  KV_MEMBER(LogFilePath)
-  KV_MEMBER(DiscordLogLevel)
-  KV_MEMBER(DiscordWebhook)
-  KV_MEMBER(DiscordAuthor)
-  KV_END_SERIALIZATION
-
-  void emplaceOptions(cxxopts::Options& options) override;
-  bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
+ private:
+  std::unique_ptr<Http::Client> m_http;
+  std::string m_webhook;
+  std::string m_author{};
 };
-}  // namespace App
+
+}  // namespace Discord
+}  // namespace Log
 }  // namespace Xi

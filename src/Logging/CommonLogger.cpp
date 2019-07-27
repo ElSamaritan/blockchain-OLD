@@ -22,6 +22,10 @@
 #include <chrono>
 #include <utility>
 
+#if !defined(NDEBUG)
+#include <iostream>
+#endif
+
 namespace Logging {
 
 namespace {
@@ -112,6 +116,30 @@ CommonLogger::CommonLogger(Level level) : pattern("%D %T [%C] "), logLevel(level
   m_detached = std::thread{[this]() { loopQueue(); }};
 }
 
+void CommonLogger::doLogString(const std::string& message) {
+  XI_UNUSED(message);
+}
+
+void CommonLogger::doLogContext(CommonLogger::LogContext context) {
+  if (disabledCategories.count(context.category) > 0) {
+    return;
+  }
+
+  if (!pattern.empty()) {
+    size_t insertPos = 0;
+    if (!context.body.empty() && context.body[0] == ILogger::COLOR_DELIMETER) {
+      size_t delimPos = context.body.find(ILogger::COLOR_DELIMETER, 1);
+      if (delimPos != std::string::npos) {
+        insertPos = delimPos + 1;
+      }
+    }
+
+    context.body.insert(insertPos, formatPattern(pattern, context.category, context.level, context.time));
+  }
+
+  doLogString(context.body);
+}
+
 CommonLogger::~CommonLogger() {
   try {
     m_shutdown.store(true, std::memory_order_release);
@@ -142,25 +170,20 @@ void CommonLogger::loopQueue() {
 }
 
 void CommonLogger::logContext(CommonLogger::LogContext context) {
-  XI_CONCURRENT_LOCK_READ(m_configGuard);
-
-  if (disabledCategories.count(context.category) > 0) {
-    return;
+  try {
+    XI_CONCURRENT_LOCK_READ(m_configGuard);
+    doLogContext(context);
   }
-
-  if (!pattern.empty()) {
-    size_t insertPos = 0;
-    if (!context.body.empty() && context.body[0] == ILogger::COLOR_DELIMETER) {
-      size_t delimPos = context.body.find(ILogger::COLOR_DELIMETER, 1);
-      if (delimPos != std::string::npos) {
-        insertPos = delimPos + 1;
-      }
-    }
-
-    context.body.insert(insertPos, formatPattern(pattern, context.category, context.level, context.time));
+#if !defined(NDEBUG)
+  catch (std::exception& e) {
+    std::cout << "log threw: " << e.what() << std::endl;
+  } catch (...) {
+    std::cout << "log threw: UNKNOWN" << std::endl;
   }
-
-  doLogString(context.body);
 }
-
+#else
+  catch (...) {
+    /* */
+  }
+#endif
 }  // namespace Logging

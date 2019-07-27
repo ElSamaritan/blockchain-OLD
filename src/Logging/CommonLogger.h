@@ -31,7 +31,7 @@
 namespace Logging {
 
 class CommonLogger : public ILogger {
- private:
+ protected:
   struct LogContext {
     std::string category;
     Level level;
@@ -68,7 +68,8 @@ class CommonLogger : public ILogger {
 
   CommonLogger(Level level);
 
-  virtual void doLogString(const std::string& message) = 0;
+  virtual void doLogString(const std::string& message);
+  virtual void doLogContext(LogContext context);
 
  private:
   void loopQueue();

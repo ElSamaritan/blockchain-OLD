@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <string>
+
 #include <Xi/ExternalIncludePush.h>
 #include <boost/optional.hpp>
 #include <Xi/ExternalIncludePop.h>
@@ -32,7 +34,15 @@
 #include <Serialization/ISerializer.h>
 
 namespace Logging {
-enum Level { None = 0, Fatal = 1, Error = 2, Warning = 3, Info = 4, Debugging = 5, Trace = 6 };
+enum Level {
+  None = 0,
+  Fatal = 1,
+  Error = 2,
+  Warning = 3,
+  Info = 4,
+  Debugging = 5,
+  Trace = 6,
+};
 
 class LevelTranslator {
  public:
@@ -44,4 +54,6 @@ class LevelTranslator {
 };
 
 [[nodiscard]] bool serialize(Level& level, CryptoNote::ISerializer& serializer);
+
+std::string toString(Level level);
 }  // namespace Logging

@@ -154,6 +154,19 @@ xi_make_library(
 )
 
 xi_make_library(
+  Xi-Log-Discord
+
+  PUBLIC_LIBRARIES
+    Xi::Core
+    Xi::Http
+
+    Serialization
+    Logging
+
+    boost
+)
+
+xi_make_library(
   Xi-Rpc
 
   PUBLIC_LIBRARIES
@@ -208,7 +221,9 @@ xi_make_library(
   Xi-App
 
   PUBLIC_LIBRARIES
-    Xi.Core
+    Xi::Core
+    Xi::Log::Discord
+
     boost
     cxxopts
     Serialization

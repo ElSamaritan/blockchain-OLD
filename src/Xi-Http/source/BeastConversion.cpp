@@ -93,7 +93,7 @@ Xi::Http::BeastConversion::beast_response_t Xi::Http::BeastConversion::operator(
     const Xi::Http::BeastConversion::api_response_t &response) const {
   beast_response_t beastresponse;
   copyHeaders(response.headers(), beastresponse);
-  beastresponse.result(static_cast<int>(response.status()));
+  beastresponse.result(static_cast<unsigned int>(response.status()));
   beastresponse.set(boost::beast::http::field::connection, "close");
   if (!response.body().empty()) {
     beastresponse.body() = encodeBody(boost::iostreams::array_source{response.body().data(), response.body().size()},

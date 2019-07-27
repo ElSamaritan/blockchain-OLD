@@ -124,6 +124,7 @@ class Application {
   std::unique_ptr<Logging::LoggerRef> m_ologger;
   std::unique_ptr<Logging::ILogger> m_consoleLogger;
   std::unique_ptr<Logging::ILogger> m_fileLogger;
+  std::unique_ptr<Logging::ILogger> m_discordLogger;
   std::unique_ptr<LoggingOptions> m_logOptions;
   // ------------------------------------------------ Logging ------------------------------------------------------
 

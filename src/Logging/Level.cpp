@@ -91,3 +91,7 @@ bool Logging::serialize(Logging::Level &level, CryptoNote::ISerializer &serializ
     return true;
   }
 }
+
+std::string Logging::toString(Logging::Level level) {
+  return LevelTranslator{}.put_value(level).value_or("<unknown>");
+}
