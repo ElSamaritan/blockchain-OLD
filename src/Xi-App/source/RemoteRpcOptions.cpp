@@ -50,7 +50,7 @@ bool Xi::App::RemoteRpcOptions::evaluateParsedOptions(const cxxopts::Options &op
                                                       const cxxopts::ParseResult &result) {
   XI_UNUSED(options);
 
-  if (result.count("rpc-remote-host")) {
+  if (result.count("rpc-remote-host") > 0) {
     if (result.count("rpc-remote-address") > 0 || result.count("rpc-remote-port") > 0) {
       exceptional<AmbiguousEndpointError>();
     }
@@ -59,13 +59,14 @@ bool Xi::App::RemoteRpcOptions::evaluateParsedOptions(const cxxopts::Options &op
     if (!Common::parseIpAddressAndPort(_ip, _port, result["rpc-remote-host"].as<std::string>())) {
       exceptional<InvalidHostFormatError>();
     }
-  }
 
-  if (Port < 1) {
-    exceptional<InvalidPortError>();
-  }
-  if (Address != "127.0.0.1") {
-    uint32_t _ = 0;
+    Address = Common::ipAddressToString(_ip);
+    Port = _port;
+  } else {
+    if (Port < 1) {
+      exceptional<InvalidPortError>();
+    }
+    [[maybe_unused]] uint32_t _ = 0;
     if (!Common::parseIpAddress(_, Address)) {
       exceptional<InvalidIpFormatError>();
     }
