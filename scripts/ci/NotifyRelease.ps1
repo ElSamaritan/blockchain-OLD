@@ -31,8 +31,10 @@ $BuildEnvironment = Get-BuildEnvironment
 $NotificationChannels = @(
     "stable",
     "beta",
-    "edge"
+    "edge",
+    "clutter"
 )
+
 if (-not ($NotificationChannels -contains $BuildEnvironment.Channel)) {
     Write-Log "Not a chanel to notify on, skipping..."
     return
@@ -78,7 +80,17 @@ $Payload = "{
   } ]
 }"
 
-Invoke-RestMethod -Uri "$($env:DISCORD_WEBHOOK)" -Method "POST" -UserAgent "GitlabCI-Webhook" `
+$DiscordWebhook = $env:DISCORD_WEBHOOK
+$GlobalNotificationChannels = @(
+    "stable",
+    "beta"
+)
+
+if (-not ($GlobalNotificationChannels -contains $BuildEnvironment.Channel)) {
+    $DiscordWebhook = $env:DISCORD_WEBHOOK_DEV
+}
+
+Invoke-RestMethod -Uri "$($DiscordWebhook)" -Method "POST" -UserAgent "GitlabCI-Webhook" `
     -ContentType "application/json" -Header @{"X-Author" = "gitlab-ci" } `
     -Body $Payload
 
