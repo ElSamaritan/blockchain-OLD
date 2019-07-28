@@ -2158,7 +2158,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, uint32_t index, size_t fullRe
   uint64_t currentReward = 0;
   m_currency.getBlockReward(block.version, fullRewardZone, 0, generatedCoins, fee, currentReward, emissionChange);
 
-  size_t cumulativeSize = m_currency.minerReward(block.version).reservedSize();
+  size_t cumulativeSize = 0;
 
   const EligibleIndex blockIndex{index, block.timestamp};
   // We assume eligible transactions are ordered, such that the first transactions are most profitible. Using this
@@ -2200,7 +2200,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, uint32_t index, size_t fullRe
     fee += iFee;
     cumulativeSize += iSize;
     block.transactionHashes.emplace_back(iter->getTransactionHash());
-    transactionsSize += iter->getTransactionBinaryArray().size();
+    transactionsSize += iSize;
   }
 
   if (departedTransactions > 0) {
