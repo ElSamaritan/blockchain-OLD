@@ -19,6 +19,7 @@
 #include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Result.h>
+#include <Xi/Exceptional.hpp>
 #include <Xi/Config/NetworkType.h>
 #include <Xi/Config/Network.h>
 #include <Xi/Http/SSLConfiguration.h>
@@ -183,7 +184,7 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
       cxxopts::value<std::string>()->implicit_value("*"), "<domain>")
     ("fee-address", "Sets the convenience charge <address> for light wallets that use the daemon", cxxopts::value<std::string>(), "<address>")
     ("fee-view-key", "Fee address private view key to validate fees are payed.", cxxopts::value<std::string>(), "<private-key>")
-    ("fee-amount", "Sets the convenience charge amount for light wallets that use the daemon", cxxopts::value<int>()->default_value("0"), "#");
+    ("fee-amount", "Sets the convenience charge amount for light wallets that use the daemon", cxxopts::value<int64_t>()->default_value("0"), "#");
 
   options.add_options("Network")
     ("network-dir", "Directory to search for additional network configuration files.", cxxopts::value<std::string>()->default_value(config.networkConfigDir))
@@ -362,7 +363,9 @@ void handleSettings(int argc, char* argv[], DaemonConfiguration& config) {
     }
 
     if (cli.count("fee-amount") > 0) {
-      config.fees.amount = cli["fee-amount"].as<uint64_t>();
+      const auto feeAmount = cli["fee-amount"].as<int64_t>();
+      Xi::exceptional_if<Xi::OutOfRangeError>(feeAmount < 1, "fee-amount is not greater zero");
+      config.fees.amount = static_cast<uint64_t>(feeAmount);
     }
 
     if (CommonCLI::handleCLIOptions(options, cli)) exit(0);
