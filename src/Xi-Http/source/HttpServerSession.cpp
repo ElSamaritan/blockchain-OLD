@@ -28,10 +28,19 @@
 
 #include "HttpServerSession.h"
 
+#include <utility>
+
 #include <Xi/ExternalIncludePush.h>
 #include <boost/beast/version.hpp>
 #include <boost/asio/bind_executor.hpp>
 #include <Xi/ExternalIncludePop.h>
+
+Xi::Http::HttpServerSession::HttpServerSession(Xi::Http::ServerSession::socket_t socket,
+                                               Xi::Http::ServerSession::buffer_t buffer,
+                                               std::shared_ptr<Xi::Http::RequestHandler> handler,
+                                               Xi::Concurrent::IDispatcher& dispatcher)
+    : ServerSession(socket.get_executor(), std::move(buffer), handler, dispatcher), m_socket{std::move(socket)} {
+}
 
 void Xi::Http::HttpServerSession::doReadRequest() {
   m_request = {};

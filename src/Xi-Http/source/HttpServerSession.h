@@ -26,13 +26,15 @@
 #include <memory>
 #include <utility>
 
+#include "Stream.h"
 #include "ServerSession.h"
 
 namespace Xi {
 namespace Http {
 class HttpServerSession : public ServerSession {
  public:
-  using ServerSession::ServerSession;
+  HttpServerSession(socket_t socket, buffer_t buffer, std::shared_ptr<RequestHandler> handler,
+                    Concurrent::IDispatcher& dispatcher);
   XI_DEFAULT_MOVE(HttpServerSession);
   ~HttpServerSession() override = default;
 
@@ -44,6 +46,7 @@ class HttpServerSession : public ServerSession {
   void doClose() override;
 
  private:
+  socket_t m_socket;
 };
 }  // namespace Http
 }  // namespace Xi

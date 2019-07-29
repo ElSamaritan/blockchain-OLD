@@ -24,6 +24,7 @@
 #pragma once
 
 #include <memory>
+#include <chrono>
 
 namespace Xi {
 namespace Http {
@@ -39,6 +40,7 @@ class IClientSessionBuilder {
 
   virtual std::shared_ptr<ClientSession> makeHttpSession() = 0;
   virtual std::shared_ptr<ClientSession> makeHttpsSession() = 0;
+  virtual std::chrono::seconds timeout() const = 0;
 };
 
 }  // namespace Http

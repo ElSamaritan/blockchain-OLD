@@ -29,16 +29,18 @@
 #include <sstream>
 #include <string>
 
+#include <Xi/ExternalIncludePush.h>
 #include <boost/optional.hpp>
-
-#include <Xi/Global.hh>
-
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast.hpp>
 #include <boost/asio/ssl/error.hpp>
 #include <boost/asio/ssl/stream.hpp>
+#include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Global.hh>
+
+#include "Stream.h"
 #include "ClientSession.h"
 
 namespace Xi {
@@ -69,7 +71,7 @@ class HttpsClientSession : public ClientSession {
   void onHandshake(boost::beast::error_code ec);
 
  private:
-  boost::asio::ssl::stream<boost::asio::ip::tcp::socket> m_stream;
+  SslClientStream m_stream;
 };
 }  // namespace Http
 }  // namespace Xi

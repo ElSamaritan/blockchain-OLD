@@ -135,7 +135,7 @@ void Xi::Http::SSLConfiguration::emplaceOptions(cxxopts::Options &options, Xi::H
             cxxopts::value<std::string>(m_privateKeyPassword)->default_value(""))
 
         ("ssl-dh", "Filepath containing the dhparam randomization for the server.",
-            cxxopts::value<std::string>(m_privateKeyPath)->default_value("dh.pem"));
+            cxxopts::value<std::string>(m_dhparamPath)->default_value("dh.pem"));
     // clang-format on
   }
 
@@ -151,13 +151,13 @@ void Xi::Http::SSLConfiguration::emplaceOptions(cxxopts::Options &options, Xi::H
   }
 }
 
-#define CATCH_THROW_WITH_CONTEXT(INST, FILE)                         \
-  try {                                                              \
-    INST;                                                            \
-    if (ec)                                                          \
-      throw std::runtime_error{""};                                  \
-  } catch (...) {                                                    \
-    throw std::runtime_error{std::string{"unable to load "} + FILE}; \
+#define CATCH_THROW_WITH_CONTEXT(INST, FILE)                                           \
+  try {                                                                                \
+    INST;                                                                              \
+    if (ec)                                                                            \
+      throw std::runtime_error{ec.message()};                                          \
+  } catch (std::exception & e) {                                                       \
+    throw std::runtime_error{std::string{"unable to load "} + FILE + ": " + e.what()}; \
   }
 
 void Xi::Http::SSLConfiguration::initializeServerContext(boost::asio::ssl::context &ctx) {
@@ -174,8 +174,7 @@ void Xi::Http::SSLConfiguration::initializeServerContext(boost::asio::ssl::conte
   ctx.set_password_callback(
       [pkp = privateKeyPassword()](std::size_t, boost::asio::ssl::context_base::password_purpose) { return pkp; });
 
-  ctx.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2 |
-                  boost::asio::ssl::context::single_dh_use);
+  ctx.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2);
 
   boost::system::error_code ec;
   CATCH_THROW_WITH_CONTEXT(ctx.use_certificate_chain_file(rootedPath(certificatePath()), ec),

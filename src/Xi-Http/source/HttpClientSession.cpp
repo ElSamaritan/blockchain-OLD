@@ -30,32 +30,33 @@
 
 Xi::Http::HttpClientSession::HttpClientSession(boost::asio::io_context& io,
                                                std::shared_ptr<IClientSessionBuilder> builder)
-    : ClientSession(io, builder), m_socket{io} {
+    : ClientSession(io, builder), m_stream{io} {
 }
 
 void Xi::Http::HttpClientSession::doPrepareRun() {
+  m_stream.expires_after(timeout());
 }
 
 void Xi::Http::HttpClientSession::doOnHostResolved(resolver_t::iterator begin, resolver_t::iterator end) {
-  boost::asio::async_connect(m_socket, begin, end,
-                             std::bind(&ClientSession::onConnected, shared_from_this(), std::placeholders::_1));
+  boost::beast::get_lowest_layer(m_stream).async_connect(
+      begin, end, std::bind(&ClientSession::onConnected, shared_from_this(), std::placeholders::_1));
 }
 
 void Xi::Http::HttpClientSession::doOnConnected() {
   boost::beast::http::async_write(
-      m_socket, m_request,
+      m_stream, m_request,
       std::bind(&ClientSession::onRequestWritten, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void Xi::Http::HttpClientSession::doOnRequestWritten() {
   boost::beast::http::async_read(
-      m_socket, m_buffer, m_response,
+      m_stream, m_buffer, m_response,
       std::bind(&ClientSession::onResponseRecieved, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void Xi::Http::HttpClientSession::doOnResponseRecieved() {
   boost::beast::error_code ec;
-  m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+  m_stream.close();
   onShutdown(ec);
 }
 

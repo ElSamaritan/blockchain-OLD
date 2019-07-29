@@ -34,6 +34,7 @@ Xi::Http::HttpsClientSession::HttpsClientSession(boost::asio::io_context &io, bo
 }
 
 void Xi::Http::HttpsClientSession::doPrepareRun() {
+  boost::beast::get_lowest_layer(m_stream).expires_after(timeout());
   const auto host = m_request.find(boost::beast::http::field::host);
   if (host == m_request.end())
     throw std::runtime_error{"request has no host"};
@@ -44,8 +45,8 @@ void Xi::Http::HttpsClientSession::doPrepareRun() {
 }
 
 void Xi::Http::HttpsClientSession::doOnHostResolved(resolver_t::iterator begin, resolver_t::iterator end) {
-  boost::asio::async_connect(m_stream.next_layer(), begin, end,
-                             std::bind(&ClientSession::onConnected, shared_from_this(), std::placeholders::_1));
+  boost::beast::get_lowest_layer(m_stream).async_connect(
+      begin, end, std::bind(&ClientSession::onConnected, shared_from_this(), std::placeholders::_1));
 }
 
 void Xi::Http::HttpsClientSession::doOnConnected() {

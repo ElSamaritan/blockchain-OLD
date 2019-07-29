@@ -30,13 +30,9 @@
 #include <boost/asio/bind_executor.hpp>
 #include <Xi/ExternalIncludePop.h>
 
-Xi::Http::ServerSession::ServerSession(socket_t socket, buffer_t buffer, std::shared_ptr<RequestHandler> handler,
+Xi::Http::ServerSession::ServerSession(executor_t executor, buffer_t buffer, std::shared_ptr<RequestHandler> handler,
                                        Concurrent::IDispatcher& dispatcher)
-    : m_socket{std::move(socket)},
-      m_strand{m_socket.get_executor()},
-      m_buffer{std::move(buffer)},
-      m_handler{handler},
-      m_dispatcher{dispatcher} {
+    : m_strand{executor}, m_buffer{std::move(buffer)}, m_handler{handler}, m_dispatcher{dispatcher} {
   if (m_handler.get() == nullptr)
     throw std::invalid_argument{"a server session requires a non null request handler"};
 }
@@ -46,6 +42,10 @@ Xi::Http::ServerSession::~ServerSession() {
 
 void Xi::Http::ServerSession::run() {
   readRequest();
+}
+
+Xi::Http::ServerLimitsConfiguration Xi::Http::ServerSession::limits() const {
+  return ServerLimitsConfiguration{};
 }
 
 void Xi::Http::ServerSession::readRequest() {

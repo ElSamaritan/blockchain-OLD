@@ -25,6 +25,7 @@
 
 #include <sstream>
 #include <memory>
+#include <chrono>
 
 #include <Xi/ExternalIncludePush.h>
 #include <boost/asio.hpp>
@@ -73,6 +74,8 @@ class ClientSession : public std::enable_shared_from_this<ClientSession> {
    * \return a future that will be ready once the session finishes or an error occured
    */
   future_t run(Request&& request);
+
+  std::chrono::seconds timeout() const;
 
   /*!
    * \brief onHostResolved called when the resolver finished

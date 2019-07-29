@@ -37,7 +37,7 @@ Xi::Http::HttpsServerSession::HttpsServerSession(Xi::Http::ServerSession::socket
                                                  boost::asio::ssl::context &ctx,
                                                  std::shared_ptr<Xi::Http::RequestHandler> handler,
                                                  Xi::Concurrent::IDispatcher &dispatcher)
-    : ServerSession(std::move(socket), std::move(buffer), handler, dispatcher), m_stream{m_socket, ctx} {
+    : ServerSession(socket.get_executor(), std::move(buffer), handler, dispatcher), m_stream{std::move(socket), ctx} {
 }
 
 void Xi::Http::HttpsServerSession::run() {
@@ -68,6 +68,9 @@ void Xi::Http::HttpsServerSession::onShutdown(boost::beast::error_code ec) {
 
 void Xi::Http::HttpsServerSession::doReadRequest() {
   m_request = {};
+  auto thisLimits = limits();
+  boost::beast::get_lowest_layer(m_stream).expires_after(thisLimits.readTimeout());
+  boost::beast::get_lowest_layer(m_stream).rate_policy().read_limit(thisLimits.readLimit());
   boost::beast::http::async_read(
       m_stream, m_buffer, m_request,
       boost::asio::bind_executor(m_strand, std::bind(&ServerSession::onRequestRead, shared_from_this(),
@@ -82,6 +85,9 @@ void Xi::Http::HttpsServerSession::doOnRequestRead() {
 
 void Xi::Http::HttpsServerSession::doWriteResponse(Response &&response) {
   m_response = m_conversion(response);
+  auto thisLimits = limits();
+  boost::beast::get_lowest_layer(m_stream).expires_after(thisLimits.writeTimeout());
+  boost::beast::get_lowest_layer(m_stream).rate_policy().write_limit(thisLimits.writeLimit());
   boost::beast::http::async_write(
       m_stream, m_response,
       boost::asio::bind_executor(m_strand, std::bind(&ServerSession::onResponseWritten, shared_from_this(),

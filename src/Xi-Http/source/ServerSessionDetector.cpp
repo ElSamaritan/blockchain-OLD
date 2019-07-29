@@ -28,8 +28,7 @@
 #include "HttpServerSession.h"
 #include "HttpsServerSession.h"
 
-Xi::Http::ServerSessionDetector::ServerSessionDetector(boost::asio::ip::tcp::socket socket,
-                                                       boost::asio::ssl::context &ctx,
+Xi::Http::ServerSessionDetector::ServerSessionDetector(ServerStream::socket_type socket, boost::asio::ssl::context &ctx,
                                                        std::shared_ptr<IServerSessionBuilder> builder)
     : m_socket{std::move(socket)}, m_ctx{ctx}, m_strand{m_socket.get_executor()}, m_builder{builder} {
   if (m_builder.get() == nullptr)

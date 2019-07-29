@@ -93,7 +93,7 @@ struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
     }
   }
 
-  void doOnAccept(boost::asio::ip::tcp::socket socket) override {
+  void doOnAccept(ServerStream::socket_type socket) override {
     if (!loopGuard) {
       return;
     } else {

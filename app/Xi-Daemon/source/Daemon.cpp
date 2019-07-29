@@ -359,7 +359,8 @@ int main(int argc, char* argv[]) {
 
   } catch (const std::exception& e) {
     logger(Level::Error) << "Exception: " << e.what();
-    throw e;
+    std::cerr << "Exception: " << e.what() << std::endl;
+    return EXIT_FAILURE;
   }
 
   logger(Info) << "Node stopped.";

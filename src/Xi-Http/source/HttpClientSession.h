@@ -29,14 +29,17 @@
 #include <sstream>
 #include <string>
 
+#include <Xi/ExternalIncludePush.h>
 #include <boost/optional.hpp>
-
-#include <Xi/Global.hh>
-
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast.hpp>
+#include <boost/beast/core/basic_stream.hpp>
+#include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Global.hh>
+
+#include "Stream.h"
 #include "ClientSession.h"
 
 namespace Xi {
@@ -60,7 +63,7 @@ class HttpClientSession : public ClientSession {
   void doOnShutdown() override;
 
  private:
-  boost::asio::ip::tcp::socket m_socket;
+  ClientStream m_stream;
 };
 }  // namespace Http
 }  // namespace Xi

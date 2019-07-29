@@ -55,6 +55,7 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
   std::thread thread;
   boost::asio::io_context io;
   boost::asio::ssl::context ctx{boost::asio::ssl::context::sslv23_client};
+  std::atomic<std::chrono::seconds> m_timeout{std::chrono::seconds{20}};
 
   _Worker() {
   }
@@ -83,6 +84,9 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
   }
   std::shared_ptr<ClientSession> makeHttpsSession() override {
     return std::make_shared<HttpsClientSession>(io, ctx, shared_from_this());
+  }
+  std::chrono::seconds timeout() const override {
+    return m_timeout.load(std::memory_order_consume);
   }
 };
 
@@ -117,6 +121,11 @@ void Xi::Http::Client::useAuthorization(const Xi::Http::BasicCredentials &creden
 void Xi::Http::Client::useAuthorization(const Xi::Http::BearerCredentials &credentials) {
   XI_CONCURRENT_LOCK_WRITE(m_credentials_guard);
   m_credentials = credentials;
+}
+
+Xi::Http::Client &Xi::Http::Client::useTimeout(std::chrono::seconds seconds) {
+  m_worker->m_timeout.store(seconds, std::memory_order_release);
+  return *this;
 }
 
 std::future<Xi::Http::Response> Xi::Http::Client::send(Xi::Http::Request &&request) {

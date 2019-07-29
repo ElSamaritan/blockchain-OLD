@@ -38,7 +38,9 @@
 #include <Xi/Concurrent/IDispatcher.h>
 
 #include "Xi/Http/RequestHandler.h"
+#include "Xi/Http/ServerLimitsConfiguration.h"
 
+#include "Stream.h"
 #include "BeastConversion.h"
 
 namespace Xi {
@@ -56,8 +58,9 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
   using buffer_t = boost::beast::flat_buffer;
   using request_t = BeastConversion::beast_request_t;
   using response_t = BeastConversion::beast_response_t;
-  using socket_t = boost::asio::ip::tcp::socket;
-  using strand_t = boost::asio::strand<socket_t::executor_type>;
+  using socket_t = ServerStream::socket_type;
+  using executor_t = socket_t::executor_type;
+  using strand_t = boost::asio::strand<executor_t>;
 
  public:
   /*!
@@ -65,7 +68,7 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
    * \param socket the socket created for communicating with the client
    * \param handler the high level api handler that will server the request
    */
-  ServerSession(socket_t socket, buffer_t buffer, std::shared_ptr<RequestHandler> handler,
+  ServerSession(executor_t executor, buffer_t buffer, std::shared_ptr<RequestHandler> handler,
                 Concurrent::IDispatcher& dispatcher);
   XI_DEFAULT_MOVE(ServerSession);
   virtual ~ServerSession();
@@ -74,6 +77,11 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
    * \brief run starts handling the session
    */
   virtual void run();
+
+  /*!
+   * \brief limits Secuirity limits used by this server to ensure balanced availability.
+   */
+  ServerLimitsConfiguration limits() const;
 
   /*!
    * \brief readRequest called on startup an will read the requests data/headers...
@@ -127,7 +135,6 @@ class ServerSession : public std::enable_shared_from_this<ServerSession> {
   virtual void doOnResponseWritten() = 0;
   virtual void doClose() = 0;
 
-  socket_t m_socket;
   strand_t m_strand;
   buffer_t m_buffer;
   std::shared_ptr<RequestHandler> m_handler;

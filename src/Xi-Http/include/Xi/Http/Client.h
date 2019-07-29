@@ -30,6 +30,7 @@
 #include <future>
 #include <optional>
 #include <variant>
+#include <chrono>
 
 #include <System/Dispatcher.h>
 
@@ -65,6 +66,8 @@ class Client {
   void useAuthorization(Null);
   void useAuthorization(const BasicCredentials& credentials);
   void useAuthorization(const BearerCredentials& credentials);
+
+  Client& useTimeout(std::chrono::seconds seconds);
 
   /*!
    * \brief send sends the request to the server asynchroniously

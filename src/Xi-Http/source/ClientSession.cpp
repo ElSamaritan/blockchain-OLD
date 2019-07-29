@@ -54,6 +54,10 @@ Xi::Http::ClientSession::future_t Xi::Http::ClientSession::run(Xi::Http::Request
   return m_promise.get_future();
 }
 
+std::chrono::seconds Xi::Http::ClientSession::timeout() const {
+  return m_builder->timeout();
+}
+
 void Xi::Http::ClientSession::onHostResolved(boost::beast::error_code ec, resolver_t::results_type results) {
   try {
     checkErrorCode(ec);

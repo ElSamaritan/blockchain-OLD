@@ -30,6 +30,7 @@
 #include <boost/asio/ssl.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include "Stream.h"
 #include "HttpServerSession.h"
 
 namespace Xi {
@@ -54,7 +55,7 @@ class HttpsServerSession : public ServerSession {
   void doClose() override;
 
  private:
-  boost::asio::ssl::stream<socket_t&> m_stream;
+  SslServerStream m_stream;
 };
 }  // namespace Http
 }  // namespace Xi

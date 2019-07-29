@@ -34,6 +34,7 @@
 #include <boost/beast/core.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include "Stream.h"
 #include "IServerSessionBuilder.h"
 
 namespace Xi {
@@ -45,7 +46,7 @@ namespace Http {
  */
 class ServerSessionDetector : public std::enable_shared_from_this<ServerSessionDetector> {
  public:
-  ServerSessionDetector(boost::asio::ip::tcp::socket socket, boost::asio::ssl::context& ctx,
+  ServerSessionDetector(ServerStream::socket_type socket, boost::asio::ssl::context& ctx,
                         std::shared_ptr<IServerSessionBuilder> builder);
   ~ServerSessionDetector() = default;
 
@@ -54,9 +55,9 @@ class ServerSessionDetector : public std::enable_shared_from_this<ServerSessionD
   void onDetect(boost::beast::error_code ec, boost::tribool result);
 
  private:
-  boost::asio::ip::tcp::socket m_socket;
+  ServerStream::socket_type m_socket;
   boost::asio::ssl::context& m_ctx;
-  boost::asio::strand<boost::asio::ip::tcp::socket::executor_type> m_strand;
+  boost::asio::strand<ServerStream::executor_type> m_strand;
   boost::beast::flat_buffer m_buffer;
   std::shared_ptr<IServerSessionBuilder> m_builder;
 };
