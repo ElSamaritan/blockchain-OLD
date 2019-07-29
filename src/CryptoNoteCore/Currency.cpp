@@ -310,7 +310,7 @@ uint64_t Currency::minimumFee(BlockVersion version, uint64_t canonicialBuckets) 
   const auto minFee = transfer.minimumFee();
   XI_RETURN_SC_IF(canonicialBuckets <= transfer.freeBuckets(), minFee);
   canonicialBuckets -= transfer.freeBuckets();
-  return minFee + (minFee + (canonicialBuckets * minFee * transfer.rateNominator()) / transfer.rateDenominator());
+  return minFee + ((canonicialBuckets * minFee * transfer.rateNominator()) / transfer.rateDenominator());
 }
 
 size_t Currency::blockGrantedFullRewardZoneByBlockVersion(BlockVersion blockVersion) const {
