@@ -120,12 +120,6 @@
                 "window_size": 90,
                 "initial": 20000,
                 "proof_of_work": "CNX-v1-Light"
-            },
-
-            "mixin": {
-                "min": 2,
-                "max": 3,
-                "upgrade_size": 20
             }
         }
     ]
