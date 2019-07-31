@@ -58,16 +58,9 @@ class DataBaseConfig {
 };
 
 XI_SERIALIZATION_ENUM(DataBaseConfig::Compression)
-[[nodiscard]] bool serialize(DataBaseConfig::Compression& compression, ISerializer& s);
 
 std::string toString(DataBaseConfig::Compression com);
 }  // namespace CryptoNote
-
-namespace Common {
-template <>
-void toString<CryptoNote::DataBaseConfig::Compression>(const CryptoNote::DataBaseConfig::Compression& compression,
-                                                       std::string& out);
-}
 
 XI_SERIALIZATION_ENUM_RANGE(CryptoNote::DataBaseConfig::Compression, None, LZ4HC)
 XI_SERIALIZATION_ENUM_TAG(CryptoNote::DataBaseConfig::Compression, None, "none")

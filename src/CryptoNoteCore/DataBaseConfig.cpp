@@ -8,6 +8,7 @@
 
 #include <limits>
 
+#include <Xi/Exceptions.hpp>
 #include <Common/Util.h>
 #include "Common/CommandLine.h"
 #include "Common/StringTools.h"
@@ -108,40 +109,16 @@ void DataBaseConfig::setCompression(DataBaseConfig::Compression _compression) {
   compression = _compression;
 }
 
-namespace Common {
-template <>
-void toString(const CryptoNote::DataBaseConfig::Compression &compression, std::string &out) {
+std::string CryptoNote::toString(DataBaseConfig::Compression compression) {
   using CryptoNote::DataBaseConfig;
 
   switch (compression) {
     case DataBaseConfig::Compression::None:
-      out = "none";
-      break;
+      return "none";
     case DataBaseConfig::Compression::LZ4:
-      out = "lz4";
-      break;
+      return "lz4";
     case DataBaseConfig::Compression::LZ4HC:
-      out = "lz4hc";
-      break;
-    default:
-      throw std::runtime_error{"Unknown string representation for DataBaseConfig::Compression."};
+      return "lz4hc";
   }
-}
-}  // namespace Common
-
-[[nodiscard]] bool serialize(DataBaseConfig::Compression &compression, ISerializer &s) {
-  if (s.type() == ISerializer::INPUT) {
-    std::string str;
-    XI_RETURN_EC_IF_NOT(s(str, "compression"), false);
-    return DataBaseConfig::parseCompression(str, compression);
-  } else {
-    assert(s.type() == ISerializer::OUTPUT);
-    std::string str;
-    Common::toString(compression, str);
-    return s(str, "compression");
-  }
-}
-
-std::string toString(DataBaseConfig::Compression com) {
-  return Common::toString(com);
+  Xi::exceptional<Xi::InvalidArgumentError>("Unknown compression value: {}", static_cast<uint32_t>(compression));
 }

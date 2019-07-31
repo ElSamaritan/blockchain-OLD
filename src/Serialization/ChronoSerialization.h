@@ -26,30 +26,18 @@
 #include <chrono>
 
 #include <Xi/Global.hh>
-#include <Serialization/ISerializer.h>
-#include <Serialization/ChronoSerialization.h>
 
-namespace Xi {
-namespace Http {
+#include "Serialization/ISerializer.h"
 
-class ServerLimitsConfiguration {
- public:
-  /// Timeout once reached on request connection is killed.
-  XI_PROPERTY(std::chrono::seconds, readTimeout, std::chrono::seconds{20})
-  /// Timeout once reached while writing response connection is killed.
-  XI_PROPERTY(std::chrono::seconds, writeTimeout, std::chrono::seconds{20})
-  /// Max bytes read per second.
-  XI_PROPERTY(size_t, readLimit, 16 * 1024)
-  /// Max bytes written per second.
-  XI_PROPERTY(size_t, writeLimit, 128 * 1024)
+namespace CryptoNote {
 
-  KV_BEGIN_SERIALIZATION
-  KV_MEMBER_RENAME(readTimeout(), read_timeout)
-  KV_MEMBER_RENAME(writeTimeout(), write_timeout)
-  KV_MEMBER_RENAME(readLimit(), read_limit)
-  KV_MEMBER_RENAME(writeLimit(), write_limit)
-  KV_END_SERIALIZATION
-};
+template <class _RepresentationT, class _PeriodT>
+[[nodiscard]] bool serialize(std::chrono::duration<_RepresentationT, _PeriodT>& value, Common::StringView name,
+                             ISerializer& serializer) {
+  _RepresentationT _ = value.count();
+  XI_RETURN_EC_IF_NOT(serializer(_, name), false);
+  value = std::chrono::duration<_RepresentationT, _PeriodT>{_};
+  XI_RETURN_SC(true);
+}
 
-}  // namespace Http
-}  // namespace Xi
+}  // namespace CryptoNote
