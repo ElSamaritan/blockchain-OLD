@@ -27,12 +27,52 @@ endif()
 
 set(XI_CMAKE_EXTERNAL_YAML_CPP ON)
 
-set(YAML_CPP_BUILD_TESTS OFF CACHE INTERNAL "Enable testing")
-set(YAML_CPP_BUILD_TOOLS OFF CACHE INTERNAL "Enable parse tools")
-set(YAML_CPP_BUILD_CONTRIB OFF CACHE INTERNAL "Enable contrib stuff in library")
-set(YAML_CPP_INSTALL OFF CACHE INTERNAL "Enable generation of install target")
-set(MSVC_SHARED_RT OFF CACHE INTERNAL "MSVC: Build with shared runtime libs (/MD)")
-set(MSVC_STHREADED_RT OFF CACHE INTERNAL "MSVC: Build with single-threaded static runtime libs (/ML until VS .NET 2003)")
+if(MSVC)
+  set(
+    YAMLCPP_EXTRA_CMAKE_ARGS
+      -DMSVC_SHARED_RT=OFF
+      -DMSVC_STHREADED_RT=OFF
+  )
+endif()
 
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/yaml-cpp)
+ExternalProject_Add(
+  jbeder-yaml-cpp
+
+  PREFIX "jbeder-yaml-cpp"
+
+  UPDATE_COMMAND ""
+  PATCH_COMMAND ""
+  TEST_COMMAND ""
+
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/yaml-cpp"
+  INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/yaml-cpp
+
+  CMAKE_ARGS
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/yaml-cpp
+    -DYAML_CPP_BUILD_TOOLS=OFF
+    -DYAML_CPP_BUILD_TESTS=OFF
+    -DYAML_CPP_INSTALL=ON
+    ${YAMLCPP_EXTRA_CMAKE_ARGS}
+)
+
+install()
+ExternalProject_Get_Property(jbeder-yaml-cpp INSTALL_DIR)
+
+add_library(yaml-cpp STATIC IMPORTED GLOBAL)
+add_dependencies(yaml-cpp jbeder-yaml-cpp)
 add_library(yaml::yaml-cpp ALIAS yaml-cpp)
+
+include(GNUInstallDirs)
+make_directory("${INSTALL_DIR}/include")
+set(YAML_CPP_LIB_DIR ${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR})
+if(MSVC)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set_property(TARGET yaml-cpp PROPERTY IMPORTED_LOCATION ${YAML_CPP_LIB_DIR}/libyaml-cppmtd.lib)
+    else()
+        set_property(TARGET yaml-cpp PROPERTY IMPORTED_LOCATION ${YAML_CPP_LIB_DIR}/libyaml-cppmt.lib)
+    endif()
+else()
+    set_property(TARGET yaml-cpp PROPERTY IMPORTED_LOCATION ${YAML_CPP_LIB_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${CMAKE_STATIC_LIBRARY_SUFFIX})
+endif()
+set_property(TARGET yaml-cpp APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${INSTALL_DIR}/include")

@@ -24,4 +24,5 @@
 set(ASYNCPLUSPLUS_USE_CXX_EXCEPTIONS ON CACHE INTERNAL "")
 set(ASYNCPLUSPLUS_ENABLE_INSTALL OFF CACHE INTERNAL "")
 
-add_subdirectory(asyncplusplus)
+add_subdirectory(asyncplusplus EXCLUDE_FROM_ALL)
+add_library(async::asyncplusplus ALIAS Async++)
