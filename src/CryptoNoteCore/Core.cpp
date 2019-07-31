@@ -717,6 +717,20 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     return error::AddBlockErrorCode::REJECTED_AS_ORPHANED;
   }
 
+  const auto previousBlockIndex = cache->getBlockIndex(previousBlockHash);
+  if (blockIndex != previousBlockIndex + 1) {
+    return error::TransactionValidationError::BASE_INPUT_WRONG_BLOCK_INDEX;
+  }
+
+  const bool addOnTop = cache->getTopBlockIndex() == previousBlockIndex;
+  const bool isAlternative = !addOnTop || cache->getChildCount() > 0 || cache != mainChain();
+
+  if (isAlternative) {
+    if (!checkpoints.isAlternativeBlockAllowed(getTopBlockIndex() + 1, blockIndex)) {
+      return error::AddBlockErrorCode::REJECTED_AS_ALTERNATIVE;
+    }
+  }
+
   if (hasBlock(cachedBlock.getBlockHash())) {
     logger(Logging::Debugging) << "Block " << blockStr << " already exists";
     return error::AddBlockErrorCode::ALREADY_EXISTS;
@@ -748,9 +762,6 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   }
   auto cumulativeBlockSize = cumulativeSize + blockTemplate.baseTransaction.binarySize();
 
-  auto previousBlockIndex = cache->getBlockIndex(previousBlockHash);
-
-  bool addOnTop = cache->getTopBlockIndex() == previousBlockIndex;
   auto maxBlockCumulativeSize = m_currency.maxBlockSize(blockTemplate.version, previousBlockIndex);
   if (cumulativeBlockSize > maxBlockCumulativeSize) {
     logger(Logging::Debugging) << "Block " << blockStr << " has too big cumulative size";

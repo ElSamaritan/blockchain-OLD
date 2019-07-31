@@ -46,6 +46,7 @@ class MinerApplication : public Application {
 
   MinerOptions Options{};
 
+  void loadEnvironment(Xi::App::Environment& env) override;
   void makeOptions(cxxopts::Options& options) override;
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
   int run() override;
@@ -54,6 +55,11 @@ class MinerApplication : public Application {
 }  // namespace XiMiner
 
 XI_DECLARE_APP(XiMiner::MinerApplication)
+
+void XiMiner::MinerApplication::loadEnvironment(Environment& env) {
+  Application::loadEnvironment(env);
+  Options.loadEnvironment(env);
+}
 
 void XiMiner::MinerApplication::makeOptions(cxxopts::Options& options) {
   this->Application::makeOptions(options);

@@ -29,7 +29,6 @@
 
 #include <ColouredMsg.h>
 #include <Menu.h>
-#include <ParseArguments.h>
 #include <Tools.h>
 #include <Xi/Config/WalletConfig.h>
 

@@ -106,6 +106,11 @@ std::string header(const CryptoNote::Currency& currency, bool colored = false);
 bool isDevVersion();
 
 /*!
+ * \brief devWarning returns a message to be printed if a dev version is running.
+ */
+std::string devWarning();
+
+/*!
  * \brief insecureClientWarning returns a message to be printed for insecure client setups
  */
 std::string insecureClientWarning();

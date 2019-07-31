@@ -36,6 +36,18 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(InconsistentGenerate, "generate seed was specifi
 
 namespace XiWallet {
 
+void WalletOptions::loadEnvironment(Xi::App::Environment &env) {
+  // clang-format off
+  env
+    (wallet(), "WALLET_FILE")
+    (password(), "WALLET_PASSWORD")
+    (useRemote(), "WALLET_REMOTE")
+    (generate(), "WALLET_GENERATE")
+    (generateSeed(), "WALLET_SEED")
+  ;
+  // clang-format on
+}
+
 void WalletOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("wallet")
@@ -47,8 +59,8 @@ void WalletOptions::emplaceOptions(cxxopts::Options &options) {
       cxxopts::value<bool>(generate())->implicit_value("true"))
     ("s,seed", "uses the given seed on wallet generation (not mnemonics)",
       cxxopts::value<std::string>(generateSeed())->default_value(generateSeed()), "<string>")
-    ("use-remote", "enables remote usage instead of an embedded node",
-      cxxopts::value<bool>(useRemote())->default_value("false"), "<enabled>")
+    ("r,remote", "enables remote usage instead of an embedded node",
+      cxxopts::value<bool>(useRemote())->default_value(useRemote() ? "true" : "false"), "<enabled>")
   ;
   // clang-format on
 }

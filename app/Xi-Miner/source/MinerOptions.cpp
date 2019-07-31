@@ -41,6 +41,21 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidReportInterval, "report interval may not 
 // clang-format on
 }  // namespace
 
+void XiMiner::MinerOptions::loadEnvironment(Xi::App::Environment &env) {
+  // clang-format off
+  env
+    (Address, "MINER_ADDRESS")
+    (Threads, "MINER_THREADS")
+    (UpdateInterval, "MINER_UPDATE_INTERVAL")
+    (ReportShow, "MINER_REPORT_SHOW")
+    (ReportInterval, "MINER_REPORT_INTERVAL")
+    (BlockLimit, "MINER_BLOCK_LIMIT")
+    (Panic, "MINER_PANIC")
+    (NoneInteractive, "NONE_INTERACTIVE")
+  ;
+  // clang-format on
+}
+
 void XiMiner::MinerOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("miner")

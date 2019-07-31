@@ -43,16 +43,17 @@
 namespace Xi {
 namespace App {
 struct RemoteRpcOptions : public IOptions {
-  std::string Address = "127.0.0.1";
-  uint16_t Port = Xi::Config::Network::Configuration::rpcDefaultPort();
-  std::string AccessToken = "";
+  XI_PROPERTY(std::string, address, "127.0.0.1")
+  XI_PROPERTY(uint16_t, port, Xi::Config::Network::Configuration::rpcDefaultPort())
+  XI_PROPERTY(std::string, accessToken, "")
 
   KV_BEGIN_SERIALIZATION
-  KV_MEMBER(Address)
-  KV_MEMBER(Port)
-  KV_MEMBER(AccessToken)
+  KV_MEMBER_RENAME(address(), address)
+  KV_MEMBER_RENAME(port(), port)
+  KV_MEMBER_RENAME(accessToken(), access_token)
   KV_END_SERIALIZATION
 
+  void loadEnvironment(Environment& env) override;
   void emplaceOptions(cxxopts::Options& options) override;
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
 

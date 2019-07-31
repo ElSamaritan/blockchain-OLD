@@ -87,10 +87,16 @@ class WalletApplication : public Application {
 
   WalletOptions Options{};
 
+  void loadEnvironment(Xi::App::Environment& env) override;
   void makeOptions(cxxopts::Options& options) override;
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
   int run() override;
 };
+
+void WalletApplication::loadEnvironment(Environment& env) {
+  Application::loadEnvironment(env);
+  Options.loadEnvironment(env);
+}
 
 void WalletApplication::makeOptions(cxxopts::Options& options) {
   this->Application::makeOptions(options);
@@ -105,7 +111,7 @@ bool WalletApplication::evaluateParsedOptions(const cxxopts::Options& options, c
 
 int WalletApplication::run() {
   if (Options.generate() && Options.wallet().empty()) {
-    return generate(logger(), *currency(), Options.generateSeed());
+    return generate(logger(), intermediateCurrency()->immediateState(), Options.generateSeed());
   }
 
   auto remote = rpcNode(true, !Options.useRemote());

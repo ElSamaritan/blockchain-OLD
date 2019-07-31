@@ -39,6 +39,24 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidConfiguration, "net node initialization f
 namespace Xi {
 namespace App {
 
+void NodeOptions::loadEnvironment(Environment &env) {
+  // clang-format off
+  env
+    (bind(), "P2P_BIND_IP")
+    (port(), "P2P_BIND_PORT")
+    (hidePort(), "P2P_HIDE_PORT")
+    (localIp(), "P2P_LOCAL_IP")
+    (externalPort(), "P2P_EXTERNAL_PORT")
+    (banDuration(), "P2P_BAN_DURATION")
+    (autoBan(), "P2P_BAN_AUTO")
+    (addPeers(), "P2P_PEERS_ADD")
+    (exclusivePeers(), "P2P_PEERS_EXCLUSIVE")
+    (priorityPeers(), "P2P_PPERS_PRIORITY")
+    (seedPeers(), "P2P_PEERS_SEED")
+  ;
+  // clang-format on
+}
+
 void NodeOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("p2p")

@@ -25,6 +25,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 #include <cinttypes>
 #include <ctime>
 #include <type_traits>
@@ -71,6 +72,8 @@ std::string to_lower(const std::string& str);
 std::string to_upper(const std::string& str);
 
 std::string replace(std::string_view str, std::string_view toReplace, std::string_view replacement);
+
+std::vector<std::string> split(const std::string& str, const std::string& tokens);
 
 /*!
  * Parses a string representation into a corresponding data structure.

@@ -30,8 +30,8 @@
 
 Xi::Http::SSLConfiguration::SSLConfiguration()
     : m_enabled{false},
-      m_verifyPeers{false},
-      m_rootPath{"./certs"},
+      m_verifyPeers{true},
+      m_rootPath{"./ssl"},
       m_certificatePath{"cert.pem"},
       m_privateKeyPath{"key.pem"},
       m_dhparamPath{"dh.pem"},
@@ -100,57 +100,6 @@ void Xi::Http::SSLConfiguration::setPrivateKeyPassword(const std::string &passwo
   m_privateKeyPassword = password;
 }
 
-bool Xi::Http::SSLConfiguration::serialize(CryptoNote::ISerializer &s) {
-  XI_RETURN_EC_IF_NOT(s(m_enabled, "enabled"), false);
-  XI_RETURN_EC_IF_NOT(s(m_verifyPeers, "verify_peers"), false);
-  XI_RETURN_EC_IF_NOT(s(m_rootPath, "directory"), false);
-  XI_RETURN_EC_IF_NOT(s(m_certificatePath, "certificates_path"), false);
-  XI_RETURN_EC_IF_NOT(s(m_privateKeyPath, "private_key_path"), false);
-  XI_RETURN_EC_IF_NOT(s(m_dhparamPath, "dh_param_path"), false);
-  XI_RETURN_EC_IF_NOT(s(m_trustedKeysPath, "trusted_keys_path"), false);
-  XI_RETURN_EC_IF_NOT(s(m_privateKeyPassword, "private_key_password"), false);
-  return true;
-}
-
-void Xi::Http::SSLConfiguration::emplaceOptions(cxxopts::Options &options, Xi::Http::SSLConfiguration::Usage usage) {
-  // clang-format off
-  options.add_options("SSL")
-        ("ssl", "Enables and enforces SSL usage to secure your privacy.",
-            cxxopts::value<bool>(m_enabled)->implicit_value("true"))
-
-        ("ssl-dir", "Directory containing ssl key files.",
-            cxxopts::value<std::string>(m_rootPath)->default_value("./certs"));
-  // clang-format on
-
-  if (static_cast<int>(usage) & static_cast<int>(Usage::Server)) {
-    // clang-format off
-    options.add_options("SSL")
-        ("ssl-cert", "Filepath containing the server certificate to use.",
-            cxxopts::value<std::string>(m_certificatePath)->default_value("cert.pem"))
-
-        ("ssl-pk", "Filepath containing the server private key for encryption.",
-            cxxopts::value<std::string>(m_privateKeyPath)->default_value("key.pem"))
-
-        ("ssl-pkp", "Password of the private key file used by the server.",
-            cxxopts::value<std::string>(m_privateKeyPassword)->default_value(""))
-
-        ("ssl-dh", "Filepath containing the dhparam randomization for the server.",
-            cxxopts::value<std::string>(m_dhparamPath)->default_value("dh.pem"));
-    // clang-format on
-  }
-
-  if (static_cast<int>(usage) & static_cast<int>(Usage::Client)) {
-    // clang-format off
-    options.add_options("SSL")
-        ("ssl-peers", "Filepath containing server certficates you want to trust.",
-            cxxopts::value<std::string>(m_certificatePath)->default_value("trusted.pem"))
-
-        ("ssl-verify", "Enables peer verification.",
-            cxxopts::value<bool>(m_verifyPeers)->implicit_value("true"));
-    // clang-format on
-  }
-}
-
 #define CATCH_THROW_WITH_CONTEXT(INST, FILE)                                           \
   try {                                                                                \
     INST;                                                                              \
@@ -164,25 +113,26 @@ void Xi::Http::SSLConfiguration::initializeServerContext(boost::asio::ssl::conte
   using namespace boost::filesystem;
   if (disabled())
     return;
-  if (!exists(rootedPath(certificatePath())))
+  if (!exists(certificatePath()))
     throw std::runtime_error{"CertFile could not be found."};
-  if (!exists(rootedPath(privateKeyPath())))
+  if (!exists(privateKeyPath()))
     throw std::runtime_error{"KeyFile could not be found."};
-  if (!exists(rootedPath(dhparamPath())))
+  if (!exists(dhparamPath()))
     throw std::runtime_error{"DhFile could not be found."};
 
-  ctx.set_password_callback(
-      [pkp = privateKeyPassword()](std::size_t, boost::asio::ssl::context_base::password_purpose) { return pkp; });
+  ctx.set_password_callback([pkp = privateKeyPassword()](
+                                std::size_t, boost::asio::ssl::context_base::password_purpose purpose) -> std::string {
+    XI_RETURN_EC_IF(purpose != boost::asio::ssl::context_base::password_purpose::for_reading, "");
+    XI_RETURN_SC(pkp);
+  });
 
   ctx.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2);
 
   boost::system::error_code ec;
-  CATCH_THROW_WITH_CONTEXT(ctx.use_certificate_chain_file(rootedPath(certificatePath()), ec),
-                           rootedPath(certificatePath()))
-  CATCH_THROW_WITH_CONTEXT(
-      ctx.use_private_key_file(rootedPath(privateKeyPath()), boost::asio::ssl::context::file_format::pem, ec),
-      rootedPath(privateKeyPath()))
-  CATCH_THROW_WITH_CONTEXT(ctx.use_tmp_dh_file(rootedPath(dhparamPath()), ec), rootedPath(dhparamPath()))
+  CATCH_THROW_WITH_CONTEXT(ctx.use_certificate_chain_file(certificatePath(), ec), certificatePath())
+  CATCH_THROW_WITH_CONTEXT(ctx.use_private_key_file(privateKeyPath(), boost::asio::ssl::context::file_format::pem, ec),
+                           privateKeyPath())
+  CATCH_THROW_WITH_CONTEXT(ctx.use_tmp_dh_file(dhparamPath(), ec), dhparamPath())
 }
 
 void Xi::Http::SSLConfiguration::initializeClientContext(boost::asio::ssl::context &ctx) {
@@ -193,7 +143,7 @@ void Xi::Http::SSLConfiguration::initializeClientContext(boost::asio::ssl::conte
   } else {
     ctx.set_verify_mode(boost::asio::ssl::verify_peer);
     boost::system::error_code ec;
-    CATCH_THROW_WITH_CONTEXT(ctx.load_verify_file(rootedPath(trustedKeysPath()), ec), rootedPath(trustedKeysPath()))
+    CATCH_THROW_WITH_CONTEXT(ctx.load_verify_file(trustedKeysPath(), ec), trustedKeysPath())
   }
 }
 
@@ -217,13 +167,4 @@ bool Xi::Http::SSLConfiguration::isInsecure(Xi::Http::SSLConfiguration::Usage us
   }
 
   return false;
-}
-
-std::string Xi::Http::SSLConfiguration::rootedPath(const std::string &path) const {
-  boost::filesystem::path fpath{path};
-  if (rootPath().empty() || fpath.is_absolute()) {
-    return path;
-  } else {
-    return (boost::filesystem::path{rootPath()} / fpath).string();
-  }
 }

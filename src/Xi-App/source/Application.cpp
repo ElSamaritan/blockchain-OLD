@@ -27,10 +27,18 @@
 #include <stdexcept>
 #include <utility>
 #include <cassert>
+#include <ctime>
+#include <string>
+
+#include <Xi/ExternalIncludePush.h>
+#include <boost/algorithm/string.hpp>
+#include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Exceptional.hpp>
 #include <Xi/FileSystem.h>
 #include <Xi/Log/Discord/Discord.hpp>
+#include <Xi/Version/BuildInfo.h>
+#include <Xi/Version/Version.h>
 #include <CommonCLI/CommonCLI.h>
 #include <Logging/ConsoleLogger.h>
 #include <Logging/FileLogger.h>
@@ -41,9 +49,15 @@
 #include <NodeRpcProxy/NodeRpcProxy.h>
 #include <NodeInProcess/NodeInProcess.hpp>
 
+#if defined(XI_USE_BREAKPAD)
+#include <Xi/CrashHandler.h>
+#endif
+
 #if defined(_WIN32) && defined(NDEBUG)
 #include <Windows.h>
 #endif
+
+#include "Xi/App/Environment.h"
 
 namespace {
 // clang-format off
@@ -69,14 +83,63 @@ int Xi::App::Application::exec(int argc, char **argv) {
   SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
 #endif
 
-  XI_UNUSED(argc, argv);
   try {
+    Environment env{"XI"};
+    Environment::set(std::string{"XI_APP="} + name());
+    Environment::set(std::string{"XI_TIMESTAMP="} + std::to_string(std::time(nullptr)));
+    Environment::set(std::string{"XI_VERSION="} + APP_VERSION);
+    Environment::set(std::string{"XI_VERSION_PATCH="} + std::to_string(APP_VER_REV));
+    Environment::set(std::string{"XI_VERSION_MINOR="} + std::to_string(APP_VER_MINOR));
+    Environment::set(std::string{"XI_VERSION_MAJOR="} + std::to_string(APP_VER_MAJOR));
+    Environment::set(std::string{"XI_BUILD_BRANCH="} + BUILD_BRANCH);
+    Environment::set(std::string{"XI_BUILD_CHANNEL="} + BUILD_CHANNEL);
+    Environment::set(std::string{"XI_BUILD_COMMIT="} + BUILD_COMMIT_ID);
+
+    env.load();
+    env.load(std::string{".env."} + to_lower(replace(name(), "xi-", "")));
+
+    for (int i = 1; i < argc; ++i) {
+      std::string iarg = argv[i];
+      if (starts_with(iarg, "ENV=")) {
+        std::string envvalue = iarg.substr(4);
+        env.load(envvalue);
+        std::swap(argv[i], argv[argc - 1]);
+        argc -= 1;
+      }
+    }
+    loadEnvironment(env);
+
     cxxopts::Options cliOptions{name(), description()};
     makeOptions(cliOptions);
     const auto parseResult = cliOptions.parse(argc, argv);
     if (evaluateParsedOptions(cliOptions, parseResult)) {
-      return 0;
+      return EXIT_SUCCESS;
     }
+
+#if defined(XI_USE_BREAKPAD)
+    std::unique_ptr<CrashHandler> breakpad{};
+    if (m_breakpadOptions.enabled()) {
+      CrashHandlerConfig breakpadConfig{};
+      breakpadConfig.IsEnabled = true;
+      breakpadConfig.IsUploadEnabled = false;
+      breakpadConfig.OutputPath = m_breakpadOptions.outputPath();
+      breakpadConfig.Application = name();
+      breakpad = std::make_unique<CrashHandler>(breakpadConfig);
+    }
+#endif
+
+    if (CommonCLI::isDevVersion()) {
+      (*m_ologger)(Logging::Warning) << CommonCLI::devWarning();
+    }
+
+    if (m_sslClientOptions && ssl()->isInsecure(Http::SSLConfiguration::Usage::Client)) {
+      (*m_ologger)(Logging::Warning) << CommonCLI::insecureClientWarning();
+    }
+
+    if (m_sslServerOptions && ssl()->isInsecure(Http::SSLConfiguration::Usage::Server)) {
+      (*m_ologger)(Logging::Warning) << CommonCLI::insecureServerWarning();
+    }
+
     XI_UNUSED_REVAL(CommonCLI::make_crash_dumper(name()));
     setUp();
     int returnCode = run();
@@ -110,8 +173,8 @@ System::Dispatcher &Xi::App::Application::dispatcher() {
   return m_dispatcher;
 }
 
-CryptoNote::RpcRemoteConfiguration Xi::App::Application::remoteConfiguration() const {
-  return m_remoteRpcOptions->getConfig(m_sslConfig);
+CryptoNote::RpcRemoteConfiguration Xi::App::Application::remoteConfiguration() {
+  return m_remoteRpcOptions->getConfig(*ssl());
 }
 
 CryptoNote::RocksDBWrapper *Xi::App::Application::database() {
@@ -121,11 +184,23 @@ CryptoNote::RocksDBWrapper *Xi::App::Application::database() {
   return m_database.get();
 }
 
+std::string Xi::App::Application::dataDirectory() {
+  database();
+  return m_dbOptions->DataDirectory;
+}
+
 CryptoNote::Checkpoints *Xi::App::Application::checkpoints() {
   if (m_checkpoints.get() == nullptr) {
     initializeCheckpoints();
   }
   return m_checkpoints.get();
+}
+
+CryptoNote::CurrencyBuilder *Xi::App::Application::intermediateCurrency() {
+  if (m_intermediateCurrency.get() == nullptr) {
+    initializeIntermediateCurrency();
+  }
+  return m_intermediateCurrency.get();
 }
 
 CryptoNote::Currency *Xi::App::Application::currency() {
@@ -149,12 +224,13 @@ CryptoNote::INode *Xi::App::Application::rpcNode(bool pollUpdates, bool preferEm
   if (!m_remoteNode) {
     if (!preferEmbbedded || !m_remoteRpcOptions) {
       auto &crrcy = *currency();
-      m_remoteNode = std::make_unique<CryptoNote::NodeRpcProxy>(m_remoteRpcOptions->Address, m_remoteRpcOptions->Port,
-                                                                m_sslConfig, crrcy, logger());
-      if (!m_remoteRpcOptions->AccessToken.empty()) {
+      auto &sslConf = *ssl();
+      m_remoteNode = std::make_unique<CryptoNote::NodeRpcProxy>(m_remoteRpcOptions->address(),
+                                                                m_remoteRpcOptions->port(), sslConf, crrcy, logger());
+      if (!m_remoteRpcOptions->accessToken().empty()) {
         static_cast<CryptoNote::NodeRpcProxy *>(m_remoteNode.get())
             ->httpClient()
-            .useAuthorization(Xi::Http::BearerCredentials{m_remoteRpcOptions->AccessToken});
+            .useAuthorization(Xi::Http::BearerCredentials{m_remoteRpcOptions->accessToken()});
       }
 
       if (!pollUpdates) {
@@ -180,67 +256,138 @@ CryptoNote::NodeServer *Xi::App::Application::node() {
   return m_node.get();
 }
 
+Xi::Http::SSLConfiguration *Xi::App::Application::ssl() {
+  if (!m_sslConfig) {
+    initializeSsl();
+  }
+  return m_sslConfig.get();
+}
+
+CryptoNote::RpcServer *Xi::App::Application::rpcServer() {
+  if (!m_rpcServer) {
+    initializeRpcServer();
+  }
+  return m_rpcServer.get();
+}
+
+CryptoNote::CryptoNoteProtocolHandler *Xi::App::Application::protocol() {
+  node();
+  return m_protocol.get();
+}
+
+#define XI_APP_OPTION_ENV(MEMBER) MEMBER.loadEnvironment(env);
+
+#define XI_APP_CONDITIONAL_OPTION_ENV(MEMBER) \
+  if (MEMBER) {                               \
+    XI_APP_OPTION_ENV((*MEMBER));             \
+  }
+
+void Xi::App::Application::loadEnvironment(Xi::App::Environment &env) {
+  XI_APP_OPTION_ENV(m_generalOptions)
+  XI_APP_OPTION_ENV(m_licenseOptions)
+  XI_APP_OPTION_ENV(m_breakpadOptions)
+  XI_APP_CONDITIONAL_OPTION_ENV(m_logOptions)
+  XI_APP_CONDITIONAL_OPTION_ENV(m_dbOptions)
+  XI_APP_CONDITIONAL_OPTION_ENV(m_remoteRpcOptions)
+  XI_APP_CONDITIONAL_OPTION_ENV(m_netOptions)
+  XI_APP_CONDITIONAL_OPTION_ENV(m_checkpointOptions)
+  XI_APP_CONDITIONAL_OPTION_ENV(m_nodeOptions)
+  XI_APP_CONDITIONAL_OPTION_ENV(m_rpcServerOptions)
+  XI_APP_CONDITIONAL_OPTION_ENV(m_blockExplorerOptions)
+  XI_APP_CONDITIONAL_OPTION_ENV(m_publicNodeOptions)
+  XI_APP_CONDITIONAL_OPTION_ENV(m_sslOptions)
+  XI_APP_CONDITIONAL_OPTION_ENV(m_sslServerOptions)
+  XI_APP_CONDITIONAL_OPTION_ENV(m_sslClientOptions)
+}
+
+#undef XI_APP_CONDITIONAL_ENV
+#undef XI_APP_CONDITIONAL_OPTION_ENV
+
+#define XI_APP_OPTION_INIT(MEMBER) MEMBER.emplaceOptions(options);
+
 #define XI_APP_CONDITIONAL_OPTION_INIT(MEMBER) \
   if (MEMBER) {                                \
-    MEMBER->emplaceOptions(options);           \
+    XI_APP_OPTION_INIT((*MEMBER));             \
   }
 
 void Xi::App::Application::makeOptions(cxxopts::Options &options) {
-  CommonCLI::emplaceCLIOptions(options);
+  XI_APP_OPTION_INIT(m_generalOptions)
+  XI_APP_OPTION_INIT(m_licenseOptions)
+  XI_APP_OPTION_INIT(m_breakpadOptions)
   XI_APP_CONDITIONAL_OPTION_INIT(m_logOptions)
   XI_APP_CONDITIONAL_OPTION_INIT(m_dbOptions)
   XI_APP_CONDITIONAL_OPTION_INIT(m_remoteRpcOptions)
   XI_APP_CONDITIONAL_OPTION_INIT(m_netOptions)
   XI_APP_CONDITIONAL_OPTION_INIT(m_checkpointOptions)
   XI_APP_CONDITIONAL_OPTION_INIT(m_nodeOptions)
-  if (isSSLClientRequired() || isSSLServerRequired()) {
-    if (!isSSLClientRequired()) {
-      m_sslConfig.emplaceOptions(options, Http::SSLConfiguration::Usage::Server);
-    } else if (!isSSLServerRequired()) {
-      m_sslConfig.emplaceOptions(options, Http::SSLConfiguration::Usage::Client);
-    } else {
-      m_sslConfig.emplaceOptions(options, Http::SSLConfiguration::Usage::Both);
-    }
-  }
+  XI_APP_CONDITIONAL_OPTION_INIT(m_rpcServerOptions)
+  XI_APP_CONDITIONAL_OPTION_INIT(m_blockExplorerOptions)
+  XI_APP_CONDITIONAL_OPTION_INIT(m_publicNodeOptions)
+  XI_APP_CONDITIONAL_OPTION_INIT(m_sslOptions)
+  XI_APP_CONDITIONAL_OPTION_INIT(m_sslServerOptions)
+  XI_APP_CONDITIONAL_OPTION_INIT(m_sslClientOptions)
 }
 
 #undef XI_APP_CONDITIONAL_OPTION_INIT
 
-#define XI_APP_CONDITIONAL_OPTION_EVAL(MEMBER)          \
-  if (MEMBER) {                                         \
-    if (MEMBER->evaluateParsedOptions(options, result)) \
-      return true;                                      \
+#define XI_APP_OPTION_EVAL(MEMBER, DESC)                                       \
+  try {                                                                        \
+    if (MEMBER.evaluateParsedOptions(options, result))                         \
+      return true;                                                             \
+  } catch (const std::exception &e) {                                          \
+    std::cerr << "Invalid " << #DESC << " options: " << e.what() << std::endl; \
+    throw e;                                                                   \
+  }
+
+#define XI_APP_CONDITIONAL_OPTION_EVAL(MEMBER, DESC) \
+  if (MEMBER) {                                      \
+    XI_APP_OPTION_EVAL((*MEMBER), DESC)              \
   }
 
 bool Xi::App::Application::evaluateParsedOptions(const cxxopts::Options &options, const cxxopts::ParseResult &result) {
-  if (CommonCLI::handleCLIOptions(options, result))
-    return true;
-  XI_APP_CONDITIONAL_OPTION_EVAL(m_logOptions)
-  XI_APP_CONDITIONAL_OPTION_EVAL(m_dbOptions)
-  XI_APP_CONDITIONAL_OPTION_EVAL(m_remoteRpcOptions)
-  XI_APP_CONDITIONAL_OPTION_EVAL(m_netOptions)
-  XI_APP_CONDITIONAL_OPTION_EVAL(m_checkpointOptions)
-  XI_APP_CONDITIONAL_OPTION_EVAL(m_nodeOptions)
-  if (isSSLClientRequired()) {
-    if (m_sslConfig.isInsecure(Http::SSLConfiguration::Usage::Client)) {
-      (*m_ologger)(Logging::Warning) << CommonCLI::insecureClientWarning();
-    }
-  }
-  if (isSSLServerRequired()) {
-    if (m_sslConfig.isInsecure(Http::SSLConfiguration::Usage::Server)) {
-      (*m_ologger)(Logging::Warning) << CommonCLI::insecureClientWarning();
-    }
-  }
-  return false;
+  XI_APP_OPTION_EVAL(m_generalOptions, general)
+  XI_APP_OPTION_EVAL(m_licenseOptions, license)
+  XI_APP_OPTION_EVAL(m_breakpadOptions, breakpad)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_logOptions, logging)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_dbOptions, database)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_remoteRpcOptions, rpcremote)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_netOptions, network)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_checkpointOptions, checkpoint)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_nodeOptions, node)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_rpcServerOptions, node)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_blockExplorerOptions, node)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_publicNodeOptions, node)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_sslOptions, ssl)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_sslServerOptions, ssl)
+  XI_APP_CONDITIONAL_OPTION_EVAL(m_sslClientOptions, ssl)
+  XI_RETURN_SC(false);
 }
+
+#undef XI_APP_OPTION_EVAL
+#undef XI_APP_CONDITIONAL_OPTION_EVAL
 
 void Xi::App::Application::setUp() {
   initializeLogger();
 }
 
 void Xi::App::Application::tearDown() {
-  if (m_remoteNode)
+  if (m_node) {
+    if (!m_node->deinit()) {
+      (*m_ologger)(Logging::Fatal) << "node server shutdown failed";
+    }
+  }
+
+  if (m_rpcServer) {
+    try {
+      m_rpcServer->stop();
+    } catch (std::exception &e) {
+      (*m_ologger)(Logging::Fatal) << "rpc srver shutdown faield: " << e.what();
+    }
+  }
+
+  if (m_remoteNode) {
     m_remoteNode->shutdown();
+  }
   if (m_core) {
     if (!m_core->transactionPool().save(m_dbOptions->DataDirectory)) {
       (*m_ologger)(Logging::Fatal) << "transaction pool export failed.";
@@ -253,8 +400,6 @@ void Xi::App::Application::tearDown() {
   if (m_database)
     m_database->shutdown();
 }
-
-#undef XI_APP_CONDITIONAL_OPTION_EVAL
 
 void Xi::App::Application::useLogging(Logging::Level defaultLevel) {
   if (m_logOptions.get() == nullptr) {
@@ -274,9 +419,10 @@ void Xi::App::Application::useDatabase() {
 }
 
 void Xi::App::Application::useRemoteRpc() {
+  useCurrency();
+  useSslClient();
   if (m_remoteRpcOptions.get() == nullptr) {
     m_remoteRpcOptions = std::make_unique<RemoteRpcOptions>();
-    useCurrency();
   }
 }
 
@@ -312,20 +458,44 @@ void Xi::App::Application::useNode() {
   }
 }
 
-bool Xi::App::Application::isSSLClientRequired() const {
-  return m_remoteRpcOptions.get() != nullptr;
+void Xi::App::Application::useRpcServer() {
+  useSslServer();
+  useCurrency();
+  useCore();
+  useNode();
+  if (m_rpcServerOptions == nullptr) {
+    m_rpcServerOptions = std::make_unique<ServerRpcOptions>();
+    m_blockExplorerOptions = std::make_unique<BlockExplorerOptions>();
+    m_publicNodeOptions = std::make_unique<PublicNodeOptions>();
+  }
 }
 
-bool Xi::App::Application::isSSLServerRequired() const {
-  return false;
+void Xi::App::Application::useSsl() {
+  if (m_sslOptions == nullptr) {
+    m_sslOptions = std::make_unique<SslOptions>();
+  }
+}
+
+void Xi::App::Application::useSslServer() {
+  useSsl();
+  if (m_sslServerOptions == nullptr) {
+    m_sslServerOptions = std::make_unique<SslServerOptions>(*m_sslOptions);
+  }
+}
+
+void Xi::App::Application::useSslClient() {
+  useSsl();
+  if (m_sslClientOptions == nullptr) {
+    m_sslClientOptions = std::make_unique<SslClientOptions>(*m_sslOptions);
+  }
 }
 
 void Xi::App::Application::initializeLogger() {
   if (m_logOptions) {
-    m_consoleLogger =
-        std::make_unique<Logging::ConsoleLogger>(m_logOptions->ConsoleLogLevel.value_or(m_logOptions->DefaultLogLevel));
+    m_logger->setMaxLevel(m_logOptions->DefaultLogLevel);
+    m_consoleLogger = std::make_unique<Logging::ConsoleLogger>(m_logOptions->ConsoleLogLevel.value_or(Logging::Trace));
     m_logger->addLogger(*m_consoleLogger);
-    auto fileLogLevel = m_logOptions->ConsoleLogLevel.value_or(m_logOptions->DefaultLogLevel);
+    auto fileLogLevel = m_logOptions->FileLogLevel.value_or(Logging::Trace);
     if (fileLogLevel != Logging::None) {
       auto fileLogger = std::make_unique<Logging::FileLogger>(fileLogLevel);
       auto filePath = m_logOptions->LogFilePath;
@@ -339,7 +509,7 @@ void Xi::App::Application::initializeLogger() {
 
     if (!m_logOptions->DiscordWebhook.empty()) {
       auto discordLogger = std::make_unique<Xi::Log::Discord::DiscordLogger>(
-          m_logOptions->DiscordWebhook, m_logOptions->DiscordLogLevel.value_or(Logging::Warning));
+          m_logOptions->DiscordWebhook, m_logOptions->DiscordLogLevel.value_or(Logging::Trace));
       discordLogger->setAuthor(m_logOptions->DiscordAuthor);
       m_logger->addLogger(*discordLogger);
       m_discordLogger = std::move(discordLogger);
@@ -362,14 +532,21 @@ void Xi::App::Application::initializeCheckpoints() {
   m_checkpoints = m_checkpointOptions->getCheckpoints(*currency(), logger());
 }
 
+void Xi::App::Application::initializeIntermediateCurrency() {
+  m_intermediateCurrency = std::make_unique<CryptoNote::CurrencyBuilder>(logger());
+  m_intermediateCurrency->networkDir(m_netOptions->directory());
+  m_intermediateCurrency->network(m_netOptions->network());
+}
+
 void Xi::App::Application::initializeCurrency() {
   CryptoNote::CurrencyBuilder builder{logger()};
-  builder.networkDir(m_netOptions->NetworkDir);
-  builder.network(m_netOptions->Network);
+  builder.networkDir(m_netOptions->directory());
+  builder.network(m_netOptions->network());
   m_currency = std::make_unique<CryptoNote::Currency>(builder.currency());
 }
 
 void Xi::App::Application::initializeCore() {
+  database();
   m_core = std::make_unique<CryptoNote::Core>(
       *currency(), logger(), *checkpoints(), dispatcher(), m_dbOptions->LightNode,
       std::make_unique<CryptoNote::DatabaseBlockchainCacheFactory>(*database(), logger()),
@@ -394,4 +571,45 @@ void Xi::App::Application::initializeNode() {
   m_node = std::make_unique<CryptoNote::NodeServer>(dispatcher(), currency()->network(), *m_protocol, logger());
   m_protocol->set_p2p_endpoint(m_node.get());
   exceptional_if_not<RuntimeError>(m_node->init(config), "unable to initialize local node");
+}
+
+void Xi::App::Application::initializeSsl() {
+  m_sslConfig = std::make_unique<Http::SSLConfiguration>();
+  m_sslOptions->configure(*m_sslConfig);
+
+  if (m_sslServerOptions) {
+    m_sslServerOptions->configure(*m_sslConfig);
+  }
+
+  if (m_sslServerOptions) {
+    m_sslServerOptions->configure(*m_sslConfig);
+  }
+}
+
+void Xi::App::Application::initializeRpcServer() {
+  const auto &config = *m_rpcServerOptions;
+  if (config.enabled()) {
+    m_rpcServer = std::make_shared<CryptoNote::RpcServer>(
+        dispatcher(), logger(), static_cast<CryptoNote::Core &>(*core()), *node(), *protocol());
+    m_rpcServer->setAccessToken(config.accessToken());
+    m_rpcServer->enableCors(config.cors());
+
+    if (!m_publicNodeOptions->fee().address().empty()) {
+      m_rpcServer->setFeeAddress(m_publicNodeOptions->fee().address());
+      m_rpcServer->setFeeAmount(m_publicNodeOptions->fee().amount());
+      if (!m_publicNodeOptions->fee().viewKey().empty()) {
+        m_rpcServer->setFeeViewKey(m_publicNodeOptions->fee().viewKey());
+      }
+    }
+
+    if (m_blockExplorerOptions->enabled()) {
+      m_rpcServer->setBlockexplorer(true);
+      if (!m_publicNodeOptions->enabled()) {
+        m_rpcServer->setBlockexplorerOnly(true);
+      }
+    }
+
+    m_rpcServer->setHandler(m_rpcServer);
+    m_rpcServer->start(config.bind(), config.port());
+  }
 }

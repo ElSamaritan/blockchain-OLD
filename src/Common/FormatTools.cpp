@@ -163,8 +163,7 @@ std::string get_upgrade_info(CryptoNote::BlockHeight supported_height,
 }
 
 //--------------------------------------------------------------------------------
-std::string get_status_string(const CryptoNote::COMMAND_RPC_GET_INFO::response& iresp,
-                              const CryptoNote::Currency& currency) {
+std::string get_status_string(const StatusInfo& iresp, const CryptoNote::Currency& currency) {
   std::stringstream ss;
   std::time_t uptime = std::time(nullptr) - iresp.start_time;
   auto forkStatus = get_fork_status(iresp.network_height, iresp.upgrade_heights, iresp.supported_height, currency);
@@ -187,8 +186,7 @@ std::string get_status_string(const CryptoNote::COMMAND_RPC_GET_INFO::response& 
   return ss.str();
 }
 
-void printStatus(const CryptoNote::COMMAND_RPC_GET_INFO::response& iresp, const CryptoNote::Currency& currency,
-                 std::ostream& stream) {
+void printStatus(const StatusInfo& iresp, const CryptoNote::Currency& currency, std::ostream& stream) {
   const auto currentTime = std::time(nullptr);
   const auto startTime = static_cast<std::time_t>(iresp.start_time);
   const auto upTime = currentTime - startTime;
@@ -231,7 +229,7 @@ void printStatus(const CryptoNote::COMMAND_RPC_GET_INFO::response& iresp, const 
     stream << rang::fg::green;
     emitter << YAML::Key << "network";
     stream << rang::fg::reset;
-    emitter << YAML::Value << iresp.network;
+    emitter << YAML::Value << toString(iresp.network);
   }
   {
     stream << rang::fg::green;

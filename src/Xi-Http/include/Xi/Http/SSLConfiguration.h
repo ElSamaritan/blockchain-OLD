@@ -113,8 +113,6 @@ class SSLConfiguration {
   const std::string& privateKeyPassword() const;
   void setPrivateKeyPassword(const std::string& password);
 
-  bool serialize(CryptoNote::ISerializer& s);
-  void emplaceOptions(cxxopts::Options& options, Usage usage);
   void initializeServerContext(boost::asio::ssl::context& ctx);
   void initializeClientContext(boost::asio::ssl::context& ctx);
 
@@ -124,14 +122,6 @@ class SSLConfiguration {
    * \return True if the configuration is considered insecure for the usecase, otherwise false
    */
   bool isInsecure(Usage usage) const;
-
- private:
-  /*!
-   * \brief rootedPath Transaforms relative paths to be relative to the given rootPath
-   * \param path The path to transform
-   * \return The provided path if absolute, or a path relative to rootPath (if given)
-   */
-  std::string rootedPath(const std::string& path) const;
 
  private:
   bool m_enabled;

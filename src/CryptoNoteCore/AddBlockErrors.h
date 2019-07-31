@@ -29,7 +29,8 @@ enum class AddBlockErrorCode {
   ADDED_TO_ALTERNATIVE_AND_SWITCHED,
   ALREADY_EXISTS,
   REJECTED_AS_ORPHANED,
-  DESERIALIZATION_FAILED
+  DESERIALIZATION_FAILED,
+  REJECTED_AS_ALTERNATIVE
 };
 
 // custom category:
@@ -61,6 +62,8 @@ class AddBlockErrorCategory : public std::error_category {
         return "Block rejected as orphaned";
       case AddBlockErrorCode::DESERIALIZATION_FAILED:
         return "Deserialization error";
+      case AddBlockErrorCode::REJECTED_AS_ALTERNATIVE:
+        return "Block rejected as alternative in checkpoint range";
       default:
         return "Unknown error";
     }

@@ -36,16 +36,48 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidCompression, "invalid database compressio
                                 DatabaseOption)
 }  // namespace
 
+void Xi::App::DatabaseOptions::loadEnvironment(Xi::App::Environment &env) {
+  std::string compression{};
+  // clang-format off
+  env
+    (DataDirectory, "DATA_DIR")
+    (Threads, "DB_THREADS")
+    (WriteBufferSize, "DB_WRITE_BUFFER")
+    (ReadCacheSize, "DB_READ_BUFFER")
+    (compression, "DB_COMPRESSION")
+    (LightNode, "LIGHT_NODE")
+  ;
+  // clang-format on
+  if (!compression.empty()) {
+    if (!CryptoNote::DataBaseConfig::parseCompression(compression, Compression)) {
+      exceptional<InvalidCompressionError>();
+    }
+  }
+}
+
 void Xi::App::DatabaseOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
-  options.add_options("database")
-    ("data-dir", "directory to store the database, defaulted to data directory if not provided",
+  options.add_options("core")
+    ("data-dir", "directory to store chain data, defaulted to data directory if not provided",
         cxxopts::value<std::string>(DataDirectory)->default_value(DataDirectory), "directory path")
-    ("db-threads", "maximum threads utilized to read/write the database", cxxopts::value<uint16_t>(Threads), "# > 0")
-    ("db-write-buffer", "maximum buffer allocated for a write batch", cxxopts::value<uint64_t>(WriteBufferSize), "mega bytes")
-    ("db-read-buffer", "maximum cache size allocated for reoccuring reads", cxxopts::value<uint64_t>(ReadCacheSize), "mega bytes")
-    ("db-compression", "compression used to minimize database size", cxxopts::value<std::string>(), "none|lz4|lz4hc")
-    ("light-node", "prunes transaction signatures to sparse memory footprint", cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
+
+    ("light-node", "prunes transaction signatures to sparse memory footprint",
+        cxxopts::value<bool>()->default_value(LightNode ? "true" : "false")
+                              ->implicit_value("true"))
+  ;
+
+  options.add_options("database")
+    ("db-threads", "maximum threads utilized to read/write the database",
+        cxxopts::value<uint16_t>(Threads)->default_value(std::to_string(Threads)), "# > 0")
+
+    ("db-write-buffer", "maximum buffer allocated for a write batch",
+        cxxopts::value<uint64_t>(WriteBufferSize)->default_value(std::to_string(WriteBufferSize)), "bytes size")
+
+    ("db-read-buffer", "maximum cache size allocated for reoccuring reads",
+        cxxopts::value<uint64_t>(ReadCacheSize)->default_value(std::to_string(ReadCacheSize)), "bytes size")
+
+    ("db-compression", "compression used to minimize database size",
+        cxxopts::value<std::string>()->default_value(toString(Compression)), "none|lz4|lz4hc")
   ;
   // clang-format on
 }

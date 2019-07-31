@@ -76,15 +76,16 @@ struct LoggingOptions : public IOptions {
   std::string DiscordAuthor;
 
   KV_BEGIN_SERIALIZATION
-  KV_MEMBER(DefaultLogLevel)
-  KV_MEMBER(ConsoleLogLevel)
-  KV_MEMBER(FileLogLevel)
-  KV_MEMBER(LogFilePath)
-  KV_MEMBER(DiscordLogLevel)
-  KV_MEMBER(DiscordWebhook)
-  KV_MEMBER(DiscordAuthor)
+  KV_MEMBER_RENAME(DefaultLogLevel, default_log_level)
+  KV_MEMBER_RENAME(ConsoleLogLevel, console_log_level)
+  KV_MEMBER_RENAME(FileLogLevel, file_log_level)
+  KV_MEMBER_RENAME(LogFilePath, file_log_path)
+  KV_MEMBER_RENAME(DiscordLogLevel, discord_log_level)
+  KV_MEMBER_RENAME(DiscordWebhook, discord_log_webhook)
+  KV_MEMBER_RENAME(DiscordAuthor, discord_log_author)
   KV_END_SERIALIZATION
 
+  void loadEnvironment(Environment& env) override;
   void emplaceOptions(cxxopts::Options& options) override;
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
 };

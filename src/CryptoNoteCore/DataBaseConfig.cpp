@@ -141,3 +141,7 @@ void toString(const CryptoNote::DataBaseConfig::Compression &compression, std::s
     return s(str, "compression");
   }
 }
+
+std::string toString(DataBaseConfig::Compression com) {
+  return Common::toString(com);
+}

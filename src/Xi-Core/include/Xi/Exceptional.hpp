@@ -28,6 +28,10 @@
 #include <type_traits>
 #include <string>
 
+#include <Xi/ExternalIncludePush.h>
+#include <fmt/format.h>
+#include <Xi/ExternalIncludePop.h>
+
 namespace Xi {
 template <typename _ExceptionT>
 [[noreturn]] inline void exceptional() {
@@ -35,10 +39,10 @@ template <typename _ExceptionT>
   throw _ExceptionT{};
 }
 
-template <typename _ExceptionT>
-[[noreturn]] inline void exceptional(const char* s) {
+template <typename _ExceptionT, typename... _Ts>
+[[noreturn]] inline void exceptional(const char* s, _Ts&&... args) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
-  throw _ExceptionT{s};
+  throw _ExceptionT{fmt::format(s, std::forward<_Ts>(args)...)};
 }
 
 template <typename _ExceptionT>
@@ -55,11 +59,11 @@ inline void exceptional_if(bool cond) {
   }
 }
 
-template <typename _ExceptionT>
-inline void exceptional_if(bool cond, const char* s) {
+template <typename _ExceptionT, typename... _Ts>
+inline void exceptional_if(bool cond, const char* s, _Ts&&... args) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   if (cond) {
-    exceptional<_ExceptionT>(s);
+    exceptional<_ExceptionT>(fmt::format(s, std::forward<_Ts>(args)...));
   }
 }
 
@@ -79,11 +83,11 @@ inline void exceptional_if_not(bool cond) {
   }
 }
 
-template <typename _ExceptionT>
-inline void exceptional_if_not(bool cond, const char* s) {
+template <typename _ExceptionT, typename... _Ts>
+inline void exceptional_if_not(bool cond, const char* s, _Ts&&... args) {
   static_assert(std::is_base_of<std::exception, _ExceptionT>::value, "Only exceptions can be exceptional.");
   if (!cond) {
-    exceptional<_ExceptionT>(s);
+    exceptional<_ExceptionT>(fmt::format(s, std::forward<_Ts>(args)...));
   }
 }
 
@@ -97,25 +101,32 @@ inline void exceptional_if_not(bool cond, const std::string& s) {
 
 }  // namespace Xi
 
-#define XI_DECLARE_EXCEPTIONAL_CATEGORY(CAT)                \
-  class CAT##Exception : public std::exception {            \
-   private:                                                 \
-    std::string m;                                          \
-                                                            \
-   protected:                                               \
-    CAT##Exception(const char* s) : m{s} {}                 \
-    CAT##Exception(const std::string& s) : m{s} {}          \
-                                                            \
-   public:                                                  \
-    virtual ~CAT##Exception() = default;                    \
-                                                            \
-    const char* what() const noexcept { return m.c_str(); } \
+#define XI_DECLARE_EXCEPTIONAL_CATEGORY(CAT)      \
+  class CAT##Exception : public std::exception {  \
+   private:                                       \
+    std::string m;                                \
+                                                  \
+   protected:                                     \
+    CAT##Exception(const char* s) : m{s} {        \
+    }                                             \
+    CAT##Exception(const std::string& s) : m{s} { \
+    }                                             \
+                                                  \
+   public:                                        \
+    virtual ~CAT##Exception() = default;          \
+                                                  \
+    const char* what() const noexcept {           \
+      return m.c_str();                           \
+    }                                             \
   };
 
-#define XI_DECLARE_EXCEPTIONAL_INSTANCE(X, MSG, CAT)      \
-  class X##Error : public CAT##Exception {                \
-   public:                                                \
-    X##Error() : CAT##Exception(MSG) {}                   \
-    X##Error(const char* s) : CAT##Exception(s) {}        \
-    X##Error(const std::string& s) : CAT##Exception(s) {} \
+#define XI_DECLARE_EXCEPTIONAL_INSTANCE(X, MSG, CAT)     \
+  class X##Error : public CAT##Exception {               \
+   public:                                               \
+    X##Error() : CAT##Exception(MSG) {                   \
+    }                                                    \
+    X##Error(const char* s) : CAT##Exception(s) {        \
+    }                                                    \
+    X##Error(const std::string& s) : CAT##Exception(s) { \
+    }                                                    \
   };

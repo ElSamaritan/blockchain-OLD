@@ -20,6 +20,9 @@
 
 #include "CommonCLI/CommonCLI.h"
 #include <Xi/Config.h>
+#include <Xi/App/SslOptions.h>
+#include <Xi/App/SslServerOptions.h>
+#include <Xi/App/SslClientOptions.h>
 #include <Logging/ILogger.h>
 
 using nlohmann::json;
@@ -64,7 +67,8 @@ struct WalletServiceConfiguration {
 
   std::string network;
   std::string networkDir;
-  ::Xi::Http::SSLConfiguration ssl;
+
+  Xi::Http::SSLConfiguration ssl{};
 };
 
 inline WalletServiceConfiguration initConfiguration() {
@@ -142,12 +146,26 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
     ("register-service", "Registers this program as a Windows service",cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
     ("unregister-service", "Unregisters this program from being a Windows service", cxxopts::value<bool>()->default_value("false")->implicit_value("true"));
 #endif
-
-  config.ssl.emplaceOptions(options, ::Xi::Http::SSLConfiguration::Usage::Both);
   // clang-format on
+
+  Xi::App::SslOptions sslOptions{};
+  Xi::App::SslServerOptions sslServerOptions{sslOptions};
+  Xi::App::SslClientOptions sslClientOptions{sslOptions};
+
+  sslOptions.emplaceOptions(options);
+  sslServerOptions.emplaceOptions(options);
+  sslClientOptions.emplaceOptions(options);
 
   try {
     auto cli = options.parse(argc, argv);
+
+    sslOptions.evaluateParsedOptions(options, cli);
+    sslServerOptions.evaluateParsedOptions(options, cli);
+    sslClientOptions.evaluateParsedOptions(options, cli);
+
+    sslOptions.configure(config.ssl);
+    sslServerOptions.configure(config.ssl);
+    sslClientOptions.configure(config.ssl);
 
     if (cli.count("config") > 0) {
       config.configFile = cli["config"].as<std::string>();
@@ -333,11 +351,6 @@ inline void handleSettings(const std::string configFile, WalletServiceConfigurat
     config.serverRoot = j["server-root"].get<std::string>();
   }
 
-  if (j.find("ssl") != j.end()) {
-    if (!CryptoNote::loadFromJson(config.ssl, j["ssl-client"].dump())) {
-      throw std::runtime_error{"Invalid ssl configuration in json configuration."};
-    }
-  }
   if (j.find("network") != j.end()) {
     config.network = j["network"];
   }
@@ -357,7 +370,6 @@ inline json asJSON(const WalletServiceConfiguration& config) {
                 {"rpc-legacy-security", config.legacySecurity},
                 {"rpc-password", config.rpcPassword},
                 {"server-root", config.serverRoot},
-                {"ssl", CryptoNote::storeToJson(config.ssl)},
                 {"network", config.network},
                 {"network-dir", config.networkDir}};
   return j;

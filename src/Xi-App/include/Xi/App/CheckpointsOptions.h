@@ -41,13 +41,14 @@ namespace Xi {
 namespace App {
 struct CheckpointsOptions : public IOptions {
   std::string CheckpointsFile = "";
-  bool UseCheckpoints = false;
+  bool UseCheckpoints = true;
 
   KV_BEGIN_SERIALIZATION
-  KV_MEMBER(CheckpointsFile)
-  KV_MEMBER(UseCheckpoints)
+  KV_MEMBER_RENAME(CheckpointsFile, file)
+  KV_MEMBER_RENAME(UseCheckpoints, enable)
   KV_END_SERIALIZATION
 
+  void loadEnvironment(Environment& env) override;
   void emplaceOptions(cxxopts::Options& options) override;
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
 

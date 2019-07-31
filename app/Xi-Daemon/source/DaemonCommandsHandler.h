@@ -15,6 +15,7 @@
 #include <Logging/LoggerManager.h>
 #include <Xi/Blockchain/Explorer/IExplorer.hpp>
 #include <Xi/Blockchain/Services/BlockExplorer/BlockExplorer.hpp>
+#include <CryptoNoteProtocol/CryptoNoteProtocolHandler.h>
 #include "Rpc/RpcServer.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Rpc/JsonRpc.h"
@@ -26,15 +27,15 @@ class NodeServer;
 
 class DaemonCommandsHandler : public Common::ConsoleHandler {
  public:
-  DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log,
-                        CryptoNote::RpcServer* prpc_server);
+  DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote::NodeServer& srv,
+                        CryptoNote::CryptoNoteProtocolHandler& protocol, Logging::LoggerManager& log);
 
  private:
   CryptoNote::Core& m_core;
   CryptoNote::NodeServer& m_srv;
+  CryptoNote::CryptoNoteProtocolHandler& m_protocol;
   Logging::LoggerRef logger;
   Logging::LoggerManager& m_logManager;
-  CryptoNote::RpcServer* m_prpc_server;
 
   std::shared_ptr<Xi::Blockchain::Explorer::IExplorer> m_explorer;
   std::shared_ptr<Xi::Blockchain::Services::BlockExplorer::BlockExplorer> m_explorerService;
@@ -45,7 +46,6 @@ class DaemonCommandsHandler : public Common::ConsoleHandler {
   bool version(const std::vector<std::string>& args);
   bool show_hr(const std::vector<std::string>& args);
   bool hide_hr(const std::vector<std::string>& args);
-  bool print_bc(const std::vector<std::string>& args);
   bool log_set(const std::vector<std::string>& args);
   bool start_mining(const std::vector<std::string>& args);
   bool stop_mining(const std::vector<std::string>& args);

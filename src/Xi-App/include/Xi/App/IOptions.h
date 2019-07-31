@@ -27,11 +27,14 @@
 #include <cxxopts.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include "Xi/App/Environment.h"
+
 namespace Xi {
 namespace App {
 struct IOptions {
   virtual ~IOptions() = default;
 
+  virtual void loadEnvironment(Environment& env) = 0;
   virtual void emplaceOptions(cxxopts::Options& options) = 0;
   virtual bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) = 0;
 };

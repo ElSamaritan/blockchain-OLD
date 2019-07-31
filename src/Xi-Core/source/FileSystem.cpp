@@ -23,6 +23,8 @@
 
 #include "Xi/FileSystem.h"
 
+#include <Xi/Exceptions.hpp>
+
 Xi::Result<boost::filesystem::space_info> Xi::FileSystem::availableSpace(const std::string &directory) {
   XI_ERROR_TRY();
   boost::filesystem::path path(directory);
@@ -94,5 +96,39 @@ Xi::Result<void> Xi::FileSystem::removeFileIfExists(const std::string &p) {
     }
   }
   return success();
+  XI_ERROR_CATCH();
+}
+
+Xi::Result<std::string> Xi::FileSystem::searchFile(const std::string &filepath, const std::string &fileEnding,
+                                                   const std::string &dataDir) {
+  using namespace boost::filesystem;
+  XI_ERROR_TRY();
+  std::vector<path> alternatives{{path{filepath}}};
+  if (!fileEnding.empty()) {
+    alternatives.push_back(path{filepath + fileEnding});
+  }
+  if (!dataDir.empty()) {
+    path dataPath{dataDir};
+    alternatives.push_back(dataPath / filepath);
+    if (!fileEnding.empty()) {
+      alternatives.push_back(dataPath / (filepath + fileEnding));
+    }
+  }
+  for (const auto &alternative : alternatives) {
+    boost::system::error_code ec{};
+    auto canoncialAlternative = canonical(alternative, ec);
+    if (ec) {
+      continue;
+    }
+    if (!boost::filesystem::exists(canoncialAlternative, ec) || ec) {
+      continue;
+    }
+    if (!is_regular_file(canoncialAlternative, ec) || ec) {
+      continue;
+    }
+    return success(canoncialAlternative.string());
+  }
+  exceptional<NotFoundError>("file not found: {0} (file ending: {1}, data directory: {2})", filepath, fileEnding,
+                             dataDir);
   XI_ERROR_CATCH();
 }

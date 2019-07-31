@@ -31,13 +31,22 @@ XI_DECLARE_EXCEPTIONAL_CATEGORY(NetworkOption)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(UnrecognizedNetwork, "given network is unregcognized.", NetworkOption)
 }  // namespace
 
+void Xi::App::NetworkOptions::loadEnvironment(Xi::App::Environment &env) {
+  // clang-format off
+  env
+    (directory(), "NETWORK_DIR")
+    (network(), "NETWORK")
+  ;
+  // clang-format on
+}
+
 void Xi::App::NetworkOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("network")
-    ("network", "the xi network you want to operate on.", cxxopts::value<std::string>()->default_value(Xi::Config::Network::defaultNetworkIdentifier()),
+    ("network", "the xi network you want to operate on.", cxxopts::value<std::string>()->default_value(network()),
         "<NAME>.[MainNet|StageNet|TestNet|LocalTestNet]")
     ("network-dir", "Directory to search for additional network configuration files.",
-     cxxopts::value<std::string>()->default_value(NetworkDir))
+     cxxopts::value<std::string>()->default_value(directory()))
   ;
   // clang-format on
 }
@@ -46,10 +55,10 @@ bool Xi::App::NetworkOptions::evaluateParsedOptions(const cxxopts::Options &opti
                                                     const cxxopts::ParseResult &result) {
   XI_UNUSED(options);
   if (result.count("network")) {
-    Network = result["network"].as<std::string>();
+    network() = result["network"].as<std::string>();
   }
   if (result.count("network-dir")) {
-    NetworkDir = result["network-dir"].as<std::string>();
+    directory() = result["network-dir"].as<std::string>();
   }
   return false;
 }

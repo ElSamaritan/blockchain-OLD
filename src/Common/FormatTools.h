@@ -12,12 +12,24 @@
 #include "CryptoNoteCore/Currency.h"
 
 namespace Common {
+struct StatusInfo {
+  uint64_t start_time;
+  CryptoNote::BlockVersion version;
+  CryptoNote::BlockHeight height;
+  CryptoNote::BlockHeight network_height;
+  CryptoNote::BlockHeight supported_height;
+  std::vector<CryptoNote::BlockHeight> upgrade_heights;
+  Xi::Config::Network::Type network;
+  bool synced;
+  uint32_t hashrate;
+  uint32_t outgoing_connections_count;
+  uint32_t incoming_connections_count;
+};
+
 std::string get_mining_speed(uint32_t hr);
 std::string get_sync_percentage(CryptoNote::BlockHeight height, CryptoNote::BlockHeight target_height);
 std::string get_upgrade_time(CryptoNote::BlockHeight height, CryptoNote::BlockHeight upgrade_height);
-std::string get_status_string(const CryptoNote::COMMAND_RPC_GET_INFO::response& iresp,
-                              const CryptoNote::Currency& currency);
+std::string get_status_string(const StatusInfo& iresp, const CryptoNote::Currency& currency);
 
-void printStatus(const CryptoNote::COMMAND_RPC_GET_INFO::response& iresp, const CryptoNote::Currency& currency,
-                 std::ostream& stream);
+void printStatus(const StatusInfo& iresp, const CryptoNote::Currency& currency, std::ostream& stream);
 }  // namespace Common

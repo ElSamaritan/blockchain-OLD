@@ -48,6 +48,7 @@ class SyncApplication : public Application {
 
   XiSync::SyncOptions Options{};
 
+  void loadEnvironment(Xi::App::Environment& env) override;
   void makeOptions(cxxopts::Options& options) override;
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
   int run() override;
@@ -60,6 +61,11 @@ class SyncApplication : public Application {
 }  // namespace
 
 XI_DECLARE_APP(SyncApplication)
+
+void SyncApplication::loadEnvironment(Environment& env) {
+  Application::loadEnvironment(env);
+  Options.loadEnvironment(env);
+}
 
 void SyncApplication::makeOptions(cxxopts::Options& options) {
   this->Application::makeOptions(options);

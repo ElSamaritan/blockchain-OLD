@@ -15,12 +15,13 @@
 #include <Xi/Config/NetworkType.h>
 #include <Common/StringTools.h>
 #include <Serialization/ISerializer.h>
+#include <Serialization/EnumSerialization.hpp>
 
 namespace CryptoNote {
 
 class DataBaseConfig {
  public:
-  enum struct Compression { None, LZ4, LZ4HC };
+  enum struct Compression { None = 1, LZ4, LZ4HC };
 
  public:
   static bool parseCompression(const std::string& compressionMode, Compression& out);
@@ -56,7 +57,10 @@ class DataBaseConfig {
   Compression compression;
 };
 
+XI_SERIALIZATION_ENUM(DataBaseConfig::Compression)
 [[nodiscard]] bool serialize(DataBaseConfig::Compression& compression, ISerializer& s);
+
+std::string toString(DataBaseConfig::Compression com);
 }  // namespace CryptoNote
 
 namespace Common {
@@ -64,3 +68,8 @@ template <>
 void toString<CryptoNote::DataBaseConfig::Compression>(const CryptoNote::DataBaseConfig::Compression& compression,
                                                        std::string& out);
 }
+
+XI_SERIALIZATION_ENUM_RANGE(CryptoNote::DataBaseConfig::Compression, None, LZ4HC)
+XI_SERIALIZATION_ENUM_TAG(CryptoNote::DataBaseConfig::Compression, None, "none")
+XI_SERIALIZATION_ENUM_TAG(CryptoNote::DataBaseConfig::Compression, LZ4, "lz4")
+XI_SERIALIZATION_ENUM_TAG(CryptoNote::DataBaseConfig::Compression, LZ4HC, "lz4hc")

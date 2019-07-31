@@ -25,6 +25,43 @@
 
 #include <Xi/Global.hh>
 
+void Xi::App::LoggingOptions::loadEnvironment(Xi::App::Environment &env) {
+  std::string defaultLogLevel{};
+  std::string consoleLogLevel{};
+  std::string discordLogLevel{};
+  std::string fileLogLevel{};
+  // clang-format off
+  env
+    (defaultLogLevel, "LOG_LEVEL")
+    (consoleLogLevel, "LOG_CONSOLE_LEVEL")
+    (discordLogLevel, "LOG_DISCORD_LEVEL")
+    (fileLogLevel, "LOG_FILE_LEVEL")
+    (LogFilePath, "LOG_FILE_PATH")
+    (DiscordWebhook, "LOG_DISCORD_WEBHOOK")
+    (DiscordAuthor, "LOG_DISCORD_AUTHOR")
+  ;
+  // clang-format on
+  Logging::LevelTranslator trans{};
+  if (!defaultLogLevel.empty()) {
+    DefaultLogLevel = trans.get_value(defaultLogLevel).value_or(DefaultLogLevel);
+  }
+  if (!consoleLogLevel.empty()) {
+    if (auto level = trans.get_value(consoleLogLevel)) {
+      ConsoleLogLevel = *level;
+    }
+  }
+  if (!discordLogLevel.empty()) {
+    if (auto level = trans.get_value(discordLogLevel)) {
+      DiscordLogLevel = *level;
+    }
+  }
+  if (!fileLogLevel.empty()) {
+    if (auto level = trans.get_value(fileLogLevel)) {
+      FileLogLevel = *level;
+    }
+  }
+}
+
 void Xi::App::LoggingOptions::emplaceOptions(cxxopts::Options &options) {
   Logging::LevelTranslator trans{};
   const std::string acceptedLevels{"none|fatal|error|warning|info|debbuging|trace"};
@@ -49,7 +86,7 @@ bool Xi::App::LoggingOptions::evaluateParsedOptions(const cxxopts::Options &opti
   if (result.count("log-level")) {
     auto logLevel = trans.get_value(result["log-level"].as<std::string>());
     if (logLevel == boost::none) {
-      throw cxxopts::invalid_option_format_error{result["log-level"].as<std::string>() + " no recognized."};
+      throw cxxopts::invalid_option_format_error{result["log-level"].as<std::string>() + " not recognized."};
     } else {
       DefaultLogLevel = *logLevel;
     }
@@ -57,7 +94,7 @@ bool Xi::App::LoggingOptions::evaluateParsedOptions(const cxxopts::Options &opti
   if (result.count("log-console-level")) {
     auto logLevel = trans.get_value(result["log-console-level"].as<std::string>());
     if (logLevel == boost::none) {
-      throw cxxopts::invalid_option_format_error{result["log-console-level"].as<std::string>() + " no recognized."};
+      throw cxxopts::invalid_option_format_error{result["log-console-level"].as<std::string>() + " not recognized."};
     } else {
       ConsoleLogLevel = *logLevel;
     }
@@ -65,7 +102,7 @@ bool Xi::App::LoggingOptions::evaluateParsedOptions(const cxxopts::Options &opti
   if (result.count("log-file-level")) {
     auto logLevel = trans.get_value(result["log-file-level"].as<std::string>());
     if (logLevel == boost::none) {
-      throw cxxopts::invalid_option_format_error{result["log-file-level"].as<std::string>() + " no recognized."};
+      throw cxxopts::invalid_option_format_error{result["log-file-level"].as<std::string>() + " not recognized."};
     } else {
       FileLogLevel = *logLevel;
     }
@@ -73,7 +110,7 @@ bool Xi::App::LoggingOptions::evaluateParsedOptions(const cxxopts::Options &opti
   if (result.count("log-discord-level")) {
     auto logLevel = trans.get_value(result["log-discord-level"].as<std::string>());
     if (logLevel == boost::none) {
-      throw cxxopts::invalid_option_format_error{result["log-discord-level"].as<std::string>() + " no recognized."};
+      throw cxxopts::invalid_option_format_error{result["log-discord-level"].as<std::string>() + " not recognized."};
     } else {
       DiscordLogLevel = *logLevel;
     }

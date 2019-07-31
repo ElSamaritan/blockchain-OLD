@@ -69,6 +69,7 @@ struct NodeOptions : public IOptions {
   KV_MEMBER_RENAME(seedPeers(), peers_seed)
   KV_END_SERIALIZATION
 
+  void loadEnvironment(Environment& env) override;
   void emplaceOptions(cxxopts::Options& options) override;
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
 

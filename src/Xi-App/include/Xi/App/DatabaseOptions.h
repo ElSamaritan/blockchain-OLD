@@ -52,15 +52,16 @@ struct DatabaseOptions : public IOptions {
   bool LightNode = false;
 
   KV_BEGIN_SERIALIZATION
-  KV_MEMBER(DataDirectory)
-  KV_MEMBER(Threads)
-  KV_MEMBER(MaximumOpenFiles)
-  KV_MEMBER(WriteBufferSize)
-  KV_MEMBER(ReadCacheSize)
-  KV_MEMBER(Compression)
-  KV_MEMBER(LightNode)
+  KV_MEMBER_RENAME(DataDirectory, data_dir)
+  KV_MEMBER_RENAME(Threads, threads)
+  KV_MEMBER_RENAME(MaximumOpenFiles, max_open_files)
+  KV_MEMBER_RENAME(WriteBufferSize, write_buffer_size)
+  KV_MEMBER_RENAME(ReadCacheSize, read_cache_size)
+  KV_MEMBER_RENAME(Compression, compression)
+  KV_MEMBER_RENAME(LightNode, light_node)
   KV_END_SERIALIZATION
 
+  void loadEnvironment(Environment& env) override;
   void emplaceOptions(cxxopts::Options& options) override;
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
 

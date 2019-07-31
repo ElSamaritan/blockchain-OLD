@@ -32,6 +32,7 @@
 
 #include <Xi/Global.hh>
 #include <Xi/Result.h>
+#include <Xi/App/Environment.h>
 
 namespace XiSync {
 class SyncOptions {
@@ -44,7 +45,9 @@ class SyncOptions {
   uint32_t BatchSize = 1000;
   uint32_t CheckpointsDensity = 100;
   bool TruncFile = false;
+  bool UseRemote = false;
 
+  void loadEnvironment(Xi::App::Environment& env);
   void emplaceOptions(cxxopts::Options& options);
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result);
 };

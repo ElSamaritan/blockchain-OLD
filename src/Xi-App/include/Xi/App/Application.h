@@ -31,6 +31,7 @@
 
 #include <Xi/Global.hh>
 #include <Xi/Http/SSLConfiguration.h>
+#include <Xi/Http/Server.h>
 #include <System/Dispatcher.h>
 #include <Logging/LoggerManager.h>
 #include <CryptoNoteCore/RocksDBWrapper.h>
@@ -40,13 +41,23 @@
 #include <CryptoNoteCore/INode.h>
 #include <P2p/NetNode.h>
 #include <Rpc/RpcRemoteConfiguration.h>
+#include <Rpc/RpcServer.h>
 
+#include "Xi/App/GeneralOptions.h"
+#include "Xi/App/LicenseOptions.h"
+#include "Xi/App/BreakpadOptions.h"
 #include "Xi/App/LoggingOptions.h"
 #include "Xi/App/DatabaseOptions.h"
 #include "Xi/App/RemoteRpcOptions.h"
 #include "Xi/App/NetworkOptions.h"
 #include "Xi/App/CheckpointsOptions.h"
 #include "Xi/App/NodeOptions.h"
+#include "Xi/App/PublicNodeOptions.h"
+#include "Xi/App/BlockExplorerOptions.h"
+#include "Xi/App/ServerRpcOptions.h"
+#include "Xi/App/SslOptions.h"
+#include "Xi/App/SslClientOptions.h"
+#include "Xi/App/SslServerOptions.h"
 
 namespace Xi {
 namespace App {
@@ -70,19 +81,25 @@ class Application {
   Logging::LoggerManager& logger();
   System::Dispatcher& dispatcher();
 
-  CryptoNote::RpcRemoteConfiguration remoteConfiguration() const;
+  CryptoNote::RpcRemoteConfiguration remoteConfiguration();
 
   // --------------------------------------------- PreSetup ---------------------------------------------------
   CryptoNote::RocksDBWrapper* database();
+  std::string dataDirectory();
   CryptoNote::Checkpoints* checkpoints();
+  CryptoNote::CurrencyBuilder* intermediateCurrency();
   CryptoNote::Currency* currency();
   CryptoNote::ICore* core();
   CryptoNote::INode* rpcNode(bool pollUpdates = false, bool preferEmbbedded = false);
   CryptoNote::NodeServer* node();
+  Http::SSLConfiguration* ssl();
+  CryptoNote::RpcServer* rpcServer();
+  CryptoNote::CryptoNoteProtocolHandler* protocol();
   // --------------------------------------------- PreSetup ---------------------------------------------------
 
   // --------------------------------------------- Overrides --------------------------------------------------
  protected:
+  virtual void loadEnvironment(Environment& env);
   virtual void makeOptions(cxxopts::Options& options);
   virtual bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result);
   virtual void setUp();
@@ -101,18 +118,22 @@ class Application {
   void useCheckpoints();
   void useCore();
   void useNode();
+  void useRpcServer();
+  void useSsl();
+  void useSslServer();
+  void useSslClient();
   // ---------------------------------------------- Helper ----------------------------------------------------
 
  private:
-  bool isSSLClientRequired() const;
-  bool isSSLServerRequired() const;
-
   void initializeLogger();
   void initializeDatabase();
   void initializeCheckpoints();
+  void initializeIntermediateCurrency();
   void initializeCurrency();
   void initializeCore();
   void initializeNode();
+  void initializeSsl();
+  void initializeRpcServer();
 
  private:
   const std::string m_name;
@@ -128,12 +149,21 @@ class Application {
   std::unique_ptr<LoggingOptions> m_logOptions;
   // ------------------------------------------------ Logging ------------------------------------------------------
 
+  GeneralOptions m_generalOptions{};
+  LicenseOptions m_licenseOptions{};
+  BreakpadOptions m_breakpadOptions{};
+
   std::unique_ptr<DatabaseOptions> m_dbOptions;
   std::unique_ptr<RemoteRpcOptions> m_remoteRpcOptions;
   std::unique_ptr<NetworkOptions> m_netOptions;
   std::unique_ptr<CheckpointsOptions> m_checkpointOptions;
   std::unique_ptr<NodeOptions> m_nodeOptions;
-  Xi::Http::SSLConfiguration m_sslConfig;
+  std::unique_ptr<ServerRpcOptions> m_rpcServerOptions;
+  std::unique_ptr<PublicNodeOptions> m_publicNodeOptions;
+  std::unique_ptr<BlockExplorerOptions> m_blockExplorerOptions;
+  std::unique_ptr<SslOptions> m_sslOptions;
+  std::unique_ptr<SslClientOptions> m_sslClientOptions;
+  std::unique_ptr<SslServerOptions> m_sslServerOptions;
   bool m_coreRequied = false;
   bool m_currencyRequired = false;
 
@@ -141,9 +171,12 @@ class Application {
   std::unique_ptr<CryptoNote::Checkpoints> m_checkpoints;
   std::unique_ptr<CryptoNote::ICore> m_core;
   std::unique_ptr<CryptoNote::Currency> m_currency;
+  std::unique_ptr<CryptoNote::CurrencyBuilder> m_intermediateCurrency;
   std::unique_ptr<CryptoNote::INode> m_remoteNode;
   std::unique_ptr<CryptoNote::NodeServer> m_node;
   std::unique_ptr<CryptoNote::CryptoNoteProtocolHandler> m_protocol;
+  std::shared_ptr<CryptoNote::RpcServer> m_rpcServer;
+  std::unique_ptr<Http::SSLConfiguration> m_sslConfig;
 };
 }  // namespace App
 }  // namespace Xi

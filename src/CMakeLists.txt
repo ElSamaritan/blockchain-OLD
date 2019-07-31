@@ -215,6 +215,7 @@ if(XI_BUILD_BREAKPAD)
       boost
   )
   target_compile_definitions(Xi.CrashHandler INTERFACE XI_USE_BREAKPAD)
+  set(XI_CRASH_HANDLER_LIB Xi::CrashHandler)
 endif()
 
 xi_make_library(
@@ -223,15 +224,18 @@ xi_make_library(
   PUBLIC_LIBRARIES
     Xi::Core
     Xi::Log::Discord
+    ${XI_CRASH_HANDLER_LIB}
 
-    boost
-    cxxopts
     Serialization
     Common
     CommonCLI
     CryptoNoteCore
     NodeRpcProxy
     NodeInProcess
+
+    boost
+    openssl
+    cxxopts
 )
 
 file(GLOB_RECURSE CommonCLI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI/*")
@@ -291,7 +295,7 @@ target_link_libraries(
         boost
 
     PRIVATE
-        Async++
+        async::asyncplusplus
 )
 
 # The reason we link so many Xi libraries here:

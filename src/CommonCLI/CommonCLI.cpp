@@ -94,6 +94,21 @@ bool CommonCLI::isDevVersion() {
       ;
 }
 
+std::string CommonCLI::devWarning() {
+  return R"(
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ATTENTION   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !                                                                                       !
+   ! You are running a development version! The program may contain bugs or is not         !
+   ! compatible with the main network. In case you accidentally ran into this version and  !
+   ! do not want to use it to for testing purposes you should visit our GitLab page        !
+   !     https://gitlab.com/galaxia-project/blockchain                                     !
+   ! . Or if you want to build xi yourself make sure you are building from the master      !
+   ! branch.                                                                               !
+   !                                                                                       !
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ATTENTION   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+)";
+}
+
 std::string CommonCLI::insecureClientWarning() {
   return R"(
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   WARNING   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

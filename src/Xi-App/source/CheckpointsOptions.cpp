@@ -35,10 +35,22 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(CheckpointFileMissing, "provided checkpoints imp
 // clang-format on
 }  // namespace
 
+void Xi::App::CheckpointsOptions::loadEnvironment(Xi::App::Environment &env) {
+  // clang-format off
+  env
+    (UseCheckpoints, "CHECKPOINTS")
+    (CheckpointsFile, "CHECKPOINTS_IMPORT")
+  ;
+  // clang-format on
+}
+
 void Xi::App::CheckpointsOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("checkpoints")
-      ("checkpoints", "enables the usage checkpoints, making synchronization faster", cxxopts::value<bool>(UseCheckpoints)->implicit_value("true"))
+      ("checkpoints-disable", "enables the usage checkpoints, making synchronization faster",
+        cxxopts::value<bool>(UseCheckpoints)->default_value(UseCheckpoints ? "true" : "false")
+                                            ->implicit_value("false"))
+
       ("checkpoints-import", "imports additional checkpoints from a csv file", cxxopts::value<std::string>(CheckpointsFile))
   ;
   // clang-format on
@@ -46,8 +58,8 @@ void Xi::App::CheckpointsOptions::emplaceOptions(cxxopts::Options &options) {
 
 bool Xi::App::CheckpointsOptions::evaluateParsedOptions(const cxxopts::Options &options,
                                                         const cxxopts::ParseResult &result) {
-  XI_UNUSED(options);
-  if (result.count("checkpoints-import") > 0) {
+  XI_UNUSED(options, result);
+  if (CheckpointsFile.size() > 0) {
     if (!FileSystem::exists(CheckpointsFile).valueOrThrow()) {
       exceptional<CheckpointFileMissingError>();
     }

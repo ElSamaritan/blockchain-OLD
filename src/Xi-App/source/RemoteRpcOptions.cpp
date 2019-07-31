@@ -35,13 +35,30 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(AmbiguousEndpoint, "you may not provde a port or
                                 RemoteRpcOption)
 }  // namespace
 
+void Xi::App::RemoteRpcOptions::loadEnvironment(Xi::App::Environment &env) {
+  // clang-format off
+  env
+    (address(), "RPC_REMOTE_ADDRESS")
+    (port(), "RPC_REMOTE_PORT")
+    (accessToken(), "RPC_REMOTE_ACCESS_TOKEN")
+  ;
+  // clang-format on
+}
+
 void Xi::App::RemoteRpcOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("remote rpc")
-    ("rpc-remote-address", "remote ip address running the rpc server.", cxxopts::value<std::string>(Address)->default_value(Address), "#.#.#.#")
-    ("rpc-remote-port", "remote port the rpc server is listening on.", cxxopts::value<uint16_t>(Port)->default_value(std::to_string(Port)), "#")
-    ("rpc-remote-host", "unified ip address and port of the remote rpc server", cxxopts::value<std::string>(), "#.#.#.#:#")
-    ("rpc-remote-access-token", "access token required by the rpc server", cxxopts::value<std::string>(AccessToken)->default_value(AccessToken), "<token>")
+    ("rpc-remote-address", "remote ip address running the rpc server.",
+      cxxopts::value<std::string>(address())->default_value(address()), "#.#.#.#")
+
+    ("rpc-remote-port", "remote port the rpc server is listening on.",
+      cxxopts::value<uint16_t>(port())->default_value(std::to_string(port())), "#")
+
+    ("rpc-remote-host", "unified ip address and port of the remote rpc server",
+      cxxopts::value<std::string>(), "#.#.#.#:#")
+
+    ("rpc-remote-access-token", "access token required by the rpc server",
+      cxxopts::value<std::string>(accessToken())->default_value(accessToken()), "<token>")
   ;
   // clang-format on
 }
@@ -60,14 +77,14 @@ bool Xi::App::RemoteRpcOptions::evaluateParsedOptions(const cxxopts::Options &op
       exceptional<InvalidHostFormatError>();
     }
 
-    Address = Common::ipAddressToString(_ip);
-    Port = _port;
+    address() = Common::ipAddressToString(_ip);
+    port() = _port;
   } else {
-    if (Port < 1) {
+    if (port() < 1) {
       exceptional<InvalidPortError>();
     }
     [[maybe_unused]] uint32_t _ = 0;
-    if (!Common::parseIpAddress(_, Address)) {
+    if (!Common::parseIpAddress(_, address())) {
       exceptional<InvalidIpFormatError>();
     }
   }
@@ -77,9 +94,9 @@ bool Xi::App::RemoteRpcOptions::evaluateParsedOptions(const cxxopts::Options &op
 CryptoNote::RpcRemoteConfiguration Xi::App::RemoteRpcOptions::getConfig(
     const Xi::Http::SSLConfiguration &sslConfig) const {
   CryptoNote::RpcRemoteConfiguration cfg{};
-  cfg.Host = Address;
-  cfg.Port = Port;
-  cfg.AccessToken = AccessToken;
+  cfg.Host = address();
+  cfg.Port = port();
+  cfg.AccessToken = accessToken();
   cfg.Ssl = sslConfig;
   return cfg;
 }

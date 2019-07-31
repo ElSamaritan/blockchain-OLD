@@ -98,4 +98,14 @@ std::string replace(std::string_view str, std::string_view toReplace, std::strin
   return reval;
 }
 
+std::vector<std::string> split(const std::string &str, const std::string &tokens) {
+  std::vector<std::string> reval{};
+  boost::split(reval, str, boost::is_any_of(tokens), boost::token_compress_on);
+  for (auto &ireval : reval) {
+    ireval = Xi::trim(ireval);
+  }
+  reval.erase(std::remove_if(reval.begin(), reval.end(), [](const auto &i) { return i.empty(); }), reval.end());
+  return reval;
+}
+
 }  // namespace Xi

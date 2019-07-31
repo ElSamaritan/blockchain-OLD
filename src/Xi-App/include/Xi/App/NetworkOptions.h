@@ -27,6 +27,7 @@
 #include <cxxopts.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Global.hh>
 #include <Xi/Config/NetworkType.h>
 #include <Xi/Config/Network.h>
 #include <Serialization/ISerializer.h>
@@ -37,11 +38,15 @@
 namespace Xi {
 namespace App {
 struct NetworkOptions : public IOptions {
-  std::string NetworkDir = "./config";
-  std::string Network = Xi::Config::Network::defaultNetworkIdentifier();
+  XI_PROPERTY(std::string, directory, "network")
+  XI_PROPERTY(std::string, network, Xi::Config::Network::defaultNetworkIdentifier())
 
-  // TODO: serialization
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(directory(), config_dir)
+  KV_MEMBER_RENAME(network(), network)
+  KV_END_SERIALIZATION
 
+  void loadEnvironment(Environment& env) override;
   void emplaceOptions(cxxopts::Options& options) override;
   bool evaluateParsedOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) override;
 };

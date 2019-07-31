@@ -26,6 +26,7 @@
 #include <chrono>
 
 #include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
 
 namespace Xi {
 namespace Http {
@@ -40,6 +41,13 @@ class ServerLimitsConfiguration {
   XI_PROPERTY(size_t, readLimit, 16 * 1024)
   /// Max bytes written per second.
   XI_PROPERTY(size_t, writeLimit, 128 * 1024)
+
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(readTimeout(), read_timeout)
+  KV_MEMBER_RENAME(writeTimeout(), write_timeout)
+  KV_MEMBER_RENAME(readLimit(), read_limit)
+  KV_MEMBER_RENAME(writeLimit(), write_limit)
+  KV_END_SERIALIZATION
 };
 
 }  // namespace Http

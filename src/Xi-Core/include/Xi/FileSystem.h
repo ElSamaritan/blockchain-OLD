@@ -50,5 +50,15 @@ Xi::Result<void> removeDircetoryIfExists(const std::string& directory);
 Xi::Result<bool> exists(const std::string& path);
 Xi::Result<void> removeFileIfExists(const std::string& path);
 
+/*!
+ * \brief searchFile Tries to find a file for a given path.
+ * \param filepath The given path to search for
+ * \param fileEnding If not empty tries to add the file ending that may not been provided.
+ * \param dataDir A user provided data, the file may be relative to it.
+ * \return The normal form path if found otherwise an error.
+ */
+Xi::Result<std::string> searchFile(const std::string& filepath, const std::string& fileEnding = "",
+                                   const std::string& dataDir = "");
+
 }  // namespace FileSystem
 }  // namespace Xi
