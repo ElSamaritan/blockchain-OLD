@@ -158,6 +158,7 @@ bool BinaryOutputStreamSerializer::typeTag(TypeTag& tag, Common::StringView name
 }
 
 bool BinaryOutputStreamSerializer::flag(std::vector<TypeTag>& flag, Common::StringView name) {
+  XI_UNUSED(name);
   uint16_t nativeFlag = 0;
   for (const auto& iFlag : flag) {
     XI_RETURN_EC_IF(iFlag.binary() == TypeTag::NoBinaryTag, false);
@@ -165,7 +166,7 @@ bool BinaryOutputStreamSerializer::flag(std::vector<TypeTag>& flag, Common::Stri
     assert(iFlag.binary() > 0);
     nativeFlag |= (1 << (iFlag.binary() - 1));
   }
-  return this->operator()(nativeFlag, name);
+  return writeInteger(stream, nativeFlag, false);
 }
 
 bool BinaryOutputStreamSerializer::operator()(double& value, Common::StringView name) {

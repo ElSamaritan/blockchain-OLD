@@ -192,8 +192,9 @@ bool BinaryInputStreamSerializer::typeTag(TypeTag& tag, Common::StringView name)
 }
 
 bool BinaryInputStreamSerializer::flag(std::vector<TypeTag>& flag, Common::StringView name) {
+  XI_UNUSED(name);
   uint16_t nativeFlag = 0;
-  XI_RETURN_EC_IF_NOT(this->operator()(nativeFlag, name), false);
+  readInteger(stream, nativeFlag, false);
   XI_RETURN_EC_IF(nativeFlag > (1 << 14), false);
   flag.clear();
   for (size_t i = 0; (1 << i) <= nativeFlag; ++i) {
