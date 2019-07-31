@@ -31,14 +31,18 @@
 #include "Xi/Blockchain/Block/Version.hpp"
 #include "Xi/Blockchain/Block/Nonce.hpp"
 #include "Xi/Blockchain/Block/MergeMiningTag.hpp"
+#include "Xi/Blockchain/Block/Feature.hpp"
 
 namespace Xi {
 namespace Blockchain {
 namespace Block {
 
 struct Header {
+  Feature features{Feature::None};
+
   Version version;
   Version upgradeVote;
+
   Nonce nonce;
   uint64_t timestamp;
   Crypto::FastHash previousBlockHash;

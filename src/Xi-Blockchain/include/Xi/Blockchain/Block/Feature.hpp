@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -21,54 +21,35 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Blockchain/Block/Header.hpp"
+#pragma once
 
-#include <algorithm>
+#include <cinttypes>
 
-#include <Xi/Exceptions.hpp>
-#include <Common/VectorOutputStream.h>
-#include <Serialization/BinaryOutputStreamSerializer.h>
-#include <Serialization/OptionalSerialization.hpp>
+#include <Xi/TypeSafe/Flag.hpp>
+#include <Serialization/FlagSerialization.hpp>
 
-bool Xi::Blockchain::Block::Header::serialize(CryptoNote::ISerializer &serializer) {
-  return serialize(serializer, false);
-}
+namespace Xi {
+namespace Blockchain {
+namespace Block {
 
-Crypto::Hash Xi::Blockchain::Block::Header::headerHash() const {
-  return ::Crypto::Hash::computeObjectHash(*this).takeOrThrow();
-}
+enum Feature : uint16_t {
+  None = 0,
+  UpgradeVote = 1 << 0,
+  BlockReward = 1 << 1,
+  StaticReward = 1 << 2,
+  Transfers = 1 << 3,
+  Fusions = 1 << 4,
+};
 
-Crypto::Hash Xi::Blockchain::Block::Header::proofOfWorkPrefix() const {
-  ByteVector buffer{};
-  buffer.reserve(64);
+XI_TYPESAFE_FLAG_MAKE_OPERATIONS(Feature)
+XI_SERIALIZATION_FLAG(Feature)
 
-  {
-    Common::VectorOutputStream stream{buffer};
-    CryptoNote::BinaryOutputStreamSerializer serializer{stream};
-    if (!const_cast<Header *>(this)->serialize(serializer, true)) {
-      exceptional<RuntimeError>("unable to compute hash due to serialization failure");
-    }
-  }
+}  // namespace Block
+}  // namespace Blockchain
+}  // namespace Xi
 
-  return ::Crypto::Hash::compute(buffer).takeOrThrow();
-}
-
-Crypto::Hash Xi::Blockchain::Block::Header::proofOfWorkHash(const ::Crypto::Hash &transactionTreeHash) const {
-  std::array<::Crypto::Hash, 2> hashes{{proofOfWorkPrefix(), transactionTreeHash}};
-  return ::Crypto::Hash::computeMerkleTree(hashes).takeOrThrow();
-}
-
-bool Xi::Blockchain::Block::Header::serialize(CryptoNote::ISerializer &serializer, bool isPoWPrefix) {
-  XI_RETURN_EC_IF_NOT(serializer(features, "features"), false);
-  XI_RETURN_EC_IF_NOT(serializer(version, "version"), false);
-  XI_RETURN_EC_IF_NOT(serializer(upgradeVote, "upgrade_vote"), false);
-  if (!isPoWPrefix) {
-    XI_RETURN_EC_IF_NOT(serializer(nonce, "nonce"), false);
-  }
-  XI_RETURN_EC_IF_NOT(serializer(timestamp, "timestamp"), false);
-  XI_RETURN_EC_IF_NOT(serializer(previousBlockHash, "previous_block_hash"), false);
-  if (!isPoWPrefix) {
-    XI_RETURN_EC_IF_NOT(serializer(mergeMiningTag, "merge_mining_tag"), false);
-  }
-  return true;
-}
+XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Block::Feature, BlockReward, Fusions)
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, BlockReward, "block_reward")
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, StaticReward, "static_reward")
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, Transfers, "transfers")
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, Fusions, "fusions")
