@@ -87,13 +87,13 @@ debian 9 - Build:
     BOOST_ROOT: /deps/boost
     CI_TARGET_OS: "debian 9"
 
-fedora 29 - Build:
-  <<: *linux_build_definition
-  image: registry.gitlab.com/galaxia-project/environment/fedora:29
-  variables:
-    OPENSSL_ROOT_DIR: /deps/openssl
-    BOOST_ROOT: /deps/boost
-    CI_TARGET_OS: "fedora 29"
+# fedora 29 - Build:
+#   <<: *linux_build_definition
+#   image: registry.gitlab.com/galaxia-project/environment/fedora:29
+#   variables:
+#     OPENSSL_ROOT_DIR: /deps/openssl
+#     BOOST_ROOT: /deps/boost
+#     CI_TARGET_OS: "fedora 29"
 
 # openSuse Leap - Build:
 #   <<: *linux_build_definition
@@ -174,7 +174,7 @@ Packages:
     - "Ubuntu Xenial - Build"
     # - "centOS 7 - Build"
     - "debian 9 - Build"
-    - "fedora 29 - Build"
+    # - "fedora 29 - Build"
     # - "openSuse Leap - Build"
     # - "alpine 3.10 - Build"
     - "Windows 10 - Build"
