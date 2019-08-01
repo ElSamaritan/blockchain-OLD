@@ -36,12 +36,10 @@ namespace Blockchain {
 namespace Explorer {
 
 struct TransactionExtraInfo {
-  CryptoNote::BinaryArray raw;
-  ::Crypto::PublicKey public_key;
+  std::optional<Crypto::PublicKey> public_key;
   std::optional<CryptoNote::PaymentId> payment_id;
 
   KV_BEGIN_SERIALIZATION
-  XI_RETURN_EC_IF_NOT(s.binary(raw.data(), raw.size(), "raw"), false);
   KV_MEMBER(public_key)
   KV_MEMBER(payment_id)
   KV_END_SERIALIZATION

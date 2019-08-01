@@ -383,51 +383,6 @@ struct COMMAND_RPC_GETBLOCKHASH {
   };
 };
 
-struct COMMAND_RPC_GETBLOCKTEMPLATE_STATE {
-  using request = Null;
-  struct response {
-    Crypto::Hash
-        template_state;  ///< Hash unique to a previous call, iff a new requested block template would not change.
-    std::string status;
-
-    KV_BEGIN_SERIALIZATION
-    KV_MEMBER(template_state)
-    KV_MEMBER(status)
-    KV_END_SERIALIZATION
-  };
-};
-
-struct COMMAND_RPC_GETBLOCKTEMPLATE {
-  struct request {
-    uint8_t reserve_size;  // max 255 bytes
-    AccountPublicAddress wallet_address;
-
-    KV_BEGIN_SERIALIZATION
-    KV_MEMBER(reserve_size)
-    KV_MEMBER(wallet_address)
-    KV_END_SERIALIZATION
-  };
-
-  struct response {
-    uint64_t difficulty;
-    BlockHeight height;
-    uint64_t reserved_offset;
-    BlockTemplate block_template;
-    std::string status;
-    Crypto::Hash
-        template_state;  ///< Hash unique to a previous call, iff a new requested block template would not change.
-
-    KV_BEGIN_SERIALIZATION
-    KV_MEMBER(difficulty)
-    KV_MEMBER(height)
-    KV_MEMBER(reserved_offset)
-    KV_MEMBER(block_template)
-    KV_MEMBER(status)
-    KV_MEMBER(template_state)
-    KV_END_SERIALIZATION
-  };
-};
-
 struct COMMAND_RPC_GET_CURRENCY_ID {
   typedef Null request;
 

@@ -133,7 +133,7 @@ class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
                                   std::vector<TransactionPrefixInfo>& addedTransactions,
                                   std::vector<Crypto::Hash>& deletedTransactions) const override;
 
-  virtual bool getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, const BinaryArray& extraNonce,
+  virtual bool getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr,
                                 uint64_t& difficulty, uint32_t& index) const override;
 
   virtual CoreStatistics getCoreStatistics() const override;

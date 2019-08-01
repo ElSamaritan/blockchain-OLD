@@ -32,9 +32,9 @@ namespace Xi {
 namespace Blockchain {
 namespace Block {
 
-struct Nonce : Xi::enable_blob_from_this<Nonce, 8> {
+struct Nonce : Xi::enable_blob_from_this<Nonce, 4> {
   using enable_blob_from_this::enable_blob_from_this;
-  using integer_type = uint64_t;
+  using integer_type = uint32_t;
   using signed_integer_type = std::make_signed_t<integer_type>;
 
   static const Nonce Null;

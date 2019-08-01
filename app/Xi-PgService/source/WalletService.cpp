@@ -48,27 +48,8 @@ namespace PaymentService {
 
 namespace {
 
-bool checkPaymentId(const std::string& paymentId) {
-  if (paymentId.size() != 64) {
-    return false;
-  }
-
-  return std::all_of(paymentId.begin(), paymentId.end(), [](const char c) {
-    if (c >= '0' && c <= '9') {
-      return true;
-    }
-
-    if (c >= 'a' && c <= 'f') {
-      return true;
-    }
-
-    if (c >= 'A' && c <= 'F') {
-      return true;
-    }
-
-    return false;
-  });
-}
+bool checkPaymentId(const std::string& paymentId) { return !CryptoNote::PaymentId::fromString(paymentId).isError(); }
+bool checkPaymentId(const CryptoNote::PaymentId& paymentId) { return paymentId.isValid(); }
 
 CryptoNote::PaymentId parsePaymentId(const std::string& paymentIdStr) {
   if (!checkPaymentId(paymentIdStr)) {
@@ -77,32 +58,25 @@ CryptoNote::PaymentId parsePaymentId(const std::string& paymentIdStr) {
   return CryptoNote::PaymentId::fromString(paymentIdStr).takeOrThrow();
 }
 
-bool getPaymentIdFromExtra(const std::string& binaryString, CryptoNote::PaymentId& paymentId) {
-  return CryptoNote::getPaymentIdFromTxExtra(Common::asBinaryArray(binaryString), paymentId);
-}
-
-std::string getPaymentIdStringFromExtra(const std::string& binaryString) {
+std::string getPaymentIdStringFromExtra(const CryptoNote::TransactionExtra& extra) {
   CryptoNote::PaymentId paymentId;
 
-  try {
-    if (!getPaymentIdFromExtra(binaryString, paymentId)) {
-      return std::string();
-    }
-  } catch (std::exception&) {
-    return std::string();
+  if (!extra.paymentId) {
+    return std::string{};
+  } else {
+    return extra.paymentId->toString();
   }
-
-  return Common::podToHex(paymentId);
 }
 
 }  // namespace
 
 struct TransactionsInBlockInfoFilter {
-  TransactionsInBlockInfoFilter(const std::vector<std::string>& addressesVec, const std::string& paymentIdStr) {
+  TransactionsInBlockInfoFilter(const std::vector<std::string>& addressesVec,
+                                const std::optional<CryptoNote::PaymentId>& _paymentId) {
     addresses.insert(addressesVec.begin(), addressesVec.end());
 
-    if (!paymentIdStr.empty()) {
-      paymentId = parsePaymentId(paymentIdStr);
+    if (_paymentId) {
+      paymentId = *_paymentId;
       havePaymentId = true;
     } else {
       havePaymentId = false;
@@ -112,7 +86,7 @@ struct TransactionsInBlockInfoFilter {
   bool checkTransaction(const CryptoNote::WalletTransactionWithTransfers& transaction) const {
     if (havePaymentId) {
       CryptoNote::PaymentId transactionPaymentId;
-      if (!getPaymentIdFromExtra(transaction.transaction.extra, transactionPaymentId)) {
+      if (!CryptoNote::getPaymentIdFromTxExtra(transaction.transaction.extra, transactionPaymentId)) {
         return false;
       }
 
@@ -143,13 +117,11 @@ struct TransactionsInBlockInfoFilter {
 
 namespace {
 
-void addPaymentIdToExtra(const std::string& paymentId, std::string& extra) {
-  std::vector<uint8_t> extraVector;
-  if (!CryptoNote::createTxExtraWithPaymentId(paymentId, extraVector)) {
-    throw std::system_error(make_error_code(CryptoNote::error::BAD_PAYMENT_ID));
+void validatePaymentId(const CryptoNote::PaymentId& paymentId, Logging::LoggerRef logger) {
+  if (!checkPaymentId(paymentId)) {
+    logger(Logging::Warning) << "Can't validate payment id: " << paymentId.toString();
+    throw std::system_error(make_error_code(CryptoNote::error::WalletServiceErrorCode::WRONG_PAYMENT_ID_FORMAT));
   }
-
-  std::copy(extraVector.begin(), extraVector.end(), std::back_inserter(extra));
 }
 
 void validatePaymentId(const std::string& paymentId, Logging::LoggerRef logger) {
@@ -205,9 +177,7 @@ PaymentService::TransactionRpcInfo convertTransactionWithTransfersToTransactionR
   transactionInfo.unlockTime = transactionWithTransfers.transaction.unlockTime;
   transactionInfo.amount = transactionWithTransfers.transaction.totalAmount;
   transactionInfo.fee = transactionWithTransfers.transaction.fee;
-  transactionInfo.extra = Common::toHex(transactionWithTransfers.transaction.extra.data(),
-                                        transactionWithTransfers.transaction.extra.size());
-  transactionInfo.paymentId = getPaymentIdStringFromExtra(transactionWithTransfers.transaction.extra);
+  transactionInfo.extra = transactionWithTransfers.transaction.extra;
 
   for (const CryptoNote::WalletTransfer& transfer : transactionWithTransfers.transfers) {
     PaymentService::TransferRpcInfo rpcTransfer;
@@ -270,9 +240,9 @@ void validateAddresses(const std::vector<std::string>& addresses, const CryptoNo
   }
 }
 
-std::tuple<std::string, std::string> decodeIntegratedAddress(const std::string& integratedAddr,
-                                                             const CryptoNote::Currency& currency,
-                                                             Logging::LoggerRef logger) {
+std::tuple<std::string, CryptoNote::PaymentId> decodeIntegratedAddress(const std::string& integratedAddr,
+                                                                       const CryptoNote::Currency& currency,
+                                                                       Logging::LoggerRef logger) {
   std::string decoded;
   uint64_t prefix;
 
@@ -310,7 +280,7 @@ std::tuple<std::string, std::string> decodeIntegratedAddress(const std::string& 
   /* Check the extracted address is good. */
   validateAddresses({address}, currency, logger);
 
-  return std::make_tuple(address, paymentID);
+  return std::make_tuple(address, CryptoNote::PaymentId::fromString(paymentID).takeOrThrow());
 }
 
 std::string getValidatedTransactionExtraString(const std::string& extraString) {
@@ -846,14 +816,14 @@ std::error_code WalletService::getMnemonicSeed(const std::string& address, std::
 
 std::error_code WalletService::getTransactionHashes(const std::vector<std::string>& addresses,
                                                     const std::string& blockHashString, uint32_t blockCount,
-                                                    const std::string& paymentId,
+                                                    const std::optional<CryptoNote::PaymentId>& paymentId,
                                                     std::vector<TransactionHashesInBlockRpcInfo>& transactionHashes) {
   try {
     System::EventLock lk(readyEvent);
     validateAddresses(addresses, currency, logger);
 
-    if (!paymentId.empty()) {
-      validatePaymentId(paymentId, logger);
+    if (paymentId) {
+      validatePaymentId(*paymentId, logger);
     }
 
     TransactionsInBlockInfoFilter transactionFilter(addresses, paymentId);
@@ -873,14 +843,14 @@ std::error_code WalletService::getTransactionHashes(const std::vector<std::strin
 
 std::error_code WalletService::getTransactionHashes(const std::vector<std::string>& addresses,
                                                     BlockHeight firstBlockHeight, uint32_t blockCount,
-                                                    const std::string& paymentId,
+                                                    const std::optional<CryptoNote::PaymentId>& paymentId,
                                                     std::vector<TransactionHashesInBlockRpcInfo>& transactionHashes) {
   try {
     System::EventLock lk(readyEvent);
     validateAddresses(addresses, currency, logger);
 
-    if (!paymentId.empty()) {
-      validatePaymentId(paymentId, logger);
+    if (paymentId) {
+      validatePaymentId(*paymentId, logger);
     }
 
     TransactionsInBlockInfoFilter transactionFilter(addresses, paymentId);
@@ -899,14 +869,14 @@ std::error_code WalletService::getTransactionHashes(const std::vector<std::strin
 
 std::error_code WalletService::getTransactions(const std::vector<std::string>& addresses,
                                                const std::string& blockHashString, uint32_t blockCount,
-                                               const std::string& paymentId,
+                                               const std::optional<CryptoNote::PaymentId>& paymentId,
                                                std::vector<TransactionsInBlockRpcInfo>& transactions) {
   try {
     System::EventLock lk(readyEvent);
     validateAddresses(addresses, currency, logger);
 
-    if (!paymentId.empty()) {
-      validatePaymentId(paymentId, logger);
+    if (paymentId) {
+      validatePaymentId(*paymentId, logger);
     }
 
     TransactionsInBlockInfoFilter transactionFilter(addresses, paymentId);
@@ -926,14 +896,15 @@ std::error_code WalletService::getTransactions(const std::vector<std::string>& a
 }
 
 std::error_code WalletService::getTransactions(const std::vector<std::string>& addresses, BlockHeight firstBlockHeight,
-                                               uint32_t blockCount, const std::string& paymentId,
+                                               uint32_t blockCount,
+                                               const std::optional<CryptoNote::PaymentId>& paymentId,
                                                std::vector<TransactionsInBlockRpcInfo>& transactions) {
   try {
     System::EventLock lk(readyEvent);
     validateAddresses(addresses, currency, logger);
 
-    if (!paymentId.empty()) {
-      validatePaymentId(paymentId, logger);
+    if (paymentId) {
+      validatePaymentId(*paymentId, logger);
     }
 
     TransactionsInBlockInfoFilter transactionFilter(addresses, paymentId);
@@ -1004,20 +975,21 @@ std::error_code WalletService::sendTransaction(SendTransaction::Request& request
                      [&loc](char c) { return std::toupper(c, loc); });
     }
 
-    std::vector<std::string> paymentIDs;
+    std::vector<CryptoNote::PaymentId> paymentIDs;
 
     for (auto& transfer : request.transfers) {
       std::string addr = transfer.address;
 
       /* It's not a standard address. Is it an integrated address? */
       if (!CryptoNote::validateAddress(addr, currency)) {
-        std::string address, paymentID;
+        std::string address;
+        CryptoNote::PaymentId paymentID;
         std::tie(address, paymentID) = decodeIntegratedAddress(addr, currency, logger);
 
         /* A payment ID was specified with the transaction, and it is not
            the same as the decoded one -> we can't send a transaction
            with two different payment ID's! */
-        if (request.paymentId != "" && request.paymentId != paymentID) {
+        if (request.paymentId && (*request.paymentId) != paymentID) {
           throw std::system_error(make_error_code(CryptoNote::error::CONFLICTING_PAYMENT_IDS));
         }
 
@@ -1056,15 +1028,13 @@ std::error_code WalletService::sendTransaction(SendTransaction::Request& request
 
     CryptoNote::TransactionParameters sendParams;
     if (request.paymentId) {
-      addPaymentIdToExtra(*request.paymentId, sendParams.extra);
-    } else {
-      sendParams.extra = getValidatedTransactionExtraString(request.extra.value_or(""));
+      CryptoNote::setPaymentIdToTransactionExtraNonce(sendParams.extra, *request.paymentId);
     }
 
     sendParams.sourceAddresses = request.sourceAddresses;
     sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers, m_node_address, m_node_fee);
     sendParams.fee = request.fee.value_or(currency.minimumFee(node.getLastKnownBlockVersion()));
-    sendParams.mixIn = request.anonymity.value_or(currency.mixinUpperBound(node.getLastKnownBlockVersion()));
+    sendParams.mixIn = currency.mixinUpperBound(node.getLastKnownBlockVersion());
     sendParams.unlockTimestamp = request.unlockTime.value_or(0);
     sendParams.changeDestination = request.changeAddress.value_or("");
 
@@ -1088,26 +1058,21 @@ std::error_code WalletService::createDelayedTransaction(CreateDelayedTransaction
   try {
     System::EventLock lk(readyEvent);
 
-    /* Integrated address payment ID's are uppercase - lets convert the input
-       payment ID to upper so we can compare with more ease */
-    const std::locale loc{};
-    std::transform(request.paymentId.begin(), request.paymentId.end(), request.paymentId.begin(),
-                   [&loc](char c) { return std::toupper(c, loc); });
-
-    std::vector<std::string> paymentIDs;
+    std::vector<CryptoNote::PaymentId> paymentIDs;
 
     for (auto& transfer : request.transfers) {
       std::string addr = transfer.address;
 
       /* It's not a standard address. Is it an integrated address? */
       if (!CryptoNote::validateAddress(addr, currency)) {
-        std::string address, paymentID;
+        std::string address;
+        CryptoNote::PaymentId paymentID;
         std::tie(address, paymentID) = decodeIntegratedAddress(addr, currency, logger);
 
         /* A payment ID was specified with the transaction, and it is not
            the same as the decoded one -> we can't send a transaction
            with two different payment ID's! */
-        if (request.paymentId != "" && request.paymentId != paymentID) {
+        if (request.paymentId && (*request.paymentId) != paymentID) {
           throw std::system_error(make_error_code(CryptoNote::error::CONFLICTING_PAYMENT_IDS));
         }
 
@@ -1140,16 +1105,14 @@ std::error_code WalletService::createDelayedTransaction(CreateDelayedTransaction
     }
 
     CryptoNote::TransactionParameters sendParams;
-    if (!request.paymentId.empty()) {
-      addPaymentIdToExtra(request.paymentId, sendParams.extra);
-    } else {
-      sendParams.extra = Common::asString(Common::fromHex(request.extra));
+    if (request.paymentId) {
+      CryptoNote::setPaymentIdToTransactionExtraNonce(sendParams.extra, *request.paymentId);
     }
 
     sendParams.sourceAddresses = request.addresses;
     sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers, m_node_address, m_node_fee);
     sendParams.fee = request.fee;
-    sendParams.mixIn = request.anonymity;
+    sendParams.mixIn = node.currency().mixinUpperBound(node.getLastKnownBlockVersion());
     sendParams.unlockTimestamp = request.unlockTime;
     sendParams.changeDestination = request.changeAddress.value_or("");
 
@@ -1251,7 +1214,7 @@ std::error_code WalletService::getUnconfirmedTransactionHashes(const std::vector
 
     std::vector<CryptoNote::WalletTransactionWithTransfers> transactions = wallet.getUnconfirmedTransactions();
 
-    TransactionsInBlockInfoFilter transactionFilter(addresses, "");
+    TransactionsInBlockInfoFilter transactionFilter(addresses, std::nullopt);
 
     for (const auto& transaction : transactions) {
       if (transactionFilter.checkTransaction(transaction)) {

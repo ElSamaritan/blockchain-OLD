@@ -15,7 +15,7 @@ void deleteFromAddressBook();
 
 void listAddressBook();
 
-const Maybe<std::string> getAddressBookPaymentID();
+const Maybe<CryptoNote::TransactionExtra> getAddressBookPaymentID();
 
 const Maybe<const std::string> getAddressBookAddress();
 

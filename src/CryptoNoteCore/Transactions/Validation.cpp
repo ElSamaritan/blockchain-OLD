@@ -35,68 +35,22 @@
 
 using Error = CryptoNote::error::TransactionValidationError;
 
-Error CryptoNote::validateExtra(const CryptoNote::Transaction &tx) {
-  XI_RETURN_EC_IF_NOT(validateExtraSize(tx), Error::EXTRA_TOO_LARGE);
-  std::vector<TransactionExtraField> fields;
-  XI_RETURN_EC_IF_NOT(parseTransactionExtra(tx.extra, fields), Error::EXTRA_ILL_FORMED);
-  XI_RETURN_EC_IF_NOT(validateExtraPublicKeys(fields), Error::EXTRA_INVALID_PUBLIC_KEY);
-  XI_RETURN_EC_IF_NOT(validateExtraNonce(fields), Error::EXTRA_INVALID_NONCE);
+Error CryptoNote::validateExtra(const CryptoNote::Transaction &tx, CryptoNote::TransactionExtraFeature exact) {
+  return validateExtra(tx, exact, exact);
+}
+
+Error CryptoNote::validateExtra(const CryptoNote::Transaction &tx, TransactionExtraFeature required,
+                                TransactionExtraFeature allowed) {
+  const auto &extra = tx.extra;
+  XI_RETURN_EC_IF_NOT(hasFlag(extra.features, required), Error::EXTRA_ILL_FORMED);
+  XI_RETURN_EC_IF_NOT(discardFlag(extra.features, allowed) == TransactionExtraFeature::None, Error::EXTRA_ILL_FORMED);
+  XI_RETURN_EC_IF_NOT(hasFlag(extra.features, TransactionExtraFeature::PublicKey) == extra.publicKey.has_value(),
+                      Error::EXTRA_ILL_FORMED);
+  XI_RETURN_EC_IF(extra.publicKey && !extra.publicKey->isValid(), Error::EXTRA_INVALID_PUBLIC_KEY);
+  XI_RETURN_EC_IF_NOT(hasFlag(extra.features, TransactionExtraFeature::PaymentId) == extra.paymentId.has_value(),
+                      Error::EXTRA_ILL_FORMED);
+  XI_RETURN_EC_IF(extra.paymentId && !extra.paymentId->isValid(), Error::EXTRA_INVALID_PAYMENT_ID);
   return Error::VALIDATION_SUCCESS;
-}
-
-bool CryptoNote::validateExtraSize(const CryptoNote::Transaction &tx) {
-  return tx.extra.size() <= TX_EXTRA_MAX_SIZE;
-}
-
-bool CryptoNote::validateExtraPublicKeys(const std::vector<TransactionExtraField> &fields) {
-  const auto isPublicKey = [](const auto &field) { return field.type() == typeid(TransactionExtraPublicKey); };
-  auto search = std::find_if(fields.begin(), fields.end(), isPublicKey);
-  XI_RETURN_EC_IF(search == fields.end(), false);
-  const auto &pkField = boost::get<TransactionExtraPublicKey>(*search);
-  XI_RETURN_EC_IF_NOT(validateExtraPublicKeys(pkField), false);
-  auto another = std::find_if(std::next(search), fields.end(), isPublicKey);
-  return another == fields.end();
-}
-
-bool CryptoNote::validateExtraPublicKeys(const CryptoNote::TransactionExtraPublicKey &pk) {
-  return pk.publicKey.isValid();
-}
-
-bool CryptoNote::validateExtraCumulativePadding(const std::vector<CryptoNote::TransactionExtraField> &fields) {
-  size_t padSize = 0;
-  for (const auto &field : fields) {
-    if (field.type() == typeid(TransactionExtraPadding)) {
-      padSize += boost::get<TransactionExtraPadding>(field).size;
-      XI_RETURN_EC_IF(padSize > TX_EXTRA_PADDING_MAX_COUNT, false);
-    }
-  }
-  return true;
-}
-
-bool CryptoNote::validateExtraNonce(const std::vector<TransactionExtraField> &fields) {
-  const auto isExtraNonce = [](const auto &field) { return field.type() == typeid(TransactionExtraNonce); };
-  auto search = std::find_if(fields.begin(), fields.end(), isExtraNonce);
-  XI_RETURN_SC_IF(search == fields.end(), true);
-  const auto &nonceField = boost::get<TransactionExtraNonce>(*search);
-  XI_RETURN_EC_IF_NOT(validateExtraNonce(nonceField), false);
-  auto another = std::find_if(std::next(search), fields.end(), isExtraNonce);
-  return another == fields.end();
-}
-
-bool CryptoNote::validateExtraNonce(const CryptoNote::TransactionExtraNonce &nonce) {
-  XI_RETURN_EC_IF(nonce.nonce.empty(), false);
-  XI_RETURN_EC_IF(nonce.nonce.size() > TX_EXTRA_NONCE_MAX_COUNT, false);
-
-  if (nonce.nonce[0] == TX_EXTRA_NONCE_PAYMENT_ID) {
-    XI_RETURN_EC_IF_NOT(nonce.nonce.size() == 1 + Crypto::PublicKey::bytes(), false);
-    Crypto::PublicKey paymentId{};
-    std::memcpy(paymentId.data(), &nonce.nonce[1], Crypto::PublicKey::bytes());
-    XI_RETURN_EC_IF_NOT(paymentId.isValid(), false);
-  } else {
-    XI_RETURN_EC_IF_NOT(nonce.nonce[0] == TX_EXTRA_NONCE_CUSTOM_ID, false);
-  }
-
-  return true;
 }
 
 bool CryptoNote::validateCanonicalDecomposition(const CryptoNote::Transaction &tx) {
@@ -132,7 +86,9 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
   XI_RETURN_EC_IF_NOT(context.currency.isTransferVersionSupported(context.blockVersion, tx.version),
                       Error::INVALID_VERSION);
 
-  if (const auto ec = validateExtra(tx); ec != Error::VALIDATION_SUCCESS) {
+  if (const auto ec = validateExtra(tx, TransactionExtraFeature::PublicKey,
+                                    TransactionExtraFeature::PublicKey | TransactionExtraFeature::PaymentId);
+      ec != Error::VALIDATION_SUCCESS) {
     XI_RETURN_EC(ec);
   }
 

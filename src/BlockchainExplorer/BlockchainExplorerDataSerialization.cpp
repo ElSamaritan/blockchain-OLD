@@ -66,8 +66,6 @@ template <typename T>
 
 [[nodiscard]] bool serialize(TransactionExtraDetails& extra, ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializePod(extra.publicKey, "public_key", serializer), false);
-  XI_RETURN_EC_IF_NOT(serializer(extra.nonce, "nonce"), false);
-  XI_RETURN_EC_IF_NOT(serializer.binary(extra.raw, "raw"), false);
   return true;
 }
 

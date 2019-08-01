@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -23,53 +23,31 @@
 
 #pragma once
 
-#include <cinttypes>
-#include <string>
+#include <Xi/Global.hh>
+#include <Xi/TypeSafe/Flag.hpp>
+#include <Serialization/FlagSerialization.hpp>
 
-#include <Serialization/ISerializer.h>
-#include <CryptoNoteCore/CryptoNote.h>
+namespace Xi {
+namespace Blockchain {
+namespace Transaction {
 
-namespace CryptoNote {
-namespace RpcCommands {
-
-struct GetBlockTemplate {
-  static inline std::string identifier() {
-    static const std::string __Identifier{"get_block_template"};
-    return __Identifier;
-  }
-
-  struct request {
-    std::string wallet_address;
-
-    KV_BEGIN_SERIALIZATION
-    KV_MEMBER(wallet_address)
-    KV_END_SERIALIZATION
-  };
-
-  struct response {
-    uint64_t difficulty;
-    BlockHeight height;
-    uint32_t reserved_offset;
-    std::string blocktemplate_blob;
-    std::string proof_of_work_algorithm;
-    std::string status;
-
-    /*!
-     * \brief template_state Hash unique to a previous call, iff a new requested block template would not change.
-     */
-    std::string template_state;
-
-    KV_BEGIN_SERIALIZATION
-    KV_MEMBER(difficulty)
-    KV_MEMBER(height)
-    KV_MEMBER(reserved_offset)
-    KV_MEMBER(blocktemplate_blob)
-    KV_MEMBER(proof_of_work_algorithm)
-    KV_MEMBER(status)
-    KV_MEMBER(template_state)
-    KV_END_SERIALIZATION
-  };
+enum struct ExtraFeature {
+  None = 0,
+  PublicKey = 1 << 0,
+  PaymentId = 1 << 1,
 };
 
-}  // namespace RpcCommands
-}  // namespace CryptoNote
+XI_TYPESAFE_FLAG_MAKE_OPERATIONS(ExtraFeature)
+XI_SERIALIZATION_FLAG(ExtraFeature)
+
+}  // namespace Transaction
+}  // namespace Blockchain
+}  // namespace Xi
+
+XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Transaction::ExtraFeature, PublicKey, PaymentId)
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::ExtraFeature, PublicKey, "public_key")
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::ExtraFeature, PaymentId, "payment_id")
+
+namespace CryptoNote {
+using TransactionExtraFeature = Xi::Blockchain::Transaction::ExtraFeature;
+}

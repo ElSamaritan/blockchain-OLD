@@ -44,7 +44,7 @@ class WalletUserTransactionsCache {
   size_t getTransactionCount() const;
   size_t getTransferCount() const;
 
-  TransactionId addNewTransaction(uint64_t amount, uint64_t fee, const std::string& extra,
+  TransactionId addNewTransaction(uint64_t amount, uint64_t fee, const TransactionExtra& extra,
                                   const std::vector<WalletLegacyTransfer>& transfers, uint64_t unlockTime);
   void updateTransaction(TransactionId transactionId, const CryptoNote::Transaction& tx, uint64_t amount,
                          const std::list<TransactionOutputInformation>& usedOutputs);

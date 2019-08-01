@@ -151,8 +151,8 @@ class ICore : public IBlockchain {
                                   std::vector<TransactionPrefixInfo>& addedTransactions,
                                   std::vector<Crypto::Hash>& deletedTransactions) const = 0;
 
-  virtual bool getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, const BinaryArray& extraNonce,
-                                uint64_t& difficulty, uint32_t& height) const = 0;
+  virtual bool getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, uint64_t& difficulty,
+                                uint32_t& height) const = 0;
 
   virtual CoreStatistics getCoreStatistics() const = 0;
   virtual bool isPruned() const = 0;

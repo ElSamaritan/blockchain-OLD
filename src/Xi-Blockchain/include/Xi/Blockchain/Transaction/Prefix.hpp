@@ -32,19 +32,19 @@
 
 #include "Xi/Blockchain/Transaction/Input.hpp"
 #include "Xi/Blockchain/Transaction/Output.hpp"
+#include "Xi/Blockchain/Transaction/Extra.hpp"
 
 namespace Xi {
 namespace Blockchain {
 namespace Transaction {
 
 struct Prefix {
-  uint8_t version;
-  uint64_t unlockTime;
+  uint8_t version{0};
+  uint64_t unlockTime{0};
 
-  InputVector inputs;
-  OutputVector outputs;
-
-  ByteVector extra;
+  InputVector inputs{};
+  OutputVector outputs{};
+  Extra extra{};
 
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
 

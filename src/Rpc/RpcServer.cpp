@@ -249,7 +249,6 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
         // clang-format on
 
         // Not enabled on block explorer
-        {"getblocktemplate", {makeMemberMethod(&RpcServer::on_getblocktemplate), false, false}},
         {"submitblock", {makeMemberMethod(&RpcServer::on_submitblock), false, false}}};
 
     auto it = jsonRpcHandlers.find(jsonRequest.getMethod());
@@ -1251,15 +1250,6 @@ Hash RpcServer::block_template_state_hash() const {
   return reval;
 }
 
-bool RpcServer::on_getblocktemplatestate(const COMMAND_RPC_GETBLOCKTEMPLATE_STATE::request& req,
-                                         COMMAND_RPC_GETBLOCKTEMPLATE_STATE::response& res) {
-  XI_UNUSED(req);
-  const auto stateHash = block_template_state_hash();
-  res.template_state = stateHash;
-  res.status = CORE_RPC_STATUS_OK;
-  return true;
-}
-
 namespace {
 uint64_t slow_memmem(void* start_buff, size_t buflen, void* pat, size_t patlen) {
   void* buf = memchr(start_buff, ((char*)pat)[0], buflen);
@@ -1276,63 +1266,6 @@ uint64_t slow_memmem(void* start_buff, size_t buflen, void* pat, size_t patlen) 
 }
 }  // namespace
 
-bool RpcServer::on_getblocktemplate(const COMMAND_RPC_GETBLOCKTEMPLATE::request& req,
-                                    COMMAND_RPC_GETBLOCKTEMPLATE::response& res) {
-  // TODO REMOVE ME
-  if (req.reserve_size > TX_EXTRA_NONCE_MAX_COUNT) {
-    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_BIG_RESERVE_SIZE, "To big reserved size, maximum 126"};
-  }
-
-  AccountPublicAddress acc = boost::value_initialized<AccountPublicAddress>();
-
-  if (!req.wallet_address.isValid()) {
-    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_WRONG_WALLET_ADDRESS, "Invalid wallet address"};
-  }
-
-  BlockTemplate blockTemplate = boost::value_initialized<BlockTemplate>();
-  CryptoNote::BinaryArray blob_reserve;
-  blob_reserve.resize(req.reserve_size, 0);
-
-  uint32_t blockTemplateIndex = 0;
-  if (!m_core.getBlockTemplate(blockTemplate, acc, blob_reserve, res.difficulty, blockTemplateIndex)) {
-    logger(Error) << "Failed to create block template";
-    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Internal error: failed to create block template"};
-  }
-  res.height = BlockHeight::fromIndex(blockTemplateIndex);
-
-  BinaryArray block_blob = toBinaryArray(blockTemplate);
-  PublicKey tx_pub_key = CryptoNote::getTransactionPublicKeyFromExtra(blockTemplate.baseTransaction.extra);
-  if (tx_pub_key == PublicKey::Null) {
-    logger(Error) << "Failed to find tx pub key in coinbase extra";
-    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
-                                "Internal error: failed to find tx pub key in coinbase extra"};
-  }
-
-  if (0 < req.reserve_size) {
-    res.reserved_offset = slow_memmem((void*)block_blob.data(), block_blob.size(), &tx_pub_key, sizeof(tx_pub_key));
-    if (!res.reserved_offset) {
-      logger(Error) << "Failed to find tx pub key in blockblob";
-      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
-                                  "Internal error: failed to create block template"};
-    }
-    res.reserved_offset += sizeof(tx_pub_key) + 3;  // 3 bytes: tag for TX_EXTRA_TAG_PUBKEY(1 byte), tag for
-                                                    // TX_EXTRA_NONCE(1 byte), counter in TX_EXTRA_NONCE(1 byte)
-    if (res.reserved_offset + req.reserve_size > block_blob.size()) {
-      logger(Error) << "Failed to calculate offset for reserved bytes";
-      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
-                                  "Internal error: failed to create block template"};
-    }
-  } else {
-    res.reserved_offset = 0;
-  }
-
-  res.block_template = fromBinaryArray<BlockTemplate>(block_blob);
-  res.template_state = block_template_state_hash();
-  res.status = CORE_RPC_STATUS_OK;
-
-  return true;
-}
-
 bool RpcServer::on_get_block_template_state(const RpcCommands::GetBlockTemplateState::request& req,
                                             RpcCommands::GetBlockTemplateState::response& res) {
   XI_UNUSED(req);
@@ -1344,10 +1277,6 @@ bool RpcServer::on_get_block_template_state(const RpcCommands::GetBlockTemplateS
 
 bool RpcServer::on_get_block_template(const RpcCommands::GetBlockTemplate::request& req,
                                       RpcCommands::GetBlockTemplate::response& res) {
-  if (req.reserve_size > TX_EXTRA_NONCE_MAX_COUNT) {
-    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_BIG_RESERVE_SIZE, "To big reserved size, maximum 126"};
-  }
-
   AccountPublicAddress acc = boost::value_initialized<AccountPublicAddress>();
 
   if (!req.wallet_address.size() || !m_core.getCurrency().parseAccountAddressString(req.wallet_address, acc)) {
@@ -1355,9 +1284,8 @@ bool RpcServer::on_get_block_template(const RpcCommands::GetBlockTemplate::reque
   }
 
   BlockTemplate blockTemplate = boost::value_initialized<BlockTemplate>();
-  CryptoNote::BinaryArray blob_reserve;
   uint32_t blockTemplateIndex = 0;
-  if (!m_core.getBlockTemplate(blockTemplate, acc, blob_reserve, res.difficulty, blockTemplateIndex)) {
+  if (!m_core.getBlockTemplate(blockTemplate, acc, res.difficulty, blockTemplateIndex)) {
     logger(Error) << "Failed to create block template";
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Internal error: failed to create block template"};
   }
@@ -1369,25 +1297,6 @@ bool RpcServer::on_get_block_template(const RpcCommands::GetBlockTemplate::reque
     logger(Error) << "Failed to find tx pub key in coinbase extra";
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
                                 "Internal error: failed to find tx pub key in coinbase extra"};
-  }
-
-  if (0 < req.reserve_size) {
-    res.reserved_offset = static_cast<uint32_t>(
-        slow_memmem((void*)block_blob.data(), block_blob.size(), &tx_pub_key, sizeof(tx_pub_key)));
-    if (!res.reserved_offset) {
-      logger(Error) << "Failed to find tx pub key in blockblob";
-      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
-                                  "Internal error: failed to create block template"};
-    }
-    res.reserved_offset += sizeof(tx_pub_key) + 3;  // 3 bytes: tag for TX_EXTRA_TAG_PUBKEY(1 byte), tag for
-                                                    // TX_EXTRA_NONCE(1 byte), counter in TX_EXTRA_NONCE(1 byte)
-    if (res.reserved_offset + req.reserve_size > block_blob.size()) {
-      logger(Error) << "Failed to calculate offset for reserved bytes";
-      throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
-                                  "Internal error: failed to create block template"};
-    }
-  } else {
-    res.reserved_offset = 0;
   }
 
   res.blocktemplate_blob = toHex(block_blob);

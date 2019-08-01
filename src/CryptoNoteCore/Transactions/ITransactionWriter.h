@@ -40,8 +40,6 @@ class ITransactionWriter {
 
   // extra
   virtual void setPaymentId(const PaymentId& paymentId) = 0;
-  virtual void setExtraNonce(const BinaryArray& nonce) = 0;
-  virtual void appendExtra(const BinaryArray& extraData) = 0;
 
   // Inputs/Outputs
   virtual size_t addInput(const KeyInput& input) = 0;
@@ -51,7 +49,8 @@ class ITransactionWriter {
   virtual size_t addOutput(uint64_t amount, const AccountPublicAddress& to) = 0;
   virtual size_t addOutput(uint64_t amount, const KeyOutput& out) = 0;
 
-  // transaction info
+  // Extra
+  virtual void applyExtra(const TransactionExtra& extra) = 0;
   virtual void setTransactionSecretKey(const Crypto::SecretKey& key) = 0;
 
   // signing

@@ -36,7 +36,7 @@ bool Prefix::serialize(CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer(unlockTime, "unlock_time"), false);
   XI_RETURN_EC_IF_NOT(serializer(inputs, "inputs"), false);
   XI_RETURN_EC_IF_NOT(serializer(outputs, "outputs"), false);
-  XI_RETURN_EC_IF_NOT(serializer.binary(extra, "extra"), false);
+  XI_RETURN_EC_IF_NOT(serializer(extra, "extra"), false);
   XI_RETURN_SC(true);
 }
 

@@ -56,8 +56,6 @@ typedef std::variant<BaseInputDetails, KeyInputDetails> TransactionInputDetails;
 
 struct TransactionExtraDetails {
   Crypto::PublicKey publicKey;
-  BinaryArray nonce;
-  BinaryArray raw;
 };
 
 struct TransactionDetails {

@@ -1533,7 +1533,7 @@ uint64_t WalletGreen::getBalanceMinusDust(const std::vector<std::string>& addres
 }
 
 void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets, const std::vector<WalletOrder>& orders,
-                                     uint64_t fee, const std::string& extra, uint64_t unlockTimestamp,
+                                     uint64_t fee, const CryptoNote::TransactionExtra& extra, uint64_t unlockTimestamp,
                                      const DonationSettings& donation,
                                      const CryptoNote::AccountPublicAddress& changeDestination,
                                      PreparedTransaction& preparedTransaction) {
@@ -1967,13 +1967,14 @@ void WalletGreen::pushBackOutgoingTransfers(size_t txId, const std::vector<Walle
 }
 
 size_t WalletGreen::insertOutgoingTransactionAndPushEvent(const Hash& transactionHash, uint64_t fee,
-                                                          const BinaryArray& extra, uint64_t unlockTimestamp) {
+                                                          const CryptoNote::TransactionExtra& extra,
+                                                          uint64_t unlockTimestamp) {
   WalletTransaction insertTx;
   insertTx.state = WalletTransactionState::CREATED;
   insertTx.creationTime = static_cast<uint64_t>(time(nullptr));
   insertTx.unlockTime = unlockTimestamp;
   insertTx.blockHeight = CryptoNote::BlockHeight::Null;
-  insertTx.extra.assign(reinterpret_cast<const char*>(extra.data()), extra.size());
+  insertTx.extra = extra;
   insertTx.fee = fee;
   insertTx.hash = transactionHash;
   insertTx.totalAmount = 0;  // 0 until transactionHandlingEnd() is called
@@ -2007,49 +2008,41 @@ bool WalletGreen::updateWalletTransactionInfo(size_t transactionId, const Crypto
   auto it = std::next(txIdIndex.begin(), transactionId);
 
   bool updated = false;
-  bool r = txIdIndex.modify(it, [this, transactionId, &info, totalAmount, &updated](WalletTransaction& transaction) {
-    if (transaction.blockHeight != info.blockHeight) {
-      transaction.blockHeight = info.blockHeight;
-      updated = true;
-    }
+  [[maybe_unused]] bool r =
+      txIdIndex.modify(it, [this, transactionId, &info, totalAmount, &updated](WalletTransaction& transaction) {
+        if (transaction.blockHeight != info.blockHeight) {
+          transaction.blockHeight = info.blockHeight;
+          updated = true;
+        }
 
-    if (transaction.timestamp != info.timestamp) {
-      transaction.timestamp = info.timestamp;
-      updated = true;
-    }
+        if (transaction.timestamp != info.timestamp) {
+          transaction.timestamp = info.timestamp;
+          updated = true;
+        }
 
-    bool isSucceeded = transaction.state == WalletTransactionState::SUCCEEDED;
-    // If transaction was sent to daemon, it can not have CREATED and FAILED states, its state can be SUCCEEDED,
-    // CANCELLED or DELETED
-    bool wasSent =
-        transaction.state != WalletTransactionState::CREATED && transaction.state != WalletTransactionState::FAILED;
-    bool isConfirmed = transaction.blockHeight != BlockHeight::Null;
-    if (!isSucceeded && (wasSent || isConfirmed)) {
-      // transaction may be deleted first then added again
-      transaction.state = WalletTransactionState::SUCCEEDED;
-      updated = true;
-    }
+        bool isSucceeded = transaction.state == WalletTransactionState::SUCCEEDED;
+        // If transaction was sent to daemon, it can not have CREATED and FAILED states, its state can be SUCCEEDED,
+        // CANCELLED or DELETED
+        bool wasSent =
+            transaction.state != WalletTransactionState::CREATED && transaction.state != WalletTransactionState::FAILED;
+        bool isConfirmed = transaction.blockHeight != BlockHeight::Null;
+        if (!isSucceeded && (wasSent || isConfirmed)) {
+          // transaction may be deleted first then added again
+          transaction.state = WalletTransactionState::SUCCEEDED;
+          updated = true;
+        }
 
-    if (transaction.totalAmount != totalAmount) {
-      transaction.totalAmount = totalAmount;
-      updated = true;
-    }
+        if (transaction.totalAmount != totalAmount) {
+          transaction.totalAmount = totalAmount;
+          updated = true;
+        }
 
-    // Fix LegacyWallet error. Some old versions didn't fill extra field
-    if (transaction.extra.empty() && !info.extra.empty()) {
-      transaction.extra = Common::asString(info.extra);
-      updated = true;
-    }
-
-    bool isBase = info.totalAmountIn == 0;
-    if (transaction.isBase != isBase) {
-      transaction.isBase = isBase;
-      updated = true;
-    }
-  });
-
-  if (r) {
-  }
+        bool isBase = info.totalAmountIn == 0;
+        if (transaction.isBase != isBase) {
+          transaction.isBase = isBase;
+          updated = true;
+        }
+      });
   assert(r);
 
   if (updated) {
@@ -2076,7 +2069,7 @@ size_t WalletGreen::insertBlockchainTransaction(const TransactionInformation& in
   }
 
   tx.unlockTime = info.unlockTime;
-  tx.extra.assign(reinterpret_cast<const char*>(info.extra.data()), info.extra.size());
+  tx.extra = info.extra;
   tx.totalAmount = txBalance;
   tx.creationTime = info.timestamp;
 
@@ -2302,8 +2295,8 @@ bool WalletGreen::eraseForeignTransfers(size_t transactionId, size_t firstTransf
 }
 
 std::unique_ptr<CryptoNote::ITransactionBuilder> WalletGreen::makeTransaction(
-    const std::vector<ReceiverAmounts>& decomposedOutputs, std::vector<InputInfo>& keysInfo, const std::string& extra,
-    uint64_t unlockTimestamp) {
+    const std::vector<ReceiverAmounts>& decomposedOutputs, std::vector<InputInfo>& keysInfo,
+    const CryptoNote::TransactionExtra& extra, uint64_t unlockTimestamp) {
   std::unique_ptr<ITransactionBuilder> tx = createTransaction();
 
   typedef std::pair<const AccountPublicAddress*, uint64_t> AmountToAddress;
@@ -2324,7 +2317,7 @@ std::unique_ptr<CryptoNote::ITransactionBuilder> WalletGreen::makeTransaction(
   }
 
   tx->setUnlockTime(unlockTimestamp);
-  tx->appendExtra(Common::asBinaryArray(extra));
+  tx->applyExtra(extra);
 
   for (auto& input : keysInfo) {
     tx->addInput(makeAccountKeys(*input.walletRecord), input.keyInfo, input.ephKeys);
@@ -2990,9 +2983,9 @@ void WalletGreen::transactionUpdated(const TransactionInformation& transactionIn
                       << transactionInfo.blockHeight.native() << ", totalAmountIn "
                       << m_currency.amountFormatter()(transactionInfo.totalAmountIn) << ", totalAmountOut "
                       << m_currency.amountFormatter()(transactionInfo.totalAmountOut)
-                      << (transactionInfo.paymentId.has_value()
+                      << (transactionInfo.extra.paymentId.has_value()
                               ? ", paymentId NONE"
-                              : ", paymentId " + transactionInfo.paymentId->toString());
+                              : ", paymentId " + transactionInfo.extra.paymentId->toString());
 
   if (m_state == WalletState::NOT_INITIALIZED) {
     return;
@@ -3413,7 +3406,8 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, const std::vecto
     ReceiverAmounts decomposedOutputs = decomposeFusionOutputs(destination, inputsAmount);
     assert(decomposedOutputs.amounts.size() <= fusionRatio);
 
-    fusionTransaction = makeTransaction(std::vector<ReceiverAmounts>{decomposedOutputs}, keysInfo, "", 0);
+    fusionTransaction = makeTransaction(std::vector<ReceiverAmounts>{decomposedOutputs}, keysInfo,
+                                        CryptoNote::TransactionExtra::Null, 0);
 
     transactionSize = getTransactionSize(*fusionTransaction);
 

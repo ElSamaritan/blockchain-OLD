@@ -71,7 +71,7 @@ struct WalletTransaction {
   uint64_t fee;
   uint64_t creationTime;
   uint64_t unlockTime;
-  std::string extra;
+  TransactionExtra extra;
   bool isBase;
 };
 
@@ -98,7 +98,7 @@ struct TransactionParameters {
   std::vector<WalletOrder> destinations;
   uint64_t fee = 0;
   uint16_t mixIn = 0;
-  std::string extra;
+  TransactionExtra extra{};
   uint64_t unlockTimestamp = 0;
   DonationSettings donation;
   std::string changeDestination;

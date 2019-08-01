@@ -12,9 +12,6 @@ MaximumFee: 2000
 MinimumAmount: 999
 MaximumAmount: 1000
 
-MinAnonymity: 0
-MaxAnonymity: 0
-
 MinFusionThreshold: 1000
 MaxFusionThreshold: 100000
 FusionPropability: 10

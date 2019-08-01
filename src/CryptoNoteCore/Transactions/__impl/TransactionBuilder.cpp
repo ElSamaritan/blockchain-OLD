@@ -26,9 +26,11 @@
 #include <algorithm>
 #include <numeric>
 
+#include <Xi/Exceptions.hpp>
 #include <Xi/Config/Transaction.h>
 
 #include "CryptoNoteCore/CryptoNoteTools.h"
+#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/Transactions/TransactionUtils.h"
 
 using namespace Crypto;
@@ -51,14 +53,11 @@ namespace CryptoNote {
 TransactionBuilder::TransactionBuilder() {
   CryptoNote::KeyPair txKeys(CryptoNote::generateKeyPair());
 
-  TransactionExtraPublicKey pk = {txKeys.publicKey};
-  extra.set(pk);
-
   transaction.version = 1;
   transaction.unlockTime = 0;
-  transaction.extra = extra.serialize();
   transaction.signatures = TransactionSignatureCollection{};
 
+  setTransactionPublicKeyToExtra(transaction.extra, txKeys.publicKey);
   secretKey = txKeys.secretKey;
 }
 
@@ -66,12 +65,10 @@ TransactionBuilder::TransactionBuilder(const BinaryArray& ba) {
   if (!fromBinaryArray(transaction, ba)) {
     throw std::runtime_error("Invalid transaction data");
   }
-
-  extra.parse(transaction.extra);
 }
 
 TransactionBuilder::TransactionBuilder(const CryptoNote::Transaction& tx) : transaction(tx) {
-  extra.parse(transaction.extra);
+  /* */
 }
 
 void TransactionBuilder::invalidateHash() {
@@ -99,9 +96,7 @@ Hash TransactionBuilder::getTransactionPrefixHash() const {
 }
 
 PublicKey TransactionBuilder::getTransactionPublicKey() const {
-  PublicKey pk(PublicKey::Null);
-  extra.getPublicKey(pk);
-  return pk;
+  return getTransactionPublicKeyFromExtra(transaction.extra);
 }
 
 uint64_t TransactionBuilder::getUnlockTime() const {
@@ -123,17 +118,10 @@ bool TransactionBuilder::getTransactionSecretKey(SecretKey& key) const {
 }
 
 void TransactionBuilder::setTransactionSecretKey(const SecretKey& key) {
-  const auto& sk = reinterpret_cast<const SecretKey&>(key);
-  PublicKey pk;
-  PublicKey txPubKey;
+  checkIfSigning();
+  Xi::exceptional_if_not<Xi::InvalidArgumentError>(key.isValid(), "invalid transaction secret key: {}", key.toString());
 
-  secret_key_to_public_key(sk, pk);
-  extra.getPublicKey(txPubKey);
-
-  if (txPubKey != pk) {
-    throw std::runtime_error("Secret transaction key does not match public key");
-  }
-
+  setTransactionPublicKeyToExtra(transaction.extra, key.toPublicKey());
   secretKey = key;
 }
 
@@ -257,47 +245,24 @@ void TransactionBuilder::setPaymentId(const PaymentId& pid) {
   if (!pid.isValid()) {
     throw std::runtime_error{"invalid payment id"};
   }
-  BinaryArray paymentIdBlob;
-  setPaymentIdToTransactionExtraNonce(paymentIdBlob, pid);
-  setExtraNonce(paymentIdBlob);
+  setPaymentIdToTransactionExtraNonce(transaction.extra, pid);
 }
 
 bool TransactionBuilder::getPaymentId(PaymentId& pid) const {
-  BinaryArray nonce;
-  if (getExtraNonce(nonce)) {
-    PaymentId paymentId;
-    if (getPaymentIdFromTransactionExtraNonce(nonce, paymentId)) {
-      pid = paymentId;
-      return true;
-    }
-  }
-  return false;
+  return getPaymentIdFromTransactionExtraNonce(transaction.extra, pid);
 }
 
-void TransactionBuilder::setExtraNonce(const BinaryArray& nonce) {
-  checkIfSigning();
-  TransactionExtraNonce extraNonce = {nonce};
-  extra.set(extraNonce);
-  transaction.extra = extra.serialize();
-  invalidateHash();
-}
-
-void TransactionBuilder::appendExtra(const BinaryArray& extraData) {
-  checkIfSigning();
-  transaction.extra.insert(transaction.extra.end(), extraData.begin(), extraData.end());
-}
-
-bool TransactionBuilder::getExtraNonce(BinaryArray& nonce) const {
-  TransactionExtraNonce extraNonce;
-  if (extra.get(extraNonce)) {
-    nonce = extraNonce.nonce;
-    return true;
-  }
-  return false;
-}
-
-BinaryArray TransactionBuilder::getExtra() const {
+const TransactionExtra& TransactionBuilder::getExtra() const {
   return transaction.extra;
+}
+
+void TransactionBuilder::applyExtra(const TransactionExtra& extra) {
+  if (extra.publicKey) {
+    throw std::runtime_error{"extra public key cannot be applied, use setSecretKey"};
+  }
+  if (extra.paymentId) {
+    setPaymentId(*extra.paymentId);
+  }
 }
 
 size_t TransactionBuilder::getInputCount() const {

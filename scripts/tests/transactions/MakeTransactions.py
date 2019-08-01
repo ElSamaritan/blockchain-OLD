@@ -17,13 +17,12 @@ class Transfer:
 
 class Transaction:
     Transfers = []
-    Anonymity = 0
     Fee = 0
     UnlockTime = 0
 
     def __str__(self):
-        _str = "\n\tFee: %.6f\n\tAnonymity: %d\n\tTransfers:" % (
-            prettyAmount(self.Fee), self.Anonymity)
+        _str = "\n\tFee: %.6f\n\tTransfers:" % (
+            prettyAmount(self.Fee))
         for transfer in self.Transfers:
             _str += ("\n\t\t%s" % transfer)
         return _str
@@ -31,10 +30,9 @@ class Transaction:
 
 class FusionTransaction:
     Threshold = 10000000000000000
-    Anonymity = 0
 
     def __str__(self):
-        return "\n\tDustThreshold: %.6f\n\tAnonymity: %d\n" % (prettyAmount(self.Threshold), self.Anonymity)
+        return "\n\tDustThreshold: %.6f\n" % (prettyAmount(self.Threshold))
 
 
 class Balance:
@@ -78,15 +76,13 @@ class PGService:
             })
         return self.makeCall("sendTransaction", {
             'transfers': transfers,
-            'anonymity': transaction.Anonymity,
             'fee': transaction.Fee,
             'unlock_time': transaction.UnlockTime
         })
 
     def sendFusionTransaction(self, transaction: FusionTransaction):
         return self.makeCall("sendFusionTransaction", {
-            'threshold': transaction.Threshold,
-            'anonymity': transaction.Anonymity
+            'threshold': transaction.Threshold
         })
 
     def makeCall(self, method, params={}):
@@ -169,8 +165,6 @@ MinFee = config['MinimumFee']
 MaxFee = config['MaximumFee']
 MinAmount = config['MinimumAmount']
 MaxAmount = config['MaximumAmount']
-MinMixin = config['MinAnonymity']
-MaxMixin = config['MaxAnonymity']
 MinFusionThreshold = config['MinFusionThreshold']
 MaxFusionThreshold = config['MaxFusionThreshold']
 FusionPropability = config['FusionPropability']
@@ -200,7 +194,6 @@ def makeRandomTransaction():
     recievers.append(sortedWallets[recieverIndex].Address)
 
     transaction.Fee = randint(MinFee, MaxFee)
-    transaction.Anonymity = randint(MinMixin, MaxMixin)
 
     totalAmount = transaction.Fee
     for reciever in recievers:
@@ -224,7 +217,6 @@ def makeRandomFusionTransaction():
     transaction = FusionTransaction()
     wallet = wallets[randint(0, len(wallets) - 1)]
     transaction.Threshold = randint(MinFusionThreshold, MaxFusionThreshold)
-    transaction.Anonymity = randint(MinMixin, MaxMixin)
     try:
         wallet.sendFusionTransaction(transaction)
     except ValueError as error:

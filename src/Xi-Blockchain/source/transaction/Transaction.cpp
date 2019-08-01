@@ -98,7 +98,7 @@ void Transaction::nullify() {
   unlockTime = 0;
   inputs.clear();
   outputs.clear();
-  extra.clear();
+  extra.nullify();
   signatures = SignatureVector{};
 }
 
@@ -126,7 +126,7 @@ bool Transaction::serialize(CryptoNote::ISerializer& serializer) {
     } else {
       assert(serializer.isOutput());
       XI_RETURN_EC_IF_NOT(unlockTime == 0, false);
-      XI_RETURN_EC_IF_NOT(extra.empty(), false);
+      XI_RETURN_EC_IF_NOT(extra.isNull(), false);
       XI_RETURN_EC_IF(signatures.has_value(), false);
       XI_RETURN_EC_IF_NOT(inputs.empty(), false);
       XI_RETURN_EC_IF_NOT(outputs.empty(), false);

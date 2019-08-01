@@ -190,7 +190,6 @@ bool TransactionRpcInfo::serialize(CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(fee, "fee"), false);
   XI_RETURN_EC_IF_NOT(serializer(transfers, "transfers"), false);
   XI_RETURN_EC_IF_NOT(serializer(extra, "extra"), false);
-  XI_RETURN_EC_IF_NOT(serializer(paymentId, "payment_id"), false);
   return true;
 }
 
@@ -238,8 +237,6 @@ bool SendTransaction::Request::serialize(CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(transfers, "transfers"), false);
   XI_RETURN_EC_IF_NOT(serializer(changeAddress, "change_address"), false);
   XI_RETURN_EC_IF_NOT(serializer(fee, "fee"), false);
-  XI_RETURN_EC_IF_NOT(serializer(anonymity, "anonymity"), false);
-  XI_RETURN_EC_IF_NOT(serializer(extra, "extra"), false);
   XI_RETURN_EC_IF_NOT(serializer(paymentId, "payment_id"), false);
   XI_RETURN_EC_IF_NOT(serializer(unlockTime, "unlock_time"), false);
   return true;
@@ -254,8 +251,6 @@ bool CreateDelayedTransaction::Request::serialize(CryptoNote::ISerializer& seria
   XI_RETURN_EC_IF_NOT(serializer(transfers, "transfers"), false);
   XI_RETURN_EC_IF_NOT(serializer(changeAddress, "change_address"), false);
   XI_RETURN_EC_IF_NOT(serializer(fee, "fee"), false);
-  XI_RETURN_EC_IF_NOT(serializer(anonymity, "anonymity"), false);
-  XI_RETURN_EC_IF_NOT(serializer(extra, "extra"), false);
   XI_RETURN_EC_IF_NOT(serializer(paymentId, "payment_id"), false);
   XI_RETURN_EC_IF_NOT(serializer(unlockTime, "unlock_time"), false);
   return true;
@@ -294,7 +289,6 @@ bool SendDelayedTransaction::Response::serialize(CryptoNote::ISerializer& serial
 
 bool SendFusionTransaction::Request::serialize(CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(threshold, "threshold"), false);
-  XI_RETURN_EC_IF_NOT(serializer(anonymity, "anonymity"), false);
   XI_RETURN_EC_IF_NOT(serializer(addresses, "addresses"), false);
   XI_RETURN_EC_IF_NOT(serializer(destinationAddress, "destination_address"), false);
   return true;

@@ -226,7 +226,7 @@ struct GetTransactionHashes {
     CryptoNote::BlockHeight firstBlockHeight = CryptoNote::BlockHeight::Null;
     std::string blockHash;
     uint32_t blockCount;
-    std::string paymentId;
+    std::optional<CryptoNote::PaymentId> paymentId;
 
     bool serialize(CryptoNote::ISerializer& serializer);
   };
@@ -256,8 +256,7 @@ struct TransactionRpcInfo {
   int64_t amount;
   uint64_t fee;
   std::vector<TransferRpcInfo> transfers;
-  std::string extra;
-  std::string paymentId;
+  CryptoNote::TransactionExtra extra;
 
   bool serialize(CryptoNote::ISerializer& serializer);
 };
@@ -289,7 +288,7 @@ struct GetTransactions {
     std::string blockHash;
     CryptoNote::BlockHeight firstBlockHeight = CryptoNote::BlockHeight::Null;
     uint32_t blockCount;
-    std::string paymentId;
+    std::optional<CryptoNote::PaymentId> paymentId;
 
     bool serialize(CryptoNote::ISerializer& serializer);
   };
@@ -328,9 +327,7 @@ struct SendTransaction {
     std::vector<WalletRpcOrder> transfers;
     std::optional<std::string> changeAddress;
     std::optional<uint64_t> fee = 0;
-    std::optional<uint16_t> anonymity;
-    std::optional<std::string> extra;
-    std::optional<std::string> paymentId;
+    std::optional<CryptoNote::PaymentId> paymentId;
     std::optional<uint64_t> unlockTime = 0;
 
     bool serialize(CryptoNote::ISerializer& serializer);
@@ -349,9 +346,7 @@ struct CreateDelayedTransaction {
     std::vector<WalletRpcOrder> transfers;
     std::optional<std::string> changeAddress;
     uint64_t fee = 0;
-    uint16_t anonymity;
-    std::string extra;
-    std::string paymentId;
+    std::optional<CryptoNote::PaymentId> paymentId;
     uint64_t unlockTime = 0;
 
     bool serialize(CryptoNote::ISerializer& serializer);
@@ -403,7 +398,6 @@ struct SendDelayedTransaction {
 struct SendFusionTransaction {
   struct Request {
     uint64_t threshold;
-    std::optional<uint16_t> anonymity;
     std::vector<std::string> addresses;
     std::optional<std::string> destinationAddress;
 
@@ -436,7 +430,7 @@ struct EstimateFusion {
 struct CreateIntegratedAddress {
   struct Request {
     std::string address;
-    std::string paymentId;
+    CryptoNote::PaymentId paymentId;
 
     bool serialize(CryptoNote::ISerializer& serializer);
   };

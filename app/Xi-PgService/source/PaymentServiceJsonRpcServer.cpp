@@ -338,7 +338,7 @@ std::error_code PaymentServiceJsonRpcServer::handleEstimateFusion(const Estimate
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateIntegratedAddress(
     const CreateIntegratedAddress::Request& request, CreateIntegratedAddress::Response& response) {
-  return service.createIntegratedAddress(request.address, request.paymentId, response.integratedAddress);
+  return service.createIntegratedAddress(request.address, request.paymentId.toString(), response.integratedAddress);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleNodeFeeInfo(const NodeFeeInfo::Request& request,

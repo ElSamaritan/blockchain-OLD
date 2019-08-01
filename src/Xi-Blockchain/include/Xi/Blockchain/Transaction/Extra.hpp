@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -23,53 +23,38 @@
 
 #pragma once
 
-#include <cinttypes>
-#include <string>
+#include <optional>
 
+#include <Xi/Global.hh>
+#include <Xi/Crypto/PublicKey.hpp>
 #include <Serialization/ISerializer.h>
-#include <CryptoNoteCore/CryptoNote.h>
 
-namespace CryptoNote {
-namespace RpcCommands {
+#include "Xi/Blockchain/Transaction/ExtraFeature.hpp"
+#include "Xi/Blockchain/Transaction/PaymentId.hpp"
 
-struct GetBlockTemplate {
-  static inline std::string identifier() {
-    static const std::string __Identifier{"get_block_template"};
-    return __Identifier;
-  }
+namespace Xi {
+namespace Blockchain {
+namespace Transaction {
 
-  struct request {
-    std::string wallet_address;
+struct Extra {
+  static const Extra Null;
 
-    KV_BEGIN_SERIALIZATION
-    KV_MEMBER(wallet_address)
-    KV_END_SERIALIZATION
-  };
+  ExtraFeature features{ExtraFeature::None};
+  std::optional<Crypto::PublicKey> publicKey{std::nullopt};
+  std::optional<PaymentId> paymentId{std::nullopt};
 
-  struct response {
-    uint64_t difficulty;
-    BlockHeight height;
-    uint32_t reserved_offset;
-    std::string blocktemplate_blob;
-    std::string proof_of_work_algorithm;
-    std::string status;
+  explicit Extra();
 
-    /*!
-     * \brief template_state Hash unique to a previous call, iff a new requested block template would not change.
-     */
-    std::string template_state;
+  void nullify();
+  bool isNull() const;
 
-    KV_BEGIN_SERIALIZATION
-    KV_MEMBER(difficulty)
-    KV_MEMBER(height)
-    KV_MEMBER(reserved_offset)
-    KV_MEMBER(blocktemplate_blob)
-    KV_MEMBER(proof_of_work_algorithm)
-    KV_MEMBER(status)
-    KV_MEMBER(template_state)
-    KV_END_SERIALIZATION
-  };
+  bool serialize(CryptoNote::ISerializer& serializer);
 };
 
-}  // namespace RpcCommands
+}  // namespace Transaction
+}  // namespace Blockchain
+}  // namespace Xi
+
+namespace CryptoNote {
+using TransactionExtra = Xi::Blockchain::Transaction::Extra;
 }  // namespace CryptoNote

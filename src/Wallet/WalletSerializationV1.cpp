@@ -70,7 +70,7 @@ struct WalletTransactionDto {
   uint64_t fee;
   uint64_t creationTime;
   uint64_t unlockTime;
-  std::string extra;
+  CryptoNote::TransactionExtra extra;
 
   WalletTransactionDto() {
   }

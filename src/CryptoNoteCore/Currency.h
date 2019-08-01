@@ -114,7 +114,7 @@ class Currency {
 
   bool constructMinerTx(BlockVersion blockVersion, uint32_t height, size_t medianSize, uint64_t alreadyGeneratedCoins,
                         size_t currentBlockSize, uint64_t fee, const AccountPublicAddress& minerAddress,
-                        Transaction& tx, const BinaryArray& extraNonce, size_t maxOuts) const;
+                        Transaction& tx, size_t maxOuts) const;
 
   // -------------------------------------------- Static Reward -------------------------------------------------------
   bool isStaticRewardEnabledForBlockVersion(BlockVersion blockVersion) const;

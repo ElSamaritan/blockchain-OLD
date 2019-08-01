@@ -261,7 +261,8 @@ class WalletGreen : public IWallet,
   bool isFusionTransaction(const WalletTransaction& walletTx) const;
 
   void prepareTransaction(std::vector<WalletOuts>&& wallets, const std::vector<WalletOrder>& orders, uint64_t fee,
-                          const std::string& extra, uint64_t unlockTimestamp, const DonationSettings& donation,
+                          const CryptoNote::TransactionExtra& extra, uint64_t unlockTimestamp,
+                          const DonationSettings& donation,
                           const CryptoNote::AccountPublicAddress& changeDestinationAddress,
                           PreparedTransaction& preparedTransaction);
 
@@ -299,8 +300,8 @@ class WalletGreen : public IWallet,
   ReceiverAmounts splitAmount(uint64_t amount, const AccountPublicAddress& destination);
 
   std::unique_ptr<CryptoNote::ITransactionBuilder> makeTransaction(
-      const std::vector<ReceiverAmounts>& decomposedOutputs, std::vector<InputInfo>& keysInfo, const std::string& extra,
-      uint64_t unlockTimestamp);
+      const std::vector<ReceiverAmounts>& decomposedOutputs, std::vector<InputInfo>& keysInfo,
+      const TransactionExtra& extra, uint64_t unlockTimestamp);
 
   void sendTransaction(const CryptoNote::Transaction& cryptoNoteTransaction);
   size_t validateSaveAndSendTransaction(const ITransactionReader& transaction,
@@ -308,7 +309,7 @@ class WalletGreen : public IWallet,
 
   size_t insertBlockchainTransaction(const TransactionInformation& info, int64_t txBalance);
   size_t insertOutgoingTransactionAndPushEvent(const Crypto::Hash& transactionHash, uint64_t fee,
-                                               const BinaryArray& extra, uint64_t unlockTimestamp);
+                                               const TransactionExtra& extra, uint64_t unlockTimestamp);
   void updateTransactionStateAndPushEvent(size_t transactionId, WalletTransactionState state);
   bool updateWalletTransactionInfo(size_t transactionId, const CryptoNote::TransactionInformation& info,
                                    int64_t totalAmount);

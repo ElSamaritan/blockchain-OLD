@@ -373,10 +373,9 @@ void printOutgoingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
             << WarningMsg("    Fee           " + node.currency().amountFormatter()(t.fee)) << std::endl
             << WarningMsg("    Total Spent   " + node.currency().amountFormatter()(absTotalAmount)) << std::endl;
 
-  const std::string paymentID = getPaymentIDFromExtra(t.extra);
-
-  if (paymentID != "") {
-    std::cout << WarningMsg("    Payment ID    " + paymentID) << std::endl;
+  CryptoNote::PaymentId paymentId{};
+  if (CryptoNote::getPaymentIdFromTxExtra(t.extra, paymentId)) {
+    std::cout << WarningMsg("    Payment ID    " + paymentId.toString()) << std::endl;
   }
 
   std::cout << std::endl;
@@ -398,10 +397,9 @@ void printIncomingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
 
   std::cout << SuccessMsg("    Amount        " + node.currency().amountFormatter()(absTotalAmount)) << std::endl;
 
-  const std::string paymentID = getPaymentIDFromExtra(t.extra);
-
-  if (paymentID != "") {
-    std::cout << SuccessMsg("    Payment ID    " + paymentID) << std::endl;
+  CryptoNote::PaymentId paymentId{};
+  if (CryptoNote::getPaymentIdFromTxExtra(t.extra, paymentId)) {
+    std::cout << SuccessMsg("    Payment ID    " + paymentId.toString()) << std::endl;
   }
 
   std::cout << std::endl;
@@ -472,7 +470,7 @@ void createIntegratedAddress(const CryptoNote::Currency &currency) {
     std::getline(std::cin, paymentID);
     trim(paymentID);
 
-    std::vector<uint8_t> extra;
+    CryptoNote::TransactionExtra extra{};
 
     std::cout << std::endl;
 

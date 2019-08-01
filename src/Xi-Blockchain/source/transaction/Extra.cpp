@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -21,55 +21,36 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/Blockchain/Transaction/Extra.hpp"
 
-#include <cinttypes>
-#include <string>
+namespace Xi {
+namespace Blockchain {
+namespace Transaction {
 
-#include <Serialization/ISerializer.h>
-#include <CryptoNoteCore/CryptoNote.h>
+const Extra Extra::Null{};
 
-namespace CryptoNote {
-namespace RpcCommands {
+Extra::Extra() {
+  nullify();
+}
 
-struct GetBlockTemplate {
-  static inline std::string identifier() {
-    static const std::string __Identifier{"get_block_template"};
-    return __Identifier;
-  }
+void Extra::nullify() {
+  features = ExtraFeature::None;
+  publicKey = std::nullopt;
+  paymentId = std::nullopt;
+}
 
-  struct request {
-    std::string wallet_address;
+bool Extra::isNull() const {
+  XI_RETURN_SC_IF_NOT(features == ExtraFeature::None, false);
+  XI_RETURN_SC_IF_NOT(publicKey, false);
+  XI_RETURN_SC_IF_NOT(paymentId, false);
+  XI_RETURN_SC(true);
+}
 
-    KV_BEGIN_SERIALIZATION
-    KV_MEMBER(wallet_address)
-    KV_END_SERIALIZATION
-  };
+bool Extra::serialize(CryptoNote::ISerializer &serializer) {
+  XI_UNUSED(serializer);
+  return false;
+}
 
-  struct response {
-    uint64_t difficulty;
-    BlockHeight height;
-    uint32_t reserved_offset;
-    std::string blocktemplate_blob;
-    std::string proof_of_work_algorithm;
-    std::string status;
-
-    /*!
-     * \brief template_state Hash unique to a previous call, iff a new requested block template would not change.
-     */
-    std::string template_state;
-
-    KV_BEGIN_SERIALIZATION
-    KV_MEMBER(difficulty)
-    KV_MEMBER(height)
-    KV_MEMBER(reserved_offset)
-    KV_MEMBER(blocktemplate_blob)
-    KV_MEMBER(proof_of_work_algorithm)
-    KV_MEMBER(status)
-    KV_MEMBER(template_state)
-    KV_END_SERIALIZATION
-  };
-};
-
-}  // namespace RpcCommands
-}  // namespace CryptoNote
+}  // namespace Transaction
+}  // namespace Blockchain
+}  // namespace Xi

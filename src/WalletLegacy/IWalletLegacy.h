@@ -61,7 +61,7 @@ struct WalletLegacyTransaction {
   bool isCoinbase;
   BlockHeight blockHeight;
   uint64_t timestamp;
-  std::string extra;
+  TransactionExtra extra;
   WalletLegacyTransactionState state;
 };
 

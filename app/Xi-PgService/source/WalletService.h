@@ -79,16 +79,16 @@ class WalletService {
   std::error_code getViewKey(std::string& viewSecretKey);
   std::error_code getMnemonicSeed(const std::string& address, std::string& mnemonicSeed);
   std::error_code getTransactionHashes(const std::vector<std::string>& addresses, const std::string& blockHash,
-                                       uint32_t blockCount, const std::string& paymentId,
+                                       uint32_t blockCount, const std::optional<CryptoNote::PaymentId>& paymentId,
                                        std::vector<TransactionHashesInBlockRpcInfo>& transactionHashes);
   std::error_code getTransactionHashes(const std::vector<std::string>& addresses, BlockHeight firstBlockHeight,
-                                       uint32_t blockCount, const std::string& paymentId,
+                                       uint32_t blockCount, const std::optional<CryptoNote::PaymentId>& paymentId,
                                        std::vector<TransactionHashesInBlockRpcInfo>& transactionHashes);
   std::error_code getTransactions(const std::vector<std::string>& addresses, const std::string& blockHash,
-                                  uint32_t blockCount, const std::string& paymentId,
+                                  uint32_t blockCount, const std::optional<CryptoNote::PaymentId>& paymentId,
                                   std::vector<TransactionsInBlockRpcInfo>& transactionHashes);
   std::error_code getTransactions(const std::vector<std::string>& addresses, BlockHeight firstBlockHeight,
-                                  uint32_t blockCount, const std::string& paymentId,
+                                  uint32_t blockCount, const std::optional<CryptoNote::PaymentId>& paymentId,
                                   std::vector<TransactionsInBlockRpcInfo>& transactionHashes);
   std::error_code getTransaction(const std::string& transactionHash, TransactionRpcInfo& transaction);
   std::error_code getAddresses(std::vector<std::string>& addresses);

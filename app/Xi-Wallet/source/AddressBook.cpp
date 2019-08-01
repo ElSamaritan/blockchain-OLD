@@ -44,7 +44,7 @@ const std::string getAddressBookName(AddressBook addressBook) {
   }
 }
 
-const Maybe<std::string> getAddressBookPaymentID() {
+const Maybe<CryptoNote::TransactionExtra> getAddressBookPaymentID() {
   std::stringstream msg;
 
   msg << std::endl << "Does this address book entry have a payment ID associated with it?" << std::endl;
@@ -76,7 +76,7 @@ void addToAddressBook(const CryptoNote::Currency& currency) {
   }
 
   std::string address = maybeAddress.x.second;
-  std::string paymentID = "";
+  std::optional<CryptoNote::PaymentId> paymentID = std::nullopt;
 
   bool integratedAddress = maybeAddress.x.first == IntegratedAddress;
 
@@ -89,10 +89,10 @@ void addToAddressBook(const CryptoNote::Currency& currency) {
       return;
     }
 
-    paymentID = maybePaymentID.x;
+    paymentID = maybePaymentID.x.paymentId;
   }
 
-  addressBook.emplace_back(friendlyName, address, paymentID, integratedAddress);
+  addressBook.emplace_back(friendlyName, address, paymentID ? paymentID->toString() : "", integratedAddress);
 
   if (saveAddressBook(addressBook)) {
     std::cout << std::endl

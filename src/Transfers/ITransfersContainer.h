@@ -40,8 +40,7 @@ struct TransactionInformation {
   uint64_t unlockTime;
   uint64_t totalAmountIn;
   uint64_t totalAmountOut;
-  std::vector<uint8_t> extra;
-  std::optional<PaymentId> paymentId;
+  TransactionExtra extra;
 };
 
 struct TransactionOutputInformation {

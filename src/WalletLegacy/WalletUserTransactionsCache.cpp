@@ -70,7 +70,8 @@ size_t WalletUserTransactionsCache::getTransferCount() const {
   return m_transfers.size();
 }
 
-TransactionId WalletUserTransactionsCache::addNewTransaction(uint64_t amount, uint64_t fee, const std::string& extra,
+TransactionId WalletUserTransactionsCache::addNewTransaction(uint64_t amount, uint64_t fee,
+                                                             const TransactionExtra& extra,
                                                              const std::vector<WalletLegacyTransfer>& transfers,
                                                              uint64_t unlockTime) {
   WalletLegacyTransaction transaction;
@@ -95,7 +96,7 @@ void WalletUserTransactionsCache::updateTransaction(TransactionId transactionId,
                                                     const std::list<TransactionOutputInformation>& usedOutputs) {
   // update extra field from created transaction
   auto& txInfo = m_transactions.at(transactionId);
-  txInfo.extra.assign(tx.extra.begin(), tx.extra.end());
+  txInfo.extra = tx.extra;
   m_unconfirmedTransactions.add(tx, transactionId, amount, usedOutputs);
 }
 
@@ -136,7 +137,7 @@ std::shared_ptr<WalletLegacyEvent> WalletUserTransactionsCache::onTransactionUpd
     transaction.blockHeight = txInfo.blockHeight;
     transaction.isCoinbase = isCoinbase;
     transaction.timestamp = txInfo.timestamp;
-    transaction.extra.assign(txInfo.extra.begin(), txInfo.extra.end());
+    transaction.extra = txInfo.extra;
     transaction.state = WalletLegacyTransactionState::Active;
     transaction.unlockTime = txInfo.unlockTime;
 

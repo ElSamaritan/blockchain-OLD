@@ -34,16 +34,9 @@
 
 namespace CryptoNote {
 
-error::TransactionValidationError validateExtra(const Transaction& tx);
-
-bool validateExtraSize(const Transaction& tx);
-bool validateExtraCumulativePadding(const std::vector<TransactionExtraField>& fields);
-
-bool validateExtraPublicKeys(const std::vector<TransactionExtraField>& fields);
-bool validateExtraPublicKeys(const TransactionExtraPublicKey& pk);
-
-bool validateExtraNonce(const std::vector<TransactionExtraField>& fields);
-bool validateExtraNonce(const TransactionExtraNonce& nonce);
+error::TransactionValidationError validateExtra(const Transaction& tx, TransactionExtraFeature exact);
+error::TransactionValidationError validateExtra(const Transaction& tx, TransactionExtraFeature required,
+                                                TransactionExtraFeature allowed);
 
 bool validateCanonicalDecomposition(const Transaction& tx);
 

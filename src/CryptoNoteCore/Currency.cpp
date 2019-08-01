@@ -385,18 +385,13 @@ bool Currency::getBlockReward(BlockVersion blockVersion, size_t medianSize, size
 bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_t medianSize,
                                 uint64_t alreadyGeneratedCoins, size_t currentBlockSize, uint64_t fee,
                                 const AccountPublicAddress& minerAddress, Transaction& tx,
-                                const BinaryArray& extraNonce /* = BinaryArray()*/, size_t maxOuts /* = 1*/) const {
+                                size_t maxOuts /* = 1*/) const {
   tx.inputs.clear();
   tx.outputs.clear();
-  tx.extra.clear();
+  tx.extra.nullify();
 
   KeyPair txkey = generateKeyPair();
   addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
-  if (!extraNonce.empty()) {
-    if (!addExtraNonceToTransactionExtra(tx.extra, extraNonce)) {
-      return false;
-    }
-  }
 
   BaseInput in;
   in.height = BlockHeight::fromIndex(index);
@@ -801,7 +796,7 @@ Currency CurrencyBuilder::currency() {
 Transaction CurrencyBuilder::generateGenesisTransaction() const {
   CryptoNote::Transaction tx;
   CryptoNote::AccountPublicAddress ac = boost::value_initialized<CryptoNote::AccountPublicAddress>();
-  m_currency.constructMinerTx(BlockVersion::Genesis, 0, 0, 0, 0, 0, ac, tx, BinaryArray{}, 20);  // zero fee in genesis
+  m_currency.constructMinerTx(BlockVersion::Genesis, 0, 0, 0, 0, 0, ac, tx, 20);  // zero fee in genesis
   return tx;
 }
 Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<AccountPublicAddress>& targets) const {

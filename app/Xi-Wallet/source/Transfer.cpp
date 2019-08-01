@@ -101,12 +101,13 @@ bool confirmTransaction(CryptoNote::TransactionParameters t, std::shared_ptr<Wal
             << std::endl
             << "and a node fee of " << SuccessMsg(walletInfo->currency().amountFormatter()(nodeFee));
 
-  const std::string paymentID = getPaymentIDFromExtra(t.extra);
+  CryptoNote::PaymentId paymentId{CryptoNote::PaymentId::Null};
+  CryptoNote::getPaymentIdFromTxExtra(t.extra, paymentId);
 
   /* Lets not split the integrated address out into its address and
      payment ID combo. It'll confused users. */
-  if (paymentID != "" && !integratedAddress) {
-    std::cout << ", " << std::endl << "and a Payment ID of " << SuccessMsg(paymentID);
+  if (!paymentId.isNull() && !integratedAddress) {
+    std::cout << ", " << std::endl << "and a Payment ID of " << SuccessMsg(paymentId.toString());
   } else {
     std::cout << ".";
   }
@@ -286,7 +287,7 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, bool sendAll, CryptoNote::
 
   std::string address = originalAddress;
 
-  std::string extra;
+  CryptoNote::TransactionExtra extra{};
 
   bool integratedAddress = maybeAddress.x.first == IntegratedAddress;
 
@@ -295,7 +296,13 @@ void transfer(std::shared_ptr<WalletInfo> walletInfo, bool sendAll, CryptoNote::
   if (integratedAddress) {
     auto addrPaymentIDPair = extractIntegratedAddress(maybeAddress.x.second, walletInfo->currency());
     address = addrPaymentIDPair.x.first;
-    extra = getExtraFromPaymentID(addrPaymentIDPair.x.second);
+    try {
+      extra = getExtraFromPaymentID(addrPaymentIDPair.x.second);
+    } catch (...) {
+      std::cout << ErrorMsg("Invalid payment id encoded in integrated address: ") << WarningMsg(maybeAddress.x.second)
+                << std::endl;
+      return;
+    }
   }
 
   /* Don't need to prompt for payment ID if they used an integrated
@@ -410,7 +417,7 @@ BalanceInfo doWeHaveEnoughBalance(uint64_t amount, uint64_t fee, std::shared_ptr
   }
 }
 
-void doTransfer(std::string address, uint64_t amount, uint64_t fee, std::string extra,
+void doTransfer(std::string address, uint64_t amount, uint64_t fee, CryptoNote::TransactionExtra extra,
                 std::shared_ptr<WalletInfo> walletInfo, bool integratedAddress, uint64_t mixin,
                 std::optional<CryptoNote::FeeAddress> nodeFees, std::string originalAddress, uint64_t unlockTimestamp,
                 const CryptoNote::Currency &currency) {
@@ -545,7 +552,7 @@ void handleTransferError(const std::system_error &e) {
   }
 }
 
-Maybe<std::string> getPaymentID(std::string msg) {
+Maybe<CryptoNote::TransactionExtra> getPaymentID(std::string msg) {
   while (true) {
     std::string paymentID;
 
@@ -556,14 +563,14 @@ Maybe<std::string> getPaymentID(std::string msg) {
     std::getline(std::cin, paymentID);
 
     if (paymentID == "") {
-      return Just<std::string>(paymentID);
+      return Just<CryptoNote::TransactionExtra>(CryptoNote::TransactionExtra::Null);
     }
 
     if (paymentID == "cancel") {
-      return Nothing<std::string>();
+      return Nothing<CryptoNote::TransactionExtra>();
     }
 
-    std::vector<uint8_t> extra;
+    CryptoNote::TransactionExtra extra;
 
     /* Convert the payment ID into an "extra" */
     if (!CryptoNote::createTxExtraWithPaymentId(paymentID, extra)) {
@@ -574,33 +581,19 @@ Maybe<std::string> getPaymentID(std::string msg) {
       continue;
     }
 
-    return Just<std::string>(paymentID);
+    return Just<CryptoNote::TransactionExtra>(extra);
   }
 }
 
-std::string getExtraFromPaymentID(std::string paymentID) {
-  if (paymentID == "") {
-    return paymentID;
+CryptoNote::TransactionExtra getExtraFromPaymentID(std::string paymentID) {
+  auto reval = CryptoNote::TransactionExtra::Null;
+  if (!paymentID.empty()) {
+    reval.paymentId = CryptoNote::PaymentId::fromString(paymentID).takeOrThrow();
   }
-
-  std::vector<uint8_t> extra;
-
-  /* Convert the payment ID into an "extra" */
-  CryptoNote::createTxExtraWithPaymentId(paymentID, extra);
-
-  /* Then convert the "extra" back into a string so we can pass
-     the argument that walletgreen expects. Note this string is not
-     the same as the original paymentID string! */
-  std::string extraString;
-
-  for (auto i : extra) {
-    extraString += static_cast<char>(i);
-  }
-
-  return extraString;
+  return reval;
 }
 
-Maybe<std::string> getExtra() {
+Maybe<CryptoNote::TransactionExtra> getExtra() {
   std::stringstream msg;
 
   msg << std::endl
@@ -613,11 +606,11 @@ Maybe<std::string> getExtra() {
     return maybePaymentID;
   }
 
-  if (maybePaymentID.x == "") {
+  if (maybePaymentID.x.isNull()) {
     return maybePaymentID;
   }
 
-  return Just<std::string>(getExtraFromPaymentID(maybePaymentID.x));
+  return Just<CryptoNote::TransactionExtra>(maybePaymentID.x);
 }
 
 Maybe<uint64_t> getFee(const uint64_t minFee, const CryptoNote::Currency &currency) {
@@ -760,8 +753,7 @@ Maybe<std::pair<std::string, std::string>> extractIntegratedAddress(std::string 
     return Nothing<std::pair<std::string, std::string>>();
   }
 
-  std::vector<uint8_t> extra;
-
+  CryptoNote::TransactionExtra extra{};
   /* And the payment ID out should be valid as well! */
   if (!CryptoNote::createTxExtraWithPaymentId(paymentID, extra)) {
     return Nothing<std::pair<std::string, std::string>>();

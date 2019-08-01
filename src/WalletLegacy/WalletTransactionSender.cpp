@@ -63,14 +63,11 @@ void createChangeDestinations(const AccountPublicAddress& address, uint64_t need
 }
 
 void constructTx(const AccountKeys keys, const std::vector<TransactionSourceEntry>& sources,
-                 const std::vector<TransactionDestinationEntry>& splittedDests, const std::string& extra,
-                 uint64_t unlockTimestamp, uint64_t sizeLimit, Transaction& tx) {
-  std::vector<uint8_t> extraVec;
-  extraVec.reserve(extra.size());
-  std::for_each(extra.begin(), extra.end(), [&extraVec](const char el) { extraVec.push_back(el); });
-
+                 const std::vector<TransactionDestinationEntry>& splittedDests,
+                 const CryptoNote::TransactionExtra& extra, uint64_t unlockTimestamp, uint64_t sizeLimit,
+                 Transaction& tx) {
   Logging::LoggerGroup nullLog;
-  bool r = constructTransaction(keys, sources, splittedDests, extraVec, tx, unlockTimestamp, nullLog);
+  bool r = constructTransaction(keys, sources, splittedDests, extra, tx, unlockTimestamp, nullLog);
 
   throwIf(!r, error::INTERNAL_WALLET_ERROR);
   throwIf(tx.binarySize() >= sizeLimit, error::TRANSACTION_SIZE_TOO_BIG);
@@ -117,7 +114,7 @@ void WalletTransactionSender::validateTransfersAddresses(const std::vector<Walle
 std::shared_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(
     TransactionId& transactionId, std::deque<std::shared_ptr<WalletLegacyEvent>>& events,
     const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, BlockVersion blockVersion,
-    const std::string& extra, uint64_t mixIn, uint64_t unlockTimestamp) {
+    const TransactionExtra& extra, uint64_t mixIn, uint64_t unlockTimestamp) {
   using namespace CryptoNote;
 
   throwIf(transfers.empty(), error::ZERO_DESTINATION);

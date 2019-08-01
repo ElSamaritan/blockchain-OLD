@@ -47,8 +47,10 @@ class TransactionBuilder : public ITransactionBuilder {
   virtual Crypto::PublicKey getTransactionPublicKey() const override;
   virtual uint64_t getUnlockTime() const override;
   virtual bool getPaymentId(PaymentId& hash) const override;
-  virtual bool getExtraNonce(BinaryArray& nonce) const override;
-  virtual BinaryArray getExtra() const override;
+  virtual const TransactionExtra& getExtra() const override;
+
+  // Extra
+  virtual void applyExtra(const TransactionExtra& extra) override;
 
   // inputs
   virtual size_t getInputCount() const override;
@@ -78,8 +80,6 @@ class TransactionBuilder : public ITransactionBuilder {
 
   virtual void setUnlockTime(uint64_t unlockTime) override;
   virtual void setPaymentId(const PaymentId& hash) override;
-  virtual void setExtraNonce(const BinaryArray& nonce) override;
-  virtual void appendExtra(const BinaryArray& extraData) override;
 
   // Inputs/Outputs
   virtual size_t addInput(const KeyInput& input) override;
@@ -110,6 +110,5 @@ class TransactionBuilder : public ITransactionBuilder {
   boost::optional<Crypto::SecretKey> secretKey;
   mutable boost::optional<Crypto::Hash> transactionHash;
   mutable boost::optional<Crypto::Hash> transactionPrefixHash;
-  TransactionExtra extra;
 };
 }  // namespace CryptoNote

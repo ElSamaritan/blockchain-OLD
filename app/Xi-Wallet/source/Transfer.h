@@ -17,7 +17,7 @@ enum BalanceInfo { NotEnoughBalance, EnoughBalance, SetMixinToZero };
 
 void transfer(std::shared_ptr<WalletInfo> walletInfo, bool sendAll, CryptoNote::INode& node);
 
-void doTransfer(std::string address, uint64_t amount, uint64_t fee, std::string extra,
+void doTransfer(std::string address, uint64_t amount, uint64_t fee, CryptoNote::TransactionExtra extra,
                 std::shared_ptr<WalletInfo> walletInfo, bool integratedAddress, uint64_t mixin,
                 std::optional<CryptoNote::FeeAddress> nodeFees, std::string originalAddress, uint64_t unlockTimestamp,
                 const CryptoNote::Currency& currency);
@@ -41,11 +41,11 @@ void handleTransferError(const std::system_error& e);
 
 AddressType parseAddress(std::string address, const CryptoNote::Currency& currency);
 
-std::string getExtraFromPaymentID(std::string paymentID);
+CryptoNote::TransactionExtra getExtraFromPaymentID(std::string paymentID);
 
-Maybe<std::string> getPaymentID(std::string msg);
+Maybe<CryptoNote::TransactionExtra> getPaymentID(std::string msg);
 
-Maybe<std::string> getExtra();
+Maybe<CryptoNote::TransactionExtra> getExtra();
 
 Maybe<std::pair<AddressType, std::string>> getAddress(std::string msg, const CryptoNote::Currency& currency);
 

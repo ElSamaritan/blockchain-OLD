@@ -32,8 +32,6 @@ bool fileExists(const std::string &filename);
 
 bool shutdown(std::shared_ptr<WalletInfo> walletInfo, CryptoNote::INode &node, bool &alreadyShuttingDown);
 
-std::string getPaymentIDFromExtra(const std::string &extra);
-
 std::string unixTimeToDate(const uint64_t timestamp);
 
 std::string createIntegratedAddress(const std::string &address, const CryptoNote::Currency &currency,

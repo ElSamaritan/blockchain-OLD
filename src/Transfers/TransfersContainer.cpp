@@ -41,7 +41,7 @@ namespace CryptoNote {
   KV_MEMBER_RENAME(ti.totalAmountIn, total_amount_in);
   KV_MEMBER_RENAME(ti.totalAmountOut, total_amount_out);
   KV_MEMBER_RENAME(ti.extra, extra);
-  KV_MEMBER_RENAME(ti.paymentId, payment_id);
+  KV_MEMBER_RENAME(ti.extra.paymentId, payment_id);
   return true;
 }
 
@@ -210,9 +210,9 @@ void TransfersContainer::addTransaction(const TransactionBlockInfo& block, const
 
   PaymentId pid{};
   if (!tx.getPaymentId(pid)) {
-    txInfo.paymentId = std::nullopt;
+    txInfo.extra.paymentId = std::nullopt;
   } else {
-    txInfo.paymentId = std::move(pid);
+    txInfo.extra.paymentId = std::move(pid);
   }
 
   auto result = m_transactions.emplace(std::move(txInfo));

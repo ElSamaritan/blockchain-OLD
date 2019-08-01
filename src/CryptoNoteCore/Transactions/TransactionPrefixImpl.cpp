@@ -26,6 +26,7 @@
 #include "CryptoNoteCore/Transactions/TransactionApiExtra.h"
 #include "CryptoNoteCore/Transactions/TransactionUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
+#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 
 using namespace Crypto;
 
@@ -45,8 +46,7 @@ class TransactionPrefixImpl : public ITransactionReader {
 
   // extra
   virtual bool getPaymentId(PaymentId& paymentId) const override;
-  virtual bool getExtraNonce(BinaryArray& nonce) const override;
-  virtual BinaryArray getExtra() const override;
+  virtual const TransactionExtra& getExtra() const override;
 
   // inputs
   virtual size_t getInputCount() const override;
@@ -77,7 +77,6 @@ class TransactionPrefixImpl : public ITransactionReader {
 
  private:
   TransactionPrefix m_txPrefix;
-  TransactionExtra m_extra;
   Hash m_txHash;
 };
 
@@ -85,8 +84,6 @@ TransactionPrefixImpl::TransactionPrefixImpl() {
 }
 
 TransactionPrefixImpl::TransactionPrefixImpl(const TransactionPrefix& prefix, const Hash& transactionHash) {
-  m_extra.parse(prefix.extra);
-
   m_txPrefix = prefix;
   m_txHash = transactionHash;
 }
@@ -100,9 +97,7 @@ Hash TransactionPrefixImpl::getTransactionPrefixHash() const {
 }
 
 PublicKey TransactionPrefixImpl::getTransactionPublicKey() const {
-  Crypto::PublicKey pk(PublicKey::Null);
-  m_extra.getPublicKey(pk);
-  return pk;
+  return m_txPrefix.extra.publicKey.value_or(Crypto::PublicKey::Null);
 }
 
 uint64_t TransactionPrefixImpl::getUnlockTime() const {
@@ -110,31 +105,15 @@ uint64_t TransactionPrefixImpl::getUnlockTime() const {
 }
 
 bool TransactionPrefixImpl::getPaymentId(PaymentId& hash) const {
-  BinaryArray nonce;
-
-  if (getExtraNonce(nonce)) {
-    PaymentId paymentId;
-    if (getPaymentIdFromTransactionExtraNonce(nonce, paymentId)) {
-      hash = paymentId;
-      return true;
-    }
-  }
-
-  return false;
-}
-
-bool TransactionPrefixImpl::getExtraNonce(BinaryArray& nonce) const {
-  TransactionExtraNonce extraNonce;
-
-  if (m_extra.get(extraNonce)) {
-    nonce = extraNonce.nonce;
+  PaymentId paymentId;
+  if (getPaymentIdFromTransactionExtraNonce(m_txPrefix.extra, paymentId)) {
+    hash = paymentId;
     return true;
   }
-
   return false;
 }
 
-BinaryArray TransactionPrefixImpl::getExtra() const {
+const TransactionExtra& TransactionPrefixImpl::getExtra() const {
   return m_txPrefix.extra;
 }
 

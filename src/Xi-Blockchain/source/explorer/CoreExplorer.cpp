@@ -281,7 +281,6 @@ TransactionInfo CoreExplorer::fromCore(const CryptoNote::CachedTransaction &tran
   reval.unlock_time = transaction.getTransaction().unlockTime;
   reval.blob_size = transaction.getBlobSize();
 
-  reval.extra.raw = transaction.getTransaction().extra;
   reval.extra.public_key = transaction.getPublicKey();
   auto paymentId = transaction.getPaymentId();
   if (paymentId.has_value()) {

@@ -102,7 +102,6 @@ Xi::Result<XiMiner::MinerBlockTemplate> XiMiner::UpdateMonitor::getBlockTemplate
   m_logger(Logging::Trace) << "request block template state";
   CryptoNote::RpcCommands::GetBlockTemplate::request request;
   CryptoNote::RpcCommands::GetBlockTemplate::response response;
-  request.reserve_size = 0;
   request.wallet_address = m_address;
   CryptoNote::JsonRpc::invokeJsonRpcCommand(m_http, CryptoNote::RpcCommands::GetBlockTemplate::identifier(), request,
                                             response);

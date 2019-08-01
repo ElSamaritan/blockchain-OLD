@@ -1372,8 +1372,8 @@ bool Core::getPoolChangesLite(const Crypto::Hash& lastBlockHash, const std::vect
   return getTopBlockHash() == lastBlockHash;
 }
 
-bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, const BinaryArray& extraNonce,
-                            uint64_t& difficulty, uint32_t& index) const {
+bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, uint64_t& difficulty,
+                            uint32_t& index) const {
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
   XI_UNUSED_REVAL(transactionPool().acquireExclusiveAccess());
@@ -1459,9 +1459,9 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   uint64_t fee = 0;
   fillBlockTemplate(b, index, medianSize, maxBlockSize, transactionsSize, fee);
 
-  b.baseTransaction.extra.clear();
+  b.baseTransaction.extra.nullify();
   if (auto ec = m_currency.constructMinerTx(b.version, index, medianSize, alreadyGeneratedCoins, transactionsSize, fee,
-                                            adr, b.baseTransaction, extraNonce, 20);
+                                            adr, b.baseTransaction, 20);
       !ec) {
     logger(Logging::Error) << "Failed to construct miner tx, first chance";
     XI_RETURN_EC(false);
@@ -1608,7 +1608,7 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   }
 
   {
-    auto extraEc = validateExtra(block.baseTransaction);
+    auto extraEc = validateExtra(block.baseTransaction, TransactionExtraFeature::PublicKey);
     if (extraEc != error::TransactionValidationError::VALIDATION_SUCCESS) {
       return extraEc;
     }
@@ -2517,8 +2517,6 @@ TransactionDetails Core::getTransactionDetails(const Crypto::Hash& transactionHa
     transactionDetails.hasPaymentId = true;
   }
   transactionDetails.extra.publicKey = transaction->getTransactionPublicKey();
-  transaction->getExtraNonce(transactionDetails.extra.nonce);
-
   transactionDetails.signatures = rawTransaction.signatures;
 
   transactionDetails.inputs.reserve(transaction->getInputCount());

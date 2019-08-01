@@ -121,7 +121,7 @@ std::vector<uint32_t> absolute_output_offsets_to_relative(const std::vector<uint
 }
 
 bool constructTransaction(const AccountKeys& sender_account_keys, const std::vector<TransactionSourceEntry>& sources,
-                          const std::vector<TransactionDestinationEntry>& destinations, std::vector<uint8_t> extra,
+                          const std::vector<TransactionDestinationEntry>& destinations, TransactionExtra extra,
                           Transaction& tx, uint64_t unlock_time, Logging::ILogger& log) {
   LoggerRef logger(log, "construct_tx");
   try {

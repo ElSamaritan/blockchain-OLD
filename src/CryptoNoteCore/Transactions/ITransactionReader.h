@@ -46,8 +46,7 @@ class ITransactionReader {
 
   // extra
   virtual bool getPaymentId(PaymentId& paymentId) const = 0;
-  virtual bool getExtraNonce(BinaryArray& nonce) const = 0;
-  virtual BinaryArray getExtra() const = 0;
+  virtual const TransactionExtra& getExtra() const = 0;
 
   // inputs
   virtual size_t getInputCount() const = 0;

@@ -57,6 +57,7 @@ enum class TransactionValidationError {
   INPUTS_NOT_CANONICAL = 53,  ///< One of the input amounts is not canoncial.
   EXTRA_MISSING_PUBLIC_KEY = 41,  ///< Every transaction must have at least one embedded public key.
   EXTRA_INVALID_PUBLIC_KEY = 42,  ///< A transaction extra encoded public key must be a valid ecc point.
+  EXTRA_INVALID_PAYMENT_ID = 55,  ///< A transaction extra encoded payment id must be a valid ecc point.
   EXTRA_INVALID_NONCE = 46,  ///< A transaction extra nonce, may encode a single playment id or custom data indicated by
                              ///< the custom data start flag.
   INPUT_INVALID_SIGNATURES = 14,  ///< The signing signature of the input is invalid. Its likely that a user tried to
@@ -102,7 +103,7 @@ enum class TransactionValidationError {
   UNLOCK_TOO_LARGE = 50,   ///< Given unlock exceeds limits and is unreasonable high.
   UNLOCK_ILL_FORMED = 51,  ///< Given unlock is based on timestamp but unlocks before the genesis timestamp.
 
-  __NUM = 55  ///< The count of different enum values, if you add a new one use this as its value and increase this by
+  __NUM = 56  ///< The count of different enum values, if you add a new one use this as its value and increase this by
               ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation
               ///< and tickets aso.
 };
@@ -208,6 +209,8 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "The pool denied the transaction being to large to get a sufficient reward for mining it.";
       case TransactionValidationError::EXTRA_INVALID_PUBLIC_KEY:
         return "Transaction public key is invalid.";
+      case TransactionValidationError::EXTRA_INVALID_PAYMENT_ID:
+        return "Transaction payment id is invalid.";
       case TransactionValidationError::EXTRA_MISSING_PUBLIC_KEY:
         return "No public key found in extra.";
       case TransactionValidationError::EXISTS_IN_BLOCKCHAIN:
