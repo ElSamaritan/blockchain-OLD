@@ -108,7 +108,6 @@ bool Currency::generateGenesisBlock() {
   }
 
   m_genesisBlockTemplate.version = BlockVersion::Genesis;
-  m_genesisBlockTemplate.upgradeVote = m_genesisBlockTemplate.version;
   m_genesisBlockTemplate.timestamp = coin().startTimestamp();
   m_genesisBlockTemplate.nonce.fill(0);
   m_genesisBlockTemplate.previousBlockHash.nullify();

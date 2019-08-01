@@ -54,7 +54,7 @@ struct ShortBlockInfo {
   /// size of this block
   uint64_t blob_size;
   Block::Version version;
-  Block::Version upgrade_vote;
+  Block::Feature features;
 
   /// cumulative proof of work based on this block and all prefious blocks
   uint64_t cumulative_difficulty;
@@ -71,7 +71,7 @@ struct ShortBlockInfo {
   KV_MEMBER(chain)
   KV_MEMBER(blob_size)
   KV_MEMBER(version)
-  KV_MEMBER(upgrade_vote)
+  KV_MEMBER(features)
 
   KV_MEMBER(cumulative_difficulty)
   KV_MEMBER(cumulative_supply)

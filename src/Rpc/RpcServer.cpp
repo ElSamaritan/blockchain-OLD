@@ -931,7 +931,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
 
   res.block.timestamp = block_header.timestamp;
   res.block.version = block_header.version;
-  res.block.upgrade_vote = block_header.upgrade_vote;
+  res.block.features = block_header.features;
   res.block.previous_hash = block_header.prev_hash;
   res.block.nonce = block_header.nonce;
   res.block.depth = BlockHeight::fromIndex(m_core.getTopBlockIndex()).native() - res.block.height.native();
@@ -1499,7 +1499,7 @@ uint64_t get_block_reward(const BlockTemplate& blk) {
 void RpcServer::fill_block_header_response(const BlockTemplate& blk, bool orphan_status, BlockHeight height,
                                            const Hash& hash, block_header_response& response) {
   response.version = blk.version;
-  response.upgrade_vote = blk.upgradeVote;
+  response.features = blk.features;
   response.timestamp = blk.timestamp;
   response.prev_hash = blk.previousBlockHash;
   response.nonce = blk.nonce;

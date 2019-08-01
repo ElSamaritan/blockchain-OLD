@@ -72,7 +72,7 @@ struct BlockShortEntry {
 struct BlockHeaderInfo {
   BlockHeight height = BlockHeight::Null;
   BlockVersion version = BlockVersion::Null;
-  BlockVersion upgradeVote = BlockVersion::Null;
+  BlockFeature features = BlockFeature::None;
   uint64_t timestamp = 0;
   Crypto::Hash hash = Crypto::Hash::Null;
   Crypto::Hash prevHash = Crypto::Hash::Null;

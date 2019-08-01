@@ -445,7 +445,7 @@ struct COMMAND_RPC_SUBMITBLOCK {
 
 struct block_header_response {
   BlockVersion version;
-  BlockVersion upgrade_vote;
+  BlockFeature features;
   uint64_t timestamp;
   Crypto::Hash prev_hash;
   BlockNonce nonce;
@@ -461,7 +461,7 @@ struct block_header_response {
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(version)
-  KV_MEMBER(upgrade_vote)
+  KV_MEMBER(features)
   KV_MEMBER(timestamp)
   KV_MEMBER(prev_hash)
   KV_MEMBER(nonce)
@@ -563,7 +563,7 @@ struct f_block_short_response {
 
 struct f_block_details_response : f_block_short_response {
   BlockVersion version;
-  BlockVersion upgrade_vote;
+  BlockFeature features;
   Crypto::Hash previous_hash;
   BlockNonce nonce;
   bool orphan_status;
@@ -583,7 +583,7 @@ struct f_block_details_response : f_block_short_response {
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(version)
-  KV_MEMBER(upgrade_vote)
+  KV_MEMBER(features)
   KV_MEMBER(timestamp)
   KV_MEMBER(previous_hash)
   KV_MEMBER(nonce)

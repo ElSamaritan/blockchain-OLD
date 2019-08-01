@@ -36,7 +36,7 @@ namespace CryptoNote {
 namespace {
 
 const uint32_t ONE_DAY_SECONDS = 60 * 60 * 24;
-const CachedBlockInfo NULL_CACHED_BLOCK_INFO{Crypto::Hash::Null, BlockVersion::Null, BlockVersion::Null, 0, 0, 0, 0, 0};
+const CachedBlockInfo NULL_CACHED_BLOCK_INFO{Crypto::Hash::Null, BlockVersion::Null, BlockFeature::None, 0, 0, 0, 0, 0};
 
 bool requestPackedOutputs(IBlockchainCache::Amount amount, Common::ArrayView<uint32_t> globalIndexes,
                           IDataBase& database, std::vector<PackedOutIndex>& result) {
@@ -951,7 +951,7 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   CachedBlockInfo blockInfo;
   blockInfo.blockHash = cachedBlock.getBlockHash();
   blockInfo.version = cachedBlock.getBlock().version;
-  blockInfo.upgradeVote = cachedBlock.getBlock().upgradeVote;
+  blockInfo.features = cachedBlock.getBlock().features;
   blockInfo.timestamp = cachedBlock.getBlock().timestamp;
   blockInfo.blobSize = blockSize;
   blockInfo.cumulativeDifficulty = cumulativeDifficulty;
@@ -2025,7 +2025,7 @@ void DatabaseBlockchainCache::addGenesisBlock(CachedBlock&& genesisBlock) {
   CachedBlockInfo blockInfo{};
   blockInfo.blockHash = genesisBlock.getBlockHash();
   blockInfo.version = genesisBlock.getBlock().version;
-  blockInfo.upgradeVote = genesisBlock.getBlock().upgradeVote;
+  blockInfo.features = genesisBlock.getBlock().features;
   blockInfo.timestamp = genesisBlock.getBlock().timestamp;
   blockInfo.cumulativeDifficulty = 1;
   blockInfo.blobSize = genesisTransactionsSize;

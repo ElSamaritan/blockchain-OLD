@@ -139,7 +139,7 @@ TEST_F(CryptoNote_DatabaseBlockchainCache, CachedBlockInfo) {
   tmp.timestamp = genesis.timestamp + 60;
   tmp.previousBlockHash = genesis.blockHash;
   tmp.version = genesis.version;
-  tmp.upgradeVote = genesis.upgradeVote;
+  tmp.features = genesis.features;
   tmp.baseTransaction.version = 1;
   tmp.baseTransaction.inputs.push_back(BaseInput{height.next(1)});
   TransactionValidatorState vstate{};
@@ -153,7 +153,7 @@ TEST_F(CryptoNote_DatabaseBlockchainCache, CachedBlockInfo) {
 
   EXPECT_EQ(genesis.blockHash.toString(), genesis2.blockHash.toString());
   EXPECT_EQ(genesis.version, genesis2.version);
-  EXPECT_EQ(genesis.upgradeVote, genesis2.upgradeVote);
+  EXPECT_EQ(genesis.features, genesis2.features);
   EXPECT_EQ(genesis.timestamp, genesis2.timestamp);
   EXPECT_EQ(genesis.blobSize, genesis2.blobSize);
   EXPECT_EQ(genesis.cumulativeDifficulty, genesis2.cumulativeDifficulty);

@@ -242,7 +242,7 @@ void NodeInProcess::getLastBlockHeaderInfo(BlockHeaderInfo &info, const INode::C
   }
   info.height = BlockHeight::fromIndex(index);
   info.version = details->version;
-  info.upgradeVote = details->upgradeVote;
+  info.features = details->features;
   info.timestamp = details->timestamp;
   info.hash = details->hash;
   info.prevHash = details->prevBlockHash;

@@ -93,7 +93,7 @@ template <typename T>
 
 [[nodiscard]] bool serialize(BlockDetails& block, ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(block.version, "version"), false);
-  XI_RETURN_EC_IF_NOT(serializer(block.upgradeVote, "upgrade_vote"), false);
+  XI_RETURN_EC_IF_NOT(serializer(block.features, "features"), false);
   XI_RETURN_EC_IF_NOT(serializer(block.timestamp, "timestamp"), false);
   XI_RETURN_EC_IF_NOT(serializePod(block.prevBlockHash, "prevBlockHash", serializer), false);
   XI_RETURN_EC_IF_NOT(serializer(block.nonce, "nonce"), false);

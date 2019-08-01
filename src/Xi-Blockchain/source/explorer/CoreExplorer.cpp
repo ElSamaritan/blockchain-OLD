@@ -378,7 +378,7 @@ ShortBlockInfo CoreExplorer::fromCore(const CryptoNote::CachedBlockInfo &info, c
   reval.chain = isAlternative ? BlockSource::AlternativeChain : BlockSource::MainChain;
   reval.blob_size = info.blobSize;
   reval.version = info.version;
-  reval.upgrade_vote = info.upgradeVote;
+  reval.features = info.features;
   reval.cumulative_difficulty = info.cumulativeDifficulty;
   reval.cumulative_supply = info.alreadyGeneratedCoins;
   reval.cumulative_transactions_count = info.alreadyGeneratedTransactions;

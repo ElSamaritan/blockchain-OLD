@@ -94,7 +94,7 @@ void NodeRpcProxy::resetInternalState() {
   m_networkVersion.store(BlockVersion::Null.native(), std::memory_order_release);
   lastLocalBlockHeaderInfo.height = BlockHeight::Null;
   lastLocalBlockHeaderInfo.version = BlockVersion::Null;
-  lastLocalBlockHeaderInfo.upgradeVote = BlockVersion::Null;
+  lastLocalBlockHeaderInfo.features = BlockFeature::None;
   lastLocalBlockHeaderInfo.timestamp = 0;
   lastLocalBlockHeaderInfo.hash = Crypto::Hash::Null;
   lastLocalBlockHeaderInfo.prevHash = Crypto::Hash::Null;
@@ -273,7 +273,7 @@ std::error_code NodeRpcProxy::updateBlockchainStatus() {
     if (blockHash != lastLocalBlockHeaderInfo.hash) {
       lastLocalBlockHeaderInfo.height = blockHeight;
       lastLocalBlockHeaderInfo.version = rsp.block_header.version;
-      lastLocalBlockHeaderInfo.upgradeVote = rsp.block_header.upgrade_vote;
+      lastLocalBlockHeaderInfo.features = rsp.block_header.features;
       lastLocalBlockHeaderInfo.timestamp = rsp.block_header.timestamp;
       lastLocalBlockHeaderInfo.hash = blockHash;
       lastLocalBlockHeaderInfo.prevHash = prevBlockHash;
@@ -341,7 +341,7 @@ std::error_code NodeRpcProxy::doGetLastBlockHeaderInfo(BlockHeaderInfo& info) {
 
   info.height = rsp.block_header.height;
   info.version = rsp.block_header.version;
-  info.upgradeVote = rsp.block_header.upgrade_vote;
+  info.features = rsp.block_header.features;
   info.timestamp = rsp.block_header.timestamp;
   info.hash = blockHash;
   info.prevHash = prevBlockHash;

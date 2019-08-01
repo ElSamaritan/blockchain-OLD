@@ -82,7 +82,7 @@ struct TransactionDetails {
 
 struct BlockDetails {
   BlockVersion version{0};
-  BlockVersion upgradeVote{0};
+  BlockFeature features{BlockFeature::None};
   uint64_t timestamp = 0;
   Crypto::Hash prevBlockHash;
   BlockNonce nonce = BlockNonce::Null;

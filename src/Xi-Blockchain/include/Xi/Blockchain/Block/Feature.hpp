@@ -37,8 +37,7 @@ enum Feature : uint16_t {
   UpgradeVote = 1 << 0,
   BlockReward = 1 << 1,
   StaticReward = 1 << 2,
-  Transfers = 1 << 3,
-  Fusions = 1 << 4,
+  Transactions = 1 << 3
 };
 
 XI_TYPESAFE_FLAG_MAKE_OPERATIONS(Feature)
@@ -48,8 +47,7 @@ XI_SERIALIZATION_FLAG(Feature)
 }  // namespace Blockchain
 }  // namespace Xi
 
-XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Block::Feature, BlockReward, Fusions)
+XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Block::Feature, BlockReward, Transactions)
 XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, BlockReward, "block_reward")
 XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, StaticReward, "static_reward")
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, Transfers, "transfers")
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, Fusions, "fusions")
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, Transactions, "transactions")

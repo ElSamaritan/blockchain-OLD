@@ -91,7 +91,7 @@ bool ExtendedTransactionInfo::serialize(CryptoNote::ISerializer& s) {
 bool CachedBlockInfo::serialize(ISerializer& s) {
   XI_RETURN_EC_IF_NOT(s(blockHash, "block_hash"), false);
   XI_RETURN_EC_IF_NOT(s(version, "version"), false);
-  XI_RETURN_EC_IF_NOT(s(upgradeVote, "upgrade_vote"), false);
+  XI_RETURN_EC_IF_NOT(s(features, "features"), false);
   XI_RETURN_EC_IF_NOT(s(timestamp, "timestamp"), false);
   XI_RETURN_EC_IF_NOT(s(blobSize, "blob_size"), false);
   XI_RETURN_EC_IF_NOT(s(cumulativeDifficulty, "cumulative_difficulty"), false);
@@ -215,7 +215,7 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
   CachedBlockInfo blockInfo;
   blockInfo.blockHash = cachedBlock.getBlockHash();
   blockInfo.version = cachedBlock.getBlock().version;
-  blockInfo.upgradeVote = cachedBlock.getBlock().upgradeVote;
+  blockInfo.features = cachedBlock.getBlock().features;
   blockInfo.timestamp = cachedBlock.getBlock().timestamp;
   blockInfo.blobSize = blockSize;
   blockInfo.cumulativeDifficulty = cumulativeDifficulty;

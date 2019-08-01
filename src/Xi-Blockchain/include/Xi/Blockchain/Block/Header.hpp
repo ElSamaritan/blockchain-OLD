@@ -40,10 +40,10 @@ namespace Blockchain {
 namespace Block {
 
 struct Header {
-  Feature features{Feature::None};
-
   Version version;
-  Version upgradeVote;
+
+  /// lightweighted optionals encoding
+  Feature features{Feature::None};
 
   Nonce nonce;
   uint64_t timestamp;
@@ -63,5 +63,4 @@ struct Header {
 
 }  // namespace Block
 }  // namespace Blockchain
-
 }  // namespace Xi

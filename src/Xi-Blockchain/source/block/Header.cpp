@@ -63,9 +63,8 @@ Hash Header::proofOfWorkHash(const Hash &transactionTreeHash) const {
 }
 
 bool Header::serialize(CryptoNote::ISerializer &serializer, bool isPoWPrefix) {
-  XI_RETURN_EC_IF_NOT(serializer(features, "features"), false);
   XI_RETURN_EC_IF_NOT(serializer(version, "version"), false);
-  XI_RETURN_EC_IF_NOT(serializer(upgradeVote, "upgrade_vote"), false);
+  XI_RETURN_EC_IF_NOT(serializer(features, "features"), false);
   if (!isPoWPrefix) {
     XI_RETURN_EC_IF_NOT(serializer(nonce, "nonce"), false);
   }

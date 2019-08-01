@@ -82,7 +82,7 @@ struct ExtendedTransactionInfo : CachedTransactionInfo {
 struct CachedBlockInfo {
   Crypto::Hash blockHash{Crypto::Hash::Null};
   BlockVersion version{BlockVersion::Null};
-  BlockVersion upgradeVote{BlockVersion::Null};
+  BlockFeature features{BlockFeature::None};
   uint64_t timestamp;
   uint64_t blobSize;
   uint64_t cumulativeDifficulty;

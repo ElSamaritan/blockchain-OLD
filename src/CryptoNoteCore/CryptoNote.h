@@ -55,6 +55,7 @@ XI_DECLARE_SPANS(BlockHeight)
 using BlockOffset = Xi::Blockchain::Block::Offset;
 using BlockNonce = Xi::Blockchain::Block::Nonce;
 using BlockHeader = Xi::Blockchain::Block::Header;
+using BlockFeature = Xi::Blockchain::Block::Feature;
 
 using BlockHash = Crypto::Hash;
 using BlockHashVector = std::vector<BlockHash>;

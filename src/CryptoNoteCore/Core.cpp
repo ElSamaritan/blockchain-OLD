@@ -1387,7 +1387,6 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
 
   b = boost::value_initialized<BlockTemplate>();
   b.version = BlockVersion{getBlockVersionForIndex(index)};
-  b.upgradeVote = b.version;
   b.previousBlockHash = getTopBlockHash();
 
   if (m_currency.isStaticRewardEnabledForBlockVersion(b.version)) {
@@ -1589,9 +1588,6 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
 
   if (upgradeManager().getBlockVersion(cachedBlock.getBlockIndex()) != block.version) {
     return error::BlockValidationError::WRONG_VERSION;
-  }
-  if (block.upgradeVote < block.version || block.upgradeVote.native() > block.version.native() + 1) {
-    return error::BlockValidationError::WRONG_UPGRADE_VOTE;
   }
 
   if (block.timestamp > getAdjustedTime() + m_currency.time(block.version).futureLimit()) {
@@ -2345,7 +2341,7 @@ std::optional<BlockDetails> Core::getBlockDetails(const Crypto::Hash& blockHash)
 
   BlockDetails blockDetails;
   blockDetails.version = blockTemplate.version;
-  blockDetails.upgradeVote = blockTemplate.upgradeVote;
+  blockDetails.features = blockTemplate.features;
   blockDetails.timestamp = blockTemplate.timestamp;
   blockDetails.prevBlockHash = blockTemplate.previousBlockHash;
   blockDetails.nonce = blockTemplate.nonce;
