@@ -36,16 +36,6 @@ namespace CryptoNote {
 
 struct AccountKeys;
 
-[[nodiscard]] bool serialize(TransactionPrefix& txP, ISerializer& serializer);
-[[nodiscard]] bool serialize(Transaction& tx, ISerializer& serializer);
-[[nodiscard]] bool serialize(TransactionOutput& in, ISerializer& serializer);
-
-[[nodiscard]] bool serialize(BaseInput& gen, ISerializer& serializer);
-[[nodiscard]] bool serialize(KeyInput& key, ISerializer& serializer);
-
-[[nodiscard]] bool serialize(TransactionOutput& output, ISerializer& serializer);
-[[nodiscard]] bool serialize(KeyOutput& key, ISerializer& serializer);
-
 [[nodiscard]] bool serialize(BlockTemplate& block, ISerializer& serializer);
 
 [[nodiscard]] bool serialize(AccountPublicAddress& address, ISerializer& serializer);

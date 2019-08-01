@@ -58,7 +58,7 @@ class ITransactionReader {
   // outputs
   virtual size_t getOutputCount() const = 0;
   virtual uint64_t getOutputTotalAmount() const = 0;
-  virtual TransactionTypes::OutputType getOutputType(size_t index) const = 0;
+  virtual TransactionTypes::OutputTargetType getOutputType(size_t index) const = 0;
   virtual void getOutput(size_t index, KeyOutput& output, uint64_t& amount) const = 0;
 
   // signatures

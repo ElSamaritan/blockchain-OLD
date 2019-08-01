@@ -57,7 +57,7 @@ class TransactionPrefixImpl : public ITransactionReader {
   // outputs
   virtual size_t getOutputCount() const override;
   virtual uint64_t getOutputTotalAmount() const override;
-  virtual TransactionTypes::OutputType getOutputType(size_t index) const override;
+  virtual TransactionTypes::OutputTargetType getOutputType(size_t index) const override;
   virtual void getOutput(size_t index, KeyOutput& output, uint64_t& amount) const override;
 
   // signatures
@@ -160,18 +160,20 @@ size_t TransactionPrefixImpl::getOutputCount() const {
 }
 
 uint64_t TransactionPrefixImpl::getOutputTotalAmount() const {
-  return std::accumulate(m_txPrefix.outputs.begin(), m_txPrefix.outputs.end(), 0ULL,
-                         [](uint64_t val, const TransactionOutput& out) { return val + out.amount; });
+  return getOutputAmount(m_txPrefix);
 }
 
-TransactionTypes::OutputType TransactionPrefixImpl::getOutputType(size_t index) const {
-  return getTransactionOutputType(getOutputChecked(m_txPrefix, index).target);
+TransactionTypes::OutputTargetType TransactionPrefixImpl::getOutputType(size_t index) const {
+  const auto& target = getOutputTargetChecked(getOutputChecked(m_txPrefix, index));
+  return getTransactionOutputTargetType(target);
 }
 
 void TransactionPrefixImpl::getOutput(size_t index, KeyOutput& output, uint64_t& amount) const {
-  const auto& out = getOutputChecked(m_txPrefix, index, TransactionTypes::OutputType::Key);
-  output = std::get<KeyOutput>(out.target);
-  amount = out.amount;
+  const auto& out = getOutputChecked(m_txPrefix, index, TransactionTypes::OutputType::Amount,
+                                     TransactionTypes::OutputTargetType::Key);
+  const auto& target = getOutputTargetChecked(out);
+  amount = std::get<TransactionAmountOutput>(out).amount;
+  output = std::get<KeyOutput>(target);
 }
 
 size_t TransactionPrefixImpl::getRequiredSignaturesCount(size_t inputIndex) const {

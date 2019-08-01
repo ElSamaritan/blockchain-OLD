@@ -59,7 +59,7 @@ class TransactionBuilder : public ITransactionBuilder {
   // outputs
   virtual size_t getOutputCount() const override;
   virtual uint64_t getOutputTotalAmount() const override;
-  virtual TransactionTypes::OutputType getOutputType(size_t index) const override;
+  virtual TransactionTypes::OutputTargetType getOutputType(size_t index) const override;
   virtual void getOutput(size_t index, KeyOutput& output, uint64_t& amount) const override;
 
   virtual size_t getRequiredSignaturesCount(size_t index) const override;
@@ -98,20 +98,13 @@ class TransactionBuilder : public ITransactionBuilder {
  private:
   void invalidateHash();
 
-  std::vector<Crypto::Signature>& getSignatures(size_t input);
+  TransactionRingSignature& getRingSignature(size_t input);
 
-  const Crypto::SecretKey& txSecretKey() const {
-    if (!secretKey) {
-      throw std::runtime_error("Operation requires transaction secret key");
-    }
-    return *secretKey;
-  }
+  /// Throws if no secret key generated.
+  const Crypto::SecretKey& txSecretKey() const;
 
-  void checkIfSigning() const {
-    if (!std::get<TransactionSignatureCollection>(transaction.signatures).empty()) {
-      throw std::runtime_error("Cannot perform requested operation, since it will invalidate transaction signatures");
-    }
-  }
+  /// Throws if transactions is being signed or already signed.
+  void checkIfSigning() const;
 
   CryptoNote::Transaction transaction;
   boost::optional<Crypto::SecretKey> secretKey;

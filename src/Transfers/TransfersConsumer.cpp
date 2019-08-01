@@ -72,7 +72,7 @@ void findMyOutputs(const ITransactionReader& tx, const SecretKey& viewSecretKey,
   for (size_t idx = 0; idx < outputCount; ++idx) {
     auto outType = tx.getOutputType(size_t(idx));
 
-    if (outType == TransactionTypes::OutputType::Key) {
+    if (outType == TransactionTypes::OutputTargetType::Key) {
       uint64_t amount;
       KeyOutput out;
       tx.getOutput(idx, out, amount);
@@ -434,7 +434,7 @@ std::error_code createTransfers(const AccountKeys& account, const TransactionBlo
 
     auto outType = tx.getOutputType(size_t(idx));
 
-    if (outType != TransactionTypes::OutputType::Key) {
+    if (outType != TransactionTypes::OutputTargetType::Key) {
       continue;
     }
 
@@ -446,7 +446,7 @@ std::error_code createTransfers(const AccountKeys& account, const TransactionBlo
     info.globalOutputIndex =
         (blockInfo.height == BlockHeight::Null) ? UNCONFIRMED_TRANSACTION_GLOBAL_OUTPUT_INDEX : globalIdxs[idx];
 
-    if (outType == TransactionTypes::OutputType::Key) {
+    if (outType == TransactionTypes::OutputTargetType::Key) {
       uint64_t amount;
       KeyOutput out;
       tx.getOutput(idx, out, amount);

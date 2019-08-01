@@ -53,7 +53,9 @@ using ByteArray = std::array<Byte, _Size>;
 
 XI_DECLARE_SPANS(Byte)
 
-static inline ByteSpan asByteSpan(void* data, size_t size) { return ByteSpan{reinterpret_cast<Byte*>(data), size}; }
+static inline ByteSpan asByteSpan(void* data, size_t size) {
+  return ByteSpan{reinterpret_cast<Byte*>(data), size};
+}
 
 static inline ConstByteSpan asByteSpan(const void* data, size_t size) {
   return ConstByteSpan{reinterpret_cast<const Byte*>(data), size};
@@ -89,8 +91,18 @@ static inline ConstByteSpan asConstByteSpan(std::string_view str) {
 
 }  // namespace Xi
 
-static inline constexpr uint64_t operator"" _Bytes(unsigned long long bytes) { return bytes; }
-static inline constexpr uint64_t operator"" _kB(unsigned long long kiloBytes) { return kiloBytes * 1024; }
-static inline constexpr uint64_t operator"" _MB(unsigned long long megaBytes) { return megaBytes * 1024 * 1024; }
+namespace CryptoNote {
+using BinaryArray = Xi::ByteVector;
+}
+
+static inline constexpr uint64_t operator"" _Bytes(unsigned long long bytes) {
+  return bytes;
+}
+static inline constexpr uint64_t operator"" _kB(unsigned long long kiloBytes) {
+  return kiloBytes * 1024;
+}
+static inline constexpr uint64_t operator"" _MB(unsigned long long megaBytes) {
+  return megaBytes * 1024 * 1024;
+}
 
 #endif

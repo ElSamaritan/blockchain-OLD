@@ -531,7 +531,7 @@ void WalletGreen::load(const std::string& path, const std::string& password, std
         container->getOutputs(allTransfers, ITransfersContainer::IncludeAll);
         m_logger(Info) << "Known Transfers " << allTransfers.size();
         for (auto& o : allTransfers) {
-          if (o.type == TransactionTypes::OutputType::Key) {
+          if (o.type == TransactionTypes::OutputTargetType::Key) {
             m_synchronizer.addPublicKeysSeen(addr, o.transactionHash, o.outputKey);
           }
         }

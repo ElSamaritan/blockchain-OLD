@@ -26,22 +26,11 @@
 #include <vector>
 
 #include <Xi/Global.hh>
-#include <Xi/Crypto/FastHash.hpp>
 
+#include "Xi/Blockchain/Block/Hash.hpp"
 #include "Xi/Blockchain/Block/Nonce.hpp"
 #include "Xi/Blockchain/Block/Offset.hpp"
 #include "Xi/Blockchain/Block/Header.hpp"
 #include "Xi/Blockchain/Block/Height.hpp"
 #include "Xi/Blockchain/Block/Version.hpp"
-
-namespace Xi {
-namespace Blockchain {
-namespace Block {
-
-using Hash = ::Crypto::Hash;
-using HashVector = std::vector<Hash>;
-XI_DECLARE_SPANS(Hash)
-
-}  // namespace Block
-}  // namespace Blockchain
-}  // namespace Xi
+#include "Xi/Blockchain/Block/ProofOfWorkTemplate.hpp"

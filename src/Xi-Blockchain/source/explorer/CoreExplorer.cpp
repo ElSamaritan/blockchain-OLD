@@ -243,13 +243,17 @@ ShortTransactionInputInfo CoreExplorer::fromCore(const CryptoNote::TransactionIn
   }
 }
 
-ShortTransactionOutputInfo CoreExplorer::fromCore(const CryptoNote::TransactionOutput &input) const {
-  if (auto keyOutput = std::get_if<CryptoNote::KeyOutput>(&input.target)) {
-    XI_UNUSED(keyOutput);
+ShortTransactionOutputInfo CoreExplorer::fromCore(const CryptoNote::TransactionOutput &output) const {
+  if (const auto amountOutput = std::get_if<Transaction::AmountOutput>(std::addressof(output))) {
+    if (auto keyOutput = std::get_if<CryptoNote::KeyOutput>(&amountOutput->target)) {
+      XI_UNUSED(keyOutput);
 
-    ShortTransactionKeyOutputInfo reval{};
-    reval.amount = input.amount;
-    return reval;
+      ShortTransactionKeyOutputInfo reval{};
+      reval.amount = amountOutput->amount;
+      return reval;
+    } else {
+      exceptional<InvalidVariantTypeError>();
+    }
   } else {
     exceptional<InvalidVariantTypeError>();
   }
@@ -342,16 +346,19 @@ DetailedTransactionInfo CoreExplorer::fromCore(const CryptoNote::IBlockchainCach
   reval.outputs.reserve(outputs.size());
   size_t i = 0;
   for (const auto &output : outputs) {
-    if (auto keyOutput = std::get_if<CryptoNote::KeyOutput>(&output.target)) {
-      reval.outputs.emplace_back(std::in_place_type<DetailedTransactionKeyOutput>);
-      auto &iOutput = std::get<DetailedTransactionKeyOutput>(reval.outputs.back());
-      iOutput.output.amount = output.amount;
-      iOutput.output.target = *keyOutput;
-      iOutput.global_index = std::nullopt;
-      if (info != nullptr) {
-        if (info->globalIndexes.size() > i) {
-          iOutput.global_index = info->globalIndexes[i];
+    if (const auto amountOutput = std::get_if<Transaction::AmountOutput>(std::addressof(output))) {
+      if (auto keyOutput = std::get_if<CryptoNote::KeyOutput>(std::addressof(amountOutput->target))) {
+        reval.outputs.emplace_back(std::in_place_type<DetailedTransactionKeyOutput>);
+        auto &iOutput = std::get<DetailedTransactionKeyOutput>(reval.outputs.back());
+        iOutput.output = output;
+        iOutput.global_index = std::nullopt;
+        if (info != nullptr) {
+          if (info->globalIndexes.size() > i) {
+            iOutput.global_index = info->globalIndexes[i];
+          }
         }
+      } else {
+        exceptional<InvalidVariantTypeError>();
       }
     } else {
       exceptional<InvalidVariantTypeError>();
@@ -393,8 +400,8 @@ BlockInfo CoreExplorer::fromCore(const CryptoNote::CachedRawBlock &raw, const Cr
 
   const auto &currency = m_core.currency();
   if (currency.isStaticRewardEnabledForBlockVersion(reval.version)) {
-    reval.static_reward =
-        fromCore(cache(*currency.constructStaticRewardTx(raw.block()).takeOrThrow()), true, transactionContainer);
+    reval.static_reward = fromCore(CryptoNote::cache(*currency.constructStaticRewardTx(raw.block()).takeOrThrow()),
+                                   true, transactionContainer);
   } else {
     reval.static_reward = std::nullopt;
   }
@@ -422,7 +429,7 @@ DetailedBlockInfo CoreExplorer::fromCore(const CryptoNote::IBlockchainCache *seg
   if (raw.block().hasStaticReward()) {
     auto staticReward = m_core.currency().constructStaticRewardTx(raw.block()).takeOrThrow();
     exceptional_if_not<RuntimeError>(staticReward.has_value());
-    transactions.emplace_back(cache(std::move(*staticReward)));
+    transactions.emplace_back(CryptoNote::cache(std::move(*staticReward)));
   }
   for (size_t i = 0; i < raw.transferCount(); ++i) {
     transactions.emplace_back(CryptoNote::CachedTransaction::fromBinaryArray(raw.raw().transactions[i]).takeOrThrow());

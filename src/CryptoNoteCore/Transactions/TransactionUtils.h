@@ -52,8 +52,6 @@ uint64_t getTransactionOutputAmount(const Transaction& transaction);
 boost::optional<Crypto::KeyImage> getTransactionInputKeyImage(const TransactionInput& input);
 std::vector<Crypto::KeyImage> getTransactionKeyImages(const Transaction& transaction);
 
-Crypto::PublicKey getTransactionOutputKey(const TransactionOutputTarget& target);
-Crypto::PublicKey getTransactionOutputKey(const TransactionOutput& output);
 std::vector<Crypto::PublicKey> getTransactionOutputKeys(const Transaction& transaction);
 
 std::vector<uint32_t> getTransactionInputIndices(const KeyInput& input);
@@ -67,10 +65,13 @@ bool isOutToKey(const Crypto::PublicKey& spendPublicKey, const Crypto::PublicKey
                 const Crypto::KeyDerivation& derivation, size_t keyIndex);
 
 // TransactionOutput helper functions
-TransactionTypes::OutputType getTransactionOutputType(const TransactionOutputTarget& out);
+TransactionTypes::OutputType getTransactionOutputType(const TransactionOutput& out);
+TransactionTypes::OutputTargetType getTransactionOutputTargetType(const TransactionOutputTarget& out);
+const TransactionOutputTarget& getOutputTargetChecked(const CryptoNote::TransactionOutput& out);
 const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& transaction, size_t index);
 const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& transaction, size_t index,
-                                          TransactionTypes::OutputType type);
+                                          TransactionTypes::OutputType outType,
+                                          TransactionTypes::OutputTargetType type);
 
 bool findOutputsToAccount(const CryptoNote::TransactionPrefix& transaction, const AccountPublicAddress& addr,
                           const Crypto::SecretKey& viewSecretKey, std::vector<uint32_t>& out, uint64_t& amount);

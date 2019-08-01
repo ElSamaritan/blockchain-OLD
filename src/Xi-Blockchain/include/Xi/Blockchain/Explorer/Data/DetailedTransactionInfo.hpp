@@ -97,7 +97,7 @@ struct DetailedTransactionKeyOutput {
   /// The actual encoded output in the transaction.
   TransactionOutput output;
   /// The global index of the output, only valid once mined.
-  std::optional<TransactionOutput::GlobalIndex> global_index;
+  std::optional<Transaction::GlobalIndex> global_index;
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(output)

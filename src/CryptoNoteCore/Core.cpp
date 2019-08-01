@@ -896,7 +896,10 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
                     error::BlockValidationError::DOUBLE_SPENDING);
 
     TransferValidationInfo transfersInfo{};
-    makeTransferValidationInfo(*cache, transferContext, globalOutputReferences, previousBlockIndex, transfersInfo);
+    if (const auto ec = makeTransferValidationInfo(*cache, transferContext, globalOutputReferences, previousBlockIndex,
+                                                   transfersInfo)) {
+      return ec;
+    }
 
 #if defined(XI_EXPERIMENTAL_PARALLEL_TRANSFER_VALIDATION)
     async::parallel_for(async::irange(0ULL, transactions.size()),
@@ -1632,24 +1635,23 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     return error::TransactionValidationError::BASE_TRANSACTION_WRONG_UNLOCK_TIME;
   }
 
-  if (!std::holds_alternative<TransactionSignatureCollection>(block.baseTransaction.signatures)) {
-    return error::TransactionValidationError::INVALID_SIGNATURE_TYPE;
-  }
-  const auto& ringSignatures = std::get<TransactionSignatureCollection>(block.baseTransaction.signatures);
-
-  if (!ringSignatures.empty()) {
+  if (block.baseTransaction.signatures.has_value()) {
     return error::TransactionValidationError::BASE_INVALID_SIGNATURES_COUNT;
   }
 
   std::vector<uint64_t> embeddedAmounts{};
   embeddedAmounts.reserve(block.baseTransaction.outputs.size());
 
-  for (const auto& output : block.baseTransaction.outputs) {
+  for (const auto& anyOutput : block.baseTransaction.outputs) {
+    if (!std::holds_alternative<TransactionAmountOutput>(anyOutput)) {
+      return error::TransactionValidationError::OUTPUT_UNEXPECTED_TYPE;
+    }
+    const auto& output = std::get<TransactionAmountOutput>(anyOutput);
     if (output.amount == 0) {
       return error::TransactionValidationError::OUTPUT_ZERO_AMOUNT;
     }
 
-    auto keyOutput = std::get_if<KeyOutput>(&output.target);
+    auto keyOutput = std::get_if<KeyOutput>(std::addressof(output.target));
     if (keyOutput == nullptr) {
       return error::TransactionValidationError::OUTPUT_UNKNOWN_TYPE;
     }
@@ -1677,13 +1679,13 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   const auto& b = cachedBlock.getBlock();
   if (m_currency.isStaticRewardEnabledForBlockVersion(b.version)) {
     if (!b.staticRewardHash.has_value()) {
-      return error::BlockValidationError::STATIC_REWARD_MISMATCH;
+      return error::BlockValidationError::STATIC_REWARD_MISSMATCH;
     }
 
     auto staticReward = m_currency.constructStaticRewardTx(b.previousBlockHash, b.version, previousBlockIndex + 1);
     if (staticReward.isError() || !staticReward.value().has_value()) {
       logger(Logging::Error) << "expected static reward but consturation failed while validating block";
-      return error::BlockValidationError::STATIC_REWARD_MISMATCH;
+      return error::BlockValidationError::STATIC_REWARD_MISSMATCH;
       ;
     }
     CachedTransaction cStaticReward{std::move(staticReward.take().value())};
@@ -1691,10 +1693,10 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     Xi::Crypto::Hash::Crc::Hash16 crc{};
     compute(expectedStaticRewardHash.span(), crc);
     if (std::memcmp(b.staticRewardHash->data(), crc.data(), crc.size()) != 0) {
-      return error::BlockValidationError::STATIC_REWARD_MISMATCH;
+      return error::BlockValidationError::STATIC_REWARD_MISSMATCH;
     }
   } else if (b.staticRewardHash.has_value()) {
-    return error::BlockValidationError::STATIC_REWARD_MISMATCH;
+    return error::BlockValidationError::STATIC_REWARD_MISSMATCH;
   }
   // END: Static Reward Hash Validation ------------------------------------------------------------------------------
 
@@ -2351,7 +2353,9 @@ std::optional<BlockDetails> Core::getBlockDetails(const Crypto::Hash& blockHash)
 
   blockDetails.reward = 0;
   for (const TransactionOutput& out : blockTemplate.baseTransaction.outputs) {
-    blockDetails.reward += out.amount;
+    if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(out))) {
+      blockDetails.reward += amountOutput->amount;
+    }
   }
   blockDetails.staticReward = m_currency.staticRewardAmountForBlockVersion(blockDetails.version);
 

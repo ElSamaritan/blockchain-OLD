@@ -1487,7 +1487,9 @@ namespace {
 uint64_t get_block_reward(const BlockTemplate& blk) {
   uint64_t reward = 0;
   for (const TransactionOutput& out : blk.baseTransaction.outputs) {
-    reward += out.amount;
+    if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(out))) {
+      reward += amountOutput->amount;
+    }
   }
   return reward;
 }

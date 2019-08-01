@@ -82,7 +82,9 @@ bool get_tx_fee(const Transaction& tx, uint64_t& fee) {
   }
 
   for (const auto& o : tx.outputs) {
-    amount_out += o.amount;
+    if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(o))) {
+      amount_out += amountOutput->amount;
+    }
   }
 
   if (!(amount_in >= amount_out)) {
@@ -126,7 +128,7 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
     tx.inputs.clear();
     tx.outputs.clear();
     tx.signatures = TransactionSignatureCollection{};
-    auto& signatures = std::get<TransactionSignatureCollection>(tx.signatures);
+    auto& signatures = std::get<TransactionSignatureCollection>(*tx.signatures);
 
     tx.version = 1;
     tx.unlockTime = unlock_time;
@@ -212,7 +214,7 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
         return false;
       }
 
-      TransactionOutput out;
+      TransactionAmountOutput out;
       out.amount = dst_entr.amount;
       KeyOutput tk;
       tk.key = out_eph_public_key;
@@ -239,8 +241,8 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
         keys_ptrs.push_back(&o.second);
       }
 
-      signatures.push_back(std::vector<Signature>());
-      std::vector<Signature>& sigs = signatures.back();
+      signatures.push_back(TransactionRingSignature{});
+      auto& sigs = std::get<TransactionRingSignature>(signatures.back());
       sigs.resize(src_entr.outputs.size());
       generate_ring_signature(tx_prefix_hash, std::get<KeyInput>(tx.inputs[i]).keyImage, keys_ptrs,
                               in_contexts[i].in_ephemeral.secretKey, src_entr.realOutput, sigs.data());
@@ -280,24 +282,28 @@ bool checkInputTypesSupported(const TransactionPrefix& tx) {
 
 bool checkOutsValid(const TransactionPrefix& tx, std::string* error) {
   for (const TransactionOutput& out : tx.outputs) {
-    if (auto keyOut = std::get_if<KeyOutput>(&out.target)) {
-      if (!isCanonicalAmount(out.amount)) {
-        if (error) {
-          *error = "None canonical amount";
+    if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(out))) {
+      if (auto keyOut = std::get_if<KeyOutput>(std::addressof(amountOutput->target))) {
+        if (!isCanonicalAmount(amountOutput->amount)) {
+          if (error) {
+            *error = "None canonical amount";
+          }
+          return false;
         }
-        return false;
-      }
 
-      if (!keyOut->key.isValid()) {
+        if (!keyOut->key.isValid()) {
+          if (error) {
+            *error = "Output with invalid key";
+          }
+          return false;
+        }
+      } else {
         if (error) {
-          *error = "Output with invalid key";
+          *error = "Output with invalid type";
         }
         return false;
       }
     } else {
-      if (error) {
-        *error = "Output with invalid type";
-      }
       return false;
     }
   }
@@ -330,9 +336,11 @@ bool checkInputsOverflow(const TransactionPrefix& tx) {
 bool checkOutsOverflow(const TransactionPrefix& tx) {
   uint64_t money = 0;
   for (const auto& o : tx.outputs) {
-    if (money > o.amount + money)
-      return false;
-    money += o.amount;
+    if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(o))) {
+      if (money > amountOutput->amount + money)
+        return false;
+      money += amountOutput->amount;
+    }
   }
   return true;
 }
@@ -340,7 +348,9 @@ bool checkOutsOverflow(const TransactionPrefix& tx) {
 uint64_t get_outs_money_amount(const Transaction& tx) {
   uint64_t outputs_amount = 0;
   for (const auto& o : tx.outputs) {
-    outputs_amount += o.amount;
+    if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(o))) {
+      outputs_amount += amountOutput->amount;
+    }
   }
   return outputs_amount;
 }
@@ -386,13 +396,14 @@ bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, const Public
   generate_key_derivation(tx_pub_key, acc.viewSecretKey, derivation);
 
   for (const TransactionOutput& o : tx.outputs) {
-    if (auto keyOutput = std::get_if<KeyOutput>(&o.target)) {
-      if (is_out_to_acc(acc, *keyOutput, derivation, keyIndex)) {
-        outs.push_back(outputIndex);
-        money_transfered += o.amount;
+    if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(o))) {
+      if (auto keyOutput = std::get_if<KeyOutput>(std::addressof(amountOutput->target))) {
+        if (is_out_to_acc(acc, *keyOutput, derivation, keyIndex)) {
+          outs.push_back(outputIndex);
+          money_transfered += amountOutput->amount;
+        }
+        ++keyIndex;
       }
-
-      ++keyIndex;
     }
 
     ++outputIndex;

@@ -72,6 +72,9 @@ XI_MAKE_GENERIC_COMPARISON(Signature)
 
 std::ostream& operator<<(std::ostream& stream, const Signature& rhs);
 
+using SignatureVector = std::vector<Signature>;
+XI_DECLARE_SPANS(Signature)
+
 }  // namespace Crypto
 }  // namespace Xi
 

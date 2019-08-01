@@ -23,6 +23,7 @@
 #include <exception>
 #include <algorithm>
 
+#include <Xi/Exceptions.hpp>
 #include <crypto/crypto.h>
 
 #include "CryptoNoteCore/Account.h"
@@ -69,7 +70,11 @@ uint64_t getTransactionInputAmount(const Transaction& transaction) {
 }
 
 uint64_t getTransactionOutputAmount(const TransactionOutput& out) {
-  return out.amount;
+  if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(out))) {
+    return amountOutput->amount;
+  } else {
+    return 0ULL;
+  }
 }
 
 uint64_t getTransactionOutputAmount(const Transaction& transaction) {
@@ -97,22 +102,20 @@ std::vector<KeyImage> getTransactionKeyImages(const Transaction& transaction) {
   return reval;
 }
 
-PublicKey getTransactionOutputKey(const TransactionOutputTarget& target) {
-  if (auto keyOutput = std::get_if<KeyOutput>(&target)) {
-    return keyOutput->key;
-  } else {
-    throw std::runtime_error{"Unexpected transaction output type."};
-  }
-}
-
-PublicKey getTransactionOutputKey(const TransactionOutput& output) {
-  return getTransactionOutputKey(output.target);
-}
-
 std::vector<PublicKey> getTransactionOutputKeys(const Transaction& transaction) {
   std::vector<PublicKey> keys;
-  std::transform(transaction.outputs.begin(), transaction.outputs.end(), std::back_inserter(keys),
-                 [](const auto& output) { return getTransactionOutputKey(output); });
+  keys.reserve(transaction.outputs.size());
+  for (const auto& output : transaction.outputs) {
+    const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(output));
+    if (amountOutput == nullptr) {
+      continue;
+    }
+    const auto keyTarget = std::get_if<KeyOutput>(std::addressof(amountOutput->target));
+    if (keyTarget == nullptr) {
+      continue;
+    }
+    keys.emplace_back(keyTarget->key);
+  }
   return keys;
 }
 
@@ -147,13 +150,20 @@ const TransactionInput& getInputChecked(const CryptoNote::TransactionPrefix& tra
 }
 
 // TransactionOutput helper functions
-
-TransactionTypes::OutputType getTransactionOutputType(const TransactionOutputTarget& out) {
-  if (std::holds_alternative<KeyOutput>(out)) {
-    return TransactionTypes::OutputType::Key;
+TransactionTypes::OutputType getTransactionOutputType(const TransactionOutput& out) {
+  if (std::holds_alternative<TransactionAmountOutput>(out)) {
+    return TransactionTypes::OutputType::Amount;
   }
 
   return TransactionTypes::OutputType::Invalid;
+}
+
+TransactionTypes::OutputTargetType getTransactionOutputTargetType(const TransactionOutputTarget& out) {
+  if (std::holds_alternative<KeyOutput>(out)) {
+    return TransactionTypes::OutputTargetType::Key;
+  }
+
+  return TransactionTypes::OutputTargetType::Invalid;
 }
 
 const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& transaction, size_t index) {
@@ -164,10 +174,24 @@ const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& t
   return transaction.outputs[index];
 }
 
+const TransactionOutputTarget& getOutputTargetChecked(const TransactionOutput& out) {
+  if (!std::holds_alternative<TransactionAmountOutput>(out)) {
+    throw std::runtime_error{"Unexpected transaction output type"};
+  }
+  return std::get<TransactionAmountOutput>(out).target;
+}
+
 const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& transaction, size_t index,
-                                          TransactionTypes::OutputType type) {
+                                          TransactionTypes::OutputType outType,
+                                          TransactionTypes::OutputTargetType type) {
   const auto& output = getOutputChecked(transaction, index);
-  if (getTransactionOutputType(output.target) != type) {
+  const auto outputType = getTransactionOutputType(output);
+  if (outputType != outType) {
+    throw std::runtime_error{"Unexpected transaction output type"};
+  }
+
+  const auto& target = getOutputTargetChecked(output);
+  if (getTransactionOutputTargetType(target) != type) {
     throw std::runtime_error("Unexpected transaction output target type");
   }
 
@@ -183,31 +207,34 @@ bool isOutToKey(const Crypto::PublicKey& spendPublicKey, const Crypto::PublicKey
 
 bool findOutputsToAccount(const CryptoNote::TransactionPrefix& transaction, const AccountPublicAddress& addr,
                           const SecretKey& viewSecretKey, std::vector<uint32_t>& out, uint64_t& amount) {
+  using namespace Xi;
+
   AccountKeys keys;
   keys.address = addr;
   // only view secret key is used, spend key is not needed
   keys.viewSecretKey = viewSecretKey;
 
-  Crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(transaction.extra);
+  ::Crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(transaction.extra);
 
   amount = 0;
   size_t keyIndex = 0;
   uint32_t outputIndex = 0;
 
-  Crypto::KeyDerivation derivation;
+  ::Crypto::KeyDerivation derivation;
   generate_key_derivation(txPubKey, keys.viewSecretKey, derivation);
 
   for (const TransactionOutput& o : transaction.outputs) {
-    assert(std::holds_alternative<KeyOutput>(o.target));
-    if (auto keyOutput = std::get_if<KeyOutput>(&o.target)) {
-      if (is_out_to_acc(keys, *keyOutput, derivation, keyIndex)) {
-        out.push_back(outputIndex);
-        amount += o.amount;
-      }
+    exceptional_if_not<InvalidVariantTypeError>(std::holds_alternative<TransactionAmountOutput>(o));
+    const auto& amountOutput = std::get<TransactionAmountOutput>(o);
+    exceptional_if_not<InvalidVariantTypeError>(std::holds_alternative<KeyOutput>(amountOutput.target));
+    const auto& keyOutput = std::get<KeyOutput>(amountOutput.target);
 
-      ++keyIndex;
+    if (is_out_to_acc(keys, keyOutput, derivation, keyIndex)) {
+      out.push_back(outputIndex);
+      amount += amountOutput.amount;
     }
 
+    ++keyIndex;
     ++outputIndex;
   }
 

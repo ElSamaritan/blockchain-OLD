@@ -58,7 +58,7 @@ class SpentOutputDescriptor {
   size_t hash() const;
 
  private:
-  TransactionTypes::OutputType m_type;
+  TransactionTypes::OutputTargetType m_type;
   union {
     const Crypto::KeyImage* m_keyImage;
     struct {
@@ -105,7 +105,7 @@ struct TransactionOutputInformationEx : public TransactionOutputInformationIn {
   KV_MEMBER_RENAME(transactionHash, transaction_hash)
   KV_MEMBER(visible)
 
-  if (type == TransactionTypes::OutputType::Key) {
+  if (type == TransactionTypes::OutputTargetType::Key) {
     KV_MEMBER_RENAME(outputKey, output_key)
   }
   KV_END_SERIALIZATION
@@ -246,7 +246,7 @@ class TransfersContainer : public ITransfersContainer {
   void deleteTransactionTransfers(const Crypto::Hash& transactionHash);
   bool isSpendTimeUnlocked(uint64_t unlockTime) const;
   bool isIncluded(const TransactionOutputInformationEx& info, uint32_t flags) const;
-  static bool isIncluded(TransactionTypes::OutputType type, uint32_t state, uint32_t flags);
+  static bool isIncluded(TransactionTypes::OutputTargetType type, uint32_t state, uint32_t flags);
   void updateTransfersVisibility(const Crypto::KeyImage& keyImage);
 
   void copyToSpent(const TransactionBlockInfo& block, const ITransactionReader& tx, size_t inputIndex,

@@ -118,7 +118,9 @@ template <typename... _Ts>
   }
 
 #define XI_SERIALIZATION_VARIANT_INVARIANT(VARIANT_TYPE, ...)                                                  \
-  struct VARIANT_TYPE : std::variant<__VA_ARGS__> {};                                                          \
+  struct VARIANT_TYPE : std::variant<__VA_ARGS__> {                                                            \
+    using variant::variant;                                                                                    \
+  };                                                                                                           \
   [[nodiscard]] inline bool serialize(VARIANT_TYPE &value, ::Common::StringView name,                          \
                                       ::CryptoNote::ISerializer &serializer) {                                 \
     return ::CryptoNote::serializeVariant<VARIANT_TYPE>(static_cast<std::variant<__VA_ARGS__> &>(value), name, \

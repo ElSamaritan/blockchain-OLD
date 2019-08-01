@@ -807,33 +807,34 @@ void DatabaseBlockchainCache::pushTransaction(const CachedTransaction& cachedTra
   std::set<Amount> newKeyAmounts;
 
   for (auto& output : tx.outputs) {
-    transactionCacheInfo.outputs.push_back(output.target);
+    transactionCacheInfo.outputs.push_back(output);
 
     PackedOutIndex poi;
     poi.data.blockIndex = blockIndex;
     poi.data.transactionIndex = transactionBlockIndex;
     poi.data.outputIndex = outputCount++;
 
-    if (auto keyOutput = std::get_if<KeyOutput>(&output.target)) {
-      keyIndexes[output.amount].push_back(poi);
-      auto outputCountForAmount = updateKeyOutputCount(output.amount, 1);
+    if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(output))) {
+      keyIndexes[amountOutput->amount].push_back(poi);
+      auto outputCountForAmount = updateKeyOutputCount(amountOutput->amount, 1);
       if (outputCountForAmount == 1) {
-        newKeyAmounts.insert(output.amount);
+        newKeyAmounts.insert(amountOutput->amount);
       }
 
       assert(outputCountForAmount > 0);
       auto globalIndex = outputCountForAmount - 1;
       transactionCacheInfo.globalIndexes.push_back(globalIndex);
       // output global index:
-      transactionCacheInfo.amountToKeyIndexes[output.amount].push_back(globalIndex);
+      transactionCacheInfo.amountToKeyIndexes[amountOutput->amount].push_back(globalIndex);
 
-      KeyOutputInfo outputInfo;
-      outputInfo.publicKey = keyOutput->key;
-      outputInfo.transactionHash = transactionCacheInfo.transactionHash;
-      outputInfo.unlockTime = transactionCacheInfo.unlockTime;
-      outputInfo.index = poi;
-
-      batch.insertKeyOutputInfo(output.amount, globalIndex, outputInfo);
+      if (const auto keyTarget = std::get_if<KeyOutput>(std::addressof(amountOutput->target))) {
+        KeyOutputInfo outputInfo;
+        outputInfo.publicKey = keyTarget->key;
+        outputInfo.transactionHash = transactionCacheInfo.transactionHash;
+        outputInfo.unlockTime = transactionCacheInfo.unlockTime;
+        outputInfo.index = poi;
+        batch.insertKeyOutputInfo(amountOutput->amount, globalIndex, outputInfo);
+      }
     }
   }
 
@@ -1079,17 +1080,20 @@ ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputKeys(uint64_t a
   assert(std::is_sorted(globalIndexes.begin(), globalIndexes.end()));                             // sorted
   assert(std::adjacent_find(globalIndexes.begin(), globalIndexes.end()) == globalIndexes.end());  // unique
 
-  return extractKeyOutputs(amount, blockIndex, globalIndexes,
-                           [&](const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex) {
-                             XI_UNUSED(globalIndex);
-                             if (!isTransactionSpendTimeUnlocked(info.unlockTime, blockIndex, timestamp)) {
-                               return ExtractOutputKeysResult::OUTPUT_LOCKED;
-                             }
+  return extractKeyOutputs(
+      amount, blockIndex, globalIndexes,
+      [&](const CachedTransactionInfo& info, PackedOutIndex index, uint32_t globalIndex) {
+        XI_UNUSED(globalIndex);
+        if (!isTransactionSpendTimeUnlocked(info.unlockTime, blockIndex, timestamp)) {
+          return ExtractOutputKeysResult::OUTPUT_LOCKED;
+        }
 
-                             assert(std::holds_alternative<KeyOutput>(info.outputs[index.data.outputIndex]));
-                             publicKeys.push_back(std::get<KeyOutput>(info.outputs[index.data.outputIndex]).key);
-                             return ExtractOutputKeysResult::SUCCESS;
-                           });
+        assert(std::holds_alternative<TransactionAmountOutput>(info.outputs[index.data.outputIndex]));
+        const auto amountOutput = std::get<TransactionAmountOutput>(info.outputs[index.data.outputIndex]);
+        assert(std::holds_alternative<KeyOutput>(amountOutput.target));
+        publicKeys.push_back(std::get<KeyOutput>(amountOutput.target).key);
+        return ExtractOutputKeysResult::SUCCESS;
+      });
 }
 
 ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOtputIndexes(uint64_t amount,
@@ -1868,7 +1872,10 @@ ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputs(
     tx.unlockTime = kv.second.unlockTime;
     tx.transactionHash = kv.second.transactionHash;
     tx.outputs.resize(kv.second.index.data.outputIndex + 1);
-    tx.outputs[kv.second.index.data.outputIndex] = KeyOutput{kv.second.publicKey};
+    TransactionAmountOutput output{};
+    output.amount = amount;
+    output.target = TransactionOutputTarget{KeyOutput{kv.second.publicKey}};
+    tx.outputs[kv.second.index.data.outputIndex] = TransactionOutput{output};
 
     // TODO: change the interface of extractKeyOutputs to return vector of structures instead of passing callback as
     // predicate
@@ -1996,12 +2003,16 @@ BlockchainReadResult DatabaseBlockchainCache::readDatabase(BlockchainReadBatch& 
 void DatabaseBlockchainCache::addGenesisBlock(CachedBlock&& genesisBlock) {
   uint64_t genesisGeneratedCoins = 0;
   for (const TransactionOutput& output : genesisBlock.getBlock().baseTransaction.outputs) {
-    genesisGeneratedCoins += output.amount;
+    if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(output))) {
+      genesisGeneratedCoins += amountOutput->amount;
+    }
   }
   const auto staticReward = currency.constructStaticRewardTx(genesisBlock).takeOrThrow();
   if (staticReward.has_value()) {
     for (const TransactionOutput& output : staticReward->outputs) {
-      genesisGeneratedCoins += output.amount;
+      if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(output))) {
+        genesisGeneratedCoins += amountOutput->amount;
+      }
     }
   }
 

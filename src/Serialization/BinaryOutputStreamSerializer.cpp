@@ -166,7 +166,7 @@ bool BinaryOutputStreamSerializer::flag(std::vector<TypeTag>& flag, Common::Stri
     assert(iFlag.binary() > 0);
     nativeFlag |= (1 << (iFlag.binary() - 1));
   }
-  return writeInteger(stream, nativeFlag, false);
+  return writeInteger(stream, nativeFlag, true);
 }
 
 bool BinaryOutputStreamSerializer::operator()(double& value, Common::StringView name) {

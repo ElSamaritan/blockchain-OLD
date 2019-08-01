@@ -100,8 +100,12 @@ bool CryptoNote::validateExtraNonce(const CryptoNote::TransactionExtraNonce &non
 }
 
 bool CryptoNote::validateCanonicalDecomposition(const CryptoNote::Transaction &tx) {
-  return std::all_of(tx.outputs.begin(), tx.outputs.end(),
-                     [](const auto &iOutput) { return isCanonicalAmount(iOutput.amount); });
+  for (const auto &output : tx.outputs) {
+    if (const auto &amountOut = std::get_if<TransactionAmountOutput>(std::addressof(output))) {
+      XI_RETURN_EC_IF_NOT(isCanonicalAmount(amountOut->amount), false);
+    }
+  }
+  XI_RETURN_SC(true);
 }
 
 std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransaction &transaction,
@@ -133,7 +137,9 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
   }
 
   XI_RETURN_EC_IF(tx.outputs.empty(), Error::EMPTY_OUTPUTS);
-  for (const auto &output : tx.outputs) {
+  for (const auto &anyOutput : tx.outputs) {
+    XI_RETURN_EC_IF_NOT(std::holds_alternative<TransactionAmountOutput>(anyOutput), Error::OUTPUT_UNKNOWN_TYPE);
+    const auto &output = std::get<TransactionAmountOutput>(anyOutput);
     XI_RETURN_EC_IF_NOT(std::holds_alternative<KeyOutput>(output.target), Error::OUTPUT_UNKNOWN_TYPE);
     const auto &keyTarget = std::get<KeyOutput>(output.target);
     if (!context.inCheckpointRange) {
@@ -148,9 +154,10 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
   XI_RETURN_EC_IF(out.outputSum == 0, Error::OUTPUT_ZERO);
 
   XI_RETURN_EC_IF(tx.inputs.empty(), Error::EMPTY_INPUTS);
-  XI_RETURN_EC_IF_NOT(std::holds_alternative<TransactionSignatureCollection>(tx.signatures),
+  XI_RETURN_EC_IF_NOT(tx.signatures.has_value(), Error::INVALID_SIGNATURE_TYPE);
+  XI_RETURN_EC_IF_NOT(std::holds_alternative<TransactionSignatureCollection>(*tx.signatures),
                       Error::INVALID_SIGNATURE_TYPE);
-  const auto &signatures = std::get<TransactionSignatureCollection>(tx.signatures);
+  const auto &signatures = std::get<TransactionSignatureCollection>(*tx.signatures);
   cache.globalIndicesForInput.reserve(tx.inputs.size());
   XI_RETURN_EC_IF_NOT(tx.inputs.size() == signatures.size(), Error::INPUT_INVALID_SIGNATURES_COUNT);
   for (size_t i = 0; i < tx.inputs.size(); ++i) {
@@ -168,8 +175,10 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
     }
 
     XI_RETURN_EC_IF(keyInput.outputIndices.empty(), Error::INPUT_EMPTY_OUTPUT_USAGE);
-    XI_RETURN_EC_IF_NOT(keyInput.outputIndices.size() == signatures[i].size(), Error::INPUT_INVALID_SIGNATURES_COUNT);
-    for (const auto &signature : signatures[i]) {
+    XI_RETURN_EC_IF_NOT(std::holds_alternative<TransactionRingSignature>(signatures[i]), Error::INVALID_SIGNATURE_TYPE);
+    const auto &iRingSignature = std::get<TransactionRingSignature>(signatures[i]);
+    XI_RETURN_EC_IF_NOT(keyInput.outputIndices.size() == iRingSignature.size(), Error::INPUT_INVALID_SIGNATURES_COUNT);
+    for (const auto &signature : iRingSignature) {
       XI_RETURN_EC_IF_NOT(signature.isValid(), Error::INPUT_INVALID_SIGNATURES);
     }
 
@@ -205,13 +214,15 @@ std::error_code CryptoNote::postValidateTransfer(const CryptoNote::CachedTransac
   XI_UNUSED(context);
 
   const auto &tx = transaction.getTransaction();
-  assert(std::holds_alternative<TransactionSignatureCollection>(tx.signatures));
-  const auto &signatures = std::get<TransactionSignatureCollection>(tx.signatures);
+  assert(tx.signatures.has_value());
+  assert(std::holds_alternative<TransactionSignatureCollection>(*tx.signatures));
+  const auto &signatures = std::get<TransactionSignatureCollection>(*tx.signatures);
   assert(tx.inputs.size() == signatures.size());
 
   for (size_t i = 0; i < tx.inputs.size(); ++i) {
     const auto &input = tx.inputs[i];
-    const auto &inputSignatures = signatures[i];
+    assert(std::holds_alternvative<TransactionRingSignature>(signatures[i]));
+    const auto &inputSignatures = std::get<TransactionRingSignature>(signatures[i]);
     assert(std::holds_alternative<KeyInput>(input));
     const auto &keyInput = std::get<KeyInput>(input);
 
@@ -251,27 +262,40 @@ std::error_code CryptoNote::postValidateTransfer(const CryptoNote::CachedTransac
   return Error::VALIDATION_SUCCESS;
 }
 
-void CryptoNote::makeTransferValidationInfo(const IBlockchainCache &segment, const TransferValidationContext &context,
-                                            const std::unordered_map<Amount, GlobalOutputIndexSet> &refs,
-                                            uint32_t blockIndex, CryptoNote::TransferValidationInfo &info) {
+std::error_code CryptoNote::makeTransferValidationInfo(const IBlockchainCache &segment,
+                                                       const TransferValidationContext &context,
+                                                       const std::unordered_map<Amount, GlobalOutputIndexSet> &refs,
+                                                       uint32_t blockIndex, CryptoNote::TransferValidationInfo &info) {
   // Currently disabled due to an issue of outputs not found by the in memory cache.
   // info.outputs = segment.extractKeyOutputs(refs, blockIndex);
   for (const auto &iAmountRefs : refs) {
     GlobalOutputIndexVector indices{};
     indices.reserve(iAmountRefs.second.size());
     std::copy(iAmountRefs.second.begin(), iAmountRefs.second.end(), std::back_inserter(indices));
-    segment.extractKeyOutputs(iAmountRefs.first, context.previousBlockIndex,
-                              Common::ArrayView<GlobalOutputIndex>{indices.data(), indices.size()},
-                              [&](const CachedTransactionInfo &txinfo, PackedOutIndex index, uint32_t globalIndex) {
-                                KeyOutputInfo iInfo{};
-                                iInfo.index = index;
-                                iInfo.transactionHash = txinfo.transactionHash;
-                                iInfo.unlockTime = txinfo.unlockTime;
-                                const auto &keyOutput = std::get<KeyOutput>(txinfo.outputs[index.data.outputIndex]);
-                                iInfo.publicKey = keyOutput.key;
-                                info.outputs[iAmountRefs.first].emplace(std::make_pair(globalIndex, std::move(iInfo)));
-                                return ExtractOutputKeysResult::SUCCESS;
-                              });
+    const auto extractionResult = segment.extractKeyOutputs(
+        iAmountRefs.first, context.previousBlockIndex,
+        Common::ArrayView<GlobalOutputIndex>{indices.data(), indices.size()},
+        [&](const CachedTransactionInfo &txinfo, PackedOutIndex index, uint32_t globalIndex) {
+          KeyOutputInfo iInfo{};
+          iInfo.index = index;
+          iInfo.transactionHash = txinfo.transactionHash;
+          iInfo.unlockTime = txinfo.unlockTime;
+          if (!std::holds_alternative<TransactionAmountOutput>(txinfo.outputs[index.data.outputIndex])) {
+            return ExtractOutputKeysResult::INVALID_TYPE;
+          }
+          const auto &amountOutput = std::get<TransactionAmountOutput>(txinfo.outputs[index.data.outputIndex]);
+          if (!std::holds_alternative<KeyOutput>(amountOutput.target)) {
+            return ExtractOutputKeysResult::INVALID_TYPE;
+          }
+          const auto &keyOutput = std::get<KeyOutput>(amountOutput.target);
+
+          iInfo.publicKey = keyOutput.key;
+          info.outputs[iAmountRefs.first].emplace(std::make_pair(globalIndex, std::move(iInfo)));
+          return ExtractOutputKeysResult::SUCCESS;
+        });
+    if (extractionResult != ExtractOutputKeysResult::SUCCESS) {
+      return Error::INPUT_INVALID_GLOBAL_INDEX;
+    }
   }
 
   const auto queryMixinThreshold = context.maximumMixin * context.upgradeMixin + 1;
@@ -289,4 +313,6 @@ void CryptoNote::makeTransferValidationInfo(const IBlockchainCache &segment, con
       info.mixinsUpgradeThreshold[amount] = (requiredMixins + 1) * context.upgradeMixin - availableMixins;
     }
   }
+
+  return Error::VALIDATION_SUCCESS;
 }

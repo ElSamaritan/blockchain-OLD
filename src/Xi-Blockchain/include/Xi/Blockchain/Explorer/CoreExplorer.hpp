@@ -85,7 +85,7 @@ class CoreExplorer : public IExplorer, private CryptoNote::IBlockchainObserver, 
 
  private:
   ShortTransactionInputInfo fromCore(const CryptoNote::TransactionInput& input) const;
-  ShortTransactionOutputInfo fromCore(const CryptoNote::TransactionOutput& input) const;
+  ShortTransactionOutputInfo fromCore(const CryptoNote::TransactionOutput& output) const;
   TransactionInfo fromCore(const CryptoNote::CachedTransaction& transaction, bool isStaticReward,
                            TransactionContainer container) const;
   DetailedTransactionInfo fromCore(const CryptoNote::IBlockchainCache* segment,

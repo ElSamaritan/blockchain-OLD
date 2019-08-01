@@ -46,7 +46,7 @@ struct TransactionInformation {
 
 struct TransactionOutputInformation {
   // output info
-  TransactionTypes::OutputType type;
+  TransactionTypes::OutputTargetType type;
   uint64_t amount;
   uint32_t globalOutputIndex;
   uint32_t outputInTransaction;

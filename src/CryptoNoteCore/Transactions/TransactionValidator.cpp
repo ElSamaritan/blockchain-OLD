@@ -76,7 +76,10 @@ Xi::Result<CryptoNote::EligibleIndex> CryptoNote::TransactionValidator::doValida
   }
 
   TransferValidationInfo info{};
-  makeTransferValidationInfo(chain(), context, state.globalOutputIndicesUsed, chain().getTopBlockIndex(), info);
+  if (const auto ec = makeTransferValidationInfo(chain(), context, state.globalOutputIndicesUsed,
+                                                 chain().getTopBlockIndex(), info)) {
+    return Xi::makeError(ec);
+  }
 
   if (const auto ec = postValidateTransfer(transaction, context, cache, info)) {
     return Xi::makeError(ec);

@@ -32,7 +32,9 @@
 #include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Result.h>
+#include <Xi/Byte.hh>
 #include <Xi/Crypto/KeyImage.hpp>
+#include <Xi/Blockchain/Transaction/Transaction.hpp>
 
 #include "CryptoNoteCore/CryptoNote.h"
 

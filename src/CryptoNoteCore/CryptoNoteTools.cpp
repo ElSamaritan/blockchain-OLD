@@ -98,10 +98,12 @@ std::vector<uint64_t> CryptoNote::getInputsAmounts(const Transaction& transactio
   return inputsAmounts;
 }
 
-uint64_t CryptoNote::getOutputAmount(const Transaction& transaction) {
+uint64_t CryptoNote::getOutputAmount(const TransactionPrefix& transaction) {
   uint64_t amount = 0;
   for (auto& output : transaction.outputs) {
-    amount += output.amount;
+    if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(output))) {
+      amount += amountOutput->amount;
+    }
   }
 
   return amount;
@@ -133,8 +135,12 @@ bool CryptoNote::isCanonicalAmount(uint64_t amount) {
 
 size_t CryptoNote::countCanonicalDecomposition(const Transaction& tx) {
   std::vector<uint64_t> outs;
-  std::transform(tx.outputs.begin(), tx.outputs.end(), std::back_inserter(outs),
-                 [](const auto& iOutput) { return iOutput.amount; });
+  outs.reserve(tx.outputs.size());
+  for (const auto& output : tx.outputs) {
+    if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(output))) {
+      outs.push_back(amountOutput->amount);
+    }
+  }
   return countCanonicalDecomposition(outs);
 }
 

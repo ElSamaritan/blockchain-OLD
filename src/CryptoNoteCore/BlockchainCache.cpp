@@ -132,13 +132,17 @@ BlockchainCache::BlockchainCache(const std::string& filename, const Currency& cu
 
     uint64_t genesisGeneratedCoins = 0;
     for (const TransactionOutput& output : genesisBlock.getBlock().baseTransaction.outputs) {
-      genesisGeneratedCoins += output.amount;
+      if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(output))) {
+        genesisGeneratedCoins += amountOutput->amount;
+      }
     }
 
     boost::optional<Transaction> staticReward = currency.constructStaticRewardTx(genesisRawBlock).takeOrThrow();
     if (staticReward.has_value()) {
       for (const TransactionOutput& output : staticReward->outputs) {
-        genesisGeneratedCoins += output.amount;
+        if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(output))) {
+          genesisGeneratedCoins += amountOutput->amount;
+        }
       }
     }
 
@@ -416,15 +420,15 @@ void BlockchainCache::pushTransaction(const CachedTransaction& cachedTransaction
   logger(Logging::Debugging) << "Adding " << tx.outputs.size() << " transaction outputs";
   uint16_t outputCount = 0;
   for (auto& output : tx.outputs) {
-    transactionCacheInfo.outputs.push_back(output.target);
+    transactionCacheInfo.outputs.push_back(output);
 
     PackedOutIndex poi;
     poi.data.blockIndex = blockIndex;
     poi.data.transactionIndex = transactionInBlockIndex;
     poi.data.outputIndex = outputCount++;
 
-    if (std::holds_alternative<KeyOutput>(output.target)) {
-      transactionCacheInfo.globalIndexes.push_back(insertKeyOutputToGlobalIndex(output.amount, poi, blockIndex));
+    if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(output))) {
+      transactionCacheInfo.globalIndexes.push_back(insertKeyOutputToGlobalIndex(amountOutput->amount, poi, blockIndex));
     }
   }
 
@@ -937,7 +941,9 @@ ExtractOutputKeysResult BlockchainCache::extractKeyOutputKeys(uint64_t amount, u
                                return ExtractOutputKeysResult::OUTPUT_LOCKED;
                              }
 
-                             const auto& keyOutput = std::get<KeyOutput>(info.outputs[index.data.outputIndex]);
+                             const auto& amountOutput =
+                                 std::get<TransactionAmountOutput>(info.outputs[index.data.outputIndex]);
+                             const auto& keyOutput = std::get<KeyOutput>(amountOutput.target);
                              publicKeys.push_back(keyOutput.key);
                              return ExtractOutputKeysResult::SUCCESS;
                            });
@@ -1086,6 +1092,8 @@ ExtractOutputKeysResult BlockchainCache::extractKeyOtputIndexes(uint64_t amount,
 std::map<IBlockchainCache::Amount, std::map<IBlockchainCache::GlobalOutputIndex, KeyOutputInfo>>
 BlockchainCache::extractKeyOutputs(const std::unordered_map<IBlockchainCache::Amount, GlobalOutputIndexSet>& references,
                                    uint32_t blockIndex) const {
+  using namespace Xi;
+
   XI_RETURN_SC_IF(references.empty(), {});
 
   if (startIndex < blockIndex) {
@@ -1137,8 +1145,11 @@ BlockchainCache::extractKeyOutputs(const std::unordered_map<IBlockchainCache::Am
       assert(txSearch != transactionsTag.end());
 
       assert(txOutputIndex.data.outputIndex < txSearch->outputs.size());
-      assert(std::holds_alternative<KeyOutput>(txSearch->outputs[txOutputIndex.data.outputIndex]));
-      const auto& keyOutput = std::get<KeyOutput>(txSearch->outputs[txOutputIndex.data.outputIndex]);
+      exceptional_if_not<InvalidVariantTypeError>(
+          std::holds_alternative<TransactionAmountOutput>(txSearch->outputs[txOutputIndex.data.outputIndex]));
+      const auto& amountOutput = std::get<TransactionAmountOutput>(txSearch->outputs[txOutputIndex.data.outputIndex]);
+      exceptional_if_not<InvalidVariantTypeError>(std::holds_alternative<KeyOutput>(amountOutput.target));
+      const auto& keyOutput = std::get<KeyOutput>(amountOutput.target);
 
       KeyOutputInfo iOutputInfo{};
       iOutputInfo.transactionHash = txSearch->transactionHash;

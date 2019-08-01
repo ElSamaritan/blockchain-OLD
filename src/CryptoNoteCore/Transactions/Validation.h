@@ -88,14 +88,17 @@ struct TransferValidationInfo {
   std::map<Amount, uint64_t> requiredMixins;
 };
 
-std::error_code preValidateTransfer(const CachedTransaction& transaction, const TransferValidationContext& context,
-                                    TransferValidationCache& cache, TransferValidationState& out);
+[[nodiscard]] std::error_code preValidateTransfer(const CachedTransaction& transaction,
+                                                  const TransferValidationContext& context,
+                                                  TransferValidationCache& cache, TransferValidationState& out);
 
-std::error_code postValidateTransfer(const CachedTransaction& transaction, const TransferValidationContext& context,
-                                     TransferValidationCache& cache, const TransferValidationInfo& info);
+[[nodiscard]] std::error_code postValidateTransfer(const CachedTransaction& transaction,
+                                                   const TransferValidationContext& context,
+                                                   TransferValidationCache& cache, const TransferValidationInfo& info);
 
-void makeTransferValidationInfo(const IBlockchainCache& segment, const TransferValidationContext& context,
-                                const std::unordered_map<Amount, GlobalOutputIndexSet>& refs, uint32_t blockIndex,
-                                TransferValidationInfo& info);
+[[nodiscard]] std::error_code makeTransferValidationInfo(const IBlockchainCache& segment,
+                                                         const TransferValidationContext& context,
+                                                         const std::unordered_map<Amount, GlobalOutputIndexSet>& refs,
+                                                         uint32_t blockIndex, TransferValidationInfo& info);
 
 }  // namespace CryptoNote

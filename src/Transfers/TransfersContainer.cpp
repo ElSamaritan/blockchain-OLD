@@ -100,12 +100,12 @@ TransferIteratorList<TIterator> createTransferIteratorList(const std::pair<TIter
 }
 }  // namespace
 
-SpentOutputDescriptor::SpentOutputDescriptor() : m_type(TransactionTypes::OutputType::Invalid) {
+SpentOutputDescriptor::SpentOutputDescriptor() : m_type(TransactionTypes::OutputTargetType::Invalid) {
 }
 
 SpentOutputDescriptor::SpentOutputDescriptor(const TransactionOutputInformationIn& transactionInfo)
     : m_type(transactionInfo.type), m_data{0, 0} {
-  if (m_type == TransactionTypes::OutputType::Key) {
+  if (m_type == TransactionTypes::OutputTargetType::Key) {
     m_keyImage = &transactionInfo.keyImage;
   } else {
     assert(false);
@@ -117,16 +117,16 @@ SpentOutputDescriptor::SpentOutputDescriptor(const KeyImage* keyImage) {
 }
 
 void SpentOutputDescriptor::assign(const KeyImage* keyImage) {
-  m_type = TransactionTypes::OutputType::Key;
+  m_type = TransactionTypes::OutputTargetType::Key;
   m_keyImage = keyImage;
 }
 
 bool SpentOutputDescriptor::isValid() const {
-  return m_type != TransactionTypes::OutputType::Invalid;
+  return m_type != TransactionTypes::OutputTargetType::Invalid;
 }
 
 bool SpentOutputDescriptor::operator==(const SpentOutputDescriptor& other) const {
-  if (m_type == TransactionTypes::OutputType::Key) {
+  if (m_type == TransactionTypes::OutputTargetType::Key) {
     return other.m_type == m_type && *other.m_keyImage == *m_keyImage;
   } else {
     assert(false);
@@ -135,7 +135,7 @@ bool SpentOutputDescriptor::operator==(const SpentOutputDescriptor& other) const
 }
 
 size_t SpentOutputDescriptor::hash() const {
-  if (m_type == TransactionTypes::OutputType::Key) {
+  if (m_type == TransactionTypes::OutputTargetType::Key) {
     return hash_value(*m_keyImage);
   } else {
     assert(false);
@@ -255,7 +255,7 @@ bool TransfersContainer::addTransactionOutputs(const TransactionBlockInfo& block
       (void)result;  // Disable unused warning
       assert(result.second);
     } else {
-      if (info.type == TransactionTypes::OutputType::Key) {
+      if (info.type == TransactionTypes::OutputTargetType::Key) {
         bool duplicate = false;
         SpentOutputDescriptor descriptor(transfer);
 
@@ -286,7 +286,7 @@ bool TransfersContainer::addTransactionOutputs(const TransactionBlockInfo& block
       assert(result.second);
     }
 
-    if (info.type == TransactionTypes::OutputType::Key) {
+    if (info.type == TransactionTypes::OutputTargetType::Key) {
       updateTransfersVisibility(info.keyImage);
     }
 
@@ -438,7 +438,7 @@ bool TransfersContainer::markTransactionConfirmed(const TransactionBlockInfo& bl
 
       transferIt = m_unconfirmedTransfers.get<ContainingTransactionIndex>().erase(transferIt);
 
-      if (transfer.type == TransactionTypes::OutputType::Key) {
+      if (transfer.type == TransactionTypes::OutputTargetType::Key) {
         updateTransfersVisibility(transfer.keyImage);
       }
     }
@@ -476,7 +476,7 @@ bool TransfersContainer::markTransactionConfirmed(const TransactionBlockInfo& bl
 
       transferIt = m_availableTransfers.get<ContainingTransactionIndex>().erase(transferIt);
 
-      if (unconfirmedTransfer.type == TransactionTypes::OutputType::Key) {
+      if (unconfirmedTransfer.type == TransactionTypes::OutputTargetType::Key) {
         updateTransfersVisibility(unconfirmedTransfer.keyImage);
       }
     }
@@ -512,7 +512,7 @@ void TransfersContainer::deleteTransactionTransfers(const Hash& transactionHash)
     assert(result.second);
     it = spendingTransactionIndex.erase(it);
 
-    if (result.first->type == TransactionTypes::OutputType::Key) {
+    if (result.first->type == TransactionTypes::OutputTargetType::Key) {
       updateTransfersVisibility(result.first->keyImage);
     }
   }
@@ -520,7 +520,7 @@ void TransfersContainer::deleteTransactionTransfers(const Hash& transactionHash)
   auto unconfirmedTransfersRange =
       m_unconfirmedTransfers.get<ContainingTransactionIndex>().equal_range(transactionHash);
   for (auto it = unconfirmedTransfersRange.first; it != unconfirmedTransfersRange.second;) {
-    if (it->type == TransactionTypes::OutputType::Key) {
+    if (it->type == TransactionTypes::OutputTargetType::Key) {
       KeyImage keyImage = it->keyImage;
       it = m_unconfirmedTransfers.get<ContainingTransactionIndex>().erase(it);
       updateTransfersVisibility(keyImage);
@@ -532,7 +532,7 @@ void TransfersContainer::deleteTransactionTransfers(const Hash& transactionHash)
   auto& transactionTransfersIndex = m_availableTransfers.get<ContainingTransactionIndex>();
   auto transactionTransfersRange = transactionTransfersIndex.equal_range(transactionHash);
   for (auto it = transactionTransfersRange.first; it != transactionTransfersRange.second;) {
-    if (it->type == TransactionTypes::OutputType::Key) {
+    if (it->type == TransactionTypes::OutputTargetType::Key) {
       KeyImage keyImage = it->keyImage;
       it = transactionTransfersIndex.erase(it);
       updateTransfersVisibility(keyImage);
@@ -932,7 +932,7 @@ void TransfersContainer::repair() {
       assert(result.second);
       it = m_spentTransfers.erase(it);
 
-      if (result.first->type == TransactionTypes::OutputType::Key) {
+      if (result.first->type == TransactionTypes::OutputTargetType::Key) {
         updateTransfersVisibility(result.first->keyImage);
       }
 
@@ -951,7 +951,7 @@ void TransfersContainer::repair() {
                         << ", transaction hash " << it->transactionHash << ", output " << std::setw(2)
                         << it->outputInTransaction << ", amount " << m_currency.amountFormatter()(it->amount);
 
-      if (it->type == TransactionTypes::OutputType::Key) {
+      if (it->type == TransactionTypes::OutputTargetType::Key) {
         KeyImage keyImage = it->keyImage;
         it = m_unconfirmedTransfers.erase(it);
         updateTransfersVisibility(keyImage);
@@ -976,7 +976,7 @@ void TransfersContainer::repair() {
                         << ", output " << std::setw(2) << it->outputInTransaction << ", amount "
                         << m_currency.amountFormatter()(it->amount);
 
-      if (it->type == TransactionTypes::OutputType::Key) {
+      if (it->type == TransactionTypes::OutputTargetType::Key) {
         KeyImage keyImage = it->keyImage;
         it = m_availableTransfers.erase(it);
         updateTransfersVisibility(keyImage);
@@ -1020,10 +1020,10 @@ bool TransfersContainer::isIncluded(const TransactionOutputInformationEx& info, 
   return isIncluded(info.type, state, flags);
 }
 
-bool TransfersContainer::isIncluded(TransactionTypes::OutputType type, uint32_t state, uint32_t flags) {
+bool TransfersContainer::isIncluded(TransactionTypes::OutputTargetType type, uint32_t state, uint32_t flags) {
   return
       // filter by type
-      (((flags & IncludeTypeKey) != 0 && type == TransactionTypes::OutputType::Key)) &&
+      (((flags & IncludeTypeKey) != 0 && type == TransactionTypes::OutputTargetType::Key)) &&
       // filter by state
       ((flags & state) != 0);
 }

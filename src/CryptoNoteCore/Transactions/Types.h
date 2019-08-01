@@ -32,7 +32,8 @@ namespace CryptoNote {
 namespace TransactionTypes {
 
 enum class InputType : uint8_t { Invalid, Key, Generating };
-enum class OutputType : uint8_t { Invalid, Key };
+enum class OutputType : uint8_t { Invalid, Amount };
+enum class OutputTargetType : uint8_t { Invalid, Key };
 
 struct GlobalOutput {
   Crypto::PublicKey targetKey;

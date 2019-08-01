@@ -27,7 +27,9 @@
 #include <optional>
 
 #include <Xi/Crypto/FastHash.hpp>
+#include <Xi/Crypto/Hash/Crc.hpp>
 
+#include "Xi/Blockchain/Block/Hash.hpp"
 #include "Xi/Blockchain/Block/Version.hpp"
 #include "Xi/Blockchain/Block/Nonce.hpp"
 #include "Xi/Blockchain/Block/MergeMiningTag.hpp"
@@ -47,12 +49,13 @@ struct Header {
   uint64_t timestamp;
   Crypto::FastHash previousBlockHash;
   PrunableMergeMiningTag mergeMiningTag;
+  std::optional<Crypto::Hash::Crc::Hash16> staticRewardHash;
 
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
 
-  Crypto::FastHash headerHash() const;
-  Crypto::FastHash proofOfWorkPrefix() const;
-  Crypto::FastHash proofOfWorkHash(const Crypto::FastHash& transactionTreeHash) const;
+  Hash headerHash() const;
+  Hash proofOfWorkPrefix() const;
+  Hash proofOfWorkHash(const Hash& transactionTreeHash) const;
 
  private:
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer, bool isPoWPrefix);

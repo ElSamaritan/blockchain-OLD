@@ -446,7 +446,7 @@ bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_
     KeyOutput tk;
     tk.key = outEphemeralPubKey;
 
-    TransactionOutput out;
+    TransactionAmountOutput out;
     summaryAmounts += out.amount = outAmounts[no];
     out.target = tk;
     tx.outputs.push_back(out);
@@ -552,7 +552,7 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const
     KeyOutput tk;
     tk.key = outEphemeralPubKey;
 
-    TransactionOutput out;
+    TransactionAmountOutput out;
     summaryAmounts += out.amount = outAmounts[no];
     out.target = tk;
     tx.outputs.push_back(out);
@@ -653,7 +653,9 @@ bool Currency::isFusionTransaction(const Transaction& transaction, size_t size, 
   std::vector<uint64_t> outputsAmounts;
   outputsAmounts.reserve(transaction.outputs.size());
   for (const TransactionOutput& output : transaction.outputs) {
-    outputsAmounts.push_back(output.amount);
+    XI_RETURN_EC_IF_NOT(std::holds_alternative<TransactionAmountOutput>(output), false);
+    const auto& amountOutput = std::get<TransactionAmountOutput>(output);
+    outputsAmounts.push_back(amountOutput.amount);
   }
 
   return isFusionTransaction(getInputsAmounts(transaction), outputsAmounts, size, version);
@@ -835,7 +837,7 @@ Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<Accoun
       }
       KeyOutput tk;
       tk.key = outEphemeralPubKey;
-      TransactionOutput out;
+      TransactionAmountOutput out;
       out.amount = iAmount;
       out.target = tk;
       tx.outputs.push_back(out);

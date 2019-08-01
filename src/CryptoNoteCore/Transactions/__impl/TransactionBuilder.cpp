@@ -167,7 +167,7 @@ size_t TransactionBuilder::addOutput(uint64_t amount, const AccountPublicAddress
 
   KeyOutput outKey;
   derivePublicKey(to, txSecretKey(), transaction.outputs.size(), outKey.key);
-  TransactionOutput out = {amount, outKey};
+  TransactionOutput out = TransactionAmountOutput{amount, outKey};
   transaction.outputs.emplace_back(out);
   invalidateHash();
 
@@ -177,7 +177,7 @@ size_t TransactionBuilder::addOutput(uint64_t amount, const AccountPublicAddress
 size_t TransactionBuilder::addOutput(uint64_t amount, const KeyOutput& out) {
   checkIfSigning();
   size_t outputIndex = transaction.outputs.size();
-  TransactionOutput realOut = {amount, out};
+  TransactionOutput realOut = TransactionAmountOutput{amount, out};
   transaction.outputs.emplace_back(realOut);
   invalidateHash();
   return outputIndex;
@@ -201,15 +201,16 @@ void TransactionBuilder::signInputKey(size_t index, const TransactionTypes::Inpu
                           keysPtrs, reinterpret_cast<const SecretKey&>(ephKeys.secretKey),
                           info.realOutput.transactionIndex, signatures.data());
 
-  getSignatures(index) = signatures;
+  getRingSignature(index) = signatures;
   invalidateHash();
 }
 
-std::vector<Signature>& TransactionBuilder::getSignatures(size_t input) {
-  if (!std::holds_alternative<TransactionSignatureCollection>(transaction.signatures)) {
+TransactionRingSignature& TransactionBuilder::getRingSignature(size_t input) {
+  if (!transaction.signatures.has_value() ||
+      !std::holds_alternative<TransactionSignatureCollection>(*transaction.signatures)) {
     throw std::runtime_error{"invalid signature type"};
   }
-  auto& signatures = std::get<TransactionSignatureCollection>(transaction.signatures);
+  auto& signatures = std::get<TransactionSignatureCollection>(*transaction.signatures);
   // update signatures container size if needed
   if (signatures.size() < transaction.inputs.size()) {
     signatures.resize(transaction.inputs.size());
@@ -219,7 +220,32 @@ std::vector<Signature>& TransactionBuilder::getSignatures(size_t input) {
     throw std::runtime_error("Invalid input index");
   }
 
-  return signatures[input];
+  if (!std::holds_alternative<TransactionRingSignature>(signatures[input])) {
+    throw std::runtime_error{"invalid signature type"};
+  }
+
+  return std::get<TransactionRingSignature>(signatures[input]);
+}
+
+const SecretKey& TransactionBuilder::txSecretKey() const {
+  if (!secretKey) {
+    throw std::runtime_error("Operation requires transaction secret key");
+  }
+  return *secretKey;
+}
+
+void TransactionBuilder::checkIfSigning() const {
+  if (!transaction.signatures.has_value()) {
+    return;
+  }
+
+  if (!std::holds_alternative<TransactionSignatureCollection>(*transaction.signatures)) {
+    throw std::runtime_error{"invalid signature type"};
+  }
+
+  if (!std::get<TransactionSignatureCollection>(*transaction.signatures).empty()) {
+    throw std::runtime_error("Cannot perform requested operation, since it will invalidate transaction signatures");
+  }
 }
 
 BinaryArray TransactionBuilder::getTransactionData() const {
@@ -296,18 +322,20 @@ size_t TransactionBuilder::getOutputCount() const {
 }
 
 uint64_t TransactionBuilder::getOutputTotalAmount() const {
-  return std::accumulate(transaction.outputs.begin(), transaction.outputs.end(), 0ULL,
-                         [](uint64_t val, const TransactionOutput& out) { return val + out.amount; });
+  return getOutputAmount(transaction);
 }
 
-TransactionTypes::OutputType TransactionBuilder::getOutputType(size_t index) const {
-  return getTransactionOutputType(getOutputChecked(transaction, index).target);
+TransactionTypes::OutputTargetType TransactionBuilder::getOutputType(size_t index) const {
+  return getTransactionOutputTargetType(getOutputTargetChecked(getOutputChecked(transaction, index)));
 }
 
 void TransactionBuilder::getOutput(size_t index, KeyOutput& output, uint64_t& amount) const {
-  const auto& out = getOutputChecked(transaction, index, TransactionTypes::OutputType::Key);
-  output = std::get<KeyOutput>(out.target);
-  amount = out.amount;
+  const auto& out = getOutputChecked(transaction, index, TransactionTypes::OutputType::Amount,
+                                     TransactionTypes::OutputTargetType::Key);
+  const auto& target = getOutputTargetChecked(out);
+
+  amount = std::get<TransactionAmountOutput>(out).amount;
+  output = std::get<KeyOutput>(target);
 }
 
 bool TransactionBuilder::findOutputsToAccount(const AccountPublicAddress& addr, const SecretKey& viewSecretKey,
@@ -329,20 +357,15 @@ bool TransactionBuilder::validateOutputs() const {
 }
 
 bool TransactionBuilder::validateSignatures() const {
-  if (!std::holds_alternative<TransactionSignatureCollection>(transaction.signatures)) {
-    return false;
-  }
-  const auto& ringSignatures = std::get<TransactionSignatureCollection>(transaction.signatures);
-  if (ringSignatures.size() < transaction.inputs.size()) {
-    return false;
-  }
-
+  XI_RETURN_EC_IF_NOT(transaction.signatures, false);
+  XI_RETURN_EC_IF_NOT(std::holds_alternative<TransactionSignatureCollection>(*transaction.signatures), false);
+  const auto& signatures = std::get<TransactionSignatureCollection>(*transaction.signatures);
+  XI_RETURN_EC_IF(signatures.size() < transaction.inputs.size(), false);
   for (size_t i = 0; i < transaction.inputs.size(); ++i) {
-    if (getRequiredSignaturesCount(i) > ringSignatures[i].size()) {
-      return false;
-    }
+    XI_RETURN_EC_IF_NOT(std::holds_alternative<TransactionRingSignature>(signatures[i]), false);
+    const auto& ringSignature = std::get<TransactionRingSignature>(signatures[i]);
+    XI_RETURN_EC_IF(getRequiredSignaturesCount(i) > ringSignature.size(), false);
   }
-
-  return true;
+  XI_RETURN_SC(true);
 }
 }  // namespace CryptoNote

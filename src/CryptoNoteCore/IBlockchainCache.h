@@ -35,7 +35,7 @@ namespace CryptoNote {
 class ISerializer;
 struct TransactionValidatorState;
 
-enum class ExtractOutputKeysResult { SUCCESS, INVALID_GLOBAL_INDEX, OUTPUT_LOCKED, TIME_PROVIDER_FAILED };
+enum class ExtractOutputKeysResult { SUCCESS, INVALID_GLOBAL_INDEX, OUTPUT_LOCKED, TIME_PROVIDER_FAILED, INVALID_TYPE };
 
 const uint32_t INVALID_BLOCK_INDEX = std::numeric_limits<uint32_t>::max();
 
@@ -62,7 +62,7 @@ struct CachedTransactionInfo {
   uint32_t transactionIndex;
   Crypto::Hash transactionHash;
   uint64_t unlockTime;
-  std::vector<TransactionOutputTarget> outputs;
+  std::vector<TransactionOutput> outputs;
   // needed for getTransactionGlobalIndexes query
   std::vector<uint32_t> globalIndexes;
   bool isDeterministicallyGenerated;
