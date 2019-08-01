@@ -23,10 +23,25 @@
 
 #pragma once
 
+#include <optional>
 #include <Xi/Global.hh>
+#include <Serialization/ISerializer.h>
+
+#include "Xi/Blockchain/Transaction/Transaction.hpp"
+#include "Xi/Blockchain/Transaction/Hash.hpp"
+#include "Xi/Blockchain/Block/Header.hpp"
 
 namespace Xi {
 namespace Blockchain {
-namespace Block {}  // namespace Block
+namespace Block {
+
+struct Template : public Header {
+  Transaction::Transaction baseTransaction;
+  Transaction::HashVector transactionHashes;
+
+  [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
+};
+
+}  // namespace Block
 }  // namespace Blockchain
 }  // namespace Xi

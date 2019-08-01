@@ -24,26 +24,28 @@
 #pragma once
 
 #include <Xi/Global.hh>
-#include <Serialization/ISerializer.h>
-#include <Xi/Crypto/PublicKey.hpp>
+#include <Serialization/EnumSerialization.hpp>
 
 namespace Xi {
 namespace Blockchain {
 namespace Transaction {
 
-struct KeyOutputTarget {
-  /// Diffie Hellmann key exchange, derived from the epheremal keys and destination public key.
-  Crypto::PublicKey key{Crypto::PublicKey::Null};
-
-  KV_BEGIN_SERIALIZATION
-  KV_MEMBER(key)
-  KV_END_SERIALIZATION
+enum struct Type {
+  None = 0,
+  Reward = 1,
+  Transfer = 2,
 };
+
+XI_SERIALIZATION_ENUM(Type)
 
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi
 
+XI_SERIALIZATION_ENUM_RANGE(Xi::Blockchain::Transaction::Type, Reward, Transfer)
+XI_SERIALIZATION_ENUM_TAG(Xi::Blockchain::Transaction::Type, Reward, "reward")
+XI_SERIALIZATION_ENUM_TAG(Xi::Blockchain::Transaction::Type, Transfer, "transfer")
+
 namespace CryptoNote {
-using KeyOutput = Xi::Blockchain::Transaction::KeyOutputTarget;
+using TransactionType = Xi::Blockchain::Transaction::Type;
 }

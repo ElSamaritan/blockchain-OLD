@@ -29,15 +29,11 @@
 #include <Serialization/SerializationOverloads.h>
 #include <Serialization/VariantSerialization.hpp>
 
+#include "Xi/Blockchain/Pruned.hpp"
+
 namespace Xi {
 namespace Blockchain {
 namespace Block {
-
-struct NoMergeMiningTag {
-  KV_BEGIN_SERIALIZATION
-  XI_UNUSED(s)
-  KV_END_SERIALIZATION
-};
 
 struct MergeMiningTag {
   ::Crypto::HashVector prefix;
@@ -52,22 +48,17 @@ struct MergeMiningTag {
   uint64_t binarySize() const;
 };
 
-struct PrunedMergeMiningTag {
-  ::Crypto::Hash proofOfWorkPrefix;
-  uint64_t binarySize;
-
-  KV_BEGIN_SERIALIZATION
-  KV_MEMBER_RENAME(proofOfWorkPrefix, proof_of_work_prefix)
-  KV_MEMBER_RENAME(binarySize, binary_size)
-  KV_END_SERIALIZATION
-};
-
-using PrunableMergeMiningTag = std::variant<NoMergeMiningTag, MergeMiningTag, PrunedMergeMiningTag>;
+// clang-format off
+XI_SERIALIZATION_VARIANT_INVARIANT(
+  PrunableMergeMiningTag,
+    Pruned,
+    MergeMiningTag
+)
+// clang-format on
 
 }  // namespace Block
 }  // namespace Blockchain
 }  // namespace Xi
 
-XI_SERIALIZATION_VARIANT_TAG(Xi::Blockchain::Block::PrunableMergeMiningTag, 0, 0x0001, "none")
-XI_SERIALIZATION_VARIANT_TAG(Xi::Blockchain::Block::PrunableMergeMiningTag, 1, 0x0002, "raw")
-XI_SERIALIZATION_VARIANT_TAG(Xi::Blockchain::Block::PrunableMergeMiningTag, 2, 0x0003, "pruned")
+XI_SERIALIZATION_VARIANT_TAG(Xi::Blockchain::Block::PrunableMergeMiningTag, 0, 0x0001, "pruned")
+XI_SERIALIZATION_VARIANT_TAG(Xi::Blockchain::Block::PrunableMergeMiningTag, 1, 0x0002, "collection")

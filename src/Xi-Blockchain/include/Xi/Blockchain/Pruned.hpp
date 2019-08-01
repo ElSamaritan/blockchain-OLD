@@ -34,9 +34,9 @@ namespace Blockchain {
 
 struct Pruned {
   /// The hash of the pruned object
-  Crypto::FastHash hash;
+  Crypto::FastHash hash{Crypto::FastHash::Null};
   /// The binary size of the pruned object
-  uint64_t binarySize;
+  uint64_t binarySize{0};
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(hash)

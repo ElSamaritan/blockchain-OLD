@@ -25,25 +25,27 @@
 
 #include <type_traits>
 
-#define XI_TYPESAFE_FLAG_MAKE_OPERATIONS(_FlagT)                                                                    \
-  inline constexpr _FlagT operator|(_FlagT a, _FlagT b) noexcept {                                                  \
-    return _FlagT(((std::underlying_type<_FlagT>::type)a) | ((std::underlying_type<_FlagT>::type)b));               \
-  }                                                                                                                 \
-  inline _FlagT &operator|=(_FlagT &a, _FlagT b) noexcept {                                                         \
-    return (_FlagT &)(((std::underlying_type<_FlagT>::type &)a) |= ((std::underlying_type<_FlagT>::type)b));        \
-  }                                                                                                                 \
-  inline constexpr _FlagT operator&(_FlagT a, _FlagT b) noexcept {                                                  \
-    return _FlagT(((std::underlying_type<_FlagT>::type)a) & ((std::underlying_type<_FlagT>::type)b));               \
-  }                                                                                                                 \
-  inline _FlagT &operator&=(_FlagT &a, _FlagT b) noexcept {                                                         \
-    return (_FlagT &)(((std::underlying_type<_FlagT>::type &)a) &= ((std::underlying_type<_FlagT>::type)b));        \
-  }                                                                                                                 \
-  inline constexpr _FlagT operator~(_FlagT a) noexcept { return _FlagT(~((std::underlying_type<_FlagT>::type)a)); } \
-  inline constexpr _FlagT operator^(_FlagT a, _FlagT b) noexcept {                                                  \
-    return _FlagT(((std::underlying_type<_FlagT>::type)a) ^ ((std::underlying_type<_FlagT>::type)b));               \
-  }                                                                                                                 \
-  inline _FlagT &operator^=(_FlagT &a, _FlagT b) noexcept {                                                         \
-    return (_FlagT &)(((std::underlying_type<_FlagT>::type &)a) ^= ((std::underlying_type<_FlagT>::type)b));        \
+#define XI_TYPESAFE_FLAG_MAKE_OPERATIONS(_FlagT)                                                             \
+  inline constexpr _FlagT operator|(_FlagT a, _FlagT b) noexcept {                                           \
+    return _FlagT(((std::underlying_type<_FlagT>::type)a) | ((std::underlying_type<_FlagT>::type)b));        \
+  }                                                                                                          \
+  inline _FlagT &operator|=(_FlagT &a, _FlagT b) noexcept {                                                  \
+    return (_FlagT &)(((std::underlying_type<_FlagT>::type &)a) |= ((std::underlying_type<_FlagT>::type)b)); \
+  }                                                                                                          \
+  inline constexpr _FlagT operator&(_FlagT a, _FlagT b) noexcept {                                           \
+    return _FlagT(((std::underlying_type<_FlagT>::type)a) & ((std::underlying_type<_FlagT>::type)b));        \
+  }                                                                                                          \
+  inline _FlagT &operator&=(_FlagT &a, _FlagT b) noexcept {                                                  \
+    return (_FlagT &)(((std::underlying_type<_FlagT>::type &)a) &= ((std::underlying_type<_FlagT>::type)b)); \
+  }                                                                                                          \
+  inline constexpr _FlagT operator~(_FlagT a) noexcept {                                                     \
+    return _FlagT(~((std::underlying_type<_FlagT>::type)a));                                                 \
+  }                                                                                                          \
+  inline constexpr _FlagT operator^(_FlagT a, _FlagT b) noexcept {                                           \
+    return _FlagT(((std::underlying_type<_FlagT>::type)a) ^ ((std::underlying_type<_FlagT>::type)b));        \
+  }                                                                                                          \
+  inline _FlagT &operator^=(_FlagT &a, _FlagT b) noexcept {                                                  \
+    return (_FlagT &)(((std::underlying_type<_FlagT>::type &)a) ^= ((std::underlying_type<_FlagT>::type)b)); \
   }
 
 template <typename _FlagT>
@@ -56,4 +58,10 @@ template <typename _FlagT>
 [[nodiscard]] inline constexpr _FlagT discardFlag(_FlagT value, _FlagT flags) {
   static_assert(std::is_enum_v<_FlagT>, "flags are only well defined for enum types.");
   return value & (~flags);
+}
+
+template <typename _FlagT>
+[[nodiscard]] inline constexpr bool hasAnyOtherFlag(_FlagT value, _FlagT flags) {
+  static_assert(std::is_enum_v<_FlagT>, "flags are only well defined for enum types.");
+  return static_cast<std::underlying_type_t<_FlagT>>(discardFlag(value, flags)) != 0;
 }

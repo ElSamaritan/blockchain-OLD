@@ -96,6 +96,11 @@ enum class TransactionValidationError {
                                             ///< unlocking window
   INVALID_VERSION = 31,  ///< The version is not supported. This protects against user trying to use new transaction
                          ///< versions that are currently not supported.
+  TYPE_INVALID = 56,
+  FEATURE_USAGE_INVALID = 57,
+  FEATURE_USAGE_REQUIRED = 58,
+  FEATURE_ILL_FORMED = 59,
+
   INVALID_MIXIN = 32,
   INPUT_MIXIN_TOO_HIGH = 33,
   INPUT_MIXIN_TOO_LOW = 34,
@@ -103,7 +108,7 @@ enum class TransactionValidationError {
   UNLOCK_TOO_LARGE = 50,   ///< Given unlock exceeds limits and is unreasonable high.
   UNLOCK_ILL_FORMED = 51,  ///< Given unlock is based on timestamp but unlocks before the genesis timestamp.
 
-  __NUM = 56  ///< The count of different enum values, if you add a new one use this as its value and increase this by
+  __NUM = 60  ///< The count of different enum values, if you add a new one use this as its value and increase this by
               ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation
               ///< and tickets aso.
 };
@@ -233,6 +238,15 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Outputs are not in canoncial form.";
       case TransactionValidationError::OUTPUT_ZERO:
         return "The sum of all output amounts is zero.";
+
+      case TransactionValidationError::TYPE_INVALID:
+        return "invalid transaction type";
+      case TransactionValidationError::FEATURE_USAGE_INVALID:
+        return "invalid transaction feature usage";
+      case TransactionValidationError::FEATURE_USAGE_REQUIRED:
+        return "transaction should have used a feature to sparse memory size";
+      case TransactionValidationError::FEATURE_ILL_FORMED:
+        return "transaction feature is used but ill formed";
 
       case TransactionValidationError::UNLOCK_TOO_LARGE:
         return "Given unlock exceeds limits and is unreasonable high.";

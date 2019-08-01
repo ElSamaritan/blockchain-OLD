@@ -79,13 +79,6 @@ namespace Crypto {
 
 namespace CryptoNote {
 
-[[nodiscard]] bool serialize(BlockTemplate& block, ISerializer& serializer) {
-  XI_RETURN_EC_IF_NOT(serializer(static_cast<BlockHeader&>(block), "header"), false);
-  XI_RETURN_EC_IF_NOT(serializer(block.baseTransaction, "miner_tx"), false);
-  XI_RETURN_EC_IF_NOT(serializer(block.transactionHashes, "tx_hashes"), false);
-  return true;
-}
-
 [[nodiscard]] bool serialize(AccountPublicAddress& address, ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(address.spendPublicKey, "spend_public_key"), false);
   XI_RETURN_EC_IF_NOT(serializer(address.viewPublicKey, "view_public_key"), false);

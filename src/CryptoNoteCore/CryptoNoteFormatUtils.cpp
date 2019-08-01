@@ -131,7 +131,12 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
     auto& signatures = std::get<TransactionSignatureCollection>(*tx.signatures);
 
     tx.version = 1;
+    tx.type = TransactionType::Transfer;
+
     tx.unlockTime = unlock_time;
+    if (tx.unlockTime > 0) {
+      tx.features |= TransactionFeature::UniformUnlock;
+    }
 
     tx.extra = extra;
     KeyPair txkey = generateKeyPair();

@@ -54,6 +54,7 @@ TransactionBuilder::TransactionBuilder() {
   CryptoNote::KeyPair txKeys(CryptoNote::generateKeyPair());
 
   transaction.version = 1;
+  transaction.type = TransactionType::Transfer;
   transaction.unlockTime = 0;
   transaction.signatures = TransactionSignatureCollection{};
 

@@ -133,61 +133,85 @@ bool Transaction::serialize(CryptoNote::ISerializer& serializer) {
       return true;
     }
   }
-  XI_RETURN_EC_IF(inputs.empty(), false);
-  if (std::holds_alternative<RewardInput>(inputs.front())) {
-    if (serializer.isOutput()) {
-      XI_RETURN_EC_IF(signatures.has_value(), false);
-    } else {
-      signatures = std::nullopt;
-    }
-    return true;
+  XI_RETURN_EC_IF_NOT(version == 1, false);
+  switch (type) {
+    case Type::Reward:
+      return serializeReward(serializer);
+
+    case Type::Transfer:
+      return serializeTransfer(serializer);
+
+    case Type::None:
+      XI_RETURN_EC(false);
+  }
+  XI_RETURN_EC(false);
+}
+
+bool Transaction::serializeReward(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(type == Type::Reward, false);
+
+  if (serializer.isInput()) {
+    signatures = std::nullopt;
+    XI_RETURN_SC(true);
+  } else if (serializer.isOutput()) {
+    XI_RETURN_EC_IF(signatures, false);
+    XI_RETURN_SC(true);
+  } else {
+    XI_RETURN_EC(false);
+  }
+}
+
+bool Transaction::serializeTransfer(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(type == Type::Transfer, false);
+
+  if (serializer.isInput()) {
+    XI_RETURN_EC_IF_NOT(signatures.has_value(), false);
+  } else if (serializer.isOutput()) {
+    signatures = Pruned{};
+  } else {
+    XI_RETURN_EC(false);
   }
 
-  // TODO
-  XI_RETURN_EC_IF_NOT(serializer(signatures, "signatures"), false);
-  //  XI_RETURN_EC_IF_NOT(signatures.has_value(), false);
-  //  bool isPruned = std::holds_alternative<Pruned>(*signatures);
-  //  XI_RETURN_EC_IF_NOT(serializer(isPruned, "pruned"), false);
-  //  if (serializer.isInput()) {
-  //    if (isPruned) {
-  //      signatures = Pruned{};
-  //    } else {
-  //      signatures = SignatureCollection{};
-  //    }
-  //  }
+  XI_RETURN_EC_IF_NOT(CryptoNote::serializeVariantOpen<SignatureCollection>(*signatures, "signatures", serializer),
+                      false);
 
-  //  if (auto pruned = std::get_if<TransactionSignaturePruned>(std::addressof(signatures))) {
-  //    XI_RETURN_EC_IF_NOT(serializer(*pruned, "signatures"), false);
-  //  } else if (auto raw = std::get_if<TransactionSignatureCollection>(std::addressof(signatures))) {
-  //    auto& signatures = *raw;
-  //    const size_t outerSignaturesCount = inputs.size();
-  //    XI_RETURN_EC_IF_NOT(serializer.beginStaticArray(outerSignaturesCount, "signatures"), false);
+  if (auto pruned = std::get_if<Pruned>(std::addressof(*signatures))) {
+    XI_RETURN_EC_IF_NOT(serializer(*pruned, "value"), false);
+  } else if (auto raw = std::get_if<SignatureVector>(std::addressof(*signatures))) {
+    auto& ssignatures = *raw;
+    const size_t outerSignaturesCount = inputs.size();
+    XI_RETURN_EC_IF_NOT(serializer.beginStaticArray(outerSignaturesCount, "value"), false);
+    XI_RETURN_EC_IF_NOT(outerSignaturesCount == inputs.size(), false);
+    if (serializer.isInput()) {
+      ssignatures.resize(outerSignaturesCount, RingSignature{});
+    } else {
+      for (const auto& signature : ssignatures) {
+        XI_RETURN_EC_IF_NOT(std::holds_alternative<RingSignature>(signature), false);
+      }
+    }
+    for (size_t i = 0; i < outerSignaturesCount; ++i) {
+      XI_RETURN_EC_IF_NOT(std::holds_alternative<AmountInput>(inputs[i]), false);
+      auto& iSignature = std::get<RingSignature>(ssignatures[i]);
+      const auto& iInput = std::get<AmountInput>(inputs[i]);
+      const size_t innerSignaturesCount = iInput.outputIndices.size();
+      XI_RETURN_EC_IF_NOT(serializer.beginStaticArray(innerSignaturesCount, ""), false);
+      if (serializer.isInput()) {
+        iSignature.resize(innerSignaturesCount, Crypto::Signature::Null);
+      } else if (serializer.isOutput()) {
+        XI_RETURN_EC_IF_NOT(iSignature.size() == innerSignaturesCount, false);
+      }
+      for (size_t j = 0; j < innerSignaturesCount; ++j) {
+        XI_RETURN_EC_IF_NOT(serializer(iSignature[j], ""), false);
+      }
+      XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
+    }
 
-  //    XI_RETURN_EC_IF_NOT(outerSignaturesCount == inputs.size(), false);
-  //    if (serializer.isInput()) {
-  //      signatures.resize(outerSignaturesCount, {});
-  //    }
-  //    for (size_t i = 0; i < outerSignaturesCount; ++i) {
-  //      XI_RETURN_EC_IF_NOT(std::holds_alternative<KeyInput>(inputs[i]), false);
-  //      const auto& iInput = std::get<KeyInput>(inputs[i]);
-  //      const size_t innerSignaturesCount = iInput.outputIndices.size();
-  //      XI_RETURN_EC_IF_NOT(serializer.beginStaticArray(innerSignaturesCount, ""), false);
-  //      if (serializer.isInput()) {
-  //        signatures[i].resize(innerSignaturesCount, Crypto::Signature::Null);
-  //      } else if (serializer.isOutput()) {
-  //        XI_RETURN_EC_IF_NOT(signatures[i].size() == innerSignaturesCount, false);
-  //      }
-  //      for (size_t j = 0; j < innerSignaturesCount; ++j) {
-  //        XI_RETURN_EC_IF_NOT(serializer(signatures[i][j], ""), false);
-  //      }
-  //      XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
-  //    }
+    XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
+  } else {
+    XI_RETURN_EC(false);
+  }
 
-  //    XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
-  //  } else {
-  //    XI_RETURN_EC(false);
-  //  }
-
+  XI_RETURN_EC_IF_NOT(CryptoNote::serializeVariantClose(serializer), false);
   XI_RETURN_SC(true);
 }
 

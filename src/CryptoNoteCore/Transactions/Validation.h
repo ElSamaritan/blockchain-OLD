@@ -34,9 +34,8 @@
 
 namespace CryptoNote {
 
-error::TransactionValidationError validateExtra(const Transaction& tx, TransactionExtraFeature exact);
-error::TransactionValidationError validateExtra(const Transaction& tx, TransactionExtraFeature required,
-                                                TransactionExtraFeature allowed);
+error::TransactionValidationError validateFeatureIntegrity(const Transaction& tx);
+error::TransactionValidationError validateExtra(const Transaction& tx);
 
 bool validateCanonicalDecomposition(const Transaction& tx);
 

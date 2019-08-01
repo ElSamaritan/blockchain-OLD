@@ -33,6 +33,8 @@
 #include "Xi/Blockchain/Transaction/Input.hpp"
 #include "Xi/Blockchain/Transaction/Output.hpp"
 #include "Xi/Blockchain/Transaction/Extra.hpp"
+#include "Xi/Blockchain/Transaction/Feature.hpp"
+#include "Xi/Blockchain/Transaction/Type.hpp"
 
 namespace Xi {
 namespace Blockchain {
@@ -40,6 +42,10 @@ namespace Transaction {
 
 struct Prefix {
   uint8_t version{0};
+
+  Type type{Type::None};
+  Feature features{Feature::None};
+
   uint64_t unlockTime{0};
 
   InputVector inputs{};
@@ -50,6 +56,13 @@ struct Prefix {
 
   Crypto::FastHash prefixHash() const;
   uint64_t prefixBinarySize() const;
+  void nullifyPrefix();
+
+ private:
+  [[nodiscard]] bool serializeUnlock(CryptoNote::ISerializer& serializer);
+  [[nodiscard]] bool serializeReward(CryptoNote::ISerializer& serializer);
+  [[nodiscard]] bool serializeTransfer(CryptoNote::ISerializer& serializer);
+  [[nodiscard]] bool serializeOutputs(CryptoNote::ISerializer& serializer);
 };
 
 }  // namespace Transaction

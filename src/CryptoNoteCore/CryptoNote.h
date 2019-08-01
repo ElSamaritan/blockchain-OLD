@@ -61,9 +61,8 @@ using BlockHash = Crypto::Hash;
 using BlockHashVector = std::vector<BlockHash>;
 XI_DECLARE_SPANS(BlockHash)
 
-using NoMergeMiningTag = Xi::Blockchain::Block::NoMergeMiningTag;
+using Pruned = Xi::Blockchain::Pruned;
 using MergeMiningTag = Xi::Blockchain::Block::MergeMiningTag;
-using PrunedMergeMiningTag = Xi::Blockchain::Block::PrunedMergeMiningTag;
 using PrunableMergeMiningTag = Xi::Blockchain::Block::PrunableMergeMiningTag;
 
 using TransactionHash = Crypto::Hash;
@@ -75,11 +74,7 @@ using GlobalOutputIndex = uint32_t;
 using GlobalOutputIndexVector = std::vector<GlobalOutputIndex>;
 using GlobalOutputIndexSet = std::set<GlobalOutputIndex>;
 
-struct BlockTemplate : public BlockHeader {
-  Transaction baseTransaction;
-  std::vector<Crypto::Hash> transactionHashes;
-};
-
+using BlockTemplate = Xi::Blockchain::Block::Template;
 using BlockProofOfWork = Xi::Blockchain::Block::ProofOfWorkTemplate;
 
 struct AccountPublicAddress {

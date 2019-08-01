@@ -77,6 +77,7 @@ class ICore : public IBlockchain {
   virtual Crypto::Hash getTopBlockHash() const = 0;
   virtual BlockVersion getTopBlockVersion() const = 0;
   virtual Crypto::Hash getBlockHashByIndex(uint32_t blockIndex) const = 0;
+  virtual uint32_t getBlockIndexByHash(const Crypto::Hash hash) const = 0;
   virtual uint64_t getBlockTimestampByIndex(uint32_t blockIndex) const = 0;
 
   virtual std::optional<BlockSource> hasBlock(const Crypto::Hash& blockHash) const = 0;

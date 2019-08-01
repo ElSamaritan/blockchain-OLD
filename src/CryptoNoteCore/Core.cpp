@@ -327,6 +327,18 @@ Crypto::Hash Core::getBlockHashByIndex(uint32_t blockIndex) const {
   return chainsLeaves[0]->getBlockHash(blockIndex);
 }
 
+uint32_t Core::getBlockIndexByHash(const Hash hash) const {
+  assert(!chainsStorage.empty());
+  assert(!chainsLeaves.empty());
+  assert(blockIndex <= getTopBlockIndex());
+
+  throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
+  const auto cache = findSegmentContainingBlock(hash);
+  XI_RETURN_EC_IF(cache == nullptr, INVALID_BLOCK_INDEX);
+  return cache->getBlockIndex(hash);
+}
+
 uint64_t Core::getBlockTimestampByIndex(uint32_t blockIndex) const {
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
@@ -698,26 +710,28 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   XI_CONCURRENT_RLOCK(m_access);
   XI_UNUSED_REVAL(transactionPool().acquireExclusiveAccess());
 
-  uint32_t blockIndex = cachedBlock.getBlockIndex();
+  const auto& blockTemplate = cachedBlock.getBlock();
+  const auto& previousBlockHash = blockTemplate.previousBlockHash;
+  auto cache = findSegmentContainingBlock(previousBlockHash);
+  if (cache == nullptr) {
+    logger(Logging::Debugging) << "Block " << cachedBlock.getBlockHash().toString() << " rejected as orphaned";
+    return error::AddBlockErrorCode::REJECTED_AS_ORPHANED;
+  }
+
+  const auto previousBlockIndex = cache->getBlockIndex(previousBlockHash);
+  const auto blockIndex = previousBlockIndex + 1;
+
   Crypto::Hash blockHash = cachedBlock.getBlockHash();
   std::ostringstream os;
   os << blockIndex << " (" << blockHash << ")";
   std::string blockStr = os.str();
 
   logger(Logging::Debugging) << "Request to add block " << blockStr;
-  if (cachedBlock.getBlockIndex() == 0) {
-    logger(Logging::Debugging) << "Block index=" << cachedBlock.getBlockIndex() << " is genesis block index";
-    return error::AddBlockErrorCode::REJECTED_AS_ORPHANED;
-  }
-  const auto& blockTemplate = cachedBlock.getBlock();
-  const auto& previousBlockHash = blockTemplate.previousBlockHash;
-  auto cache = findSegmentContainingBlock(previousBlockHash);
-  if (cache == nullptr) {
-    logger(Logging::Debugging) << "Block " << blockStr << " rejected as orphaned";
+  if (blockIndex == 0) {
+    logger(Logging::Debugging) << "Block index=" << blockIndex << " is genesis block index";
     return error::AddBlockErrorCode::REJECTED_AS_ORPHANED;
   }
 
-  const auto previousBlockIndex = cache->getBlockIndex(previousBlockHash);
   if (blockIndex != previousBlockIndex + 1) {
     return error::TransactionValidationError::BASE_INPUT_WRONG_BLOCK_INDEX;
   }
@@ -781,16 +795,16 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     return error::BlockValidationError::DIFFICULTY_OVERHEAD;
   }
 
-  if (checkpoints.isInCheckpointZone(cachedBlock.getBlockIndex())) {
-    if (!checkpoints.checkBlock(cachedBlock.getBlockIndex(), cachedBlock.getBlockHash())) {
+  if (checkpoints.isInCheckpointZone(blockIndex)) {
+    if (!checkpoints.checkBlock(blockIndex, cachedBlock.getBlockHash())) {
       logger(Logging::Warning) << "Checkpoint block hash mismatch for block " << blockStr;
       return error::BlockValidationError::CHECKPOINT_BLOCK_HASH_MISMATCH;
     }
   } else {
     using BlockError = error::BlockValidationError;
     const auto& block = cachedBlock.getBlock();
-    if (!std::holds_alternative<NoMergeMiningTag>(block.mergeMiningTag)) {
-      if (const auto mmt = std::get_if<MergeMiningTag>(std::addressof(block.mergeMiningTag))) {
+    if (block.mergeMiningTag) {
+      if (const auto mmt = std::get_if<MergeMiningTag>(std::addressof(*block.mergeMiningTag))) {
         const auto maxMergeMiningSize = currency().maximumMergeMiningSize(block.version);
         XI_RETURN_EC_IF(maxMergeMiningSize == 0, BlockError::MERGE_MINING_TAG_DISABLED);
         XI_RETURN_EC_IF(mmt->prefix.size() > maxMergeMiningSize, BlockError::MERGE_MINING_TAG_TOO_LARGE);
@@ -798,7 +812,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
         const auto mergeMiningSize = mmt->size();
         XI_RETURN_EC_IF(mergeMiningSize == 0, BlockError::MERGE_MINING_TAG_EMPTY);
         XI_RETURN_EC_IF(mergeMiningSize > maxMergeMiningSize, BlockError::MERGE_MINING_TAG_TOO_LARGE);
-      } else if (const auto pmmt = std::get_if<PrunedMergeMiningTag>(std::addressof(block.mergeMiningTag))) {
+      } else if (const auto pmmt = std::get_if<Pruned>(std::addressof(*block.mergeMiningTag))) {
         XI_UNUSED(pmmt)
         XI_RETURN_EC(BlockError::MERGE_MINING_TAG_PRUNED);
       } else {
@@ -995,8 +1009,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
           logger(Logging::Info) << "Block " << blockStr << " added to main chain";
         }
 
-        m_blockchainObservers.notify(&IBlockchainObserver::blockAdded, cachedBlock.getBlockIndex(),
-                                     cachedBlock.getBlockHash());
+        m_blockchainObservers.notify(&IBlockchainObserver::blockAdded, blockIndex, cachedBlock.getBlockHash());
       } else {
         cache->pushBlock(cachedBlock, transactions, validatorState, cumulativeBlockSize, emissionChange,
                          currentDifficulty, std::move(rawBlock));
@@ -1581,12 +1594,13 @@ std::vector<Crypto::Hash> CryptoNote::Core::getBlockHashes(uint32_t startBlockIn
 
 std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainCache* cache, uint64_t& minerReward) {
   const auto& block = cachedBlock.getBlock();
-  auto previousBlockIndex = cache->getBlockIndex(block.previousBlockHash);
-  // assert(block.previousBlockHash == cache->getBlockHash(previousBlockIndex));
+  const auto previousBlockIndex = cache->getBlockIndex(block.previousBlockHash);
+  const auto blockIndex = previousBlockIndex + 1;
+  assert(block.previousBlockHash == cache->getBlockHash(previousBlockIndex));
 
   minerReward = 0;
 
-  if (upgradeManager().getBlockVersion(cachedBlock.getBlockIndex()) != block.version) {
+  if (upgradeManager().getBlockVersion(blockIndex) != block.version) {
     return error::BlockValidationError::WRONG_VERSION;
   }
 
@@ -1603,15 +1617,26 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     }
   }
 
-  if (!m_currency.isTransferVersionSupported(block.version, block.baseTransaction.version)) {
+  if (!m_currency.isTransactionVersionSupported(block.version, block.baseTransaction.version)) {
     return error::TransactionValidationError::INVALID_VERSION;
   }
 
-  {
-    auto extraEc = validateExtra(block.baseTransaction, TransactionExtraFeature::PublicKey);
-    if (extraEc != error::TransactionValidationError::VALIDATION_SUCCESS) {
-      return extraEc;
-    }
+  if (block.baseTransaction.type != TransactionType::Reward) {
+    return error::TransactionValidationError::TYPE_INVALID;
+  }
+
+  if (const auto ec = validateExtra(block.baseTransaction);
+      ec != error::TransactionValidationError::VALIDATION_SUCCESS) {
+    return ec;
+  }
+  if (!block.baseTransaction.extra.publicKey) {
+    return error::TransactionValidationError::EXTRA_MISSING_PUBLIC_KEY;
+  }
+  if (hasAnyOtherFlag(block.baseTransaction.features, m_currency.minerReward(block.version).features())) {
+    return error::TransactionValidationError::FEATURE_USAGE_INVALID;
+  }
+  if (hasAnyOtherFlag(block.baseTransaction.extra.features, m_currency.minerReward(block.version).extraFeatures())) {
+    return error::TransactionValidationError::FEATURE_USAGE_INVALID;
   }
 
   if (block.baseTransaction.inputs.size() != 1) {

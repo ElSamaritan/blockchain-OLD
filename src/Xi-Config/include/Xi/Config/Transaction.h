@@ -27,6 +27,8 @@
 #include <array>
 
 #include <Xi/Global.hh>
+#include <Xi/Blockchain/Transaction/Feature.hpp>
+#include <Xi/Blockchain/Transaction/ExtraFeature.hpp>
 #include <Serialization/ISerializer.h>
 #include <Serialization/SerializationOverloads.h>
 
@@ -41,11 +43,15 @@ class Fusion {
   XI_PROPERTY(uint64_t, maximumSize)
   XI_PROPERTY(uint64_t, minimumInputCount)
   XI_PROPERTY(uint64_t, ratioLimit)
+  XI_PROPERTY(Blockchain::Transaction::Feature, features)
+  XI_PROPERTY(Blockchain::Transaction::ExtraFeature, extraFeatures)
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER_RENAME(maximumSize(), max_size)
   KV_MEMBER_RENAME(minimumInputCount(), min_input)
   KV_MEMBER_RENAME(ratioLimit(), ratio_limit)
+  KV_MEMBER_RENAME(features(), features)
+  KV_MEMBER_RENAME(extraFeatures(), extra_features)
   KV_END_SERIALIZATION
 };
 
@@ -55,6 +61,8 @@ class Transfer {
   XI_PROPERTY(uint64_t, freeBuckets)
   XI_PROPERTY(uint64_t, rateNominator)
   XI_PROPERTY(uint64_t, rateDenominator)
+  XI_PROPERTY(Blockchain::Transaction::Feature, features)
+  XI_PROPERTY(Blockchain::Transaction::ExtraFeature, extraFeatures)
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER_RENAME(maximumSize(), max_size)
@@ -62,6 +70,8 @@ class Transfer {
   KV_MEMBER_RENAME(freeBuckets(), free_buckets)
   KV_MEMBER_RENAME(rateNominator(), rate_nominator)
   KV_MEMBER_RENAME(rateDenominator(), rate_denominator)
+  KV_MEMBER_RENAME(features(), features)
+  KV_MEMBER_RENAME(extraFeatures(), extraFeatures)
   KV_END_SERIALIZATION
 };
 

@@ -35,22 +35,28 @@
 
 using Error = CryptoNote::error::TransactionValidationError;
 
-Error CryptoNote::validateExtra(const CryptoNote::Transaction &tx, CryptoNote::TransactionExtraFeature exact) {
-  return validateExtra(tx, exact, exact);
+Error CryptoNote::validateFeatureIntegrity(const CryptoNote::Transaction &tx) {
+  TransactionFeature expectedFeatures = TransactionFeature::None;
+  if (tx.unlockTime > 0) {
+    expectedFeatures |= TransactionFeature::UniformUnlock;
+  }
+  XI_RETURN_EC_IF_NOT(expectedFeatures == tx.features, Error::FEATURE_ILL_FORMED);
+  XI_RETURN_SC(Error::VALIDATION_SUCCESS);
 }
 
-Error CryptoNote::validateExtra(const CryptoNote::Transaction &tx, TransactionExtraFeature required,
-                                TransactionExtraFeature allowed) {
+Error CryptoNote::validateExtra(const CryptoNote::Transaction &tx) {
   const auto &extra = tx.extra;
-  XI_RETURN_EC_IF_NOT(hasFlag(extra.features, required), Error::EXTRA_ILL_FORMED);
-  XI_RETURN_EC_IF_NOT(discardFlag(extra.features, allowed) == TransactionExtraFeature::None, Error::EXTRA_ILL_FORMED);
-  XI_RETURN_EC_IF_NOT(hasFlag(extra.features, TransactionExtraFeature::PublicKey) == extra.publicKey.has_value(),
-                      Error::EXTRA_ILL_FORMED);
-  XI_RETURN_EC_IF(extra.publicKey && !extra.publicKey->isValid(), Error::EXTRA_INVALID_PUBLIC_KEY);
-  XI_RETURN_EC_IF_NOT(hasFlag(extra.features, TransactionExtraFeature::PaymentId) == extra.paymentId.has_value(),
-                      Error::EXTRA_ILL_FORMED);
-  XI_RETURN_EC_IF(extra.paymentId && !extra.paymentId->isValid(), Error::EXTRA_INVALID_PAYMENT_ID);
-  return Error::VALIDATION_SUCCESS;
+  TransactionExtraFeature expectedFeatures = TransactionExtraFeature::None;
+  if (extra.publicKey) {
+    XI_RETURN_EC_IF_NOT(extra.publicKey->isValid(), Error::EXTRA_INVALID_PUBLIC_KEY);
+    expectedFeatures |= TransactionExtraFeature::PublicKey;
+  }
+  if (extra.paymentId) {
+    XI_RETURN_EC_IF_NOT(extra.paymentId->isValid(), Error::EXTRA_INVALID_PAYMENT_ID);
+    expectedFeatures |= TransactionExtraFeature::PaymentId;
+  }
+  XI_RETURN_EC_IF_NOT(expectedFeatures == extra.features, Error::EXTRA_ILL_FORMED);
+  XI_RETURN_SC(Error::VALIDATION_SUCCESS);
 }
 
 bool CryptoNote::validateCanonicalDecomposition(const CryptoNote::Transaction &tx) {
@@ -68,6 +74,14 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
                                                 CryptoNote::TransferValidationState &out) {
   const auto &tx = transaction.getTransaction();
 
+  XI_RETURN_EC_IF_NOT(tx.type == TransactionType::Transfer, Error::TYPE_INVALID);
+  if (const auto ec = validateExtra(tx); ec != Error::VALIDATION_SUCCESS) {
+    XI_RETURN_EC(ec);
+  }
+  if (const auto ec = validateFeatureIntegrity(tx); ec != Error::VALIDATION_SUCCESS) {
+    XI_RETURN_EC(ec);
+  }
+  XI_RETURN_EC_IF_NOT(tx.extra.publicKey, Error::EXTRA_MISSING_PUBLIC_KEY);
   XI_RETURN_EC_IF(transaction.getBlobSize() > context.currency.maxTxSize(context.blockVersion), Error::TOO_LARGE);
 
   const auto unlock = tx.unlockTime;
@@ -83,14 +97,8 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
     XI_RETURN_EC_IF(context.previousBlockIndex + 1 + blockFutureLimit < unlock, Error::UNLOCK_TOO_LARGE);
   }
 
-  XI_RETURN_EC_IF_NOT(context.currency.isTransferVersionSupported(context.blockVersion, tx.version),
+  XI_RETURN_EC_IF_NOT(context.currency.isTransactionVersionSupported(context.blockVersion, tx.version),
                       Error::INVALID_VERSION);
-
-  if (const auto ec = validateExtra(tx, TransactionExtraFeature::PublicKey,
-                                    TransactionExtraFeature::PublicKey | TransactionExtraFeature::PaymentId);
-      ec != Error::VALIDATION_SUCCESS) {
-    XI_RETURN_EC(ec);
-  }
 
   XI_RETURN_EC_IF(tx.outputs.empty(), Error::EMPTY_OUTPUTS);
   for (const auto &anyOutput : tx.outputs) {
@@ -154,12 +162,22 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
   XI_RETURN_EC_IF(out.inputSum < out.outputSum, Error::INPUT_AMOUNT_INSUFFICIENT);
   out.fee = out.inputSum - out.outputSum;
 
+  TransactionFeature enabledFeatures = TransactionFeature::None;
+  TransactionExtraFeature enabledExtraFeatures = TransactionExtraFeature::None;
   const auto isFusionTransaction = out.fee == 0 && context.currency.isFusionTransaction(tx, context.blockVersion);
   if (!isFusionTransaction) {
     const auto canoncialBuckets = countCanonicalDecomposition(tx);
     XI_RETURN_EC_IF(out.fee < context.currency.minimumFee(context.blockVersion, canoncialBuckets),
                     Error::FEE_INSUFFICIENT);
+    enabledFeatures = context.currency.transaction(context.blockVersion).transfer().features();
+    enabledExtraFeatures = context.currency.transaction(context.blockVersion).transfer().extraFeatures();
+  } else {
+    enabledFeatures = context.currency.transaction(context.blockVersion).fusion().features();
+    enabledExtraFeatures = context.currency.transaction(context.blockVersion).fusion().extraFeatures();
   }
+
+  XI_RETURN_EC_IF_NOT(hasAnyOtherFlag(tx.features, enabledFeatures), Error::FEATURE_USAGE_INVALID);
+  XI_RETURN_EC_IF_NOT(hasAnyOtherFlag(tx.extra.features, enabledExtraFeatures), Error::FEATURE_USAGE_INVALID);
 
   return Error::VALIDATION_SUCCESS;
 }

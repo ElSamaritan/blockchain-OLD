@@ -36,8 +36,6 @@ namespace CryptoNote {
 
 struct AccountKeys;
 
-[[nodiscard]] bool serialize(BlockTemplate& block, ISerializer& serializer);
-
 [[nodiscard]] bool serialize(AccountPublicAddress& address, ISerializer& serializer);
 [[nodiscard]] bool serialize(FeeAddress& addr, ISerializer& serializer);
 [[nodiscard]] bool serialize(AccountKeys& keys, ISerializer& s);

@@ -589,6 +589,7 @@ CryptoNote::TransactionExtra getExtraFromPaymentID(std::string paymentID) {
   auto reval = CryptoNote::TransactionExtra::Null;
   if (!paymentID.empty()) {
     reval.paymentId = CryptoNote::PaymentId::fromString(paymentID).takeOrThrow();
+    reval.features |= CryptoNote::TransactionExtraFeature::PaymentId;
   }
   return reval;
 }

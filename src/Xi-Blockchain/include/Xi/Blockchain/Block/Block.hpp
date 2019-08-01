@@ -34,3 +34,4 @@
 #include "Xi/Blockchain/Block/Height.hpp"
 #include "Xi/Blockchain/Block/Version.hpp"
 #include "Xi/Blockchain/Block/ProofOfWorkTemplate.hpp"
+#include "Xi/Blockchain/Block/Template.hpp"

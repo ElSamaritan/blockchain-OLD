@@ -19,6 +19,7 @@
 
 #include <string>
 #include <cstdint>
+#include <optional>
 
 #include <Xi/Byte.hh>
 #include <Common/StringView.h>
@@ -80,11 +81,61 @@ class ISerializer {
 
   template <typename T>
   [[nodiscard]] bool operator()(T& value, Common::StringView name);
+
+  template <typename _T>
+  [[nodiscard]] bool optional(bool expected, std::optional<_T>& value, Common::StringView name);
+  template <typename _T>
+  [[nodiscard]] bool optional(bool expected, std::vector<_T>& value, Common::StringView name);
 };
 
 template <typename T>
 [[nodiscard]] bool ISerializer::operator()(T& value, Common::StringView name) {
   return serialize(value, name, *this);
+}
+
+template <typename T>
+[[nodiscard]] bool ISerializer::optional(bool expected, std::optional<T>& value, Common::StringView name) {
+  if (isInput()) {
+    if (expected) {
+      value.emplace();
+      return (*this)(*value, name);
+    } else {
+      value = std::nullopt;
+      XI_RETURN_SC(true);
+    }
+  } else if (isOutput()) {
+    if (expected) {
+      XI_RETURN_EC_IF_NOT(value.has_value(), false);
+      return (*this)(*value, name);
+    } else {
+      XI_RETURN_EC_IF(value.has_value(), false);
+      XI_RETURN_SC(true);
+    }
+  } else {
+    XI_RETURN_EC(false);
+  }
+}
+
+template <typename T>
+[[nodiscard]] bool ISerializer::optional(bool expected, std::vector<T>& value, Common::StringView name) {
+  if (isInput()) {
+    if (expected) {
+      return (*this)(value, name);
+    } else {
+      value.clear();
+      XI_RETURN_SC(true);
+    }
+  } else if (isOutput()) {
+    if (expected) {
+      XI_RETURN_EC_IF(value.empty(), false);
+      return (*this)(value, name);
+    } else {
+      XI_RETURN_EC_IF_NOT(value.empty(), false);
+      XI_RETURN_SC(true);
+    }
+  } else {
+    XI_RETURN_EC(false);
+  }
 }
 
 template <typename T>

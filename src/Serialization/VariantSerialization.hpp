@@ -40,39 +40,44 @@ inline TypeTag getVariantTypeTag();
 
 template <size_t _Index, typename _InvariantT, typename... _Ts>
 [[nodiscard]] inline bool serializeVariantInput(std::variant<_Ts...> &value, const TypeTag &tag,
-                                                ISerializer &serializer) {
+                                                ISerializer &serializer, bool haltOnValue = false) {
   assert(serializer.isInput());
   if constexpr (_Index == sizeof...(_Ts)) {
-    XI_UNUSED(value, tag, serializer);
+    XI_UNUSED(value, tag, serializer, haltOnValue);
     return false;
   } else {
     using native_t = std::variant_alternative_t<_Index, std::variant<_Ts...>>;
     if (tag == getVariantTypeTag<_InvariantT, _Index>()) {
       native_t nativeValue;
-      XI_RETURN_EC_IF_NOT(serializer(nativeValue, "value"), false);
+      if (!haltOnValue) {
+        XI_RETURN_EC_IF_NOT(serializer(nativeValue, "value"), false);
+      }
       value = std::move(nativeValue);
       return true;
     } else {
-      return serializeVariantInput<_Index + 1, _InvariantT, _Ts...>(value, tag, serializer);
+      return serializeVariantInput<_Index + 1, _InvariantT, _Ts...>(value, tag, serializer, haltOnValue);
     }
   }
 }
 
 template <size_t _Index, typename _InvariantT, typename... _Ts>
-[[nodiscard]] inline bool serializeVariantOutput(std::variant<_Ts...> &value, ISerializer &serializer) {
+[[nodiscard]] inline bool serializeVariantOutput(std::variant<_Ts...> &value, ISerializer &serializer,
+                                                 bool haltOnValue = false) {
   assert(serializer.isOutput());
   if constexpr (_Index == sizeof...(_Ts)) {
-    XI_UNUSED(value, serializer);
+    XI_UNUSED(value, serializer, haltOnValue);
     return false;
   } else {
     if (value.index() == _Index) {
       auto &varValue = std::get<_Index>(value);
       TypeTag tag{getVariantTypeTag<_InvariantT, _Index>()};
       XI_RETURN_EC_IF_NOT(serializer.typeTag(tag, "type"), false);
-      XI_RETURN_EC_IF_NOT(serializer(varValue, "value"), false);
+      if (!haltOnValue) {
+        XI_RETURN_EC_IF_NOT(serializer(varValue, "value"), false);
+      }
       return true;
     } else {
-      return serializeVariantOutput<_Index + 1, _InvariantT, _Ts...>(value, serializer);
+      return serializeVariantOutput<_Index + 1, _InvariantT, _Ts...>(value, serializer, haltOnValue);
     }
   }
 }
@@ -87,17 +92,42 @@ template <typename _InvariantT, typename... _Ts>
     TypeTag tag{TypeTag::NoBinaryTag, TypeTag::NoTextTag};
     XI_RETURN_EC_IF_NOT(serializer.typeTag(tag, "type"), false);
     XI_RETURN_EC_IF(tag.isNull(), false);
-    if (!CryptoNote::Impl::serializeVariantInput<0, _InvariantT, _Ts...>(value, tag, serializer)) {
+    if (!CryptoNote::Impl::serializeVariantInput<0, _InvariantT, _Ts...>(value, tag, serializer, false)) {
       return false;
     }
   } else {
     assert(serializer.isOutput());
-    if (!CryptoNote::Impl::serializeVariantOutput<0, _InvariantT, _Ts...>(value, serializer)) {
+    if (!CryptoNote::Impl::serializeVariantOutput<0, _InvariantT, _Ts...>(value, serializer, false)) {
       return false;
     }
   }
   XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
   return true;
+}
+
+template <typename _InvariantT, typename... _Ts>
+[[nodiscard]] inline bool serializeVariantOpen(std::variant<_Ts...> &value, Common::StringView name,
+                                               ISerializer &serializer) {
+  XI_RETURN_EC_IF_NOT(serializer.beginObject(name), false);
+  if (serializer.isInput()) {
+    TypeTag tag{TypeTag::NoBinaryTag, TypeTag::NoTextTag};
+    XI_RETURN_EC_IF_NOT(serializer.typeTag(tag, "type"), false);
+    XI_RETURN_EC_IF(tag.isNull(), false);
+    if (!CryptoNote::Impl::serializeVariantInput<0, _InvariantT, _Ts...>(value, tag, serializer, true)) {
+      return false;
+    }
+  } else {
+    assert(serializer.isOutput());
+    if (!CryptoNote::Impl::serializeVariantOutput<0, _InvariantT, _Ts...>(value, serializer, true)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+[[nodiscard]] inline bool serializeVariantClose(ISerializer &serializer) {
+  XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
+  XI_RETURN_SC(true);
 }
 
 template <typename... _Ts>

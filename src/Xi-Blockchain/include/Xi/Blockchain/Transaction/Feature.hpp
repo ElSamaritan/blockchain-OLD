@@ -24,26 +24,28 @@
 #pragma once
 
 #include <Xi/Global.hh>
-#include <Serialization/ISerializer.h>
-#include <Xi/Crypto/PublicKey.hpp>
+#include <Xi/TypeSafe/Flag.hpp>
+#include <Serialization/FlagSerialization.hpp>
 
 namespace Xi {
 namespace Blockchain {
 namespace Transaction {
 
-struct KeyOutputTarget {
-  /// Diffie Hellmann key exchange, derived from the epheremal keys and destination public key.
-  Crypto::PublicKey key{Crypto::PublicKey::Null};
-
-  KV_BEGIN_SERIALIZATION
-  KV_MEMBER(key)
-  KV_END_SERIALIZATION
+enum struct Feature {
+  None = 0,
+  UniformUnlock = 1 << 0,
 };
+
+XI_TYPESAFE_FLAG_MAKE_OPERATIONS(Feature)
+XI_SERIALIZATION_FLAG(Feature)
 
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi
 
+XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Transaction::Feature, UniformUnlock, UniformUnlock)
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::Feature, UniformUnlock, "uniform_unlock")
+
 namespace CryptoNote {
-using KeyOutput = Xi::Blockchain::Transaction::KeyOutputTarget;
+using TransactionFeature = Xi::Blockchain::Transaction::Feature;
 }

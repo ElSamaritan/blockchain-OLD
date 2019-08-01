@@ -28,6 +28,8 @@
 #include <Xi/Global.hh>
 #include <Serialization/ISerializer.h>
 #include <Serialization/SerializationOverloads.h>
+#include <Xi/Blockchain/Transaction/Feature.hpp>
+#include <Xi/Blockchain/Transaction/ExtraFeature.hpp>
 
 #include "Xi/Config/VersionContainer.hpp"
 
@@ -53,12 +55,16 @@ class Configuration {
   XI_PROPERTY(uint64_t, zone)
   XI_PROPERTY(uint8_t, cuttOff)
   XI_PROPERTY(uint64_t, reservedSize)
+  XI_PROPERTY(Blockchain::Transaction::Feature, features)
+  XI_PROPERTY(Blockchain::Transaction::ExtraFeature, extraFeatures)
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER_RENAME(windowSize(), window_size)
   KV_MEMBER_RENAME(zone(), zone)
   KV_MEMBER_RENAME(cuttOff(), cut_off)
   KV_MEMBER_RENAME(reservedSize(), reserved_size)
+  KV_MEMBER_RENAME(features(), features)
+  KV_MEMBER_RENAME(extraFeatures(), extraFeatures)
   KV_END_SERIALIZATION
 };
 

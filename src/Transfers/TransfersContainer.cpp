@@ -211,8 +211,10 @@ void TransfersContainer::addTransaction(const TransactionBlockInfo& block, const
   PaymentId pid{};
   if (!tx.getPaymentId(pid)) {
     txInfo.extra.paymentId = std::nullopt;
+    txInfo.extra.features &= ~TransactionExtraFeature::PaymentId;
   } else {
     txInfo.extra.paymentId = std::move(pid);
+    txInfo.extra.features |= TransactionExtraFeature::PaymentId;
   }
 
   auto result = m_transactions.emplace(std::move(txInfo));

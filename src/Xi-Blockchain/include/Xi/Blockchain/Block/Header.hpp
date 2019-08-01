@@ -48,7 +48,8 @@ struct Header {
   Nonce nonce;
   uint64_t timestamp;
   Crypto::FastHash previousBlockHash;
-  PrunableMergeMiningTag mergeMiningTag;
+
+  std::optional<PrunableMergeMiningTag> mergeMiningTag;
   std::optional<Crypto::Hash::Crc::Hash16> staticRewardHash;
 
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);

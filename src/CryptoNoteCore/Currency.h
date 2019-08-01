@@ -71,7 +71,7 @@ class Currency {
   uint8_t mixinLowerBound(BlockVersion blockVersion) const;
   uint8_t mixinUpperBound(BlockVersion blockVersion) const;
 
-  [[nodiscard]] bool isTransferVersionSupported(BlockVersion blockVersion, uint16_t transferVersion) const;
+  [[nodiscard]] bool isTransactionVersionSupported(BlockVersion blockVersion, uint16_t transferVersion) const;
 
   uint64_t minimumFee(BlockVersion version) const;
   uint64_t minimumFee(BlockVersion version, uint64_t canonicialBuckets) const;

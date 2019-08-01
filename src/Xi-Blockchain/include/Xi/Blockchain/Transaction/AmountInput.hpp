@@ -37,13 +37,13 @@ namespace Transaction {
 
 struct AmountInput {
   /// Amount of the used input, all used outputs must correspond to this amount.
-  Amount amount;
+  Amount amount{0};
 
   /// Delta encoded global indices of outputs used (real one + mixins)
-  GlobalDeltaIndexVector outputIndices;
+  GlobalDeltaIndexVector outputIndices{};
 
   /// Double spending protection.
-  Crypto::KeyImage keyImage;
+  Crypto::KeyImage keyImage{Crypto::KeyImage::Null};
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(amount)

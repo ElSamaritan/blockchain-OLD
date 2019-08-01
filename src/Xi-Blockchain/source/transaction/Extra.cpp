@@ -47,8 +47,10 @@ bool Extra::isNull() const {
 }
 
 bool Extra::serialize(CryptoNote::ISerializer &serializer) {
-  XI_UNUSED(serializer);
-  return false;
+  XI_RETURN_EC_IF_NOT(serializer(features, "features"), false);
+  XI_RETURN_EC_IF_NOT(serializer.optional(hasFlag(features, ExtraFeature::PublicKey), publicKey, "public_key"), false);
+  XI_RETURN_EC_IF_NOT(serializer.optional(hasFlag(features, ExtraFeature::PaymentId), paymentId, "payment_id"), false);
+  XI_RETURN_SC(true);
 }
 
 }  // namespace Transaction

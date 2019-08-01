@@ -70,9 +70,11 @@ bool Header::serialize(CryptoNote::ISerializer &serializer, bool isPoWPrefix) {
   }
   XI_RETURN_EC_IF_NOT(serializer(timestamp, "timestamp"), false);
   XI_RETURN_EC_IF_NOT(serializer(previousBlockHash, "previous_block_hash"), false);
-  XI_RETURN_EC_IF_NOT(serializer(staticRewardHash, "static_reward_hash"), false);
+  XI_RETURN_EC_IF_NOT(
+      serializer.optional(hasFlag(features, Feature::StaticReward), staticRewardHash, "static_reward_hash"), false);
   if (!isPoWPrefix) {
-    XI_RETURN_EC_IF_NOT(serializer(mergeMiningTag, "merge_mining_tag"), false);
+    XI_RETURN_EC_IF_NOT(
+        serializer.optional(hasFlag(features, Feature::MergeMining), mergeMiningTag, "merge_mining_tag"), false);
   }
   return true;
 }

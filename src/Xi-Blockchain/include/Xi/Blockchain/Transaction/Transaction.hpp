@@ -65,6 +65,10 @@ struct Transaction : public Prefix {
   void prune();
 
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
+
+ private:
+  [[nodiscard]] bool serializeReward(CryptoNote::ISerializer& serializer);
+  [[nodiscard]] bool serializeTransfer(CryptoNote::ISerializer& serializer);
 };
 
 }  // namespace Transaction

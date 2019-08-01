@@ -75,6 +75,7 @@ class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
   virtual Crypto::Hash getTopBlockHash() const override;
   virtual BlockVersion getTopBlockVersion() const override;
   virtual Crypto::Hash getBlockHashByIndex(uint32_t blockIndex) const override;
+  virtual uint32_t getBlockIndexByHash(const Crypto::Hash hash) const override;
   virtual uint64_t getBlockTimestampByIndex(uint32_t blockIndex) const override;
 
   virtual std::optional<BlockSource> hasBlock(const Crypto::Hash& blockHash) const override;
@@ -133,8 +134,8 @@ class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
                                   std::vector<TransactionPrefixInfo>& addedTransactions,
                                   std::vector<Crypto::Hash>& deletedTransactions) const override;
 
-  virtual bool getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr,
-                                uint64_t& difficulty, uint32_t& index) const override;
+  virtual bool getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, uint64_t& difficulty,
+                                uint32_t& index) const override;
 
   virtual CoreStatistics getCoreStatistics() const override;
   virtual bool isPruned() const override;

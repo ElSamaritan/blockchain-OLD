@@ -295,7 +295,7 @@ uint8_t Currency::mixinUpperBound(BlockVersion blockVersion) const {
   return m_transaction(blockVersion)->mixin().maximum();
 }
 
-bool Currency::isTransferVersionSupported(BlockVersion blockVersion, uint16_t transferVersion) const {
+bool Currency::isTransactionVersionSupported(BlockVersion blockVersion, uint16_t transferVersion) const {
   const auto& supportedVersions = m_transaction(blockVersion)->supportedVersions();
   return std::find(supportedVersions.begin(), supportedVersions.end(), transferVersion) != supportedVersions.end();
 }
@@ -386,9 +386,7 @@ bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_
                                 uint64_t alreadyGeneratedCoins, size_t currentBlockSize, uint64_t fee,
                                 const AccountPublicAddress& minerAddress, Transaction& tx,
                                 size_t maxOuts /* = 1*/) const {
-  tx.inputs.clear();
-  tx.outputs.clear();
-  tx.extra.nullify();
+  tx.nullify();
 
   KeyPair txkey = generateKeyPair();
   addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
@@ -453,7 +451,8 @@ bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_
   }
 
   tx.version = 1;
-  // lock
+  tx.type = TransactionType::Reward;
+  tx.features |= TransactionFeature::UniformUnlock;
   tx.unlockTime = index + minedMoneyUnlockWindow();
   tx.inputs.push_back(in);
   return true;
@@ -557,7 +556,7 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const
   }
 
   tx.version = 1;
-  // lock
+  tx.type = TransactionType::Reward;
   tx.unlockTime = 0;
   tx.inputs.push_back(in);
 
@@ -805,6 +804,8 @@ Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<Accoun
   CryptoNote::Transaction tx;
   tx.nullify();
   tx.version = 1;
+  tx.type = TransactionType::Reward;
+  tx.features |= TransactionFeature::UniformUnlock;
   tx.unlockTime = m_currency.minedMoneyUnlockWindow();
   KeyPair txkey = generateKeyPair();
   addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
