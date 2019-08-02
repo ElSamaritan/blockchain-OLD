@@ -1390,6 +1390,9 @@ std::vector<uint64_t> DatabaseBlockchainCache::getLastUnits(
 }
 
 Crypto::Hash DatabaseBlockchainCache::getBlockHash(uint32_t blockIndex) const {
+  using namespace Xi;
+  exceptional_if<NotFoundError>(blockIndex > getTopBlockIndex());
+
   if (blockIndex == getTopBlockIndex()) {
     return getTopBlockHash();
   }

@@ -107,6 +107,7 @@ uint64_t TransactionBuilder::getUnlockTime() const {
 void TransactionBuilder::setUnlockTime(uint64_t unlockTime) {
   checkIfSigning();
   transaction.unlockTime = unlockTime;
+  transaction.features |= TransactionFeature::UniformUnlock;
   invalidateHash();
 }
 

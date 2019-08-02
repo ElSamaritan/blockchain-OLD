@@ -176,8 +176,8 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
     enabledExtraFeatures = context.currency.transaction(context.blockVersion).fusion().extraFeatures();
   }
 
-  XI_RETURN_EC_IF_NOT(hasAnyOtherFlag(tx.features, enabledFeatures), Error::FEATURE_USAGE_INVALID);
-  XI_RETURN_EC_IF_NOT(hasAnyOtherFlag(tx.extra.features, enabledExtraFeatures), Error::FEATURE_USAGE_INVALID);
+  XI_RETURN_EC_IF(hasAnyOtherFlag(tx.features, enabledFeatures), Error::FEATURE_USAGE_INVALID);
+  XI_RETURN_EC_IF(hasAnyOtherFlag(tx.extra.features, enabledExtraFeatures), Error::FEATURE_USAGE_INVALID);
 
   return Error::VALIDATION_SUCCESS;
 }
@@ -195,7 +195,7 @@ std::error_code CryptoNote::postValidateTransfer(const CryptoNote::CachedTransac
 
   for (size_t i = 0; i < tx.inputs.size(); ++i) {
     const auto &input = tx.inputs[i];
-    assert(std::holds_alternvative<TransactionRingSignature>(signatures[i]));
+    assert(std::holds_alternative<TransactionRingSignature>(signatures[i]));
     const auto &inputSignatures = std::get<TransactionRingSignature>(signatures[i]);
     assert(std::holds_alternative<KeyInput>(input));
     const auto &keyInput = std::get<KeyInput>(input);

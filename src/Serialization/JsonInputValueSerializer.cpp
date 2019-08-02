@@ -234,7 +234,7 @@ bool JsonInputValueSerializer::flag(std::vector<TypeTag>& flag, Common::StringVi
   flag.clear();
   bool hasFlag = false;
   XI_RETURN_EC_IF_NOT(maybe(hasFlag, name), false);
-  XI_RETURN_EC_IF_NOT(hasFlag, true);
+  XI_RETURN_SC_IF_NOT(hasFlag, true);
 
   size_t size = 0;
   XI_RETURN_EC_IF_NOT(beginArray(size, name), false);

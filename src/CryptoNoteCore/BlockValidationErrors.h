@@ -57,7 +57,9 @@ enum class BlockValidationError {
   MERGE_MINING_TAG_INVALID_TYPE = 20,
   MERGE_MINING_TAG_PRUNED = 21,
 
-  __NUM = 25,
+  FEATURES_ILL_FORMED = 25,
+
+  __NUM = 26,
 };
 
 // custom category:
@@ -130,6 +132,9 @@ class BlockValidationErrorCategory : public std::error_category {
         return "Block template contains an unknown/invalid merge mining tag type.";
       case BlockValidationError::MERGE_MINING_TAG_PRUNED:
         return "Block template contains a pruned merge mining tag.";
+
+      case BlockValidationError::FEATURES_ILL_FORMED:
+        return "Block features does not correspond to encoded data.";
 
       default:
         return "Unknown error";

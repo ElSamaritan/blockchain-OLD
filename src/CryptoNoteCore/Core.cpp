@@ -330,7 +330,6 @@ Crypto::Hash Core::getBlockHashByIndex(uint32_t blockIndex) const {
 uint32_t Core::getBlockIndexByHash(const Hash hash) const {
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
-  assert(blockIndex <= getTopBlockIndex());
 
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
@@ -1400,6 +1399,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, u
 
   b = boost::value_initialized<BlockTemplate>();
   b.version = BlockVersion{getBlockVersionForIndex(index)};
+  b.features |= BlockFeature::BaseTransaction;
   b.previousBlockHash = getTopBlockHash();
 
   if (m_currency.isStaticRewardEnabledForBlockVersion(b.version)) {
@@ -1410,6 +1410,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, u
     }
     CachedTransaction cStaticReward{std::move(staticReward.take().value())};
     auto txHash = cStaticReward.getTransactionHash();
+    b.features |= BlockFeature::StaticReward;
     b.staticRewardHash = Xi::Crypto::Hash::Crc::Hash16::Null;
     compute(txHash.span(), *b.staticRewardHash);
   } else {
@@ -1593,6 +1594,14 @@ std::vector<Crypto::Hash> CryptoNote::Core::getBlockHashes(uint32_t startBlockIn
 }
 
 std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainCache* cache, uint64_t& minerReward) {
+  BlockFeature expected = BlockFeature::BaseTransaction;
+  if (hasFlag(cachedBlock.getBlock().features, BlockFeature::UpgradeVote)) {
+    expected |= BlockFeature::UpgradeVote;
+  }
+  if (cachedBlock.getBlock().transactionHashes.size() > 0) {
+    expected |= BlockFeature::Transactions;
+  }
+
   const auto& block = cachedBlock.getBlock();
   const auto previousBlockIndex = cache->getBlockIndex(block.previousBlockHash);
   const auto blockIndex = previousBlockIndex + 1;
@@ -1625,6 +1634,10 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     return error::TransactionValidationError::TYPE_INVALID;
   }
 
+  if (const auto ec = validateFeatureIntegrity(block.baseTransaction);
+      ec != error::TransactionValidationError::VALIDATION_SUCCESS) {
+    return ec;
+  }
   if (const auto ec = validateExtra(block.baseTransaction);
       ec != error::TransactionValidationError::VALIDATION_SUCCESS) {
     return ec;
@@ -1677,15 +1690,14 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
       return error::TransactionValidationError::OUTPUT_UNKNOWN_TYPE;
     }
 
-    if (!check_key(keyOutput->key)) {
+    if (!keyOutput->key.isValid()) {
       return error::TransactionValidationError::OUTPUT_INVALID_KEY;
     }
 
-    if (std::numeric_limits<uint64_t>::max() - output.amount < minerReward) {
+    if (Xi::hasAdditionOverflow(minerReward, output.amount, std::addressof(minerReward))) {
       return error::TransactionValidationError::OUTPUTS_AMOUNT_OVERFLOW;
     }
 
-    minerReward += output.amount;
     embeddedAmounts.push_back(output.amount);
   }
 
@@ -1699,6 +1711,7 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   // BEGIN: Static Reward Hash Validation ----------------------------------------------------------------------------
   const auto& b = cachedBlock.getBlock();
   if (m_currency.isStaticRewardEnabledForBlockVersion(b.version)) {
+    expected |= BlockFeature::StaticReward;
     if (!b.staticRewardHash.has_value()) {
       return error::BlockValidationError::STATIC_REWARD_MISSMATCH;
     }
@@ -1721,6 +1734,9 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   }
   // END: Static Reward Hash Validation ------------------------------------------------------------------------------
 
+  if (b.features != expected) {
+    return error::BlockValidationError::FEATURES_ILL_FORMED;
+  }
   return error::TransactionValidationError::VALIDATION_SUCCESS;
 }
 
@@ -2239,6 +2255,10 @@ void Core::fillBlockTemplate(BlockTemplate& block, uint32_t index, size_t fullRe
 
   if (departedTransactions > 0) {
     m_transactionPool->sanityCheck(std::numeric_limits<uint64_t>::max());
+  }
+
+  if (block.transactionHashes.size() > 0) {
+    block.features |= BlockFeature::Transactions;
   }
 }
 

@@ -42,8 +42,15 @@
 using namespace Xi::App;
 
 namespace {
-void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const CryptoNote::CurrencyBuilder& currency,
+void print_genesis_tx_hex(std::vector<std::string> rewardAddresses, const CryptoNote::CurrencyBuilder& currency,
                           Logging::ILogger& logManager) {
+  for (auto& rewardAddress : rewardAddresses) {
+    rewardAddress = Xi::trim(rewardAddress);
+  }
+  rewardAddresses.erase(
+      std::remove_if(rewardAddresses.begin(), rewardAddresses.end(), [](const auto& i) { return i.empty(); }),
+      rewardAddresses.end());
+
   Logging::LoggerRef logger{logManager, "GenesisTX"};
   std::vector<CryptoNote::AccountPublicAddress> rewardTargets;
 

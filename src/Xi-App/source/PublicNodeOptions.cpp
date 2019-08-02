@@ -48,7 +48,7 @@ void PublicNodeOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("public node")
     ("public-node-disable", "Disables public node capabilities of this instance.",
-      cxxopts::value(enabled())->implicit_value("false"))
+      cxxopts::value(enabled())->default_value(enabled() ?  "true" : "false")->implicit_value("false"))
 
     ("public-node-fee-address", "Sets the convenience charge <address> for light wallets that use the daemon",
       cxxopts::value<std::string>(fee().address()), "<address>")

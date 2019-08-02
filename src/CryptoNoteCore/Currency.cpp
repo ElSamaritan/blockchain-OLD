@@ -108,6 +108,7 @@ bool Currency::generateGenesisBlock() {
   }
 
   m_genesisBlockTemplate.version = BlockVersion::Genesis;
+  m_genesisBlockTemplate.features |= BlockFeature::BaseTransaction;
   m_genesisBlockTemplate.timestamp = coin().startTimestamp();
   m_genesisBlockTemplate.nonce.fill(0);
   m_genesisBlockTemplate.previousBlockHash.nullify();
@@ -132,6 +133,7 @@ bool Currency::generateGenesisBlock() {
     }
     const CachedTransaction cStaticReward{*staticReward.takeOrThrow()};
     const auto txHash = cStaticReward.getTransactionHash();
+    m_genesisBlockTemplate.features |= BlockFeature::StaticReward;
     m_genesisBlockTemplate.staticRewardHash = Xi::Crypto::Hash::Crc::Hash16::Null;
     compute(txHash.span(), *m_genesisBlockTemplate.staticRewardHash);
   } else {

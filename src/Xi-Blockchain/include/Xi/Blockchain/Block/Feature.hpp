@@ -35,7 +35,7 @@ namespace Block {
 enum Feature : uint16_t {
   None = 0,
   UpgradeVote = 1 << 0,
-  BlockReward = 1 << 1,
+  BaseTransaction = 1 << 1,
   StaticReward = 1 << 2,
   Transactions = 1 << 3,
   MergeMining = 1 << 4,
@@ -48,8 +48,13 @@ XI_SERIALIZATION_FLAG(Feature)
 }  // namespace Blockchain
 }  // namespace Xi
 
-XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Block::Feature, BlockReward, MergeMining)
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, BlockReward, "block_reward")
+XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Block::Feature, UpgradeVote, MergeMining)
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, UpgradeVote, "upgrade_vote")
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, BaseTransaction, "base_transaction")
 XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, StaticReward, "static_reward")
 XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, Transactions, "transactions")
 XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Block::Feature, MergeMining, "merge_mining")
+
+namespace CryptoNote {
+using BlockFeature = Xi::Blockchain::Block::Feature;
+}

@@ -533,6 +533,9 @@ BlockHeightVector BlockchainCache::getBlockHeights(ConstBlockHashSpan hashes) co
 }
 
 Crypto::Hash BlockchainCache::getBlockHash(uint32_t blockIndex) const {
+  using namespace Xi;
+  exceptional_if<NotFoundError>(blockIndex > getTopBlockIndex());
+
   if (blockIndex < startIndex) {
     assert(parent != nullptr);
     return parent->getBlockHash(blockIndex);

@@ -94,12 +94,8 @@ bool Transaction::isNull() const {
 }
 
 void Transaction::nullify() {
-  version = 0;
-  unlockTime = 0;
-  inputs.clear();
-  outputs.clear();
-  extra.nullify();
-  signatures = SignatureVector{};
+  nullifyPrefix();
+  signatures = std::nullopt;
 }
 
 void Transaction::prune() {
@@ -165,9 +161,9 @@ bool Transaction::serializeTransfer(CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(type == Type::Transfer, false);
 
   if (serializer.isInput()) {
-    XI_RETURN_EC_IF_NOT(signatures.has_value(), false);
-  } else if (serializer.isOutput()) {
     signatures = Pruned{};
+  } else if (serializer.isOutput()) {
+    XI_RETURN_EC_IF_NOT(signatures.has_value(), false);
   } else {
     XI_RETURN_EC(false);
   }

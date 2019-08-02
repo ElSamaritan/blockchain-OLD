@@ -64,7 +64,7 @@ class Configuration {
   KV_MEMBER_RENAME(cuttOff(), cut_off)
   KV_MEMBER_RENAME(reservedSize(), reserved_size)
   KV_MEMBER_RENAME(features(), features)
-  KV_MEMBER_RENAME(extraFeatures(), extraFeatures)
+  KV_MEMBER_RENAME(extraFeatures(), extra_features)
   KV_END_SERIALIZATION
 };
 

@@ -71,7 +71,7 @@ class Transfer {
   KV_MEMBER_RENAME(rateNominator(), rate_nominator)
   KV_MEMBER_RENAME(rateDenominator(), rate_denominator)
   KV_MEMBER_RENAME(features(), features)
-  KV_MEMBER_RENAME(extraFeatures(), extraFeatures)
+  KV_MEMBER_RENAME(extraFeatures(), extra_features)
   KV_END_SERIALIZATION
 };
 
