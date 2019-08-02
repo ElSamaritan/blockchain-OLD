@@ -42,7 +42,7 @@ struct AmountDecompositionUnit {
 class AmountDecompositions {
   std::unordered_map<uint64_t, AmountDecompositionUnit> m_units;
   AmountDecompositions() {
-    for (uint8_t decade = 0; decade < std::numeric_limits<uint64_t>::digits10; ++decade) {
+    for (uint8_t decade = 0; decade < 16; ++decade) {
       uint64_t iDecadeUnit = Xi::pow64(10, decade);
       for (uint8_t digit = 1; digit < 10; ++digit) {
         uint64_t iAmount = iDecadeUnit * digit;
@@ -158,6 +158,14 @@ uint64_t CryptoNote::cutDigitsFromAmount(uint64_t amount, const size_t count) {
 uint8_t CryptoNote::getCanoncialAmountDecimalPlace(uint64_t amount) {
   if (const auto search = AmountDecompositions::units().find(amount); search != AmountDecompositions::units().end()) {
     return search->second.DecadeIndex;
+  } else {
+    XI_RETURN_EC(std::numeric_limits<uint8_t>::max());
+  }
+}
+
+uint8_t CryptoNote::getCanoncialAmountDigit(uint64_t amount) {
+  if (const auto search = AmountDecompositions::units().find(amount); search != AmountDecompositions::units().end()) {
+    return search->second.Digit;
   } else {
     XI_RETURN_EC(std::numeric_limits<uint8_t>::max());
   }

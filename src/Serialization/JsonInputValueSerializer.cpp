@@ -53,6 +53,10 @@ ISerializer::SerializerType JsonInputValueSerializer::type() const {
   return ISerializer::INPUT;
 }
 
+ISerializer::FormatType JsonInputValueSerializer::format() const {
+  return ISerializer::HumanReadable;
+}
+
 bool JsonInputValueSerializer::beginObject(Common::StringView name) {
   XI_RETURN_EC_IF(chain.empty(), false);
   const JsonValue* parent = chain.back();

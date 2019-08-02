@@ -23,33 +23,32 @@
 
 #pragma once
 
-#include <Xi/Global.hh>
-#include <Serialization/ISerializer.h>
-#include <Xi/Crypto/PublicKey.hpp>
+#include <cinttypes>
 
-#include "Xi/Blockchain/Transaction/CanonicalAmount.hpp"
-#include "Xi/Blockchain/Transaction/OutputTarget.hpp"
+#include <Xi/Global.hh>
+#include <Xi/TypeSafe/Integral.hpp>
+#include <Serialization/ISerializer.h>
+
+#include "Xi/Blockchain/Transaction/Amount.hpp"
 
 namespace Xi {
 namespace Blockchain {
 namespace Transaction {
 
-struct AmountOutput {
-  /// New amount generated once mined.
-  CanonicalAmount amount;
-  /// Target to receive the amount
-  OutputTarget target;
+struct CanonicalAmount : TypeSafe::EnableIntegralFromThis<uint64_t, CanonicalAmount> {
+  using EnableIntegralFromThis::EnableIntegralFromThis;
 
-  KV_BEGIN_SERIALIZATION
-  KV_MEMBER(amount)
-  KV_MEMBER(target)
-  KV_END_SERIALIZATION
+  operator Amount() const;
+
+  friend bool serialize(CanonicalAmount&, Common::StringView, CryptoNote::ISerializer&);
 };
+
+[[nodiscard]] bool serialize(CanonicalAmount& value, Common::StringView name, CryptoNote::ISerializer& serializer);
 
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi
 
 namespace CryptoNote {
-using TransactionAmountOutput = Xi::Blockchain::Transaction::AmountOutput;
+using CanonicalAmount = Xi::Blockchain::Transaction::CanonicalAmount;
 }

@@ -1876,7 +1876,7 @@ ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputs(
     tx.transactionHash = kv.second.transactionHash;
     tx.outputs.resize(kv.second.index.data.outputIndex + 1);
     TransactionAmountOutput output{};
-    output.amount = amount;
+    output.amount = CanonicalAmount{amount};
     output.target = TransactionOutputTarget{KeyOutput{kv.second.publicKey}};
     tx.outputs[kv.second.index.data.outputIndex] = TransactionOutput{output};
 

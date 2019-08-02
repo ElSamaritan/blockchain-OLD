@@ -175,7 +175,7 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
 
       // put key image into tx input
       KeyInput input_to_key;
-      input_to_key.amount = src_entr.amount;
+      input_to_key.amount = CanonicalAmount{src_entr.amount};
       input_to_key.keyImage = img;
 
       // fill outputs array and use relative offsets
@@ -220,7 +220,7 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
       }
 
       TransactionAmountOutput out;
-      out.amount = dst_entr.amount;
+      out.amount = CanonicalAmount{dst_entr.amount};
       KeyOutput tk;
       tk.key = out_eph_public_key;
       out.target = tk;

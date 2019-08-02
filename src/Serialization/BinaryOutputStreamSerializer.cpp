@@ -45,6 +45,10 @@ ISerializer::SerializerType BinaryOutputStreamSerializer::type() const {
   return ISerializer::OUTPUT;
 }
 
+ISerializer::FormatType BinaryOutputStreamSerializer::format() const {
+  return ISerializer::Machinery;
+}
+
 bool BinaryOutputStreamSerializer::useVarInt() {
   return m_useVarInt;
 }

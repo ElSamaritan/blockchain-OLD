@@ -39,18 +39,26 @@ bool Prefix::serialize(CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializeUnlock(serializer), false);
   XI_RETURN_EC_IF_NOT(serializer(extra, "extra"), false);
 
-  switch (type) {
-    case Type::Reward:
-      return serializeReward(serializer);
+  if (serializer.isHumanReadable()) {
+    XI_RETURN_EC_IF_NOT(serializer(inputs, "inputs"), false);
+    XI_RETURN_EC_IF_NOT(serializer(outputs, "outputs"), false);
+    XI_RETURN_SC(true);
+  } else if (serializer.isMachinery()) {
+    switch (type) {
+      case Type::Reward:
+        return serializeReward(serializer);
 
-    case Type::Transfer:
-      return serializeTransfer(serializer);
+      case Type::Transfer:
+        return serializeTransfer(serializer);
 
-    case Type::None:
-      XI_RETURN_EC(false);
+      case Type::None:
+        XI_RETURN_EC(false);
+    }
+
+    XI_RETURN_EC(false);
+  } else {
+    XI_RETURN_EC(false);
   }
-
-  XI_RETURN_EC(false);
 }
 
 Crypto::FastHash Prefix::prefixHash() const {
@@ -133,7 +141,7 @@ bool Prefix::serializeOutputs(CryptoNote::ISerializer &serializer) {
   uint64_t outputCount = outputs.size();
   XI_RETURN_EC_IF_NOT(serializer.beginArray(outputCount, "outputs"), false);
   if (serializer.isInput()) {
-    outputs = OutputVector{outputCount, AmountOutput{0, KeyOutputTarget{}}};
+    outputs = OutputVector{outputCount, AmountOutput{CanonicalAmount{0}, KeyOutputTarget{}}};
   } else if (serializer.isOutput()) {
     for (const auto &output : outputs) {
       XI_RETURN_EC_IF_NOT(std::holds_alternative<AmountOutput>(output), false);

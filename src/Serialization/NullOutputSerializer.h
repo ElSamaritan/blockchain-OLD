@@ -35,6 +35,9 @@ class NullOutputSerializer final : public ISerializer {
   inline ISerializer::SerializerType type() const override {
     return ISerializer::OUTPUT;
   }
+  inline ISerializer::FormatType format() const override {
+    return ISerializer::Machinery;
+  }
 
   [[nodiscard]] inline bool beginObject(Common::StringView) override {
     return true;

@@ -138,7 +138,7 @@ size_t TransactionBuilder::addInput(const AccountKeys& senderKeys, const Transac
                                     KeyPair& ephKeys) {
   checkIfSigning();
   KeyInput input;
-  input.amount = info.amount;
+  input.amount = CanonicalAmount{info.amount};
 
   generate_key_image_helper(senderKeys, info.realOutput.transactionPublicKey, info.realOutput.outputInTransaction,
                             ephKeys, input.keyImage);
@@ -157,7 +157,7 @@ size_t TransactionBuilder::addOutput(uint64_t amount, const AccountPublicAddress
 
   KeyOutput outKey;
   derivePublicKey(to, txSecretKey(), transaction.outputs.size(), outKey.key);
-  TransactionOutput out = TransactionAmountOutput{amount, outKey};
+  TransactionOutput out = TransactionAmountOutput{CanonicalAmount{amount}, outKey};
   transaction.outputs.emplace_back(out);
   invalidateHash();
 
@@ -167,7 +167,7 @@ size_t TransactionBuilder::addOutput(uint64_t amount, const AccountPublicAddress
 size_t TransactionBuilder::addOutput(uint64_t amount, const KeyOutput& out) {
   checkIfSigning();
   size_t outputIndex = transaction.outputs.size();
-  TransactionOutput realOut = TransactionAmountOutput{amount, out};
+  TransactionOutput realOut = TransactionAmountOutput{CanonicalAmount{amount}, out};
   transaction.outputs.emplace_back(realOut);
   invalidateHash();
   return outputIndex;

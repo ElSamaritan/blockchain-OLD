@@ -37,6 +37,7 @@ class ConsoleOutputSerializer final : public ISerializer {
 
   // ISerializer =====================================================================================================
   SerializerType type() const override;
+  FormatType format() const override;
 
   [[nodiscard]] virtual bool beginObject(Common::StringView name) override;
   [[nodiscard]] virtual bool endObject() override;

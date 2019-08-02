@@ -441,7 +441,8 @@ bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_
     tk.key = outEphemeralPubKey;
 
     TransactionAmountOutput out;
-    summaryAmounts += out.amount = outAmounts[no];
+    out.amount = CanonicalAmount{outAmounts[no]};
+    summaryAmounts += out.amount;
     out.target = tk;
     tx.outputs.push_back(out);
   }
@@ -548,7 +549,8 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const
     tk.key = outEphemeralPubKey;
 
     TransactionAmountOutput out;
-    summaryAmounts += out.amount = outAmounts[no];
+    out.amount = CanonicalAmount{outAmounts[no]};
+    summaryAmounts += out.amount;
     out.target = tk;
     tx.outputs.push_back(out);
   }
@@ -835,7 +837,7 @@ Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<Accoun
       KeyOutput tk;
       tk.key = outEphemeralPubKey;
       TransactionAmountOutput out;
-      out.amount = iAmount;
+      out.amount = CanonicalAmount{iAmount};
       out.target = tk;
       tx.outputs.push_back(out);
     }

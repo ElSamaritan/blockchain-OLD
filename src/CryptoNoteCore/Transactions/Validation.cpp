@@ -111,7 +111,7 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
     }
     XI_RETURN_EC_IF(output.amount == 0, Error::OUTPUT_ZERO_AMOUNT);
     XI_RETURN_EC_IF_NOT(isCanonicalAmount(output.amount), Error::OUTPUTS_NOT_CANONCIAL);
-    if (Xi::hasAdditionOverflow(out.outputSum, output.amount, &out.outputSum)) {
+    if (Xi::hasAdditionOverflow(out.outputSum, output.amount.native(), &out.outputSum)) {
       XI_RETURN_EC(Error::OUTPUTS_AMOUNT_OVERFLOW);
     }
   }
@@ -134,7 +134,7 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
     }
     XI_RETURN_EC_IF(keyInput.amount == 0, Error::INPUT_ZERO_AMOUNT);
     XI_RETURN_EC_IF_NOT(isCanonicalAmount(keyInput.amount), Error::INPUTS_NOT_CANONICAL);
-    if (Xi::hasAdditionOverflow(out.inputSum, keyInput.amount, &out.inputSum)) {
+    if (Xi::hasAdditionOverflow(out.inputSum, keyInput.amount.native(), &out.inputSum)) {
       XI_RETURN_EC(Error::INPUTS_AMOUNT_OVERFLOW);
     }
 

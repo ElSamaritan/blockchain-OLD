@@ -1694,7 +1694,7 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
       return error::TransactionValidationError::OUTPUT_INVALID_KEY;
     }
 
-    if (Xi::hasAdditionOverflow(minerReward, output.amount, std::addressof(minerReward))) {
+    if (Xi::hasAdditionOverflow(minerReward, output.amount.native(), std::addressof(minerReward))) {
       return error::TransactionValidationError::OUTPUTS_AMOUNT_OVERFLOW;
     }
 

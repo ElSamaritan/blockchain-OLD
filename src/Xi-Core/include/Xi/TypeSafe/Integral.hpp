@@ -21,6 +21,8 @@
  *                                                                                                *
  * ============================================================================================== */
 
+#pragma once
+
 #include <type_traits>
 
 namespace Xi {
@@ -38,27 +40,48 @@ struct EnableIntegralFromThis {
   value_type value;  ///< stores the actual value representation
 
  private:
-  constexpr compatible_t &this_compatible() { return *static_cast<compatible_t *>(this); }
-  constexpr const compatible_t &this_compatible() const { return *static_cast<const compatible_t *>(this); }
+  constexpr compatible_t &this_compatible() {
+    return *static_cast<compatible_t *>(this);
+  }
+  constexpr const compatible_t &this_compatible() const {
+    return *static_cast<const compatible_t *>(this);
+  }
 
  public:
-  explicit constexpr EnableIntegralFromThis() : value{} {}
-  explicit constexpr EnableIntegralFromThis(value_type _value) : value{_value} {}
-  explicit constexpr EnableIntegralFromThis(const EnableIntegralFromThis &_value) : value{_value.value} {}
+  explicit constexpr EnableIntegralFromThis() : value{} {
+  }
+  explicit constexpr EnableIntegralFromThis(value_type _value) : value{_value} {
+  }
+  explicit constexpr EnableIntegralFromThis(const EnableIntegralFromThis &_value) : value{_value.value} {
+  }
   compatible_t &operator=(compatible_t _value) {
     this->value = _value;
     return this_compatible();
   }
 
-  constexpr value_type native() const { return this->value; }
+  constexpr value_type native() const {
+    return this->value;
+  }
 
-  constexpr bool operator==(const compatible_t &rhs) const { return this->value == rhs.value; }
-  constexpr bool operator!=(const compatible_t &rhs) const { return this->value != rhs.value; }
+  constexpr bool operator==(const compatible_t &rhs) const {
+    return this->value == rhs.value;
+  }
+  constexpr bool operator!=(const compatible_t &rhs) const {
+    return this->value != rhs.value;
+  }
 
-  constexpr bool operator<(const compatible_t &rhs) const { return this->value < rhs.value; }
-  constexpr bool operator<=(const compatible_t &rhs) const { return this->value <= rhs.value; }
-  constexpr bool operator>(const compatible_t &rhs) const { return this->value > rhs.value; }
-  constexpr bool operator>=(const compatible_t &rhs) const { return this->value >= rhs.value; }
+  constexpr bool operator<(const compatible_t &rhs) const {
+    return this->value < rhs.value;
+  }
+  constexpr bool operator<=(const compatible_t &rhs) const {
+    return this->value <= rhs.value;
+  }
+  constexpr bool operator>(const compatible_t &rhs) const {
+    return this->value > rhs.value;
+  }
+  constexpr bool operator>=(const compatible_t &rhs) const {
+    return this->value >= rhs.value;
+  }
 };
 
 }  // namespace TypeSafe

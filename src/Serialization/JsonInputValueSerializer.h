@@ -30,6 +30,7 @@ class JsonInputValueSerializer : public ISerializer {
   virtual ~JsonInputValueSerializer() override;
 
   SerializerType type() const override;
+  FormatType format() const override;
 
   [[nodiscard]] virtual bool beginObject(Common::StringView name) override;
   [[nodiscard]] virtual bool endObject() override;

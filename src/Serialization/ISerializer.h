@@ -35,11 +35,13 @@ namespace CryptoNote {
 class ISerializer {
  public:
   enum SerializerType { INPUT, OUTPUT };
+  enum FormatType { HumanReadable, Machinery };
 
   virtual ~ISerializer() {
   }
 
   virtual SerializerType type() const = 0;
+  virtual FormatType format() const = 0;
 
   [[nodiscard]] virtual bool beginObject(Common::StringView name) = 0;
   [[nodiscard]] virtual bool endObject() = 0;
@@ -77,6 +79,13 @@ class ISerializer {
   }
   [[nodiscard]] bool isOutput() const {
     return type() == OUTPUT;
+  }
+
+  [[nodiscard]] bool isHumanReadable() const {
+    return format() == HumanReadable;
+  }
+  [[nodiscard]] bool isMachinery() const {
+    return format() == Machinery;
   }
 
   template <typename T>

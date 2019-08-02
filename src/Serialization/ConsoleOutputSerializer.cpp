@@ -79,6 +79,10 @@ ISerializer::SerializerType ConsoleOutputSerializer::type() const {
   return ISerializer::OUTPUT;
 }
 
+ISerializer::FormatType ConsoleOutputSerializer::format() const {
+  return ISerializer::HumanReadable;
+}
+
 bool ConsoleOutputSerializer::beginObject(Common::StringView name) {
   if (m_impl->stack.empty()) {
     m_impl->emitter << YAML::BeginMap;

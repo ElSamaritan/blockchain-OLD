@@ -32,6 +32,7 @@ class BinaryInputStreamSerializer final : public ISerializer {
   virtual ~BinaryInputStreamSerializer() override = default;
 
   virtual ISerializer::SerializerType type() const override;
+  FormatType format() const override;
 
   bool useVarInt();
   void setUseVarInt(bool use);

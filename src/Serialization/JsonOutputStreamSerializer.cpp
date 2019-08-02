@@ -59,6 +59,10 @@ ISerializer::SerializerType JsonOutputStreamSerializer::type() const {
   return ISerializer::OUTPUT;
 }
 
+ISerializer::FormatType JsonOutputStreamSerializer::format() const {
+  return ISerializer::HumanReadable;
+}
+
 bool JsonOutputStreamSerializer::beginObject(Common::StringView name) {
   XI_RETURN_EC_IF(chain.empty(), false);
   JsonValue& parent = *chain.back();

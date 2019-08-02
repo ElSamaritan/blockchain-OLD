@@ -28,7 +28,7 @@
 #include <Serialization/SerializationOverloads.h>
 #include <Xi/Crypto/KeyImage.hpp>
 
-#include "Xi/Blockchain/Transaction/Amount.hpp"
+#include "Xi/Blockchain/Transaction/CanonicalAmount.hpp"
 #include "Xi/Blockchain/Transaction/GlobalIndex.hpp"
 
 namespace Xi {
@@ -37,7 +37,7 @@ namespace Transaction {
 
 struct AmountInput {
   /// Amount of the used input, all used outputs must correspond to this amount.
-  Amount amount{0};
+  CanonicalAmount amount{0};
 
   /// Delta encoded global indices of outputs used (real one + mixins)
   GlobalDeltaIndexVector outputIndices{};
