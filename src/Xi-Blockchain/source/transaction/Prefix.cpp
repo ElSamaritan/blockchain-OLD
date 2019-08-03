@@ -1,4 +1,4 @@
-/* ============================================================================================== *
+﻿/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -125,7 +125,7 @@ bool Prefix::serializeReward(CryptoNote::ISerializer &serializer) {
 }
 
 bool Prefix::serializeTransfer(CryptoNote::ISerializer &serializer) {
-  uint64_t inputCount = inputs.size();
+  size_t inputCount = inputs.size();
   XI_RETURN_EC_IF_NOT(serializer.beginArray(inputCount, "inputs"), false);
   if (serializer.isInput()) {
     inputs = InputVector{inputCount, AmountInput{}};
@@ -147,7 +147,7 @@ bool Prefix::serializeTransfer(CryptoNote::ISerializer &serializer) {
 }
 
 bool Prefix::serializeOutputs(CryptoNote::ISerializer &serializer) {
-  uint64_t outputCount = outputs.size();
+  size_t outputCount = outputs.size();
   XI_RETURN_EC_IF_NOT(serializer.beginArray(outputCount, "outputs"), false);
   if (serializer.isInput()) {
     outputs = OutputVector{outputCount, AmountOutput{CanonicalAmount{0}, KeyOutputTarget{}}};
