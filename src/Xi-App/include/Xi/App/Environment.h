@@ -39,7 +39,7 @@ class Environment {
   static void set(const std::string& value);
 
  public:
-  explicit Environment(const std::string prefix);
+  explicit Environment(const std::string& globalPrefix, const std::string& appPrefix);
 
  public:
   Environment& operator()(bool& value, const std::string& id);
@@ -60,11 +60,14 @@ class Environment {
   void load(const std::string& filename, bool userProvided = false);
 
  private:
+  std::string globalApp(const std::string& id);
   std::string global(const std::string& id);
+  std::string localApp(const std::string& id);
   std::string local(const std::string& id);
 
  private:
   std::string m_globalPrefix;
+  std::string m_appPrefix;
   std::map<std::string, std::string> m_importMap;
 };
 

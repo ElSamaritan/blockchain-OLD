@@ -91,14 +91,18 @@ _IntegerT toInteger(std::string str) {
 }
 }  // namespace
 
-#define XI_ENV_CONSIDER(CONVERT)                         \
-  if (auto locValue = local(id); !locValue.empty()) {    \
-    value = CONVERT(locValue);                           \
-  }                                                      \
-  if (auto globValue = global(id); !globValue.empty()) { \
-    value = CONVERT(globValue);                          \
-  }                                                      \
-  return *this
+#define XI_ENV_CONSIDER_CASE(CONVERT, GETTER)          \
+  if (auto envValue = GETTER(id); !envValue.empty()) { \
+    value = CONVERT(envValue);                         \
+    return *this;                                      \
+  }
+
+#define XI_ENV_CONSIDER(CONVERT)           \
+  XI_ENV_CONSIDER_CASE(CONVERT, globalApp) \
+  XI_ENV_CONSIDER_CASE(CONVERT, localApp)  \
+  XI_ENV_CONSIDER_CASE(CONVERT, global)    \
+  XI_ENV_CONSIDER_CASE(CONVERT, local)     \
+  return *this;
 
 std::string Environment::get(const std::string &key) {
   auto value = std::getenv(key.c_str());
@@ -129,7 +133,8 @@ void Environment::set(const std::string &value) {
 #endif
 }
 
-Environment::Environment(const std::string prefix) : m_globalPrefix{prefix} {
+Environment::Environment(const std::string &globalPrefix, const std::string &appPrefix)
+    : m_globalPrefix{globalPrefix}, m_appPrefix{appPrefix} {
   /* */
 }
 
@@ -177,6 +182,9 @@ Environment &Environment::operator()(std::vector<std::string> &value, const std:
   XI_ENV_CONSIDER(toStringVector);
 }
 
+#undef XI_ENV_CONSIDER
+#undef XI_ENV_CONSIDER_CASE
+
 void Environment::load() {
   if (const auto envEnv = get(m_globalPrefix + "_ENV"); !envEnv.empty()) {
     load(envEnv, true);
@@ -220,12 +228,22 @@ void Environment::load(const std::string &env, bool userProvided) {
 }
 
 std::string Environment::global(const std::string &id) {
-  std::string globalId = m_globalPrefix + "_" + id;
+  std::string globalAppId = m_globalPrefix + "_" + id;
+  return get(globalAppId);
+}
+
+std::string Environment::globalApp(const std::string &id) {
+  std::string globalId = m_globalPrefix + "_" + m_appPrefix + "_" + id;
   return get(globalId);
 }
 
 std::string Environment::local(const std::string &id) {
   return get(id);
+}
+
+std::string Environment::localApp(const std::string &id) {
+  std::string localAppId = m_appPrefix + "_" + id;
+  return get(localAppId);
 }
 }  // namespace App
 }  // namespace Xi
