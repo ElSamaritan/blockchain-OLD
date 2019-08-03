@@ -364,6 +364,7 @@ void NodeInProcess::queryBlocks(std::vector<Crypto::Hash> &&knownBlockIds, uint6
   for (auto &item : infos) {
     BlockShortEntry bse;
     bse.hasBlock = false;
+    bse.timestamp = item.timestamp;
 
     bse.blockHash = std::move(item.block_hash);
     if (!item.block.empty()) {

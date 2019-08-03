@@ -21,33 +21,30 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/Blockchain/Transaction/Input.hpp"
 
-#include <Xi/Global.hh>
-#include <Xi/TypeSafe/Flag.hpp>
-#include <Serialization/FlagSerialization.hpp>
+#include <Xi/Exceptions.hpp>
 
 namespace Xi {
 namespace Blockchain {
 namespace Transaction {
 
-enum struct Feature {
-  None = 0,
-  UniformUnlock = 1 << 0,
-  GlobalIndexOffset = 1 << 1,
-  StaticRingSize = 1 << 2,
-};
-
-XI_TYPESAFE_FLAG_MAKE_OPERATIONS(Feature)
-XI_SERIALIZATION_FLAG(Feature)
+bool operator<(const Input& lhs, const Input& rhs) {
+  XI_RETURN_SC_IF(lhs.index() < rhs.index(), true);
+  XI_RETURN_SC_IF(lhs.index() > rhs.index(), false);
+  if (std::holds_alternative<RewardInput>(lhs)) {
+    const auto& lhsReward = std::get<RewardInput>(lhs);
+    const auto& rhsReward = std::get<RewardInput>(rhs);
+    XI_RETURN_SC(lhsReward.height < rhsReward.height);
+  } else if (std::holds_alternative<AmountInput>(lhs)) {
+    const auto& lhsAmount = std::get<AmountInput>(lhs);
+    const auto& rhsAmount = std::get<AmountInput>(rhs);
+    XI_RETURN_SC(lhsAmount.keyImage < rhsAmount.keyImage);
+  } else {
+    exceptional<InvalidVariantTypeError>();
+  }
+}
 
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi
-
-XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Transaction::Feature, UniformUnlock, UniformUnlock)
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::Feature, UniformUnlock, "uniform_unlock")
-
-namespace CryptoNote {
-using TransactionFeature = Xi::Blockchain::Transaction::Feature;
-}

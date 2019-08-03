@@ -21,33 +21,38 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
-
-#include <Xi/Global.hh>
-#include <Xi/TypeSafe/Flag.hpp>
-#include <Serialization/FlagSerialization.hpp>
+#include "Xi/Blockchain/Transaction/AmountInput.hpp"
 
 namespace Xi {
 namespace Blockchain {
 namespace Transaction {
 
-enum struct Feature {
-  None = 0,
-  UniformUnlock = 1 << 0,
-  GlobalIndexOffset = 1 << 1,
-  StaticRingSize = 1 << 2,
-};
+bool AmountInput::serialize(CryptoNote::ISerializer& serializer, std::optional<uint16_t> ringSize) {
+  XI_RETURN_EC_IF_NOT(serializer(amount, "amount"), false);
+  XI_RETURN_EC_IF_NOT(serializer(keyImage, "key_image"), false);
 
-XI_TYPESAFE_FLAG_MAKE_OPERATIONS(Feature)
-XI_SERIALIZATION_FLAG(Feature)
+  if (!ringSize) {
+    XI_RETURN_EC_IF_NOT(serializer(outputIndices, "output_indices"), false);
+  } else {
+    if (serializer.isOutput()) {
+      XI_RETURN_EC_IF_NOT(outputIndices.size() == *ringSize, false);
+    }
+
+    XI_RETURN_EC_IF_NOT(serializer.beginStaticArray(*ringSize, "output_indices"), false);
+    if (serializer.isInput()) {
+      outputIndices.resize(*ringSize);
+    }
+
+    for (auto& index : outputIndices) {
+      XI_RETURN_EC_IF_NOT(serializer(index, ""), false);
+    }
+
+    XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
+  }
+
+  XI_RETURN_SC(true);
+}
 
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi
-
-XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Transaction::Feature, UniformUnlock, UniformUnlock)
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::Feature, UniformUnlock, "uniform_unlock")
-
-namespace CryptoNote {
-using TransactionFeature = Xi::Blockchain::Transaction::Feature;
-}

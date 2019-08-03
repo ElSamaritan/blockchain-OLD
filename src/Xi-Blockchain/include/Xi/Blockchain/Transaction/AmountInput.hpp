@@ -23,6 +23,9 @@
 
 #pragma once
 
+#include <optional>
+#include <cinttypes>
+
 #include <Xi/Global.hh>
 #include <Serialization/ISerializer.h>
 #include <Serialization/SerializationOverloads.h>
@@ -39,17 +42,13 @@ struct AmountInput {
   /// Amount of the used input, all used outputs must correspond to this amount.
   CanonicalAmount amount{0};
 
-  /// Delta encoded global indices of outputs used (real one + mixins)
-  GlobalDeltaIndexVector outputIndices{};
-
   /// Double spending protection.
   Crypto::KeyImage keyImage{Crypto::KeyImage::Null};
 
-  KV_BEGIN_SERIALIZATION
-  KV_MEMBER(amount)
-  KV_MEMBER_RENAME(outputIndices, output_indices)
-  KV_MEMBER_RENAME(keyImage, key_image)
-  KV_END_SERIALIZATION
+  /// Delta encoded global indices of outputs used (real one + mixins)
+  GlobalDeltaIndexVector outputIndices{};
+
+  [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer, std::optional<uint16_t> ringSize = std::nullopt);
 };
 
 }  // namespace Transaction

@@ -205,7 +205,8 @@ class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
   Xi::Result<uint32_t> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds) const;
   std::vector<Crypto::Hash> getBlockHashes(uint32_t startBlockIndex, uint32_t maxCount) const;
 
-  std::error_code validateBlock(const CachedBlock& block, IBlockchainCache* cache, uint64_t& minerReward);
+  std::error_code validateBlock(const CachedBlock& block, IBlockchainCache* cache, uint64_t timestamp,
+                                uint64_t& minerReward);
 
   uint64_t getAdjustedTime() const;
   void updateMainChainSet();

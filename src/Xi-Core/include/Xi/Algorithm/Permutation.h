@@ -23,31 +23,50 @@
 
 #pragma once
 
+#include <vector>
+#include <cinttypes>
+#include <algorithm>
+#include <iterator>
+
 #include <Xi/Global.hh>
-#include <Xi/TypeSafe/Flag.hpp>
-#include <Serialization/FlagSerialization.hpp>
 
 namespace Xi {
-namespace Blockchain {
-namespace Transaction {
 
-enum struct Feature {
-  None = 0,
-  UniformUnlock = 1 << 0,
-  GlobalIndexOffset = 1 << 1,
-  StaticRingSize = 1 << 2,
-};
+using Permutation = std::vector<uint64_t>;
 
-XI_TYPESAFE_FLAG_MAKE_OPERATIONS(Feature)
-XI_SERIALIZATION_FLAG(Feature)
-
-}  // namespace Transaction
-}  // namespace Blockchain
-}  // namespace Xi
-
-XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Transaction::Feature, UniformUnlock, UniformUnlock)
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::Feature, UniformUnlock, "uniform_unlock")
-
-namespace CryptoNote {
-using TransactionFeature = Xi::Blockchain::Transaction::Feature;
+inline Permutation makePermutation(size_t size) {
+  Permutation reval{};
+  reval.resize(size);
+  for (size_t i = 0; i < size; ++i) {
+    reval[i] = i;
+  }
+  return reval;
 }
+
+template <typename _RandIter, typename _Pred>
+inline void sortPermutation(_RandIter begin, Permutation& permutation, const _Pred& pred) {
+  std::sort(permutation.begin(), permutation.end(), [&pred, begin](uint64_t lhs, uint64_t rhs) {
+    return pred(*std::next(begin, lhs), *std::next(begin, rhs));
+  });
+}
+
+template <typename _RandIter>
+inline void sortPermutation(_RandIter begin, Permutation& permutation) {
+  return sortPermutation(begin, permutation, std::less<decltype(*begin)>{});
+}
+
+template <typename _RandIter>
+inline void applyPermutation(_RandIter begin, Permutation permutation) {
+  for (size_t i = 0; i < permutation.size(); ++i) {
+    size_t current = i;
+    while (i != permutation[current]) {
+      size_t next = permutation[current];
+      std::iter_swap(std::next(begin, current), std::next(begin, next));
+      permutation[current] = current;
+      current = next;
+    }
+    permutation[current] = current;
+  }
+}
+
+}  // namespace Xi

@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <optional>
 #include <cinttypes>
 
 #include <Xi/Global.hh>
@@ -47,6 +48,8 @@ struct Prefix {
   Feature features{Feature::None};
 
   uint64_t unlockTime{0};
+  std::optional<GlobalIndex> globalIndexOffset{std::nullopt};
+  std::optional<uint16_t> staticRingSize{std::nullopt};
 
   InputVector inputs{};
   OutputVector outputs{};

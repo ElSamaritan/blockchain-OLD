@@ -107,7 +107,9 @@ uint64_t TransactionBuilder::getUnlockTime() const {
 void TransactionBuilder::setUnlockTime(uint64_t unlockTime) {
   checkIfSigning();
   transaction.unlockTime = unlockTime;
-  transaction.features |= TransactionFeature::UniformUnlock;
+  if (unlockTime > 0) {
+    transaction.features |= TransactionFeature::UniformUnlock;
+  }
   invalidateHash();
 }
 
@@ -129,14 +131,20 @@ void TransactionBuilder::setTransactionSecretKey(const SecretKey& key) {
 
 size_t TransactionBuilder::addInput(const KeyInput& input) {
   checkIfSigning();
+  checkIfInputsFinalized();
   transaction.inputs.emplace_back(input);
   invalidateHash();
+  const uint64_t ringSize = input.outputIndices.size();
+  minRingSize = std::min(minRingSize, ringSize);
+  maxRingSize = std::max(maxRingSize, ringSize);
+  minGlobalIndex = std::min(minGlobalIndex, input.outputIndices.front());
   return transaction.inputs.size() - 1;
 }
 
 size_t TransactionBuilder::addInput(const AccountKeys& senderKeys, const TransactionTypes::InputKeyInfo& info,
                                     KeyPair& ephKeys) {
   checkIfSigning();
+  checkIfInputsFinalized();
   KeyInput input;
   input.amount = CanonicalAmount{info.amount};
 
@@ -148,12 +156,27 @@ size_t TransactionBuilder::addInput(const AccountKeys& senderKeys, const Transac
     input.outputIndices.push_back(out.outputIndex);
   }
 
-  input.outputIndices = absolute_output_offsets_to_relative(input.outputIndices);
+  if (const auto sc = deltaEncodeGlobalIndices(input.outputIndices, input.outputIndices); !sc) {
+    Xi::exceptional<Xi::RuntimeError>("delta encoding of global indices failed");
+  }
   return addInput(input);
+}
+
+void TransactionBuilder::finalizeInputs() {
+  if (inputsFinalized) {
+    return;
+  }
+
+  inputsPermutation = Xi::makePermutation(transaction.inputs.size());
+  Xi::sortPermutation(transaction.inputs.begin(), inputsPermutation);
+  Xi::applyPermutation(transaction.inputs.begin(), inputsPermutation);
+
+  inputsFinalized = true;
 }
 
 size_t TransactionBuilder::addOutput(uint64_t amount, const AccountPublicAddress& to) {
   checkIfSigning();
+  checkIfOutputsFinalized();
 
   KeyOutput outKey;
   derivePublicKey(to, txSecretKey(), transaction.outputs.size(), outKey.key);
@@ -166,6 +189,7 @@ size_t TransactionBuilder::addOutput(uint64_t amount, const AccountPublicAddress
 
 size_t TransactionBuilder::addOutput(uint64_t amount, const KeyOutput& out) {
   checkIfSigning();
+  checkIfOutputsFinalized();
   size_t outputIndex = transaction.outputs.size();
   TransactionOutput realOut = TransactionAmountOutput{CanonicalAmount{amount}, out};
   transaction.outputs.emplace_back(realOut);
@@ -173,8 +197,33 @@ size_t TransactionBuilder::addOutput(uint64_t amount, const KeyOutput& out) {
   return outputIndex;
 }
 
-void TransactionBuilder::signInputKey(size_t index, const TransactionTypes::InputKeyInfo& info,
+void TransactionBuilder::finalizeOutputs() {
+  if (outputsFinalized) {
+    return;
+  }
+
+  outputsFinalized = true;
+}
+
+void TransactionBuilder::emplaceFeatures(const TransactionFeature enabled) {
+  if (minGlobalIndex > 0 && hasFlag(enabled, TransactionFeature::GlobalIndexOffset)) {
+    transaction.features |= TransactionFeature::GlobalIndexOffset;
+    transaction.globalIndexOffset = static_cast<GlobalOutputIndex>(minGlobalIndex);
+    for (auto& input : transaction.inputs) {
+      auto& amountInput = std::get<KeyInput>(input);
+      amountInput.outputIndices.front() -= static_cast<GlobalDeltaIndex>(minGlobalIndex);
+    }
+  }
+
+  if (minRingSize == maxRingSize && hasFlag(enabled, TransactionFeature::StaticRingSize)) {
+    transaction.features |= TransactionFeature::StaticRingSize;
+    transaction.staticRingSize = static_cast<uint16_t>(minRingSize);
+  }
+}
+
+void TransactionBuilder::signInputKey(size_t originalIndex, const TransactionTypes::InputKeyInfo& info,
                                       const KeyPair& ephKeys) {
+  const size_t index = inputsPermutation[originalIndex];
   const auto& input = std::get<KeyInput>(getInputChecked(transaction, index, TransactionTypes::InputType::Key));
   Hash prefixHash = getTransactionPrefixHash();
 
@@ -236,6 +285,14 @@ void TransactionBuilder::checkIfSigning() const {
   if (!std::get<TransactionSignatureCollection>(*transaction.signatures).empty()) {
     throw std::runtime_error("Cannot perform requested operation, since it will invalidate transaction signatures");
   }
+}
+
+void TransactionBuilder::checkIfInputsFinalized() const {
+  Xi::exceptional_if<Xi::RuntimeError>(inputsFinalized, "inputs already finalized");
+}
+
+void TransactionBuilder::checkIfOutputsFinalized() const {
+  Xi::exceptional_if<Xi::RuntimeError>(inputsFinalized, "outputs already finalized");
 }
 
 BinaryArray TransactionBuilder::getTransactionData() const {

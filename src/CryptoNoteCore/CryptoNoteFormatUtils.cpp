@@ -102,27 +102,10 @@ uint64_t get_tx_fee(const Transaction& tx) {
   return r;
 }
 
-std::vector<uint32_t> relativeOutputOffsetsToAbsolute(const std::vector<uint32_t>& off) {
-  std::vector<uint32_t> res = off;
-  for (size_t i = 1; i < res.size(); i++)
-    res[i] += res[i - 1];
-  return res;
-}
-
-std::vector<uint32_t> absolute_output_offsets_to_relative(const std::vector<uint32_t>& off) {
-  if (off.empty())
-    return {};
-  auto copy = off;
-  std::sort(copy.begin(), copy.end());
-  for (size_t i = 1; i < copy.size(); ++i) {
-    copy[i] = off[i] - off[i - 1];
-  }
-  return copy;
-}
-
 bool constructTransaction(const AccountKeys& sender_account_keys, const std::vector<TransactionSourceEntry>& sources,
                           const std::vector<TransactionDestinationEntry>& destinations, TransactionExtra extra,
-                          Transaction& tx, uint64_t unlock_time, Logging::ILogger& log) {
+                          Transaction& tx, uint64_t unlock_time, Logging::ILogger& log, const Currency& currency,
+                          const BlockVersion blockVersion) {
   LoggerRef logger(log, "construct_tx");
   try {
     tx.inputs.clear();
@@ -145,6 +128,10 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
     struct input_generation_context_data {
       KeyPair in_ephemeral;
     };
+
+    uint64_t minGlobalIndex = std::numeric_limits<uint64_t>::max();
+    uint64_t minRingSize = std::numeric_limits<uint64_t>::max();
+    uint64_t maxRingSize = std::numeric_limits<uint64_t>::min();
 
     std::vector<input_generation_context_data> in_contexts;
     uint64_t summary_inputs_money = 0;
@@ -183,9 +170,22 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
         input_to_key.outputIndices.push_back(out_entry.first);
       }
 
-      input_to_key.outputIndices = absolute_output_offsets_to_relative(input_to_key.outputIndices);
+      if (const auto sc = deltaEncodeGlobalIndices(input_to_key.outputIndices, input_to_key.outputIndices); !sc) {
+        logger(Error) << "global output indices delta encoding failed" << ENDL;
+        XI_RETURN_EC(false);
+      }
+
+      if (input_to_key.outputIndices.front() < minGlobalIndex) {
+        minGlobalIndex = input_to_key.outputIndices.front();
+      }
+      const uint64_t ringSize = input_to_key.outputIndices.size();
+      minRingSize = std::min(minRingSize, ringSize);
+      maxRingSize = std::max(maxRingSize, ringSize);
+
       tx.inputs.push_back(input_to_key);
     }
+
+    std::sort(tx.inputs.begin(), tx.inputs.end());
 
     // "Shuffle" outs
     std::vector<TransactionDestinationEntry> shuffled_dsts(destinations);
@@ -234,6 +234,28 @@ bool constructTransaction(const AccountKeys& sender_account_keys, const std::vec
       logger(Error) << "Transaction inputs money (" << summary_inputs_money << ") less than outputs money ("
                     << summary_outs_money << ")";
       return false;
+    }
+
+    bool isFusion = summary_outs_money == summary_inputs_money;
+    TransactionFeature usableFeatures = TransactionFeature::None;
+    if (isFusion) {
+      usableFeatures = currency.transaction(blockVersion).fusion().features();
+    } else {
+      usableFeatures = currency.transaction(blockVersion).transfer().features();
+    }
+
+    if (minRingSize == maxRingSize && hasFlag(usableFeatures, TransactionFeature::StaticRingSize)) {
+      tx.features |= TransactionFeature::StaticRingSize;
+      tx.staticRingSize = static_cast<uint16_t>(minRingSize);
+    }
+
+    if (minGlobalIndex > 0 && hasFlag(usableFeatures, TransactionFeature::GlobalIndexOffset)) {
+      tx.features |= TransactionFeature::GlobalIndexOffset;
+      tx.globalIndexOffset = static_cast<GlobalIndex>(minGlobalIndex);
+      for (auto& input : tx.inputs) {
+        auto& amountInput = std::get<KeyInput>(input);
+        amountInput.outputIndices.front() -= static_cast<GlobalDeltaIndex>(minGlobalIndex);
+      }
     }
 
     // generate ring signatures

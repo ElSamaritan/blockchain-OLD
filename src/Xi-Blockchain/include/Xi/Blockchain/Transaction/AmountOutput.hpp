@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <cinttypes>
+
 #include <Xi/Global.hh>
 #include <Serialization/ISerializer.h>
 #include <Xi/Crypto/PublicKey.hpp>

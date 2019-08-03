@@ -45,6 +45,8 @@ XI_SERIALIZATION_VARIANT_INVARIANT(
 using OutputVector = std::vector<Output>;
 XI_DECLARE_SPANS(Output)
 
+bool operator<(const Output& rhs, const Output& lhs);
+
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi

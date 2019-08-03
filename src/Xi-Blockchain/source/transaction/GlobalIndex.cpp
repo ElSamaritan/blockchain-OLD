@@ -21,33 +21,35 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/Blockchain/Transaction/GlobalIndex.hpp"
 
-#include <Xi/Global.hh>
-#include <Xi/TypeSafe/Flag.hpp>
-#include <Serialization/FlagSerialization.hpp>
+#include <algorithm>
+
+#include <Xi/Algorithm/Math.h>
 
 namespace Xi {
 namespace Blockchain {
 namespace Transaction {
 
-enum struct Feature {
-  None = 0,
-  UniformUnlock = 1 << 0,
-  GlobalIndexOffset = 1 << 1,
-  StaticRingSize = 1 << 2,
-};
+bool deltaEncodeGlobalIndices(const GlobalIndexVector &input, GlobalDeltaIndexVector &out) {
+  out = input;
+  std::sort(out.begin(), out.end());
+  for (size_t i = 1; i < out.size(); ++i) {
+    out[i] = out[i] - out[i - 1];
+  }
+  XI_RETURN_SC(true);
+}
 
-XI_TYPESAFE_FLAG_MAKE_OPERATIONS(Feature)
-XI_SERIALIZATION_FLAG(Feature)
+bool deltaDecodeGlobalIndices(const GlobalDeltaIndexVector &input, GlobalIndexVector &out, const GlobalIndex offset) {
+  out = input;
+  XI_RETURN_SC_IF(out.empty(), true);
+  XI_RETURN_EC_IF(hasAdditionOverflow(out.front(), offset, std::addressof(out.front())), false);
+  for (size_t i = 1; i < out.size(); i++) {
+    XI_RETURN_EC_IF(hasAdditionOverflow(out[i], out[i - 1], std::addressof(out[i])), false);
+  }
+  XI_RETURN_SC(true);
+}
 
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi
-
-XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Transaction::Feature, UniformUnlock, UniformUnlock)
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::Feature, UniformUnlock, "uniform_unlock")
-
-namespace CryptoNote {
-using TransactionFeature = Xi::Blockchain::Transaction::Feature;
-}

@@ -23,31 +23,34 @@
 
 #pragma once
 
+#include <cinttypes>
+
 #include <Xi/Global.hh>
-#include <Xi/TypeSafe/Flag.hpp>
-#include <Serialization/FlagSerialization.hpp>
+#include <Xi/TypeSafe/Integral.hpp>
+#include <Serialization/ISerializer.h>
 
 namespace Xi {
 namespace Blockchain {
-namespace Transaction {
+namespace Block {
 
-enum struct Feature {
-  None = 0,
-  UniformUnlock = 1 << 0,
-  GlobalIndexOffset = 1 << 1,
-  StaticRingSize = 1 << 2,
+struct TimestampShift : TypeSafe::EnableIntegralFromThis<int64_t, TimestampShift> {
+  using EnableIntegralFromThis::EnableIntegralFromThis;
+
+  uint64_t apply(uint64_t origin) const;
+  [[nodiscard]] bool tryApply(uint64_t origin, uint64_t& out) const;
+
+  friend bool serialize(TimestampShift&, Common::StringView, CryptoNote::ISerializer&);
 };
 
-XI_TYPESAFE_FLAG_MAKE_OPERATIONS(Feature)
-XI_SERIALIZATION_FLAG(Feature)
+TimestampShift makeTimestampShift(uint64_t from, uint64_t to);
 
-}  // namespace Transaction
+[[nodiscard]] bool serialize(TimestampShift& value, Common::StringView name, CryptoNote::ISerializer& serializer);
+
+}  // namespace Block
 }  // namespace Blockchain
 }  // namespace Xi
 
-XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Transaction::Feature, UniformUnlock, UniformUnlock)
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::Feature, UniformUnlock, "uniform_unlock")
-
 namespace CryptoNote {
-using TransactionFeature = Xi::Blockchain::Transaction::Feature;
-}
+using BlockTimestampShift = Xi::Blockchain::Block::TimestampShift;
+using Xi::Blockchain::Block::makeTimestampShift;
+}  // namespace CryptoNote

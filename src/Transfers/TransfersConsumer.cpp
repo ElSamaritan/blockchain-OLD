@@ -228,6 +228,7 @@ uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, BlockHeight
 
   auto pushingThread = std::async(std::launch::async, [&] {
     for (uint32_t i = 0; i < count && !stopProcessing; ++i) {
+      const auto timestamp = blocks[i].timestamp;
       const auto& block = blocks[i].block;
 
       if (!block.is_initialized()) {
@@ -236,14 +237,14 @@ uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, BlockHeight
       }
 
       // filter by syncStartTimestamp
-      if (m_syncStart.timestamp && block->timestamp < m_syncStart.timestamp) {
+      if (m_syncStart.timestamp && timestamp < m_syncStart.timestamp) {
         ++emptyBlockCount;
         continue;
       }
 
       TransactionBlockInfo blockInfo;
       blockInfo.height = startHeight.next(i);
-      blockInfo.timestamp = block->timestamp;
+      blockInfo.timestamp = timestamp;
       blockInfo.transactionIndex = 0;  // position in block
 
       for (const auto& tx : blocks[i].transactions) {

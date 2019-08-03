@@ -324,7 +324,12 @@ DetailedTransactionInfo CoreExplorer::fromCore(const CryptoNote::IBlockchainCach
       iKeyInput.input = *keyInput;
       iKeyInput.ring_size = keyInput->outputIndices.size();
       iKeyInput.references.reserve(iKeyInput.ring_size);
-      const auto globalIndices = CryptoNote::relativeOutputOffsetsToAbsolute(keyInput->outputIndices);
+      Blockchain::Transaction::GlobalIndexVector globalIndices{};
+      {
+        [[maybe_unused]] const auto ec = Blockchain::Transaction::deltaDecodeGlobalIndices(
+            keyInput->outputIndices, globalIndices, transaction.getTransaction().globalIndexOffset.value_or(0));
+        assert(ec);
+      }
       std::vector<std::pair<TransactionHash, size_t>> references{};
       references.reserve(globalIndices.size());
       segment->extractKeyOtputReferences(keyInput->amount,

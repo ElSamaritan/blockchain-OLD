@@ -17,6 +17,7 @@
 #include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Global.hh>
+#include <Xi/Encoding/VarInt.hh>
 
 #include "../Common/Base58.h"
 #include "../Common/int-util.h"
@@ -109,7 +110,7 @@ bool Currency::generateGenesisBlock() {
 
   m_genesisBlockTemplate.version = BlockVersion::Genesis;
   m_genesisBlockTemplate.features |= BlockFeature::BaseTransaction;
-  m_genesisBlockTemplate.timestamp = coin().startTimestamp();
+  m_genesisBlockTemplate.timestamp = makeTimestampShift(0, coin().startTimestamp());
   m_genesisBlockTemplate.nonce.fill(0);
   m_genesisBlockTemplate.previousBlockHash.nullify();
   if (!network().isMainNet()) {
@@ -721,24 +722,23 @@ bool Currency::checkProofOfWork(const CachedBlock& block, uint64_t currentDiffic
 }
 
 size_t Currency::getApproximateMaximumInputCount(size_t transactionSize, size_t outputCount, size_t mixinCount) const {
-  const size_t KEY_IMAGE_SIZE = sizeof(Crypto::KeyImage);
-  const size_t OUTPUT_KEY_SIZE = sizeof(decltype(KeyOutput::key));
-  const size_t AMOUNT_SIZE = sizeof(uint64_t) + 2;                    // varint
-  const size_t GLOBAL_INDEXES_VECTOR_SIZE_SIZE = sizeof(uint8_t);     // varint
-  const size_t GLOBAL_INDEXES_INITIAL_VALUE_SIZE = sizeof(uint32_t);  // varint
-  const size_t GLOBAL_INDEXES_DIFFERENCE_SIZE = sizeof(uint32_t);     // varint
-  const size_t SIGNATURE_SIZE = sizeof(Crypto::Signature);
-  const size_t EXTRA_TAG_SIZE = sizeof(uint8_t);
-  const size_t INPUT_TAG_SIZE = sizeof(uint8_t);
-  const size_t OUTPUT_TAG_SIZE = sizeof(uint8_t);
-  const size_t PUBLIC_KEY_SIZE = sizeof(Crypto::PublicKey);
-  const size_t TRANSACTION_VERSION_SIZE = sizeof(uint8_t);
-  const size_t TRANSACTION_UNLOCK_TIME_SIZE = sizeof(uint64_t);
+  using namespace Xi::Encoding::VarInt;
+  const size_t KEY_IMAGE_SIZE = Crypto::KeyImage::bytes();
+  const size_t OUTPUT_KEY_SIZE = Crypto::PublicKey::bytes();
+  const size_t AMOUNT_SIZE = 1;
+  const size_t GLOBAL_INDEXES_VECTOR_SIZE_SIZE = mixinCount >= (1 << 7) ? 2 : 1;
+  const size_t GLOBAL_INDEXES_INITIAL_VALUE_SIZE = maximumEncodingSize<uint32_t>();
+  const size_t GLOBAL_INDEXES_DIFFERENCE_SIZE = maximumEncodingSize<uint32_t>();
+  const size_t SIGNATURE_SIZE = Crypto::Signature::bytes();
+  const size_t EXTRA_TAG_SIZE = 1;
+  const size_t PUBLIC_KEY_SIZE = Crypto::PublicKey::bytes();
+  const size_t TRANSACTION_VERSION_SIZE = 2 * maximumEncodingSize<uint16_t>();
+  const size_t TRANSACTION_UNLOCK_TIME_SIZE = maximumEncodingSize<uint64_t>();
 
-  const size_t outputsSize = outputCount * (OUTPUT_TAG_SIZE + OUTPUT_KEY_SIZE + AMOUNT_SIZE);
+  const size_t outputsSize = outputCount * (OUTPUT_KEY_SIZE + AMOUNT_SIZE);
   const size_t headerSize = TRANSACTION_VERSION_SIZE + TRANSACTION_UNLOCK_TIME_SIZE + EXTRA_TAG_SIZE + PUBLIC_KEY_SIZE;
-  const size_t inputSize = INPUT_TAG_SIZE + AMOUNT_SIZE + KEY_IMAGE_SIZE + SIGNATURE_SIZE +
-                           GLOBAL_INDEXES_VECTOR_SIZE_SIZE + GLOBAL_INDEXES_INITIAL_VALUE_SIZE +
+  const size_t inputSize = AMOUNT_SIZE + KEY_IMAGE_SIZE + SIGNATURE_SIZE + GLOBAL_INDEXES_VECTOR_SIZE_SIZE +
+                           GLOBAL_INDEXES_INITIAL_VALUE_SIZE +
                            mixinCount * (GLOBAL_INDEXES_DIFFERENCE_SIZE + SIGNATURE_SIZE);
 
   return (transactionSize - headerSize - outputsSize) / inputSize;
@@ -777,7 +777,7 @@ Currency::Currency(Currency&& currency)
       m_proofOfWorkAlgorithms{std::move(currency.m_proofOfWorkAlgorithms)} {
 }
 
-CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log), m_networkDir{"./config"} {
+CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log), m_networkDir{"./network"} {
   mempoolTxLiveTime(static_cast<uint64_t>(Xi::Config::Limits::maximumTransactionLivetimeSpan().count()));
   mempoolTxFromAltBlockLiveTime(
       static_cast<uint64_t>(Xi::Config::Limits::maximumTransactionLivetimeSpanFromAltBlocks().count()));

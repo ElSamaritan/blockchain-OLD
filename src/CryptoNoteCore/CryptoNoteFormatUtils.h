@@ -25,6 +25,7 @@
 
 #include "CryptoNoteBasic.h"
 #include "CryptoNoteSerialization.h"
+#include "CryptoNoteCore/Currency.h"
 
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
@@ -57,7 +58,8 @@ struct TransactionDestinationEntry {
 
 bool constructTransaction(const AccountKeys& senderAccountKeys, const std::vector<TransactionSourceEntry>& sources,
                           const std::vector<TransactionDestinationEntry>& destinations, TransactionExtra extra,
-                          Transaction& transaction, uint64_t unlock_time, Logging::ILogger& log);
+                          Transaction& transaction, uint64_t unlock_time, Logging::ILogger& log,
+                          const Currency& currency, const BlockVersion blockVersion);
 
 bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const Crypto::PublicKey& tx_pub_key,
                    size_t keyIndex);
@@ -79,9 +81,6 @@ bool checkInputsOverflow(const TransactionPrefix& tx);
 bool checkOutsOverflow(const TransactionPrefix& tx);
 uint64_t get_outs_money_amount(const Transaction& tx);
 std::string short_hash_str(const Crypto::Hash& h);
-
-std::vector<uint32_t> relativeOutputOffsetsToAbsolute(const std::vector<uint32_t>& off);
-std::vector<uint32_t> absolute_output_offsets_to_relative(const std::vector<uint32_t>& off);
 
 // 62387000000 -> 455827 + 7000000 + 80000000 + 300000000 + 2000000000 + 60000000000
 template <typename chunk_handler_t>

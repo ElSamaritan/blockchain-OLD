@@ -45,13 +45,18 @@ class ITransactionWriter {
   virtual size_t addInput(const KeyInput& input) = 0;
   virtual size_t addInput(const AccountKeys& senderKeys, const TransactionTypes::InputKeyInfo& info,
                           KeyPair& ephKeys) = 0;
+  virtual void finalizeInputs() = 0;
 
   virtual size_t addOutput(uint64_t amount, const AccountPublicAddress& to) = 0;
   virtual size_t addOutput(uint64_t amount, const KeyOutput& out) = 0;
+  virtual void finalizeOutputs() = 0;
 
   // Extra
   virtual void applyExtra(const TransactionExtra& extra) = 0;
   virtual void setTransactionSecretKey(const Crypto::SecretKey& key) = 0;
+
+  // Features
+  virtual void emplaceFeatures(const TransactionFeature enabled) = 0;
 
   // signing
   virtual void signInputKey(size_t input, const TransactionTypes::InputKeyInfo& info, const KeyPair& ephKeys) = 0;

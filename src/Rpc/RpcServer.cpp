@@ -63,9 +63,10 @@ static inline bool serialize(COMMAND_RPC_GET_BLOCKS_FAST::response& response, IS
 }
 
 [[nodiscard]] bool serialize(BlockShortInfo& blockShortInfo, ISerializer& s) {
-  KV_MEMBER_RENAME(blockShortInfo.block_hash, block_hash);
-  XI_RETURN_EC_IF_NOT(s.binary(blockShortInfo.block, "block_short_info"), false);
-  KV_MEMBER_RENAME(blockShortInfo.transaction_prefixes, transaction_prefixes);
+  XI_RETURN_EC_IF_NOT(s(blockShortInfo.block_hash, "hash"), false);
+  XI_RETURN_EC_IF_NOT(s(blockShortInfo.timestamp, "timestamp"), false);
+  XI_RETURN_EC_IF_NOT(s.binary(blockShortInfo.block, "block"), false);
+  XI_RETURN_EC_IF_NOT(s(blockShortInfo.transaction_prefixes, "transaction_prefixes"), false);
   return true;
 }
 
@@ -1079,7 +1080,7 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
     f_block_short_response block_short;
 
     block_short.cumulative_size = blkDetails.blockSize;
-    block_short.timestamp = blk.timestamp;
+    block_short.timestamp = blkDetails.timestamp;
     block_short.height = blockHeight;
     block_short.hash = blockHash;
     block_short.difficulty = blkDetails.difficulty;
@@ -1409,7 +1410,7 @@ void RpcServer::fill_block_header_response(const BlockTemplate& blk, bool orphan
                                            const Hash& hash, block_header_response& response) {
   response.version = blk.version;
   response.features = blk.features;
-  response.timestamp = blk.timestamp;
+  response.timestamp = m_core.getBlockTimestampByIndex(height.toIndex());
   response.prev_hash = blk.previousBlockHash;
   response.nonce = blk.nonce;
   response.orphan_status = orphan_status;

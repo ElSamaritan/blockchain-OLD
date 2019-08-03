@@ -37,6 +37,7 @@ struct TransactionPrefixInfo {
 
 struct BlockShortInfo {
   Crypto::Hash block_hash;
+  uint64_t timestamp;
   BinaryArray block;
   std::vector<TransactionPrefixInfo> transaction_prefixes;
 };

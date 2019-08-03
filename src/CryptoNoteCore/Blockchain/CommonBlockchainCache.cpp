@@ -129,6 +129,16 @@ uint64_t CryptoNote::CommonBlockchainCache::getCurrentBlockSize(uint32_t blockIn
   return sizes.back();
 }
 
+uint64_t CryptoNote::CommonBlockchainCache::getCurrentTimestamp() const {
+  return getCurrentTimestamp(getTopBlockIndex());
+}
+
+uint64_t CryptoNote::CommonBlockchainCache::getCurrentTimestamp(uint32_t blockIndex) const {
+  const auto timestamp = getLastTimestamps(1, blockIndex, UseGenesis{true});
+  exceptional_if<NotFoundError>(timestamp.empty());
+  return timestamp.back();
+}
+
 bool CryptoNote::CommonBlockchainCache::isTransactionSpendTimeUnlockedByBlockIndex(uint64_t unlockTime,
                                                                                    uint32_t blockIndex) const {
   assert(unlockTime <= BlockHeight::max().toIndex());

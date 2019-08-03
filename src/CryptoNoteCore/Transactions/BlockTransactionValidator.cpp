@@ -37,5 +37,5 @@ bool CryptoNote::BlockTransactionValidator::checkIfAnySpent(const Crypto::KeyIma
 void CryptoNote::BlockTransactionValidator::fillContext(CryptoNote::TransferValidationContext &context) const {
   context.blockVersion = m_block.Header.version;
   context.previousBlockIndex = m_block.previousBlockIndex;
-  context.timestamp = m_block.Header.timestamp;
+  context.timestamp = m_block.Header.timestamp.apply(chain().getCurrentTimestamp(m_block.previousBlockIndex));
 }

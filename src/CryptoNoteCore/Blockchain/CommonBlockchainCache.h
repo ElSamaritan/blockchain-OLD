@@ -59,6 +59,9 @@ class CommonBlockchainCache : public IBlockchainCache {
   [[nodiscard]] uint64_t getCurrentBlockSize() const override;
   [[nodiscard]] uint64_t getCurrentBlockSize(uint32_t blockIndex) const override;
 
+  [[nodiscard]] uint64_t getCurrentTimestamp() const override;
+  [[nodiscard]] uint64_t getCurrentTimestamp(uint32_t blockIndex) const override;
+
   [[nodiscard]] uint64_t getCurrentCumulativeDifficulty() const override;
   [[nodiscard]] uint64_t getCurrentCumulativeDifficulty(uint32_t blockIndex) const override;
 

@@ -136,7 +136,7 @@ TEST_F(CryptoNote_DatabaseBlockchainCache, CachedBlockInfo) {
   CachedBlockInfo pushed;
 
   BlockTemplate tmp;
-  tmp.timestamp = genesis.timestamp + 60;
+  tmp.timestamp = BlockTimestampShift{60};
   tmp.previousBlockHash = genesis.blockHash;
   tmp.version = genesis.version;
   tmp.features = genesis.features;

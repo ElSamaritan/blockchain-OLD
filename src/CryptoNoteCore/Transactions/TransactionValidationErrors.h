@@ -55,6 +55,7 @@ enum class TransactionValidationError {
       48,                     ///< An input used for the transaction is an output of a transaction that is still locked.
   INPUT_ZERO_AMOUNT = 54,     ///< Input amount is zero.
   INPUTS_NOT_CANONICAL = 53,  ///< One of the input amounts is not canoncial.
+  INPUTS_NOT_SORTED = 61,     ///< Transaction inputs were not sorted by their key images.
   EXTRA_MISSING_PUBLIC_KEY = 41,  ///< Every transaction must have at least one embedded public key.
   EXTRA_INVALID_PUBLIC_KEY = 42,  ///< A transaction extra encoded public key must be a valid ecc point.
   EXTRA_INVALID_PAYMENT_ID = 55,  ///< A transaction extra encoded payment id must be a valid ecc point.
@@ -72,6 +73,7 @@ enum class TransactionValidationError {
   BASE_INPUT_INVALID_NONCE = 37,       ///< Base transactions can only store public keys in their nonce.
   BASE_INVALID_SIGNATURES_COUNT = 38,  ///< Base transaction may not contain any signatures.
   OUTPUTS_NOT_CANONCIAL = 45,          ///< Base transaction may always have the canonical form.
+  OUTPUTS_NOT_SORTED = 60,             ///< Transaction outputs were not sorted.
   UNUSED_STATIC_REWARD_INVALID_ADDRESS = 39,  ///< The static reward address is invalid, not the expected one.
   UNUSED_STATIC_REWARD_INVALID_OUT = 40,  ///< The static reward contains an invalid out, either wrong encoded or not
                                           ///< designated to the built in static reward address.
@@ -108,7 +110,7 @@ enum class TransactionValidationError {
   UNLOCK_TOO_LARGE = 50,   ///< Given unlock exceeds limits and is unreasonable high.
   UNLOCK_ILL_FORMED = 51,  ///< Given unlock is based on timestamp but unlocks before the genesis timestamp.
 
-  __NUM = 60  ///< The count of different enum values, if you add a new one use this as its value and increase this by
+  __NUM = 62  ///< The count of different enum values, if you add a new one use this as its value and increase this by
               ///< one. Do not reorder assignments as it would lead to inconsistent error codes in the documentation
               ///< and tickets aso.
 };
@@ -168,6 +170,8 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Transaction's inputs sum overflow";
       case TransactionValidationError::INPUTS_NOT_CANONICAL:
         return "Input amount is not canonical.";
+      case TransactionValidationError::INPUTS_NOT_SORTED:
+        return "Transaction inputs are not sorted.";
       case TransactionValidationError::BASE_INPUT_WRONG_COUNT:
         return "Wrong input count";
       case TransactionValidationError::BASE_INPUT_UNEXPECTED_TYPE:
@@ -202,6 +206,8 @@ class TransactionValidationErrorCategory : public std::error_category {
         return "Transaction has unknown output type";
       case TransactionValidationError::OUTPUTS_AMOUNT_OVERFLOW:
         return "Transaction has outputs amount overflow";
+      case TransactionValidationError::OUTPUTS_NOT_SORTED:
+        return "Transaction outputs are not sorted.";
       case TransactionValidationError::BASE_TRANSACTION_WRONG_UNLOCK_TIME:
         return "Transaction has wrong unlock time";
       case TransactionValidationError::INVALID_MIXIN:

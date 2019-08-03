@@ -34,6 +34,7 @@
 #include "Xi/Blockchain/Block/Nonce.hpp"
 #include "Xi/Blockchain/Block/MergeMiningTag.hpp"
 #include "Xi/Blockchain/Block/Feature.hpp"
+#include "Xi/Blockchain/Block/TimestampShift.hpp"
 
 namespace Xi {
 namespace Blockchain {
@@ -46,7 +47,7 @@ struct Header {
   Feature features{Feature::None};
 
   Nonce nonce;
-  uint64_t timestamp;
+  TimestampShift timestamp{0};
   Crypto::FastHash previousBlockHash;
 
   std::optional<PrunableMergeMiningTag> mergeMiningTag;

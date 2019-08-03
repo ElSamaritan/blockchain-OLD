@@ -2299,7 +2299,7 @@ std::unique_ptr<CryptoNote::ITransactionBuilder> WalletGreen::makeTransaction(
     const CryptoNote::TransactionExtra& extra, uint64_t unlockTimestamp) {
   std::unique_ptr<ITransactionBuilder> tx = createTransaction();
 
-  typedef std::pair<const AccountPublicAddress*, uint64_t> AmountToAddress;
+  typedef std::pair<const AccountPublicAddress*, Amount> AmountToAddress;
   std::vector<AmountToAddress> amountsToAddresses;
   for (const auto& output : decomposedOutputs) {
     for (auto amount : output.amounts) {
@@ -2312,16 +2312,32 @@ std::unique_ptr<CryptoNote::ITransactionBuilder> WalletGreen::makeTransaction(
   std::sort(amountsToAddresses.begin(), amountsToAddresses.end(),
             [](const AmountToAddress& left, const AmountToAddress& right) { return left.second < right.second; });
 
+  Amount inputSum = 0;
+  Amount outputSum = 0;
+
   for (const auto& amountToAddress : amountsToAddresses) {
+    outputSum += amountToAddress.second;
     tx->addOutput(amountToAddress.second, *amountToAddress.first);
   }
+  tx->finalizeOutputs();
 
   tx->setUnlockTime(unlockTimestamp);
   tx->applyExtra(extra);
 
   for (auto& input : keysInfo) {
+    inputSum += input.keyInfo.amount;
     tx->addInput(makeAccountKeys(*input.walletRecord), input.keyInfo, input.ephKeys);
   }
+  tx->finalizeInputs();
+
+  TransactionFeature enabledFeatures = TransactionFeature::None;
+  const auto currentConsensus = m_node.getLastKnownBlockVersion();
+  if (inputSum == outputSum) {
+    enabledFeatures = currency().transaction(currentConsensus).fusion().features();
+  } else {
+    enabledFeatures = currency().transaction(currentConsensus).transfer().features();
+  }
+  tx->emplaceFeatures(enabledFeatures);
 
   size_t i = 0;
   for (auto& input : keysInfo) {

@@ -37,6 +37,13 @@ bool Prefix::serialize(CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer(type, "type"), false);
   XI_RETURN_EC_IF_NOT(serializer(features, "features"), false);
   XI_RETURN_EC_IF_NOT(serializeUnlock(serializer), false);
+  XI_RETURN_EC_IF_NOT(
+      serializer.optional(hasFlag(features, Feature::GlobalIndexOffset), globalIndexOffset, "global_index_offset"),
+      false);
+  XI_RETURN_EC_IF(globalIndexOffset.value_or(1) == 0, false);
+  XI_RETURN_EC_IF_NOT(
+      serializer.optional(hasFlag(features, Feature::StaticRingSize), staticRingSize, "static_ring_size"), false);
+  XI_RETURN_EC_IF(staticRingSize.value_or(1) == 0, false);
   XI_RETURN_EC_IF_NOT(serializer(extra, "extra"), false);
 
   if (serializer.isHumanReadable()) {
@@ -131,7 +138,7 @@ bool Prefix::serializeTransfer(CryptoNote::ISerializer &serializer) {
   }
   XI_RETURN_EC_IF(inputs.empty(), false);
   for (auto &input : inputs) {
-    XI_RETURN_EC_IF_NOT(serializer(std::get<AmountInput>(input), ""), false);
+    XI_RETURN_EC_IF_NOT(serializer(std::get<AmountInput>(input), "", staticRingSize), false);
   }
   XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
   return serializeOutputs(serializer);

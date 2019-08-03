@@ -952,7 +952,7 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   blockInfo.blockHash = cachedBlock.getBlockHash();
   blockInfo.version = cachedBlock.getBlock().version;
   blockInfo.features = cachedBlock.getBlock().features;
-  blockInfo.timestamp = cachedBlock.getBlock().timestamp;
+  blockInfo.timestamp = cachedBlock.getBlock().timestamp.apply(lastBlockInfo.timestamp);
   blockInfo.blobSize = blockSize;
   blockInfo.cumulativeDifficulty = cumulativeDifficulty;
   blockInfo.alreadyGeneratedCoins = alreadyGeneratedCoins;
@@ -985,8 +985,7 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
     pushTransaction(transaction, index, transactionIndex++, batch, false);
   }
 
-  auto closestBlockIndexDb =
-      requestClosestBlockIndexByTimestamp(roundToMidnight(cachedBlock.getBlock().timestamp), database);
+  auto closestBlockIndexDb = requestClosestBlockIndexByTimestamp(roundToMidnight(blockInfo.timestamp), database);
   if (!closestBlockIndexDb.second) {
     logger(Logging::Error) << "push block " << cachedBlock.getBlockHash()
                            << " request closest block index by timestamp failed";
@@ -994,10 +993,10 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   }
 
   if (!closestBlockIndexDb.first) {
-    batch.insertClosestTimestampBlockIndex(roundToMidnight(cachedBlock.getBlock().timestamp), index);
+    batch.insertClosestTimestampBlockIndex(roundToMidnight(blockInfo.timestamp), index);
   }
 
-  insertBlockTimestamp(batch, cachedBlock.getBlock().timestamp, cachedBlock.getBlockHash());
+  insertBlockTimestamp(batch, blockInfo.timestamp, cachedBlock.getBlockHash());
 
   auto res = database.write(batch);
   if (res) {
@@ -2029,7 +2028,7 @@ void DatabaseBlockchainCache::addGenesisBlock(CachedBlock&& genesisBlock) {
   blockInfo.blockHash = genesisBlock.getBlockHash();
   blockInfo.version = genesisBlock.getBlock().version;
   blockInfo.features = genesisBlock.getBlock().features;
-  blockInfo.timestamp = genesisBlock.getBlock().timestamp;
+  blockInfo.timestamp = genesisBlock.getBlock().timestamp.apply(0);
   blockInfo.cumulativeDifficulty = 1;
   blockInfo.blobSize = genesisTransactionsSize;
   blockInfo.alreadyGeneratedCoins = genesisGeneratedCoins;
@@ -2048,7 +2047,7 @@ void DatabaseBlockchainCache::addGenesisBlock(CachedBlock&& genesisBlock) {
 
   batch.insertCachedBlock(blockInfo, 0, transactionHashes);
   batch.insertRawBlock(0, {toBinaryArray(genesisBlock.getBlock()), {}});
-  batch.insertClosestTimestampBlockIndex(roundToMidnight(genesisBlock.getBlock().timestamp), 0);
+  batch.insertClosestTimestampBlockIndex(roundToMidnight(blockInfo.timestamp), 0);
 
   auto res = database.writeSync(batch);
   if (res) {

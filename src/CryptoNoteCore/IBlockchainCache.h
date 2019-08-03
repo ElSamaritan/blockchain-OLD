@@ -250,6 +250,9 @@ class IBlockchainCache : public std::enable_shared_from_this<IBlockchainCache> {
   virtual uint64_t getDifficultyForNextBlock(BlockVersion version) const = 0;
   virtual uint64_t getDifficultyForNextBlock(BlockVersion version, uint32_t blockIndex) const = 0;
 
+  virtual uint64_t getCurrentTimestamp() const = 0;
+  virtual uint64_t getCurrentTimestamp(uint32_t blockIndex) const = 0;
+
   virtual uint64_t getCurrentCumulativeDifficulty() const = 0;
   virtual uint64_t getCurrentCumulativeDifficulty(uint32_t blockIndex) const = 0;
 

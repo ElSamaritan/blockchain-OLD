@@ -184,6 +184,7 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
   uint64_t cumulativeDifficulty = 0;
   uint64_t alreadyGeneratedCoins = 0;
   uint64_t alreadyGeneratedTransactions = 0;
+  uint64_t previousTimestamp = 0;
 
   boost::optional<Transaction> staticReward = currency.constructStaticRewardTx(cachedBlock).takeOrThrow();
   const auto index = cachedBlock.getBlockIndex();
@@ -193,6 +194,7 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
       cumulativeDifficulty = parent->getCurrentCumulativeDifficulty(index - 1);
       alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(index - 1);
       alreadyGeneratedTransactions = parent->getAlreadyGeneratedTransactions(index - 1);
+      previousTimestamp = parent->getCurrentTimestamp(index - 1);
     }
 
     cumulativeDifficulty += blockDifficulty;
@@ -207,6 +209,7 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
     cumulativeDifficulty = lastBlockInfo.cumulativeDifficulty + blockDifficulty;
     alreadyGeneratedCoins = lastBlockInfo.alreadyGeneratedCoins + generatedCoins;
     alreadyGeneratedTransactions = lastBlockInfo.alreadyGeneratedTransactions + cachedTransactions.size() + 1;
+    previousTimestamp = lastBlockInfo.timestamp;
     if (staticReward.has_value()) {
       alreadyGeneratedTransactions += 1;
     }
@@ -216,7 +219,7 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
   blockInfo.blockHash = cachedBlock.getBlockHash();
   blockInfo.version = cachedBlock.getBlock().version;
   blockInfo.features = cachedBlock.getBlock().features;
-  blockInfo.timestamp = cachedBlock.getBlock().timestamp;
+  blockInfo.timestamp = cachedBlock.getBlock().timestamp.apply(previousTimestamp);
   blockInfo.blobSize = blockSize;
   blockInfo.cumulativeDifficulty = cumulativeDifficulty;
   blockInfo.alreadyGeneratedCoins = alreadyGeneratedCoins;

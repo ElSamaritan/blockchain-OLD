@@ -44,6 +44,7 @@ enum class BlockValidationError {
   TRANSACTION_ABSENT = 12,
   TRANSACTION_DUPLICATES = 13,
   TRANSACTION_INCONSISTENCY = 14,
+  TRANSACTIONS_NOT_SORTED = 26,
   UNEXPECTED_STATIC_REWARD = 15,
 
   COINBASE_TOO_LARGE = 22,
@@ -59,7 +60,7 @@ enum class BlockValidationError {
 
   FEATURES_ILL_FORMED = 25,
 
-  __NUM = 26,
+  __NUM = 27,
 };
 
 // custom category:
@@ -111,6 +112,8 @@ class BlockValidationErrorCategory : public std::error_category {
         return "Block contains duplicated transactions";
       case BlockValidationError::TRANSACTION_INCONSISTENCY:
         return "Block template and raw block have inconsistent transactions";
+      case BlockValidationError::TRANSACTIONS_NOT_SORTED:
+        return "Transactions are not sorted by their hashes.";
       case BlockValidationError::UNEXPECTED_STATIC_REWARD:
         return "Block template contains a static reward but static rewards are disabled for the current block version";
 

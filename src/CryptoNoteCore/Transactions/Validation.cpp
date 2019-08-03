@@ -40,6 +40,14 @@ Error CryptoNote::validateFeatureIntegrity(const CryptoNote::Transaction &tx) {
   if (tx.unlockTime > 0) {
     expectedFeatures |= TransactionFeature::UniformUnlock;
   }
+  if (tx.globalIndexOffset) {
+    XI_RETURN_EC_IF(*tx.globalIndexOffset == 0, Error::FEATURE_USAGE_INVALID);
+    expectedFeatures |= TransactionFeature::GlobalIndexOffset;
+  }
+  if (tx.staticRingSize) {
+    XI_RETURN_EC_IF(*tx.staticRingSize == 0, Error::FEATURE_USAGE_INVALID);
+    expectedFeatures |= TransactionFeature::StaticRingSize;
+  }
   XI_RETURN_EC_IF_NOT(expectedFeatures == tx.features, Error::FEATURE_ILL_FORMED);
   XI_RETURN_SC(Error::VALIDATION_SUCCESS);
 }
@@ -100,6 +108,7 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
   XI_RETURN_EC_IF_NOT(context.currency.isTransactionVersionSupported(context.blockVersion, tx.version),
                       Error::INVALID_VERSION);
 
+  CanonicalAmount previousOutputAmount{0};
   XI_RETURN_EC_IF(tx.outputs.empty(), Error::EMPTY_OUTPUTS);
   for (const auto &anyOutput : tx.outputs) {
     XI_RETURN_EC_IF_NOT(std::holds_alternative<TransactionAmountOutput>(anyOutput), Error::OUTPUT_UNKNOWN_TYPE);
@@ -114,15 +123,21 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
     if (Xi::hasAdditionOverflow(out.outputSum, output.amount.native(), &out.outputSum)) {
       XI_RETURN_EC(Error::OUTPUTS_AMOUNT_OVERFLOW);
     }
+    XI_RETURN_EC_IF(previousOutputAmount > output.amount, Error::OUTPUTS_NOT_SORTED);
+    previousOutputAmount = output.amount;
   }
   XI_RETURN_EC_IF(out.outputSum == 0, Error::OUTPUT_ZERO);
 
+  uint64_t minRingSize = std::numeric_limits<uint64_t>::max();
+  uint64_t maxRingSize = std::numeric_limits<uint64_t>::min();
+  GlobalIndex minGlobalIndex = std::numeric_limits<GlobalIndex>::max();
   XI_RETURN_EC_IF(tx.inputs.empty(), Error::EMPTY_INPUTS);
   XI_RETURN_EC_IF_NOT(tx.signatures.has_value(), Error::INVALID_SIGNATURE_TYPE);
   XI_RETURN_EC_IF_NOT(std::holds_alternative<TransactionSignatureCollection>(*tx.signatures),
                       Error::INVALID_SIGNATURE_TYPE);
   const auto &signatures = std::get<TransactionSignatureCollection>(*tx.signatures);
   cache.globalIndicesForInput.reserve(tx.inputs.size());
+  XI_RETURN_EC_IF_NOT(std::is_sorted(tx.inputs.begin(), tx.inputs.end()), Error::INPUTS_NOT_SORTED);
   XI_RETURN_EC_IF_NOT(tx.inputs.size() == signatures.size(), Error::INPUT_INVALID_SIGNATURES_COUNT);
   for (size_t i = 0; i < tx.inputs.size(); ++i) {
     const auto &input = tx.inputs[i];
@@ -146,14 +161,30 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
       XI_RETURN_EC_IF_NOT(signature.isValid(), Error::INPUT_INVALID_SIGNATURES);
     }
 
-    if (keyInput.outputIndices.size() > 1) {
-      XI_RETURN_EC_IF(keyInput.outputIndices.size() < static_cast<size_t>(context.minimumMixin + 1),
-                      Error::INPUT_MIXIN_TOO_LOW);
-      XI_RETURN_EC_IF(keyInput.outputIndices.size() > static_cast<size_t>(context.maximumMixin + 1),
-                      Error::INPUT_MIXIN_TOO_HIGH);
+    const uint64_t ringSize = keyInput.outputIndices.size();
+    if (ringSize > 1) {
+      XI_RETURN_EC_IF(ringSize < static_cast<size_t>(context.minimumMixin + 1), Error::INPUT_MIXIN_TOO_LOW);
+      XI_RETURN_EC_IF(ringSize > static_cast<size_t>(context.maximumMixin + 1), Error::INPUT_MIXIN_TOO_HIGH);
     }
+    if (ringSize < minRingSize) {
+      minRingSize = ringSize;
+    }
+    if (ringSize > maxRingSize) {
+      maxRingSize = ringSize;
+    }
+
     XI_RETURN_EC_IF_NOT(out.usedKeyImages.insert(keyInput.keyImage).second, Error::INPUT_IDENTICAL_KEYIMAGES);
-    cache.globalIndicesForInput.emplace_back(relativeOutputOffsetsToAbsolute(keyInput.outputIndices));
+    if (keyInput.outputIndices.front() < minGlobalIndex) {
+      minGlobalIndex = keyInput.outputIndices.front();
+    }
+
+    {
+      GlobalIndexVector globalIndices{};
+      XI_RETURN_EC_IF_NOT(
+          deltaDecodeGlobalIndices(keyInput.outputIndices, globalIndices, tx.globalIndexOffset.value_or(0)),
+          Error::INPUT_INVALID_GLOBAL_INDEX);
+      cache.globalIndicesForInput.emplace_back(std::move(globalIndices));
+    }
     for (const auto &globalOutputIndex : cache.globalIndicesForInput.back()) {
       XI_RETURN_EC_IF_NOT(out.globalOutputIndicesUsed[keyInput.amount].insert(globalOutputIndex).second,
                           Error::INPUT_IDENTICAL_OUTPUT_INDEXES);
@@ -174,6 +205,14 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
   } else {
     enabledFeatures = context.currency.transaction(context.blockVersion).fusion().features();
     enabledExtraFeatures = context.currency.transaction(context.blockVersion).fusion().extraFeatures();
+  }
+
+  if (minGlobalIndex > 0) {
+    XI_RETURN_EC_IF(hasFlag(enabledFeatures, TransactionFeature::GlobalIndexOffset), Error::FEATURE_USAGE_REQUIRED);
+  }
+
+  if (minRingSize == maxRingSize && !tx.staticRingSize) {
+    XI_RETURN_EC_IF(hasFlag(enabledFeatures, TransactionFeature::StaticRingSize), Error::FEATURE_USAGE_REQUIRED);
   }
 
   XI_RETURN_EC_IF(hasAnyOtherFlag(tx.features, enabledFeatures), Error::FEATURE_USAGE_INVALID);

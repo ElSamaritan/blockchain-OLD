@@ -762,6 +762,7 @@ std::error_code NodeRpcProxy::doQueryBlocksLite(const std::vector<Crypto::Hash>&
 
   for (auto& item : rsp.blocks) {
     BlockShortEntry bse;
+    bse.timestamp = item.timestamp;
     bse.hasBlock = false;
 
     bse.blockHash = std::move(item.block_hash);

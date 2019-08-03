@@ -39,6 +39,8 @@ XI_SERIALIZATION_VARIANT_INVARIANT(
 )
 // clang-format on
 
+bool operator<(const OutputTarget& lhs, const OutputTarget& rhs);
+
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi

@@ -21,33 +21,26 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/Blockchain/Transaction/OutputTarget.hpp"
 
-#include <Xi/Global.hh>
-#include <Xi/TypeSafe/Flag.hpp>
-#include <Serialization/FlagSerialization.hpp>
+#include <Xi/Exceptions.hpp>
 
 namespace Xi {
 namespace Blockchain {
 namespace Transaction {
 
-enum struct Feature {
-  None = 0,
-  UniformUnlock = 1 << 0,
-  GlobalIndexOffset = 1 << 1,
-  StaticRingSize = 1 << 2,
-};
-
-XI_TYPESAFE_FLAG_MAKE_OPERATIONS(Feature)
-XI_SERIALIZATION_FLAG(Feature)
+bool operator<(const OutputTarget& lhs, const OutputTarget& rhs) {
+  XI_RETURN_SC_IF(lhs.index() < rhs.index(), true);
+  XI_RETURN_SC_IF(lhs.index() > rhs.index(), false);
+  if (std::holds_alternative<KeyOutputTarget>(lhs)) {
+    const auto& lhsKey = std::get<KeyOutputTarget>(lhs);
+    const auto& rhsKey = std::get<KeyOutputTarget>(rhs);
+    XI_RETURN_SC(lhsKey.key < rhsKey.key);
+  } else {
+    exceptional<InvalidVariantTypeError>();
+  }
+}
 
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi
-
-XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Transaction::Feature, UniformUnlock, UniformUnlock)
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::Feature, UniformUnlock, "uniform_unlock")
-
-namespace CryptoNote {
-using TransactionFeature = Xi::Blockchain::Transaction::Feature;
-}

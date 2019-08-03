@@ -21,33 +21,53 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/Blockchain/Block/TimestampShift.hpp"
 
-#include <Xi/Global.hh>
-#include <Xi/TypeSafe/Flag.hpp>
-#include <Serialization/FlagSerialization.hpp>
+#include <exception>
+#include <limits>
 
 namespace Xi {
 namespace Blockchain {
-namespace Transaction {
+namespace Block {
 
-enum struct Feature {
-  None = 0,
-  UniformUnlock = 1 << 0,
-  GlobalIndexOffset = 1 << 1,
-  StaticRingSize = 1 << 2,
-};
+bool serialize(TimestampShift &value, Common::StringView name, CryptoNote::ISerializer &serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(value.value, name), false);
+  XI_RETURN_SC(true);
+}
 
-XI_TYPESAFE_FLAG_MAKE_OPERATIONS(Feature)
-XI_SERIALIZATION_FLAG(Feature)
+uint64_t TimestampShift::apply(uint64_t origin) const {
+  uint64_t reval = 0;
+  exceptional_if_not<OutOfRangeError>(tryApply(origin, reval));
+  return reval;
+}
 
-}  // namespace Transaction
+bool TimestampShift::tryApply(uint64_t origin, uint64_t &out) const {
+  if (native() < 0) {
+    const auto unsignedValue = static_cast<uint64_t>(-1 * native());
+    XI_RETURN_EC_IF(unsignedValue > origin, false);
+    out = origin - unsignedValue;
+    XI_RETURN_SC(true);
+  } else {
+    const auto unsignedValue = static_cast<uint64_t>(native());
+    XI_RETURN_EC_IF(origin + unsignedValue < origin, false);
+    out = origin + unsignedValue;
+    XI_RETURN_SC(true);
+  }
+}
+
+TimestampShift makeTimestampShift(uint64_t from, uint64_t to) {
+  static_assert(std::numeric_limits<int64_t>::min() <= (-1 * std::numeric_limits<int64_t>::max()), "");
+  if (to < from) {
+    const auto shift = from - to;
+    exceptional_if<OutOfRangeError>(shift > static_cast<uint64_t>(std::numeric_limits<int64_t>::max()));
+    return TimestampShift{-1 * static_cast<int64_t>(shift)};
+  } else {
+    const auto shift = to - from;
+    exceptional_if<OutOfRangeError>(shift > static_cast<uint64_t>(std::numeric_limits<int64_t>::max()));
+    return TimestampShift{static_cast<int64_t>(shift)};
+  }
+}
+
+}  // namespace Block
 }  // namespace Blockchain
 }  // namespace Xi
-
-XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Transaction::Feature, UniformUnlock, UniformUnlock)
-XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::Feature, UniformUnlock, "uniform_unlock")
-
-namespace CryptoNote {
-using TransactionFeature = Xi::Blockchain::Transaction::Feature;
-}

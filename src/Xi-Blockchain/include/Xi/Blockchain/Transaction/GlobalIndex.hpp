@@ -32,11 +32,15 @@ namespace Xi {
 namespace Blockchain {
 namespace Transaction {
 
-using GlobalIndex = uint64_t;
+using GlobalIndex = uint32_t;
 using GlobalIndexVector = std::vector<GlobalIndex>;
 
 using GlobalDeltaIndex = uint32_t;
 using GlobalDeltaIndexVector = std::vector<GlobalDeltaIndex>;
+
+[[nodiscard]] bool deltaEncodeGlobalIndices(const GlobalIndexVector& input, GlobalDeltaIndexVector& out);
+[[nodiscard]] bool deltaDecodeGlobalIndices(const GlobalDeltaIndexVector& input, GlobalIndexVector& out,
+                                            const GlobalIndex offset = 0);
 
 }  // namespace Transaction
 }  // namespace Blockchain
@@ -48,4 +52,7 @@ using GlobalIndexVector = Xi::Blockchain::Transaction::GlobalIndexVector;
 
 using GlobalDeltaIndex = Xi::Blockchain::Transaction::GlobalDeltaIndex;
 using GlobalDeltaIndexVector = Xi::Blockchain::Transaction::GlobalDeltaIndexVector;
+
+using Xi::Blockchain::Transaction::deltaDecodeGlobalIndices;
+using Xi::Blockchain::Transaction::deltaEncodeGlobalIndices;
 }  // namespace CryptoNote

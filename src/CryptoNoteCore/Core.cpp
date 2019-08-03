@@ -345,10 +345,7 @@ uint64_t Core::getBlockTimestampByIndex(uint32_t blockIndex) const {
 
   throwIfNotInitialized();
   XI_CONCURRENT_RLOCK(m_access);
-  auto timestamps = chainsLeaves[0]->getLastTimestamps(1, blockIndex, addGenesisBlock);
-  assert(timestamps.size() == 1);
-
-  return timestamps[0];
+  return chainsLeaves[0]->getCurrentTimestamp(blockIndex);
 }
 
 std::optional<BlockSource> Core::hasBlock(const Crypto::Hash& blockHash) const {
@@ -533,9 +530,7 @@ bool Core::queryBlocksLite(const std::vector<Crypto::Hash>& knownBlockHashes, ui
 
     if (startIndex > 0 && timestamp == 0) {
       if (startIndex <= mainChain->getTopBlockIndex()) {
-        RawBlock block = mainChain->getBlockByIndex(startIndex);
-        auto blockTemplate = extractBlockTemplate(block);
-        timestamp = blockTemplate.timestamp;
+        timestamp = mainChain->getCurrentTimestamp(startIndex);
       }
     }
 
@@ -586,9 +581,7 @@ bool Core::queryBlocksDetailed(const std::vector<Crypto::Hash>& knownBlockHashes
 
     if (startIndex > 0 && timestamp == 0) {
       if (startIndex <= mainChain->getTopBlockIndex()) {
-        RawBlock block = mainChain->getBlockByIndex(startIndex);
-        auto blockTemplate = extractBlockTemplate(block);
-        timestamp = blockTemplate.timestamp;
+        timestamp = mainChain->getCurrentTimestamp(startIndex);
       }
     }
 
@@ -719,6 +712,14 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
 
   const auto previousBlockIndex = cache->getBlockIndex(previousBlockHash);
   const auto blockIndex = previousBlockIndex + 1;
+  uint64_t blockTimestamp = 0;
+  {
+    uint64_t previousTimestamp = cache->getCurrentTimestamp(previousBlockIndex);
+    if (!blockTemplate.timestamp.tryApply(previousTimestamp, blockTimestamp)) {
+      return blockTemplate.timestamp.native() < 0 ? error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_PAST
+                                                  : error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_FUTURE;
+    }
+  }
 
   Crypto::Hash blockHash = cachedBlock.getBlockHash();
   std::ostringstream os;
@@ -782,7 +783,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   }
 
   uint64_t minerReward = 0;
-  auto blockValidationResult = validateBlock(cachedBlock, cache, minerReward);
+  auto blockValidationResult = validateBlock(cachedBlock, cache, blockTimestamp, minerReward);
   if (blockValidationResult) {
     logger(Logging::Debugging) << "Failed to validate block " << blockStr << ": " << blockValidationResult.message();
     return blockValidationResult;
@@ -835,18 +836,20 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
       return error::BlockValidationError::TRANSACTION_DUPLICATES;
     if (blockTemplate.transactionHashes.size() != transactions.size())
       return error::BlockValidationError::TRANSACTION_INCONSISTENCY;
-    for (const auto& transaction : transactions) {
-      auto search = std::find(blockTemplate.transactionHashes.begin(), blockTemplate.transactionHashes.end(),
-                              transaction.getTransactionHash());
-      if (search == blockTemplate.transactionHashes.end())
+    for (size_t i = 0; i < blockTemplate.transactionHashes.size(); ++i) {
+      if (blockTemplate.transactionHashes[i] != transactionHashes[i]) {
         return error::BlockValidationError::TRANSACTION_INCONSISTENCY;
+      }
+    }
+    if (!std::is_sorted(transactionHashes.begin(), transactionHashes.end())) {
+      return error::BlockValidationError::TRANSACTIONS_NOT_SORTED;
     }
   }
 
   TransferValidationContext transferContext{currency(), *cache};
   transferContext.blockVersion = blockTemplate.version;
   transferContext.previousBlockIndex = previousBlockIndex;
-  transferContext.timestamp = blockTemplate.timestamp;
+  transferContext.timestamp = blockTimestamp;
   transferContext.inCheckpointRange = checkpoints.isInCheckpointZone(blockIndex);
   transferContext.minimumMixin = currency().mixinLowerBound(blockTemplate.version);
   transferContext.maximumMixin = currency().mixinUpperBound(blockTemplate.version);
@@ -892,65 +895,52 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     }
   }
   TransactionValidatorState validatorState{};
-
-  if (!checkpoints.isInCheckpointZone(blockIndex)) {
-    std::unordered_map<Amount, GlobalOutputIndexSet> globalOutputReferences{};
-    for (auto& transferValidation : transferValidations) {
-      const auto additionSize = transferValidation.usedKeyImages.size();
-      XI_RETURN_EC_IF_NOT(
-          Xi::merge(validatorState.spentKeyImages, std::move(transferValidation.usedKeyImages)) == additionSize,
-          error::BlockValidationError::DOUBLE_SPENDING);
-      for (auto&& amountReferences : transferValidation.globalOutputIndicesUsed) {
-        Xi::merge(globalOutputReferences[amountReferences.first], std::move(amountReferences.second));
-      }
+  std::unordered_map<Amount, GlobalOutputIndexSet> globalOutputReferences{};
+  for (auto& transferValidation : transferValidations) {
+    const auto additionSize = transferValidation.usedKeyImages.size();
+    XI_RETURN_EC_IF_NOT(
+        Xi::merge(validatorState.spentKeyImages, std::move(transferValidation.usedKeyImages)) == additionSize,
+        error::BlockValidationError::DOUBLE_SPENDING);
+    for (auto&& amountReferences : transferValidation.globalOutputIndicesUsed) {
+      Xi::merge(globalOutputReferences[amountReferences.first], std::move(amountReferences.second));
     }
+  }
 
-    XI_RETURN_EC_IF(cache->checkIfAnySpent(validatorState.spentKeyImages, previousBlockIndex),
-                    error::BlockValidationError::DOUBLE_SPENDING);
+  XI_RETURN_EC_IF(cache->checkIfAnySpent(validatorState.spentKeyImages, previousBlockIndex),
+                  error::BlockValidationError::DOUBLE_SPENDING);
 
-    TransferValidationInfo transfersInfo{};
-    if (const auto ec = makeTransferValidationInfo(*cache, transferContext, globalOutputReferences, previousBlockIndex,
-                                                   transfersInfo)) {
-      return ec;
-    }
+  TransferValidationInfo transfersInfo{};
+  if (const auto ec = makeTransferValidationInfo(*cache, transferContext, globalOutputReferences, previousBlockIndex,
+                                                 transfersInfo)) {
+    return ec;
+  }
 
 #if defined(XI_EXPERIMENTAL_PARALLEL_TRANSFER_VALIDATION)
-    async::parallel_for(async::irange(0ULL, transactions.size()),
-                        [&](auto i)
+  async::parallel_for(async::irange(0ULL, transactions.size()),
+                      [&](auto i)
 #else
-    for (size_t i = 0; i < transactions.size(); ++i)
+  for (size_t i = 0; i < transactions.size(); ++i)
 #endif
-                        {
-                          const auto ec =
-                              postValidateTransfer(transactions[i], transferContext, transferCaches[i], transfersInfo);
-                          if (ec) {
-                            logger(Logging::Debugging) << "Failed to validate transaction "
-                                                       << transactions[i].getTransactionHash() << ": " << ec.message();
+                      {
+                        const auto ec =
+                            postValidateTransfer(transactions[i], transferContext, transferCaches[i], transfersInfo);
+                        if (ec) {
+                          logger(Logging::Debugging) << "Failed to validate transaction "
+                                                     << transactions[i].getTransactionHash() << ": " << ec.message();
 #if !defined(XI_EXPERIMENTAL_PARALLEL_TRANSFER_VALIDATION)
-                            return ec;
+                          return ec;
 #endif
-                          }
-                          transferResults[i] = ec;
                         }
+                        transferResults[i] = ec;
+                      }
 #if defined(XI_EXPERIMENTAL_PARALLEL_TRANSFER_VALIDATION)
-    );
+  );
 #endif
 
-    for (size_t i = 0; i < transactions.size(); ++i) {
-      if (transferResults[i] != error::TransactionValidationError::VALIDATION_SUCCESS) {
-        return transferResults[i];
-      }
+  for (size_t i = 0; i < transactions.size(); ++i) {
+    if (transferResults[i] != error::TransactionValidationError::VALIDATION_SUCCESS) {
+      return transferResults[i];
     }
-  } else {
-    for (auto&& transferValidation : transferValidations) {
-      const auto additionSize = transferValidation.usedKeyImages.size();
-      XI_RETURN_EC_IF_NOT(
-          Xi::merge(validatorState.spentKeyImages, std::move(transferValidation.usedKeyImages)) == additionSize,
-          error::BlockValidationError::DOUBLE_SPENDING);
-    }
-
-    XI_RETURN_EC_IF(cache->checkIfAnySpent(validatorState.spentKeyImages, previousBlockIndex),
-                    error::BlockValidationError::DOUBLE_SPENDING);
   }
 
   uint64_t reward = 0;
@@ -1400,6 +1390,9 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, u
   b = boost::value_initialized<BlockTemplate>();
   b.version = BlockVersion{getBlockVersionForIndex(index)};
   b.features |= BlockFeature::BaseTransaction;
+  if (currency().upgradeManager().maximumVersion() > b.version) {
+    b.features |= BlockFeature::UpgradeVote;
+  }
   b.previousBlockHash = getTopBlockHash();
 
   if (m_currency.isStaticRewardEnabledForBlockVersion(b.version)) {
@@ -1422,7 +1415,8 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, u
     logger(Logging::Error) << "Failed to receive timestamp: " << timestamp.error().message();
     return false;
   }
-  b.timestamp = timestamp.value();
+  const auto previousTimestamp = getBlockTimestampByIndex(index - 1);
+  b.timestamp = makeTimestampShift(previousTimestamp, *timestamp);
 
   /* Ok, so if an attacker is fiddling around with timestamps on the network,
      they can make it so all the valid pools / miners don't produce valid
@@ -1457,8 +1451,8 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, u
 
     uint64_t medianTimestamp = Common::medianValue(timestamps);
 
-    if (b.timestamp < medianTimestamp) {
-      b.timestamp = medianTimestamp;
+    if (*timestamp < medianTimestamp) {
+      b.timestamp = makeTimestampShift(previousTimestamp, medianTimestamp);
     }
   }
 
@@ -1593,7 +1587,8 @@ std::vector<Crypto::Hash> CryptoNote::Core::getBlockHashes(uint32_t startBlockIn
   return chainsLeaves[0]->getBlockHashes(startBlockIndex, maxCount);
 }
 
-std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainCache* cache, uint64_t& minerReward) {
+std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainCache* cache, uint64_t timestamp,
+                                    uint64_t& minerReward) {
   BlockFeature expected = BlockFeature::BaseTransaction;
   if (hasFlag(cachedBlock.getBlock().features, BlockFeature::UpgradeVote)) {
     expected |= BlockFeature::UpgradeVote;
@@ -1613,7 +1608,7 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     return error::BlockValidationError::WRONG_VERSION;
   }
 
-  if (block.timestamp > getAdjustedTime() + m_currency.time(block.version).futureLimit()) {
+  if (timestamp > getAdjustedTime() + m_currency.time(block.version).futureLimit()) {
     return error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_FUTURE;
   }
 
@@ -1621,7 +1616,7 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
       cache->getLastTimestamps(m_currency.time(block.version).windowSize(), previousBlockIndex, addGenesisBlock);
   if (timestamps.size() >= m_currency.time(block.version).windowSize()) {
     auto median_ts = Common::medianValue(timestamps);
-    if (block.timestamp < median_ts) {
+    if (timestamp < median_ts) {
       return error::BlockValidationError::TIMESTAMP_TOO_FAR_IN_PAST;
     }
   }
@@ -1656,6 +1651,10 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     return error::TransactionValidationError::BASE_INPUT_WRONG_COUNT;
   }
 
+  if (!std::is_sorted(block.baseTransaction.inputs.begin(), block.baseTransaction.inputs.end())) {
+    return error::TransactionValidationError::INPUTS_NOT_SORTED;
+  }
+
   auto baseInput = std::get_if<BaseInput>(&block.baseTransaction.inputs[0]);
   if (baseInput == nullptr) {
     return error::TransactionValidationError::BASE_INPUT_UNEXPECTED_TYPE;
@@ -1676,6 +1675,7 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
   std::vector<uint64_t> embeddedAmounts{};
   embeddedAmounts.reserve(block.baseTransaction.outputs.size());
 
+  CanonicalAmount previousAmount{0};
   for (const auto& anyOutput : block.baseTransaction.outputs) {
     if (!std::holds_alternative<TransactionAmountOutput>(anyOutput)) {
       return error::TransactionValidationError::OUTPUT_UNEXPECTED_TYPE;
@@ -1699,6 +1699,10 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     }
 
     embeddedAmounts.push_back(output.amount);
+
+    if (previousAmount > output.amount) {
+      return error::TransactionValidationError::OUTPUTS_NOT_SORTED;
+    }
   }
 
   std::vector<uint64_t> canoncialAmounts;
@@ -2117,6 +2121,7 @@ void Core::fillQueryBlockShortInfo(uint32_t fullOffset, uint32_t currentIndex, s
     RawBlock rawBlock = getRawBlock(segment, blockIndex);
 
     BlockShortInfo blockShortInfo;
+    blockShortInfo.timestamp = segment->getCurrentTimestamp(blockIndex);
     blockShortInfo.block = std::move(rawBlock.blockTemplate);
     blockShortInfo.block_hash = segment->getBlockHash(blockIndex);
 
@@ -2199,18 +2204,21 @@ size_t Core::calculateCumulativeBlocksizeLimit(uint32_t height) const {
 void Core::fillBlockTemplate(BlockTemplate& block, uint32_t index, size_t fullRewardZone, size_t maxCumulativeSize,
                              size_t& transactionsSize, uint64_t& fee) const {
   throwIfNotInitialized();
+  XI_CONCURRENT_RLOCK(m_access);
+
   transactionsSize = 0;
   fee = 0;
 
   // What would be our reward without any transaction used
   const auto generatedCoins = chainsLeaves[0]->getAlreadyGeneratedCoins(index - 1);
+  const auto previousTimestamp = chainsLeaves[0]->getCurrentTimestamp(index - 1);
   int64_t emissionChange = 0;
   uint64_t currentReward = 0;
   m_currency.getBlockReward(block.version, fullRewardZone, 0, generatedCoins, fee, currentReward, emissionChange);
 
   size_t cumulativeSize = 0;
 
-  const EligibleIndex blockIndex{index, block.timestamp};
+  const EligibleIndex blockIndex{index, block.timestamp.apply(previousTimestamp)};
   // We assume eligible transactions are ordered, such that the first transactions are most profitible. Using this
   // we now implement a greedy search algorithm to fill the transaction.
   std::vector<CachedTransaction> poolTransactions = m_transactionPool->eligiblePoolTransactions(blockIndex);
@@ -2259,6 +2267,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, uint32_t index, size_t fullRe
 
   if (block.transactionHashes.size() > 0) {
     block.features |= BlockFeature::Transactions;
+    std::sort(block.transactionHashes.begin(), block.transactionHashes.end());
   }
 }
 
@@ -2382,12 +2391,13 @@ std::optional<BlockDetails> Core::getBlockDetails(const Crypto::Hash& blockHash)
   }
 
   uint32_t blockIndex = segment->getBlockIndex(blockHash);
+  uint64_t timestamp = segment->getCurrentTimestamp(blockIndex);
   BlockTemplate blockTemplate = restoreBlockTemplate(segment, blockIndex);
 
   BlockDetails blockDetails;
   blockDetails.version = blockTemplate.version;
   blockDetails.features = blockTemplate.features;
-  blockDetails.timestamp = blockTemplate.timestamp;
+  blockDetails.timestamp = timestamp;
   blockDetails.prevBlockHash = blockTemplate.previousBlockHash;
   blockDetails.nonce = blockTemplate.nonce;
   blockDetails.hash = blockHash;
@@ -2578,7 +2588,12 @@ TransactionDetails Core::getTransactionDetails(const Crypto::Hash& transactionHa
       txInToKeyDetails.input = std::get<KeyInput>(rawTransaction.inputs[i]);
       std::vector<std::pair<Crypto::Hash, size_t>> outputReferences;
       outputReferences.reserve(txInToKeyDetails.input.outputIndices.size());
-      std::vector<uint32_t> globalIndexes = relativeOutputOffsetsToAbsolute(txInToKeyDetails.input.outputIndices);
+      std::vector<GlobalIndex> globalIndexes{};
+      {
+        [[maybe_unused]] bool ec = deltaDecodeGlobalIndices(txInToKeyDetails.input.outputIndices, globalIndexes,
+                                                            rawTransaction.globalIndexOffset.value_or(0));
+        assert(ec);
+      }
       ExtractOutputKeysResult result = segment->extractKeyOtputReferences(
           txInToKeyDetails.input.amount, {globalIndexes.data(), globalIndexes.size()}, outputReferences);
       assert(result == ExtractOutputKeysResult::SUCCESS);

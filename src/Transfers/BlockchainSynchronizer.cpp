@@ -513,6 +513,7 @@ void BlockchainSynchronizer::processBlocks(GetBlocksResponse& response) {
     }
 
     CompleteBlock completeBlock;
+    completeBlock.timestamp = block.timestamp;
     completeBlock.blockHash = block.blockHash;
     if (block.hasBlock) {
       completeBlock.block = std::move(block.block);

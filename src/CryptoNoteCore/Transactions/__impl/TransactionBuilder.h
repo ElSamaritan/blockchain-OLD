@@ -29,6 +29,8 @@
 #include <boost/optional.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Algorithm/Permutation.h>
+
 #include "CryptoNoteCore/CryptoNote.h"
 #include "CryptoNoteCore/Transactions/TransactionApiExtra.h"
 #include "CryptoNoteCore/Transactions/ITransactionBuilder.h"
@@ -85,9 +87,13 @@ class TransactionBuilder : public ITransactionBuilder {
   virtual size_t addInput(const KeyInput& input) override;
   virtual size_t addInput(const AccountKeys& senderKeys, const TransactionTypes::InputKeyInfo& info,
                           KeyPair& ephKeys) override;
+  virtual void finalizeInputs() override;
 
   virtual size_t addOutput(uint64_t amount, const AccountPublicAddress& to) override;
   virtual size_t addOutput(uint64_t amount, const KeyOutput& out) override;
+  virtual void finalizeOutputs() override;
+
+  virtual void emplaceFeatures(const TransactionFeature enabled) override;
 
   virtual void signInputKey(size_t input, const TransactionTypes::InputKeyInfo& info, const KeyPair& ephKeys) override;
 
@@ -106,9 +112,20 @@ class TransactionBuilder : public ITransactionBuilder {
   /// Throws if transactions is being signed or already signed.
   void checkIfSigning() const;
 
+  void checkIfInputsFinalized() const;
+  void checkIfOutputsFinalized() const;
+
   CryptoNote::Transaction transaction;
   boost::optional<Crypto::SecretKey> secretKey;
   mutable boost::optional<Crypto::Hash> transactionHash;
   mutable boost::optional<Crypto::Hash> transactionPrefixHash;
+
+  Xi::Permutation inputsPermutation{};
+  bool inputsFinalized = false;
+  bool outputsFinalized = false;
+
+  GlobalIndex minGlobalIndex = std::numeric_limits<GlobalIndex>::max();
+  uint64_t minRingSize = std::numeric_limits<uint64_t>::max();
+  uint64_t maxRingSize = std::numeric_limits<uint64_t>::min();
 };
 }  // namespace CryptoNote
