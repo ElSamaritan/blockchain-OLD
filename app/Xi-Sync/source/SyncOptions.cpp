@@ -56,15 +56,26 @@ void XiSync::SyncOptions::loadEnvironment(Xi::App::Environment &env) {
 void XiSync::SyncOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("sync")
-    ("i,import", "imports a dump to a local blockchain database", cxxopts::value<bool>()->implicit_value("true"))
-    ("e,export", "exports a dump from a local database or a blockexplorer enabled remote daemon", cxxopts::value<bool>()->implicit_value("true"))
-    ("f,file", "the blockchain dump file to import/export", cxxopts::value<std::string>(DumpFile)->default_value(DumpFile))
+    ("i,import", "imports a dump to a local blockchain database",
+      cxxopts::value<bool>()->implicit_value("true"))
+
+    ("e,export", "exports a dump from a local database or a blockexplorer enabled remote daemon",
+      cxxopts::value<bool>()->implicit_value("true"))
+
+    ("f,file", "the blockchain dump file to import/export",
+      cxxopts::value<std::string>(DumpFile)->default_value(DumpFile))
+
     ("r,remote", "uses a remote daemon to create an export instead of a local database",
       cxxopts::value<bool>()->default_value(UseRemote ? "true" : "false")->implicit_value("true"))
-    ("b,batch-size", "number of blocks to emplace in every batch", cxxopts::value<uint32_t>(BatchSize)->default_value(std::to_string(BatchSize)))
+
+    ("b,batch-size", "number of blocks to emplace in every batch",
+      cxxopts::value<uint32_t>(BatchSize)->default_value(std::to_string(BatchSize)))
+
     ("d,density", "number of blocks pushed at max before adding a new checkpoint",
-        cxxopts::value<uint32_t>(CheckpointsDensity)->default_value(std::to_string(CheckpointsDensity)), "# > 0")
-    ("t,trunc", "overrites the export file if present.", cxxopts::value<bool>(TruncFile)->implicit_value("true"))
+      cxxopts::value<uint32_t>(CheckpointsDensity)->default_value(std::to_string(CheckpointsDensity)), "# > 0")
+
+    ("t,trunc", "overrites the export file if present.",
+      cxxopts::value<bool>(TruncFile)->default_value(TruncFile ? "true" : "false")->implicit_value("true"))
   ;
   // clang-format on
 }

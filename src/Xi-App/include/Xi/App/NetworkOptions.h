@@ -38,7 +38,7 @@
 namespace Xi {
 namespace App {
 struct NetworkOptions : public IOptions {
-  XI_PROPERTY(std::string, directory, "network")
+  XI_PROPERTY(std::string, directory, "./network")
   XI_PROPERTY(std::string, network, Xi::Config::Network::defaultNetworkIdentifier())
 
   KV_BEGIN_SERIALIZATION

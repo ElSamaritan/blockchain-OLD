@@ -59,20 +59,20 @@ void XiMiner::MinerOptions::loadEnvironment(Xi::App::Environment &env) {
 void XiMiner::MinerOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("miner")
-    ("a,address", "public address receiving block rewards.", cxxopts::value<std::string>(Address))
+    ("a,address", "public address receiving block rewards.", cxxopts::value<std::string>(Address)->default_value(Address))
     ("t,threads", "number of threads to use.", cxxopts::value<uint32_t>(Threads)->default_value(std::to_string(Threads)), "# > 0")
     ("u,update-interval", "number of milliseconds to wait before checking for an update",
         cxxopts::value<uint16_t>(UpdateInterval)->default_value(std::to_string(UpdateInterval)), "ms >= 50")
     ("i,report-interval", "number of seconds between consecutive hashrate reports",
         cxxopts::value<uint16_t>(ReportInterval)->default_value(std::to_string(ReportInterval)), "s >= 1")
     ("r,report-show", "enables status reporting by default",
-        cxxopts::value<bool>(ReportShow)->implicit_value("true"))
+        cxxopts::value<bool>(ReportShow)->default_value(ReportShow ? "true": "false")->implicit_value("true"))
     ("l,block-limit", "maximum number of blocks to mine, after n blocks have been mined by this instance the aplication exits",
         cxxopts::value<uint32_t>(BlockLimit)->default_value(std::to_string(BlockLimit)))
     ("p,panic", "forces the application to exit if a health check fails",
-        cxxopts::value<bool>(Panic)->implicit_value("true"))
+        cxxopts::value<bool>(Panic)->default_value(Panic ? "true" : "false")->implicit_value("true"))
     ("n,none-interactive", "disabled interactive command line",
-          cxxopts::value<bool>(NoneInteractive)->implicit_value("true"))
+          cxxopts::value<bool>(NoneInteractive)->default_value(NoneInteractive ? "true" : "false")->implicit_value("true"))
   ;
   // clang-format on
 }

@@ -41,7 +41,7 @@ void SslOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("ssl")
         ("ssl", "Enables and enforces SSL usage to secure your privacy.",
-            cxxopts::value<bool>(enabled())->implicit_value("true"))
+            cxxopts::value<bool>(enabled())->default_value(enabled() ? "true" : "false")->implicit_value("true"))
 
         ("ssl-dir", "default directory to lookup all ssl related files.",
             cxxopts::value<std::string>(rootDir())->default_value(rootDir()));

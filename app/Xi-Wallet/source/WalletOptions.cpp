@@ -53,12 +53,16 @@ void WalletOptions::emplaceOptions(cxxopts::Options &options) {
   options.add_options("wallet")
     ("w,wallet", "wallet filepath to open/generate",
       cxxopts::value<std::string>(wallet())->default_value(wallet()), "<filepath>|<empty>")
+
     ("p,password", "wallet password for decryption",
-      cxxopts::value<std::string>(password()), "<password>")
+      cxxopts::value<std::string>(password())->default_value(password()), "<password>")
+
     ("g,generate", "generates a new wallet, if wallet file is empty, keys are printed to console",
-      cxxopts::value<bool>(generate())->implicit_value("true"))
+      cxxopts::value<bool>(generate())->default_value(generate() ? "true" : "false")->implicit_value("true"))
+
     ("s,seed", "uses the given seed on wallet generation (not mnemonics)",
       cxxopts::value<std::string>(generateSeed())->default_value(generateSeed()), "<string>")
+
     ("r,remote", "enables remote usage instead of an embedded node",
       cxxopts::value<bool>(useRemote())->default_value(useRemote() ? "true" : "false"), "<enabled>")
   ;

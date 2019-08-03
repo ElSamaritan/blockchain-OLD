@@ -76,7 +76,7 @@ void ServerRpcOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("rpc server")
     ("rpc-server", "Enables a http server for remote protocol commands",
-      cxxopts::value<bool>(enabled())->implicit_value("true"))
+      cxxopts::value<bool>(enabled())->default_value(enabled() ? "true" : "false")->implicit_value("true"))
 
     ("rpc-server-cors", "Adds header 'Access-Control-Allow-Origin' to the RPC responses using the <domain>. "
                         "Uses the value specified as the domain. Use * for all.",
