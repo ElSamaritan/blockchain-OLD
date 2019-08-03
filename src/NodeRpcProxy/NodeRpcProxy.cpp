@@ -74,7 +74,7 @@ NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort,
       m_networkHeight(BlockHeight::Null),
       m_networkVersion(BlockVersion::Null.native()),
       m_nodeHeight(BlockHeight::Null),
-      m_connected(true) {
+      m_connected(false) {
   resetInternalState();
   m_httpClient = std::make_unique<Xi::Http::Client>(nodeHost, nodePort, sslConfig);
 }

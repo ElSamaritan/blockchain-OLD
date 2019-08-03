@@ -21,45 +21,46 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Blockchain/Transaction/GlobalIndex.hpp"
-
+#include <limits>
+#include <random>
+#include <vector>
 #include <algorithm>
-#include <utility>
 
-#include <Xi/Algorithm/Math.h>
+#include <gmock/gmock.h>
 
-namespace Xi {
-namespace Blockchain {
-namespace Transaction {
+#include <Xi/Blockchain/Transaction/GlobalIndex.hpp>
 
-bool deltaEncodeGlobalIndices(GlobalIndexVector input, GlobalDeltaIndexVector &out) {
-  if (input.empty()) {
-    out.clear();
-    XI_RETURN_SC(true);
+#define XI_UNIT_TEST_SUITE Xi_Blockchain_Transaction_GlobalIndex
+
+TEST(XI_UNIT_TEST_SUITE, EncodeDecode) {
+  using namespace Xi;
+  using namespace Xi::Blockchain::Transaction;
+
+  std::default_random_engine eng{};
+  std::uniform_int_distribution<GlobalIndex> indexDist{0, std::numeric_limits<GlobalIndex>::max()};
+
+  for (size_t i = 0; i < 20; ++i) {
+    for (size_t j = 0; j < i; ++j) {
+      GlobalIndexVector values{};
+      for (size_t k = 0; k < j; ++k) {
+        values.push_back(indexDist(eng));
+      }
+
+      GlobalDeltaIndexVector encoded{};
+      ASSERT_TRUE(deltaEncodeGlobalIndices(values, encoded));
+      std::sort(values.begin(), values.end());
+      GlobalIndexVector decoded{};
+      ASSERT_TRUE(deltaDecodeGlobalIndices(encoded, decoded));
+      EXPECT_EQ(values, decoded);
+
+      if (j > 0) {
+        const auto offset = encoded.front();
+        encoded.front() -= offset;
+
+        GlobalIndexVector offsetDecoded{};
+        ASSERT_TRUE(deltaDecodeGlobalIndices(encoded, offsetDecoded, offset));
+        EXPECT_EQ(values, offsetDecoded);
+      }
+    }
   }
-  std::sort(input.begin(), input.end());
-  auto copy = input;
-  for (size_t i = 1; i < copy.size(); ++i) {
-    copy[i] = input[i] - input[i - 1];
-  }
-  out = std::move(copy);
-  XI_RETURN_SC(true);
 }
-
-bool deltaDecodeGlobalIndices(GlobalDeltaIndexVector input, GlobalIndexVector &out, const GlobalIndex offset) {
-  GlobalIndexVector res = input;
-  if (res.empty()) {
-    out.clear();
-    XI_RETURN_SC(true);
-  }
-  XI_RETURN_EC_IF(hasAdditionOverflow(res.front(), offset, std::addressof(res.front())), false);
-  for (size_t i = 1; i < res.size(); i++) {
-    XI_RETURN_EC_IF(hasAdditionOverflow(res[i], res[i - 1], std::addressof(res[i])), false);
-  }
-  out = std::move(res);
-  XI_RETURN_SC(true);
-}
-
-}  // namespace Transaction
-}  // namespace Blockchain
-}  // namespace Xi

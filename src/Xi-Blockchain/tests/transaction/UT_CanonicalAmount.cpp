@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -21,43 +21,38 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include <iostream>
+#include <limits>
+#include <random>
 
-#include <Xi/Config/Coin.h>
-#include <crypto/crypto.h>
-#include <CryptoNoteCore/CryptoNote.h>
-#include <CryptoNoteCore/CryptoNoteTools.h>
-#include <CryptoNoteCore/Account.h>
-#include <CryptoNoteCore/Currency.h>
-#include <Serialization/JsonOutputStreamSerializer.h>
-#include <Mnemonics/Mnemonics.h>
-#include <Common/Base58.h>
+#include <gmock/gmock.h>
 
-int main(int, char**) {
-  CryptoNote::AccountKeys account;
-  Crypto::generate_keys(account.address.spendPublicKey, account.spendSecretKey);
-  CryptoNote::AccountBase::generateViewFromSpend(account.spendSecretKey, account.viewSecretKey);
-  if(!Crypto::secret_key_to_public_key(account.viewSecretKey, account.address.viewPublicKey)) {
-      return -1;
+#include <Xi/Algorithm/Math.h>
+#include <Xi/Blockchain/Transaction/CanonicalAmount.hpp>
+
+#define XI_UNIT_TEST_SUITE Xi_Blockchain_Transaction_CanoncialAmount
+
+TEST(XI_UNIT_TEST_SUITE, EncodeDecode) {
+  using namespace Xi;
+  using namespace Xi::Blockchain::Transaction;
+
+  std::vector<CanonicalAmount::value_type> values{};
+  for (CanonicalAmount::value_type i = 1; i < 10; ++i) {
+    values.push_back(std::numeric_limits<CanonicalAmount::value_type>::min() + i);
+    values.push_back(pow64(10, 15) * i);
   }
 
-  auto binaryAddress = CryptoNote::toBinaryArray(account.address);
-  auto address = Tools::Base58::encode_addr(0x1cf46e, Common::asString(binaryAddress));
-  auto mnemonicSeed = Mnemonics::PrivateKeyToMnemonic(account.spendSecretKey);
+  std::default_random_engine eng{};
+  std::uniform_int_distribution<CanonicalAmount::value_type> indexDist{0, 15};
+  std::uniform_int_distribution<CanonicalAmount::value_type> digitDist{1, 9};
+  for (size_t i = 0; i < 20000; ++i) {
+    values.push_back(pow64(10, indexDist(eng)) * digitDist(eng));
+  }
 
-  CryptoNote::JsonOutputStreamSerializer ser{};
-  XI_RETURN_EC_IF_NOT(ser(address, "address"), -1);
-  XI_RETURN_EC_IF_NOT(ser.beginObject("public_keys"), -1);
-  XI_RETURN_EC_IF_NOT(ser(account.address.viewPublicKey, "view_key"),-1);
-  XI_RETURN_EC_IF_NOT(ser(account.address.spendPublicKey, "spend_key"),-1);
-  XI_RETURN_EC_IF_NOT(ser.endObject(), -1);
-  XI_RETURN_EC_IF_NOT(ser.beginObject("secret_keys"), -1);
-  XI_RETURN_EC_IF_NOT(ser(account.viewSecretKey, "view_key"), -1);
-  XI_RETURN_EC_IF_NOT(ser(account.spendSecretKey, "spend_key"), -1);
-  XI_RETURN_EC_IF_NOT(ser.endObject(), -1);
-  XI_RETURN_EC_IF_NOT(ser(mnemonicSeed, "mnemonics"), -1);
-
-  std::cout << ser << std::endl;
-
-  return 0;
+  for (const auto i : values) {
+    Byte encode = 0xFF;
+    ASSERT_TRUE(CanonicalAmount::encode(i, encode));
+    CanonicalAmount::value_type decode = std::numeric_limits<CanonicalAmount::value_type>::max();
+    ASSERT_TRUE(CanonicalAmount::decode(encode, decode));
+    EXPECT_EQ(i, decode);
+  }
 }

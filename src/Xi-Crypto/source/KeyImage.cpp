@@ -94,10 +94,9 @@ std::ostream &operator<<(std::ostream &stream, const KeyImage &rhs) {
 }
 
 }  // namespace Crypto
+}  // namespace Xi
 
-bool Crypto::serialize(KeyImage &keyImage, Common::StringView name, CryptoNote::ISerializer &serializer) {
+bool Xi::Crypto::serialize(KeyImage &keyImage, Common::StringView name, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(keyImage.data(), KeyImage::bytes(), name), false);
   return true;
 }
-
-}  // namespace Xi

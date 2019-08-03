@@ -26,6 +26,7 @@
 #include <cinttypes>
 
 #include <Xi/Global.hh>
+#include <Xi/Byte.hh>
 #include <Xi/TypeSafe/Integral.hpp>
 #include <Serialization/ISerializer.h>
 
@@ -36,6 +37,9 @@ namespace Blockchain {
 namespace Transaction {
 
 struct CanonicalAmount : TypeSafe::EnableIntegralFromThis<uint64_t, CanonicalAmount> {
+  [[nodiscard]] static bool encode(value_type value, Byte& byte);
+  [[nodiscard]] static bool decode(Byte byte, value_type& value);
+
   using EnableIntegralFromThis::EnableIntegralFromThis;
 
   operator Amount() const;

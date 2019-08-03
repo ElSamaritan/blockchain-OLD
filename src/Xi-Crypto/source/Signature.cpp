@@ -90,10 +90,9 @@ std::ostream &operator<<(std::ostream &stream, const Signature &rhs) {
 }
 
 }  // namespace Crypto
+}  // namespace Xi
 
-bool Crypto::serialize(Signature &signature, Common::StringView name, CryptoNote::ISerializer &serializer) {
+bool Xi::Crypto::serialize(Signature &signature, Common::StringView name, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(signature.data(), Signature::bytes(), name), false);
   return true;
 }
-
-}  // namespace Xi

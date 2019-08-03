@@ -195,8 +195,8 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
       info.upgrade_heights.empty() ? CryptoNote::BlockHeight::fromIndex(0) : *info.upgrade_heights.rbegin();
   info.network = m_core.currency().network().type();
   info.synced = m_protocol.isSynchronized();
-  info.hashrate =
-      static_cast<uint32_t>(m_core.getDifficultyForNextBlock() * (2ULL << 31) / m_core.currency().coin().blockTime());
+  info.hashrate = static_cast<uint32_t>(round(m_core.getDifficultyForNextBlock() /
+                                              m_core.currency().coin().blockTime()));  // TODO Not a good approximation
   const uint32_t totalConnections = static_cast<uint32_t>(m_srv.get_connections_count());
   info.outgoing_connections_count = static_cast<uint32_t>(m_srv.get_outgoing_connections_count());
   info.incoming_connections_count = totalConnections - info.outgoing_connections_count;

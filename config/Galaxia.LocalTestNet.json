@@ -84,7 +84,9 @@
                     "rate_nominator": 1,
                     "rate_denominator": 10,
                     "features": [
-                        "uniform_unlock"
+                        "uniform_unlock",
+                        "global_index_offset",
+                        "static_ring_size"
                     ],
                     "extra_features": [
                         "public_key",
@@ -96,7 +98,10 @@
                     "max_size": 8192,
                     "min_input": 12,
                     "ratio_limit": 4,
-                    "features": null,
+                    "features": [
+                        "static_ring_size",
+                        "global_index_offset"
+                    ],
                     "extra_features": [
                         "public_key"
                     ]

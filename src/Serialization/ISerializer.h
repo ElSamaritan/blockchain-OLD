@@ -88,8 +88,8 @@ class ISerializer {
     return format() == Machinery;
   }
 
-  template <typename T, typename... _ArgsT>
-  [[nodiscard]] bool operator()(T& value, Common::StringView name, _ArgsT&&... args);
+  template <typename T>
+  [[nodiscard]] bool operator()(T& value, Common::StringView name);
 
   template <typename _T>
   [[nodiscard]] bool optional(bool expected, std::optional<_T>& value, Common::StringView name);
@@ -97,9 +97,9 @@ class ISerializer {
   [[nodiscard]] bool optional(bool expected, std::vector<_T>& value, Common::StringView name);
 };
 
-template <typename T, typename... _ArgsT>
-[[nodiscard]] bool ISerializer::operator()(T& value, Common::StringView name, _ArgsT&&... args) {
-  return serialize(value, name, *this, std::forward<_ArgsT>(args)...);
+template <typename T>
+[[nodiscard]] bool ISerializer::operator()(T& value, Common::StringView name) {
+  return serialize(value, name, *this);
 }
 
 template <typename T>
@@ -147,17 +147,17 @@ template <typename T>
   }
 }
 
-template <typename T, typename... _ArgsT>
-[[nodiscard]] bool serialize(T& value, Common::StringView name, ISerializer& serializer, _ArgsT&&... args) {
+template <typename T>
+[[nodiscard]] bool serialize(T& value, Common::StringView name, ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer.beginObject(name), false);
-  XI_RETURN_EC_IF_NOT(serialize(value, serializer, std::forward<_ArgsT>(args)...), false);
+  XI_RETURN_EC_IF_NOT(serialize(value, serializer), false);
   XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
   return true;
 }
 
-template <typename T, typename... _ArgsT>
-[[nodiscard]] bool serialize(T& value, ISerializer& serializer, _ArgsT&&... args) {
-  return value.serialize(serializer, std::forward<_ArgsT>(args)...);
+template <typename T>
+[[nodiscard]] bool serialize(T& value, ISerializer& serializer) {
+  return value.serialize(serializer);
 }
 
 struct Null {

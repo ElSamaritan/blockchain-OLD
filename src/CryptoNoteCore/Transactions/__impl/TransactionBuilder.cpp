@@ -167,10 +167,6 @@ void TransactionBuilder::finalizeInputs() {
     return;
   }
 
-  inputsPermutation = Xi::makePermutation(transaction.inputs.size());
-  Xi::sortPermutation(transaction.inputs.begin(), inputsPermutation);
-  Xi::applyPermutation(transaction.inputs.begin(), inputsPermutation);
-
   inputsFinalized = true;
 }
 
@@ -221,9 +217,8 @@ void TransactionBuilder::emplaceFeatures(const TransactionFeature enabled) {
   }
 }
 
-void TransactionBuilder::signInputKey(size_t originalIndex, const TransactionTypes::InputKeyInfo& info,
+void TransactionBuilder::signInputKey(size_t index, const TransactionTypes::InputKeyInfo& info,
                                       const KeyPair& ephKeys) {
-  const size_t index = inputsPermutation[originalIndex];
   const auto& input = std::get<KeyInput>(getInputChecked(transaction, index, TransactionTypes::InputType::Key));
   Hash prefixHash = getTransactionPrefixHash();
 

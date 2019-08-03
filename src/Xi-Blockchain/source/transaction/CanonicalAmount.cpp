@@ -33,6 +33,8 @@ namespace Xi {
 namespace Blockchain {
 namespace Transaction {
 
+namespace {
+
 // clang-format off
 const Byte IndexMask  = 0b11110000;
 const Byte DigitMask  = 0b00001111;
@@ -40,9 +42,9 @@ const Byte IndexShift = 4;
 const Byte DigitShift = 0;
 // clang-format on
 
-namespace {
+}  // namespace
 
-[[nodiscard]] bool decode(Byte byte, uint64_t &value) {
+[[nodiscard]] bool CanonicalAmount::decode(Byte byte, uint64_t &value) {
   XI_RETURN_EC_IF(byte == 0, false);
   uint8_t index = ((byte & IndexMask) >> IndexShift);
   uint8_t digit = ((byte & DigitMask) >> DigitShift);
@@ -52,7 +54,7 @@ namespace {
   XI_RETURN_SC(true);
 }
 
-[[nodiscard]] bool encode(uint64_t value, Byte &byte) {
+[[nodiscard]] bool CanonicalAmount::encode(uint64_t value, Byte &byte) {
   assert(CryptoNote::isCanonicalAmount(value));
   const auto index = CryptoNote::getCanoncialAmountDecimalPlace(value);
   XI_RETURN_EC_IF_NOT(index < 16, false);
@@ -66,9 +68,8 @@ namespace {
 
   XI_RETURN_SC(true);
 }
-}  // namespace
 
-Xi::Blockchain::Transaction::CanonicalAmount::operator Amount() const {
+CanonicalAmount::operator Amount() const {
   return native();
 }
 
@@ -82,13 +83,13 @@ bool serialize(CanonicalAmount &value, Common::StringView name, CryptoNote::ISer
   } else if (serializer.isMachinery()) {
     Byte encoded = 0;
     if (serializer.isOutput()) {
-      XI_RETURN_EC_IF_NOT(encode(value.native(), encoded), false);
+      XI_RETURN_EC_IF_NOT(CanonicalAmount::encode(value.native(), encoded), false);
     }
 
     XI_RETURN_EC_IF_NOT(serializer.binary(std::addressof(encoded), 1, name), false);
 
     if (serializer.isInput()) {
-      XI_RETURN_EC_IF_NOT(decode(encoded, value.value), false);
+      XI_RETURN_EC_IF_NOT(CanonicalAmount::decode(encoded, value.value), false);
     }
   } else {
     XI_RETURN_EC(false);

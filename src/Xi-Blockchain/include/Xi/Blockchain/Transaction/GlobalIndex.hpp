@@ -38,8 +38,8 @@ using GlobalIndexVector = std::vector<GlobalIndex>;
 using GlobalDeltaIndex = uint32_t;
 using GlobalDeltaIndexVector = std::vector<GlobalDeltaIndex>;
 
-[[nodiscard]] bool deltaEncodeGlobalIndices(const GlobalIndexVector& input, GlobalDeltaIndexVector& out);
-[[nodiscard]] bool deltaDecodeGlobalIndices(const GlobalDeltaIndexVector& input, GlobalIndexVector& out,
+[[nodiscard]] bool deltaEncodeGlobalIndices(GlobalIndexVector input, GlobalDeltaIndexVector& out);
+[[nodiscard]] bool deltaDecodeGlobalIndices(GlobalDeltaIndexVector input, GlobalIndexVector& out,
                                             const GlobalIndex offset = 0);
 
 }  // namespace Transaction

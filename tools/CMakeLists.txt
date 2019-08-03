@@ -16,9 +16,12 @@ foreach(xiTool ${XI_TOOLS_SOURCE_FILES})
           Rpc
           Serialization
           System
+          Crypto
           rocksdb
           lz4
           boost
+
+          ${XI_CANONICAL_LIBRARIES}
       )
 endforeach() # xiTool
 

@@ -22,5 +22,5 @@ MinFusionThreshold: 1000
 MaxFusionThreshold: 100000
 FusionPropability: 20
 
-TransactionsPerMinute: 20
+TransactionsPerMinute: 100
 ResetOnStart: false

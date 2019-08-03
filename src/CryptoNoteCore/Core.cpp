@@ -1292,6 +1292,9 @@ bool Core::getRandomOutputs(uint64_t amount, uint16_t count, std::vector<uint32_
     case ExtractOutputKeysResult::OUTPUT_LOCKED:
       logger(Logging::Debugging) << "Output is locked";
       return false;
+    case ExtractOutputKeysResult::INVALID_TYPE:
+      logger(Logging::Debugging) << "Output is not a key output";
+      return false;
   }
 
   return false;

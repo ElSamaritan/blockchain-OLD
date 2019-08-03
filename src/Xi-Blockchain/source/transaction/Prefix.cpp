@@ -138,7 +138,9 @@ bool Prefix::serializeTransfer(CryptoNote::ISerializer &serializer) {
   }
   XI_RETURN_EC_IF(inputs.empty(), false);
   for (auto &input : inputs) {
-    XI_RETURN_EC_IF_NOT(serializer(std::get<AmountInput>(input), "", staticRingSize), false);
+    XI_RETURN_EC_IF_NOT(serializer.beginObject(""), false);
+    XI_RETURN_EC_IF_NOT(std::get<AmountInput>(input).serialize(serializer, staticRingSize), false);
+    XI_RETURN_EC_IF_NOT(serializer.endObject(), false);
   }
   XI_RETURN_EC_IF_NOT(serializer.endArray(), false);
   return serializeOutputs(serializer);

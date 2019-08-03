@@ -101,10 +101,9 @@ std::ostream &operator<<(std::ostream &stream, const SecretKey &rhs) {
 }
 
 }  // namespace Crypto
+}  // namespace Xi
 
-bool Crypto::serialize(SecretKey &secretKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
+bool Xi::Crypto::serialize(SecretKey &secretKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(secretKey.data(), SecretKey::bytes(), name), false);
   return true;
 }
-
-}  // namespace Xi

@@ -140,12 +140,11 @@ void FastHash::nullify() {
 
 }  // namespace Crypto
 
-bool Crypto::serialize(FastHash &hash, Common::StringView name, CryptoNote::ISerializer &serializer) {
-  return serializer.binary(hash.data(), FastHash::bytes(), name);
-}
-
 std::ostream &Crypto::operator<<(std::ostream &stream, const Xi::Crypto::FastHash &hash) {
   return stream << hash.toString();
 }
-
 }  // namespace Xi
+
+bool Xi::Crypto::serialize(FastHash &hash, Common::StringView name, CryptoNote::ISerializer &serializer) {
+  return serializer.binary(hash.data(), FastHash::bytes(), name);
+}

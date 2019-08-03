@@ -89,10 +89,9 @@ void PublicKey::nullify() {
 std::ostream &Crypto::operator<<(std::ostream &stream, const Crypto::PublicKey &key) {
   return stream << key.toString();
 }
+}  // namespace Xi
 
-bool Crypto::serialize(PublicKey &publicKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
+bool Xi::Crypto::serialize(PublicKey &publicKey, Common::StringView name, CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(publicKey.data(), PublicKey::bytes(), name), false);
   XI_RETURN_SC(true);
 }
-
-}  // namespace Xi

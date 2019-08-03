@@ -95,11 +95,10 @@ std::ostream &operator<<(std::ostream &stream, const KeyDerivation &rhs) {
 }
 
 }  // namespace Crypto
+}  // namespace Xi
 
-bool Crypto::serialize(Crypto::KeyDerivation &keyDerivation, Common::StringView name,
-                       CryptoNote::ISerializer &serializer) {
+bool Xi::Crypto::serialize(Crypto::KeyDerivation &keyDerivation, Common::StringView name,
+                           CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer.binary(keyDerivation.data(), KeyDerivation::bytes(), name), false);
   return true;
 }
-
-}  // namespace Xi

@@ -51,23 +51,6 @@ namespace {
 bool checkPaymentId(const std::string& paymentId) { return !CryptoNote::PaymentId::fromString(paymentId).isError(); }
 bool checkPaymentId(const CryptoNote::PaymentId& paymentId) { return paymentId.isValid(); }
 
-CryptoNote::PaymentId parsePaymentId(const std::string& paymentIdStr) {
-  if (!checkPaymentId(paymentIdStr)) {
-    throw std::system_error(make_error_code(CryptoNote::error::WalletServiceErrorCode::WRONG_PAYMENT_ID_FORMAT));
-  }
-  return CryptoNote::PaymentId::fromString(paymentIdStr).takeOrThrow();
-}
-
-std::string getPaymentIdStringFromExtra(const CryptoNote::TransactionExtra& extra) {
-  CryptoNote::PaymentId paymentId;
-
-  if (!extra.paymentId) {
-    return std::string{};
-  } else {
-    return extra.paymentId->toString();
-  }
-}
-
 }  // namespace
 
 struct TransactionsInBlockInfoFilter {
@@ -281,15 +264,6 @@ std::tuple<std::string, CryptoNote::PaymentId> decodeIntegratedAddress(const std
   validateAddresses({address}, currency, logger);
 
   return std::make_tuple(address, CryptoNote::PaymentId::fromString(paymentID).takeOrThrow());
-}
-
-std::string getValidatedTransactionExtraString(const std::string& extraString) {
-  std::vector<uint8_t> binary;
-  if (!Common::fromHex(extraString, binary)) {
-    throw std::system_error(make_error_code(CryptoNote::error::BAD_TRANSACTION_EXTRA));
-  }
-
-  return Common::asString(binary);
 }
 
 std::vector<std::string> collectDestinationAddresses(const std::vector<PaymentService::WalletRpcOrder>& orders) {

@@ -387,6 +387,11 @@ void Xi::App::Application::setUp() {
   initializeLogger();
 }
 
+#define XI_APP_RESET_IF(MEMBER) \
+  if (MEMBER) {                 \
+    MEMBER.reset(nullptr);      \
+  }
+
 void Xi::App::Application::tearDown() {
   if (m_node) {
     if (!m_node->deinit()) {
@@ -414,9 +419,20 @@ void Xi::App::Application::tearDown() {
       (*m_ologger)(Logging::Fatal) << "Core routine save procedure failed.";
     }
   }
-  if (m_database)
+  if (m_database) {
     m_database->shutdown();
+  }
+
+  XI_APP_RESET_IF(m_node)
+  if (m_rpcServer) {
+    m_rpcServer = nullptr;
+  }
+  XI_APP_RESET_IF(m_remoteNode)
+  XI_APP_RESET_IF(m_core)
+  XI_APP_RESET_IF(m_database)
 }
+
+#undef XI_APP_RESET_IF
 
 void Xi::App::Application::useLogging(Logging::Level defaultLevel) {
   if (m_logOptions.get() == nullptr) {

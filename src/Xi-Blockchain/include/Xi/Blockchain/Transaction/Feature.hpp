@@ -45,8 +45,10 @@ XI_SERIALIZATION_FLAG(Feature)
 }  // namespace Blockchain
 }  // namespace Xi
 
-XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Transaction::Feature, UniformUnlock, UniformUnlock)
+XI_SERIALIZATION_FLAG_RANGE(Xi::Blockchain::Transaction::Feature, UniformUnlock, StaticRingSize)
 XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::Feature, UniformUnlock, "uniform_unlock")
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::Feature, GlobalIndexOffset, "global_index_offset")
+XI_SERIALIZATION_FLAG_TAG(Xi::Blockchain::Transaction::Feature, StaticRingSize, "static_ring_size")
 
 namespace CryptoNote {
 using TransactionFeature = Xi::Blockchain::Transaction::Feature;

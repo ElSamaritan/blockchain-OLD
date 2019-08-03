@@ -108,7 +108,6 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
   XI_RETURN_EC_IF_NOT(context.currency.isTransactionVersionSupported(context.blockVersion, tx.version),
                       Error::INVALID_VERSION);
 
-  CanonicalAmount previousOutputAmount{0};
   XI_RETURN_EC_IF(tx.outputs.empty(), Error::EMPTY_OUTPUTS);
   for (const auto &anyOutput : tx.outputs) {
     XI_RETURN_EC_IF_NOT(std::holds_alternative<TransactionAmountOutput>(anyOutput), Error::OUTPUT_UNKNOWN_TYPE);
@@ -123,8 +122,6 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
     if (Xi::hasAdditionOverflow(out.outputSum, output.amount.native(), &out.outputSum)) {
       XI_RETURN_EC(Error::OUTPUTS_AMOUNT_OVERFLOW);
     }
-    XI_RETURN_EC_IF(previousOutputAmount > output.amount, Error::OUTPUTS_NOT_SORTED);
-    previousOutputAmount = output.amount;
   }
   XI_RETURN_EC_IF(out.outputSum == 0, Error::OUTPUT_ZERO);
 
@@ -137,7 +134,6 @@ std::error_code CryptoNote::preValidateTransfer(const CryptoNote::CachedTransact
                       Error::INVALID_SIGNATURE_TYPE);
   const auto &signatures = std::get<TransactionSignatureCollection>(*tx.signatures);
   cache.globalIndicesForInput.reserve(tx.inputs.size());
-  XI_RETURN_EC_IF_NOT(std::is_sorted(tx.inputs.begin(), tx.inputs.end()), Error::INPUTS_NOT_SORTED);
   XI_RETURN_EC_IF_NOT(tx.inputs.size() == signatures.size(), Error::INPUT_INVALID_SIGNATURES_COUNT);
   for (size_t i = 0; i < tx.inputs.size(); ++i) {
     const auto &input = tx.inputs[i];
