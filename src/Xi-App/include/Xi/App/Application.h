@@ -72,7 +72,7 @@ class Application {
   static std::unique_ptr<Application> makeInstance();
 
  public:
-  virtual ~Application() = default;
+  virtual ~Application();
 
   int exec(int argc, char** argv);
 

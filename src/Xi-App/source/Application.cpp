@@ -78,6 +78,22 @@ Xi::App::Application::Application(std::string _name, std::string _description)
   m_ologger = std::make_unique<Logging::LoggerRef>(*m_logger, "App");
 }
 
+#define XI_APP_REMOVE_LOGGER(MEMBER) \
+  if (MEMBER) {                      \
+    m_logger->removeLogger(*MEMBER); \
+    MEMBER.reset(nullptr);           \
+  }
+
+Xi::App::Application::~Application() {
+  XI_APP_REMOVE_LOGGER(m_consoleLogger)
+  XI_APP_REMOVE_LOGGER(m_fileLogger)
+  XI_APP_REMOVE_LOGGER(m_discordLogger)
+  m_ologger.reset(nullptr);
+  m_logger.reset(nullptr);
+}
+
+#undef XI_APP_REMOVE_LOGGER
+
 int Xi::App::Application::exec(int argc, char **argv) {
 #if defined(_WIN32) && defined(NDEBUG)
   SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
