@@ -22,7 +22,9 @@
 
         "block_time": 10,
         "reward_unlock_time": 100,
-        "emission_speed": 25,
+        "emission_speed": 21,
+        "initial_emission_speed": 23,
+        "turning_point": 100,
 
         "start_timestamp": 1563538772,
         "genesis_transaction": "0101010a010a265b7ac379a6e994e8f36a5153bb5682cfa8c3f9404ebee35e564ed221a9ed0102b1a0c0b570fe8855a2e1e84343c220178828927c41fc390549aa8ee40d2121631bc1adb686e87b5bc87e2234ce08d16432ae8badb544ce84edc161519bb40611b4f2"
@@ -46,7 +48,7 @@
                 "window_size": 128,
                 "zone": 262144,
                 "cut_off": 4,
-                "reserved_size": 300,
+                "reserved_size": 600,
                 "features": [
                     "uniform_unlock"
                 ],

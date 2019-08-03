@@ -109,7 +109,9 @@ class Currency {
   const BlockTemplate& genesisBlock() const;
   const Crypto::Hash& genesisBlockHash() const;
 
-  bool getBlockReward(BlockVersion blockVersion, size_t medianSize, size_t currentBlockSize,
+  bool getBlockBaseReward(uint32_t blockIndex, BlockVersion blockVersion, uint64_t circulating, uint64_t& reward) const;
+
+  bool getBlockReward(uint32_t blockIndex, BlockVersion blockVersion, size_t medianSize, size_t currentBlockSize,
                       uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward, int64_t& emissionChange) const;
 
   bool constructMinerTx(BlockVersion blockVersion, uint32_t height, size_t medianSize, uint64_t alreadyGeneratedCoins,

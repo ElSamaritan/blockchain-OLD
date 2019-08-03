@@ -60,7 +60,10 @@ class Configuration {
 
   XI_PROPERTY(uint16_t, blockTime)
   XI_PROPERTY(uint32_t, rewardUnlockTime)
+
+  XI_PROPERTY(uint32_t, initialEmissionSpeed)
   XI_PROPERTY(uint32_t, emissionSpeed)
+  XI_PROPERTY(uint32_t, turningPoint)
 
   XI_PROPERTY(uint64_t, startTimestamp)
   XI_PROPERTY(std::string, genesisTransaction)
@@ -78,6 +81,9 @@ class Configuration {
   KV_MEMBER_RENAME(rewardUnlockTime(), reward_unlock_time)
   KV_MEMBER_RENAME(emissionSpeed(), emission_speed)
   XI_RETURN_EC_IF_NOT(emissionSpeed() <= 8 * sizeof(uint64_t), false);
+  KV_MEMBER_RENAME(initialEmissionSpeed(), initial_emission_speed)
+  XI_RETURN_EC_IF_NOT(initialEmissionSpeed() <= 8 * sizeof(uint64_t), false);
+  KV_MEMBER_RENAME(turningPoint(), turning_point)
 
   KV_MEMBER_RENAME(startTimestamp(), start_timestamp)
   KV_MEMBER_RENAME(genesisTransaction(), genesis_transaction)

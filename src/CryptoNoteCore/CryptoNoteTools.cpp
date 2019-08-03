@@ -22,6 +22,7 @@
 #include <utility>
 #include <limits>
 #include <algorithm>
+#include <numeric>
 #include <iterator>
 
 #include <Xi/Algorithm/Math.h>
@@ -148,10 +149,19 @@ uint64_t CryptoNote::cutDigitsFromAmount(uint64_t amount, const size_t count) {
   if (count == 0) {
     return amount;
   } else if (count >= std::numeric_limits<uint64_t>::digits10) {
-    return 0;
+    return amount;
   } else {
-    uint64_t decimal = Xi::pow64(10, count);
-    return amount - (amount % decimal);
+    std::vector<Amount> canoncialAmounts{};
+    decomposeAmount(amount, canoncialAmounts);
+    if (canoncialAmounts.size() <= count) {
+      return amount;
+    } else {
+      std::sort(canoncialAmounts.begin(), canoncialAmounts.end(), std::greater<Amount>{});
+      canoncialAmounts.erase(
+          std::next(canoncialAmounts.begin(), static_cast<std::vector<Amount>::difference_type>(count)),
+          canoncialAmounts.end());
+      return std::accumulate(canoncialAmounts.begin(), canoncialAmounts.end(), 0ULL);
+    }
   }
 }
 

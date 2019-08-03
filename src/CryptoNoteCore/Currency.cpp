@@ -353,13 +353,41 @@ const Crypto::Hash& Currency::genesisBlockHash() const {
   return m_cachedGenesisBlock->getBlockHash();
 }
 
-bool Currency::getBlockReward(BlockVersion blockVersion, size_t medianSize, size_t currentBlockSize,
-                              uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward,
+bool Currency::getBlockBaseReward(uint32_t blockIndex, BlockVersion blockVersion, uint64_t circulating,
+                                  uint64_t& reward) const {
+  reward = 0;
+  const auto supply = coin().totalSupply();
+  XI_RETURN_SC_IF(circulating >= supply, true);
+  const auto turningPoint = coin().turningPoint();
+
+  uint64_t normalBaseReward = (coin().totalSupply() - circulating) >> coin().emissionSpeed();
+
+  if (blockIndex < turningPoint) {
+    uint64_t initialBaseReward = (coin().totalSupply() - circulating) >> coin().initialEmissionSpeed();
+    uint64_t initialPortion = ((turningPoint - blockIndex) * initialBaseReward);
+    uint64_t normalPortion = blockIndex * normalBaseReward;
+    reward = (initialPortion + normalPortion) / turningPoint;
+  } else {
+    reward = normalBaseReward;
+  }
+
+  uint64_t cutted = cutDigitsFromAmount(reward, rewardCutOffByBlockVersion(blockVersion));
+  if (supply - circulating < cutted) {
+    reward = supply - circulating;
+  } else {
+    reward = cutted;
+  }
+  XI_RETURN_SC(true);
+}
+
+bool Currency::getBlockReward(uint32_t blockIndex, BlockVersion blockVersion, size_t medianSize,
+                              size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward,
                               int64_t& emissionChange) const {
   assert(alreadyGeneratedCoins <= coin().totalSupply());
   assert(coin().emissionSpeed() > 0 && coin().emissionSpeed() <= 8 * sizeof(uint64_t));
 
-  uint64_t baseReward = (coin().totalSupply() - alreadyGeneratedCoins) >> coin().emissionSpeed();
+  uint64_t baseReward = 0;
+  XI_RETURN_EC_IF_NOT(getBlockBaseReward(blockIndex, blockVersion, alreadyGeneratedCoins, baseReward), false);
   if (alreadyGeneratedCoins == 0 && coin().premine() != 0) {
     XI_RETURN_EC_IF_NOT(blockVersion == BlockVersion::Genesis, false);
     baseReward = coin().premine();
@@ -375,12 +403,13 @@ bool Currency::getBlockReward(BlockVersion blockVersion, size_t medianSize, size
   }
 
   const uint64_t penalizedBaseReward = getPenalizedAmount(baseReward, medianSize, currentBlockSize);
+  XI_RETURN_EC_IF(penalizedBaseReward > baseReward, false);
   const uint64_t penalizedFee = getPenalizedAmount(fee, medianSize, currentBlockSize);
+  XI_RETURN_EC_IF(penalizedFee > fee, false);
   const uint64_t staticReward = staticRewardAmountForBlockVersion(blockVersion);
-  const uint64_t cuttedReward = cutDigitsFromAmount(penalizedBaseReward, rewardCutOffByBlockVersion(blockVersion));
 
-  emissionChange = cuttedReward + staticReward - (fee - penalizedFee);
-  reward = cuttedReward + penalizedFee;
+  emissionChange = penalizedBaseReward + staticReward;
+  reward = penalizedBaseReward + penalizedFee;
 
   return true;
 }
@@ -399,7 +428,7 @@ bool Currency::constructMinerTx(BlockVersion blockVersion, uint32_t index, size_
 
   uint64_t blockReward;
   int64_t emissionChange;
-  if (!getBlockReward(blockVersion, medianSize, currentBlockSize, alreadyGeneratedCoins, fee, blockReward,
+  if (!getBlockReward(index, blockVersion, medianSize, currentBlockSize, alreadyGeneratedCoins, fee, blockReward,
                       emissionChange)) {
     logger(Info) << "Block is too big";
     return false;

@@ -23,6 +23,8 @@
         "block_time": 5,
         "reward_unlock_time": 0,
         "emission_speed": 21,
+        "initial_emission_speed": 24,
+        "turning_point": 100,
 
         "start_timestamp": 1558439939,
         "genesis_transaction": "0100010101026401bff6a12251ff1c5c07897b8da69c9a9b7e4cf5bc7e16182537f9d65e39ac948ee80701a24cb3af9ac5a94089f00b88977c40a19d897e1a727b92e5a2218251de6ac2722101054b6ce54ed7664a4621d735099a742a46df73cc905d605c14fd60178614843b"
@@ -46,7 +48,13 @@
             "window_size": 128,
             "zone": 134217728,
             "cut_off": 4,
-            "reserved_size": 600
+            "reserved_size": 600,
+            "features": [
+                "uniform_unlock"
+            ],
+            "extra_features": [
+                "public_key"
+            ]
         },
 
         "merge_mining": {
@@ -74,13 +82,23 @@
                 "min_fee": 1000,
                 "free_buckets": 2,
                 "rate_nominator": 1,
-                "rate_denominator": 10
+                "rate_denominator": 10,
+                "features": [
+                    "uniform_unlock"
+                ],
+                "extra_features": [
+                    "public_key",
+                    "payment_id"
+                ]
             },
 
             "fusion": {
                 "max_size": 33554432,
                 "min_input": 12,
-                "ratio_limit": 4
+                "ratio_limit": 4,
+                "extra_features": [
+                    "public_key"
+                ]
             },
 
             "mixin": {

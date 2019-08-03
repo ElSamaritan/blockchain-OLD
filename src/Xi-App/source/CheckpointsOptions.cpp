@@ -51,7 +51,8 @@ void Xi::App::CheckpointsOptions::emplaceOptions(cxxopts::Options &options) {
         cxxopts::value<bool>(UseCheckpoints)->default_value(UseCheckpoints ? "true" : "false")
                                             ->implicit_value("false"))
 
-      ("checkpoints-import", "imports additional checkpoints from a csv file", cxxopts::value<std::string>(CheckpointsFile))
+      ("checkpoints-import", "imports additional checkpoints from a csv file",
+        cxxopts::value<std::string>(CheckpointsFile)->default_value(CheckpointsFile))
   ;
   // clang-format on
 }
