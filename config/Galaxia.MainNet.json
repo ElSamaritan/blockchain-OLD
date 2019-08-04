@@ -1,0 +1,137 @@
+{
+    "general": {
+        "homepage": "https://galaixia-project.com",
+        "description": "An evolving framework for blockchain-based applications.",
+        "copyright": "(c) 2018-2019 Xi Project Developers",
+        "contact_url": "https://chat.galaxia-project.com",
+        "license_url": "https://gitlab.com/galaxia-project/blockchain/blob/develop/LICENSE",
+        "download_url": "https://releases.galaxia-project.com"
+    },
+
+    "coin": {
+        "name": "Galaxia",
+        "ticker": "GLX",
+        "prefix": {
+            "text": "gxi",
+            "base58": 1897582
+        },
+
+        "decimals": 6,
+        "total_supply": 55000000000000,
+        "premine": 1100000000000,
+
+        "block_time": 60,
+        "reward_unlock_time": 600,
+        "emission_speed": 19,
+        "initial_emission_speed": 23,
+        "turning_point": 10000000,
+
+        "start_timestamp": 1564920900,
+        "genesis_transaction": "0101010a01bfa61273b38766f499f22d9f6ab57992f5d2ff55fdd14de76bd686b4e016abd10102b1a6ae0d76bbc28cddacd133e52d7917fca7568db4ed13937ab9490a674847349ac1c2dd2e2796cbe869f8b5b51950a8a274161913ada208a6f855a811f45ab62bcf"
+    },
+
+    "network": {
+        "type": "main",
+        "identifier": "5397b3a8bcc2753dd9f70ba88d6b693c",
+        "seeds": [
+            "207.180.228.241:40000",
+            "207.180.224.162:40000"
+        ],
+
+        "p2p_port": 22868,
+        "rpc_port": 22869,
+        "pgservice_port": 38070
+    },
+
+    "upgrades": [{
+            "height": 1,
+            "fork": false,
+
+            "miner_reward": {
+                "window_size": 128,
+                "zone": 131072,
+                "cut_off": 4,
+                "reserved_size": 600,
+                "features": [
+                    "uniform_unlock"
+                ],
+                "extra_features": [
+                    "public_key"
+                ]
+            },
+
+            "merge_mining": null,
+
+            "static_reward": {
+                "amount": 500000,
+                "address": "gxi1YQRCv996iUCodGoZioYvxBrcjSK9s5pZNFvFoKTwgKBAkdtCGXFEJ6Z5tUe284LNGwfyRSDFhMQp4JUMzLRd17RC5PgFc7"
+            },
+
+            "time": {
+                "window_size": 1024,
+                "future_limit": 300
+            },
+
+            "transaction": {
+                "future_unlock_limit": 15768000,
+                "supported_versions": [
+                    1
+                ],
+
+                "transfer": {
+                    "max_size": 32768,
+                    "min_fee": 10000,
+                    "free_buckets": 2,
+                    "rate_nominator": 5,
+                    "rate_denominator": 10,
+                    "features": [
+                        "uniform_unlock",
+                        "global_index_offset",
+                        "static_ring_size"
+                    ],
+                    "extra_features": [
+                        "public_key",
+                        "payment_id"
+                    ]
+                },
+
+                "fusion": {
+                    "max_size": 16384,
+                    "min_input": 24,
+                    "ratio_limit": 6,
+                    "features": [
+                        "static_ring_size",
+                        "global_index_offset"
+                    ],
+                    "extra_features": [
+                        "public_key"
+                    ]
+                },
+
+                "mixin": {
+                    "min": 2,
+                    "max": 4,
+                    "upgrade_size": 100
+                }
+            },
+
+            "difficulty": {
+                "algorithm": "LWMA-v1",
+                "window_size": 90,
+                "initial": 20000,
+                "proof_of_work": "CNX-v1"
+            },
+
+            "limit": {
+                "maximum": 1048576,
+                "initial": 524288,
+                "window_size": 1440,
+                "increase_rate": 256
+            }
+        },
+        {
+            "height": 2,
+            "fork": false
+        }
+    ]
+}

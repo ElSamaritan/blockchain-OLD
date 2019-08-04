@@ -525,7 +525,7 @@ void Xi::App::Application::useSslClient() {
 
 void Xi::App::Application::initializeLogger() {
   if (m_logOptions) {
-    m_logger->setMaxLevel(m_logOptions->DefaultLogLevel);
+    m_logger->setMaxLevel(Logging::Trace);
     m_consoleLogger = std::make_unique<Logging::ConsoleLogger>(m_logOptions->ConsoleLogLevel.value_or(Logging::Trace));
     m_logger->addLogger(*m_consoleLogger);
     auto fileLogLevel = m_logOptions->FileLogLevel.value_or(Logging::Trace);
