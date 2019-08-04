@@ -2425,7 +2425,7 @@ std::optional<BlockDetails> Core::getBlockDetails(const Crypto::Hash& blockHash)
 
   uint64_t blockBlobSize = segment->getCurrentBlockSize(blockIndex);
   uint64_t coinbaseTransactionSize = blockTemplate.baseTransaction.binarySize();
-  blockDetails.blockSize = blockBlobSize + blockDetails.transactionsCumulativeSize - coinbaseTransactionSize;
+  blockDetails.blockSize = blockBlobSize + coinbaseTransactionSize;
 
   blockDetails.alreadyGeneratedCoins = segment->getAlreadyGeneratedCoins(blockIndex);
   blockDetails.alreadyGeneratedTransactions = segment->getAlreadyGeneratedTransactions(blockIndex);
