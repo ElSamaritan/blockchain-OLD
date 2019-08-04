@@ -25,6 +25,10 @@
 
 #include <Xi/Global.hh>
 
+Xi::Http::ServerLimitsConfiguration Xi::Http::RequestHandler::limits() const {
+  return ServerLimitsConfiguration{/* */};
+}
+
 Xi::Http::Response Xi::Http::RequestHandler::operator()(const Xi::Http::Request &request) {
   try {
     auto response = doHandleRequest(request);

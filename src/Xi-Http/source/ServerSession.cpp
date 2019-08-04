@@ -45,7 +45,7 @@ void Xi::Http::ServerSession::run() {
 }
 
 Xi::Http::ServerLimitsConfiguration Xi::Http::ServerSession::limits() const {
-  return ServerLimitsConfiguration{};
+  return m_handler->limits();
 }
 
 void Xi::Http::ServerSession::readRequest() {

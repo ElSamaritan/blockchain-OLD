@@ -39,9 +39,9 @@ class ServerLimitsConfiguration {
   /// Timeout once reached while writing response connection is killed.
   XI_PROPERTY(std::chrono::seconds, writeTimeout, std::chrono::seconds{20})
   /// Max bytes read per second.
-  XI_PROPERTY(size_t, readLimit, 16 * 1024)
+  XI_PROPERTY(size_t, readLimit, 256 * 1024)
   /// Max bytes written per second.
-  XI_PROPERTY(size_t, writeLimit, 128 * 1024)
+  XI_PROPERTY(size_t, writeLimit, 2 * 1024 * 1024)
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER_RENAME(readTimeout(), read_timeout)

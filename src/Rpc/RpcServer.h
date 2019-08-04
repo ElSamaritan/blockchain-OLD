@@ -13,6 +13,7 @@
 #include <string>
 
 #include <Xi/Concurrent/RecursiveLock.h>
+#include <Xi/Concurrent/ReadersWriterLock.h>
 #include <Xi/TypeSafe/Flag.hpp>
 #include <Xi/Crypto/PasswordContainer.h>
 #include <Xi/Concurrent/ReadersWriterLock.h>
@@ -75,6 +76,9 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
                                   COMMAND_RPC_GET_BLOCK_HEADERS_RANGE::response& res,
                                   JsonRpc::JsonRpcError& error_resp);
   bool on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RPC_GET_INFO::response& res);
+
+  void limits(Xi::Http::ServerLimitsConfiguration serverLimits);
+  Xi::Http::ServerLimitsConfiguration limits() const override;
 
  private:
   const Currency& currency() const;
@@ -198,6 +202,9 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   std::shared_ptr<Xi::Blockchain::Explorer::IExplorer> m_explorer;
   std::shared_ptr<Xi::Blockchain::Services::BlockExplorer::BlockExplorer> m_explorerService;
   std::shared_ptr<Xi::Rpc::JsonProviderEndpoint> m_explorerEndpoint;
+
+  Xi::Http::ServerLimitsConfiguration m_limits{/* */};
+  Xi::Concurrent::ReadersWriterLock m_limitsGuard{/* */};
 };
 
 }  // namespace CryptoNote

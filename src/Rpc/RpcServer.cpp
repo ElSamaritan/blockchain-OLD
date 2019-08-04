@@ -734,6 +734,16 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   return true;
 }
 
+void RpcServer::limits(Xi::Http::ServerLimitsConfiguration serverLimits) {
+  XI_CONCURRENT_LOCK_WRITE(m_limitsGuard);
+  m_limits = serverLimits;
+}
+
+Xi::Http::ServerLimitsConfiguration RpcServer::limits() const {
+  XI_CONCURRENT_LOCK_READ(m_limitsGuard);
+  return m_limits;
+}
+
 const Currency& RpcServer::currency() const {
   return m_core.currency();
 }

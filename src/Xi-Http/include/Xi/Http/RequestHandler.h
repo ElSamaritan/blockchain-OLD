@@ -27,6 +27,7 @@
 
 #include "Xi/Http/Request.h"
 #include "Xi/Http/Response.h"
+#include "Xi/Http/ServerLimitsConfiguration.h"
 
 namespace Xi {
 namespace Http {
@@ -40,6 +41,12 @@ class RequestHandler {
  public:
   RequestHandler() = default;
   virtual ~RequestHandler() = default;
+
+  /*!
+   * \brief limits Enables the request handle to setup server limits for a connection.
+   * \return The connection limits to apply.
+   */
+  virtual ServerLimitsConfiguration limits() const;
 
   /*!
    * \brief operator () is called for a request to handle
