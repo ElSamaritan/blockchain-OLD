@@ -56,6 +56,7 @@ struct Header {
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
 
   Hash headerHash() const;
+
   Hash proofOfWorkPrefix() const;
   Hash proofOfWorkHash(const Hash& transactionTreeHash) const;
 

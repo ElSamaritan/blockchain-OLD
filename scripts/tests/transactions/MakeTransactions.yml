@@ -12,8 +12,8 @@ Wallets:
   #   Port: 38073
   #   Password: passwd
 
-MinimumFee: 1000
-MaximumFee: 1000
+MinimumFee: 10000
+MaximumFee: 10000
 
 MinimumAmount: 1000000
 MaximumAmount: 10000000

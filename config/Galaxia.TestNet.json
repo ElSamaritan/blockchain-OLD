@@ -1,0 +1,134 @@
+{
+    "general": {
+        "homepage": "https://galaixia-project.com",
+        "description": "An evolving framework for blockchain-based applications.",
+        "copyright": "(c) 2018-2019 Xi Project Developers",
+        "contact_url": "https://chat.galaxia-project.com",
+        "license_url": "https://gitlab.com/galaxia-project/blockchain/blob/develop/LICENSE",
+        "download_url": "https://releases.galaxia-project.com"
+    },
+
+    "coin": {
+        "name": "Galaxia",
+        "ticker": "GLX",
+        "prefix": {
+            "text": "gxi",
+            "base58": 1897582
+        },
+
+        "decimals": 6,
+        "total_supply": 55000000000000,
+        "premine": 1100000000000,
+
+        "block_time": 60,
+        "reward_unlock_time": 600,
+        "emission_speed": 21,
+        "initial_emission_speed": 22,
+        "turning_point": 1000000,
+
+        "start_timestamp": 1564875566,
+        "genesis_transaction": "0101010a0181dc8b71c0ac04f5561659ca268c0ceab439ea070694bf8a48efeab1d5c2757a0102b13a2113ccc718a837624db488bb8f71bd781ab09d79f4d6114f584eff528afb68c1ce05fe2fd207a06c3b36964227498d2edfd197098dfa71ff86876fff06356588"
+    },
+
+    "network": {
+        "type": "testing",
+        "identifier": "4ba3143cd6742b8a4ea145d59270483d",
+        "seeds": [],
+
+        "p2p_port": 22868,
+        "rpc_port": 22869,
+        "pgservice_port": 38070
+    },
+
+    "upgrades": [{
+            "height": 1,
+            "fork": false,
+
+            "miner_reward": {
+                "window_size": 64,
+                "zone": 262144,
+                "cut_off": 4,
+                "reserved_size": 600,
+                "features": [
+                    "uniform_unlock"
+                ],
+                "extra_features": [
+                    "public_key"
+                ]
+            },
+
+            "merge_mining": null,
+
+            "static_reward": {
+                "amount": 2000000,
+                "address": "gxi1RRky7fA4fLacKX2qc3SUzhHaACyge2V8T9xNa1MrWpX1kfQzzMRPqGSEDibDmJRjgz1YrCdamMsbkT1TgvD34uLZMhgwhG"
+            },
+
+            "time": {
+                "window_size": 1024,
+                "future_limit": 300
+            },
+
+            "transaction": {
+                "future_unlock_limit": 15768000,
+                "supported_versions": [
+                    1
+                ],
+
+                "transfer": {
+                    "max_size": 32768,
+                    "min_fee": 10000,
+                    "free_buckets": 2,
+                    "rate_nominator": 1,
+                    "rate_denominator": 2,
+                    "features": [
+                        "uniform_unlock",
+                        "global_index_offset",
+                        "static_ring_size"
+                    ],
+                    "extra_features": [
+                        "public_key",
+                        "payment_id"
+                    ]
+                },
+
+                "fusion": {
+                    "max_size": 16384,
+                    "min_input": 24,
+                    "ratio_limit": 6,
+                    "features": [
+                        "static_ring_size",
+                        "global_index_offset"
+                    ],
+                    "extra_features": [
+                        "public_key"
+                    ]
+                },
+
+                "mixin": {
+                    "min": 2,
+                    "max": 4,
+                    "upgrade_size": 60
+                }
+            },
+
+            "difficulty": {
+                "algorithm": "LWMA-v1",
+                "window_size": 90,
+                "initial": 5000,
+                "proof_of_work": "CNX-v1"
+            },
+
+            "limit": {
+                "maximum": 524288,
+                "initial": 262144,
+                "window_size": 1440,
+                "increase_rate": 256
+            }
+        },
+        {
+            "height": 2,
+            "fork": false
+        }
+    ]
+}

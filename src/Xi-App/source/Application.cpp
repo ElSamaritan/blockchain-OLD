@@ -626,6 +626,7 @@ void Xi::App::Application::initializeRpcServer() {
         dispatcher(), logger(), static_cast<CryptoNote::Core &>(*core()), *node(), *protocol());
     m_rpcServer->setAccessToken(config.accessToken());
     m_rpcServer->enableCors(config.cors());
+    m_rpcServer->limits(config.limits());
 
     if (!m_publicNodeOptions->fee().address().empty()) {
       m_rpcServer->setFeeAddress(m_publicNodeOptions->fee().address());
