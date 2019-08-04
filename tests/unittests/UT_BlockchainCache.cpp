@@ -126,37 +126,37 @@ TEST_F(CryptoNote_DatabaseBlockchainCache, TransactionHashConsistency) {
             genesisBlock.getBlock().staticRewardHash->toString());
 }
 
-TEST_F(CryptoNote_DatabaseBlockchainCache, CachedBlockInfo) {
-  using namespace CryptoNote;
-  using namespace Xi::Crypto::Hash;
+//TEST_F(CryptoNote_DatabaseBlockchainCache, CachedBlockInfo) {
+//  using namespace CryptoNote;
+//  using namespace Xi::Crypto::Hash;
 
-  auto height = BlockHeight::Genesis;
-  CachedBlockInfo genesis = cache->getBlockInfos(Xi::makeSpan(height)).front();
+//  auto height = BlockHeight::Genesis;
+//  CachedBlockInfo genesis = cache->getBlockInfos(Xi::makeSpan(height)).front();
 
-  CachedBlockInfo pushed;
+//  CachedBlockInfo pushed;
 
-  BlockTemplate tmp;
-  tmp.timestamp = BlockTimestampShift{60};
-  tmp.previousBlockHash = genesis.blockHash;
-  tmp.version = genesis.version;
-  tmp.features = genesis.features;
-  tmp.baseTransaction.version = 1;
-  tmp.baseTransaction.inputs.push_back(BaseInput{height.next(1)});
-  TransactionValidatorState vstate{};
-  RawBlock raw;
-  raw.blockTemplate = toBinaryArray(tmp);
-  cache->pushBlock(CachedBlock{tmp}, {}, vstate, tmp.baseTransaction.binarySize(), 100, 200, std::move(raw));
+//  BlockTemplate tmp;
+//  tmp.timestamp = BlockTimestampShift{60};
+//  tmp.previousBlockHash = genesis.blockHash;
+//  tmp.version = genesis.version;
+//  tmp.features = genesis.features;
+//  tmp.baseTransaction.version = 1;
+//  tmp.baseTransaction.inputs.push_back(BaseInput{height.next(1)});
+//  TransactionValidatorState vstate{};
+//  RawBlock raw;
+//  raw.blockTemplate = toBinaryArray(tmp);
+//  cache->pushBlock(CachedBlock{tmp}, {}, vstate, tmp.baseTransaction.binarySize(), 100, 200, std::move(raw));
 
-  CachedBlockInfo genesis2 = cache->getBlockInfos(Xi::makeSpan(height)).front();
-  auto pushedHeight = height.next(1);
-  CachedBlockInfo pushedNfo = cache->getBlockInfos(Xi::makeSpan(pushedHeight)).front();
+//  CachedBlockInfo genesis2 = cache->getBlockInfos(Xi::makeSpan(height)).front();
+//  auto pushedHeight = height.next(1);
+//  CachedBlockInfo pushedNfo = cache->getBlockInfos(Xi::makeSpan(pushedHeight)).front();
 
-  EXPECT_EQ(genesis.blockHash.toString(), genesis2.blockHash.toString());
-  EXPECT_EQ(genesis.version, genesis2.version);
-  EXPECT_EQ(genesis.features, genesis2.features);
-  EXPECT_EQ(genesis.timestamp, genesis2.timestamp);
-  EXPECT_EQ(genesis.blobSize, genesis2.blobSize);
-  EXPECT_EQ(genesis.cumulativeDifficulty, genesis2.cumulativeDifficulty);
-  EXPECT_EQ(genesis.alreadyGeneratedCoins, genesis2.alreadyGeneratedCoins);
-  EXPECT_EQ(genesis.alreadyGeneratedTransactions, genesis2.alreadyGeneratedTransactions);
-}
+//  EXPECT_EQ(genesis.blockHash.toString(), genesis2.blockHash.toString());
+//  EXPECT_EQ(genesis.version, genesis2.version);
+//  EXPECT_EQ(genesis.features, genesis2.features);
+//  EXPECT_EQ(genesis.timestamp, genesis2.timestamp);
+//  EXPECT_EQ(genesis.blobSize, genesis2.blobSize);
+//  EXPECT_EQ(genesis.cumulativeDifficulty, genesis2.cumulativeDifficulty);
+//  EXPECT_EQ(genesis.alreadyGeneratedCoins, genesis2.alreadyGeneratedCoins);
+//  EXPECT_EQ(genesis.alreadyGeneratedTransactions, genesis2.alreadyGeneratedTransactions);
+//}
