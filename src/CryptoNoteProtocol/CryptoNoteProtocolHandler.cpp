@@ -246,6 +246,7 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
     }
   } else if (context.m_is_light_node) {
     m_logger(Logging::Debugging) << context << " LightNode connected, will not sync.";
+    context.m_state = CryptoNoteConnectionContext::state_normal;
   } else {
     const auto currentHeight = get_current_blockchain_height();
     const auto remoteHeight = hshd.current_height;
@@ -628,11 +629,17 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(CryptoNoteConnectionContext& cont
           m_logger(Logging::Trace) << "Pushed lite block already exists.";
         }
       } else if (ec == error::AddBlockErrorCondition::BLOCK_REJECTED) {
-        context.m_state = CryptoNoteConnectionContext::state_synchronizing;
-        NOTIFY_REQUEST_CHAIN::request r = boost::value_initialized<NOTIFY_REQUEST_CHAIN::request>();
-        r.block_hashes = m_core.buildSparseChain();
-        m_logger(Logging::Trace) << context << "-->>NOTIFY_REQUEST_CHAIN: m_block_ids.size()=" << r.block_hashes.size();
-        post_notify<NOTIFY_REQUEST_CHAIN>(*m_p2p, r, context);
+        if (context.m_is_light_node) {
+          m_logger(Logging::Debugging) << "Orphan block from light node, will drop connection.";
+          context.m_state = CryptoNoteConnectionContext::state_shutdown;
+        } else {
+          context.m_state = CryptoNoteConnectionContext::state_synchronizing;
+          NOTIFY_REQUEST_CHAIN::request r = boost::value_initialized<NOTIFY_REQUEST_CHAIN::request>();
+          r.block_hashes = m_core.buildSparseChain();
+          m_logger(Logging::Trace) << context
+                                   << "-->>NOTIFY_REQUEST_CHAIN: m_block_ids.size()=" << r.block_hashes.size();
+          post_notify<NOTIFY_REQUEST_CHAIN>(*m_p2p, r, context);
+        }
       } else {
         m_logger(Logging::Debugging) << context
                                      << "Block verification failed, dropping connection: " << error.message();
@@ -816,7 +823,7 @@ int CryptoNoteProtocolHandler::handle_response_chain_entry(int command, NOTIFY_R
 
   context.m_remote_blockchain_height = arg.total_height;
   context.m_last_response_height =
-      arg.start_height + BlockOffset::fromNative(static_cast<uint32_t>(arg.block_hashes.size()) - 1);
+      arg.start_height + BlockOffset::fromNative(static_cast<uint32_t>(arg.block_hashes.size() - 1));
 
   if (context.m_last_response_height > context.m_remote_blockchain_height) {
     m_logger(Logging::Error) << context << "sent wrong NOTIFY_RESPONSE_CHAIN_ENTRY, with \r\nm_total_height="
@@ -1009,8 +1016,8 @@ void CryptoNoteProtocolHandler::updateObservedHeight(BlockHeight peerHeight,
 
     BlockHeight height = m_observedHeight;
     if (!context.m_remote_blockchain_height.isNull() &&
-        context.m_last_response_height <= context.m_remote_blockchain_height - BlockOffset::fromNative(1)) {
-      m_observedHeight = context.m_remote_blockchain_height - BlockOffset::fromNative(1);
+        context.m_last_response_height <= context.m_remote_blockchain_height) {
+      m_observedHeight = context.m_remote_blockchain_height;
       if (m_observedHeight != height) {
         updated = true;
       }
