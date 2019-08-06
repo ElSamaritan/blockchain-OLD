@@ -526,9 +526,10 @@ void Xi::App::Application::useSslClient() {
 void Xi::App::Application::initializeLogger() {
   if (m_logOptions) {
     m_logger->setMaxLevel(Logging::Trace);
-    m_consoleLogger = std::make_unique<Logging::ConsoleLogger>(m_logOptions->ConsoleLogLevel.value_or(Logging::Trace));
+    m_consoleLogger =
+        std::make_unique<Logging::ConsoleLogger>(m_logOptions->ConsoleLogLevel.value_or(m_logOptions->DefaultLogLevel));
     m_logger->addLogger(*m_consoleLogger);
-    auto fileLogLevel = m_logOptions->FileLogLevel.value_or(Logging::Trace);
+    auto fileLogLevel = m_logOptions->FileLogLevel.value_or(m_logOptions->DefaultLogLevel);
     if (fileLogLevel != Logging::None) {
       auto fileLogger = std::make_unique<Logging::FileLogger>(fileLogLevel);
       auto filePath = m_logOptions->LogFilePath;
@@ -542,7 +543,7 @@ void Xi::App::Application::initializeLogger() {
 
     if (!m_logOptions->DiscordWebhook.empty()) {
       auto discordLogger = std::make_unique<Xi::Log::Discord::DiscordLogger>(
-          m_logOptions->DiscordWebhook, m_logOptions->DiscordLogLevel.value_or(Logging::Trace));
+          m_logOptions->DiscordWebhook, m_logOptions->DiscordLogLevel.value_or(m_logOptions->DefaultLogLevel));
       discordLogger->setAuthor(m_logOptions->DiscordAuthor);
       m_logger->addLogger(*discordLogger);
       m_discordLogger = std::move(discordLogger);

@@ -39,7 +39,7 @@ namespace XiMiner {
 class MinerApplication : public Application {
  public:
   MinerApplication() : Application("xi-miner", "mines blocks to progress the blockchain") {
-    useLogging(Logging::Trace);
+    useLogging(Logging::Info);
     useCurrency();
     useRemoteRpc();
   }

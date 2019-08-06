@@ -79,7 +79,7 @@ namespace XiWallet {
 class WalletApplication : public Application {
  public:
   WalletApplication() : Application("xi-wallet", "cli interface to manage/create wallets and transactions.") {
-    useLogging(Logging::Warning);
+    useLogging(Logging::None);
     useCurrency();
     useNode();
     useRemoteRpc();
