@@ -1759,7 +1759,7 @@ uint64_t DatabaseBlockchainCache::getAvailableMixinsCount(DatabaseBlockchainCach
       static_cast<uint32_t>(availableMixinsCountSearch(amount, blockIndex, 0, outputsToCount - 1, threshold));
 
 #if !defined(NDEBUG)
-  if (count < outputsToCount) {
+  if (count < outputsToCount && count < threshold) {
     uint32_t nextIndex = count;
     std::vector<PackedOutIndex> nextPackedIndices{};
     if (!requestPackedOutputs(amount, Common::ArrayView<uint32_t>{std::addressof(nextIndex), 1}, database,
@@ -1777,7 +1777,7 @@ uint64_t DatabaseBlockchainCache::getAvailableMixinsCount(DatabaseBlockchainCach
 uint64_t DatabaseBlockchainCache::availableMixinsCountSearch(DatabaseBlockchainCache::Amount amount,
                                                              uint32_t blockIndex, uint32_t leftIndex,
                                                              uint32_t rightIndex, uint64_t threshold) const {
-  XI_RETURN_SC_IF(leftIndex == rightIndex, true);
+  XI_RETURN_SC_IF(leftIndex == rightIndex, leftIndex + 1);
   const uint32_t midIndex = leftIndex + (rightIndex - leftIndex) / 2;
   std::array<uint32_t, 3> boundaryIndices{{leftIndex, midIndex, rightIndex}};
   std::vector<PackedOutIndex> boundaryPackedIndices{};
@@ -1793,8 +1793,8 @@ uint64_t DatabaseBlockchainCache::availableMixinsCountSearch(DatabaseBlockchainC
   if (mid.data.blockIndex > blockIndex) {
     XI_RETURN_SC_IF(midIndex == 0, 0);
     return availableMixinsCountSearch(amount, blockIndex, leftIndex, midIndex - 1, threshold);
-  } else if (midIndex + 1 >= threshold) {
-    return midIndex + 1;
+  } else if (midIndex + 2 >= threshold) {
+    return midIndex + 2;
   } else {
     return availableMixinsCountSearch(amount, blockIndex, midIndex + 1, rightIndex, threshold);
   }
