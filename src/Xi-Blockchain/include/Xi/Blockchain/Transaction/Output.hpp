@@ -47,6 +47,8 @@ XI_DECLARE_SPANS(Output)
 
 bool operator<(const Output& rhs, const Output& lhs);
 
+Amount generatedAmount(const Output& output);
+
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi

@@ -49,6 +49,8 @@ XI_DECLARE_SPANS(Input)
 
 bool operator<(const Input& lhs, const Input& rhs);
 
+Amount consumedAmount(const Input& input);
+
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi

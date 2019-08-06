@@ -45,6 +45,16 @@ bool operator<(const Input& lhs, const Input& rhs) {
   }
 }
 
+Amount consumedAmount(const Input& input) {
+  if (std::holds_alternative<RewardInput>(input)) {
+    return consumedAmount(std::get<RewardInput>(input));
+  } else if (std::holds_alternative<AmountInput>(input)) {
+    return consumedAmount(std::get<AmountInput>(input));
+  } else {
+    exceptional<InvalidVariantTypeError>();
+  }
+}
+
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi

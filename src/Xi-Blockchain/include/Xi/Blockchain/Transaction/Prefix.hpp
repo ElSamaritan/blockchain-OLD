@@ -31,6 +31,7 @@
 #include <Serialization/ISerializer.h>
 #include <Xi/Crypto/FastHash.hpp>
 
+#include "Xi/Blockchain/Transaction/Amount.hpp"
 #include "Xi/Blockchain/Transaction/Input.hpp"
 #include "Xi/Blockchain/Transaction/Output.hpp"
 #include "Xi/Blockchain/Transaction/Extra.hpp"
@@ -55,6 +56,9 @@ struct Prefix {
   OutputVector outputs{};
   Extra extra{};
 
+  Amount generatedAmount() const;
+  Amount consumedAmount() const;
+
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
 
   Crypto::FastHash prefixHash() const;
@@ -67,6 +71,18 @@ struct Prefix {
   [[nodiscard]] bool serializeTransfer(CryptoNote::ISerializer& serializer);
   [[nodiscard]] bool serializeOutputs(CryptoNote::ISerializer& serializer);
 };
+
+inline Amount generatedAmount(const Prefix& prefix) {
+  return prefix.generatedAmount();
+}
+
+inline Amount consumedAmount(const Prefix& prefix) {
+  return prefix.consumedAmount();
+}
+
+inline Amount emission(const Prefix& prefix) {
+  return generatedAmount(prefix) - consumedAmount(prefix);
+}
 
 }  // namespace Transaction
 }  // namespace Blockchain

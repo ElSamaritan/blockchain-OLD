@@ -26,6 +26,7 @@
 #include <Xi/Global.hh>
 #include <Serialization/ISerializer.h>
 
+#include "Xi/Blockchain/Transaction/Amount.hpp"
 #include "Xi/Blockchain/Block/Height.hpp"
 
 namespace Xi {
@@ -40,6 +41,10 @@ struct RewardInput {
   KV_MEMBER(height)
   KV_END_SERIALIZATION
 };
+
+inline Amount consumedAmount(const RewardInput&) {
+  return 0;
+}
 
 }  // namespace Transaction
 }  // namespace Blockchain

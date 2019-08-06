@@ -48,6 +48,10 @@ struct AmountOutput {
   KV_END_SERIALIZATION
 };
 
+inline Amount generatedAmount(const AmountOutput& out) {
+  return out.amount.native();
+}
+
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi

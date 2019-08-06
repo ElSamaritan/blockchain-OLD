@@ -26,9 +26,23 @@
 #include <Serialization/SerializationOverloads.h>
 #include <CryptoNoteCore/CryptoNoteTools.h>
 
+#include <numeric>
+
 namespace Xi {
 namespace Blockchain {
 namespace Transaction {
+
+Amount Prefix::generatedAmount() const {
+  return std::accumulate(outputs.begin(), outputs.end(), 0ULL, [](const auto acc, const auto &output) {
+    return acc + Xi::Blockchain::Transaction::generatedAmount(output);
+  });
+}
+
+Amount Prefix::consumedAmount() const {
+  return std::accumulate(inputs.begin(), inputs.end(), 0ULL, [](const auto acc, const auto &input) {
+    return acc + Xi::Blockchain::Transaction::consumedAmount(input);
+  });
+}
 
 bool Prefix::serialize(CryptoNote::ISerializer &serializer) {
   XI_RETURN_EC_IF_NOT(serializer(version, "version"), false);

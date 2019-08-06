@@ -51,6 +51,10 @@ struct AmountInput {
   [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer, std::optional<uint16_t> ringSize = std::nullopt);
 };
 
+inline Amount consumedAmount(const AmountInput& input) {
+  return input.amount.native();
+}
+
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi

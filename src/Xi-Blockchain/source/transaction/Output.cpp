@@ -43,6 +43,14 @@ bool operator<(const Output& rhs, const Output& lhs) {
   }
 }
 
+Amount generatedAmount(const Output& output) {
+  if (std::holds_alternative<AmountOutput>(output)) {
+    return generatedAmount(std::get<AmountOutput>(output));
+  } else {
+    exceptional<InvalidVariantTypeError>();
+  }
+}
+
 }  // namespace Transaction
 }  // namespace Blockchain
 }  // namespace Xi
