@@ -1793,8 +1793,8 @@ uint64_t DatabaseBlockchainCache::availableMixinsCountSearch(DatabaseBlockchainC
   if (mid.data.blockIndex > blockIndex) {
     XI_RETURN_SC_IF(midIndex == 0, 0);
     return availableMixinsCountSearch(amount, blockIndex, leftIndex, midIndex - 1, threshold);
-  } else if (midIndex + 2 >= threshold) {
-    return midIndex + 2;
+  } else if (midIndex + 1 >= threshold) {
+    return midIndex + 1;
   } else {
     return availableMixinsCountSearch(amount, blockIndex, midIndex + 1, rightIndex, threshold);
   }
