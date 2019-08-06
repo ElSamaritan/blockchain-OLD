@@ -34,24 +34,41 @@
 
 #include <Logging/ILogger.h>
 #include <Logging/LoggerRef.h>
+#include <Common/ObserverManager.h>
 
 #include "HashrateSummary.h"
 #include "MinerManager.h"
 #include "MinerStatus.h"
+#include "BlockSubmissionResult.h"
 
 namespace XiMiner {
 class MinerMonitor : public MinerManager::Observer {
  public:
+  class Observer {
+   public:
+    virtual ~Observer() = default;
+
+    virtual void onBlockSubmission(BlockSubmissionResult result) = 0;
+    virtual void onStatusReport(MinerStatus status) = 0;
+  };
+
+ public:
   MinerMonitor(MinerManager& miner, Logging::ILogger& logger);
 
-  void onSuccessfulBlockSubmission(Crypto::Hash hash) override;
+  void onSuccessfulBlockSubmission(CryptoNote::BlockTemplate block) override;
   void onBlockTemplateChanged(MinerBlockTemplate block) override;
 
   void run();
   void shutdown();
 
+  void addObserver(Observer* observer);
+  void removeObserver(Observer* observer);
+
   void setReportInterval(std::chrono::seconds interval);
   std::chrono::seconds reportInterval() const;
+
+  MinerMonitor& statusReport(bool enabled);
+  bool statusReport() const;
 
   void setPanicExitEnabled(bool enabled);
   bool isPanicExitEnabled() const;
@@ -63,6 +80,7 @@ class MinerMonitor : public MinerManager::Observer {
   uint32_t blockLimit() const;
 
   uint32_t blocksMined() const;
+  uint64_t cumulativeReward() const;
 
   MinerStatus status() const;
 
@@ -82,6 +100,9 @@ class MinerMonitor : public MinerManager::Observer {
   std::atomic_bool m_shouldRun{false};
   std::atomic_bool m_panicExit{false};
 
+  std::atomic_bool m_statusReport{false};
+  Tools::ObserverManager<Observer> m_observer;
+
   std::chrono::system_clock::time_point m_lastBlockUpdate;
   std::chrono::system_clock::time_point m_lastStallNotification;
 
@@ -89,6 +110,7 @@ class MinerMonitor : public MinerManager::Observer {
   std::string m_minerId;  ///< Used to identify the instance on telemetry services.
   std::atomic<uint32_t> m_blocksLimit{0};
   std::atomic<uint32_t> m_blocksMined{0};
+  std::atomic<uint64_t> m_cumulativeReward{0};
 
   mutable std::mutex m_statusAccess;
   MinerStatus m_status;

@@ -145,6 +145,7 @@ void XiMiner::UpdateMonitor::updateLoop() {
       m_lastUpdate = std::chrono::high_resolution_clock::now();
     } catch (std::exception &e) {
       m_logger(Logging::Error) << "update loop failed: " << e.what();
+      std::this_thread::sleep_for(std::chrono::seconds{1});
     } catch (...) {
       m_logger(Logging::Error) << "updated loop failed for unknown reason.";
       std::this_thread::sleep_for(std::chrono::seconds{1});

@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -23,63 +23,23 @@
 
 #pragma once
 
-#include <atomic>
+#include <cinttypes>
 #include <vector>
-#include <thread>
 
-#include <Xi/Global.hh>
-#include <Xi/Result.h>
-#include <Xi/Crypto/FastHash.hpp>
-#include <Xi/Http/Client.h>
-#include <Logging/ILogger.h>
-#include <Logging/LoggerRef.h>
-#include <Common/ObserverManager.h>
-#include <Rpc/RpcRemoteConfiguration.h>
-
-#include "UpdateMonitor.h"
-#include "MinerWorker.h"
-#include "HashrateSummary.h"
+#include <Xi/Blockchain/Block/Block.hpp>
+#include <Xi/Blockchain/Transaction/Transaction.hpp>
+#include <Serialization/ISerializer.h>
 
 namespace XiMiner {
-class MinerManager : public UpdateMonitor::Observer, MinerWorker::Observer {
- public:
-  class Observer {
-   public:
-    virtual ~Observer() = default;
 
-    virtual void onSuccessfulBlockSubmission(CryptoNote::BlockTemplate block) = 0;
-    virtual void onBlockTemplateChanged(MinerBlockTemplate block) = 0;
-  };
+struct BlockSubmissionResult {
+  XI_PROPERTY(Xi::Blockchain::Block::Hash, hash)
+  XI_PROPERTY(Xi::Blockchain::Transaction::Amount, reward)
 
- public:
-  MinerManager(const CryptoNote::RpcRemoteConfiguration remote, Logging::ILogger& logger);
-  XI_DELETE_COPY(MinerManager);
-  XI_DELETE_MOVE(MinerManager);
-  ~MinerManager() override = default;
-
-  void onTemplateChanged(MinerBlockTemplate newTemplate) override;
-  void onBlockFound(CryptoNote::BlockTemplate block) override;
-  void onError(std::string what) override;
-
-  void run();
-  void shutdown();
-
-  void addObserver(Observer* observer);
-  void removeObserver(Observer* observer);
-
-  void setThreads(uint32_t threadCount);
-  uint32_t threads() const;
-
-  CollectiveHashrateSummary resetHashrateSummary();
-
- private:
-  Xi::Http::Client m_http;
-  Logging::LoggerRef m_logger;
-
-  Tools::ObserverManager<Observer> m_observer;
-  uint32_t m_threads = static_cast<uint32_t>(std::thread::hardware_concurrency());
-  std::atomic_bool m_running{false};
-  std::atomic_bool m_shutdownRequest{false};
-  std::vector<std::shared_ptr<MinerWorker>> m_worker;
+  KV_BEGIN_SERIALIZATION
+  KV_MEMBER_RENAME(hash(), hash)
+  KV_MEMBER_RENAME(reward(), reward)
+  KV_END_SERIALIZATION
 };
+
 }  // namespace XiMiner

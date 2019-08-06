@@ -34,14 +34,19 @@
 #include "MinerManager.h"
 
 namespace XiMiner {
-class MinerCommandsHandler : public Common::ConsoleHandler {
+class MinerCommandsHandler : public Common::ConsoleHandler, MinerMonitor::Observer {
  public:
   MinerCommandsHandler(MinerManager& miner, UpdateMonitor& monitor, Logging::LoggerManager& logger);
+  ~MinerCommandsHandler() override;
 
   MinerMonitor& minerMonitor();
 
   void reportShow();
   void reportHide();
+
+  // Miner Monitor Observer
+  void onBlockSubmission(BlockSubmissionResult submission) override;
+  void onStatusReport(MinerStatus status) override;
 
  private:
   bool help(const std::vector<std::string>& args);
@@ -67,8 +72,6 @@ class MinerCommandsHandler : public Common::ConsoleHandler {
  private:
   MinerManager& m_miner;
   UpdateMonitor& m_monitor;
-  Logging::ConsoleLogger m_clogger;
-  Logging::LoggerRef m_logger;
   Logging::LoggerManager& m_appLogger;
   MinerMonitor m_minerMonitor;
 };

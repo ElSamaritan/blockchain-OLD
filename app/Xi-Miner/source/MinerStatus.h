@@ -24,6 +24,7 @@
 #pragma once
 
 #include <cinttypes>
+#include <chrono>
 
 #include <Xi/Crypto/FastHash.hpp>
 #include <Serialization/ISerializer.h>
@@ -34,10 +35,12 @@ struct MinerStatus {
   double current_hashrate;
   double average_hashrate;
   uint32_t blocks_mined;
+  uint64_t cumulative_reward;
   uint32_t active_threads;
   Crypto::Hash top_block;
   uint64_t difficulty;
   std::string algorithm;
+  uint64_t reward;
 
   KV_BEGIN_SERIALIZATION
   KV_PUSH_VIRTUAL_OBJECT(hashrate)
@@ -47,11 +50,13 @@ struct MinerStatus {
 
   KV_PUSH_VIRTUAL_OBJECT(top)
   KV_MEMBER_RENAME(top_block, block)
+  KV_MEMBER(reward)
   KV_MEMBER(difficulty)
   KV_MEMBER(algorithm)
   KV_POP_VIRTUAL_OBJECT()
 
   KV_MEMBER(blocks_mined)
+  KV_MEMBER(cumulative_reward)
   KV_MEMBER(active_threads)
 
   KV_END_SERIALIZATION

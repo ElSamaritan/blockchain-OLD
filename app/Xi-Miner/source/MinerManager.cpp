@@ -58,7 +58,7 @@ void XiMiner::MinerManager::onBlockFound(CryptoNote::BlockTemplate block) {
     CryptoNote::JsonRpc::invokeJsonRpcCommand(m_http, CryptoNote::RpcCommands::SubmitBlock::identifier(), request,
                                               response);
     CryptoNote::CachedBlock cblock{block};
-    m_observer.notify(&MinerManager::Observer::onSuccessfulBlockSubmission, cblock.getBlockHash());
+    m_observer.notify(&MinerManager::Observer::onSuccessfulBlockSubmission, cblock.getBlock());
     m_logger(Logging::Info) << "block submission result: " << response.result;
   } catch (std::exception& e) {
     m_logger(Logging::Error) << "error on block submission: " << e.what();

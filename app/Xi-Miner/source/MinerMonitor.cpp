@@ -39,12 +39,19 @@ XiMiner::MinerMonitor::MinerMonitor(MinerManager& miner, Logging::ILogger& logge
   m_minerId = boost::asio::ip::host_name();
 }
 
-void XiMiner::MinerMonitor::onSuccessfulBlockSubmission(Crypto::Hash hash) {
+void XiMiner::MinerMonitor::onSuccessfulBlockSubmission(CryptoNote::BlockTemplate block) {
+  CryptoNote::CachedBlock cblock{block};
+  BlockSubmissionResult submission{};
+  submission.hash(cblock.getBlockHash());
+  submission.reward(emission(block.baseTransaction));
   m_blocksMined += 1;
-  m_logger(Logging::Info, Logging::GREEN)
-      << "Block successfully submitted: " << Common::toHex(hash.data(), hash.size());
+  m_cumulativeReward += submission.reward();
+
+  m_logger.object(Logging::Info, submission, "Block Submitted");
+  m_observer.notify(&Observer::onBlockSubmission, submission);
   if (blockLimit() > 0 && blocksMined() >= blockLimit()) {
-    m_logger(Logging::Info, Logging::RED) << "Blocks limit reached, shutting down.";
+    m_logger(Logging::Fatal) << "Blocks limit reached, shutting down.";
+    std::this_thread::sleep_for(std::chrono::seconds{5});
     std::exit(EXIT_SUCCESS);  // sorry
   }
 }
@@ -57,6 +64,7 @@ void XiMiner::MinerMonitor::onBlockTemplateChanged(MinerBlockTemplate block) {
     m_status.top_block = block.Template.previousBlockHash;
     m_status.difficulty = block.Difficutly;
     m_status.algorithm = block.Algorithm;
+    m_status.reward = emission(block.Template.baseTransaction);
   }
 }
 
@@ -79,6 +87,9 @@ void XiMiner::MinerMonitor::shutdown() {
   }
 }
 
+void XiMiner::MinerMonitor::addObserver(XiMiner::MinerMonitor::Observer* observer) { m_observer.add(observer); }
+void XiMiner::MinerMonitor::removeObserver(XiMiner::MinerMonitor::Observer* observer) { m_observer.remove(observer); }
+
 void XiMiner::MinerMonitor::setReportInterval(std::chrono::seconds interval) {
   if (interval.count() < 1) {
     return;
@@ -87,6 +98,13 @@ void XiMiner::MinerMonitor::setReportInterval(std::chrono::seconds interval) {
 }
 
 std::chrono::seconds XiMiner::MinerMonitor::reportInterval() const { return std::chrono::seconds{m_reportSeconds}; }
+
+XiMiner::MinerMonitor& XiMiner::MinerMonitor::statusReport(bool enabled) {
+  m_statusReport.store(enabled, std::memory_order_release);
+  return *this;
+}
+
+bool XiMiner::MinerMonitor::statusReport() const { return m_statusReport.load(std::memory_order_consume); }
 
 void XiMiner::MinerMonitor::setPanicExitEnabled(bool enabled) { m_panicExit.store(enabled); }
 
@@ -101,6 +119,8 @@ void XiMiner::MinerMonitor::setBlocksLimit(uint32_t limit) { m_blocksLimit.store
 uint32_t XiMiner::MinerMonitor::blockLimit() const { return m_blocksLimit.load(); }
 
 uint32_t XiMiner::MinerMonitor::blocksMined() const { return m_blocksMined.load(); }
+
+uint64_t XiMiner::MinerMonitor::cumulativeReward() const { return m_cumulativeReward.load(); }
 
 XiMiner::MinerStatus XiMiner::MinerMonitor::status() const {
   std::lock_guard<std::mutex> lck{m_statusAccess};
@@ -143,6 +163,9 @@ void XiMiner::MinerMonitor::reportHashrate() {
 
   auto currentStatus = status();
   m_logger.object(Logging::Info, currentStatus, "status");
+  if (m_statusReport) {
+    m_observer.notify(&Observer::onStatusReport, currentStatus);
+  }
 }
 
 void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
@@ -160,7 +183,8 @@ void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
     if (m_hrTimeline.size() > 0) {
       m_status.current_hashrate = m_hrTimeline.rbegin()->Hashrate;
     }
-    m_status.blocks_mined = m_blocksMined;
+    m_status.blocks_mined = blocksMined();
+    m_status.cumulative_reward = cumulativeReward();
     m_status.active_threads = m_miner.threads();
     if (m_hrTimeline.size() == 600) {
       const double shortAverage =
@@ -170,6 +194,7 @@ void XiMiner::MinerMonitor::pushHashrateCheckpoint() {
       const auto abs = (shortAverage - m_status.average_hashrate) / m_status.average_hashrate;
       if ((abs < -0.5 || shortAverage < 0.1) && isPanicExitEnabled()) {
         m_logger(Logging::Fatal) << "Hashrate stall detected, panic out.";
+        std::this_thread::sleep_for(std::chrono::seconds{5});
         std::exit(EXIT_FAILURE);  // sorry
       }
     }
@@ -187,6 +212,7 @@ void XiMiner::MinerMonitor::checkForStall() {
                              << std::chrono::duration_cast<std::chrono::minutes>(lastUpdateDuration).count()
                              << " minutes ago.";
     if (isPanicExitEnabled()) {
+      std::this_thread::sleep_for(std::chrono::seconds{5});
       std::exit(EXIT_FAILURE);  // sorry
     }
     m_lastStallNotification = now;

@@ -36,18 +36,15 @@
 
 #include <Common/StringTools.h>
 #include <CommonCLI/CommonCLI.h>
+#include <rang.hpp>
 
 #define MINER_COMMAND_DEFINE(NAME, HELP) setHandler(#NAME, boost::bind(&MinerCommandsHandler::NAME, this, _1), HELP)
 
 XiMiner::MinerCommandsHandler::MinerCommandsHandler(MinerManager &miner, UpdateMonitor &monitor,
                                                     Logging::LoggerManager &logger)
-    : ConsoleHandler(),
-      m_miner{miner},
-      m_monitor{monitor},
-      m_clogger{Logging::Info},
-      m_logger{m_clogger, ""},
-      m_appLogger{logger},
-      m_minerMonitor{miner, m_appLogger} {
+    : ConsoleHandler(), m_miner{miner}, m_monitor{monitor}, m_appLogger{logger}, m_minerMonitor{miner, m_appLogger} {
+  m_minerMonitor.addObserver(this);
+
   MINER_COMMAND_DEFINE(help, "prints a summary of all commands");
   MINER_COMMAND_DEFINE(version, "prints version information");
 
@@ -62,17 +59,24 @@ XiMiner::MinerCommandsHandler::MinerCommandsHandler(MinerManager &miner, UpdateM
   MINER_COMMAND_DEFINE(report_show, "prints the current status periodically");
   MINER_COMMAND_DEFINE(report_hide, "disables printing the current status");
   MINER_COMMAND_DEFINE(report_interval_set, "sets the status report interval");
-
-  m_clogger.setPattern("");
 }
+
+XiMiner::MinerCommandsHandler::~MinerCommandsHandler() { m_minerMonitor.removeObserver(this); }
+
+#undef MINER_COMMAND_DEFINE
 
 XiMiner::MinerMonitor &XiMiner::MinerCommandsHandler::minerMonitor() { return m_minerMonitor; }
 
-void XiMiner::MinerCommandsHandler::reportShow() { m_appLogger.setMaxLevel(Logging::Info); }
+void XiMiner::MinerCommandsHandler::reportShow() { m_minerMonitor.statusReport(true); }
+void XiMiner::MinerCommandsHandler::reportHide() { m_minerMonitor.statusReport(false); }
 
-void XiMiner::MinerCommandsHandler::reportHide() { m_appLogger.setMaxLevel(Logging::Warning); }
+void XiMiner::MinerCommandsHandler::onBlockSubmission(BlockSubmissionResult submission) {
+  printObject(submission, "Block Successfully Submitted");
+}
 
-#undef MINER_COMMAND_DEFINE
+void XiMiner::MinerCommandsHandler::onStatusReport(XiMiner::MinerStatus status) {
+  printObject(status, "Status Report");
+}
 
 bool XiMiner::MinerCommandsHandler::help(const std::vector<std::string> &args) {
   XI_UNUSED(args);
@@ -82,7 +86,7 @@ bool XiMiner::MinerCommandsHandler::help(const std::vector<std::string> &args) {
   boost::replace_all(usage, "\n", "\n  ");
   usage.insert(0, "  ");
   ss << usage << ENDL;
-  m_logger(Logging::Info) << ss.str();
+  std::cout << ss.str();
   return true;
 }
 
@@ -94,32 +98,31 @@ bool XiMiner::MinerCommandsHandler::version(const std::vector<std::string> &args
 
 bool XiMiner::MinerCommandsHandler::status(const std::vector<std::string> &args) {
   XI_UNUSED(args);
-  std::stringstream builder{};
-  builder << std::fixed << std::setprecision(2);
+  std::cout << "\n" << std::fixed << std::setprecision(2);
 
-  const auto colorForHrDiff = [](double first, double second) -> std::string {
-    if (second == 0.0) return Logging::GREEN;
-    auto procent = (first - second) / second;
-    if (procent >= -0.02)
-      return Logging::GREEN;
-    else if (procent < -0.1)
-      return Logging::RED;
+  const auto colorForHrDiff = [](double first, double second) -> rang::fg {
+    if (second == 0.0) return rang::fg::green;
+    auto percent = (first - second) / second;
+    if (percent >= -0.02)
+      return rang::fg::green;
+    else if (percent < -0.1)
+      return rang::fg::red;
     else
-      return Logging::YELLOW;
+      return rang::fg::yellow;
   };
 
   auto minerStatus = m_minerMonitor.status();
-  builder << Logging::DEFAULT << "Current Hashrate   "
-          << colorForHrDiff(minerStatus.current_hashrate, minerStatus.average_hashrate) << minerStatus.current_hashrate
-          << "H/s\n";
-  builder << Logging::DEFAULT << "Average Hashrate   " << minerStatus.average_hashrate << "H/s\n\n";
-  builder << Logging::DEFAULT << "Threads In Use     " << minerStatus.active_threads << "\n\n";
-  builder << Logging::DEFAULT << "Latest Block Hash  " << minerStatus.top_block.toString() << "\n";
-  builder << Logging::DEFAULT << "Current Difficulty " << minerStatus.difficulty << "\n";
-  builder << Logging::DEFAULT << "Current Algorithm  " << minerStatus.algorithm << "\n\n";
-  builder << Logging::YELLOW << "Blocks Mined       "
-          << (minerStatus.blocks_mined > 0 ? Logging::GREEN : Logging::WHITE) << minerStatus.blocks_mined;
-  m_logger(Logging::Info, Logging::DEFAULT) << builder.str();
+  std::cout << rang::fg::reset << "Current Hashrate   "
+            << colorForHrDiff(minerStatus.current_hashrate, minerStatus.average_hashrate)
+            << minerStatus.current_hashrate << rang::fg::reset << "H/s\n";
+  std::cout << rang::fg::reset << "Average Hashrate   " << minerStatus.average_hashrate << "H/s\n\n";
+  std::cout << rang::fg::reset << "Threads In Use     " << minerStatus.active_threads << "\n\n";
+  std::cout << rang::fg::reset << "Latest Block Hash  " << minerStatus.top_block.toString() << "\n";
+  std::cout << rang::fg::reset << "Current Difficulty " << minerStatus.difficulty << "\n";
+  std::cout << rang::fg::reset << "Current Algorithm  " << minerStatus.algorithm << "\n\n";
+  std::cout << rang::fg::reset << "Blocks Mined       "
+            << (minerStatus.blocks_mined > 0 ? rang::fg::green : rang::fg::reset) << minerStatus.blocks_mined;
+  std::cout << rang::fg::reset << std::endl;
   return true;
 }
 
@@ -132,12 +135,12 @@ bool XiMiner::MinerCommandsHandler::poll_interval_set(const std::vector<std::str
   try {
     interval = std::stoul(args[0]);
   } catch (std::invalid_argument &) {
-    m_logger(Logging::Error) << "provided interval is not a valid integer.";
+    printError("provided interval is not a valid integer.");
     return false;
   }
 
   if (interval < 50) {
-    m_logger(Logging::Error) << "interval must be at least 50ms";
+    printError("interval must be at least 50ms");
     return false;
   }
 
@@ -154,12 +157,12 @@ bool XiMiner::MinerCommandsHandler::threads_set(const std::vector<std::string> &
   try {
     threads = std::stoul(args[0]);
   } catch (std::invalid_argument &) {
-    m_logger(Logging::Error) << "provided thread count is not a valid integer.";
+    printError("provided thread count is not a valid integer.");
     return false;
   }
 
   if (threads > std::thread::hardware_concurrency()) {
-    m_logger(Logging::Error) << "thread count can not exceed " << std::to_string(std::thread::hardware_concurrency());
+    printError("thread count can not exceed " + std::to_string(std::thread::hardware_concurrency()));
     return false;
   }
 
@@ -170,7 +173,7 @@ bool XiMiner::MinerCommandsHandler::threads_set(const std::vector<std::string> &
   m_miner.setThreads(threads);
   m_minerMonitor.reset();
 
-  m_logger(Logging::Info) << "changed threads used to " << threads;
+  std::cout << "changed threads used to " << threads;
   return true;
 }
 
@@ -183,7 +186,7 @@ bool XiMiner::MinerCommandsHandler::log_set(const std::vector<std::string> &args
   auto level = trans.get_value(args[0]);
 
   if (!level.has_value()) {
-    m_logger(Logging::Warning) << "unrecognized log level: " << args[0];
+    printError("unrecognized log level: " + args[0]);
     return false;
   }
 
@@ -218,21 +221,27 @@ bool XiMiner::MinerCommandsHandler::report_interval_set(const std::vector<std::s
   try {
     seconds = std::stoull(args[0]);
   } catch (std::invalid_argument &) {
-    m_logger(Logging::Error) << "provided interval is not a valid integer.";
+    printError("provided interval is not a valid integer.");
     return false;
   }
 
   if (seconds == 0) {
-    m_logger(Logging::Error) << "report interval must be at least one second.";
+    printError("report interval must be at least one second.");
   }
 
   m_minerMonitor.setReportInterval(std::chrono::seconds{seconds});
-  m_logger(Logging::Info) << "changed report interval to " << seconds << " seconds.";
+  std::cout << "changed report interval to " << seconds << " seconds.";
   return true;
 }
 
-void XiMiner::MinerCommandsHandler::printError(std::string error) { m_logger(Logging::Error) << error; }
+void XiMiner::MinerCommandsHandler::printError(std::string error) {
+  std::cout << rang::fg::red << error << rang::fg::reset << std::endl;
+}
 
-void XiMiner::MinerCommandsHandler::printWarning(std::string warn) { m_logger(Logging::Warning) << warn; }
+void XiMiner::MinerCommandsHandler::printWarning(std::string warn) {
+  std::cout << rang::fg::yellow << warn << rang::fg::reset << std::endl;
+}
 
-void XiMiner::MinerCommandsHandler::printMessage(std::string msg) { m_logger(Logging::Info) << msg; }
+void XiMiner::MinerCommandsHandler::printMessage(std::string msg) {
+  std::cout << rang::fg::reset << msg << rang::fg::reset << std::endl;
+}
