@@ -46,6 +46,7 @@ DiscordLogger::DiscordLogger(const std::string& webhook, Logging::Level level)
 
   Http::SSLConfiguration sslConfig{};
   sslConfig.setEnabled(true);
+  sslConfig.setVerifyPeers(false);
   m_http = std::make_unique<Http::Client>("discordapp.com", static_cast<uint16_t>(443), sslConfig);
 }
 
