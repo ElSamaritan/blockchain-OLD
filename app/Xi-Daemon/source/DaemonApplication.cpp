@@ -132,7 +132,7 @@ int DaemonApplication::run() {
   std::future<int> cliRun{};
   if (!Options.noneInteractive()) {
     auto& lcore = static_cast<CryptoNote::Core&>(*core());
-    cli = std::make_unique<DaemonCommandsHandler>(lcore, *node(), *protocol(), logger());
+    cli = std::make_unique<DaemonCommandsHandler>(lcore, *node(), *protocol(), logger(), consoleLogger());
     cliRun = std::async(std::launch::async, [this, &cli, nodeServer]() {
       cli->run(name(), dataDirectory());
       nodeServer->sendStopSignal();

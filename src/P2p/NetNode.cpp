@@ -1300,6 +1300,38 @@ int NodeServer::handle_ping(int command, COMMAND_PING::request& arg, COMMAND_PIN
 }
 //-----------------------------------------------------------------------------------
 
+PeerlistCollection NodeServer::peerlist() const {
+  PeerlistCollection reval{};
+
+  std::list<PeerlistEntry> pl_wite;
+  std::list<PeerlistEntry> pl_gray;
+  m_peerlist.get_peerlist_full(pl_gray, pl_wite);
+
+  reval.white.reserve(pl_wite.size());
+  std::copy(pl_wite.begin(), pl_wite.end(), std::back_inserter(reval.white));
+  reval.gray.reserve(pl_wite.size());
+  std::copy(pl_gray.begin(), pl_gray.end(), std::back_inserter(reval.gray));
+
+  return reval;
+}
+
+P2pConnectionInfoVector NodeServer::connections() const {
+  P2pConnectionInfoVector reval{};
+  reval.reserve(m_connections.size());
+  for (const auto& cntxt : m_connections) {
+    P2pConnectionInfo info{};
+    info.id = cntxt.second.peerId;
+    info.connectionId = cntxt.second.m_connection_id;
+    info.address.ip = cntxt.second.m_remote_ip;
+    info.address.port = cntxt.second.m_remote_port;
+    info.type = cntxt.second.m_is_light_node ? P2pConnectionInfo::LightNode : P2pConnectionInfo::FullNode;
+    info.source = cntxt.second.m_is_income ? P2pConnectionInfo::Incoming : P2pConnectionInfo::Outgoing;
+    info.height = cntxt.second.m_remote_blockchain_height;
+    reval.emplace_back(std::move(info));
+  }
+  return reval;
+}
+
 bool NodeServer::log_peerlist() {
   std::list<PeerlistEntry> pl_wite;
   std::list<PeerlistEntry> pl_gray;

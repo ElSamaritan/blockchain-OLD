@@ -72,6 +72,9 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
   bool isBlockexplorerOnly() const;
   void setBlockexplorerOnly(bool enabled);
 
+  bool isMinerEndpoint() const;
+  void setIsMinerEndpoint(bool enabled);
+
   bool on_get_block_headers_range(const COMMAND_RPC_GET_BLOCK_HEADERS_RANGE::request& req,
                                   COMMAND_RPC_GET_BLOCK_HEADERS_RANGE::response& res,
                                   JsonRpc::JsonRpcError& error_resp);
@@ -194,6 +197,8 @@ class RpcServer : public Xi::Http::Server, public Xi::Http::RequestHandler {
 
   std::unique_ptr<Xi::Crypto::PasswordContainer> m_access_token{};
   Xi::Concurrent::ReadersWriterLock m_access_token_guard{};
+
+  bool m_isMinerEndpoint{true};
 
   bool m_isBlockexplorer;
   bool m_isBlockexplorerOnly;

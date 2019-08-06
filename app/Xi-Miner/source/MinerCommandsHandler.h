@@ -36,7 +36,8 @@
 namespace XiMiner {
 class MinerCommandsHandler : public Common::ConsoleHandler, MinerMonitor::Observer {
  public:
-  MinerCommandsHandler(MinerManager& miner, UpdateMonitor& monitor, Logging::LoggerManager& logger);
+  MinerCommandsHandler(MinerManager& miner, UpdateMonitor& monitor, Logging::CommonLogger& clogger,
+                       Logging::LoggerGroup& rlogger);
   ~MinerCommandsHandler() override;
 
   MinerMonitor& minerMonitor();
@@ -72,7 +73,8 @@ class MinerCommandsHandler : public Common::ConsoleHandler, MinerMonitor::Observ
  private:
   MinerManager& m_miner;
   UpdateMonitor& m_monitor;
-  Logging::LoggerManager& m_appLogger;
+  Logging::CommonLogger& m_consoleLogger;
+  Logging::LoggerGroup& m_rootLogger;
   MinerMonitor m_minerMonitor;
 };
 }  // namespace XiMiner

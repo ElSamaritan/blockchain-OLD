@@ -151,14 +151,31 @@ bool JsonOutputStreamSerializer::operator()(double& value, Common::StringView na
   return true;
 }
 
+namespace {
+const std::vector<std::pair<std::string, std::string>> escapeSequences{{
+    {"\b", "\\b"},
+    {"\f", "\\f"},
+    {"\n", "\\n"},
+    {"\r", "\\r"},
+    {"\t", "\\t"},
+    {"\"", "\\\""},
+    {"\\", "\\\\"},
+}};
+}  // namespace
+
 bool JsonOutputStreamSerializer::operator()(std::string& value, Common::StringView name) {
   XI_RETURN_EC_IF(chain.empty(), false);
   if (isOutput()) {
-    auto cp = Xi::replace(value, "\n", "\\n");
+    std::string cp = value;
+    for (auto i = escapeSequences.rbegin(); i != escapeSequences.rend(); ++i) {
+      cp = Xi::replace(cp, i->first, i->second);
+    }
     insertOrPush(*chain.back(), name, cp);
   } else {
     insertOrPush(*chain.back(), name, value);
-    value = Xi::replace(value, "\\n", "\n");
+    for (auto i = escapeSequences.begin(); i != escapeSequences.end(); ++i) {
+      value = Xi::replace(value, i->second, i->first);
+    }
   }
   return true;
 }

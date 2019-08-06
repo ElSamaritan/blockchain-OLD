@@ -111,6 +111,19 @@ struct P2pConnectionContext : public CryptoNoteConnectionContext {
   bool stopped;
 };
 
+struct P2pConnectionInfo {
+  enum Type { FullNode, LightNode };
+  enum Source { Outgoing, Incoming };
+
+  PeerIdType id;
+  uuid connectionId;
+  CryptoNote::NetworkAddress address;
+  Type type;
+  Source source;
+  CryptoNote::BlockHeight height;
+};
+using P2pConnectionInfoVector = std::vector<P2pConnectionInfo>;
+
 class NodeServer : public IP2pEndpoint {
  public:
   enum [[nodiscard]] State{
@@ -137,6 +150,9 @@ class NodeServer : public IP2pEndpoint {
   [[nodiscard]] bool serialize(ISerializer& s);
 
   // debug functions
+  CryptoNote::PeerlistCollection peerlist() const;
+  P2pConnectionInfoVector connections() const;
+
   bool log_peerlist();
   bool log_connections();
   virtual uint64_t get_connections_count() override;

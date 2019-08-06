@@ -61,6 +61,11 @@ struct connection_entry {
   bool is_income;
 };
 
+struct PeerlistCollection {
+  std::vector<PeerlistEntry> white;
+  std::vector<PeerlistEntry> gray;
+};
+
 #pragma pack(pop)
 
 inline bool operator<(const NetworkAddress& a, const NetworkAddress& b) {

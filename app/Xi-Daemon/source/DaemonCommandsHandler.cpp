@@ -10,7 +10,12 @@
 #include <chrono>
 #include <memory>
 
+#include <Xi/ExternalIncludePush.h>
+#include <rang.hpp>
+#include <Xi/ExternalIncludePop.h>
+
 #include <Xi/Global.hh>
+#include <Xi/Time.h>
 #include <Xi/Algorithm/String.h>
 #include <Xi/Version/Version.h>
 #include <CommonCLI/CommonCLI.h>
@@ -34,8 +39,8 @@
 
 DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote::NodeServer& srv,
                                              CryptoNote::CryptoNoteProtocolHandler& protocol,
-                                             Logging::LoggerManager& log)
-    : m_core(core), m_srv(srv), m_protocol{protocol}, logger(log, "daemon"), m_logManager(log) {
+                                             Logging::LoggerManager& log, Logging::CommonLogger& clogger)
+    : m_core(core), m_srv(srv), m_protocol{protocol}, m_logManager(log), m_consoleLogger{clogger} {
   m_explorer = std::make_shared<Xi::Blockchain::Explorer::CoreExplorer>(core);
   m_explorerService = Xi::Blockchain::Services::BlockExplorer::BlockExplorer::create(m_explorer, log);
 
@@ -123,7 +128,7 @@ bool DaemonCommandsHandler::log_set(const std::vector<std::string>& args) {
   if (!level.has_value()) {
     return false;
   } else {
-    m_logManager.setMaxLevel(*level);
+    m_consoleLogger.setMaxLevel(*level);
     return true;
   }
 }
@@ -474,13 +479,82 @@ bool DaemonCommandsHandler::transaction_detailed(const std::vector<std::string>&
 
 bool DaemonCommandsHandler::p2p_peers(const std::vector<std::string>& args) {
   XI_UNUSED(args);
-  m_srv.log_peerlist();
+  const auto peers = m_srv.peerlist();
+
+  // clang-format off
+  std::cout << rang::style::underline
+    << std::left << std::setw(6)  << "Type"
+    << std::left<< std::setw(2 * 8 + 2) << "Identifier"
+    << std::left<< std::setw(15 + 2) << "Address"
+    << std::left<< std::setw(5 + 2) << "Port"
+    << std::left<< std::setw(24) << "Last Seen"
+    << rang::style::reset
+    << "\n"
+  ;
+  // clang-format on
+  const auto printPeer = [](const CryptoNote::PeerlistEntry& peer) {
+    // clang-format off
+    std::cout
+      << std::left << std::setw(2 * 8 + 2) << Common::toHex(&peer.id, sizeof(peer.id))
+      << std::left << std::setw(15 + 2) << Common::ipAddressToString(peer.address.ip)
+      << std::left << std::setw(5 + 2) << peer.address.port
+      << std::left << std::setw(24) << Xi::Time::unixToLocalShortString(peer.last_seen)
+      << "\n"
+    ;
+    // clang-format on
+  };
+
+  for (const auto& peer : peers.white) {
+    std::cout << std::left << std::setw(6) << "WHITE";
+    printPeer(peer);
+  };
+  std::cout << rang::fg::gray;
+  for (const auto& peer : peers.gray) {
+    std::cout << std::left << std::setw(6) << "GRAY";
+    printPeer(peer);
+  };
+  std::cout << rang::fg::reset;
+  std::cout << std::endl;
+
   return true;
 }
 
 bool DaemonCommandsHandler::p2p_connections(const std::vector<std::string>& args) {
+  using CryptoNote::P2pConnectionInfo;
+
   XI_UNUSED(args);
-  m_srv.get_payload_object().log_connections();
+  const auto connections = m_srv.connections();
+
+  // clang-format off
+  std::cout << rang::style::underline
+    << std::left << std::setw(10)  << "Source"
+    << std::left<< std::setw(2 * 8 + 2) << "Identifier"
+    << std::left<< std::setw(2 * 8 + 2) << "Connection"
+    << std::left<< std::setw(15 + 2) << "Address"
+    << std::left<< std::setw(5 + 2) << "Port"
+    << std::left<< std::setw(10 + 2) << "Height"
+    << std::left<< std::setw(8 + 2) << "Type"
+    << rang::style::reset
+    << "\n"
+  ;
+
+  for (const auto& connection : connections) {
+    // clang-format off
+    std::cout
+      << std::left << std::setw(10) << (connection.source == P2pConnectionInfo::Incoming ? "INCOMING" : "OUTGOING")
+      << std::left << std::setw(2 * 8 + 2) << Common::toHex(&connection.id, sizeof(connection.id))
+      << std::left << std::setw(2 * 8 + 2) << Common::toHex(connection.connectionId.data, sizeof(8))
+      << std::left << std::setw(15 + 2) << Common::ipAddressToString(connection.address.ip)
+      << std::left << std::setw(5 + 2) << connection.address.port
+      << std::left << std::setw(10 + 2) << toString(connection.height)
+      << std::left << std::setw(8 + 2) << (connection.type == P2pConnectionInfo::LightNode ? "LIGHT" : "FULL")
+      << "\n"
+    ;
+    // clang-format on
+  };
+  std::cout << rang::fg::reset;
+  std::cout << std::endl;
+
   return true;
 }
 

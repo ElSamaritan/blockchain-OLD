@@ -583,7 +583,6 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
       m_logger(Logging::Info) << context << "Block received at sync phase was marked as orphaned, dropping connection: "
                               << addResult.message();
       reportFailureIfSynced(context, P2pPenalty::BlockValidationFailure);
-      context.m_state = CryptoNoteConnectionContext::state_shutdown;
       return 1;
     } else if (addResult == error::AddBlockErrorCode::ALREADY_EXISTS) {
       m_logger(Logging::Debugging) << context

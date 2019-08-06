@@ -350,6 +350,14 @@ void RpcServer::setBlockexplorerOnly(bool enabled) {
   setBlockexplorer(true);
 }
 
+bool RpcServer::isMinerEndpoint() const {
+  return m_isMinerEndpoint;
+}
+
+void RpcServer::setIsMinerEndpoint(bool enabled) {
+  m_isMinerEndpoint = enabled;
+}
+
 bool RpcServer::isCoreReady() {
   return (!m_core.getCurrency().network().isMainNet()) || m_p2p.get_payload_object().isSynchronized();
 }
@@ -1279,6 +1287,9 @@ uint64_t slow_memmem(void* start_buff, size_t buflen, void* pat, size_t patlen) 
 
 bool RpcServer::on_get_block_template_state(const RpcCommands::GetBlockTemplateState::request& req,
                                             RpcCommands::GetBlockTemplateState::response& res) {
+  if (!isMinerEndpoint()) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_MINER_EDNPOINT_DISABLED, "Mining is disabled on this node."};
+  }
   XI_UNUSED(req);
   const auto stateHash = block_template_state_hash();
   res.template_state = Common::podToHex(stateHash);
@@ -1288,6 +1299,9 @@ bool RpcServer::on_get_block_template_state(const RpcCommands::GetBlockTemplateS
 
 bool RpcServer::on_get_block_template(const RpcCommands::GetBlockTemplate::request& req,
                                       RpcCommands::GetBlockTemplate::response& res) {
+  if (!isMinerEndpoint()) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_MINER_EDNPOINT_DISABLED, "Mining is disabled on this node."};
+  }
   AccountPublicAddress acc = boost::value_initialized<AccountPublicAddress>();
 
   if (!req.wallet_address.size() || !m_core.getCurrency().parseAccountAddressString(req.wallet_address, acc)) {
@@ -1320,6 +1334,9 @@ bool RpcServer::on_get_block_template(const RpcCommands::GetBlockTemplate::reque
 }
 
 bool RpcServer::on_submit_block(const RpcCommands::SubmitBlock::request& req, RpcCommands::SubmitBlock::response& res) {
+  if (!isMinerEndpoint()) {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_MINER_EDNPOINT_DISABLED, "Mining is disabled on this node."};
+  }
   XI_CONCURRENT_RLOCK(m_submissionAccess);
 
   BinaryArray blockblob;

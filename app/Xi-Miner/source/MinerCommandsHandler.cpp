@@ -41,8 +41,14 @@
 #define MINER_COMMAND_DEFINE(NAME, HELP) setHandler(#NAME, boost::bind(&MinerCommandsHandler::NAME, this, _1), HELP)
 
 XiMiner::MinerCommandsHandler::MinerCommandsHandler(MinerManager &miner, UpdateMonitor &monitor,
-                                                    Logging::LoggerManager &logger)
-    : ConsoleHandler(), m_miner{miner}, m_monitor{monitor}, m_appLogger{logger}, m_minerMonitor{miner, m_appLogger} {
+                                                    Logging::CommonLogger &logger, Logging::LoggerGroup &rlogger)
+    : ConsoleHandler(),
+      m_miner{miner},
+      m_monitor{monitor},
+      m_consoleLogger{logger},
+      m_rootLogger{rlogger},
+      m_minerMonitor{miner, m_rootLogger} {
+  reportHide();
   m_minerMonitor.addObserver(this);
 
   MINER_COMMAND_DEFINE(help, "prints a summary of all commands");
@@ -190,19 +196,19 @@ bool XiMiner::MinerCommandsHandler::log_set(const std::vector<std::string> &args
     return false;
   }
 
-  m_appLogger.setMaxLevel(*level);
+  m_consoleLogger.setMaxLevel(*level);
   return true;
 }
 
 bool XiMiner::MinerCommandsHandler::log_hide(const std::vector<std::string> &args) {
   XI_UNUSED(args);
-  reportHide();
+  m_consoleLogger.setMaxLevel(Logging::None);
   return true;
 }
 
 bool XiMiner::MinerCommandsHandler::report_hide(const std::vector<std::string> &args) {
   XI_UNUSED(args);
-  m_appLogger.setMaxLevel(Logging::Info);
+  reportHide();
   return true;
 }
 

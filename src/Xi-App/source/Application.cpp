@@ -186,6 +186,10 @@ Logging::LoggerManager &Xi::App::Application::logger() {
   return *m_logger;
 }
 
+Logging::ConsoleLogger &Xi::App::Application::consoleLogger() {
+  return *m_consoleLogger;
+}
+
 System::Dispatcher &Xi::App::Application::dispatcher() {
   return m_dispatcher;
 }
@@ -636,6 +640,8 @@ void Xi::App::Application::initializeRpcServer() {
         m_rpcServer->setFeeViewKey(m_publicNodeOptions->fee().viewKey());
       }
     }
+
+    m_rpcServer->setIsMinerEndpoint(m_publicNodeOptions->mining());
 
     if (m_blockExplorerOptions->enabled()) {
       m_rpcServer->setBlockexplorer(true);

@@ -151,16 +151,6 @@ void XiMiner::MinerMonitor::monitorLoop() {
 }
 
 void XiMiner::MinerMonitor::reportHashrate() {
-  std::string color = Logging::CYAN;
-  const auto stats = status();
-  const auto abs = (stats.current_hashrate - stats.average_hashrate) / stats.average_hashrate;
-  if (abs >= -0.01)
-    color = Logging::GREEN;
-  else if (abs < -0.2)
-    color = Logging::RED;
-  else if (abs < -0.08)
-    color = Logging::YELLOW;
-
   auto currentStatus = status();
   m_logger.object(Logging::Info, currentStatus, "status");
   if (m_statusReport) {

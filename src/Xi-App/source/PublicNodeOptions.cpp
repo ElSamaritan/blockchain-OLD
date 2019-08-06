@@ -28,6 +28,7 @@
 namespace {
 XI_DECLARE_EXCEPTIONAL_CATEGORY(PublicNodeOptions)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(Inconsistent, "public fee options provided are inconsistent", PublicNodeOptions)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidFeeAmount, "public fee amount may not be negative", PublicNodeOptions)
 }  // namespace
 
 namespace Xi {
@@ -37,6 +38,7 @@ void PublicNodeOptions::loadEnvironment(Environment &env) {
   // clang-format off
   env
     (enabled(), "PUBLIC_NODE")
+    (mining(), "PUBLIC_NODE_MINING")
     (fee().address(), "PUBLIC_NODE_FEE_ADDRESS")
     (fee().viewKey(), "PUBLIC_NODE_FEE_VIEW_KEY")
     (fee().amount(), "PUBLIC_NODE_FEE_AMOUNT")
@@ -50,6 +52,9 @@ void PublicNodeOptions::emplaceOptions(cxxopts::Options &options) {
     ("public-node-disable", "Disables public node capabilities of this instance.",
       cxxopts::value(enabled())->default_value(enabled() ?  "true" : "false")->implicit_value("false"))
 
+    ("public-node-mining-disable", "Disables public node mining capabilities of this instance.",
+      cxxopts::value<bool>()->default_value(!mining() ?  "true" : "false")->implicit_value("true"))
+
     ("public-node-fee-address", "Sets the convenience charge <address> for light wallets that use the daemon",
       cxxopts::value<std::string>(fee().address()), "<address>")
 
@@ -62,13 +67,22 @@ void PublicNodeOptions::emplaceOptions(cxxopts::Options &options) {
 }
 
 bool PublicNodeOptions::evaluateParsedOptions(const cxxopts::Options &options, const cxxopts::ParseResult &result) {
-  XI_UNUSED(options, result);
+  XI_UNUSED(options);
   XI_RETURN_SC_IF_NOT(enabled(), false);
+
+  if (result.count("public-node-mining-disable") > 0) {
+    mining(!result["public-node-mining-disable"].as<bool>());
+  }
+
+  if (result.count("public-node-fee-amount") > 0) {
+    int64_t amount = result["public-node-fee-amount"].as<int64_t>();
+    exceptional_if<InvalidFeeAmountError>(amount < 0);
+    fee().amount(static_cast<uint64_t>(amount));
+  }
 
   bool isPartiallyProvided = !fee().address().empty() || !fee().viewKey().empty() || fee().amount() > 0;
 
   exceptional_if<InconsistentError>(isPartiallyProvided && fee().address().empty(), "fee address is missing");
-  exceptional_if<InconsistentError>(isPartiallyProvided && fee().viewKey().empty(), "fee view key is missing");
   exceptional_if<InconsistentError>(isPartiallyProvided && fee().amount() == 0, "fee amount is missing");
 
   XI_RETURN_SC(false);

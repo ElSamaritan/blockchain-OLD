@@ -48,6 +48,7 @@ struct PublicNodeFees {
 
 struct PublicNodeOptions : public IOptions {
   XI_PROPERTY(bool, enabled, true)
+  XI_PROPERTY(bool, mining, true)
   XI_PROPERTY(PublicNodeFees, fee)
 
   KV_BEGIN_SERIALIZATION

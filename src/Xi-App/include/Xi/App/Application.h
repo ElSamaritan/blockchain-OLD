@@ -34,6 +34,7 @@
 #include <Xi/Http/Server.h>
 #include <System/Dispatcher.h>
 #include <Logging/LoggerManager.h>
+#include <Logging/ConsoleLogger.h>
 #include <CryptoNoteCore/RocksDBWrapper.h>
 #include <CryptoNoteCore/Checkpoints.h>
 #include <CryptoNoteCore/ICore.h>
@@ -79,6 +80,7 @@ class Application {
   const std::string name() const;
   const std::string description() const;
   Logging::LoggerManager& logger();
+  Logging::ConsoleLogger& consoleLogger();
   System::Dispatcher& dispatcher();
 
   CryptoNote::RpcRemoteConfiguration remoteConfiguration();
@@ -143,7 +145,7 @@ class Application {
   // ------------------------------------------------ Logging ------------------------------------------------------
   std::unique_ptr<Logging::LoggerManager> m_logger;
   std::unique_ptr<Logging::LoggerRef> m_ologger;
-  std::unique_ptr<Logging::ILogger> m_consoleLogger;
+  std::unique_ptr<Logging::ConsoleLogger> m_consoleLogger;
   std::unique_ptr<Logging::ILogger> m_fileLogger;
   std::unique_ptr<Logging::ILogger> m_discordLogger;
   std::unique_ptr<LoggingOptions> m_logOptions;

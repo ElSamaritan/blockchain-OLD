@@ -39,7 +39,7 @@ namespace XiMiner {
 class MinerApplication : public Application {
  public:
   MinerApplication() : Application("xi-miner", "mines blocks to progress the blockchain") {
-    useLogging(Logging::Info);
+    useLogging(Logging::Warning);
     useCurrency();
     useRemoteRpc();
   }
@@ -74,7 +74,7 @@ bool XiMiner::MinerApplication::evaluateParsedOptions(const cxxopts::Options& op
 int XiMiner::MinerApplication::run() {
   auto monitor = UpdateMonitor::start(Options.Address, *currency(), remoteConfiguration(), logger()).takeOrThrow();
   MinerManager miner{remoteConfiguration(), logger()};
-  MinerCommandsHandler cli{miner, *monitor, logger()};
+  MinerCommandsHandler cli{miner, *monitor, consoleLogger(), logger()};
   cli.minerMonitor().setBlocksLimit(Options.BlockLimit);
   cli.minerMonitor().setReportInterval(std::chrono::seconds{Options.ReportInterval});
   cli.minerMonitor().setPanicExitEnabled(Options.Panic);

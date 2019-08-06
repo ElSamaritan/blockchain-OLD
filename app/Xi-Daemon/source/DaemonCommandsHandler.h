@@ -28,14 +28,15 @@ class NodeServer;
 class DaemonCommandsHandler : public Common::ConsoleHandler {
  public:
   DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote::NodeServer& srv,
-                        CryptoNote::CryptoNoteProtocolHandler& protocol, Logging::LoggerManager& log);
+                        CryptoNote::CryptoNoteProtocolHandler& protocol, Logging::LoggerManager& log,
+                        Logging::CommonLogger& clogger);
 
  private:
   CryptoNote::Core& m_core;
   CryptoNote::NodeServer& m_srv;
   CryptoNote::CryptoNoteProtocolHandler& m_protocol;
-  Logging::LoggerRef logger;
   Logging::LoggerManager& m_logManager;
+  Logging::CommonLogger& m_consoleLogger;
 
   std::shared_ptr<Xi::Blockchain::Explorer::IExplorer> m_explorer;
   std::shared_ptr<Xi::Blockchain::Services::BlockExplorer::BlockExplorer> m_explorerService;
