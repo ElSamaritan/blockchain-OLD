@@ -109,13 +109,6 @@ class NodeRpcProxy : public CryptoNote::INode {
 
   virtual std::optional<FeeAddress> feeAddress() const override;
 
-  unsigned int rpcTimeout() const {
-    return m_rpcTimeout;
-  }
-  void rpcTimeout(unsigned int val) {
-    m_rpcTimeout = val;
-  }
-
   void setPollUpdatesEnabled(bool enabled);
   bool pollUpdatesEnabled() const;
 
@@ -125,6 +118,15 @@ class NodeRpcProxy : public CryptoNote::INode {
  private:
   void resetInternalState();
   void workerThread(const Callback& initialized_callback);
+  /*!
+   * \brief updateConnectionStatus Conditionally updates the connection status if changed.
+   * \param isConnected True if the connection works, otherwise false.
+   */
+  void updateConnectionStatus(bool isConnected);
+  /*!
+   * \brief throttle If the connection is not established this will throttle the execution of requests.
+   */
+  void throttle() const;
 
   std::vector<Crypto::Hash> getKnownTxsVector() const;
   void pullNodeStatusAndScheduleTheNext();
@@ -187,7 +189,6 @@ class NodeRpcProxy : public CryptoNote::INode {
 
   const std::string m_nodeHost;
   const unsigned short m_nodePort;
-  unsigned int m_rpcTimeout;
   std::unique_ptr<Xi::Http::Client> m_httpClient;
   System::Event* m_httpEvent = nullptr;
 

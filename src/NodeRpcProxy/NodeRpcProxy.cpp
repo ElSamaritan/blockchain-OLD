@@ -39,9 +39,13 @@ using namespace Logging;
 using namespace System;
 
 #define XI_TRY_RPC_COMMAND(COMMAND)                                             \
+  throttle();                                                                   \
   if (const auto ec = COMMAND; ec) {                                            \
+    updateConnectionStatus(false);                                              \
     XI_PRINT_EC("[%s:%i] RPC call failed: %s\n", __FILE__, __LINE__, #COMMAND); \
     return ec;                                                                  \
+  } else {                                                                      \
+    updateConnectionStatus(true);                                               \
   }
 
 namespace CryptoNote {
@@ -68,7 +72,6 @@ NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort,
       m_currency{currency},
       m_nodeHost(nodeHost),
       m_nodePort(nodePort),
-      m_rpcTimeout(10000),
       m_pullInterval(5000),
       m_peerCount(0),
       m_networkHeight(BlockHeight::Null),
@@ -88,7 +91,6 @@ NodeRpcProxy::~NodeRpcProxy() {
 }
 
 void NodeRpcProxy::resetInternalState() {
-  m_stop = false;
   m_peerCount.store(0, std::memory_order_relaxed);
   m_networkHeight.store(BlockHeight::Null, std::memory_order_relaxed);
   m_networkVersion.store(BlockVersion::Null.native(), std::memory_order_release);
@@ -150,9 +152,10 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
     m_httpEvent->set();
 
     if (ping()) {
+      updateConnectionStatus(false);
       initialized_callback(make_error_code(error::CONNECT_ERROR));
     } else {
-      m_connected = true;
+      updateConnectionStatus(true);
       {
         std::lock_guard<std::mutex> lock(m_mutex);
         assert(m_state == STATE_INITIALIZING);
@@ -213,21 +216,33 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
   m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
 }
 
+void NodeRpcProxy::updateConnectionStatus(bool isConnected) {
+  if (m_connected == isConnected) {
+    return;
+  } else {
+    m_connected = isConnected;
+    if (m_connected) {
+      resetInternalState();
+    }
+    m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
+  }
+}
+
+void NodeRpcProxy::throttle() const {
+  if (!m_connected) {
+    std::this_thread::sleep_for(std::chrono::seconds{1});
+  } else {
+    std::this_thread::sleep_for(std::chrono::milliseconds{10});
+  }
+}
+
 void NodeRpcProxy::updateNodeStatus() {
-  bool updateBlockchain = true;
-  while (pollUpdatesEnabled() && updateBlockchain && !m_stop) {
+  if (pollUpdatesEnabled() && !m_stop) {
     if (const auto ec = updateBlockchainStatus(); ec) {
       m_logger(Error) << "Error updating blockchain status: " << ec.message();
-      if (m_connected) {
-        m_connected = false;
-        m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
-      }
+      updateConnectionStatus(false);
     } else {
-      if (!m_connected) {
-        m_connected = true;
-        m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
-      }
-      updateBlockchain = !updatePoolStatus();
+      updateConnectionStatus(true);
     }
   }
 }
@@ -361,8 +376,14 @@ void NodeRpcProxy::getFeeInfo() {
   std::error_code ec = jsonCommand("/feeinfo", ireq, iresp);
 
   if (ec || iresp.status != CORE_RPC_STATUS_OK) {
+    if (ec) {
+      updateConnectionStatus(false);
+    } else {
+      updateConnectionStatus(true);
+    }
     return;
   }
+  updateConnectionStatus(true);
 
   if (iresp.fee && !iresp.fee->address.isValid()) {
     return;
