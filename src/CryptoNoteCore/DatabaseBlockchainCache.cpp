@@ -1051,8 +1051,14 @@ bool DatabaseBlockchainCache::checkIfAnySpent(const Crypto::KeyImageSet& keyImag
   auto readResult = batch.extractResult();
   const auto& spentKeyImages = readResult.getBlockIndexesBySpentKeyImages();
 
-  return std::any_of(spentKeyImages.begin(), spentKeyImages.end(),
-                     [blockIndex](const auto& spentKeyImage) { return blockIndex <= spentKeyImage.second; });
+  for (const auto& spentKeyImage : spentKeyImages) {
+    if (blockIndex <= spentKeyImage.second) {
+      logger(Logging::Debugging) << fmt::format("KeyImage '{}' already spent at {} for index {}",
+                                                spentKeyImage.first.toString(), spentKeyImage.second, blockIndex);
+      XI_RETURN_EC(true);
+    }
+  }
+  XI_RETURN_SC(false);
 }
 
 ExtractOutputKeysResult DatabaseBlockchainCache::extractKeyOutputKeys(

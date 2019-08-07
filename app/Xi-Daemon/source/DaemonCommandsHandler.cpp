@@ -543,7 +543,7 @@ bool DaemonCommandsHandler::p2p_connections(const std::vector<std::string>& args
     std::cout
       << std::left << std::setw(10) << (connection.source == P2pConnectionInfo::Incoming ? "INCOMING" : "OUTGOING")
       << std::left << std::setw(2 * 8 + 2) << Common::toHex(&connection.id, sizeof(connection.id))
-      << std::left << std::setw(2 * 8 + 2) << Common::toHex(connection.connectionId.data, sizeof(8))
+      << std::left << std::setw(2 * 8 + 2) << Common::toHex(connection.connectionId.data, 8)
       << std::left << std::setw(15 + 2) << Common::ipAddressToString(connection.address.ip)
       << std::left << std::setw(5 + 2) << connection.address.port
       << std::left << std::setw(10 + 2) << toString(connection.height)

@@ -489,14 +489,15 @@ bool BlockchainCache::checkIfAnySpent(const Crypto::KeyImageSet& keyImages, uint
   }
 
   const auto& keyImagesTag = spentKeyImages.get<KeyImageTag>();
-  return std::any_of(keyImages.begin(), keyImages.end(), [&keyImagesTag, blockIndex](const auto& keyImage) {
+  for (const auto& keyImage : keyImages) {
     const auto search = keyImagesTag.find(keyImage);
-    if (search == keyImagesTag.end()) {
-      return false;
-    } else {
-      return search->blockIndex <= blockIndex;
+    if (search != keyImagesTag.end() && blockIndex <= search->blockIndex) {
+      logger(Logging::Debugging) << fmt::format("KeyImage '{}' already spent at {} for index {}", keyImage.toString(),
+                                                search->blockIndex, blockIndex);
+      XI_RETURN_EC(true);
     }
-  });
+  }
+  XI_RETURN_SC(false);
 }
 
 uint32_t BlockchainCache::getBlockCount() const {
