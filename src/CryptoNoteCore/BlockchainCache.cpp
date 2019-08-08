@@ -432,6 +432,8 @@ void BlockchainCache::pushTransaction(const CachedTransaction& cachedTransaction
 
     if (const auto amountOutput = std::get_if<TransactionAmountOutput>(std::addressof(output))) {
       transactionCacheInfo.globalIndexes.push_back(insertKeyOutputToGlobalIndex(amountOutput->amount, poi, blockIndex));
+    } else {
+      Xi::exceptional<Xi::InvalidVariantTypeError>();
     }
   }
 
@@ -456,6 +458,8 @@ uint32_t BlockchainCache::insertKeyOutputToGlobalIndex(uint64_t amount, PackedOu
     indexEntry.startIndex = static_cast<uint32_t>(parent->getKeyOutputsCountForAmount(amount, blockIndex));
     logger(Logging::Debugging) << "Key output count for amount " << amount
                                << " requested from parent. Returned count: " << indexEntry.startIndex;
+  } else {
+    indexEntry.startIndex = 0;
   }
 
   return indexEntry.startIndex + static_cast<uint32_t>(indexEntry.outputs.size()) - 1;
@@ -1103,7 +1107,7 @@ BlockchainCache::extractKeyOutputs(const std::unordered_map<IBlockchainCache::Am
 
   XI_RETURN_SC_IF(references.empty(), {});
 
-  if (startIndex < blockIndex) {
+  if (startIndex > blockIndex) {
     if (parent != nullptr) {
       return parent->extractKeyOutputs(references, blockIndex);
     } else {
