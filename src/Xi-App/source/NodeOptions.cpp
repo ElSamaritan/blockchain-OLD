@@ -51,7 +51,7 @@ void NodeOptions::loadEnvironment(Environment &env) {
     (autoBan(), "P2P_BAN_AUTO")
     (addPeers(), "P2P_PEERS_ADD")
     (exclusivePeers(), "P2P_PEERS_EXCLUSIVE")
-    (priorityPeers(), "P2P_PPERS_PRIORITY")
+    (priorityPeers(), "P2P_PEERS_PRIORITY")
     (seedPeers(), "P2P_PEERS_SEED")
   ;
   // clang-format on
