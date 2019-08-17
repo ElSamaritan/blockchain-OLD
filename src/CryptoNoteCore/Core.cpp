@@ -821,7 +821,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     }
 
     if (!m_currency.checkProofOfWork(cachedBlock, currentDifficulty)) {
-      logger(Logging::Warning) << "Proof of work too weak for block " << blockStr;
+      logger(Logging::Debugging) << "Proof of work too weak for block " << blockStr;
       return error::BlockValidationError::PROOF_OF_WORK_TOO_WEAK;
     }
   }
@@ -1727,7 +1727,6 @@ std::error_code Core::validateBlock(const CachedBlock& cachedBlock, IBlockchainC
     if (staticReward.isError() || !staticReward.value().has_value()) {
       logger(Logging::Error) << "expected static reward but consturation failed while validating block";
       return error::BlockValidationError::STATIC_REWARD_MISSMATCH;
-      ;
     }
     CachedTransaction cStaticReward{std::move(staticReward.take().value())};
     const auto expectedStaticRewardHash = cStaticReward.getTransactionHash();
