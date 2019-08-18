@@ -32,6 +32,7 @@
 #include <gmock/gmock.h>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Encoding/Base64.h>
 #include <Xi/Crypto/Random/Random.hh>
 
 namespace {
@@ -88,6 +89,17 @@ u1yEGpmd84+7O5Fi0O/tMeVSXcQjKOT37u/QZMsjgaHZnx5E0DvD/K7blWy0Iu79
 YQIDAQAB
 -----END PUBLIC KEY-----
 )";
+
+const std::string Peers = R"([
+    "xi://galaxia.hopto.org"
+])";
+
+const std::string PeersSignature =
+    "bmdvbOSmZsvlAObFc5GruCGczX3vWK0hXqaEoqtOB3QgkKiOX+DJtJ05adjiTxldSV4b8yMYJn+viIj6xq0HAs7GUmALtJT8JaO/"
+    "6IHoycFXK0qe86RykC5jJc3cKdzNaqz31ewHgYE0w3JjZ+6PmJXcnBuL/"
+    "lEMppG3BPsGmFGfN1DzIMenShO8AmF3CU9iRnDUpVZo39oUIH29Jib1+"
+    "aeoMuq8UTJhLQrKT8lQUs4B0BD9MLvZf6oxzgG0Kv6leyhv8EVD6MS0xWNw1w/Puk0p5k+8kVv9To4t/3ZC1iE1UPYlLSlrl5/"
+    "ogEV0kurOC93EAuxbrJb4K6L9LkMWiQ==";
 }  // namespace
 
 #define XI_TESTSUITE T_Xi_Crypto_Rsa
@@ -120,6 +132,12 @@ TEST_F(XI_TESTSUITE, ValidCases) {
     ASSERT_FALSE(signature.isError());
     EXPECT_TRUE(verify(message, pubKey, *signature));
   }
+}
+
+TEST_F(XI_TESTSUITE, PeersSignature) {
+  using namespace Xi::Crypto::Rsa;
+  const auto seedSignature = Xi::Base64::decode(PeersSignature);
+  EXPECT_TRUE(verify(Xi::asConstByteSpan(Peers), pubKey, Xi::asConstByteSpan(seedSignature)));
 }
 
 TEST_F(XI_TESTSUITE, AlteredMessage) {
