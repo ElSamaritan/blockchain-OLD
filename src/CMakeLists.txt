@@ -138,6 +138,19 @@ xi_make_library(
     openssl
 )
 
+xi_make_library(
+  Xi-Network
+
+  PUBLIC_LIBRARIES
+    Xi::Core
+    Xi::Endianess
+
+    Serialization
+
+  PRIVATE_LIBRARIES
+    uriparser::uriparser
+    boost
+)
 
 xi_make_library(
   Xi-Http
@@ -146,7 +159,8 @@ xi_make_library(
     openssl
 
   PUBLIC_LIBRARIES
-    Xi.Core
+    Xi::Core
+    Xi::Network
     boost
     cxxopts
     Serialization

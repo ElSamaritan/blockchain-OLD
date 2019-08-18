@@ -1,4 +1,4 @@
-﻿# ============================================================================================== #
+# ============================================================================================== #
 #                                                                                                #
 #                                     Galaxia Blockchain                                         #
 #                                                                                                #
@@ -21,33 +21,24 @@
 #                                                                                                #
 # ============================================================================================== #
 
-include(ExternalProject)
+if(DEFINED XI_EXTERNAL_URIPARSER_URIPARSER_CMAKE)
+    return()
+endif()
+set(XI_EXTERNAL_URIPARSER_URIPARSER_CMAKE ON)
 
-# Preinstalled Requirements
-include(boostorg-boost.cmake)
-include(openssl-openssl.cmake)
+set(URIPARSER_BUILD_CHAR ON CACHE INTERNAL "" FORCE)
+set(URIPARSER_BUILD_WCHAR_T OFF CACHE INTERNAL "" FORCE)
+set(URIPARSER_BUILD_DOCS OFF CACHE INTERNAL "" FORCE)
+set(URIPARSER_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
+set(URIPARSER_BUILD_TOOLS OFF CACHE INTERNAL "" FORCE)
 
-# Contained in buildsystem using submodules
-include(fmtlib-fmt.cmake)
-include(lz4-lz4.cmake)
-include(facebook-rocksdb.cmake)
-include(google-sparsehash-c11.cmake)
-include(miniupnp-miniupnpc.cmake)
-include(nlohmann-json.cmake)
-include(yhirose-cpp-linenoise.cmake)
-include(jarro2783-cxxopts.cmake)
-include(rang.cmake)
-include(uriparser-uriparser.cmake)
-include(yaml-cpp.cmake)
-include(ruslo-leathers.cmake)
-include(google-cpu-features.cmake)
-include(amanieu-asyncplusplus.cmake)
-
-if(XI_BUILD_BREAKPAD)
-  include(google-breakpad.cmake)
+if(MSVC)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(URIPARSER_MSVC_RUNTIME "/MTd" CACHE INTERNAL "" FORCE)
+    else()
+        set(URIPARSER_MSVC_RUNTIME "/MT" CACHE INTERNAL "" FORCE)
+    endif()
 endif()
 
-if(XI_BUILD_TESTSUITE)
-  include(google-test.cmake)
-  include(google-benchmark.cmake)
-endif()
+add_subdirectory(uriparser)
+add_library(uriparser::uriparser ALIAS uriparser)

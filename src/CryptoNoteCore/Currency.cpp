@@ -521,7 +521,7 @@ std::string Currency::staticRewardAddressForBlockVersion(BlockVersion blockVersi
 Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const Crypto::Hash& previousBlockHash,
                                                                            BlockVersion blockVersion,
                                                                            uint32_t blockIndex) const {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   const auto rewardAmount = staticRewardAmountForBlockVersion(blockVersion);
   const auto rewardAddress = staticRewardAddressForBlockVersion(blockVersion);
   if (rewardAddress.empty() || rewardAmount == 0) {
@@ -595,7 +595,7 @@ Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const
   tx.inputs.push_back(in);
 
   return Xi::success<boost::optional<Transaction>>(std::move(tx));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Xi::Result<boost::optional<Transaction>> Currency::constructStaticRewardTx(const CachedBlock& block) const {

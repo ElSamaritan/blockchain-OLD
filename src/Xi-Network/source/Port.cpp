@@ -21,41 +21,32 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Log/Discord/Embed.hpp"
+#include "Xi/Network/Port.hpp"
 
-#include <sstream>
-
-#include <Serialization/JsonOutputStreamSerializer.h>
-#include <Serialization/SerializationTools.h>
+#include <Xi/Algorithm/String.h>
 
 namespace Xi {
-namespace Log {
-namespace Discord {
+namespace Network {
 
-Xi::Log::Discord::Embed &Xi::Log::Discord::Embed::timestamp(boost::posix_time::ptime time) {
-  return timestamp(boost::posix_time::to_iso_extended_string(time));
-}
+const Port Port::Any{0};
 
-EmbedField &Embed::addField() {
-  fields().emplace_back();
-  return fields().back();
-}
-
-Result<std::string> Embed::toJson() const {
+Result<Port> Port::fromString(const std::string &str) {
   XI_ERROR_TRY
-  return success(CryptoNote::storeToJson(*this));
+  return emplaceSuccess<Port>(lexical_cast<uint16_t>(str));
   XI_ERROR_CATCH
 }
 
-Result<std::string> Embed::toWebhookBody() const {
-  XI_ERROR_TRY
-  auto embedBody = toJson().takeOrThrow();
-  std::stringstream builder{};
-  builder << "{\"embeds\": [" << embedBody << "]}";
-  return success(std::string{builder.str()});
-  XI_ERROR_CATCH
+bool Port::isAny() const {
+  return (*this) == Any;
 }
 
-}  // namespace Discord
-}  // namespace Log
+std::string Port::toString() const {
+  return std::to_string(native());
+}
+
+bool serialize(Port &port, Common::StringView name, CryptoNote::ISerializer &serializer) {
+  return serializer(port.value, name);
+}
+
+}  // namespace Network
 }  // namespace Xi

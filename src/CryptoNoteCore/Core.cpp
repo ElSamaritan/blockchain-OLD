@@ -679,7 +679,7 @@ uint64_t Core::getDifficultyForNextBlock() const {
 Xi::Result<std::vector<Crypto::Hash>> Core::findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds,
                                                                      size_t maxCount, uint32_t& totalBlockCount,
                                                                      uint32_t& startBlockIndex) const {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   assert(!remoteBlockIds.empty());
   assert(remoteBlockIds.back() == getBlockHashByIndex(0));
   throwIfNotInitialized();
@@ -693,7 +693,7 @@ Xi::Result<std::vector<Crypto::Hash>> Core::findBlockchainSupplement(const std::
   startBlockIndex = startIndexResult.value();
 
   return success(getBlockHashes(startBlockIndex, static_cast<uint32_t>(maxCount)));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlock) {
@@ -1137,7 +1137,7 @@ std::error_code Core::addBlock(RawBlock&& rawBlock) {
 }
 
 Xi::Result<std::vector<Crypto::Hash>> Core::addBlock(LiteBlock block, std::vector<CachedTransaction> txs) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   throwIfNotInitialized();
 
   XI_CONCURRENT_RLOCK(m_access);
@@ -1202,7 +1202,7 @@ Xi::Result<std::vector<Crypto::Hash>> Core::addBlock(LiteBlock block, std::vecto
     return failure(addBlock(CachedBlock{std::move(blockTemplate)}, std::move(filledRawBlock)));
   }
 
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 std::error_code Core::submitBlock(BinaryArray&& rawBlockTemplate) {
@@ -1571,7 +1571,7 @@ bool Core::extractTransactions(const std::vector<BinaryArray>& rawTransactions,
 }
 
 Xi::Result<uint32_t> Core::findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds) const {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   for (auto& hash : remoteBlockIds) {
     IBlockchainCache* blockchainSegment = findMainChainSegmentContainingBlock(hash);
     if (blockchainSegment != nullptr) {
@@ -1583,7 +1583,7 @@ Xi::Result<uint32_t> Core::findBlockchainSupplement(const std::vector<Crypto::Ha
     }
   }
   return failure(error::CoreErrorCode::GENESIS_BLOCK_NOT_FOUND);
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 std::vector<Crypto::Hash> CryptoNote::Core::getBlockHashes(uint32_t startBlockIndex, uint32_t maxCount) const {

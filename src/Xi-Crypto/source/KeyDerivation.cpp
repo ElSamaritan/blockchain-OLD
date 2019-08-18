@@ -35,7 +35,7 @@ namespace Crypto {
 const KeyDerivation KeyDerivation::Null{};
 
 Result<Crypto::KeyDerivation> KeyDerivation::fromString(const std::string &hex) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   KeyDerivation reval;
   if (KeyDerivation::bytes() * 2 != hex.size()) {
     throw std::runtime_error{"wrong hex size"};
@@ -48,7 +48,7 @@ Result<Crypto::KeyDerivation> KeyDerivation::fromString(const std::string &hex) 
   }
 
   return success(std::move(reval));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 KeyDerivation::KeyDerivation() {

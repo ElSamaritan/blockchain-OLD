@@ -21,41 +21,47 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Log/Discord/Embed.hpp"
+#pragma once
 
-#include <sstream>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <optional>
+#include <cinttypes>
 
-#include <Serialization/JsonOutputStreamSerializer.h>
-#include <Serialization/SerializationTools.h>
+#include <Xi/Global.hh>
+#include <Xi/Result.h>
 
 namespace Xi {
-namespace Log {
-namespace Discord {
+namespace Network {
 
-Xi::Log::Discord::Embed &Xi::Log::Discord::Embed::timestamp(boost::posix_time::ptime time) {
-  return timestamp(boost::posix_time::to_iso_extended_string(time));
-}
+class Uri {
+ public:
+  Result<Uri> fromString(const std::string& str);
 
-EmbedField &Embed::addField() {
-  fields().emplace_back();
-  return fields().back();
-}
+ private:
+  explicit Uri();
 
-Result<std::string> Embed::toJson() const {
-  XI_ERROR_TRY
-  return success(CryptoNote::storeToJson(*this));
-  XI_ERROR_CATCH
-}
+ public:
+  explicit Uri(const Uri& other);
+  Uri& operator=(const Uri& other);
 
-Result<std::string> Embed::toWebhookBody() const {
-  XI_ERROR_TRY
-  auto embedBody = toJson().takeOrThrow();
-  std::stringstream builder{};
-  builder << "{\"embeds\": [" << embedBody << "]}";
-  return success(std::string{builder.str()});
-  XI_ERROR_CATCH
-}
+  explicit Uri(Uri&& other);
+  Uri& operator=(Uri&& other);
 
-}  // namespace Discord
-}  // namespace Log
+  ~Uri();
+
+  const std::string& scheme() const;
+  const std::string& host() const;
+  const std::optional<uint16_t>& port() const;
+  const std::string& path() const;
+  const std::string& query() const;
+  const std::string& fragment() const;
+
+ private:
+  struct _Impl;
+  std::unique_ptr<_Impl> m_impl;
+};
+
+}  // namespace Network
 }  // namespace Xi

@@ -36,7 +36,7 @@ namespace Crypto {
 const FastHash FastHash::Null{};
 
 Result<FastHash> FastHash::fromString(const std::string &hex) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   FastHash reval;
   if (FastHash::bytes() * 2 != hex.size()) {
     throw std::runtime_error{"wrong hex size"};
@@ -45,60 +45,60 @@ Result<FastHash> FastHash::fromString(const std::string &hex) {
     throw std::runtime_error{"invalid hex string"};
   }
   return success(std::move(reval));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<FastHash> FastHash::compute(Xi::ConstByteSpan data) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   FastHash reval{};
   compute(data, reval).throwOnError();
   return success(std::move(reval));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<void> FastHash::compute(Xi::ConstByteSpan data, FastHash &out) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   Hash::fastHash(data, out.span());
   return Xi::success();
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<void> FastHash::compute(Xi::ConstByteSpan data, Xi::ByteSpan out) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   Hash::fastHash(data, out);
   return Xi::success();
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<FastHash> FastHash::computeMerkleTree(Xi::ConstByteSpan data, size_t count) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   FastHash reval{};
   computeMerkleTree(data, count, reval).throwOnError();
   return success(std::move(reval));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<void> FastHash::computeMerkleTree(Xi::ConstByteSpan data, size_t count, FastHash &out) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   Hash::treeHash(data, count, out.span());
   return Xi::success();
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<FastHash> FastHash::computeMerkleTree(ConstFastHashSpan data) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   FastHash reval{};
   computeMerkleTree(data, reval).throwOnError();
   return success(std::move(reval));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<void> FastHash::computeMerkleTree(ConstFastHashSpan data, FastHash &out) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   Hash::treeHash(Xi::ConstByteSpan{reinterpret_cast<const Xi::Byte *>(data.data()), data.size() * FastHash::bytes()},
                  data.size(), out.span());
   return Xi::success();
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 FastHash::FastHash() {

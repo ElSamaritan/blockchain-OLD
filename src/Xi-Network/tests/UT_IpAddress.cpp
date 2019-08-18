@@ -21,41 +21,19 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Log/Discord/Embed.hpp"
+#include <gmock/gmock.h>
+#include <Xi/Network/IpAddress.hpp>
 
-#include <sstream>
+#include <string>
+#include <iostream>
 
-#include <Serialization/JsonOutputStreamSerializer.h>
-#include <Serialization/SerializationTools.h>
+#define XI_TESTSUITE T_Xi_Network_IpAddress
 
-namespace Xi {
-namespace Log {
-namespace Discord {
+TEST(XI_TESTSUITE, Resolve) {
+  using namespace ::testing;
+  using namespace ::Xi::Network;
 
-Xi::Log::Discord::Embed &Xi::Log::Discord::Embed::timestamp(boost::posix_time::ptime time) {
-  return timestamp(boost::posix_time::to_iso_extended_string(time));
+  const auto ip = IpAddress::resolveAny("google.com", IpAddress::v4);
+  ASSERT_FALSE(ip.isError());
+  std::cout << toString(*ip) << std::endl;
 }
-
-EmbedField &Embed::addField() {
-  fields().emplace_back();
-  return fields().back();
-}
-
-Result<std::string> Embed::toJson() const {
-  XI_ERROR_TRY
-  return success(CryptoNote::storeToJson(*this));
-  XI_ERROR_CATCH
-}
-
-Result<std::string> Embed::toWebhookBody() const {
-  XI_ERROR_TRY
-  auto embedBody = toJson().takeOrThrow();
-  std::stringstream builder{};
-  builder << "{\"embeds\": [" << embedBody << "]}";
-  return success(std::string{builder.str()});
-  XI_ERROR_CATCH
-}
-
-}  // namespace Discord
-}  // namespace Log
-}  // namespace Xi

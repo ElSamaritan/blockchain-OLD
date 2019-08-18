@@ -21,41 +21,63 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Log/Discord/Embed.hpp"
+#pragma once
 
-#include <sstream>
+#include <variant>
+#include <vector>
+#include <string>
+#include <cinttypes>
+#include <optional>
 
-#include <Serialization/JsonOutputStreamSerializer.h>
-#include <Serialization/SerializationTools.h>
+#include <Xi/Global.hh>
+#include <Xi/Result.h>
+#include <Xi/Byte.hh>
+#include <Serialization/ISerializer.h>
+
+#include "Xi/Network/Port.hpp"
 
 namespace Xi {
-namespace Log {
-namespace Discord {
+namespace Network {
 
-Xi::Log::Discord::Embed &Xi::Log::Discord::Embed::timestamp(boost::posix_time::ptime time) {
-  return timestamp(boost::posix_time::to_iso_extended_string(time));
-}
+class IpAddress;
+using IpAddressVector = std::vector<IpAddress>;
 
-EmbedField &Embed::addField() {
-  fields().emplace_back();
-  return fields().back();
-}
+class IpAddress {
+ public:
+  enum Type {
+    v4 = 1 << 0,
+    v6 = 1 << 1,
+  };
 
-Result<std::string> Embed::toJson() const {
-  XI_ERROR_TRY
-  return success(CryptoNote::storeToJson(*this));
-  XI_ERROR_CATCH
-}
+ public:
+  static Result<IpAddress> fromString(const std::string& str);
+  static Result<IpAddressVector> resolve(const std::string& host);
+  static Result<IpAddressVector> resolve(const std::string& host, const Port port);
+  static Result<IpAddress> resolveAny(const std::string& host);
+  static Result<IpAddress> resolveAny(const std::string& host, const Type type);
 
-Result<std::string> Embed::toWebhookBody() const {
-  XI_ERROR_TRY
-  auto embedBody = toJson().takeOrThrow();
-  std::stringstream builder{};
-  builder << "{\"embeds\": [" << embedBody << "]}";
-  return success(std::string{builder.str()});
-  XI_ERROR_CATCH
-}
+ public:
+  XI_DEFAULT_COPY(IpAddress);
+  XI_DEFAULT_MOVE(IpAddress);
 
-}  // namespace Discord
-}  // namespace Log
+  Type type() const;
+
+  const Byte* data() const;
+  size_t size() const;
+
+  std::string toString() const;
+
+ private:
+  explicit IpAddress();
+
+ private:
+  using v4_storage = ByteArray<4>;
+  using v6_storage = ByteArray<16>;
+
+  std::variant<v4_storage, v6_storage> m_data;
+};
+
+std::string toString(const IpAddress& addr);
+
+}  // namespace Network
 }  // namespace Xi

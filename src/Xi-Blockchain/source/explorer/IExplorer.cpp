@@ -52,9 +52,9 @@ IExplorer::VectorResult<ShortBlockInfo> IExplorer::queryShortBlockInfo(Block::He
 }
 
 IExplorer::VectorResult<ShortBlockInfo> IExplorer::queryShortBlockInfo(Block::Height start, Block::Height end) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return queryShortBlockInfo(makeRange(start, end));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 IExplorer::SingleResult<BlockInfo> IExplorer::queryBlockInfo(Block::Height height) {
@@ -80,9 +80,9 @@ IExplorer::VectorResult<BlockInfo> IExplorer::queryBlockInfo(Block::Height start
 }
 
 IExplorer::VectorResult<BlockInfo> IExplorer::queryBlockInfo(Block::Height start, Block::Height end) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return queryBlockInfo(makeRange(start, end));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 IExplorer::SingleResult<DetailedBlockInfo> IExplorer::queryDetailedBlockInfo(Block::Height height) {
@@ -108,9 +108,9 @@ IExplorer::VectorResult<DetailedBlockInfo> IExplorer::queryDetailedBlockInfo(Blo
 }
 
 IExplorer::VectorResult<DetailedBlockInfo> IExplorer::queryDetailedBlockInfo(Block::Height start, Block::Height end) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return queryDetailedBlockInfo(makeRange(start, end));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 IExplorer::SingleResult<ShortTransactionInfo> IExplorer::queryShortTransactionInfo(const TransactionHash& hash) {

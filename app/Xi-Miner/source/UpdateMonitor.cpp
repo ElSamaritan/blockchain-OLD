@@ -36,9 +36,9 @@
 Xi::Result<std::unique_ptr<XiMiner::UpdateMonitor>> XiMiner::UpdateMonitor::start(
     std::string address, CryptoNote::Currency &currency, const CryptoNote::RpcRemoteConfiguration &remote,
     Logging::ILogger &logger) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return success(std::unique_ptr<UpdateMonitor>{new UpdateMonitor{std::move(address), currency, remote, logger}});
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 XiMiner::UpdateMonitor::~UpdateMonitor() {
@@ -86,7 +86,7 @@ std::chrono::milliseconds XiMiner::UpdateMonitor::pollInterval() const {
 }
 
 Xi::Result<std::string> XiMiner::UpdateMonitor::getBlockTemplateState() {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   m_logger(Logging::Trace) << "request block template state";
   CryptoNote::RpcCommands::GetBlockTemplateState::request request;
   CryptoNote::RpcCommands::GetBlockTemplateState::response response;
@@ -94,11 +94,11 @@ Xi::Result<std::string> XiMiner::UpdateMonitor::getBlockTemplateState() {
                                             request, response);
   m_logger(Logging::Trace) << "block template state: " << response.template_state;
   return success(std::move(response.template_state));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Xi::Result<XiMiner::MinerBlockTemplate> XiMiner::UpdateMonitor::getBlockTemplate() {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   m_logger(Logging::Trace) << "request block template state";
   CryptoNote::RpcCommands::GetBlockTemplate::request request;
   CryptoNote::RpcCommands::GetBlockTemplate::response response;
@@ -119,7 +119,7 @@ Xi::Result<XiMiner::MinerBlockTemplate> XiMiner::UpdateMonitor::getBlockTemplate
   reval.ProofOfWork = block.getProofOfWorkBlob();
 
   return success(std::move(reval));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 void XiMiner::UpdateMonitor::updateLoop() {

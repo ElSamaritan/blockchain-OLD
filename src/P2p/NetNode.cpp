@@ -1160,11 +1160,11 @@ bool NodeServer::try_ping(basic_node_data& node_data, P2pConnectionContext& cont
     COMMAND_PING::request req;
     COMMAND_PING::response rsp;
     System::Context<Xi::Result<void>> pingContext(m_dispatcher, [&]() -> Xi::Result<void> {
-      XI_ERROR_TRY();
+      XI_ERROR_TRY
       System::TcpConnector connector(m_dispatcher);
       auto connection = connector.connect(System::Ipv4Address(ip), static_cast<uint16_t>(port));
       return LevinProtocol(connection).invoke(COMMAND_PING::ID, req, rsp);
-      XI_ERROR_CATCH();
+      XI_ERROR_CATCH
     });
 
     System::Context<> timeoutContext(m_dispatcher, [&] {

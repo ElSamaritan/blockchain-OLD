@@ -21,41 +21,32 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#include "Xi/Log/Discord/Embed.hpp"
+#pragma once
 
-#include <sstream>
+#include <cinttypes>
+#include <string>
 
-#include <Serialization/JsonOutputStreamSerializer.h>
-#include <Serialization/SerializationTools.h>
+#include <Xi/Global.hh>
+#include <Xi/Result.h>
+#include <Xi/TypeSafe/Integral.hpp>
+#include <Serialization/ISerializer.h>
 
 namespace Xi {
-namespace Log {
-namespace Discord {
+namespace Network {
 
-Xi::Log::Discord::Embed &Xi::Log::Discord::Embed::timestamp(boost::posix_time::ptime time) {
-  return timestamp(boost::posix_time::to_iso_extended_string(time));
-}
+struct Port : TypeSafe::EnableIntegralFromThis<uint16_t, Port> {
+  static const Port Any;
+  static Result<Port> fromString(const std::string& str);
 
-EmbedField &Embed::addField() {
-  fields().emplace_back();
-  return fields().back();
-}
+  using EnableIntegralFromThis::EnableIntegralFromThis;
 
-Result<std::string> Embed::toJson() const {
-  XI_ERROR_TRY
-  return success(CryptoNote::storeToJson(*this));
-  XI_ERROR_CATCH
-}
+  bool isAny() const;
+  std::string toString() const;
 
-Result<std::string> Embed::toWebhookBody() const {
-  XI_ERROR_TRY
-  auto embedBody = toJson().takeOrThrow();
-  std::stringstream builder{};
-  builder << "{\"embeds\": [" << embedBody << "]}";
-  return success(std::string{builder.str()});
-  XI_ERROR_CATCH
-}
+  friend bool serialize(Port&, Common::StringView, CryptoNote::ISerializer&);
+};
 
-}  // namespace Discord
-}  // namespace Log
+[[nodiscard]] bool serialize(Port& port, Common::StringView name, CryptoNote::ISerializer& serializer);
+
+}  // namespace Network
 }  // namespace Xi

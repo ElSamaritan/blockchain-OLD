@@ -37,7 +37,7 @@ XiSync::Exporter::Exporter(XiSync::DumpWriter &writer, Logging::ILogger &logger)
     : m_writer{writer}, m_logger{logger, "Exporter"} {}
 
 Xi::Result<void> XiSync::Exporter::exportBlocks(uint32_t startIndex, uint32_t count, uint32_t batchSize) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   const auto topIndex = topBlockIndex();
   if (topIndex < startIndex) {
     Xi::exceptional<InvalidIndexError>();
@@ -60,5 +60,5 @@ Xi::Result<void> XiSync::Exporter::exportBlocks(uint32_t startIndex, uint32_t co
   }
   m_logger(Logging::Info) << "export finished";
   return Xi::success();
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }

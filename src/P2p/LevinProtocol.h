@@ -51,7 +51,7 @@ class LevinProtocol {
 
   template <typename Request, typename Response>
   Xi::Result<void> invoke(uint32_t command, const Request& request, Response& response) {
-    XI_ERROR_TRY();
+    XI_ERROR_TRY
     sendMessage(command, encode(request), true);
 
     Command cmd;
@@ -62,7 +62,7 @@ class LevinProtocol {
     }
 
     return decode(cmd.buf, response);
-    XI_ERROR_CATCH();
+    XI_ERROR_CATCH
   }
 
   template <typename Request>
@@ -86,12 +86,12 @@ class LevinProtocol {
 
   template <typename T>
   static Xi::Result<void> decode(const BinaryArray& buf, T& value) {
-    XI_ERROR_TRY();
+    XI_ERROR_TRY
     Common::MemoryInputStream stream(buf.data(), buf.size());
     BinaryInputStreamSerializer serializer(stream);
     Xi::exceptional_if_not<Xi::RuntimeError>(serialize(value, serializer));
     return Xi::success();
-    XI_ERROR_CATCH();
+    XI_ERROR_CATCH
   }
 
   template <typename T>
