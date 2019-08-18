@@ -33,10 +33,25 @@ TEST(XI_TESTSUITE, FromString) {
   using namespace ::Xi::Network;
 
   {
-    const auto uri = Uri::fromString("p2p://seeds.galaxia-project.com:40000");
+    const auto uri = Uri::fromString("p2p://seed.galaxia-project.com:40000");
     ASSERT_FALSE(uri.isError());
     EXPECT_EQ(uri->scheme(), "p2p");
     EXPECT_EQ(uri->host(), "seeds.galaxia-project.com");
     EXPECT_EQ(uri->port(), Port{40000});
+  }
+
+  {
+    const auto uri = Uri::fromString("seeds.galaxia-project.com:123");
+    ASSERT_FALSE(uri.isError());
+    EXPECT_EQ(uri->host(), "seeds.galaxia-project.com");
+    EXPECT_EQ(uri->port(), Port{123});
+  }
+
+  {
+    const auto uri = Uri::fromString("tcp://127.0.0.1");
+    ASSERT_FALSE(uri.isError());
+    EXPECT_EQ(uri->scheme(), "tcp");
+    EXPECT_EQ(uri->host(), "127.0.0.1");
+    EXPECT_EQ(uri->port(), Port::Any);
   }
 }

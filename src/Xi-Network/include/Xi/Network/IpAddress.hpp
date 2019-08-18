@@ -62,6 +62,8 @@ class IpAddress {
 
   Type type() const;
 
+  Result<uint32_t> v4Address() const;
+
   const Byte* data() const;
   size_t size() const;
 

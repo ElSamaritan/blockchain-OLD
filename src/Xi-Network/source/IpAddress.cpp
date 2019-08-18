@@ -128,6 +128,16 @@ IpAddress::Type IpAddress::type() const {
   }
 }
 
+Result<uint32_t> IpAddress::v4Address() const {
+  if (std::holds_alternative<v4_storage>(m_data)) {
+    const auto& storage = std::get<v4_storage>(m_data);
+    const auto reval = *reinterpret_cast<const uint32_t*>(storage.data());
+    return success(static_cast<uint32_t>(reval));
+  } else {
+    exceptional<InvalidVariantTypeError>();
+  }
+}
+
 const Byte* IpAddress::data() const {
   if (std::holds_alternative<v4_storage>(m_data)) {
     return std::get<v4_storage>(m_data).data();

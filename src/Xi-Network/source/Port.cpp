@@ -44,6 +44,14 @@ std::string Port::toString() const {
   return std::to_string(native());
 }
 
+Port Port::orDefault(Port def) const {
+  if (isAny()) {
+    return def;
+  } else {
+    return *this;
+  }
+}
+
 bool serialize(Port &port, Common::StringView name, CryptoNote::ISerializer &serializer) {
   return serializer(port.value, name);
 }

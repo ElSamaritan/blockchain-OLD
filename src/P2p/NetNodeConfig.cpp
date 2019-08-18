@@ -13,17 +13,34 @@
 #include <Xi/Algorithm/String.h>
 
 #include <Xi/Crypto/Random/Random.hh>
+#include <Xi/Network/Uri.hpp>
+#include <Xi/Network/IpAddress.hpp>
+
 #include <Common/Util.h>
 #include "Common/CommandLine.h"
 #include "Common/StringTools.h"
 #include "crypto/crypto.h"
 
 namespace CryptoNote {
-namespace {
 
 bool parsePeerFromString(NetworkAddress& pe, const std::string& node_addr) {
-  return Common::parseIpAddressAndPort(pe.ip, pe.port, node_addr);
+  using namespace Xi::Network;
+  XI_RETURN_SC_IF(Common::parseIpAddressAndPort(pe.ip, pe.port, node_addr), true);
+  pe.port = Xi::Config::Network::Configuration::p2pDefaultPort();
+  XI_RETURN_SC_IF(Common::parseIpAddress(pe.ip, node_addr), true);
+  const auto uri = Uri::fromString(node_addr);
+  XI_RETURN_EC_IF(uri.isError(), false);
+  pe.port = uri->port().orDefault(Port{Xi::Config::Network::Configuration::p2pDefaultPort()}).native();
+  const auto ip = IpAddress::resolveAny(uri->host(), IpAddress::v4);
+  XI_RETURN_EC_IF(ip.isError(), false);
+  XI_RETURN_EC_IF_NOT(ip->type() == IpAddress::v4, false);
+  const auto v4Ip = ip->v4Address();
+  XI_RETURN_EC_IF(v4Ip.isError(), false);
+  pe.ip = *v4Ip;
+  XI_RETURN_SC(true);
 }
+
+namespace {
 
 bool parsePeersAndAddToNetworkContainer(const std::vector<std::string> peerList,
                                         std::vector<NetworkAddress>& container) {

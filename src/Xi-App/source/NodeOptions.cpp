@@ -26,6 +26,7 @@
 #include <algorithm>
 
 #include <Xi/Exceptional.hpp>
+#include <Xi/Algorithm/String.h>
 #include <Common/StringTools.h>
 
 namespace {
@@ -75,13 +76,13 @@ void NodeOptions::emplaceOptions(cxxopts::Options &options) {
     ("p2p-ban-auto", "enabled protection mechnisms that automatically ban malicious peers",
       cxxopts::value<bool>(autoBan())->default_value("false")->implicit_value("true"), "<enabled>")
     ("p2p-peers-add", "Adds additional peers to the peerlist on startup",
-      cxxopts::value<std::vector<std::string>>(addPeers()), "<ip4:port>*")
+      cxxopts::value<std::vector<std::string>>(addPeers())->default_value(join(addPeers(), ",")), "<host>*")
     ("p2p-peers-exclusive", "Adds exclusive peers, your node will only connect to those.",
-      cxxopts::value<std::vector<std::string>>(exclusivePeers()), "<ip4:port>*")
+      cxxopts::value<std::vector<std::string>>(exclusivePeers())->default_value(join(exclusivePeers(), ",")), "<host>*")
     ("p2p-peers-priority", "Adds peers with a higher priority, prefered to connect to.",
-      cxxopts::value<std::vector<std::string>>(priorityPeers()), "<ip4:port>*")
+      cxxopts::value<std::vector<std::string>>(priorityPeers())->default_value(join(priorityPeers(), ",")), "<host>*")
     ("p2p-peers-seed", "Adds additional seed peers.",
-      cxxopts::value<std::vector<std::string>>(seedPeers()), "<ip4:port>*")
+      cxxopts::value<std::vector<std::string>>(seedPeers())->default_value(join(seedPeers(), ",")), "<host>*")
   ;
   // clang-format on
 }
@@ -98,9 +99,8 @@ bool NodeOptions::evaluateParsedOptions(const cxxopts::Options &options, const c
   const auto checkHosts = [](std::vector<std::string> &hosts) {
     hosts.erase(std::remove_if(hosts.begin(), hosts.end(), [](const auto &host) { return host.empty(); }), hosts.end());
     for (const auto &host : hosts) {
-      uint32_t ip = 0;
-      uint16_t port = 0;
-      exceptional_if_not<InvalidHostError>(Common::parseIpAddressAndPort(ip, port, host), host);
+      CryptoNote::NetworkAddress netAddress{};
+      exceptional_if_not<InvalidHostError>(CryptoNote::parsePeerFromString(netAddress, host), host);
     }
   };
 

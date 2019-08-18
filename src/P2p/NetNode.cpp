@@ -432,16 +432,13 @@ bool NodeServer::append_net_address(std::vector<NetworkAddress>& nodes, const st
   std::string host = addr.substr(0, pos);
 
   try {
-    auto port = Common::fromString<uint16_t>(addr.substr(pos + 1));
-
-    System::Ipv4Resolver resolver(m_dispatcher);
-    auto addrHost = resolver.resolve(host);
-    nodes.push_back(NetworkAddress{hostToNetwork(addrHost.getValue()), port});
-
+    NetworkAddress netAddr{};
+    XI_RETURN_EC_IF_NOT(parsePeerFromString(netAddr, addr), false);
+    nodes.push_back(netAddr);
     logger(Trace) << "Added seed node: " << nodes.back() << " (" << host << ")";
 
   } catch (const std::exception& e) {
-    logger(Error, BRIGHT_YELLOW) << "Failed to resolve host name '" << host << "': " << e.what();
+    logger(Error) << "Failed to resolve host name '" << host << "': " << e.what();
     return false;
   }
 

@@ -108,4 +108,15 @@ std::vector<std::string> split(const std::string &str, const std::string &tokens
   return reval;
 }
 
+std::string join(ConstSpan<std::string> values, const std::string &token) {
+  if (values.empty()) {
+    return "";
+  }
+  std::stringstream builder{values[0]};
+  for (size_t i = 1; i < values.size(); ++i) {
+    builder << token << values[i];
+  }
+  return builder.str();
+}
+
 }  // namespace Xi

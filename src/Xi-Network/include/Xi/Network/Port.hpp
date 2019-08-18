@@ -42,6 +42,7 @@ struct Port : TypeSafe::EnableIntegralFromThis<uint16_t, Port> {
 
   bool isAny() const;
   std::string toString() const;
+  Port orDefault(Port def) const;
 
   friend bool serialize(Port&, Common::StringView, CryptoNote::ISerializer&);
 };

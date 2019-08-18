@@ -17,6 +17,8 @@
 
 namespace CryptoNote {
 
+[[nodiscard]] bool parsePeerFromString(NetworkAddress& pe, const std::string& node_addr);
+
 class NetNodeConfig {
  public:
   NetNodeConfig();
