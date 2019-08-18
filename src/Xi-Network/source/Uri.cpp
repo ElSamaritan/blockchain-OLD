@@ -57,7 +57,7 @@ struct Uri::_Impl {
   std::string raw{};
   std::string scheme{};
   std::string host{};
-  std::optional<uint16_t> port{};
+  Port port{};
   std::string path{};
   std::string query{};
   std::string fragment{};
@@ -81,11 +81,12 @@ Result<Uri> Uri::fromString(const std::string &str) {
     {
       std::string port = toString(native.portText);
       if (port.empty()) {
-        reval.m_impl->port = std::nullopt;
+        reval.m_impl->port = Port::Any;
       } else {
-        reval.m_impl->port = lexical_cast<uint16_t>(port);
+        reval.m_impl->port = Port::fromString(port).valueOrThrow();
       }
     }
+
     return success(std::move(reval));
   }
   XI_ERROR_CATCH
@@ -129,7 +130,7 @@ const std::string &Uri::host() const {
   return m_impl->host;
 }
 
-const std::optional<uint16_t> &Uri::port() const {
+Port Uri::port() const {
   return m_impl->port;
 }
 

@@ -32,12 +32,14 @@
 #include <Xi/Global.hh>
 #include <Xi/Result.h>
 
+#include "Xi/Network/Port.hpp"
+
 namespace Xi {
 namespace Network {
 
 class Uri {
  public:
-  Result<Uri> fromString(const std::string& str);
+  static Result<Uri> fromString(const std::string& str);
 
  private:
   explicit Uri();
@@ -53,7 +55,7 @@ class Uri {
 
   const std::string& scheme() const;
   const std::string& host() const;
-  const std::optional<uint16_t>& port() const;
+  Port port() const;
   const std::string& path() const;
   const std::string& query() const;
   const std::string& fragment() const;

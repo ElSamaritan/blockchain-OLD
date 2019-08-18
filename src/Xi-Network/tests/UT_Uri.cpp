@@ -22,23 +22,21 @@
  * ============================================================================================== */
 
 #include <gmock/gmock.h>
-#include <Xi/Network/IpAddress.hpp>
+#include <Xi/Network/Uri.hpp>
 
 #include <string>
 
-#define XI_TESTSUITE T_Xi_Network_IpAddress
+#define XI_TESTSUITE T_Xi_Network_Uri
 
-TEST(XI_TESTSUITE, Resolve) {
+TEST(XI_TESTSUITE, FromString) {
   using namespace ::testing;
   using namespace ::Xi::Network;
 
   {
-    const auto ip = IpAddress::resolveAny("google.com", IpAddress::v4);
-    ASSERT_FALSE(ip.isError());
-  }
-
-  {
-    const auto ip = IpAddress::resolveAny("172.217.22.78", IpAddress::v4);
-    ASSERT_FALSE(ip.isError());
+    const auto uri = Uri::fromString("p2p://seeds.galaxia-project.com:40000");
+    ASSERT_FALSE(uri.isError());
+    EXPECT_EQ(uri->scheme(), "p2p");
+    EXPECT_EQ(uri->host(), "seeds.galaxia-project.com");
+    EXPECT_EQ(uri->port(), Port{40000});
   }
 }
