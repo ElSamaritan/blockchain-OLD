@@ -24,6 +24,8 @@ struct StatusInfo {
   uint32_t hashrate;
   uint32_t outgoing_connections_count;
   uint32_t incoming_connections_count;
+
+  uint32_t connectionsCount() const;
 };
 
 std::string get_mining_speed(uint32_t hr);

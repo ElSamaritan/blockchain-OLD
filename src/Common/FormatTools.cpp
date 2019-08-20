@@ -211,7 +211,11 @@ void printStatus(const StatusInfo& iresp, const CryptoNote::Currency& currency, 
     stream << rang::fg::reset;
     emitter << YAML::Value << builder.str();
 
-    if (iresp.height < iresp.network_height) {
+    if (iresp.connectionsCount() == 0) {
+      stream << rang::fg::red << rang::style::bold;
+      stream << " DISCONNECTED";
+      stream << rang::fg::reset << rang::style::reset;
+    } else if (iresp.height < iresp.network_height) {
       stream << rang::fg::yellow << rang::style::italic;
       stream << " (" << syncPercentage << "%) SYNCING";
       stream << rang::fg::reset << rang::style::reset;
@@ -279,6 +283,10 @@ void printStatus(const StatusInfo& iresp, const CryptoNote::Currency& currency, 
   }
   emitter << YAML::EndMap;
   stream << rang::bg::reset << rang::fg::reset << rang::style::reset;
+}
+
+uint32_t StatusInfo::connectionsCount() const {
+  return outgoing_connections_count + incoming_connections_count;
 }
 
 }  // namespace Common
