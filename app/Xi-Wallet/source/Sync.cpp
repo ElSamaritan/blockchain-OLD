@@ -26,15 +26,8 @@ void checkForNewTransactions(std::shared_ptr<WalletInfo> walletInfo) {
 
       /* Don't print outgoing or fusion transfers */
       if (t.totalAmount > 0) {
-        std::cout << std::endl
-                  << InformationMsg("New transaction found!") << std::endl
-                  << SuccessMsg("Incoming transfer:") << std::endl
-                  << SuccessMsg("Hash: " + Common::podToHex(t.hash)) << std::endl
-                  << SuccessMsg("Amount: " +
-                                walletInfo->currency().amountFormatter()(static_cast<uint64_t>(t.totalAmount)))
-                  << std::endl;
-        printUnlockTime(t, walletInfo->currency(),
-                        CryptoNote::BlockHeight::fromNative(walletInfo->wallet.getBlockCount()), true, "Unlock: ");
+        printIncomingTransfer(t, walletInfo->currency(),
+                              CryptoNote::BlockHeight::fromSize(walletInfo->wallet.getBlockCount()));
         std::cout << InformationMsg(getPrompt(walletInfo)) << std::flush;
       }
     }
