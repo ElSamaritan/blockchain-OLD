@@ -1,5 +1,5 @@
 The following third party projects are included in this project. Modified
-sources are cleary stated and published in our gitlab group
+sources are clearly stated and published in our gitlab group
     https://gitlab.com/galaxia-project/blockchain/external
 .
 
@@ -65,6 +65,15 @@ openssl
     https://github.com/openssl/openssl
     Apache License Version 2.0, January 2004
 
+rang
+    https://github.com/agauniyal/rang/blob/master/LICENSE
+    The Unlicense
+
+yaml-cpp
+    Copyright (c) 2008-2015 Jesse Beder.
+    https://github.com/jbeder/yaml-cpp/blob/master/LICENSE
+    MIT License
+
 The project was forked from an existing code base, all changes are stated by our git
 history https://gitlab.com/galaxia-project/blockchain/commits/develop.
 
@@ -74,21 +83,3 @@ AmityCoin
 
 CrypteNote, Bytecoin, Turtlecoin, Monero Project
     https://github.com/turtlecoin/turtlecoin/blob/development/LICENSE
-
-
-
-Additionally, we would like to give shoutouts and some special thanks to the 
-following developers.
-
-* angrywasp
-  As the developer of  Nerva our hash algorithm was inspired
-  by his great work on CryptoNight-Adaptive.
-
-* zpalmtree
-  One of, or the most,  active developer of TurtleCoin who has developed many 
-  parts of the code base, we are reusing, due to his robust and well thought
-  implementations.
-
-* zawy
-  For his open source development of LWMA, which serves great and is a crucial
-  part of this blockchain.
