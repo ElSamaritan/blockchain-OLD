@@ -66,7 +66,6 @@ struct WalletServiceConfiguration {
   uint32_t scanHeight;
 
   std::string network;
-  std::string networkDir;
 
   Xi::Http::SSLConfiguration ssl{};
 };
@@ -89,8 +88,7 @@ inline WalletServiceConfiguration initConfiguration() {
   config.unregisterService = false;
   config.printAddresses = false;
   config.syncFromZero = false;
-  config.network = Xi::Config::Network::defaultNetworkIdentifier();
-  config.networkDir = "./config";
+  config.network = Xi::Config::Network::defaultNetwork();
 
   return config;
 };
@@ -128,7 +126,6 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
   options.add_options("Network")
     ("bind-address", "Interface IP address for the RPC service", cxxopts::value<std::string>()->default_value(config.bindAddress), "<ip>")
     ("bind-port", "TCP port for the RPC service", cxxopts::value<uint16_t>()->default_value(std::to_string(config.bindPort)), "<port>")
-    ("network-dir", "Directory to search for additional network configuration files.", cxxopts::value<std::string>()->default_value(config.networkDir))
     ("network", "The network type you want to connect to, mostly you want to use 'MainNet' here.",
      cxxopts::value<std::string>()->default_value(Xi::to_string(Xi::Config::Network::defaultNetworkType())),
      "[MainNet|StageNet|TestNet|LocalTestNet]");
@@ -275,10 +272,6 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
       config.network = cli["network"].as<std::string>();
     }
 
-    if (cli.count("network-dir") > 0) {
-      config.networkDir = cli["network-dir"].as<std::string>();
-    }
-
     if (CommonCLI::handleCLIOptions(options, cli)) exit(0);
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Error: Unable to parse command line argument options: " << e.what() << std::endl
@@ -370,8 +363,7 @@ inline json asJSON(const WalletServiceConfiguration& config) {
                 {"rpc-legacy-security", config.legacySecurity},
                 {"rpc-password", config.rpcPassword},
                 {"server-root", config.serverRoot},
-                {"network", config.network},
-                {"network-dir", config.networkDir}};
+                {"network", config.network}};
   return j;
 };
 

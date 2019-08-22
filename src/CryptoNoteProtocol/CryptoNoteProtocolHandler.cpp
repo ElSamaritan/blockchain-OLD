@@ -17,7 +17,7 @@
 #include <Xi/Config.h>
 #include <Xi/Config/WalletConfig.h>
 #include <System/Dispatcher.h>
-#include <Common/FormatTools.h>
+#include <CryptoNoteCore/FormatTools.h>
 #include <Serialization/SerializationOverloads.h>
 
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"

@@ -31,10 +31,13 @@ XI_DECLARE_EXCEPTIONAL_CATEGORY(NetworkOption)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(UnrecognizedNetwork, "given network is unregcognized.", NetworkOption)
 }  // namespace
 
+Xi::App::NetworkOptions::NetworkOptions() : m_network{Xi::Config::Network::defaultNetwork()} {
+  /* */
+}
+
 void Xi::App::NetworkOptions::loadEnvironment(Xi::App::Environment &env) {
   // clang-format off
   env
-    (directory(), "NETWORK_DIR")
     (network(), "NETWORK")
   ;
   // clang-format on
@@ -56,9 +59,6 @@ bool Xi::App::NetworkOptions::evaluateParsedOptions(const cxxopts::Options &opti
   XI_UNUSED(options);
   if (result.count("network")) {
     network() = result["network"].as<std::string>();
-  }
-  if (result.count("network-dir")) {
-    directory() = result["network-dir"].as<std::string>();
   }
   return false;
 }

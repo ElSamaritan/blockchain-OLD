@@ -36,8 +36,8 @@ namespace Config {
 
 class Registry {
  public:
-  static int addConfigJson(std::string_view name, std::string_view content);
-  static bool addConfigJsonFile(std::string_view name, std::string_view path);
+  [[nodiscard]] static bool addConfigJson(std::string_view name, std::string_view content);
+  [[nodiscard]] static bool addConfigJsonFile(std::string_view name, std::string_view path);
   static const Configuration* searchByName(std::string_view name);
 
  private:

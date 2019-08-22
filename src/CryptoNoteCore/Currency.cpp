@@ -18,6 +18,8 @@
 
 #include <Xi/Global.hh>
 #include <Xi/Encoding/VarInt.hh>
+#include <Xi/Resource/Resource.hpp>
+#include <Xi/Resources/Chains.hpp>
 
 #include "../Common/Base58.h"
 #include "../Common/int-util.h"
@@ -333,10 +335,6 @@ std::string Currency::blockIndexesFileName() const {
 
 std::string Currency::txPoolFileName() const {
   return m_txPoolFileName;
-}
-
-const std::vector<CheckpointData>& Currency::integratedCheckpoints() const {
-  return m_integratedCheckpointData;
 }
 
 const BlockTemplate& Currency::genesisBlock() const {
@@ -789,7 +787,6 @@ Currency::Currency(Currency&& currency)
       logger(currency.logger),
 
       m_amountFormatter{std::move(currency.m_amountFormatter)},
-      m_integratedCheckpointData{std::move(currency.m_integratedCheckpointData)},
       m_general{std::move(currency.m_general)},
       m_coin{std::move(currency.m_coin)},
       m_staticReward{std::move(currency.m_staticReward)},
@@ -806,7 +803,7 @@ Currency::Currency(Currency&& currency)
       m_proofOfWorkAlgorithms{std::move(currency.m_proofOfWorkAlgorithms)} {
 }
 
-CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log), m_networkDir{"./network"} {
+CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
   mempoolTxLiveTime(static_cast<uint64_t>(Xi::Config::Limits::maximumTransactionLivetimeSpan().count()));
   mempoolTxFromAltBlockLiveTime(
       static_cast<uint64_t>(Xi::Config::Limits::maximumTransactionLivetimeSpanFromAltBlocks().count()));
@@ -911,54 +908,14 @@ CurrencyBuilder& CurrencyBuilder::configuration(const Xi::Config::Configuration&
 
 CurrencyBuilder& CurrencyBuilder::network(std::string netId) {
   if (const auto config = Xi::Config::Registry::searchByName(netId); config != nullptr) {
-    m_currency.logger(Debugging) << "Using built in configuration for: " << netId;
     return configuration(*config);
   } else {
-    auto rootDir = boost::filesystem::path{m_networkDir};
-    auto filePath = boost::filesystem::path{netId};
-    if (filePath.is_relative()) {
-      if (!boost::filesystem::exists(rootDir / filePath)) {
-        m_currency.logger(Info) << "Configuration not found in network directory: " << (rootDir / filePath).string();
-      } else {
-        filePath = rootDir / filePath;
-        std::string sfilepath = filePath.string();
-        if (!Xi::Config::Registry::addConfigJsonFile(netId, sfilepath)) {
-          m_currency.logger(Fatal) << "Unable to load " << sfilepath;
-          Xi::exceptional<Xi::NotFoundError>();
-        }
-        return configuration(*Xi::Config::Registry::searchByName(netId));
-      }
-
-      if (!boost::filesystem::exists(filePath)) {
-        m_currency.logger(Error) << "Configuration not found in working directory: " << filePath.string();
-        Xi::exceptional<Xi::NotFoundError>();
-      } else {
-        std::string sfilepath = filePath.string();
-        if (!Xi::Config::Registry::addConfigJsonFile(netId, sfilepath)) {
-          m_currency.logger(Fatal) << "Unable to load " << sfilepath;
-          Xi::exceptional<Xi::NotFoundError>();
-        }
-        return configuration(*Xi::Config::Registry::searchByName(netId));
-      }
-    } else {
-      if (!boost::filesystem::exists(filePath)) {
-        m_currency.logger(Error) << "Configuration file not found: " << filePath.string();
-        Xi::exceptional<Xi::NotFoundError>();
-      } else {
-        std::string sfilepath = filePath.string();
-        if (!Xi::Config::Registry::addConfigJsonFile(netId, sfilepath)) {
-          m_currency.logger(Fatal) << "Unable to load " << sfilepath;
-          Xi::exceptional<Xi::NotFoundError>();
-        }
-        return configuration(*Xi::Config::Registry::searchByName(netId));
-      }
-    }
+    Xi::Resources::loadChains();
+    const auto json = Xi::Resource::loadText(netId, ".json").takeOrThrow();
+    Xi::exceptional_if_not<Xi::RuntimeError>(Xi::Config::Registry::addConfigJson(netId, json),
+                                             "Failed to load configuration: {}", netId);
+    return configuration(*Xi::Config::Registry::searchByName(netId));
   }
-}
-
-CurrencyBuilder& CurrencyBuilder::networkDir(std::string dir) {
-  m_networkDir = dir;
-  return *this;
 }
 
 const Currency& CurrencyBuilder::immediateState() const {

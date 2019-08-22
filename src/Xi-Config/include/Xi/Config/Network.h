@@ -77,9 +77,13 @@ class Configuration {
   }
 };
 
-std::string defaultNetworkName();
 Type defaultNetworkType();
-std::string defaultNetworkIdentifier();
+
+/// Resource path to the default embedded chain configuration.
+std::string defaultNetwork();
+
+/// Resource path to embedded network checkpoints.
+std::string checkpoints(const Type network);
 
 std::string breakpadServer();
 

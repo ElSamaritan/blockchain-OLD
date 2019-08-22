@@ -180,7 +180,6 @@ class Currency {
   Logging::LoggerRef logger;
 
   std::shared_ptr<IAmountFormatter> m_amountFormatter;
-  std::vector<CheckpointData> m_integratedCheckpointData;
   Xi::Config::General::Configuration m_general;
   Xi::Config::Coin::Configuration m_coin;
   Xi::Config::StaticReward::Container m_staticReward;
@@ -238,13 +237,11 @@ class CurrencyBuilder {
 
   CurrencyBuilder& configuration(const Xi::Config::Configuration& config);
   CurrencyBuilder& network(std::string netId);
-  CurrencyBuilder& networkDir(std::string dir);
 
   const Currency& immediateState() const;
 
  private:
   Currency m_currency;
-  std::string m_networkDir;
 };
 
 }  // namespace CryptoNote

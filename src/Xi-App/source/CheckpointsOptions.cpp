@@ -26,12 +26,15 @@
 #include <Xi/Global.hh>
 #include <Xi/Exceptional.hpp>
 #include <Xi/FileSystem.h>
+#include <Xi/Config/Network.h>
+#include <Xi/Resources/Checkpoints.hpp>
 #include <CryptoNoteCore/Checkpoints.h>
 
 namespace {
 // clang-format off
 XI_DECLARE_EXCEPTIONAL_CATEGORY(CheckpointsOptions)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(CheckpointFileMissing, "provided checkpoints import file was not found.", CheckpointsOptions)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(CheckpointImport, "import of checkpoints failed", CheckpointsOptions)
 // clang-format on
 }  // namespace
 
@@ -70,13 +73,17 @@ bool Xi::App::CheckpointsOptions::evaluateParsedOptions(const cxxopts::Options &
 
 std::unique_ptr<CryptoNote::Checkpoints> Xi::App::CheckpointsOptions::getCheckpoints(
     const CryptoNote::Currency &currency, Logging::ILogger &logger) const {
+  Resources::loadCheckpoints();
   auto reval = std::make_unique<CryptoNote::Checkpoints>(logger);
   reval->setEnabled(UseCheckpoints);
-  for (const auto &checkpoint : currency.integratedCheckpoints()) {
-    reval->addCheckpoint(checkpoint.index, checkpoint.blockId);
-  }
-  if (!CheckpointsFile.empty()) {
-    reval->loadCheckpointsFromFile(CheckpointsFile);
+  if (UseCheckpoints) {
+    std::string checkpointPath = CheckpointsFile;
+    if (CheckpointsFile.empty()) {
+      checkpointPath = Xi::Config::Network::checkpoints(currency.network().type());
+    }
+    if (!checkpointPath.empty()) {
+      exceptional_if_not<CheckpointImportError>(reval->loadCheckpoints(checkpointPath));
+    }
   }
   return reval;
 }

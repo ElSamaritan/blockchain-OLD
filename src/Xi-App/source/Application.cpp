@@ -476,6 +476,7 @@ void Xi::App::Application::useCurrency() {
 
 void Xi::App::Application::useCheckpoints() {
   useCurrency();
+  useNetwork();
   if (m_checkpointOptions == nullptr) {
     m_checkpointOptions = std::make_unique<CheckpointsOptions>();
   }
@@ -572,13 +573,11 @@ void Xi::App::Application::initializeCheckpoints() {
 
 void Xi::App::Application::initializeIntermediateCurrency() {
   m_intermediateCurrency = std::make_unique<CryptoNote::CurrencyBuilder>(logger());
-  m_intermediateCurrency->networkDir(m_netOptions->directory());
   m_intermediateCurrency->network(m_netOptions->network());
 }
 
 void Xi::App::Application::initializeCurrency() {
   CryptoNote::CurrencyBuilder builder{logger()};
-  builder.networkDir(m_netOptions->directory());
   builder.network(m_netOptions->network());
   m_currency = std::make_unique<CryptoNote::Currency>(builder.currency());
 }

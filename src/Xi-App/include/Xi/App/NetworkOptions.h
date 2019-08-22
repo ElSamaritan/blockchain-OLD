@@ -38,13 +38,15 @@
 namespace Xi {
 namespace App {
 struct NetworkOptions : public IOptions {
-  XI_PROPERTY(std::string, directory, "./network")
-  XI_PROPERTY(std::string, network, Xi::Config::Network::defaultNetworkIdentifier())
+  XI_PROPERTY(std::string, directory)
+  XI_PROPERTY(std::string, network)
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER_RENAME(directory(), config_dir)
   KV_MEMBER_RENAME(network(), network)
   KV_END_SERIALIZATION
+
+  NetworkOptions();
 
   void loadEnvironment(Environment& env) override;
   void emplaceOptions(cxxopts::Options& options) override;
