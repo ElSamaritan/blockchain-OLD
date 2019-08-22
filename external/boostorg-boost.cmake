@@ -82,3 +82,5 @@ foreach(component ${Boost_COMPONENTS})
   mark_as_advanced(boost_${component}_DIR)
   target_link_libraries(boost INTERFACE Boost::${component})
 endforeach()
+
+add_library(boost::boost ALIAS boost)
