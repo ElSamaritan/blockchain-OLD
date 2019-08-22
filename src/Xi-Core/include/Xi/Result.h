@@ -29,6 +29,7 @@
 #include <variant>
 #include <optional>
 
+#include <Xi/Global.hh>
 #include <Xi/Error.h>
 
 namespace Xi {
@@ -196,3 +197,5 @@ inline Result<void> success() {
   catch (...) {                                       \
     return ::Xi::makeError(std::current_exception()); \
   }
+
+#define XI_ERROR_PROPAGATE(VAR) XI_RETURN_EC_IF(VAR.isError(), VAR.error());
