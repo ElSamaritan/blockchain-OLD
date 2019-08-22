@@ -48,47 +48,6 @@ struct WalletInfo {
   const CryptoNote::Currency &currency() { return this->wallet.currency(); }
 };
 
-struct Config {
-  /* Was the wallet file specified on CLI */
-  bool walletGiven = false;
-
-  /* Was the wallet pass specified on CLI */
-  bool passGiven = false;
-
-  /* Should we log walletd logs to a file */
-  bool debug = false;
-
-  /* Enables verbose logging to standard output buffer */
-  bool verbose = false;
-
-  std::string dataDir = Tools::getDefaultDataDirectory();
-  /* The daemon host */
-  std::string host = "";
-  /* The daemon host access token, if required */
-  std::string remoteRpcAccessToken = "";
-
-  /* The network to connect to, ie. MainNet/StageNet ... */
-  std::string network = Xi::Config::Network::defaultNetworkIdentifier();
-  std::string networkDir = "./config";
-
-  /* The daemon port */
-  uint16_t port = Xi::Config::Network::Configuration::rpcDefaultPort();
-
-  /* The wallet file path */
-  std::string walletFile = "";
-
-  /* The wallet password */
-  std::string walletPass = "";
-
-  /* Generates a wallet and exits. */
-  bool generate = false;
-  /* Uses a seed for wallet generation, can be used to recover wallets. */
-  std::string generate_seed{};
-
-  /* Configuration of SSL usage using the HTTP(S) client. */
-  ::Xi::Http::SSLConfiguration ssl;
-};
-
 struct AddressBookEntry {
   AddressBookEntry() {}
 
