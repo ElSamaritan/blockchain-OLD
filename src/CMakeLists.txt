@@ -110,6 +110,27 @@ target_compile_definitions(
 )
 
 xi_make_library(
+  Xi-Resource
+
+  PUBLIC_LIBRARIES
+    Xi::Core
+    Serialization
+)
+include(Xi-Resource-Builder/ResourceBuilder.cmake)
+
+xi_make_resources(
+  LIBRARY_NAME Xi.Resources
+  NAMESPACE Xi::Resources
+  OUTPATH ${CMAKE_CURRENT_BINARY_DIR}
+
+  INPUTS
+    ${PROJECT_SOURCE_DIR}/resources/Licenses.yaml
+    ${PROJECT_SOURCE_DIR}/resources/Chains.yaml
+    ${PROJECT_SOURCE_DIR}/resources/PublicKeys.yaml
+    ${PROJECT_SOURCE_DIR}/resources/Checkpoints.yaml
+)
+
+xi_make_library(
   Xi-Crypto
 
   PUBLIC_LIBRARIES
@@ -203,18 +224,13 @@ xi_make_library(
     CryptoNoteCore
 )
 
-include(Xi-Config/Config.cmake)
 xi_make_library(
   Xi-Config
 
   PUBLIC_LIBRARIES
     Xi::Core
     Xi::Blockchain
-
-  EXTRA_SOURCES
-    ${config_sources}
 )
-target_include_directories(Xi.Config PRIVATE ${CONFIG_OUT})
 
 if(XI_BUILD_BREAKPAD)
   xi_make_library(
@@ -237,6 +253,7 @@ xi_make_library(
 
   PUBLIC_LIBRARIES
     Xi::Core
+    Xi::Resource
     Xi::Log::Discord
     ${XI_CRASH_HANDLER_LIB}
 
@@ -297,22 +314,23 @@ endif ()
 
 # Add the dependencies we need
 target_link_libraries(
-    CryptoNoteCore
+  CryptoNoteCore
 
-    PUBLIC
-        Common
-        Logging
-        Crypto
-        P2P
-        Rpc
-        Serialization
-        System
-        rocksdb
-        lz4
-        boost
+  PUBLIC
+    Common
+    Logging
+    Crypto
+    P2P
+    Rpc
+    Serialization
+    System
+    rocksdb
+    lz4
+    boost
 
-    PRIVATE
-        async::asyncplusplus
+  PRIVATE
+    Xi::Resources
+    async::asyncplusplus
 )
 
 # The reason we link so many Xi libraries here:

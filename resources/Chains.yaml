@@ -1,0 +1,18 @@
+namespace: "Xi:Resources"
+identifier: "Chains"
+collections:
+prefix: "chains/"
+root: "./chains"
+entities:
+  - name: "galaxia"
+    path: "Galaxia.MainNet.json"
+    type: "text"
+  - name: "galaxia/test"
+    path: "Galaxia.TestNet.json"
+    type: "text"
+  - name: "galaxia/local"
+    path: "Galaxia.LocalTestNet.json"
+    type: "text"
+  - name: "uinttests"
+    path: "UnitTests.Network.json"
+    type: "text"
