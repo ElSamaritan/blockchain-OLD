@@ -188,6 +188,10 @@ xi_make_library(
     Common
 )
 
+if(WIN32)
+  target_link_libraries(Xi.Http PRIVATE Crypt32)
+endif()
+
 xi_make_library(
   Xi-Log-Discord
 

@@ -44,10 +44,8 @@ DiscordLogger::DiscordLogger(const std::string& webhook, Logging::Level level)
     m_webhook += webhook;
   }
 
-  Http::SSLConfiguration sslConfig{};
-  sslConfig.setEnabled(true);
-  sslConfig.setVerifyPeers(false);
-  m_http = std::make_unique<Http::Client>("discordapp.com", static_cast<uint16_t>(443), sslConfig);
+  m_http = std::make_unique<Http::Client>("discordapp.com", static_cast<uint16_t>(443),
+                                          Http::SSLConfiguration::RootStoreClient);
 }
 
 DiscordLogger::~DiscordLogger() {
@@ -99,7 +97,8 @@ void DiscordLogger::doLogString(Logging::CommonLogger::LogContext context, const
   }
 
   if (auto reqBody = embed.toWebhookBody(); !reqBody.isError()) {
-    m_http->postSync(m_webhook, Http::ContentType::Json, reqBody.take());
+    [[maybe_unused]] const auto response = m_http->postSync(m_webhook, Http::ContentType::Json, reqBody.take());
+    assert(isSuccessCode(response.status()));
   }
 }
 
@@ -152,7 +151,8 @@ void DiscordLogger::doLogObject(Logging::CommonLogger::LogContext context, Loggi
   }
 
   if (auto reqBody = embed.toWebhookBody(); !reqBody.isError()) {
-    m_http->postSync(m_webhook, Http::ContentType::Json, reqBody.take());
+    [[maybe_unused]] const auto response = m_http->postSync(m_webhook, Http::ContentType::Json, reqBody.take());
+    assert(isSuccessCode(response.status()));
   }
 }
 

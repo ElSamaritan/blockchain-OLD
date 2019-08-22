@@ -28,9 +28,17 @@
 #include <boost/asio/ssl.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#if defined(_WIN32) && _WIN32
+#include <wincrypt.h>
+#endif
+
+const Xi::Http::SSLConfiguration Xi::Http::SSLConfiguration::NoSsl{no_ssl{}};
+const Xi::Http::SSLConfiguration Xi::Http::SSLConfiguration::RootStoreClient{root_store_ssl{}};
+
 Xi::Http::SSLConfiguration::SSLConfiguration()
     : m_enabled{false},
       m_verifyPeers{true},
+      m_loadCertStore{true},
       m_rootPath{"./ssl"},
       m_certificatePath{"cert.pem"},
       m_privateKeyPath{"key.pem"},
@@ -55,6 +63,14 @@ bool Xi::Http::SSLConfiguration::verifyPeers() const {
 
 void Xi::Http::SSLConfiguration::setVerifyPeers(bool isEnabled) {
   m_verifyPeers = isEnabled;
+}
+
+bool Xi::Http::SSLConfiguration::rootStoreEnabled() const {
+  return m_loadCertStore;
+}
+
+void Xi::Http::SSLConfiguration::setRootStoreEnabled(bool isEnabled) {
+  m_loadCertStore = isEnabled;
 }
 
 const std::string &Xi::Http::SSLConfiguration::rootPath() const {
@@ -143,7 +159,35 @@ void Xi::Http::SSLConfiguration::initializeClientContext(boost::asio::ssl::conte
   } else {
     ctx.set_verify_mode(boost::asio::ssl::verify_peer);
     boost::system::error_code ec;
-    CATCH_THROW_WITH_CONTEXT(ctx.load_verify_file(trustedKeysPath(), ec), trustedKeysPath())
+    if (rootStoreEnabled()) {
+#if defined(_WIN32) && _WIN32
+      HCERTSTORE hStore = CertOpenSystemStore(0, "ROOT");
+      if (hStore == nullptr) {
+        return;
+      }
+
+      X509_STORE *store = X509_STORE_new();
+      PCCERT_CONTEXT pContext = nullptr;
+      while ((pContext = CertEnumCertificatesInStore(hStore, pContext)) != nullptr) {
+        X509 *x509 = d2i_X509(nullptr, (const unsigned char **)&pContext->pbCertEncoded, pContext->cbCertEncoded);
+        if (x509 != nullptr) {
+          X509_STORE_add_cert(store, x509);
+          X509_free(x509);
+        }
+      }
+
+      CertFreeCertificateContext(pContext);
+      CertCloseStore(hStore, 0);
+
+      SSL_CTX_set_cert_store(ctx.native_handle(), store);
+#else
+      ctx.set_default_verify_paths(ec);
+      exceptional_if<RuntimeError>(ec.failed(), "Failed to load root certificates: {}", ec.message());
+#endif
+    }
+    if (!trustedKeysPath().empty()) {
+      CATCH_THROW_WITH_CONTEXT(ctx.load_verify_file(trustedKeysPath(), ec), trustedKeysPath())
+    }
   }
 }
 
@@ -167,4 +211,15 @@ bool Xi::Http::SSLConfiguration::isInsecure(Xi::Http::SSLConfiguration::Usage us
   }
 
   return false;
+}
+
+Xi::Http::SSLConfiguration::SSLConfiguration(Xi::Http::SSLConfiguration::root_store_ssl) : SSLConfiguration() {
+  setEnabled(true);
+  setVerifyPeers(true);
+  setRootStoreEnabled(true);
+  setTrustedKeysPath("");
+}
+
+Xi::Http::SSLConfiguration::SSLConfiguration(Xi::Http::SSLConfiguration::no_ssl) : SSLConfiguration() {
+  setEnabled(false);
 }

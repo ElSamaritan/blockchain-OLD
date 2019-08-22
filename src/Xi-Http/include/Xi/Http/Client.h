@@ -106,5 +106,6 @@ class Client {
   struct _Worker;
   std::shared_ptr<_Worker> m_worker;
 };
+
 }  // namespace Http
 }  // namespace Xi

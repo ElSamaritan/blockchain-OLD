@@ -191,3 +191,7 @@ std::string Xi::to_string(Xi::Http::StatusCode status) {
       return "Unknown";
   }
 }
+
+bool Xi::Http::isSuccessCode(const Xi::Http::StatusCode code) {
+  return static_cast<int>(code) >= 200 && static_cast<int>(code) < 300;
+}

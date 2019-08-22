@@ -46,6 +46,10 @@ namespace Xi {
 namespace Http {
 class SSLConfiguration {
  public:
+  static const SSLConfiguration NoSsl;
+  static const SSLConfiguration RootStoreClient;
+
+ public:
   /*!
    * \brief The Usage enum encodes scenerious an ssl configuration is used for.
    */
@@ -88,6 +92,11 @@ class SSLConfiguration {
    */
   void setVerifyPeers(bool isEnabled);
 
+  /// Should root certificates be loaded as verified.
+  bool rootStoreEnabled() const;
+  /// Sets whether root certificates should be trusted.
+  void setRootStoreEnabled(bool isEnabled);
+
   /*!
    * \brief rootPath main directory containing all keys
    */
@@ -124,8 +133,16 @@ class SSLConfiguration {
   bool isInsecure(Usage usage) const;
 
  private:
+  struct root_store_ssl {};
+  explicit SSLConfiguration(root_store_ssl);
+
+  struct no_ssl {};
+  explicit SSLConfiguration(no_ssl);
+
+ private:
   bool m_enabled;
   bool m_verifyPeers;
+  bool m_loadCertStore;
   std::string m_rootPath;
   std::string m_certificatePath;
   std::string m_privateKeyPath;
