@@ -52,11 +52,12 @@
 namespace CryptoNote {
 
 struct YamlInputSerializer::_Impl {
+  std::optional<YAML::Node> root{std::nullopt};
   std::stack<YAML::Node> nodes;
   std::stack<uint32_t> indices;
 
-  const YAML::Node *top() const {
-    XI_RETURN_EC_IF(nodes.empty(), nullptr);
+  const YAML::Node *top() {
+    XI_RETURN_SC_IF(nodes.empty(), nullptr);
     XI_RETURN_SC(std::addressof(nodes.top()));
   }
 
@@ -77,19 +78,26 @@ struct YamlInputSerializer::_Impl {
 
   [[nodiscard]] std::optional<YAML::Node> child(Common::StringView name) {
     auto current = top();
-    if (current->IsMap()) {
-      YAML::Node value = (*current)[std::string{name.getData(), name.getSize()}];
-      XI_RETURN_EC_IF_NOT(value, std::nullopt);
-      XI_RETURN_SC(std::move(value));
-    } else if (current->IsSequence()) {
-      const auto index = indices.top();
-      XI_RETURN_EC_IF_NOT(index < current->size(), std::nullopt);
-      auto value = (*current)[index];
-      XI_RETURN_EC_IF_NOT(value, std::nullopt);
-      indices.top() += 1;
-      XI_RETURN_SC(std::move(value));
+    if (current == nullptr) {
+      XI_RETURN_EC_IF_NOT(root, std::nullopt);
+      auto _root = root;
+      root = std::nullopt;
+      XI_RETURN_SC(_root);
     } else {
-      XI_RETURN_EC(std::nullopt);
+      if (current->IsMap()) {
+        YAML::Node value = (*current)[std::string{name.getData(), name.getSize()}];
+        XI_RETURN_EC_IF_NOT(value, std::nullopt);
+        XI_RETURN_SC(std::move(value));
+      } else if (current->IsSequence()) {
+        const auto index = indices.top();
+        XI_RETURN_EC_IF_NOT(index < current->size(), std::nullopt);
+        auto value = (*current)[index];
+        XI_RETURN_EC_IF_NOT(value, std::nullopt);
+        indices.top() += 1;
+        XI_RETURN_SC(std::move(value));
+      } else {
+        XI_RETURN_EC(std::nullopt);
+      }
     }
   }
 
@@ -137,7 +145,7 @@ std::unique_ptr<YamlInputSerializer> YamlInputSerializer::parse(const std::strin
   try {
     auto node = YAML::Load(content);
     std::unique_ptr<YamlInputSerializer> reval{new YamlInputSerializer};
-    XI_RETURN_EC_IF_NOT(reval->m_impl->push(std::move(node)), nullptr);
+    reval->m_impl->root = node;
     XI_RETURN_SC(reval);
   } catch (const std::exception &e) {
     XI_PRINT_EC("YAML parse thre: %s", e.what());
@@ -148,8 +156,12 @@ std::unique_ptr<YamlInputSerializer> YamlInputSerializer::parse(const std::strin
   }
 }
 
+YamlInputSerializer::~YamlInputSerializer() {
+  /* */
+}
+
 ISerializer::SerializerType YamlInputSerializer::type() const {
-  return OUTPUT;
+  return INPUT;
 }
 
 ISerializer::FormatType YamlInputSerializer::format() const {
@@ -260,6 +272,24 @@ bool YamlInputSerializer::operator()(int64_t &value, Common::StringView name) {
 bool YamlInputSerializer::operator()(std::string &value, Common::StringView name) {
   XI_YAML_TRY
   XI_RETURN_EC_IF_NOT(m_impl->child(name, value), false);
+  XI_RETURN_SC(true);
+  XI_YAML_CATCH
+}
+
+bool YamlInputSerializer::operator()(double &value, Common::StringView name) {
+  XI_YAML_TRY
+  auto node = m_impl->child(name);
+  XI_RETURN_EC_IF_NOT(node, false);
+  value = node->as<double>();
+  XI_RETURN_SC(true);
+  XI_YAML_CATCH
+}
+
+bool YamlInputSerializer::operator()(bool &value, Common::StringView name) {
+  XI_YAML_TRY
+  auto node = m_impl->child(name);
+  XI_RETURN_EC_IF_NOT(node, false);
+  value = node->as<bool>();
   XI_RETURN_SC(true);
   XI_YAML_CATCH
 }

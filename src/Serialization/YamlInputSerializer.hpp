@@ -34,6 +34,8 @@ class YamlInputSerializer final : public CryptoNote::ISerializer {
   static std::unique_ptr<YamlInputSerializer> parse(const std::string& content);
 
  public:
+  ~YamlInputSerializer() override;
+
   SerializerType type() const override;
   FormatType format() const override;
 
@@ -79,6 +81,7 @@ template <typename _ValueT>
     auto serializer = YamlInputSerializer::parse(content);
     XI_RETURN_EC_IF_NOT(serializer, false);
     XI_RETURN_EC_IF_NOT((*serializer)(out, ""), false);
+    XI_RETURN_SC(true);
   } catch (const std::exception& e) {
     XI_PRINT_EC("YAML parsing threw: %s", e.what());
     XI_RETURN_EC(false);
