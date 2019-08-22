@@ -4,7 +4,7 @@
 //
 // Please see the included LICENSE file for more information.
 
-#include "FormatTools.h"
+#include "CryptoNoteCore/FormatTools.h"
 #include <cstdio>
 #include <ctime>
 #include <Xi/Config.h>
