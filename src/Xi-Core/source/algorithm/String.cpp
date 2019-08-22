@@ -1,4 +1,27 @@
-﻿#include "Xi/Algorithm/String.h"
+﻿/* ============================================================================================== *
+ *                                                                                                *
+ *                                     Galaxia Blockchain                                         *
+ *                                                                                                *
+ * ---------------------------------------------------------------------------------------------- *
+ * This file is part of the Xi framework.                                                         *
+ * ---------------------------------------------------------------------------------------------- *
+ *                                                                                                *
+ * Copyright 2018-2019 Xi Project Developers <support.xiproject.io>                               *
+ *                                                                                                *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the *
+ * GNU General Public License as published by the Free Software Foundation, either version 3 of   *
+ * the License, or (at your option) any later version.                                            *
+ *                                                                                                *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;      *
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.      *
+ * See the GNU General Public License for more details.                                           *
+ *                                                                                                *
+ * You should have received a copy of the GNU General Public License along with this program.     *
+ * If not, see <https://www.gnu.org/licenses/>.                                                   *
+ *                                                                                                *
+ * ============================================================================================== */
+
+#include "Xi/Algorithm/String.h"
 
 #include <limits>
 #include <string>
@@ -112,7 +135,8 @@ std::string join(ConstSpan<std::string> values, const std::string &token) {
   if (values.empty()) {
     return "";
   }
-  std::stringstream builder{values[0]};
+  std::stringstream builder{};
+  builder << values[0];
   for (size_t i = 1; i < values.size(); ++i) {
     builder << token << values[i];
   }
