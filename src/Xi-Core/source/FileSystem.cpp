@@ -132,3 +132,67 @@ Xi::Result<std::string> Xi::FileSystem::searchFile(const std::string &filepath, 
                              dataDir);
   XI_ERROR_CATCH
 }
+
+Xi::Result<std::string> Xi::FileSystem::readTextFile(const std::string &path) {
+  XI_ERROR_TRY
+  std::ifstream stream(path);
+  return emplaceSuccess<std::string>(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+  XI_ERROR_CATCH
+}
+
+Xi::Result<Xi::ByteVector> Xi::FileSystem::readBinaryFile(const std::string &path) {
+  XI_ERROR_TRY
+  std::ifstream stream(path, std::ios::binary);
+  std::string str{std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
+  ByteVector reval{};
+  reval.resize(str.size());
+  std::memcpy(reval.data(), str.data(), reval.size());
+  return success(std::move(reval));
+  XI_ERROR_CATCH
+}
+
+Xi::Result<std::string> Xi::FileSystem::directory(const std::string &path) {
+  XI_ERROR_TRY
+  boost::filesystem::path bpath{path};
+  boost::system::error_code ec{};
+  bpath = boost::filesystem::canonical(bpath, ec);
+  if (ec) {
+    return makeError(ec);
+  }
+
+  if (boost::filesystem::is_directory(bpath)) {
+    return success(bpath.string());
+  } else {
+    return success(bpath.parent_path().string());
+  }
+
+  XI_ERROR_CATCH
+}
+
+Xi::Result<std::string> Xi::FileSystem::combine(const std::string &path, const std::string &subpath) {
+  XI_ERROR_TRY
+  boost::filesystem::path bpath = boost::filesystem::path{path} / boost::filesystem::path{subpath};
+  return success(bpath.string());
+  XI_ERROR_CATCH
+}
+
+Xi::Result<std::string> Xi::FileSystem::rooted(const std::string &path, const std::string &root) {
+  XI_ERROR_TRY
+  boost::filesystem::path bpath{path};
+  boost::system::error_code ec{};
+
+  if (bpath.is_relative()) {
+    if (!root.empty()) {
+      bpath = boost::filesystem::path{root} / path;
+    }
+    bpath = boost::filesystem::canonical(bpath, ec);
+    if (ec) {
+      return makeError(ec);
+    }
+    return success(bpath.string());
+  } else {
+    return success(bpath.string());
+  }
+
+  XI_ERROR_CATCH
+}
