@@ -114,6 +114,8 @@ xi_make_library(
 
   PUBLIC_LIBRARIES
     Xi::Core
+    Xi::Network
+    Xi::Http
     Serialization
 )
 include(Xi-Resource-Builder/ResourceBuilder.cmake)
@@ -234,6 +236,7 @@ xi_make_library(
   PUBLIC_LIBRARIES
     Xi::Core
     Xi::Blockchain
+    Xi::Network
 )
 
 if(XI_BUILD_BREAKPAD)

@@ -44,8 +44,7 @@ DiscordLogger::DiscordLogger(const std::string& webhook, Logging::Level level)
     m_webhook += webhook;
   }
 
-  m_http = std::make_unique<Http::Client>("discordapp.com", static_cast<uint16_t>(443),
-                                          Http::SSLConfiguration::RootStoreClient);
+  m_http = std::make_unique<Http::Client>("https://discordapp.com", Http::SSLConfiguration::RootStoreClient);
 }
 
 DiscordLogger::~DiscordLogger() {

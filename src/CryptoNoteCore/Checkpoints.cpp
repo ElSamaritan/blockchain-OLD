@@ -20,6 +20,7 @@
 
 #include <sstream>
 
+#include <Xi/Algorithm/String.h>
 #include <Xi/Resource/Resource.hpp>
 #include <Xi/Resources/Checkpoints.hpp>
 #include <Common/StringTools.h>
@@ -40,10 +41,10 @@ void Checkpoints::setEnabled(bool useCheckpoints) {
 }
 //---------------------------------------------------------------------------
 bool Checkpoints::addCheckpoint(uint32_t index, const std::string &hash_str) {
-  auto hashParseResult = Crypto::Hash::fromString(hash_str);
+  auto hashParseResult = Crypto::Hash::fromString(Xi::trim(hash_str));
 
   if (hashParseResult.isError()) {
-    logger(Error) << "INVALID HASH IN CHECKPOINTS!";
+    logger(Error) << "INVALID HASH '" << hash_str << "' IN CHECKPOINTS! (" << hashParseResult.error().message() << ")";
     return false;
   } else {
     return addCheckpoint(index, hashParseResult.value());
