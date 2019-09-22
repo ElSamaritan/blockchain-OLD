@@ -52,7 +52,7 @@ struct Xi::Http::Server::_Listener : Listener, IServerSessionBuilder {
   std::shared_ptr<LoopGuard> loopGuard;  ///< Ensures the io context keeps idling.
 
   std::vector<std::thread> runner;
-  boost::asio::ssl::context ctx{boost::asio::ssl::context::sslv23};
+  boost::asio::ssl::context ctx{boost::asio::ssl::context::tlsv12_server};
   std::shared_ptr<RequestHandler> handler;
   Xi::Concurrent::IDispatcher& dispatcher;
 

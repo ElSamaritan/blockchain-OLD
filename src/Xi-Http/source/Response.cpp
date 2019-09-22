@@ -24,6 +24,7 @@
 #include "Xi/Http/Response.h"
 
 #include <cinttypes>
+#include <utility>
 
 Xi::Http::Response::Response(StatusCode code, const std::string &body, ContentType type)
     : m_headers{}, m_body{body}, m_statusCode{code} {
@@ -40,6 +41,10 @@ void Xi::Http::Response::setStatus(Xi::Http::StatusCode code) {
 
 const std::string &Xi::Http::Response::body() const {
   return m_body;
+}
+
+std::string Xi::Http::Response::takeBody() {
+  return std::move(m_body);
 }
 
 void Xi::Http::Response::setBody(const std::string &_body) {

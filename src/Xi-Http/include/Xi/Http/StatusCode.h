@@ -120,7 +120,8 @@ enum struct StatusCode {
 };
 
 bool isSuccessCode(const StatusCode code);
+std::string toString(Http::StatusCode status);
 
 }  // namespace Http
-std::string to_string(Http::StatusCode status);
+[[deprecated]] std::string to_string(Http::StatusCode status);
 }  // namespace Xi

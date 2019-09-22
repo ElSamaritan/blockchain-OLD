@@ -24,6 +24,7 @@
 #include "Xi/Network/Uri.hpp"
 
 #include <utility>
+#include <sstream>
 
 #include <Xi/ExternalIncludePush.h>
 #include <uriparser/Uri.h>
@@ -33,16 +34,16 @@
 #include <Xi/Algorithm/String.h>
 
 namespace {
-std::string toString(const UriTextRangeA &range) {
+std::string nativeToString(const UriTextRangeA &range) {
   return std::string{range.first, range.afterLast};
 }
 
-std::string toString(UriPathSegmentA *xs, const std::string &delim) {
+std::string nativeToString(UriPathSegmentA *xs, const std::string &delim) {
   UriPathSegmentStructA *head(xs);
   std::string accum;
 
   while (head) {
-    accum += delim + toString(head->text);
+    accum += delim + nativeToString(head->text);
     head = head->next;
   }
 
@@ -61,6 +62,7 @@ struct Uri::_Impl {
   std::string path{};
   std::string query{};
   std::string fragment{};
+  std::string target{};
 };
 
 Result<Uri> Uri::fromString(const std::string &str) {
@@ -72,19 +74,37 @@ Result<Uri> Uri::fromString(const std::string &str) {
     exceptional<InvalidArgumentError>("'{}' is not a valid uri.", str);
   } else {
     reval.m_impl->raw = str;
-    reval.m_impl->scheme = toString(native.scheme);
-    reval.m_impl->host = toString(native.hostText);
-    reval.m_impl->path = toString(native.pathHead, "/");
-    reval.m_impl->query = toString(native.query);
-    reval.m_impl->fragment = toString(native.fragment);
+    reval.m_impl->scheme = nativeToString(native.scheme);
+    reval.m_impl->host = nativeToString(native.hostText);
+    reval.m_impl->path = nativeToString(native.pathHead, "/");
+    reval.m_impl->query = nativeToString(native.query);
+    reval.m_impl->fragment = nativeToString(native.fragment);
 
     {
-      std::string port = toString(native.portText);
+      std::string port = nativeToString(native.portText);
       if (port.empty()) {
-        reval.m_impl->port = Port::Any;
+        if (reval.m_impl->scheme.empty()) {
+          reval.m_impl->port = Port::Any;
+        } else {
+          const auto protocol = parseProtocol(reval.m_impl->scheme).valueOrThrow();
+          reval.m_impl->port = Port::fromProtocol(protocol).valueOrThrow();
+        }
       } else {
         reval.m_impl->port = Port::fromString(port).valueOrThrow();
       }
+    }
+
+    {
+      std::stringstream builder{};
+      builder << reval.m_impl->path;
+      if (!reval.m_impl->query.empty()) {
+        builder << "?" << reval.m_impl->query;
+      }
+      if (!reval.m_impl->fragment.empty()) {
+        builder << "#" << reval.m_impl->fragment;
+      }
+
+      reval.m_impl->target = builder.str();
     }
 
     return success(std::move(reval));
@@ -126,6 +146,10 @@ const std::string &Uri::scheme() const {
   return m_impl->scheme;
 }
 
+Result<Protocol> Uri::protocol() const {
+  return parseProtocol(scheme());
+}
+
 const std::string &Uri::host() const {
   return m_impl->host;
 }
@@ -144,6 +168,14 @@ const std::string &Uri::query() const {
 
 const std::string &Uri::fragment() const {
   return m_impl->fragment;
+}
+
+const std::string &Uri::target() const {
+  return m_impl->target;
+}
+
+bool isUri(const std::string &str) {
+  return Uri::fromString(str).isValue();
 }
 
 }  // namespace Network

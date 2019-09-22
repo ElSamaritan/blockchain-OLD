@@ -21,54 +21,83 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
-
-#include <memory>
-#include <string>
-#include <string_view>
-#include <optional>
-#include <cinttypes>
-
-#include <Xi/Global.hh>
-#include <Xi/Result.h>
-
-#include "Xi/Network/Port.hpp"
 #include "Xi/Network/Protocol.hpp"
+
+#include <Xi/Exceptions.hpp>
 
 namespace Xi {
 namespace Network {
 
-class Uri {
- public:
-  static Result<Uri> fromString(const std::string& str);
+Result<Protocol> parseProtocol(const std::string &str) {
+  XI_ERROR_TRY
+  if (str == "http") {
+    return success(Protocol::Http);
+  } else if (str == "https") {
+    return success(Protocol::Https);
+  } else if (str == "xi") {
+    return success(Protocol::Xi);
+  } else if (str == "xis") {
+    return success(Protocol::Xis);
+  } else if (str == "xip") {
+    return success(Protocol::Xip);
+  } else {
+    exceptional<NotFoundError>("Unknown network protocol: {}", str);
+  }
+  XI_ERROR_CATCH
+}
 
- private:
-  explicit Uri();
+Result<std::string> toString(const Protocol protocol) {
+  XI_ERROR_TRY
+  switch (protocol) {
+    case Protocol::Http:
+      return emplaceSuccess<std::string>("http");
+    case Protocol::Https:
+      return emplaceSuccess<std::string>("https");
+    case Protocol::Xi:
+      return emplaceSuccess<std::string>("xi");
+    case Protocol::Xis:
+      return emplaceSuccess<std::string>("xis");
+    case Protocol::Xip:
+      return emplaceSuccess<std::string>("xip");
+  }
+  exceptional<InvalidEnumValueError>("Unrecognized network protocol");
+  XI_ERROR_CATCH
+}
 
- public:
-  Uri(const Uri& other);
-  Uri& operator=(const Uri& other);
+bool isHttpBased(const Protocol protocol) {
+  switch (protocol) {
+    case Protocol::Http:
+    case Protocol::Https:
+    case Protocol::Xi:
+    case Protocol::Xis:
+      return true;
 
-  Uri(Uri&& other);
-  Uri& operator=(Uri&& other);
+    default:
+      return false;
+  }
+}
 
-  ~Uri();
+bool isHttp(const Protocol protocol) {
+  switch (protocol) {
+    case Protocol::Http:
+    case Protocol::Xi:
+      return true;
 
-  const std::string& scheme() const;
-  Result<Protocol> protocol() const;
-  const std::string& host() const;
-  Port port() const;
-  const std::string& path() const;
-  const std::string& query() const;
-  const std::string& fragment() const;
-  const std::string& target() const;
+    default:
+      return false;
+  }
+}
 
- private:
-  struct _Impl;
-  std::unique_ptr<_Impl> m_impl;
-};
+bool isHttps(const Protocol protocol) {
+  switch (protocol) {
+    case Protocol::Https:
+    case Protocol::Xis:
+      return true;
 
-bool isUri(const std::string& str);
+    default:
+      return false;
+  }
+}
 
 }  // namespace Network
 }  // namespace Xi

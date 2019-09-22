@@ -31,12 +31,16 @@
 #include <Xi/TypeSafe/Integral.hpp>
 #include <Serialization/ISerializer.h>
 
+#include "Xi/Network/Protocol.hpp"
+
 namespace Xi {
 namespace Network {
 
 struct Port : TypeSafe::EnableIntegralFromThis<uint16_t, Port> {
   static const Port Any;
+
   static Result<Port> fromString(const std::string& str);
+  static Result<Port> fromProtocol(const Protocol protocol);
 
   using EnableIntegralFromThis::EnableIntegralFromThis;
 

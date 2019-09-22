@@ -23,52 +23,34 @@
 
 #pragma once
 
-#include <memory>
 #include <string>
-#include <string_view>
-#include <optional>
-#include <cinttypes>
 
 #include <Xi/Global.hh>
 #include <Xi/Result.h>
 
-#include "Xi/Network/Port.hpp"
-#include "Xi/Network/Protocol.hpp"
-
 namespace Xi {
 namespace Network {
 
-class Uri {
- public:
-  static Result<Uri> fromString(const std::string& str);
+enum struct Protocol {
+  Http,
+  Https,
 
- private:
-  explicit Uri();
+  /// Rpc (Http)
+  Xi,
 
- public:
-  Uri(const Uri& other);
-  Uri& operator=(const Uri& other);
+  /// Rpc (Https)
+  Xis,
 
-  Uri(Uri&& other);
-  Uri& operator=(Uri&& other);
-
-  ~Uri();
-
-  const std::string& scheme() const;
-  Result<Protocol> protocol() const;
-  const std::string& host() const;
-  Port port() const;
-  const std::string& path() const;
-  const std::string& query() const;
-  const std::string& fragment() const;
-  const std::string& target() const;
-
- private:
-  struct _Impl;
-  std::unique_ptr<_Impl> m_impl;
+  /// P2p
+  Xip,
 };
 
-bool isUri(const std::string& str);
+Result<Protocol> parseProtocol(const std::string &str);
+Result<std::string> toString(const Protocol protocol);
+
+bool isHttpBased(const Protocol protocol);
+bool isHttp(const Protocol protocol);
+bool isHttps(const Protocol protocol);
 
 }  // namespace Network
 }  // namespace Xi

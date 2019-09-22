@@ -21,54 +21,41 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include <thread>
 
-#include <memory>
-#include <string>
-#include <string_view>
-#include <optional>
-#include <cinttypes>
+#include <gmock/gmock.h>
 
-#include <Xi/Global.hh>
-#include <Xi/Result.h>
+#include <Xi/Http/Router.h>
 
-#include "Xi/Network/Port.hpp"
-#include "Xi/Network/Protocol.hpp"
+#include <Xi/Http/FunctorRequestHandler.h>
+#include <Xi/Http/BasicEndpoint.h>
+#include <Xi/Http/Server.h>
 
-namespace Xi {
-namespace Network {
+#define XI_TESTSUITE DISABLED_T_Xi_Http_Server
 
-class Uri {
- public:
-  static Result<Uri> fromString(const std::string& str);
+TEST(XI_TESTSUITE, Serve) {
+  using namespace ::testing;
+  using namespace ::Xi::Http;
 
- private:
-  explicit Uri();
+  Server server{};
+  {
+    SSLConfiguration ssl{};
+    ssl.setEnabled(true);
+    server.setSSLConfiguration(ssl);
+  }
+  bool stop = false;
+  auto router = std::make_shared<Router>();
+  router->onGet("/", [&stop](const auto&) {
+    stop = true;
+    return Response{};
+  });
 
- public:
-  Uri(const Uri& other);
-  Uri& operator=(const Uri& other);
+  server.setHandler(router);
+  server.start("127.0.0.1", 8080);
 
-  Uri(Uri&& other);
-  Uri& operator=(Uri&& other);
+  while (!stop) {
+    std::this_thread::sleep_for(std::chrono::milliseconds{200});
+  }
 
-  ~Uri();
-
-  const std::string& scheme() const;
-  Result<Protocol> protocol() const;
-  const std::string& host() const;
-  Port port() const;
-  const std::string& path() const;
-  const std::string& query() const;
-  const std::string& fragment() const;
-  const std::string& target() const;
-
- private:
-  struct _Impl;
-  std::unique_ptr<_Impl> m_impl;
-};
-
-bool isUri(const std::string& str);
-
-}  // namespace Network
-}  // namespace Xi
+  server.stop();
+}

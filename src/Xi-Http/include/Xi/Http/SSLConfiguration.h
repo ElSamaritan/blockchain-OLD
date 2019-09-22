@@ -47,6 +47,7 @@ namespace Http {
 class SSLConfiguration {
  public:
   static const SSLConfiguration NoSsl;
+  static const SSLConfiguration NoVerifyClient;
   static const SSLConfiguration RootStoreClient;
 
  public:
@@ -119,6 +120,9 @@ class SSLConfiguration {
   const std::string& trustedKeysPath() const;
   void setTrustedKeysPath(const std::string& path);
 
+  const std::vector<std::string> trustedKeys() const;
+  void addTrustedKey(const std::string& cert);
+
   const std::string& privateKeyPassword() const;
   void setPrivateKeyPassword(const std::string& password);
 
@@ -139,6 +143,9 @@ class SSLConfiguration {
   struct no_ssl {};
   explicit SSLConfiguration(no_ssl);
 
+  struct no_verify {};
+  explicit SSLConfiguration(no_verify);
+
  private:
   bool m_enabled;
   bool m_verifyPeers;
@@ -148,7 +155,9 @@ class SSLConfiguration {
   std::string m_privateKeyPath;
   std::string m_dhparamPath;
   std::string m_trustedKeysPath;
+  std::vector<std::string> m_trustedKeys;
   std::string m_privateKeyPassword;
 };
+
 }  // namespace Http
 }  // namespace Xi

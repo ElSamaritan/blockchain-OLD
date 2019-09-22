@@ -132,6 +132,14 @@ static_assert(static_cast<boost::beast::http::status>(Xi::Http::StatusCode::Netw
               "converted seamlessly.");
 
 std::string Xi::to_string(Xi::Http::StatusCode status) {
+  return toString(status);
+}
+
+bool Xi::Http::isSuccessCode(const Xi::Http::StatusCode code) {
+  return static_cast<int>(code) >= 200 && static_cast<int>(code) < 300;
+}
+
+std::string Xi::Http::toString(Xi::Http::StatusCode status) {
   switch (status) {
     case Http::StatusCode::Ok:
       return "Ok";
@@ -187,11 +195,6 @@ std::string Xi::to_string(Xi::Http::StatusCode status) {
       return "NetworkAuthenticationRequired";
     case Http::StatusCode::NetworkConnectTimeout:
       return "NetworkConnectTimeout";
-    default:
-      return "Unknown";
   }
-}
-
-bool Xi::Http::isSuccessCode(const Xi::Http::StatusCode code) {
-  return static_cast<int>(code) >= 200 && static_cast<int>(code) < 300;
+  return "Unknown";
 }

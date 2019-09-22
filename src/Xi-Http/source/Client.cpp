@@ -33,7 +33,9 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl/stream.hpp>
 
+#include <Xi/Exceptions.hpp>
 #include <Xi/Algorithm/String.h>
+#include <Xi/Network/Uri.hpp>
 
 #include "Xi/Http/Uri.h"
 
@@ -54,7 +56,7 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
   std::shared_ptr<LoopGuard> loopGuard;  ///< Ensures the io context keeps idling.
   std::thread thread;
   boost::asio::io_context io;
-  boost::asio::ssl::context ctx{boost::asio::ssl::context::sslv23_client};
+  boost::asio::ssl::context ctx{boost::asio::ssl::context::tlsv12_client};
   std::atomic<std::chrono::seconds> m_timeout{std::chrono::seconds{20}};
 
   _Worker() {
@@ -90,10 +92,19 @@ struct Xi::Http::Client::_Worker : IClientSessionBuilder, std::enable_shared_fro
   }
 };
 
-Xi::Http::Client::Client(const std::string &host, uint16_t port, SSLConfiguration config)
-    : m_host{host}, m_port{port}, m_sslConfig{config}, m_credentials{null}, m_worker{new _Worker} {
+Xi::Http::Client::Client(Xi::Http::SSLConfiguration config)
+    : m_host{std::nullopt},
+      m_sslConfig{config},
+      m_credentials{null},
+      m_worker{new _Worker}
+
+{
   m_sslConfig.initializeClientContext(m_worker->ctx);
   m_worker->run();
+}
+
+Xi::Http::Client::Client(const std::string &host, SSLConfiguration config) : Client(config) {
+  m_host = Network::Uri::fromString(host).takeOrThrow();
 }
 
 Xi::Http::Client::~Client() {
@@ -101,11 +112,20 @@ Xi::Http::Client::~Client() {
 }
 
 const std::string Xi::Http::Client::host() const {
-  return m_host;
+  exceptional_if_not<NotFoundError>(m_host.has_value(), "No default host given.");
+  return m_host->host();
 }
 
 uint16_t Xi::Http::Client::port() const {
-  return m_port;
+  exceptional_if_not<NotFoundError>(m_host.has_value(), "No default port given.");
+  const auto _port = m_host->port();
+  exceptional_if<NotFoundError>(_port.isAny(), "No default port given.");
+  return _port.native();
+}
+
+Xi::Network::Protocol Xi::Http::Client::protocol() const {
+  exceptional_if_not<NotFoundError>(m_host.has_value(), "No default protocol given.");
+  return m_host->protocol().valueOrThrow();
 }
 
 void Xi::Http::Client::useAuthorization(Xi::Null) {
@@ -129,10 +149,14 @@ Xi::Http::Client &Xi::Http::Client::useTimeout(std::chrono::seconds seconds) {
 }
 
 std::future<Xi::Http::Response> Xi::Http::Client::send(Xi::Http::Request &&request) {
-  if (request.host().empty())
+  // TODO resolve hosts that have a subpath on the server
+  if (request.host().empty()) {
     request.setHost(host());
-  if (request.port() == 0)
+    request.setSSLRequired(isHttps(protocol()));
+  }
+  if (request.port() == 0) {
     request.setPort(port());
+  }
   {
     XI_CONCURRENT_LOCK_READ(m_credentials_guard);
     if (!std::holds_alternative<Null>(m_credentials)) {
@@ -149,9 +173,7 @@ std::future<Xi::Http::Response> Xi::Http::Client::send(Xi::Http::Request &&reque
   request.headers().setAcceptedContentEncodings(
       {ContentEncoding::Gzip, ContentEncoding::Deflate, ContentEncoding::Identity});
 
-  // TODO: request type should be determined on schema not config.
-  if (m_sslConfig.enabled()) {
-    request.setSSLRequired(true);
+  if (request.isSSLRequired()) {
     return m_worker->makeHttpsSession()->run(std::move(request));
   } else {
     return m_worker->makeHttpSession()->run(std::move(request));
@@ -160,8 +182,26 @@ std::future<Xi::Http::Response> Xi::Http::Client::send(Xi::Http::Request &&reque
 
 std::future<Xi::Http::Response> Xi::Http::Client::send(const std::string &url, Xi::Http::Method method,
                                                        Xi::Http::ContentType type, std::string body) {
-  Request request{url, method};
-  request.headers().setContentType(type);
-  request.setBody(move(body));
+  Request request{};
+  request.setMethod(method);
+  if (const auto uri = Network::Uri::fromString(url); uri.isValue()) {
+    if (const auto protocol = uri->protocol(); !protocol.isError()) {
+      exceptional_if_not<InvalidArgumentError>(isHttpBased(*protocol), "Protocol is not http based.");
+      request.setSSLRequired(isHttps(*protocol));
+    }
+    if (!uri->port().isAny()) {
+      request.setPort(uri->port().native());
+    }
+    if (!uri->host().empty()) {
+      request.setHost(uri->host());
+    }
+    request.setTarget(uri->target());
+  } else {
+    request.setTarget(url);
+  }
+  if (!body.empty()) {
+    request.headers().setContentType(type);
+    request.setBody(move(body));
+  }
   return send(std::move(request));
 }

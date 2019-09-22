@@ -23,6 +23,7 @@
 
 #include "Xi/Network/Port.hpp"
 
+#include <Xi/Exceptions.hpp>
 #include <Xi/Algorithm/String.h>
 
 namespace Xi {
@@ -33,6 +34,24 @@ const Port Port::Any{0};
 Result<Port> Port::fromString(const std::string &str) {
   XI_ERROR_TRY
   return emplaceSuccess<Port>(lexical_cast<uint16_t>(str));
+  XI_ERROR_CATCH
+}
+
+Result<Port> Port::fromProtocol(const Protocol protocol) {
+  XI_ERROR_TRY
+  switch (protocol) {
+    case Protocol::Http:
+      return success(Port{80});
+    case Protocol::Https:
+      return success(Port{443});
+    case Protocol::Xi:
+      return success(Port{22869});
+    case Protocol::Xis:
+      return success(Port{22869});
+    case Protocol::Xip:
+      return success(Port{22868});
+  }
+  exceptional<InvalidEnumValueError>("Unknown network protocol");
   XI_ERROR_CATCH
 }
 

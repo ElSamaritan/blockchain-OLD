@@ -42,7 +42,7 @@ Xi::Http::HttpsServerSession::HttpsServerSession(Xi::Http::ServerSession::socket
 
 void Xi::Http::HttpsServerSession::run() {
   m_stream.async_handshake(
-      boost::asio::ssl::stream_base::server, m_buffer.data(),
+      SslServerStream::server, m_buffer.data(),
       boost::asio::bind_executor(m_strand, std::bind(&HttpsServerSession::onHandshake,
                                                      std::shared_ptr<HttpsServerSession>{shared_from_this(), this},
                                                      std::placeholders::_1, std::placeholders::_2)));

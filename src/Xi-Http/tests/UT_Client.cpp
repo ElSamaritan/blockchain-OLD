@@ -32,10 +32,7 @@ TEST(XI_TESTSUITE, HTTPGetRequestWithRedirection) {
   using namespace ::testing;
   using namespace ::Xi::Http;
 
-  SSLConfiguration config;
-  config.setEnabled(true);
-
-  Client client{"google.de", 80, config};
+  Client client{"http://google.de", SSLConfiguration::RootStoreClient};
   const uint16_t NumRequests = 1;
   std::vector<std::future<Response>> responses;
   for (auto i = 0u; i < NumRequests; ++i) {
@@ -52,11 +49,7 @@ TEST(XI_TESTSUITE, HTTPSGetRequestWithRedirection) {
   using namespace ::testing;
   using namespace ::Xi::Http;
 
-  SSLConfiguration config;
-  config.setEnabled(true);
-  config.setVerifyPeers(false);
-
-  Client client{"github.com", 443, config};
+  Client client{"https://github.com", SSLConfiguration::RootStoreClient};
   const uint16_t NumRequests = 1;
   std::vector<std::future<Response>> responses;
   for (auto i = 0u; i < NumRequests; ++i) {

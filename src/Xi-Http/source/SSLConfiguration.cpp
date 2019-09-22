@@ -32,7 +32,10 @@
 #include <wincrypt.h>
 #endif
 
+#include <Xi/FileSystem.h>
+
 const Xi::Http::SSLConfiguration Xi::Http::SSLConfiguration::NoSsl{no_ssl{}};
+const Xi::Http::SSLConfiguration Xi::Http::SSLConfiguration::NoVerifyClient{no_verify{}};
 const Xi::Http::SSLConfiguration Xi::Http::SSLConfiguration::RootStoreClient{root_store_ssl{}};
 
 Xi::Http::SSLConfiguration::SSLConfiguration()
@@ -109,6 +112,14 @@ void Xi::Http::SSLConfiguration::setTrustedKeysPath(const std::string &path) {
   m_trustedKeysPath = path;
 }
 
+const std::vector<std::string> Xi::Http::SSLConfiguration::trustedKeys() const {
+  return m_trustedKeys;
+}
+
+void Xi::Http::SSLConfiguration::addTrustedKey(const std::string &cert) {
+  m_trustedKeys.push_back(cert);
+}
+
 const std::string &Xi::Http::SSLConfiguration::privateKeyPassword() const {
   return m_privateKeyPassword;
 }
@@ -126,15 +137,12 @@ void Xi::Http::SSLConfiguration::setPrivateKeyPassword(const std::string &passwo
   }
 
 void Xi::Http::SSLConfiguration::initializeServerContext(boost::asio::ssl::context &ctx) {
-  using namespace boost::filesystem;
   if (disabled())
     return;
-  if (!exists(certificatePath()))
-    throw std::runtime_error{"CertFile could not be found."};
-  if (!exists(privateKeyPath()))
-    throw std::runtime_error{"KeyFile could not be found."};
-  if (!exists(dhparamPath()))
-    throw std::runtime_error{"DhFile could not be found."};
+
+  const auto cert = FileSystem::searchFile(certificatePath(), "pem", rootPath()).takeOrThrow();
+  const auto pk = FileSystem::searchFile(privateKeyPath(), "pem", rootPath()).takeOrThrow();
+  const auto dh = FileSystem::searchFile(dhparamPath(), "pem", rootPath()).takeOrThrow();
 
   ctx.set_password_callback([pkp = privateKeyPassword()](
                                 std::size_t, boost::asio::ssl::context_base::password_purpose purpose) -> std::string {
@@ -142,13 +150,13 @@ void Xi::Http::SSLConfiguration::initializeServerContext(boost::asio::ssl::conte
     XI_RETURN_SC(pkp);
   });
 
-  ctx.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2);
+  using ssl = boost::asio::ssl::context;
+  ctx.set_options(ssl::default_workarounds | ssl::no_sslv2 | ssl::no_sslv3 | ssl::no_tlsv1 | ssl::no_tlsv1_1);
 
   boost::system::error_code ec;
-  CATCH_THROW_WITH_CONTEXT(ctx.use_certificate_chain_file(certificatePath(), ec), certificatePath())
-  CATCH_THROW_WITH_CONTEXT(ctx.use_private_key_file(privateKeyPath(), boost::asio::ssl::context::file_format::pem, ec),
-                           privateKeyPath())
-  CATCH_THROW_WITH_CONTEXT(ctx.use_tmp_dh_file(dhparamPath(), ec), dhparamPath())
+  CATCH_THROW_WITH_CONTEXT(ctx.use_certificate_chain_file(cert, ec), cert)
+  CATCH_THROW_WITH_CONTEXT(ctx.use_private_key_file(pk, ssl::file_format::pem, ec), pk)
+  CATCH_THROW_WITH_CONTEXT(ctx.use_tmp_dh_file(dh, ec), dh)
 }
 
 void Xi::Http::SSLConfiguration::initializeClientContext(boost::asio::ssl::context &ctx) {
@@ -186,7 +194,14 @@ void Xi::Http::SSLConfiguration::initializeClientContext(boost::asio::ssl::conte
 #endif
     }
     if (!trustedKeysPath().empty()) {
-      CATCH_THROW_WITH_CONTEXT(ctx.load_verify_file(trustedKeysPath(), ec), trustedKeysPath())
+      const auto tk = FileSystem::searchFile(trustedKeysPath(), "pem", rootPath()).takeOrThrow();
+      CATCH_THROW_WITH_CONTEXT(ctx.load_verify_file(tk, ec), tk)
+    }
+
+    for (const auto &trustedKey : m_trustedKeys) {
+      boost::system::error_code ec{/* */};
+      ctx.add_certificate_authority(boost::asio::buffer(trustedKey.data(), trustedKey.size()));
+      exceptional_if<RuntimeError>(ec.failed(), "Failed loading trusted key:\n{}", trustedKey);
     }
   }
 }
@@ -222,4 +237,9 @@ Xi::Http::SSLConfiguration::SSLConfiguration(Xi::Http::SSLConfiguration::root_st
 
 Xi::Http::SSLConfiguration::SSLConfiguration(Xi::Http::SSLConfiguration::no_ssl) : SSLConfiguration() {
   setEnabled(false);
+}
+
+Xi::Http::SSLConfiguration::SSLConfiguration(Xi::Http::SSLConfiguration::no_verify) : SSLConfiguration() {
+  setEnabled(true);
+  setVerifyPeers(false);
 }
