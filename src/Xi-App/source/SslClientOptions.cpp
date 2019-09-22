@@ -56,18 +56,25 @@ void SslClientOptions::emplaceOptions(cxxopts::Options &options) {
           cxxopts::value<std::string>(trusted())->default_value("trusted.pem"))
 
       ("ssl-no-verify", "Disables peer verification.",
-          cxxopts::value<bool>(verify())->default_value((!verify()) ? "true" : "false")->implicit_value("false"))
+          cxxopts::value<bool>()->default_value((!verify()) ? "true" : "false")->implicit_value("false"))
 
       ("ssl-no-root-store", "Disables root certificates provided by the operating system.",
-          cxxopts::value<bool>(rootStore())->default_value((!rootStore()) ? "true" : "false")->implicit_value("false"))
+          cxxopts::value<bool>()->default_value((!rootStore()) ? "true" : "false")->implicit_value("false"))
   ;
   // clang-format on
 }
 
 bool SslClientOptions::evaluateParsedOptions(const cxxopts::Options &options, const cxxopts::ParseResult &result) {
-  XI_UNUSED(options, result);
-  XI_RETURN_SC_IF_NOT(verify(), false);
+  XI_UNUSED(options, result)
   XI_RETURN_SC_IF_NOT(m_baseOptions.enabled(), false);
+
+  if (result.count("ssl-no-root-store")) {
+    rootStore(!result["ssl-no-root-store"].as<bool>());
+  }
+  if (result.count("ssl-no-verify")) {
+    verify(!result["ssl-no-verify"].as<bool>());
+  }
+  XI_RETURN_SC_IF_NOT(verify(), false);
 
   exceptional_if<MissingFileError>(FileSystem::searchFile(trusted(), ".pem", m_baseOptions.rootDir()).isError());
 

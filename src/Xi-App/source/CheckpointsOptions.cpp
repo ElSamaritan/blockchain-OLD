@@ -63,11 +63,6 @@ void Xi::App::CheckpointsOptions::emplaceOptions(cxxopts::Options &options) {
 bool Xi::App::CheckpointsOptions::evaluateParsedOptions(const cxxopts::Options &options,
                                                         const cxxopts::ParseResult &result) {
   XI_UNUSED(options, result);
-  if (CheckpointsFile.size() > 0) {
-    if (!FileSystem::exists(CheckpointsFile).valueOrThrow()) {
-      exceptional<CheckpointFileMissingError>();
-    }
-  }
   return false;
 }
 

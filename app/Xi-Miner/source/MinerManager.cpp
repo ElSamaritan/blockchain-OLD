@@ -34,7 +34,7 @@
 #include <CryptoNoteCore/CryptoNoteTools.h>
 
 XiMiner::MinerManager::MinerManager(const CryptoNote::RpcRemoteConfiguration remote, Logging::ILogger& logger)
-    : m_http{remote.Host, remote.Port, remote.Ssl}, m_logger{logger, "MinerManager"} {
+    : m_http{remote.Host, remote.Ssl}, m_logger{logger, "MinerManager"} {
   if (!remote.AccessToken.empty()) {
     m_http.useAuthorization(Xi::Http::BearerCredentials{remote.AccessToken});
   }

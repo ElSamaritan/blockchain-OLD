@@ -33,13 +33,11 @@
 namespace CryptoNote {
 struct RpcRemoteConfiguration {
   std::string Host;
-  uint16_t Port;
   std::string AccessToken;
   Xi::Http::SSLConfiguration Ssl;
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER(Host)
-  KV_MEMBER(Port)
   KV_END_SERIALIZATION
 };
 }  // namespace CryptoNote

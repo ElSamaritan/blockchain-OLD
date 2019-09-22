@@ -52,7 +52,7 @@ XiMiner::UpdateMonitor::UpdateMonitor(std::string address, CryptoNote::Currency 
     : m_address{std::move(address)},
       m_currency{currency},
       m_logger{logger, "UpdateMonitor"},
-      m_http{remote.Host, remote.Port, remote.Ssl} {
+      m_http{remote.Host, remote.Ssl} {
   CryptoNote::AccountPublicAddress _;
   if (!m_currency.parseAccountAddressString(m_address, _)) {
     throw std::runtime_error{"invalid account address"};

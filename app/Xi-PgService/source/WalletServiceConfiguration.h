@@ -39,7 +39,6 @@ struct WalletServiceConfiguration {
   std::string corsHeader;
   std::string logFile;
 
-  uint16_t daemonPort;
   uint16_t bindPort;
   int logLevel;
 
@@ -73,11 +72,10 @@ struct WalletServiceConfiguration {
 inline WalletServiceConfiguration initConfiguration() {
   WalletServiceConfiguration config;
 
-  config.daemonAddress = "127.0.0.1";
+  config.daemonAddress = "xi://127.0.0.1";
   config.bindAddress = "127.0.0.1";
   config.logFile = "service.log";
   config.rpcAccessToken = "";
-  config.daemonPort = Xi::Config::Network::Configuration::rpcDefaultPort();
   config.bindPort = Xi::Config::Network::Configuration::pgserviceDefaultPort();
   config.logLevel = Logging::Info;
   config.legacySecurity = false;
@@ -99,8 +97,7 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
 
   // clang-format off
   options.add_options("Daemon")
-    ("daemon-address", "The daemon host to use for node operations",cxxopts::value<std::string>()->default_value(config.daemonAddress), "<ip>")
-    ("daemon-port", "The daemon RPC port to use for node operations", cxxopts::value<uint16_t>()->default_value(std::to_string(config.daemonPort)), "<port>")
+    ("daemon", "The daemon host to use for node operations",cxxopts::value<std::string>()->default_value(config.daemonAddress), "<uri>")
     ("rpc-remote-access-token", "access token required by the rpc server", cxxopts::value<std::string>()->default_value(config.rpcAccessToken), "<token>")
   ;
 
@@ -182,10 +179,6 @@ inline void handleSettings(int argc, char* argv[], WalletServiceConfiguration& c
 
     if (cli.count("rpc-remote-access-token") > 0) {
       config.rpcAccessToken = cli["rpc-remote-access-token"].as<std::string>();
-    }
-
-    if (cli.count("daemon-port") > 0) {
-      config.daemonPort = cli["daemon-port"].as<uint16_t>();
     }
 
     if (cli.count("log-file") > 0) {
@@ -296,10 +289,6 @@ inline void handleSettings(const std::string configFile, WalletServiceConfigurat
     config.daemonAddress = j["daemon-address"].get<std::string>();
   }
 
-  if (j.find("daemon-port") != j.end()) {
-    config.daemonPort = j["daemon-port"].get<uint16_t>();
-  }
-
   if (j.find("rpc-remote-access-token") != j.end()) {
     config.rpcAccessToken = j["rpc-remote-access-token"].get<std::string>();
   }
@@ -351,7 +340,6 @@ inline void handleSettings(const std::string configFile, WalletServiceConfigurat
 
 inline json asJSON(const WalletServiceConfiguration& config) {
   json j = json{{"daemon-address", config.daemonAddress},
-                {"daemon-port", config.daemonPort},
                 {"rpc-remote-access-token", config.rpcAccessToken},
                 {"log-file", config.logFile},
                 {"log-level", config.logLevel},
