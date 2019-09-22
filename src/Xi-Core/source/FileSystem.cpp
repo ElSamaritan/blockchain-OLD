@@ -23,6 +23,8 @@
 
 #include "Xi/FileSystem.h"
 
+#include <fstream>
+
 #include <Xi/Exceptions.hpp>
 
 Xi::Result<boost::filesystem::space_info> Xi::FileSystem::availableSpace(const std::string &directory) {
@@ -194,5 +196,23 @@ Xi::Result<std::string> Xi::FileSystem::rooted(const std::string &path, const st
     return success(bpath.string());
   }
 
+  XI_ERROR_CATCH
+}
+
+Xi::Result<void> Xi::FileSystem::writeTextFile(const std::string &path, const std::string &content, bool allowTrunc) {
+  XI_ERROR_TRY
+  exceptional_if<AlreadyExistsError>(exists(path).valueOrThrow() && !allowTrunc);
+  std::ofstream stream{path, std::ios::out | std::ios::trunc};
+  stream << content;
+  return success();
+  XI_ERROR_CATCH
+}
+
+Xi::Result<void> Xi::FileSystem::writeBinaryFile(const std::string &path, Xi::ConstByteSpan content, bool allowTrunc) {
+  XI_ERROR_TRY
+  exceptional_if<AlreadyExistsError>(exists(path).valueOrThrow() && !allowTrunc);
+  std::ofstream stream{path, std::ios::out | std::ios::trunc | std::ios::binary};
+  stream.write(reinterpret_cast<const char *>(content.data()), static_cast<std::streamsize>(content.size()));
+  return success();
   XI_ERROR_CATCH
 }

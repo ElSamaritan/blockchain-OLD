@@ -43,6 +43,7 @@ XI_DECLARE_EXCEPTIONAL_CATEGORY(FileSystem)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InsufficientSpace, "your hard drive has insufficient space for the operation",
                                 FileSystem)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidType, "request encountered a file type that were not expected", FileSystem)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(AlreadyExists, "file creation requested but the file already exists", FileSystem)
 
 Result<boost::filesystem::space_info> availableSpace(const std::string& directory);
 Result<boost::tribool> isRotationalDrive(const std::string& path);
@@ -52,7 +53,11 @@ Result<bool> exists(const std::string& path);
 Result<void> removeFileIfExists(const std::string& path);
 
 Result<std::string> readTextFile(const std::string& path);
+Result<void> writeTextFile(const std::string& path, const std::string& content, bool allowTrunc = false);
+
 Result<ByteVector> readBinaryFile(const std::string& path);
+Result<void> writeBinaryFile(const std::string& path, ConstByteSpan content, bool allowTrunc = false);
+
 Result<std::string> directory(const std::string& path);
 Result<std::string> combine(const std::string& path, const std::string& subpath);
 Result<std::string> rooted(const std::string& path, const std::string& root);
