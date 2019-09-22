@@ -34,6 +34,8 @@
 #include <Xi/Config.h>
 #include <Xi/Version/Version.h>
 #include <Xi/Crypto/Random/Random.hh>
+#include <Xi/Crypto/Rsa.hh>
+#include <Xi/Http/Client.h>
 
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
@@ -432,16 +434,13 @@ bool NodeServer::append_net_address(std::vector<NetworkAddress>& nodes, const st
   std::string host = addr.substr(0, pos);
 
   try {
-    auto port = Common::fromString<uint16_t>(addr.substr(pos + 1));
-
-    System::Ipv4Resolver resolver(m_dispatcher);
-    auto addrHost = resolver.resolve(host);
-    nodes.push_back(NetworkAddress{hostToNetwork(addrHost.getValue()), port});
-
+    NetworkAddress netAddr{};
+    XI_RETURN_EC_IF_NOT(parsePeerFromString(netAddr, addr), false);
+    nodes.push_back(netAddr);
     logger(Trace) << "Added seed node: " << nodes.back() << " (" << host << ")";
 
   } catch (const std::exception& e) {
-    logger(Error, BRIGHT_YELLOW) << "Failed to resolve host name '" << host << "': " << e.what();
+    logger(Error) << "Failed to resolve host name '" << host << "': " << e.what();
     return false;
   }
 
@@ -1160,11 +1159,11 @@ bool NodeServer::try_ping(basic_node_data& node_data, P2pConnectionContext& cont
     COMMAND_PING::request req;
     COMMAND_PING::response rsp;
     System::Context<Xi::Result<void>> pingContext(m_dispatcher, [&]() -> Xi::Result<void> {
-      XI_ERROR_TRY();
+      XI_ERROR_TRY
       System::TcpConnector connector(m_dispatcher);
       auto connection = connector.connect(System::Ipv4Address(ip), static_cast<uint16_t>(port));
       return LevinProtocol(connection).invoke(COMMAND_PING::ID, req, rsp);
-      XI_ERROR_CATCH();
+      XI_ERROR_CATCH
     });
 
     System::Context<> timeoutContext(m_dispatcher, [&] {

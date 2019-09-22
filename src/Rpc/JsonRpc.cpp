@@ -59,7 +59,7 @@ void invokeJsonRpcCommand(HttpClient& httpClient, JsonRpcRequest& jsReq, JsonRpc
   const auto httpRes = httpClient.postSync("/json_rpc", ContentType::Json, jsReq.getBody());
 
   if (httpRes.status() != StatusCode::Ok) {
-    throw std::runtime_error("JSON-RPC call failed, HTTP status = " + Xi::to_string(httpRes.status()));
+    throw std::runtime_error("JSON-RPC call failed, HTTP status = " + toString(httpRes.status()));
   }
 
   jsRes.parse(httpRes.body());

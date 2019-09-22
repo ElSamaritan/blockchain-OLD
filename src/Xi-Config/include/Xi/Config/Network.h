@@ -26,14 +26,17 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <optional>
 
 #include <Xi/ExternalIncludePush.h>
 #include <boost/uuid/uuid.hpp>
 #include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Global.hh>
+#include <Xi/Result.h>
 #include <Serialization/ISerializer.h>
 #include <Serialization/SerializationOverloads.h>
+#include <Serialization/OptionalSerialization.hpp>
 
 #include "Xi/Config/NetworkType.h"
 
@@ -46,16 +49,15 @@ class Configuration {
   XI_PROPERTY(Type, type)
   XI_PROPERTY(boost::uuids::uuid, identifier)
   XI_PROPERTY(std::vector<std::string>, seeds)
+  XI_PROPERTY(std::string, seedsUrl)
+  XI_PROPERTY(std::string, peersUrl)
+  XI_PROPERTY(std::string, nodesUrl)
 
   XI_PROPERTY(uint16_t, p2pPort)
-  static inline constexpr uint16_t p2pDefaultPort() {
-    return 22868;
-  }
+  static uint16_t p2pDefaultPort();
 
   XI_PROPERTY(uint16_t, rpcPort)
-  static inline constexpr uint16_t rpcDefaultPort() {
-    return 22869;
-  }
+  static uint16_t rpcDefaultPort();
 
   XI_PROPERTY(uint16_t, pgservicePort)
   static inline constexpr uint16_t pgserviceDefaultPort() {
@@ -66,6 +68,9 @@ class Configuration {
   KV_MEMBER_RENAME(type(), type)
   XI_RETURN_EC_IF_NOT(s.binary(identifier().data, identifier().size(), "identifier"), false);
   KV_MEMBER_RENAME(seeds(), seeds)
+  KV_MEMBER_RENAME(seedsUrl(), seeds_url)
+  KV_MEMBER_RENAME(peersUrl(), peers_url)
+  KV_MEMBER_RENAME(nodesUrl(), nodes_url)
 
   KV_MEMBER_RENAME(p2pPort(), p2p_port)
   KV_MEMBER_RENAME(rpcPort(), rpc_port)
@@ -77,9 +82,13 @@ class Configuration {
   }
 };
 
-std::string defaultNetworkName();
 Type defaultNetworkType();
-std::string defaultNetworkIdentifier();
+
+/// Resource path to the default embedded chain configuration.
+std::string defaultNetwork();
+
+/// Resource path to embedded network checkpoints.
+std::string checkpoints(const Type network);
 
 std::string breakpadServer();
 

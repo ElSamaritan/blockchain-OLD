@@ -110,6 +110,29 @@ target_compile_definitions(
 )
 
 xi_make_library(
+  Xi-Resource
+
+  PUBLIC_LIBRARIES
+    Xi::Core
+    Xi::Network
+    Xi::Http
+    Serialization
+)
+include(Xi-Resource-Builder/ResourceBuilder.cmake)
+
+xi_make_resources(
+  LIBRARY_NAME Xi.Resources
+  NAMESPACE Xi::Resources
+  OUTPATH ${CMAKE_CURRENT_BINARY_DIR}
+
+  INPUTS
+    ${PROJECT_SOURCE_DIR}/resources/Licenses.yaml
+    ${PROJECT_SOURCE_DIR}/resources/Chains.yaml
+    ${PROJECT_SOURCE_DIR}/resources/PublicKeys.yaml
+    ${PROJECT_SOURCE_DIR}/resources/Checkpoints.yaml
+)
+
+xi_make_library(
   Xi-Crypto
 
   PUBLIC_LIBRARIES
@@ -138,6 +161,19 @@ xi_make_library(
     openssl
 )
 
+xi_make_library(
+  Xi-Network
+
+  PUBLIC_LIBRARIES
+    Xi::Core
+    Xi::Endianess
+
+    Serialization
+
+  PRIVATE_LIBRARIES
+    uriparser::uriparser
+    boost
+)
 
 xi_make_library(
   Xi-Http
@@ -146,12 +182,17 @@ xi_make_library(
     openssl
 
   PUBLIC_LIBRARIES
-    Xi.Core
+    Xi::Core
+    Xi::Network
     boost
     cxxopts
     Serialization
     Common
 )
+
+if(WIN32)
+  target_link_libraries(Xi.Http PRIVATE Crypt32)
+endif()
 
 xi_make_library(
   Xi-Log-Discord
@@ -189,18 +230,14 @@ xi_make_library(
     CryptoNoteCore
 )
 
-include(Xi-Config/Config.cmake)
 xi_make_library(
   Xi-Config
 
   PUBLIC_LIBRARIES
     Xi::Core
     Xi::Blockchain
-
-  EXTRA_SOURCES
-    ${config_sources}
+    Xi::Network
 )
-target_include_directories(Xi.Config PRIVATE ${CONFIG_OUT})
 
 if(XI_BUILD_BREAKPAD)
   xi_make_library(
@@ -223,6 +260,7 @@ xi_make_library(
 
   PUBLIC_LIBRARIES
     Xi::Core
+    Xi::Resource
     Xi::Log::Discord
     ${XI_CRASH_HANDLER_LIB}
 
@@ -236,15 +274,18 @@ xi_make_library(
     boost
     openssl
     cxxopts
+
+  PRIVATE_LIBRARIES
+    Xi::Resources
 )
 
 file(GLOB_RECURSE CommonCLI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI/*")
 add_library(CommonCLI STATIC ${CommonCLI_SOURCES})
 target_include_directories(CommonCLI PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/CommonCLI")
 if(XI_BUILD_BREAKPAD)
-  target_link_libraries(CommonCLI PUBLIC cxxopts Xi::Core Xi::Version Common PRIVATE Xi::CrashHandler)
+  target_link_libraries(CommonCLI PUBLIC cxxopts Xi::Core Xi::Version Common PRIVATE Xi::CrashHandler Xi::Resources)
 else()
-  target_link_libraries(CommonCLI PUBLIC cxxopts Xi::Core Xi::Version Common)
+  target_link_libraries(CommonCLI PUBLIC cxxopts Xi::Core Xi::Version Common PRIVATE Xi::Resources)
 endif()
 
 set(
@@ -280,22 +321,23 @@ endif ()
 
 # Add the dependencies we need
 target_link_libraries(
-    CryptoNoteCore
+  CryptoNoteCore
 
-    PUBLIC
-        Common
-        Logging
-        Crypto
-        P2P
-        Rpc
-        Serialization
-        System
-        rocksdb
-        lz4
-        boost
+  PUBLIC
+    Common
+    Logging
+    Crypto
+    P2P
+    Rpc
+    Serialization
+    System
+    rocksdb
+    lz4
+    boost
 
-    PRIVATE
-        async::asyncplusplus
+  PRIVATE
+    Xi::Resources
+    async::asyncplusplus
 )
 
 # The reason we link so many Xi libraries here:
@@ -303,12 +345,14 @@ target_link_libraries(
 # libraries have a more restrictive include policy. As a result any legacy library using any Xi library may lead to
 # a compiler error in case it does not explicitly state it's dependency to the Xi library used in the interface not
 # linked explicitly.
+target_link_libraries(Common PUBLIC boost json linenoise Xi::Core Xi::Endianess Xi::Crypto)
+target_link_libraries(Common PRIVATE rang::rang yaml::yaml-cpp)
+target_link_libraries(Serialization PUBLIC boost json Common rang::rang yaml::yaml-cpp Xi::Core Xi::Endianess)
+
 target_link_libraries(P2P PUBLIC CryptoNoteCore libminiupnpc-static boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Rpc PUBLIC CryptoNoteCore boost json linenoise BlockchainExplorer ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Wallet NodeRpcProxy Transfers Rpc P2P libminiupnpc-static Serialization CryptoNoteCore System Logging Common Crypto boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(BlockchainExplorer PUBLIC boost json linenoise Crypto ${XI_CANONICAL_LIBRARIES})
-target_link_libraries(Common PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
-target_link_libraries(Common PRIVATE rang::rang yaml::yaml-cpp)
 target_link_libraries(CommonCLI PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Crypto PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Logging PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
@@ -316,6 +360,5 @@ target_link_libraries(Mnemonics PUBLIC boost json linenoise ${XI_CANONICAL_LIBRA
 target_link_libraries(NodeRpcProxy PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(NodeInProcess PUBLIC NodeRpcProxy boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(P2P PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
-target_link_libraries(Serialization PUBLIC boost json linenoise rang::rang yaml::yaml-cpp ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Transfers PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(JsonRpcServer PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})

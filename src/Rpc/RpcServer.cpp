@@ -1269,22 +1269,6 @@ Hash RpcServer::block_template_state_hash() const {
   return reval;
 }
 
-namespace {
-uint64_t slow_memmem(void* start_buff, size_t buflen, void* pat, size_t patlen) {
-  void* buf = memchr(start_buff, ((char*)pat)[0], buflen);
-  void* end = (char*)buf + buflen - patlen;
-  while (buf) {
-    if (buf > end)
-      return 0;
-    if (memcmp(buf, pat, patlen) == 0)
-      return static_cast<uint64_t>((char*)buf - (char*)start_buff);
-    buf = (char*)buf + 1;
-    buf = memchr(buf, ((char*)pat)[0], buflen);
-  }
-  return 0;
-}
-}  // namespace
-
 bool RpcServer::on_get_block_template_state(const RpcCommands::GetBlockTemplateState::request& req,
                                             RpcCommands::GetBlockTemplateState::response& res) {
   if (!isMinerEndpoint()) {

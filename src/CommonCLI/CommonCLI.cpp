@@ -32,6 +32,8 @@
 #include <Xi/Version/License.h>
 #include <Xi/Config/Ascii.h>
 #include <Xi/Config.h>
+#include <Xi/Resource/Resource.hpp>
+#include <Xi/Resources/Licenses.hpp>
 
 #include <Common/Util.h>
 
@@ -171,6 +173,8 @@ void CommonCLI::emplaceCLIOptions(cxxopts::Options& options) {
 }
 
 bool CommonCLI::handleCLIOptions(const cxxopts::Options& options, const cxxopts::ParseResult& result) {
+  using Xi::Resource::embedded;
+
   if (result.count("help")) {
     std::cout << options.help({}) << std::endl;
     return true;
@@ -181,13 +185,16 @@ bool CommonCLI::handleCLIOptions(const cxxopts::Options& options, const cxxopts:
     std::cout << verboseVersionInformation() << std::endl;
     return true;
   } else if (result.count("license")) {
-    std::cout << Xi::Version::license() << std::endl;
+    Xi::Resources::loadLicenses();
+    std::cout << embedded("xrc://license/Framework").takeOrThrow().text() << std::endl;
     return true;
   } else if (result.count("third-party")) {
-    std::cout << Xi::Version::thirdParty() << std::endl;
+    Xi::Resources::loadLicenses();
+    std::cout << embedded("xrc://license/ThridParty").takeOrThrow().text() << std::endl;
     return true;
   } else if (result.count("third-party-licenses")) {
-    std::cout << Xi::Version::thirdPartyLicense() << std::endl;
+    Xi::Resources::loadLicenses();
+    std::cout << embedded("xrc://license/ThridParty.Verbose").takeOrThrow().text() << std::endl;
     return true;
   } else if (result.count("os-version")) {
     std::cout << "OS: " << Tools::get_os_version_string() << std::endl;

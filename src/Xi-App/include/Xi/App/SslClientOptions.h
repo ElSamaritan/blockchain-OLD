@@ -39,11 +39,13 @@ class SslClientOptions : public IOptions {
   ~SslClientOptions() override = default;
 
  public:
-  XI_PROPERTY(bool, noVerify, false)
+  XI_PROPERTY(bool, verify, true)
+  XI_PROPERTY(bool, rootStore, true)
   XI_PROPERTY(std::string, trusted, "./trusted.pem")
 
   KV_BEGIN_SERIALIZATION
-  KV_MEMBER_RENAME(noVerify(), no_verfiy)
+  KV_MEMBER_RENAME(verify(), verify)
+  KV_MEMBER_RENAME(rootStore(), rootStore)
   KV_MEMBER_RENAME(trusted(), trusted)
   KV_END_SERIALIZATION
 

@@ -33,10 +33,9 @@
     "network": {
         "type": "main",
         "identifier": "5397b3a8bcc2753dd9f70ba88d6b693c",
-        "seeds": [
-            "207.180.228.241:40000",
-            "207.180.224.162:40000"
-        ],
+        "seeds_url": "https://releases.galaxia-project.com/stable/resources/seeds.json",
+        "peers_url": "https://releases.galaxia-project.com/stable/resources/peers.json",
+        "nodes_url": "https://releases.galaxia-project.com/stable/resources/nodes.json",
 
         "p2p_port": 22868,
         "rpc_port": 22869,

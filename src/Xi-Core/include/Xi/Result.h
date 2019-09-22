@@ -29,6 +29,7 @@
 #include <variant>
 #include <optional>
 
+#include <Xi/Global.hh>
 #include <Xi/Error.h>
 
 namespace Xi {
@@ -45,12 +46,12 @@ struct result_failure {};
  *
  * \code{.cpp}
  * Xi::Result<Transaction> Proxy::queryTransaction(const Crypto::Hash& id) {
- *  XI_ERROR_TRY();
+ *  XI_ERROR_TRY
  *  // Assume we have a load balance that may return a result encoding an error or a valid remote serving the
  *  // transaction.
  *  auto remote = m_loadBalancer.queryTransactionRemote(id).takeOrThrow();
  *  return remote->queryTransaction(id);
- *  XI_ERROR_CATCH();
+ *  XI_ERROR_CATCH
  * }
  * \endcode
  */
@@ -186,18 +187,15 @@ inline Result<void> success() {
 
 }  // namespace Xi
 
-#define XI_ERROR_TRY()        \
+#define XI_ERROR_TRY          \
   using ::Xi::success;        \
   using ::Xi::emplaceSuccess; \
   using ::Xi::failure;        \
-  try {                       \
-    do {                      \
-  } while (0)
-
-#define XI_ERROR_CATCH()                              \
+  try {
+#define XI_ERROR_CATCH                                \
   }                                                   \
   catch (...) {                                       \
     return ::Xi::makeError(std::current_exception()); \
-  }                                                   \
-  do {                                                \
-  } while (0)
+  }
+
+#define XI_ERROR_PROPAGATE(VAR) XI_RETURN_EC_IF(VAR.isError(), VAR.error());

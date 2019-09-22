@@ -118,6 +118,10 @@ enum struct StatusCode {
       511,  ///< The 511 status code indicates that the client needs to authenticate to gain network access.
   NetworkConnectTimeout = 599  ///< The connection timed out.
 };
+
+bool isSuccessCode(const StatusCode code);
+std::string toString(Http::StatusCode status);
+
 }  // namespace Http
-std::string to_string(Http::StatusCode status);
+[[deprecated]] std::string to_string(Http::StatusCode status);
 }  // namespace Xi

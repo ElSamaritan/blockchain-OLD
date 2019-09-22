@@ -23,20 +23,22 @@
 
 #include "Xi/FileSystem.h"
 
+#include <fstream>
+
 #include <Xi/Exceptions.hpp>
 
 Xi::Result<boost::filesystem::space_info> Xi::FileSystem::availableSpace(const std::string &directory) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   boost::filesystem::path path(directory);
   return success(boost::filesystem::space(path));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Xi::Result<boost::logic::tribool> Xi::FileSystem::isRotationalDrive(const std::string &path) {
   XI_UNUSED(path);
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return success<boost::logic::tribool>(boost::logic::indeterminate);
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Xi::Result<void> Xi::FileSystem::ensureDirectoryExists(const std::string &directory) {
@@ -54,7 +56,7 @@ Xi::Result<void> Xi::FileSystem::ensureDirectoryExists(const std::string &direct
 }
 
 Xi::Result<void> Xi::FileSystem::removeDircetoryIfExists(const std::string &directory) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   using namespace boost::filesystem;
   boost::filesystem::path path{directory};
   if (!exists(path)) {
@@ -71,7 +73,7 @@ Xi::Result<void> Xi::FileSystem::removeDircetoryIfExists(const std::string &dire
   } else {
     return failure(ec);
   }
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Xi::Result<bool> Xi::FileSystem::exists(const std::string &path) {
@@ -79,7 +81,7 @@ Xi::Result<bool> Xi::FileSystem::exists(const std::string &path) {
 }
 
 Xi::Result<void> Xi::FileSystem::removeFileIfExists(const std::string &p) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   boost::system::error_code ec;
   if (exists(p).takeOrThrow()) {
     if (boost::filesystem::is_regular_file(p, ec)) {
@@ -96,13 +98,13 @@ Xi::Result<void> Xi::FileSystem::removeFileIfExists(const std::string &p) {
     }
   }
   return success();
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Xi::Result<std::string> Xi::FileSystem::searchFile(const std::string &filepath, const std::string &fileEnding,
                                                    const std::string &dataDir) {
   using namespace boost::filesystem;
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   std::vector<path> alternatives{{path{filepath}}};
   if (!fileEnding.empty()) {
     alternatives.push_back(path{filepath + fileEnding});
@@ -130,5 +132,87 @@ Xi::Result<std::string> Xi::FileSystem::searchFile(const std::string &filepath, 
   }
   exceptional<NotFoundError>("file not found: {0} (file ending: {1}, data directory: {2})", filepath, fileEnding,
                              dataDir);
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
+}
+
+Xi::Result<std::string> Xi::FileSystem::readTextFile(const std::string &path) {
+  XI_ERROR_TRY
+  std::ifstream stream(path);
+  return emplaceSuccess<std::string>(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+  XI_ERROR_CATCH
+}
+
+Xi::Result<Xi::ByteVector> Xi::FileSystem::readBinaryFile(const std::string &path) {
+  XI_ERROR_TRY
+  std::ifstream stream(path, std::ios::binary);
+  std::string str{std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
+  ByteVector reval{};
+  reval.resize(str.size());
+  std::memcpy(reval.data(), str.data(), reval.size());
+  return success(std::move(reval));
+  XI_ERROR_CATCH
+}
+
+Xi::Result<std::string> Xi::FileSystem::directory(const std::string &path) {
+  XI_ERROR_TRY
+  boost::filesystem::path bpath{path};
+  boost::system::error_code ec{};
+  bpath = boost::filesystem::canonical(bpath, ec);
+  if (ec) {
+    return makeError(ec);
+  }
+
+  if (boost::filesystem::is_directory(bpath)) {
+    return success(bpath.string());
+  } else {
+    return success(bpath.parent_path().string());
+  }
+
+  XI_ERROR_CATCH
+}
+
+Xi::Result<std::string> Xi::FileSystem::combine(const std::string &path, const std::string &subpath) {
+  XI_ERROR_TRY
+  boost::filesystem::path bpath = boost::filesystem::path{path} / boost::filesystem::path{subpath};
+  return success(bpath.string());
+  XI_ERROR_CATCH
+}
+
+Xi::Result<std::string> Xi::FileSystem::rooted(const std::string &path, const std::string &root) {
+  XI_ERROR_TRY
+  boost::filesystem::path bpath{path};
+  boost::system::error_code ec{};
+
+  if (bpath.is_relative()) {
+    if (!root.empty()) {
+      bpath = boost::filesystem::path{root} / path;
+    }
+    bpath = boost::filesystem::canonical(bpath, ec);
+    if (ec) {
+      return makeError(ec);
+    }
+    return success(bpath.string());
+  } else {
+    return success(bpath.string());
+  }
+
+  XI_ERROR_CATCH
+}
+
+Xi::Result<void> Xi::FileSystem::writeTextFile(const std::string &path, const std::string &content, bool allowTrunc) {
+  XI_ERROR_TRY
+  exceptional_if<AlreadyExistsError>(exists(path).valueOrThrow() && !allowTrunc);
+  std::ofstream stream{path, std::ios::out | std::ios::trunc};
+  stream << content;
+  return success();
+  XI_ERROR_CATCH
+}
+
+Xi::Result<void> Xi::FileSystem::writeBinaryFile(const std::string &path, Xi::ConstByteSpan content, bool allowTrunc) {
+  XI_ERROR_TRY
+  exceptional_if<AlreadyExistsError>(exists(path).valueOrThrow() && !allowTrunc);
+  std::ofstream stream{path, std::ios::out | std::ios::trunc | std::ios::binary};
+  stream.write(reinterpret_cast<const char *>(content.data()), static_cast<std::streamsize>(content.size()));
+  return success();
+  XI_ERROR_CATCH
 }

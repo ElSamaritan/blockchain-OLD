@@ -46,3 +46,6 @@
 [submodule "external/asyncplusplus"]
 	path = external/asyncplusplus
 	url = ../extern/asyncplusplus
+[submodule "external/uriparser"]
+	path = external/uriparser
+	url = ../extern/uriparser

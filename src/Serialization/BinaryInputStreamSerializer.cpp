@@ -22,7 +22,6 @@
 #include <stdexcept>
 
 #include <Common/StreamTools.h>
-#include <Xi/Config.h>
 #include <Xi/Global.hh>
 
 #include "SerializationOverloads.h"

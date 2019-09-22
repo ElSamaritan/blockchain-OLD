@@ -1,0 +1,8 @@
+namespace: "Xi:Resources"
+identifier: "Checkpoints"
+prefix: "checkpoints/"
+root: "./checkpoints"
+entities:
+  - name: "galaxia"
+    path: "Galaxia.MainNet.csv"
+    type: "text"

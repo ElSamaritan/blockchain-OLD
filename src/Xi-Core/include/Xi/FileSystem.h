@@ -33,6 +33,7 @@
 #include <Xi/ExternalIncludePop.h>
 
 #include <Xi/Result.h>
+#include <Xi/Byte.hh>
 #include <Xi/Exceptional.hpp>
 
 namespace Xi {
@@ -42,13 +43,24 @@ XI_DECLARE_EXCEPTIONAL_CATEGORY(FileSystem)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InsufficientSpace, "your hard drive has insufficient space for the operation",
                                 FileSystem)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidType, "request encountered a file type that were not expected", FileSystem)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(AlreadyExists, "file creation requested but the file already exists", FileSystem)
 
-Xi::Result<boost::filesystem::space_info> availableSpace(const std::string& directory);
-Xi::Result<boost::tribool> isRotationalDrive(const std::string& path);
-Xi::Result<void> ensureDirectoryExists(const std::string& directory);
-Xi::Result<void> removeDircetoryIfExists(const std::string& directory);
-Xi::Result<bool> exists(const std::string& path);
-Xi::Result<void> removeFileIfExists(const std::string& path);
+Result<boost::filesystem::space_info> availableSpace(const std::string& directory);
+Result<boost::tribool> isRotationalDrive(const std::string& path);
+Result<void> ensureDirectoryExists(const std::string& directory);
+Result<void> removeDircetoryIfExists(const std::string& directory);
+Result<bool> exists(const std::string& path);
+Result<void> removeFileIfExists(const std::string& path);
+
+Result<std::string> readTextFile(const std::string& path);
+Result<void> writeTextFile(const std::string& path, const std::string& content, bool allowTrunc = false);
+
+Result<ByteVector> readBinaryFile(const std::string& path);
+Result<void> writeBinaryFile(const std::string& path, ConstByteSpan content, bool allowTrunc = false);
+
+Result<std::string> directory(const std::string& path);
+Result<std::string> combine(const std::string& path, const std::string& subpath);
+Result<std::string> rooted(const std::string& path, const std::string& root);
 
 /*!
  * \brief searchFile Tries to find a file for a given path.
@@ -57,8 +69,8 @@ Xi::Result<void> removeFileIfExists(const std::string& path);
  * \param dataDir A user provided data, the file may be relative to it.
  * \return The normal form path if found otherwise an error.
  */
-Xi::Result<std::string> searchFile(const std::string& filepath, const std::string& fileEnding = "",
-                                   const std::string& dataDir = "");
+Result<std::string> searchFile(const std::string& filepath, const std::string& fileEnding = "",
+                               const std::string& dataDir = "");
 
 }  // namespace FileSystem
 }  // namespace Xi

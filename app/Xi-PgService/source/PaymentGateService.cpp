@@ -82,8 +82,7 @@ bool PaymentGateService::init(int argc, char** argv) {
   logger.addLogger(fileLogger);
 
   CryptoNote::CurrencyBuilder builder{log.getLogger()};
-  m_currency = std::make_unique<CryptoNote::Currency>(
-      builder.networkDir(config.serviceConfig.networkDir).network(config.serviceConfig.network).currency());
+  m_currency = std::make_unique<CryptoNote::Currency>(builder.network(config.serviceConfig.network).currency());
 
   return true;
 }
@@ -136,9 +135,9 @@ void PaymentGateService::runRpcProxy(Logging::LoggerRef& log) {
   log(Logging::Info) << "Starting Payment Gate with remote node";
   const CryptoNote::Currency& currency = getCurrency();
 
-  std::unique_ptr<CryptoNote::INode> node(PaymentService::NodeFactory::createNode(
-      config.serviceConfig.daemonAddress, config.serviceConfig.daemonPort, config.serviceConfig.rpcAccessToken,
-      config.serviceConfig.ssl, getCurrency(), log.getLogger()));
+  std::unique_ptr<CryptoNote::INode> node(
+      PaymentService::NodeFactory::createNode(config.serviceConfig.daemonAddress, config.serviceConfig.rpcAccessToken,
+                                              config.serviceConfig.ssl, getCurrency(), log.getLogger()));
 
   runWalletService(currency, *node);
 }

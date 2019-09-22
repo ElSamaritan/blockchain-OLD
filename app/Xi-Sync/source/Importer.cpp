@@ -28,6 +28,7 @@
 namespace {
 XI_DECLARE_EXCEPTIONAL_CATEGORY(SyncImport)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidBlock, "a block in the dump file is invalid", SyncImport)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidCheckpoint, "a checkpoint in the dump file is invalid", SyncImport)
 }  // namespace
 
 XiSync::Importer::Importer(CryptoNote::ICore &core, CryptoNote::Checkpoints &checkpoints, Logging::ILogger &logger)
@@ -46,7 +47,10 @@ void XiSync::Importer::onBatch(XiSync::Batch batch) {
   auto currentTopIndex = m_core.getTopBlockIndex();
 
   for (const auto &checkpoint : batch.Info.Checkpoints) {
-    m_checkpoints.addCheckpoint(checkpoint.first, checkpoint.second);
+    if (!m_checkpoints.addCheckpoint(checkpoint.first, checkpoint.second)) {
+      Xi::exceptional<InvalidCheckpointError>("checkpoint '{}' at index {} is invalid.", checkpoint.second.toString(),
+                                              checkpoint.first);
+    }
   }
 
   for (uint32_t index = 0; index < batch.Blocks.size(); ++index) {

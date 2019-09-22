@@ -38,7 +38,7 @@ class SslOptions : public IOptions {
 
  public:
   XI_PROPERTY(bool, enabled, false)
-  XI_PROPERTY(std::string, rootDir, "./certs")
+  XI_PROPERTY(std::string, rootDir, "./ssl")
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER_RENAME(enabled(), enabled)

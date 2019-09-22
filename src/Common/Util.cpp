@@ -20,14 +20,12 @@
 
 #include <boost/filesystem.hpp>
 
-#include <Xi/Config.h>
-
 #ifdef WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <windows.h>
-#include <shlobj.h>
+#include <Windows.h>
+#include <ShlObj.h>
 #include <strsafe.h>
 #else
 #include <sys/utsname.h>

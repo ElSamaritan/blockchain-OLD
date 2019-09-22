@@ -46,6 +46,11 @@ namespace Xi {
 namespace Http {
 class SSLConfiguration {
  public:
+  static const SSLConfiguration NoSsl;
+  static const SSLConfiguration NoVerifyClient;
+  static const SSLConfiguration RootStoreClient;
+
+ public:
   /*!
    * \brief The Usage enum encodes scenerious an ssl configuration is used for.
    */
@@ -88,6 +93,11 @@ class SSLConfiguration {
    */
   void setVerifyPeers(bool isEnabled);
 
+  /// Should root certificates be loaded as verified.
+  bool rootStoreEnabled() const;
+  /// Sets whether root certificates should be trusted.
+  void setRootStoreEnabled(bool isEnabled);
+
   /*!
    * \brief rootPath main directory containing all keys
    */
@@ -110,6 +120,9 @@ class SSLConfiguration {
   const std::string& trustedKeysPath() const;
   void setTrustedKeysPath(const std::string& path);
 
+  const std::vector<std::string> trustedKeys() const;
+  void addTrustedKey(const std::string& cert);
+
   const std::string& privateKeyPassword() const;
   void setPrivateKeyPassword(const std::string& password);
 
@@ -124,14 +137,27 @@ class SSLConfiguration {
   bool isInsecure(Usage usage) const;
 
  private:
+  struct root_store_ssl {};
+  explicit SSLConfiguration(root_store_ssl);
+
+  struct no_ssl {};
+  explicit SSLConfiguration(no_ssl);
+
+  struct no_verify {};
+  explicit SSLConfiguration(no_verify);
+
+ private:
   bool m_enabled;
   bool m_verifyPeers;
+  bool m_loadCertStore;
   std::string m_rootPath;
   std::string m_certificatePath;
   std::string m_privateKeyPath;
   std::string m_dhparamPath;
   std::string m_trustedKeysPath;
+  std::vector<std::string> m_trustedKeys;
   std::string m_privateKeyPassword;
 };
+
 }  // namespace Http
 }  // namespace Xi

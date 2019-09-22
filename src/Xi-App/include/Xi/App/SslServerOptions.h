@@ -39,10 +39,10 @@ class SslServerOptions : public IOptions {
   ~SslServerOptions() override = default;
 
  public:
-  XI_PROPERTY(std::string, certificate, "./cert.pem")
-  XI_PROPERTY(std::string, privateKey, "./key.pem")
+  XI_PROPERTY(std::string, certificate, "cert.pem")
+  XI_PROPERTY(std::string, privateKey, "key.pem")
   XI_PROPERTY(std::string, privateKeyPassword, "")
-  XI_PROPERTY(std::string, diffieHellman, "./dh.pem")
+  XI_PROPERTY(std::string, diffieHellman, "dh.pem")
 
   KV_BEGIN_SERIALIZATION
   KV_MEMBER_RENAME(certificate(), enabled)

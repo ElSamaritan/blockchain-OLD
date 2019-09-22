@@ -61,7 +61,7 @@ std::chrono::microseconds parseUnit(const std::string& amount, const std::string
 }  // namespace
 
 Xi::Result<std::chrono::microseconds> Xi::Time::parseDuration(std::string str) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   boost::trim(str);
   std::vector<std::string> tokens;
   {
@@ -105,7 +105,7 @@ Xi::Result<std::chrono::microseconds> Xi::Time::parseDuration(std::string str) {
   }
 
   return success(total);
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 std::string Xi::Time::unixToLocalShortString(const uint64_t timestamp) {

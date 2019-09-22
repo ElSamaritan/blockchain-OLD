@@ -67,14 +67,14 @@ struct FastHash : Xi::ByteArray<XI_HASH_FAST_HASH_SIZE> {
 
   template <typename _ValueT>
   static inline Xi::Result<FastHash> computeObjectHash(const _ValueT& value) {
-    XI_ERROR_TRY();
+    XI_ERROR_TRY
     Xi::ByteVector blob{};
     Common::VectorOutputStream stream{blob};
     CryptoNote::BinaryOutputStreamSerializer serializer{stream};
     Xi::exceptional_if_not<Xi::RuntimeError>(serializer(const_cast<_ValueT&>(value), ""),
                                              "object serialization failed for hash computation");
     return FastHash::compute(blob);
-    XI_ERROR_CATCH();
+    XI_ERROR_CATCH
   }
 
   FastHash();

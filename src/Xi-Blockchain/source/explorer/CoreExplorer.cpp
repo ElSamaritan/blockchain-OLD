@@ -50,7 +50,7 @@ CoreExplorer::~CoreExplorer() {
 }
 
 Result<CurrencyInfo> CoreExplorer::queryCurrencyInfo() {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   const auto &currency = m_core.currency();
   CurrencyInfo reval{};
   reval.name = currency.coin().name();
@@ -66,7 +66,7 @@ Result<CurrencyInfo> CoreExplorer::queryCurrencyInfo() {
   reval.copyright = currency.general().copyright();
 
   return success(std::move(reval));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<Block::Height> CoreExplorer::mainChainHeight() {
@@ -104,15 +104,15 @@ IExplorer::VectorResult<_InfoT> toVectorResult(Result<std::vector<std::shared_pt
 }  // namespace
 
 IExplorer::VectorResult<ShortBlockInfo> CoreExplorer::queryShortBlockInfo(Block::ConstHashSpan hashes) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return toVectorResult(doQueryShortBlockInfo(hashes));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 IExplorer::VectorResult<ShortBlockInfo> CoreExplorer::queryShortBlockInfo(Block::ConstHeightSpan heights) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return toVectorResult(doQueryShortBlockInfo(heights));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 IExplorer::SingleResult<BlockInfo> CoreExplorer::queryTopBlockInfo() {
@@ -128,15 +128,15 @@ IExplorer::SingleResult<BlockInfo> CoreExplorer::queryTopBlockInfo() {
 }
 
 IExplorer::VectorResult<BlockInfo> CoreExplorer::queryBlockInfo(Block::ConstHashSpan hashes) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return toVectorResult(doQueryBlockInfo(hashes));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 IExplorer::VectorResult<BlockInfo> CoreExplorer::queryBlockInfo(Block::ConstHeightSpan heights) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return toVectorResult(doQueryBlockInfo(heights));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 IExplorer::SingleResult<DetailedBlockInfo> CoreExplorer::queryTopDetailedBlockInfo() {
@@ -152,51 +152,51 @@ IExplorer::SingleResult<DetailedBlockInfo> CoreExplorer::queryTopDetailedBlockIn
 }
 
 IExplorer::VectorResult<DetailedBlockInfo> CoreExplorer::queryDetailedBlockInfo(Block::ConstHashSpan hashes) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return toVectorResult(doQueryDetailedBlockInfo(hashes));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 IExplorer::VectorResult<DetailedBlockInfo> CoreExplorer::queryDetailedBlockInfo(Block::ConstHeightSpan heights) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return toVectorResult(doQueryDetailedBlockInfo(heights));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 IExplorer::VectorResult<ShortTransactionInfo> CoreExplorer::queryShortTransactionInfo(ConstTransactionHashSpan hashes) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return toVectorResult(doQueryShortTransactionInfo(hashes));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 IExplorer::VectorResult<TransactionInfo> CoreExplorer::queryTransactionInfo(ConstTransactionHashSpan hashes) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return toVectorResult(doQueryTransactionInfo(hashes, true));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 IExplorer::VectorResult<DetailedTransactionInfo> CoreExplorer::queryDetailedTransactionInfo(
     ConstTransactionHashSpan hashes) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return toVectorResult(doQueryDetailedTransactionInfo(hashes));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<ShortPoolInfo> CoreExplorer::queryShortPoolInfo() {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   if (const auto result = poolInfo(); !result.isError()) {
     ShortPoolInfo reval{static_cast<ShortPoolInfo &>(**result)};
     return success(std::move(reval));
   } else {
     return result.error();
   }
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<PoolInfo> CoreExplorer::queryPoolInfo() {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return success(*poolInfo().valueOrThrow());
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 void CoreExplorer::blockAdded(uint32_t index, const Block::Hash &hash) {
@@ -456,7 +456,7 @@ DetailedBlockInfo CoreExplorer::fromCore(const CryptoNote::IBlockchainCache *seg
 }
 
 Result<std::shared_ptr<DetailedBlockInfo>> CoreExplorer::topBlockInfo() {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   XI_CONCURRENT_LOCK_PREPARE_WRITE(m_topBlockGuard);
   if (!m_topBlock) {
     XI_CONCURRENT_LOCK_ACQUIRE_WRITE(m_topBlockGuard);
@@ -469,11 +469,11 @@ Result<std::shared_ptr<DetailedBlockInfo>> CoreExplorer::topBlockInfo() {
     }
   }
   return success(std::shared_ptr<DetailedBlockInfo>{m_topBlock});
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<std::shared_ptr<PoolInfo>> CoreExplorer::poolInfo() {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   XI_CONCURRENT_LOCK_PREPARE_WRITE(m_poolInfoGuard);
   if (!m_poolInfo) {
     XI_CONCURRENT_LOCK_ACQUIRE_WRITE(m_poolInfoGuard);
@@ -492,12 +492,12 @@ Result<std::shared_ptr<PoolInfo>> CoreExplorer::poolInfo() {
     }
   }
   return success(std::shared_ptr<PoolInfo>{m_poolInfo});
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<std::vector<std::shared_ptr<ShortTransactionInfo>>> CoreExplorer::doQueryShortTransactionInfo(
     ConstTransactionHashSpan hashes) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   if (auto inner = doQueryTransactionInfo(hashes, true); !inner.isError()) {
     std::vector<std::shared_ptr<ShortTransactionInfo>> reval{};
     reval.reserve(inner->size());
@@ -512,12 +512,12 @@ Result<std::vector<std::shared_ptr<ShortTransactionInfo>>> CoreExplorer::doQuery
   } else {
     return inner.error();
   }
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<std::vector<std::shared_ptr<TransactionInfo>>> CoreExplorer::doQueryTransactionInfo(
     ConstTransactionHashSpan hashes, bool skipBlockReferences) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   XI_UNUSED_REVAL(m_core.lock());
 
   std::map<TransactionHash, std::shared_ptr<TransactionInfo>> result{};
@@ -585,12 +585,12 @@ Result<std::vector<std::shared_ptr<TransactionInfo>>> CoreExplorer::doQueryTrans
   }
   return emplaceSuccess<std::vector<std::shared_ptr<TransactionInfo>>>(std::move(reval));
 
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<std::vector<std::shared_ptr<DetailedTransactionInfo>>> CoreExplorer::doQueryDetailedTransactionInfo(
     ConstTransactionHashSpan hashes) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   XI_UNUSED_REVAL(m_core.lock());
 
   std::map<TransactionHash, std::shared_ptr<DetailedTransactionInfo>> result{};
@@ -655,12 +655,12 @@ Result<std::vector<std::shared_ptr<DetailedTransactionInfo>>> CoreExplorer::doQu
   }
   return emplaceSuccess<std::vector<std::shared_ptr<DetailedTransactionInfo>>>(std::move(reval));
 
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 template <typename _InfoT>
 Result<std::vector<std::shared_ptr<_InfoT>>> CoreExplorer::doQueryBlockInfoByHashes(Block::ConstHashSpan hashes) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   XI_UNUSED_REVAL(m_core.lock());
 
   std::map<Block::Hash, std::shared_ptr<_InfoT>> reval{};
@@ -695,7 +695,7 @@ Result<std::vector<std::shared_ptr<_InfoT>>> CoreExplorer::doQueryBlockInfoByHas
 
   return emplaceSuccess<std::vector<std::shared_ptr<_InfoT>>>(std::move(result));
 
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<std::vector<std::shared_ptr<ShortBlockInfo>>> CoreExplorer::doQueryShortBlockInfo(Block::ConstHashSpan hashes) {
@@ -713,7 +713,7 @@ Result<std::vector<std::shared_ptr<DetailedBlockInfo>>> CoreExplorer::doQueryDet
 
 Result<std::vector<std::shared_ptr<ShortBlockInfo>>> CoreExplorer::doQueryShortBlockInfo(
     const Block::ConstHeightSpan &heights) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   XI_UNUSED_REVAL(m_core.lock());
 
   std::map<Block::Height, std::shared_ptr<ShortBlockInfo>> reval{};
@@ -743,11 +743,11 @@ Result<std::vector<std::shared_ptr<ShortBlockInfo>>> CoreExplorer::doQueryShortB
 
   return emplaceSuccess<std::vector<std::shared_ptr<ShortBlockInfo>>>(std::move(result));
 
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<std::vector<std::shared_ptr<BlockInfo>>> CoreExplorer::doQueryBlockInfo(Block::ConstHeightSpan heights) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   XI_UNUSED_REVAL(m_core.lock());
 
   std::map<Block::Height, std::shared_ptr<BlockInfo>> reval{};
@@ -779,12 +779,12 @@ Result<std::vector<std::shared_ptr<BlockInfo>>> CoreExplorer::doQueryBlockInfo(B
 
   return emplaceSuccess<std::vector<std::shared_ptr<BlockInfo>>>(std::move(result));
 
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<std::vector<std::shared_ptr<DetailedBlockInfo>>> CoreExplorer::doQueryDetailedBlockInfo(
     Block::ConstHeightSpan heights) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   XI_UNUSED_REVAL(m_core.lock());
 
   std::map<Block::Height, std::shared_ptr<DetailedBlockInfo>> reval{};
@@ -817,7 +817,7 @@ Result<std::vector<std::shared_ptr<DetailedBlockInfo>>> CoreExplorer::doQueryDet
 
   return emplaceSuccess<std::vector<std::shared_ptr<DetailedBlockInfo>>>(std::move(result));
 
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 }  // namespace Explorer

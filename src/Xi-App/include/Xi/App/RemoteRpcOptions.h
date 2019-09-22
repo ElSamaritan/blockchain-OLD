@@ -43,13 +43,12 @@
 namespace Xi {
 namespace App {
 struct RemoteRpcOptions : public IOptions {
-  XI_PROPERTY(std::string, address, "127.0.0.1")
-  XI_PROPERTY(uint16_t, port, Xi::Config::Network::Configuration::rpcDefaultPort())
+  /// Will assume the rpc port, ssl is enabled iff the corresponding ssl option was set.
+  XI_PROPERTY(std::string, host, "//127.0.0.1/")
   XI_PROPERTY(std::string, accessToken, "")
 
   KV_BEGIN_SERIALIZATION
-  KV_MEMBER_RENAME(address(), address)
-  KV_MEMBER_RENAME(port(), port)
+  KV_MEMBER_RENAME(host(), address)
   KV_MEMBER_RENAME(accessToken(), access_token)
   KV_END_SERIALIZATION
 

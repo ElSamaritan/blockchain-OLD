@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
       throw std::runtime_error{std::string{"unsupported output format: "} + format};
     }
 
-    XI_UNUSED_REVAL(CommonCLI::make_crash_dumper("xi-benchmark"));
+    XI_UNUSED_REVAL(CommonCLI::make_crash_dumper("xi-benchmark"))
 
     Logging::ConsoleLogger consoleLogger{(silent ? Logging::Info : Logging::Trace)};
     consoleLogger.setPattern("");
@@ -216,7 +216,7 @@ int main(int argc, char** argv) {
       logger(Logging::Trace) << "Total   Hashrate : " << result.totalHashrate() << "H/s\n\n";
     }
 
-    logger() << formatterSearch->second(summary);
+    std::cout << formatterSearch->second(summary) << std::endl;
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
     return -1;

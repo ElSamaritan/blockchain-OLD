@@ -23,7 +23,7 @@
 #include <Logging/ILogger.h>
 
 #include "Common/StringTools.h"
-#include "Common/FormatTools.h"
+#include "CryptoNoteCore/FormatTools.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
@@ -66,12 +66,10 @@ std::error_code interpretResponseStatus(const std::string& status) {
 
 }  // namespace
 
-NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort, Xi::Http::SSLConfiguration sslConfig,
-                           const Currency& currency, Logging::ILogger& logger)
+NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, Xi::Http::SSLConfiguration sslConfig, const Currency& currency,
+                           Logging::ILogger& logger)
     : m_logger(logger, "NodeRpcProxy"),
       m_currency{currency},
-      m_nodeHost(nodeHost),
-      m_nodePort(nodePort),
       m_pullInterval(5000),
       m_peerCount(0),
       m_networkHeight(BlockHeight::Null),
@@ -79,7 +77,7 @@ NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort,
       m_nodeHeight(BlockHeight::Null),
       m_connected(false) {
   resetInternalState();
-  m_httpClient = std::make_unique<Xi::Http::Client>(nodeHost, nodePort, sslConfig);
+  m_httpClient = std::make_unique<Xi::Http::Client>(nodeHost, sslConfig);
 }
 
 NodeRpcProxy::~NodeRpcProxy() {
@@ -981,7 +979,7 @@ void invokeJsonCommand(HttpClient& client, const std::string& url, const Request
     if (response.status() == StatusCode::Unauthorized) {
       Xi::exceptional<UnauthorizedError>();
     } else {
-      throw std::runtime_error("HTTP status: " + Xi::to_string(response.status()));
+      throw std::runtime_error("HTTP status: " + toString(response.status()));
     }
   }
 

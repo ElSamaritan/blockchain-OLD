@@ -159,7 +159,15 @@ int Xi::App::Application::exec(int argc, char **argv) {
 
     XI_UNUSED_REVAL(CommonCLI::make_crash_dumper(name()));
     setUp();
-    int returnCode = run();
+    int returnCode = EXIT_FAILURE;
+    try {
+      returnCode = run();
+    } catch (std::exception &e) {
+      std::cerr << e.what() << std::endl;
+    } catch (...) {
+      std::cerr << "unknown error in application exec routine." << std::endl;
+      return -1;
+    }
     tearDown();
     return returnCode;
   } catch (cxxopts::OptionParseException &e) {
@@ -245,13 +253,12 @@ CryptoNote::INode *Xi::App::Application::rpcNode(bool pollUpdates, bool preferEm
   if (!m_remoteNode) {
     if (!preferEmbbedded || !m_remoteRpcOptions) {
       auto &crrcy = *currency();
-      auto &sslConf = *ssl();
-      m_remoteNode = std::make_unique<CryptoNote::NodeRpcProxy>(m_remoteRpcOptions->address(),
-                                                                m_remoteRpcOptions->port(), sslConf, crrcy, logger());
-      if (!m_remoteRpcOptions->accessToken().empty()) {
+      const auto &remoteConfig = m_remoteRpcOptions->getConfig(*ssl());
+      m_remoteNode = std::make_unique<CryptoNote::NodeRpcProxy>(remoteConfig.Host, remoteConfig.Ssl, crrcy, logger());
+      if (!remoteConfig.AccessToken.empty()) {
         static_cast<CryptoNote::NodeRpcProxy *>(m_remoteNode.get())
             ->httpClient()
-            .useAuthorization(Xi::Http::BearerCredentials{m_remoteRpcOptions->accessToken()});
+            .useAuthorization(Xi::Http::BearerCredentials{remoteConfig.AccessToken});
       }
 
       if (!pollUpdates) {
@@ -476,6 +483,7 @@ void Xi::App::Application::useCurrency() {
 
 void Xi::App::Application::useCheckpoints() {
   useCurrency();
+  useNetwork();
   if (m_checkpointOptions == nullptr) {
     m_checkpointOptions = std::make_unique<CheckpointsOptions>();
   }
@@ -572,13 +580,11 @@ void Xi::App::Application::initializeCheckpoints() {
 
 void Xi::App::Application::initializeIntermediateCurrency() {
   m_intermediateCurrency = std::make_unique<CryptoNote::CurrencyBuilder>(logger());
-  m_intermediateCurrency->networkDir(m_netOptions->directory());
   m_intermediateCurrency->network(m_netOptions->network());
 }
 
 void Xi::App::Application::initializeCurrency() {
   CryptoNote::CurrencyBuilder builder{logger()};
-  builder.networkDir(m_netOptions->directory());
   builder.network(m_netOptions->network());
   m_currency = std::make_unique<CryptoNote::Currency>(builder.currency());
 }
@@ -619,8 +625,8 @@ void Xi::App::Application::initializeSsl() {
     m_sslServerOptions->configure(*m_sslConfig);
   }
 
-  if (m_sslServerOptions) {
-    m_sslServerOptions->configure(*m_sslConfig);
+  if (m_sslClientOptions) {
+    m_sslClientOptions->configure(*m_sslConfig);
   }
 }
 
@@ -651,6 +657,7 @@ void Xi::App::Application::initializeRpcServer() {
     }
 
     m_rpcServer->setHandler(m_rpcServer);
+    m_rpcServer->setSSLConfiguration(*ssl());
     m_rpcServer->start(config.bind(), config.port());
   }
 }

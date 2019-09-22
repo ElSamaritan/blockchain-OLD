@@ -70,6 +70,14 @@ class Response final {
   const std::string& body() const;
 
   /*!
+   * \brief takeBody Moves the response text body.
+   * \return Ownership of the response text body.
+   *
+   * \attention Invalidates this body state.
+   */
+  std::string takeBody();
+
+  /*!
    * \brief setBody sets the body to a copy of the provided text
    */
   void setBody(const std::string& body);

@@ -224,7 +224,7 @@ void CommonLogger::loopQueue() {
     if (toLog.empty()) {
       std::this_thread::sleep_for(std::chrono::milliseconds{10});
     } else {
-      while (!toLog.empty()) {
+      while (!(toLog.empty() || m_shutdown.load(std::memory_order_consume))) {
         logContext(std::move(toLog.front()));
         toLog.pop();
       }

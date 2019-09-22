@@ -1,0 +1,8 @@
+namespace: "Xi:Resources"
+identifier: "PublicKeys"
+prefix: "publicKey/"
+root: "./publicKeys"
+entities:
+  - name: "galaxia/web"
+    path: "Galaxia.Web.pem"
+    type: "text"

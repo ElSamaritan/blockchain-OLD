@@ -17,8 +17,13 @@
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Checkpoints.h"
-#include "Common/StringTools.h"
-#include <fstream>
+
+#include <sstream>
+
+#include <Xi/Algorithm/String.h>
+#include <Xi/Resource/Resource.hpp>
+#include <Xi/Resources/Checkpoints.hpp>
+#include <Common/StringTools.h>
 
 using namespace Logging;
 
@@ -36,10 +41,10 @@ void Checkpoints::setEnabled(bool useCheckpoints) {
 }
 //---------------------------------------------------------------------------
 bool Checkpoints::addCheckpoint(uint32_t index, const std::string &hash_str) {
-  auto hashParseResult = Crypto::Hash::fromString(hash_str);
+  auto hashParseResult = Crypto::Hash::fromString(Xi::trim(hash_str));
 
   if (hashParseResult.isError()) {
-    logger(Error) << "INVALID HASH IN CHECKPOINTS!";
+    logger(Error) << "INVALID HASH '" << hash_str << "' IN CHECKPOINTS! (" << hashParseResult.error().message() << ")";
     return false;
   } else {
     return addCheckpoint(index, hashParseResult.value());
@@ -47,24 +52,21 @@ bool Checkpoints::addCheckpoint(uint32_t index, const std::string &hash_str) {
 }
 
 bool Checkpoints::addCheckpoint(uint32_t index, const Crypto::Hash &hash) {
-  /* The return value lets us check if it was inserted or not. If it wasn't,
-     there is already a key (i.e., a height value) existing */
-  if (!points.insert({index, hash}).second) {
-    logger(Error) << "CHECKPOINT ALREADY EXISTS!";
-    return false;
+  const auto search = points.find(index);
+  if (search != points.end()) {
+    if (search->second != hash) {
+      logger(Error) << "CHECKPOINT ALREADY EXISTS AND HASH DIFFERS!";
+      return false;
+    } else {
+      return true;
+    }
+  } else {
+    points.insert({index, hash});
+    return true;
   }
-  return true;
 }
 
-bool Checkpoints::loadCheckpointsFromFile(const std::string &filename) {
-  std::ifstream file(filename);
-
-  if (!file) {
-    logger(Error) << "Could not load checkpoints file: " << filename;
-
-    return false;
-  }
-
+bool Checkpoints::loadCheckpoints(std::istream &stream) {
   /* The block this checkpoint is for (as a string) */
   std::string indexString;
 
@@ -74,34 +76,44 @@ bool Checkpoints::loadCheckpointsFromFile(const std::string &filename) {
   /* The block index (as a uint32_t) */
   uint32_t index;
 
-  /* Checkpoints file has this format:
+  /*
+    Checkpoints file has this format:
 
-     index,hash
-     index2,hash2
+    index,hash
+    index2,hash2
 
-     So, we do std::getline() on the file with the delimiter as ',' to take
-     the index, then we do std::getline() on the file again with the standard
-     delimiter of '\n', to get the hash. */
-  while (std::getline(file, indexString, ','), std::getline(file, hash)) {
+    So, we do std::getline() on the file with the delimiter as ',' to take
+    the index, then we do std::getline() on the file again with the standard
+    delimiter of '\n', to get the hash.
+  */
+  const size_t previousCount = points.size();
+  while (std::getline(stream, indexString, ','), std::getline(stream, hash)) {
     /* Try and parse the indexString as an int */
     try {
       index = std::stoi(indexString);
     } catch (const std::invalid_argument &) {
       logger(Error) << "Invalid checkpoint file format - "
-                    << "could not parse height as a number";
+                    << "could not parse index as a number";
 
       return false;
     }
 
     /* Failed to parse hash, or checkpoint already exists */
-    if (!addCheckpoint(index, hash)) {
-      return false;
-    }
+    XI_RETURN_EC_IF_NOT(addCheckpoint(index, hash), false);
   }
+  size_t importedCount = points.size() - previousCount;
+  logger(Info) << importedCount << " checkpoints imported";
+  XI_RETURN_SC(true);
+}
 
-  logger(Info) << "Loaded " << points.size() << " checkpoints from " << filename;
-
-  return true;
+bool Checkpoints::loadCheckpoints(const std::string &path) {
+  std::stringstream reader{};
+  auto content = Xi::Resource::loadText(path, ".csv");
+  if (content.isError()) {
+    logger(Logging::Error) << "Unable to load checkpoint resource: " << path;
+  }
+  reader << *content;
+  return loadCheckpoints(reader);
 }
 
 //---------------------------------------------------------------------------

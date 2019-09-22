@@ -495,7 +495,7 @@ bool BlockchainCache::checkIfAnySpent(const Crypto::KeyImageSet& keyImages, uint
   const auto& keyImagesTag = spentKeyImages.get<KeyImageTag>();
   for (const auto& keyImage : keyImages) {
     const auto search = keyImagesTag.find(keyImage);
-    if (search != keyImagesTag.end() && blockIndex <= search->blockIndex) {
+    if (search != keyImagesTag.end() && blockIndex < search->blockIndex) {
       logger(Logging::Debugging) << fmt::format("KeyImage '{}' already spent at {} for index {}", keyImage.toString(),
                                                 search->blockIndex, blockIndex);
       XI_RETURN_EC(true);

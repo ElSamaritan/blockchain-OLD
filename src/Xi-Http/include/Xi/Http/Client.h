@@ -31,11 +31,16 @@
 #include <optional>
 #include <variant>
 #include <chrono>
+#include <optional>
 
 #include <System/Dispatcher.h>
 
 #include <Xi/Global.hh>
 #include <Xi/Concurrent/ReadersWriterLock.h>
+
+#include <Xi/Network/Port.hpp>
+#include <Xi/Network/Uri.hpp>
+#include <Xi/Network/Protocol.hpp>
 
 #include "Xi/Http/Request.h"
 #include "Xi/Http/Response.h"
@@ -48,20 +53,34 @@ namespace Xi {
 namespace Http {
 class ClientSession;
 
+/*!
+ * \brief The Client class provides basic facilities for building and sending http based web requests.
+ *
+ * A client may have a default endpoint to connect to which is used to resolve a relative path requested. It is also
+ * possible to not provide any host at all. In this case it is up to the caller to ensure all informations required to
+ * resolve the endpoint are given on the request.
+ */
 class Client {
  public:
   /*!
+   * \brief Client creates a new http client without a given host.
+   * \param config Ssl configuration to use for https validation.
+   */
+
+  explicit Client(SSLConfiguration config);
+  /*!
    * \brief Client creates an new http client connected to the given host.
    * \param host The hostname this clients connects to, can be an DNS entry.
-   * \param port The port to connect to if necessary, if 0 then the default port is used (HTTP: 80, HTTPS: 443)
+   * \param config Ssl configuration to use for https validation.
    */
-  explicit Client(const std::string& host, uint16_t port, SSLConfiguration config);
+  explicit Client(const std::string& host, SSLConfiguration config);
   XI_DELETE_COPY(Client);
   XI_DEFAULT_MOVE(Client);
   virtual ~Client();
 
   const std::string host() const;
   uint16_t port() const;
+  Network::Protocol protocol() const;
 
   void useAuthorization(Null);
   void useAuthorization(const BasicCredentials& credentials);
@@ -94,8 +113,7 @@ class Client {
 #undef MAKE_METHOD_ALIAS
 
  private:
-  const std::string m_host;
-  const uint16_t m_port;
+  std::optional<Network::Uri> m_host;
   SSLConfiguration m_sslConfig;
 
   using credentials_type = std::variant<Null, BasicCredentials, BearerCredentials>;
@@ -106,5 +124,6 @@ class Client {
   struct _Worker;
   std::shared_ptr<_Worker> m_worker;
 };
+
 }  // namespace Http
 }  // namespace Xi

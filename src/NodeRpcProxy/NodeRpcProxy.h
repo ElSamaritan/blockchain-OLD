@@ -43,8 +43,8 @@ class INodeRpcProxyObserver {
 
 class NodeRpcProxy : public CryptoNote::INode {
  public:
-  NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort, ::Xi::Http::SSLConfiguration sslConfig,
-               const Currency& currency, Logging::ILogger& logger);
+  NodeRpcProxy(const std::string& nodeHost, ::Xi::Http::SSLConfiguration sslConfig, const Currency& currency,
+               Logging::ILogger& logger);
   virtual ~NodeRpcProxy() override;
 
   virtual bool addObserver(CryptoNote::INodeObserver* observer) override;
@@ -187,8 +187,6 @@ class NodeRpcProxy : public CryptoNote::INode {
   Tools::ObserverManager<CryptoNote::INodeObserver> m_observerManager;
   Tools::ObserverManager<CryptoNote::INodeRpcProxyObserver> m_rpcProxyObserverManager;
 
-  const std::string m_nodeHost;
-  const unsigned short m_nodePort;
   std::unique_ptr<Xi::Http::Client> m_httpClient;
   System::Event* m_httpEvent = nullptr;
 

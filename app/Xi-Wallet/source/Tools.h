@@ -10,6 +10,8 @@
 #include <vector>
 #include <iterator>
 
+#include <Xi/Algorithm/String.h>
+
 #include <Types.h>
 #include <CryptoNoteCore/Currency.h>
 

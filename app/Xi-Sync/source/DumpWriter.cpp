@@ -44,9 +44,9 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(StreamCorrupted, "stream corrupted while writing
 }  // namespace
 
 Xi::Result<std::unique_ptr<XiSync::DumpWriter>> XiSync::DumpWriter::open(const std::string &file) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return success(std::unique_ptr<DumpWriter>{new DumpWriter{file}});
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 uint32_t XiSync::DumpWriter::checkpointsDensity() const { return m_checkpointDensity; }
@@ -54,7 +54,7 @@ uint32_t XiSync::DumpWriter::checkpointsDensity() const { return m_checkpointDen
 void XiSync::DumpWriter::setCheckpointsDensity(uint32_t density) { m_checkpointDensity = density; }
 
 Xi::Result<void> XiSync::DumpWriter::write(uint32_t startIndex, std::vector<CryptoNote::RawBlock> blockBatch) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   if (blockBatch.empty()) {
     Xi::exceptional<InsufficientBlocksError>();
   }
@@ -95,7 +95,7 @@ Xi::Result<void> XiSync::DumpWriter::write(uint32_t startIndex, std::vector<Cryp
   }
 
   return Xi::success();
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 XiSync::DumpWriter::DumpWriter(const std::string &file)

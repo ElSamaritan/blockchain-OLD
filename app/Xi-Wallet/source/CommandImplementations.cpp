@@ -13,7 +13,7 @@
 
 #include <Xi/Algorithm/String.h>
 #include <Xi/Time.h>
-#include <Common/FormatTools.h>
+#include <CryptoNoteCore/FormatTools.h>
 #include <Common/StringTools.h>
 
 #include <CryptoNoteCore/Account.h>
@@ -381,8 +381,8 @@ void printOutgoingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
   std::cout << std::endl;
 }
 
-void printIncomingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &node) {
-  XI_UNUSED(node);
+void printIncomingTransfer(CryptoNote::WalletTransaction t, const CryptoNote::Currency &currency,
+                           const CryptoNote::BlockHeight &knownHeight) {
   assert(t.totalAmount > 0);
   const uint64_t absTotalAmount = static_cast<uint64_t>(std::abs(t.totalAmount));
 
@@ -393,9 +393,9 @@ void printIncomingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
     std::cout << SuccessMsg("    Block height  ") << SuccessMsg(toString(t.blockHeight)) << std::endl
               << SuccessMsg("    Timestamp     ") << SuccessMsg(unixTimeToDate(t.timestamp)) << std::endl;
   }
-  printUnlockTime(t, node.currency(), node.getLastKnownBlockHeight(), true, "    Unlock        ");
+  printUnlockTime(t, currency, knownHeight, true, "    Unlock        ");
 
-  std::cout << SuccessMsg("    Amount        " + node.currency().amountFormatter()(absTotalAmount)) << std::endl;
+  std::cout << SuccessMsg("    Amount        " + currency.amountFormatter()(absTotalAmount)) << std::endl;
 
   CryptoNote::PaymentId paymentId{};
   if (CryptoNote::getPaymentIdFromTxExtra(t.extra, paymentId)) {
@@ -403,6 +403,10 @@ void printIncomingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &n
   }
 
   std::cout << std::endl;
+}
+
+void printIncomingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &node) {
+  printIncomingTransfer(t, node.currency(), node.getLastKnownBlockHeight());
 }
 
 void listTransfers(bool incoming, bool outgoing, CryptoNote::WalletGreen &wallet, CryptoNote::INode &node) {

@@ -35,7 +35,7 @@ namespace Crypto {
 const KeyImage KeyImage::Null{};
 
 Result<KeyImage> KeyImage::fromString(const std::string &hex) {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   KeyImage reval;
   if (KeyImage::bytes() * 2 != hex.size()) {
     throw std::runtime_error{"wrong hex size"};
@@ -47,7 +47,7 @@ Result<KeyImage> KeyImage::fromString(const std::string &hex) {
     throw std::runtime_error{"key image is invalid"};
   }
   return success(std::move(reval));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 KeyImage::KeyImage() {

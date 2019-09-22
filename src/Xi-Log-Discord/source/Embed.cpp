@@ -42,18 +42,18 @@ EmbedField &Embed::addField() {
 }
 
 Result<std::string> Embed::toJson() const {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   return success(CryptoNote::storeToJson(*this));
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 Result<std::string> Embed::toWebhookBody() const {
-  XI_ERROR_TRY();
+  XI_ERROR_TRY
   auto embedBody = toJson().takeOrThrow();
   std::stringstream builder{};
   builder << "{\"embeds\": [" << embedBody << "]}";
   return success(std::string{builder.str()});
-  XI_ERROR_CATCH();
+  XI_ERROR_CATCH
 }
 
 }  // namespace Discord

@@ -33,6 +33,7 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(OutOfRange, "number is out of range, usually req
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidIndex, "array/vector index is invalid in called context", Runtime)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidSize, "array/vector size is invalid", Runtime)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidVariantType, "unexpected type in variant", Runtime)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidEnumValue, "enum does not match any decleration", Runtime)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(Format, "invalid format for conversion", Runtime)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(NotImplemented, "feature required is not implemented yet", Runtime)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(NotFound, "an object was requested but not found", Runtime)

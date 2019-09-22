@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <cinttypes>
+#include <iostream>
 
 #include <Logging/LoggerRef.h>
 #include <Xi/Crypto/FastHash.hpp>
@@ -40,13 +41,14 @@ class Checkpoints {
   bool isEnabled() const;
   void setEnabled(bool useCheckpoints);
 
-  bool addCheckpoint(uint32_t index, const std::string& hash_str);
-  bool addCheckpoint(uint32_t index, const Crypto::Hash& hash);
-  bool loadCheckpointsFromFile(const std::string& fileName);
-  bool isInCheckpointZone(uint32_t index) const;
-  bool checkBlock(uint32_t index, const Crypto::Hash& h) const;
-  bool checkBlock(uint32_t index, const Crypto::Hash& h, bool& isCheckpoint) const;
-  bool isAlternativeBlockAllowed(uint32_t blockchainSize, uint32_t blockIndex) const;
+  [[nodiscard]] bool addCheckpoint(uint32_t index, const std::string& hash_str);
+  [[nodiscard]] bool addCheckpoint(uint32_t index, const Crypto::Hash& hash);
+  [[nodiscard]] bool loadCheckpoints(std::istream& stream);
+  [[nodiscard]] bool loadCheckpoints(const std::string& path);
+  [[nodiscard]] bool isInCheckpointZone(uint32_t index) const;
+  [[nodiscard]] bool checkBlock(uint32_t index, const Crypto::Hash& h) const;
+  [[nodiscard]] bool checkBlock(uint32_t index, const Crypto::Hash& h, bool& isCheckpoint) const;
+  [[nodiscard]] bool isAlternativeBlockAllowed(uint32_t blockchainSize, uint32_t blockIndex) const;
   std::vector<uint32_t> getCheckpointHeights() const;
   std::size_t size() const;
   uint32_t topCheckpointIndex() const;

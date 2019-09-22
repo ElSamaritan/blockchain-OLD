@@ -36,6 +36,8 @@
 #include <boost/optional.hpp>
 #include <Xi/ExternalIncludePop.h>
 
+#include <Xi/Span.hpp>
+
 namespace Xi {
 /*!
  * \brief starts_with checks if a given string start with a prefix
@@ -74,6 +76,7 @@ std::string to_upper(const std::string& str);
 std::string replace(std::string_view str, std::string_view toReplace, std::string_view replacement);
 
 std::vector<std::string> split(const std::string& str, const std::string& tokens);
+std::string join(ConstSpan<std::string> values, const std::string& token);
 
 /*!
  * Parses a string representation into a corresponding data structure.

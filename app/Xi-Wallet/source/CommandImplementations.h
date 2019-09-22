@@ -46,6 +46,8 @@ void listTransfers(bool incoming, bool outgoing, CryptoNote::WalletGreen &wallet
 void printUnlockTime(CryptoNote::WalletTransaction t, const CryptoNote::Currency &currency,
                      CryptoNote::BlockHeight knownHeight, bool isIncoming, const std::string &prefix);
 void printOutgoingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &node);
+void printIncomingTransfer(CryptoNote::WalletTransaction t, const CryptoNote::Currency &currency,
+                           const CryptoNote::BlockHeight &knownHeight);
 void printIncomingTransfer(CryptoNote::WalletTransaction t, CryptoNote::INode &node);
 
 void createIntegratedAddress(const CryptoNote::Currency &currency);

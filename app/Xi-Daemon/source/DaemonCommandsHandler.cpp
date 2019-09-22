@@ -32,7 +32,7 @@
 #include "Rpc/JsonRpc.h"
 #include "CryptoNoteCore/Currency.h"
 #include <boost/format.hpp>
-#include "Common/FormatTools.h"
+#include "CryptoNoteCore/FormatTools.h"
 #include "Common/StringTools.h"
 
 #define DAEMON_COMMAND_DEFINE(NAME, HELP) setHandler(#NAME, boost::bind(&DaemonCommandsHandler::NAME, this, _1), HELP)

@@ -43,26 +43,38 @@ void SslClientOptions::loadEnvironment(Environment &env) {
   // clang-format off
   env
     (trusted(), "SSL_TRUSTED")
-    (noVerify(), "SSL_NO_VERIFY")
+    (verify(), "SSL_VERIFY")
+    (rootStore(), "SSL_ROOT_STORE")
   ;
   // clang-format on
 }
 
 void SslClientOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
-    options.add_options("ssl")
-        ("ssl-trusted", "Filepath containing server certficates you want to trust.",
-            cxxopts::value<std::string>(trusted())->default_value("trusted.pem"))
+  options.add_options("ssl")
+      ("ssl-trusted", "Filepath containing server certficates you want to trust.",
+          cxxopts::value<std::string>(trusted())->default_value("trusted.pem"))
 
-        ("ssl-no-verify", "Disables peer verification.",
-            cxxopts::value<bool>(noVerify())->default_value(noVerify() ? "true" : "false")->implicit_value("true"));
+      ("ssl-no-verify", "Disables peer verification.",
+          cxxopts::value<bool>()->default_value((!verify()) ? "true" : "false")->implicit_value("false"))
+
+      ("ssl-no-root-store", "Disables root certificates provided by the operating system.",
+          cxxopts::value<bool>()->default_value((!rootStore()) ? "true" : "false")->implicit_value("false"))
+  ;
   // clang-format on
 }
 
 bool SslClientOptions::evaluateParsedOptions(const cxxopts::Options &options, const cxxopts::ParseResult &result) {
-  XI_UNUSED(options, result);
-  XI_RETURN_SC_IF(noVerify(), false);
+  XI_UNUSED(options, result)
   XI_RETURN_SC_IF_NOT(m_baseOptions.enabled(), false);
+
+  if (result.count("ssl-no-root-store")) {
+    rootStore(!result["ssl-no-root-store"].as<bool>());
+  }
+  if (result.count("ssl-no-verify")) {
+    verify(!result["ssl-no-verify"].as<bool>());
+  }
+  XI_RETURN_SC_IF_NOT(verify(), false);
 
   exceptional_if<MissingFileError>(FileSystem::searchFile(trusted(), ".pem", m_baseOptions.rootDir()).isError());
 
@@ -70,10 +82,11 @@ bool SslClientOptions::evaluateParsedOptions(const cxxopts::Options &options, co
 }
 
 void SslClientOptions::configure(Http::SSLConfiguration &config) const {
-  config.setVerifyPeers(!noVerify());
-  if (!m_baseOptions.enabled() || noVerify()) {
+  config.setVerifyPeers(verify());
+  if (!m_baseOptions.enabled() || !verify()) {
     return;
   }
+  config.setRootStoreEnabled(rootStore());
   config.setTrustedKeysPath(FileSystem::searchFile(trusted(), ".pem", m_baseOptions.rootDir()).takeOrThrow());
 }
 

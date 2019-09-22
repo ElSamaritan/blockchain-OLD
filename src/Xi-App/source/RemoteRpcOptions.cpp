@@ -25,21 +25,17 @@
 
 #include <Xi/Global.hh>
 #include <Xi/Exceptional.hpp>
+#include <Xi/Network/Uri.hpp>
 
 namespace {
 XI_DECLARE_EXCEPTIONAL_CATEGORY(RemoteRpcOption)
-XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidIpFormat, "provided ip address has an invalid format.", RemoteRpcOption)
-XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidPort, "zero is not a valid port.", RemoteRpcOption)
-XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidHostFormat, "provided host has an invalid format.", RemoteRpcOption)
-XI_DECLARE_EXCEPTIONAL_INSTANCE(AmbiguousEndpoint, "you may not provde a port or address if you provide a host.",
-                                RemoteRpcOption)
+XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidHost, "Given remote rpc host ist invalid.", RemoteRpcOption)
 }  // namespace
 
 void Xi::App::RemoteRpcOptions::loadEnvironment(Xi::App::Environment &env) {
   // clang-format off
   env
-    (address(), "RPC_REMOTE_ADDRESS")
-    (port(), "RPC_REMOTE_PORT")
+    (host(), "RPC_REMOTE_HOST")
     (accessToken(), "RPC_REMOTE_ACCESS_TOKEN")
   ;
   // clang-format on
@@ -48,14 +44,8 @@ void Xi::App::RemoteRpcOptions::loadEnvironment(Xi::App::Environment &env) {
 void Xi::App::RemoteRpcOptions::emplaceOptions(cxxopts::Options &options) {
   // clang-format off
   options.add_options("remote rpc")
-    ("rpc-remote-address", "remote ip address running the rpc server.",
-      cxxopts::value<std::string>(address())->default_value(address()), "#.#.#.#")
-
-    ("rpc-remote-port", "remote port the rpc server is listening on.",
-      cxxopts::value<uint16_t>(port())->default_value(std::to_string(port())), "#")
-
-    ("rpc-remote-host", "unified ip address and port of the remote rpc server",
-      cxxopts::value<std::string>(), "#.#.#.#:#")
+    ("rpc-remote", "url to the rpc remote server (currently the daemon)",
+      cxxopts::value<std::string>(host())->default_value(host()), "<url>")
 
     ("rpc-remote-access-token", "access token required by the rpc server",
       cxxopts::value<std::string>(accessToken())->default_value(accessToken()), "<token>")
@@ -65,28 +55,15 @@ void Xi::App::RemoteRpcOptions::emplaceOptions(cxxopts::Options &options) {
 
 bool Xi::App::RemoteRpcOptions::evaluateParsedOptions(const cxxopts::Options &options,
                                                       const cxxopts::ParseResult &result) {
-  XI_UNUSED(options);
-
-  if (result.count("rpc-remote-host") > 0) {
-    if (result.count("rpc-remote-address") > 0 || result.count("rpc-remote-port") > 0) {
-      exceptional<AmbiguousEndpointError>();
-    }
-    uint32_t _ip = 0;
-    uint16_t _port = 0;
-    if (!Common::parseIpAddressAndPort(_ip, _port, result["rpc-remote-host"].as<std::string>())) {
-      exceptional<InvalidHostFormatError>();
-    }
-
-    address() = Common::ipAddressToString(_ip);
-    port() = _port;
-  } else {
-    if (port() < 1) {
-      exceptional<InvalidPortError>();
-    }
-    [[maybe_unused]] uint32_t _ = 0;
-    if (!Common::parseIpAddress(_, address())) {
-      exceptional<InvalidIpFormatError>();
-    }
+  XI_UNUSED(options, result);
+  const auto uri = Network::Uri::fromString(host());
+  if (uri.isError()) {
+    exceptional<InvalidHostError>("Remote rpc host is invalid: {}", uri.error().message());
+  }
+  if (!uri->scheme().empty()) {
+    const auto protocol = Network::parseProtocol(uri->scheme());
+    exceptional_if<InvalidHostError>(protocol.isError(), "Unsupported rpc scheme: {}", uri->scheme());
+    exceptional_if<InvalidHostError>(isHttpBased(*protocol), "Unsupported rpc scheme: {}", uri->scheme());
   }
   return false;
 }
@@ -94,8 +71,16 @@ bool Xi::App::RemoteRpcOptions::evaluateParsedOptions(const cxxopts::Options &op
 CryptoNote::RpcRemoteConfiguration Xi::App::RemoteRpcOptions::getConfig(
     const Xi::Http::SSLConfiguration &sslConfig) const {
   CryptoNote::RpcRemoteConfiguration cfg{};
-  cfg.Host = address();
-  cfg.Port = port();
+  const auto uri = Network::Uri::fromString(host()).takeOrThrow();
+  if (uri.scheme().empty()) {
+    if (sslConfig.enabled()) {
+      cfg.Host = toString(Network::Protocol::Xis).takeOrThrow() + ":" + host();
+    } else {
+      cfg.Host = toString(Network::Protocol::Xi).takeOrThrow() + ":" + host();
+    }
+  } else {
+    cfg.Host = host();
+  }
   cfg.AccessToken = accessToken();
   cfg.Ssl = sslConfig;
   return cfg;
