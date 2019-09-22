@@ -41,6 +41,7 @@
 #define XI_YAML_CATCH                        \
   }                                          \
   catch (const std::exception &e) {          \
+    XI_UNUSED(e)                             \
     XI_PRINT_EC("YAML threw: %s", e.what()); \
     XI_RETURN_EC(false);                     \
   }                                          \
@@ -148,6 +149,7 @@ std::unique_ptr<YamlInputSerializer> YamlInputSerializer::parse(const std::strin
     reval->m_impl->root = node;
     XI_RETURN_SC(reval);
   } catch (const std::exception &e) {
+    XI_UNUSED(e)
     XI_PRINT_EC("YAML parse thre: %s", e.what());
     XI_RETURN_EC(nullptr);
   } catch (...) {
