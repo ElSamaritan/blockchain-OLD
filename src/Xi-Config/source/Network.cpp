@@ -2,6 +2,8 @@
 
 #include <Xi/Version/BuildInfo.h>
 #include <Xi/Resource/Resource.hpp>
+#include <Xi/Network/Protocol.hpp>
+#include <Xi/Network/Port.hpp>
 
 Xi::Config::Network::Type Xi::Config::Network::defaultNetworkType() {
 #if !defined(NDEBUG)
@@ -51,4 +53,12 @@ std::string Xi::Config::Network::checkpoints(const Xi::Config::Network::Type net
   }
 
   exceptional<InvalidEnumValueError>("Unknown network type.");
+}
+
+uint16_t Xi::Config::Network::Configuration::p2pDefaultPort() {
+  return Xi::Network::Port::fromProtocol(Xi::Network::Protocol::Xip).valueOrThrow().native();
+}
+
+uint16_t Xi::Config::Network::Configuration::rpcDefaultPort() {
+  return Xi::Network::Port::fromProtocol(Xi::Network::Protocol::Xi).valueOrThrow().native();
 }

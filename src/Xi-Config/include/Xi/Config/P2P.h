@@ -34,7 +34,7 @@
 namespace Xi {
 namespace Config {
 namespace P2P {
-static inline constexpr uint16_t defaultPort() {
+static inline uint16_t defaultPort() {
   return Network::Configuration::p2pDefaultPort();
 }
 

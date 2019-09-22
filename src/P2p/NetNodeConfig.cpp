@@ -13,9 +13,11 @@
 #include <Xi/Algorithm/String.h>
 
 #include <Xi/Crypto/Random/Random.hh>
-#include <Xi/Network/Uri.hpp>
+#include <Xi/Crypto/Rsa.hh>
+#include <Xi/Resource/Resource.hpp>
 #include <Xi/Network/IpAddress.hpp>
-
+#include <Xi/Http/Client.h>
+#include <Serialization/SerializationTools.h>
 #include <Common/Util.h>
 #include "Common/CommandLine.h"
 #include "Common/StringTools.h"
@@ -126,6 +128,22 @@ bool NetNodeConfig::init(const Xi::Config::Network::Configuration& netConfig, co
     if (!parsePeersAndAddToNetworkContainer(addSeedNodes, seedNodes)) {
       return false;
     }
+  }
+
+  if (!netConfig.seedsUrl().empty()) {
+    const auto seedsContent = Xi::Resource::loadText(netConfig.seedsUrl());
+    XI_RETURN_EC_IF(seedsContent.isError(), false);
+    std::vector<std::string> additionalSeeds{};
+    XI_RETURN_EC_IF_NOT(loadFromJson(additionalSeeds, *seedsContent), false);
+    XI_RETURN_EC_IF_NOT(parsePeersAndAddToNetworkContainer(additionalSeeds, seedNodes), false);
+  }
+
+  if (!netConfig.peersUrl().empty()) {
+    const auto peersContent = Xi::Resource::loadText(netConfig.peersUrl());
+    XI_RETURN_EC_IF(peersContent.isError(), false);
+    std::vector<std::string> additionalPeers{};
+    XI_RETURN_EC_IF_NOT(loadFromJson(additionalPeers, *peersContent), false);
+    XI_RETURN_EC_IF_NOT(parsePeersAndAddToPeerListContainer(additionalPeers, peers), false);
   }
 
   return true;

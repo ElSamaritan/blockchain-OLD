@@ -34,6 +34,8 @@
 #include <Xi/Config.h>
 #include <Xi/Version/Version.h>
 #include <Xi/Crypto/Random/Random.hh>
+#include <Xi/Crypto/Rsa.hh>
+#include <Xi/Http/Client.h>
 
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
