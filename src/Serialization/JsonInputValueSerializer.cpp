@@ -173,10 +173,14 @@ bool JsonInputValueSerializer::operator()(uint8_t& _value, Common::StringView na
 
 bool JsonInputValueSerializer::operator()(std::string& _value, Common::StringView name) {
   auto ptr = getValue(name);
-  XI_RETURN_EC_IF(ptr == nullptr, false);
-  XI_RETURN_EC_IF_NOT(ptr->isString(), false);
-  _value = ptr->getString();
-  return true;
+  if (ptr == nullptr || ptr->isNil()) {
+    _value = "";
+    XI_RETURN_SC(true);
+  } else {
+    XI_RETURN_EC_IF_NOT(ptr->isString(), false);
+    _value = ptr->getString();
+  }
+  XI_RETURN_SC(true);
 }
 
 bool JsonInputValueSerializer::operator()(bool& _value, Common::StringView name) {
