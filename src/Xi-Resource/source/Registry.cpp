@@ -25,13 +25,32 @@
 
 #include <memory>
 #include <fstream>
+#include <cstring>
+#include <utility>
 
 #include <Xi/FileSystem.h>
+#include <Xi/Http/Client.h>
+#include <Xi/Encoding/Base64.h>
+
+namespace {
+Xi::Http::Response loadWebResource(const std::string url) {
+  auto http = std::make_unique<Xi::Http::Client>(Xi::Http::SSLConfiguration::RootStoreClient);
+  auto res = http->getSync(url, Xi::Http::ContentType::Text, "");
+  Xi::exceptional_if_not<Xi::RuntimeError>(isSuccessCode(res.status()),
+                                           "Resolving web resource '{}' yielded none success code {}.", url,
+                                           toString(res.status()));
+  return res;
+}
+}  // namespace
 
 namespace Xi {
 namespace Resource {
 
-Registry::Registry() {
+struct Registry::_Impl {
+  Container embedded{};
+};
+
+Registry::Registry() : m_impl{new _Impl} {
   /* */
 }
 
@@ -45,7 +64,7 @@ Registry::~Registry() {
 }
 
 const Container &Registry::embedded() const {
-  return m_embedded;
+  return m_impl->embedded;
 }
 const Registry &registry() {
   return Registry::singleton();
@@ -67,6 +86,13 @@ Result<std::string> loadText(const std::string &name, const std::string &fileEnd
     XI_ERROR_PROPAGATE(res)
     return success(res->text());
   } else {
+    if (const auto uri = Network::Uri::fromString(name); uri.isValue()) {
+      const auto protocol = uri->protocol();
+      if (protocol.isValue() && isHttpBased(*protocol)) {
+        return success(loadWebResource(name).takeBody());
+      }
+    }
+
     const auto search = FileSystem::searchFile(name, fileEnding, root);
     XI_ERROR_PROPAGATE(search)
     auto text = FileSystem::readTextFile(*search);
@@ -85,11 +111,23 @@ Result<ByteVector> loadBinary(const std::string &name, const std::string &fileEn
     XI_ERROR_PROPAGATE(res)
     return success(res->binary());
   } else {
+    if (const auto uri = Network::Uri::fromString(name); uri.isValue()) {
+      const auto protocol = uri->protocol();
+      if (protocol.isValue() && isHttp(*protocol)) {
+        auto httpRes = loadWebResource(name);
+        auto decoded = Base64::decode(httpRes.body());
+        ByteVector reval{};
+        reval.resize(decoded.size());
+        std::memcpy(reval.data(), decoded.data(), reval.size());
+        return success(std::move(reval));
+      }
+    }
+
     const auto search = FileSystem::searchFile(name, fileEnding, root);
     XI_ERROR_PROPAGATE(search)
-    auto bin = FileSystem::readBinaryFile(*search);
-    XI_ERROR_PROPAGATE(bin)
-    return success(bin.take());
+    auto binary = FileSystem::readBinaryFile(*search);
+    XI_ERROR_PROPAGATE(binary)
+    return success(binary.take());
   }
 
   XI_ERROR_CATCH

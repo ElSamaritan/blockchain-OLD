@@ -25,6 +25,7 @@
 
 #include <string>
 #include <optional>
+#include <memory>
 
 #include <Xi/Global.hh>
 #include <Xi/Byte.hh>
@@ -47,7 +48,8 @@ class Registry {
   const Container& embedded() const;
 
  private:
-  Container m_embedded{};
+  struct _Impl;
+  std::unique_ptr<_Impl> m_impl;
 };
 
 /// Singleton resource registry.

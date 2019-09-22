@@ -82,6 +82,14 @@ function(xi_make_resources)
     list(APPEND headerFiles ${inputHeaderFile})
     list(APPEND sourceFiles ${inputSourceFile})
 
+    string(RANDOM LENGTH 16 proxyFile)
+    add_custom_command(
+      OUTPUT
+        ${proxyFile}
+
+      COMMAND ""
+    )
+
     add_custom_command(
       OUTPUT
         ${inputHeaderFile}
@@ -93,6 +101,7 @@ function(xi_make_resources)
           --output ${rootDir}
 
       DEPENDS
+        ${proxyFile}
         ${input}
         Xi.Resource.Builder
 

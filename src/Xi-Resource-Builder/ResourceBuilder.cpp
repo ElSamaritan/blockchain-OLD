@@ -114,6 +114,20 @@ std::string entityIdentifier(const std::string& path) {
   return std::string{"__resource_"} + Xi::Crypto::FastHash::compute(Xi::asConstByteSpan(path)).takeOrThrow().toString();
 }
 
+Xi::Crypto::FastHash resourceHash(const ResourceDefinition& resources, const std::string& input) {
+  Xi::Crypto::FastHashHashVector hashes{};
+  hashes.reserve(1 + resources.entities.size());
+  hashes.emplace_back(Xi::Crypto::FastHash::computeObjectHash(resources).takeOrThrow());
+  for (const auto& entity : resources.entities) {
+    const auto inputFileDir = Xi::FileSystem::directory(input).takeOrThrow();
+    const auto collectionDir = Xi::FileSystem::rooted(resources.root, inputFileDir).takeOrThrow();
+    const auto entityPath = Xi::FileSystem::rooted(entity.path, collectionDir).takeOrThrow();
+    const auto binary = Xi::FileSystem::readBinaryFile(entityPath).takeOrThrow();
+    hashes.emplace_back(Xi::Crypto::FastHash::compute(binary).takeOrThrow());
+  }
+  return Xi::Crypto::FastHash::computeMerkleTree(hashes).takeOrThrow();
+}
+
 std::string wrapText(const std::string& text, const std::string& id) {
   std::stringstream builder{};
   builder << "static const std::string " << id << " = [](){\n";
@@ -132,9 +146,9 @@ std::string wrapText(const std::string& text, const std::string& id) {
       (void)Xi::Crypto::Random::generate(seperatorBytes);
       seperator = Common::toHex(seperatorBytes.data(), seperatorBytes.size());
     } while (itext.find(seperator) != std::string::npos);
-    builder << "\nbuilder << R\"" << seperator << "(\n";
+    builder << "\nbuilder << R\"" << seperator << "(";
     builder << itext;
-    builder << "\n)" << seperator << "\";\n";
+    builder << ")" << seperator << "\";\n";
   }
   builder << "\nreturn builder.str();\n}();";
   return builder.str();
@@ -159,14 +173,22 @@ int main(int argc, char** argv) {
     cli.parse(argc, argv);
 
     for (const auto& input : options.inputs) {
-      std::cout << "Generating " << input << "..." << std::endl;
-
       ResourceDefinition resources{};
       if (!CryptoNote::fromYaml(FileSystem::readTextFile(input).takeOrThrow(), resources)) {
         exceptional<RuntimeError>("Faile to parse input file: {}", input);
       }
 
       const auto ns = split(resources._namespace, ":");
+
+      const auto cacheHash = resourceHash(resources, input);
+      const auto cachePath = FileSystem::combine(options.output, resources.identifier + ".cache").takeOrThrow();
+      if (FileSystem::exists(cachePath).takeOrThrow()) {
+        const auto previousCacheHashString = FileSystem::readTextFile(cachePath).takeOrThrow();
+        const auto previousCacheHash = Xi::Crypto::FastHash::fromString(previousCacheHashString);
+        if (!previousCacheHash.isError() && cacheHash == *previousCacheHash) {
+          continue;
+        }
+      }
 
       const auto includeDir = FileSystem::combine(options.output, "/include").takeOrThrow();
       const auto headersDir = FileSystem::combine(includeDir, join(ns, "/")).takeOrThrow();
@@ -237,9 +259,6 @@ int main(int argc, char** argv) {
         headerBuilder << "} // " << *i << "\n";
         sourceBuilder << "} // " << *i << "\n";
       }
-
-      std::cout << " -- " << headerPath << std::endl;
-      std::cout << " -- " << sourcePath << std::endl;
     }
 
     return EXIT_SUCCESS;
