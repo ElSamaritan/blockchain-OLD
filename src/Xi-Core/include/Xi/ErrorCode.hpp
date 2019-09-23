@@ -40,7 +40,9 @@
   }                                                                               \
   ;                                                                               \
   struct NAME##ErrorCategory final : public std::error_category {                 \
-    const char *name() const noexcept override { return #DESC; }                  \
+    const char *name() const noexcept override {                                  \
+      return #DESC;                                                               \
+    }                                                                             \
     std::string message(int ev) const override;                                   \
                                                                                   \
    private:                                                                       \
@@ -55,7 +57,9 @@
   inline std::string toString(NAME##Error err) {                                  \
     return NAME##ErrorCategory::Instance.message(static_cast<int>(err));          \
   }                                                                               \
-  inline ::Xi::Error makeError(NAME##Error ec) { return ::Xi::makeError(make_error_code(ec)); }
+  inline ::Xi::Error makeError(NAME##Error ec) {                                  \
+    return ::Xi::makeError(make_error_code(ec));                                  \
+  }
 
 #define XI_ERROR_CODE_CATEGORY_BEGIN(NAMESPACE, NAME)                        \
   NAMESPACE::NAME##ErrorCategory NAMESPACE::NAME##ErrorCategory::Instance{}; \
@@ -75,25 +79,22 @@
   return "unknown";                  \
   }
 
-#define XI_ERROR_CODE_OVERLOADS(NAMESPACE, NAME)                                           \
-  namespace std {                                                                          \
-  template <>                                                                              \
-  struct is_error_code_enum<NAMESPACE::NAME##Error> : public true_type {};                 \
-  inline std::error_code make_error_code(NAMESPACE::NAME##Error e) {                       \
-    return std::error_code(static_cast<int>(e), NAMESPACE::NAME##ErrorCategory::Instance); \
-  }                                                                                        \
-  }                                                                                        \
-  namespace fmt {                                                                          \
-  template <>                                                                              \
-  struct formatter<NAMESPACE::NAME##Error> {                                               \
-    template <typename ParseContext>                                                       \
-    constexpr auto parse(ParseContext &ctx) {                                              \
-      return ctx.begin();                                                                  \
-    }                                                                                      \
-                                                                                           \
-    template <typename FormatContext>                                                      \
-    auto format(const NAMESPACE::NAME##Error &err, FormatContext &ctx) {                   \
-      return format_to(ctx.begin(), toString(err));                                        \
-    }                                                                                      \
-  };                                                                                       \
+#define XI_ERROR_CODE_OVERLOADS(NAMESPACE, NAME)                           \
+  namespace std {                                                          \
+  template <>                                                              \
+  struct is_error_code_enum<NAMESPACE::NAME##Error> : public true_type {}; \
+  }                                                                        \
+  namespace fmt {                                                          \
+  template <>                                                              \
+  struct formatter<NAMESPACE::NAME##Error> {                               \
+    template <typename ParseContext>                                       \
+    constexpr auto parse(ParseContext &ctx) {                              \
+      return ctx.begin();                                                  \
+    }                                                                      \
+                                                                           \
+    template <typename FormatContext>                                      \
+    auto format(const NAMESPACE::NAME##Error &err, FormatContext &ctx) {   \
+      return format_to(ctx.begin(), toString(err));                        \
+    }                                                                      \
+  };                                                                       \
   }  // namespace fmt

@@ -64,14 +64,14 @@ std::string trim(std::string str);
  * \param str the string to be converted to lower case
  * \return the lower case representation of the string
  */
-std::string to_lower(const std::string& str);
+std::string toLower(const std::string& str);
 
 /*!
  * \brief to_upper converts a string to upper case respecting the locale
  * \param str the string to be converted to upper case
  * \return the upper case representation of the string
  */
-std::string to_upper(const std::string& str);
+std::string toUpper(const std::string& str);
 
 std::string replace(std::string_view str, std::string_view toReplace, std::string_view replacement);
 

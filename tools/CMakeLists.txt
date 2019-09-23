@@ -12,7 +12,6 @@ foreach(xiTool ${XI_TOOLS_SOURCE_FILES})
           Logging
           Crypto
           P2P
-          Mnemonics
           Rpc
           Serialization
           System

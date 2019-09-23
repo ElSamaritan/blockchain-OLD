@@ -48,7 +48,7 @@ namespace App {
 namespace {
 
 bool toBoolean(std::string str) {
-  str = Xi::trim(Xi::to_lower(str));
+  str = Xi::trim(Xi::toLower(str));
   if (str == "true" || str == "yes" || str == "1" || str == "on") {
     return true;
   } else if (str == "false" || str == "no" || str == "0" || str == "off") {

@@ -35,7 +35,6 @@ file(GLOB_RECURSE Crypto crypto/*)
 file(GLOB_RECURSE CryptoNoteCore CryptoNoteCore/* CryptoNoteConfig.h)
 file(GLOB_RECURSE CryptoNoteProtocol CryptoNoteProtocol/*)
 file(GLOB_RECURSE Logging Logging/*)
-file(GLOB_RECURSE Mnemonics Mnemonics/*)
 file(GLOB_RECURSE NodeRpcProxy NodeRpcProxy/*)
 file(GLOB_RECURSE NodeInProcess NodeInProcess/*)
 file(GLOB_RECURSE P2p P2p/*)
@@ -58,7 +57,7 @@ else()
 endif()
 
 foreach(source_file ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol}
-                   ${JsonRpcServer} ${Logging} ${Mnemonics} ${NodeRpcProxy} ${NodeInProcess} ${P2p}
+                   ${JsonRpcServer} ${Logging} ${NodeRpcProxy} ${NodeInProcess} ${P2p}
                    ${Rpc} ${Serialization} ${System} ${Transfers} ${Wallet} ${WalletLegacy}
                    ${BlockchainExplorer})
   if(XI_CXX_FLAGS)
@@ -72,7 +71,6 @@ add_library(Common STATIC ${Common})
 add_library(Crypto STATIC ${Crypto})
 add_library(CryptoNoteCore STATIC ${CryptoNoteCore})
 add_library(Logging STATIC ${Logging})
-add_library(Mnemonics STATIC ${Mnemonics})
 add_library(NodeRpcProxy STATIC ${NodeRpcProxy})
 add_library(NodeInProcess STATIC ${NodeInProcess})
 add_library(Rpc STATIC ${Rpc})
@@ -144,6 +142,16 @@ xi_make_library(
   PRIVATE_LIBRARIES
     openssl
     boost
+)
+
+xi_make_library(
+  Xi-Mnemonic
+
+  PUBLIC_LIBRARIES
+    Xi::Core
+
+  PRIVATE_LIBRARIES
+    Xi::Crypto
 )
 
 xi_make_library(
@@ -296,7 +304,6 @@ set(
       Crypto
       CryptoNoteCore
       Logging
-      Mnemonics
       NodeRpcProxy
       NodeInProcess
       Rpc
@@ -356,7 +363,6 @@ target_link_libraries(BlockchainExplorer PUBLIC boost json linenoise Crypto ${XI
 target_link_libraries(CommonCLI PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Crypto PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(Logging PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
-target_link_libraries(Mnemonics PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(NodeRpcProxy PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(NodeInProcess PUBLIC NodeRpcProxy boost json linenoise ${XI_CANONICAL_LIBRARIES})
 target_link_libraries(P2P PUBLIC boost json linenoise ${XI_CANONICAL_LIBRARIES})

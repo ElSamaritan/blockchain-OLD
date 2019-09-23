@@ -91,7 +91,7 @@ uint64_t lexical_cast<uint64_t>(const std::string &value) {
   return std::stoull(value);
 }
 
-std::string to_lower(const std::string &str) {
+std::string toLower(const std::string &str) {
   const std::locale loc{};
   std::string reval;
   reval.resize(str.size(), '\0');
@@ -99,7 +99,7 @@ std::string to_lower(const std::string &str) {
   return reval;
 }
 
-std::string to_upper(const std::string &str) {
+std::string toUpper(const std::string &str) {
   const std::locale loc{};
   std::string reval;
   reval.resize(str.size(), '\0');

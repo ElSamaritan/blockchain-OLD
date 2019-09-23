@@ -17,6 +17,7 @@
 #include <boost/filesystem/operations.hpp>
 
 #include <Xi/Algorithm/Math.h>
+#include <Xi/Mnemonic/Mnemonic.hpp>
 #include <System/Timer.h>
 #include <System/InterruptedException.h>
 #include "Common/Base58.h"
@@ -41,8 +42,6 @@
 #include "Wallet/WalletUtils.h"
 #include "WalletServiceErrorCategory.h"
 #include "Wallet/IWallet.h"
-
-#include "Mnemonics/Mnemonics.h"
 
 namespace PaymentService {
 
@@ -331,12 +330,11 @@ void generateNewWallet(const CryptoNote::Currency& currency, const WalletConfigu
     Crypto::SecretKey private_spend_key;
     Crypto::SecretKey private_view_key;
 
-    std::string error;
-
-    std::tie(error, private_spend_key) = Mnemonics::MnemonicToPrivateKey(conf.mnemonicSeed);
-
-    if (!error.empty()) {
-      log(Logging::Error) << error;
+    if (const auto ec = Xi::Mnemonic::decode(conf.mnemonicSeed, private_spend_key.span()); ec.isError()) {
+      log(Logging::Error) << ec.error().message();
+      return;
+    } else if (!private_spend_key.isValid()) {
+      log(Logging::Error) << "Mnemonic data is consistent, but the extracted secret key is invalid.";
       return;
     }
 
@@ -772,7 +770,12 @@ std::error_code WalletService::getMnemonicSeed(const std::string& address, std::
     bool deterministic_private_keys = deterministic_private_view_key == viewKey.secretKey;
 
     if (deterministic_private_keys) {
-      mnemonicSeed = Mnemonics::PrivateKeyToMnemonic(key.secretKey);
+      if (const auto ec = Xi::Mnemonic::encode(key.secretKey.span()); !ec.isError()) {
+        mnemonicSeed = *ec;
+      } else {
+        logger(Logging::Error) << "Mnemonic computation failed internally: " << ec.error().message();
+        return make_error_code(CryptoNote::error::WalletErrorCodes::INTERNAL_WALLET_ERROR);
+      }
     } else {
       /* Have to be able to derive view key from spend key to create a mnemonic
          seed, due to being able to generate multiple addresses we can't do

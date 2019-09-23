@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -21,77 +21,47 @@
  *                                                                                                *
  * ============================================================================================== */
 
-#pragma once
+#include "Xi/Mnemonic/WordList.hpp"
 
-#include <cinttypes>
+#include <utility>
+#include <algorithm>
 
-#if defined(__GNUC__) || defined(__clang__)
-#include <cstdio>
-#else
-#include <limits>
-#endif
+#include <Xi/Exceptions.hpp>
+#include <Xi/Algorithm/Math.h>
+
+#include "Xi/Mnemonic/MnemonicError.hpp"
 
 namespace Xi {
-/*!
- * \brief pow computes the to the power of function (base^exponent)
- * \param base the base of the formula
- * \param exponent the exponent of the formula
- * \return base^exponent, 1 if exponent is 0
- */
-static inline constexpr uint32_t pow(uint32_t base, uint32_t exponent) {
-  return exponent == 0 ? 1 : base * pow(base, exponent - 1);
+namespace Mnemonic {
+
+bool WordList::empty() const {
+  return m_words.empty();
 }
 
-/*!
- * \brief pow computes the to the power of function (base^exponent)
- * \param base the base of the formula
- * \param exponent the exponent of the formula
- * \return base^exponent, 1 if exponent is 0
- */
-static inline constexpr uint64_t pow64(uint64_t base, uint64_t exponent) {
-  return exponent == 0 ? 1 : base * pow64(base, exponent - 1);
+const std::string &WordList::operator[](const size_t index) const {
+  return m_words.at(index);
 }
 
-template <typename _IntegerT>
-bool hasAdditionOverflow(const _IntegerT lhs, const _IntegerT rhs, _IntegerT* res) {
-#if defined(__GNUC__) || defined(__clang__)
-  return __builtin_add_overflow(lhs, rhs, res);
-#else
-  if (lhs + rhs < lhs) {
-    return true;
-  } else {
-    *res = lhs + rhs;
-    return false;
-  }
-#endif
+Result<size_t> WordList::operator[](const std::string &word) const {
+  const auto search = std::find(begin(m_words), end(m_words), word);
+  XI_FAIL_IF(search == end(m_words), MnemonicError::WordNotFound)
+  return success(static_cast<size_t>(std::distance(begin(m_words), search)));
 }
 
-template <typename _IntegerT>
-static inline constexpr _IntegerT log2(_IntegerT n) {
-  return (n > 1) ? 1 + log2(n >> 1) : 0;
+size_t WordList::bits() const {
+  return m_bits;
 }
 
-template <typename _IntegerT>
-static inline constexpr bool isMultipleOf(_IntegerT target, _IntegerT scalar) {
-  return (target == 0 || scalar == 0) ? (target == 0 && scalar == 0) : ((target / scalar) * scalar) == target;
+size_t WordList::count() const {
+  return m_words.size();
 }
 
-template <typename _IntegerT>
-static inline constexpr bool isPowerOf2(_IntegerT n) {
-  return !(n == 0) && !(n & (n - 1));
+WordList::WordList(std::vector<std::string> words) : m_words{move(words)} {
+  XI_EXCEPTIONAL_IF(InvalidArgumentError, m_words.empty())
+  XI_EXCEPTIONAL_IF(InvalidArgumentError, m_words.size() < 2)
+  XI_EXCEPTIONAL_IF_NOT(InvalidArgumentError, isPowerOf2(m_words.size()))
+  m_bits = log2(m_words.size());
 }
 
+}  // namespace Mnemonic
 }  // namespace Xi
-
-static inline constexpr uint64_t operator"" _k(unsigned long long kilo) {
-  return kilo * Xi::pow(10, 3);
-}
-static inline constexpr uint64_t operator"" _M(unsigned long long mega) {
-  return mega * Xi::pow(10, 6);
-}
-static inline constexpr uint64_t operator"" _G(unsigned long long giga) {
-  return giga * Xi::pow(10, 9);
-}
-static inline constexpr uint64_t operator"" _T(unsigned long long tera) {
-  return tera * Xi::pow(10, 12);
-}

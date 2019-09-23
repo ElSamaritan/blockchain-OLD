@@ -26,7 +26,7 @@
 #include <Xi/App/Application.h>
 
 #include <Common/Base58.h>
-#include <Mnemonics/Mnemonics.h>
+#include <Xi/Mnemonic/Mnemonic.hpp>
 #include <Xi/FileSystem.h>
 #include <Serialization/ConsoleOutputSerializer.hpp>
 #include <CryptoNoteCore/Currency.h>
@@ -54,7 +54,7 @@ int generate(Logging::ILogger& logger, const CryptoNote::Currency& currency, con
 
   auto binaryAddress = CryptoNote::toBinaryArray(account.address);
   auto address = Tools::Base58::encode_addr(currency.coin().prefix().base58(), Common::asString(binaryAddress));
-  auto mnemonicSeed = Mnemonics::PrivateKeyToMnemonic(account.spendSecretKey);
+  auto mnemonicSeed = Xi::Mnemonic::encode(account.spendSecretKey.span()).takeOrThrow();
 
   CryptoNote::ConsoleOutputSerializer ser{std::cout};
   XI_RETURN_EC_IF_NOT(ser.beginObject("wallet"), EXIT_FAILURE);

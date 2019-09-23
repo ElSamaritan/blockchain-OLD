@@ -12,6 +12,7 @@
 #include <ctime>
 
 #include <Xi/Algorithm/String.h>
+#include <Xi/Mnemonic/Mnemonic.hpp>
 #include <Xi/Time.h>
 #include <CryptoNoteCore/FormatTools.h>
 #include <Common/StringTools.h>
@@ -22,8 +23,6 @@
 #ifndef MSVC
 #include <fstream>
 #endif
-
-#include <Mnemonics/Mnemonics.h>
 
 #include <AddressBook.h>
 #include <ColouredMsg.h>
@@ -85,9 +84,14 @@ void printPrivateKeys(CryptoNote::WalletGreen &wallet, bool viewWallet) {
             << SuccessMsg(Common::podToHex(privateViewKey)) << std::endl;
 
   if (deterministicPrivateKeys) {
-    std::cout << std::endl
-              << SuccessMsg("Mnemonic seed:") << std::endl
-              << SuccessMsg(Mnemonics::PrivateKeyToMnemonic(privateSpendKey)) << std::endl;
+    const auto mnemonic = Xi::Mnemonic::encode(privateSpendKey.span());
+    if (mnemonic.isError()) {
+      std::cout << std::endl
+                << ErrorMsg("Mnemonic seed computation failed:") << std::endl
+                << ErrorMsg(mnemonic.error().message()) << std::endl;
+    } else {
+      std::cout << std::endl << SuccessMsg("Mnemonic seed:") << std::endl << SuccessMsg(*mnemonic) << std::endl;
+    }
   }
 }
 

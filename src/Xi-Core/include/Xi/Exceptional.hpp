@@ -32,6 +32,8 @@
 #include <fmt/format.h>
 #include <Xi/ExternalIncludePop.h>
 
+#include "Xi/Global.hh"
+
 namespace Xi {
 template <typename _ExceptionT>
 [[noreturn]] inline void exceptional() {
@@ -100,6 +102,14 @@ inline void exceptional_if_not(bool cond, const std::string& s) {
 }
 
 }  // namespace Xi
+
+#define XI_EXCEPTIONAL(ERROR_TYPE, ...) ::Xi::exceptional<ERROR_TYPE>(__VA_ARGS__);
+#define XI_EXCEPTIONAL_IF(ERROR_TYPE, COND, ...)                                                                  \
+  if (COND) {                                                                                                     \
+    XI_PRINT_EC("[%s:%i] condition (%s) failed throwin exception: %s\n", __FILE__, __LINE__, #COND, #ERROR_TYPE); \
+    XI_EXCEPTIONAL(ERROR_TYPE, __VA_ARGS__)                                                                       \
+  }
+#define XI_EXCEPTIONAL_IF_NOT(ERROR_TYPE, COND, ...) XI_EXCEPTIONAL_IF(ERROR_TYPE, (!(COND)), __VA_ARGS__)
 
 #define XI_DECLARE_EXCEPTIONAL_CATEGORY(CAT)      \
   class CAT##Exception : public std::exception {  \

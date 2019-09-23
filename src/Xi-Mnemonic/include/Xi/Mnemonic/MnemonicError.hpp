@@ -1,4 +1,4 @@
-﻿/* ============================================================================================== *
+/* ============================================================================================== *
  *                                                                                                *
  *                                     Galaxia Blockchain                                         *
  *                                                                                                *
@@ -23,75 +23,23 @@
 
 #pragma once
 
-#include <cinttypes>
-
-#if defined(__GNUC__) || defined(__clang__)
-#include <cstdio>
-#else
-#include <limits>
-#endif
+#include <Xi/ErrorCode.hpp>
 
 namespace Xi {
-/*!
- * \brief pow computes the to the power of function (base^exponent)
- * \param base the base of the formula
- * \param exponent the exponent of the formula
- * \return base^exponent, 1 if exponent is 0
- */
-static inline constexpr uint32_t pow(uint32_t base, uint32_t exponent) {
-  return exponent == 0 ? 1 : base * pow(base, exponent - 1);
-}
+namespace Mnemonic {
 
-/*!
- * \brief pow computes the to the power of function (base^exponent)
- * \param base the base of the formula
- * \param exponent the exponent of the formula
- * \return base^exponent, 1 if exponent is 0
- */
-static inline constexpr uint64_t pow64(uint64_t base, uint64_t exponent) {
-  return exponent == 0 ? 1 : base * pow64(base, exponent - 1);
-}
+// clang-format off
+XI_ERROR_CODE_BEGIN(Mnemonic)
 
-template <typename _IntegerT>
-bool hasAdditionOverflow(const _IntegerT lhs, const _IntegerT rhs, _IntegerT* res) {
-#if defined(__GNUC__) || defined(__clang__)
-  return __builtin_add_overflow(lhs, rhs, res);
-#else
-  if (lhs + rhs < lhs) {
-    return true;
-  } else {
-    *res = lhs + rhs;
-    return false;
-  }
-#endif
-}
+InvalidEntropy = 0x0001,
+WordNotFound = 0x0002,
+InvalidChecksum = 0x0003,
+UnexpectedSize = 0x0004,
 
-template <typename _IntegerT>
-static inline constexpr _IntegerT log2(_IntegerT n) {
-  return (n > 1) ? 1 + log2(n >> 1) : 0;
-}
+XI_ERROR_CODE_END(Mnemonic, "mnemonic encoding failure")
+// clang-format on
 
-template <typename _IntegerT>
-static inline constexpr bool isMultipleOf(_IntegerT target, _IntegerT scalar) {
-  return (target == 0 || scalar == 0) ? (target == 0 && scalar == 0) : ((target / scalar) * scalar) == target;
-}
-
-template <typename _IntegerT>
-static inline constexpr bool isPowerOf2(_IntegerT n) {
-  return !(n == 0) && !(n & (n - 1));
-}
-
+}  // namespace Mnemonic
 }  // namespace Xi
 
-static inline constexpr uint64_t operator"" _k(unsigned long long kilo) {
-  return kilo * Xi::pow(10, 3);
-}
-static inline constexpr uint64_t operator"" _M(unsigned long long mega) {
-  return mega * Xi::pow(10, 6);
-}
-static inline constexpr uint64_t operator"" _G(unsigned long long giga) {
-  return giga * Xi::pow(10, 9);
-}
-static inline constexpr uint64_t operator"" _T(unsigned long long tera) {
-  return tera * Xi::pow(10, 12);
-}
+XI_ERROR_CODE_OVERLOADS(Xi::Mnemonic, Mnemonic)

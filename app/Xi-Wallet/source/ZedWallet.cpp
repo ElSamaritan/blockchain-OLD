@@ -8,7 +8,6 @@
 
 #include <Common/SignalHandler.h>
 #include <Common/Base58.h>
-#include <Mnemonics/Mnemonics.h>
 #include <Xi/FileSystem.h>
 #include <Serialization/ConsoleOutputSerializer.hpp>
 #include <CryptoNoteCore/Currency.h>

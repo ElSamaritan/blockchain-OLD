@@ -11,7 +11,7 @@
 #include <CryptoNoteCore/Account.h>
 #include <CryptoNoteCore/CryptoNoteBasicImpl.h>
 
-#include <Mnemonics/Mnemonics.h>
+#include <Xi/Mnemonic/Mnemonic.hpp>
 
 #include <Wallet/WalletErrors.h>
 
@@ -92,12 +92,12 @@ std::shared_ptr<WalletInfo> mnemonicImportWallet(CryptoNote::WalletGreen &wallet
 
     trim(mnemonicPhrase);
 
-    std::string error;
-
-    std::tie(error, privateSpendKey) = Mnemonics::MnemonicToPrivateKey(mnemonicPhrase);
-
-    if (!error.empty()) {
-      std::cout << std::endl << WarningMsg(error) << std::endl << std::endl;
+    if (const auto ec = Xi::Mnemonic::decode(mnemonicPhrase, privateSpendKey.span()); ec.isError()) {
+      std::cout << std::endl << WarningMsg(ec.error().message()) << std::endl << std::endl;
+    } else if (!privateSpendKey.isValid()) {
+      std::cout << std::endl
+                << WarningMsg("Mnemonic data is consistent, but the extracted secret key is invalid.") << std::endl
+                << std::endl;
     } else {
       break;
     }

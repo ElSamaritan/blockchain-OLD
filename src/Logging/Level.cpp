@@ -36,7 +36,7 @@
 
 boost::optional<Logging::LevelTranslator::external_type> Logging::LevelTranslator::get_value(
     const Logging::LevelTranslator::internal_type &v) {
-  auto string = Xi::to_lower(v);
+  auto string = Xi::toLower(v);
   LOG_LEVEL_STRING_CASE(None)
   LOG_LEVEL_STRING_CASE(Fatal)
   LOG_LEVEL_STRING_CASE(Error)

@@ -166,7 +166,6 @@ void Xi::Http::SSLConfiguration::initializeClientContext(boost::asio::ssl::conte
     ctx.set_verify_mode(boost::asio::ssl::verify_none);
   } else {
     ctx.set_verify_mode(boost::asio::ssl::verify_peer);
-    boost::system::error_code ec;
     if (rootStoreEnabled()) {
 #if defined(_WIN32) && _WIN32
       HCERTSTORE hStore = CertOpenSystemStore(0, "ROOT");
@@ -189,11 +188,13 @@ void Xi::Http::SSLConfiguration::initializeClientContext(boost::asio::ssl::conte
 
       SSL_CTX_set_cert_store(ctx.native_handle(), store);
 #else
+      boost::system::error_code ec{/* */};
       ctx.set_default_verify_paths(ec);
       exceptional_if<RuntimeError>(ec.failed(), "Failed to load root certificates: {}", ec.message());
 #endif
     }
     if (!trustedKeysPath().empty()) {
+      boost::system::error_code ec{/* */};
       const auto tk = FileSystem::searchFile(trustedKeysPath(), "pem", rootPath()).takeOrThrow();
       CATCH_THROW_WITH_CONTEXT(ctx.load_verify_file(tk, ec), tk)
     }

@@ -28,7 +28,6 @@
 
 #include <Common/Base58.h>
 #include <Common/SignalHandler.h>
-#include <Mnemonics/Mnemonics.h>
 #include <Xi/FileSystem.h>
 #include <Serialization/ConsoleOutputSerializer.hpp>
 #include <CryptoNoteCore/Currency.h>

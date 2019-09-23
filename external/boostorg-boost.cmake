@@ -45,6 +45,7 @@ set(Boost_COMPONENTS
     program_options
     iostreams
     random
+    locale
 )
 
 if(MSVC)

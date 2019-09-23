@@ -101,7 +101,7 @@ int Xi::App::Application::exec(int argc, char **argv) {
 
   try {
     const auto appid = trim(replace(name(), "xi-", ""));
-    Environment env{"XI", to_upper(appid)};
+    Environment env{"XI", toUpper(appid)};
     Environment::set(std::string{"XI_APP="} + name());
     Environment::set(std::string{"XI_TIMESTAMP="} + std::to_string(std::time(nullptr)));
     Environment::set(std::string{"XI_VERSION="} + APP_VERSION);
@@ -113,7 +113,7 @@ int Xi::App::Application::exec(int argc, char **argv) {
     Environment::set(std::string{"XI_BUILD_COMMIT="} + BUILD_COMMIT_ID);
 
     env.load();
-    env.load(std::string{".env."} + to_lower(appid));
+    env.load(std::string{".env."} + toLower(appid));
 
     for (int i = 1; i < argc; ++i) {
       std::string iarg = argv[i];

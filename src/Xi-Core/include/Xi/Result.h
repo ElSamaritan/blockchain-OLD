@@ -199,3 +199,11 @@ inline Result<void> success() {
   }
 
 #define XI_ERROR_PROPAGATE(VAR) XI_RETURN_EC_IF(VAR.isError(), VAR.error());
+
+#define XI_FAIL(X) return failure(X);
+#define XI_FAIL_IF(COND, X)                                                                              \
+  if (COND) {                                                                                            \
+    XI_PRINT_EC("[%s:%i] condition (%s) failed returning failure: %s\n", __FILE__, __LINE__, #COND, #X); \
+    XI_FAIL(X)                                                                                           \
+  }
+#define XI_FAIL_IF_NOT(COND, X) XI_FAIL_IF(!(COND), X)
