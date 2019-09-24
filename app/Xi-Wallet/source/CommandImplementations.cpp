@@ -11,6 +11,10 @@
 #include <vector>
 #include <ctime>
 
+#include <Xi/ExternalIncludePush.h>
+#include <rang.hpp>
+#include <Xi/ExternalIncludePop.h>
+
 #include <Xi/Algorithm/String.h>
 #include <Xi/Mnemonic/Mnemonic.hpp>
 #include <Xi/Time.h>
@@ -419,29 +423,62 @@ void listTransfers(bool incoming, bool outgoing, CryptoNote::WalletGreen &wallet
   int64_t totalSpent = 0;
   int64_t totalReceived = 0;
 
+  // clang-format off
+  std::cout
+    << rang::style::underline
+      << std::left << std::setw(2) << " "
+      << std::left << std::setw(32 * 2 + 2) << "Hash"
+      << std::left << std::setw(24) << "Timestamp"
+      << std::right << std::setw(24) << "Amount"
+      << std::right << std::setw(24) << "Balance"
+    << rang::style::reset
+    << "\n"
+  ;
+  // clang-format on
   for (size_t i = 0; i < numTransactions; i++) {
     const CryptoNote::WalletTransaction t = wallet.getTransaction(i);
-
-    if (t.totalAmount < 0 && outgoing) {
-      printOutgoingTransfer(t, node);
+    if (t.totalAmount < 0) {
+      if (!outgoing) {
+        continue;
+      }
+      std::cout << rang::fg::red << std::left << std::setw(2) << "\xDB" << rang::fg::reset;
       totalSpent += -t.totalAmount;
-    } else if (t.totalAmount > 0 && incoming) {
-      printIncomingTransfer(t, node);
+    } else if (t.totalAmount > 0) {
+      if (!incoming) {
+        continue;
+      }
+      std::cout << rang::fg::green << std::left << std::setw(2) << "\xDB" << rang::fg::reset;
       totalReceived += t.totalAmount;
+    } else {
+      // Zero impact
+      continue;
     }
+
+    // clang-format off
+    std::cout
+        << std::left << std::setw(32 * 2 + 2) << t.hash.toString()
+        << std::left << std::setw(24) << Xi::Time::unixToLocalShortString(t.timestamp)
+        << std::right << std::setw(24) << wallet.currency().amountFormatter()(std::abs(t.totalAmount))
+        << std::right << std::setw(24) << wallet.currency().amountFormatter()(std::abs(totalReceived - totalSpent))
+      << "\n"
+    ;
+    // clang-format on
   }
+
+  std::cout << "\n";
+  std::cout.flush();
 
   if (incoming) {
     assert(totalReceived >= 0);
-    std::cout << SuccessMsg("Total received: " +
-                            node.currency().amountFormatter()(static_cast<uint64_t>(totalReceived)))
+    std::cout << "Total received: " << rang::fg::green
+              << node.currency().amountFormatter()(static_cast<uint64_t>(totalReceived)) << rang::fg::reset
               << std::endl;
   }
 
   if (outgoing) {
     assert(totalSpent >= 0);
-    std::cout << WarningMsg("Total spent: " + node.currency().amountFormatter()(static_cast<uint64_t>(totalSpent)))
-              << std::endl;
+    std::cout << "Total spent   : " << rang::fg::red
+              << node.currency().amountFormatter()(static_cast<uint64_t>(totalSpent)) << rang::fg::reset << std::endl;
   }
 }
 
