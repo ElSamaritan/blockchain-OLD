@@ -259,6 +259,8 @@ int main(int argc, char** argv) {
         headerBuilder << "} // " << *i << "\n";
         sourceBuilder << "} // " << *i << "\n";
       }
+
+      FileSystem::writeTextFile(cachePath, cacheHash.toString(), true).throwOnError();
     }
 
     return EXIT_SUCCESS;
