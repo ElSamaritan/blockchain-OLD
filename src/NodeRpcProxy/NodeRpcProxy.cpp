@@ -38,14 +38,14 @@ using namespace Common;
 using namespace Logging;
 using namespace System;
 
-#define XI_TRY_RPC_COMMAND(COMMAND)                                             \
-  throttle();                                                                   \
-  if (const auto ec = COMMAND; ec) {                                            \
-    updateConnectionStatus(false);                                              \
-    XI_PRINT_EC("[%s:%i] RPC call failed: %s\n", __FILE__, __LINE__, #COMMAND); \
-    return ec;                                                                  \
-  } else {                                                                      \
-    updateConnectionStatus(true);                                               \
+#define XI_TRY_RPC_COMMAND(COMMAND)                                                                        \
+  throttle();                                                                                              \
+  if (const auto ec = COMMAND; ec) {                                                                       \
+    updateConnectionStatus(false);                                                                         \
+    XI_PRINT_EC("[%s:%i] RPC call failed (%s): %s\n", __FILE__, __LINE__, ec.message().c_str(), #COMMAND); \
+    return ec;                                                                                             \
+  } else {                                                                                                 \
+    updateConnectionStatus(true);                                                                          \
   }
 
 namespace CryptoNote {
