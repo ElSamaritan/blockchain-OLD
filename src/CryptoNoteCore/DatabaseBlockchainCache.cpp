@@ -1052,7 +1052,7 @@ bool DatabaseBlockchainCache::checkIfAnySpent(const Crypto::KeyImageSet& keyImag
   const auto& spentKeyImages = readResult.getBlockIndexesBySpentKeyImages();
 
   for (const auto& spentKeyImage : spentKeyImages) {
-    if (blockIndex <= spentKeyImage.second) {
+    if (spentKeyImage.second < blockIndex) {
       logger(Logging::Debugging) << fmt::format("KeyImage '{}' already spent at {} for index {}",
                                                 spentKeyImage.first.toString(), spentKeyImage.second, blockIndex);
       XI_RETURN_EC(true);
