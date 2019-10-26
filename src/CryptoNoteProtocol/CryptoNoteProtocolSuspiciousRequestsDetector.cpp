@@ -33,6 +33,10 @@ namespace {
 struct ChainRequest {
   std::unordered_set<::Crypto::Hash> RevealedBlocks;
 };
+struct ChainRange {
+  CryptoNote::BlockHeight start;
+  uint32_t count;
+};
 }  // namespace
 
 CryptoNote::CryptoNoteProtocolSuspiciousRequestsDetector::CryptoNoteProtocolSuspiciousRequestsDetector(
@@ -71,32 +75,11 @@ bool CryptoNote::CryptoNoteProtocolSuspiciousRequestsDetector::pushAndInspect(
     const CryptoNote::NOTIFY_RESPONSE_CHAIN_ENTRY_request &response) {
   XI_UNUSED(request);
 
-  struct range_t {
-    BlockHeight start;
-    uint32_t count;
-  };
-
-  ctx.m_history.pushOccurrence<range_t>(
-      range_t{response.start_height, static_cast<uint32_t>(response.block_hashes.size())}, 2);
+  ctx.m_history.pushOccurrence<ChainRange>(
+      ChainRange{response.start_height, static_cast<uint32_t>(response.block_hashes.size())}, 2);
   {
     ChainRequest revealedBlocks{{response.block_hashes.begin(), response.block_hashes.end()}};
     ctx.m_history.pushOccurrence(revealedBlocks, 1);
-  }
-  const auto timeline = ctx.m_history.getTimeline<range_t>();
-  assert(timeline.size() > 0);
-  if (timeline.size() > 1) {
-    for (size_t i = 1; i < timeline.size(); ++i) {
-      if (timeline[i]->timestamp - timeline[i - 1]->timestamp > std::chrono::minutes{1}) {
-        continue;
-      }
-      if (timeline[i - 1]->value.start + BlockOffset::fromNative(timeline[i - 1]->value.count) >
-          timeline[i]->value.start + BlockOffset::fromNative(1)) {
-        m_logger(Logging::Debugging) << ctx << " none consecutive chain request, last_end="
-                                     << timeline[i - 1]->value.start.native() + timeline[i - 1]->value.count
-                                     << " current_start=" << timeline[i]->value.start.native();
-        P2P_CLEAR_AND_REPORT();
-      }
-    }
   }
 
   return false;
