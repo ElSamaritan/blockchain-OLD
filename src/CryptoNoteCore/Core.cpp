@@ -2896,6 +2896,15 @@ std::time_t Core::getStartTime() const {
   return start_time;
 }
 
+uint64_t Core::uptime() const {
+  auto now = time(nullptr);
+  if (now < start_time) {
+    return 0U;
+  } else {
+    return static_cast<uint64_t>(now - start_time);
+  }
+}
+
 const ITransactionPool& Core::transactionPool() const {
   return *m_transactionPool;
 }

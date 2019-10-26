@@ -163,7 +163,7 @@ RpcServer::RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, Core
       m_submissionAccess{} {
   setDispatcher(std::make_shared<Xi::Concurrent::SystemDispatcher>(dispatcher));
 
-  m_explorer = std::make_shared<Xi::Blockchain::Explorer::CoreExplorer>(c);
+  m_explorer = std::make_shared<Xi::Blockchain::Explorer::CoreExplorer>(c, protocol, p2p);
   m_explorerService = Xi::Blockchain::Services::BlockExplorer::BlockExplorer::create(m_explorer, log);
   m_explorerService->setPrefix("explorer");
   m_explorerEndpoint = std::make_shared<Xi::Rpc::JsonProviderEndpoint>(

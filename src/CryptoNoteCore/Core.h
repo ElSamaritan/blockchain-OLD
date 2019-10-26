@@ -141,6 +141,7 @@ class Core : public ICore, public ICoreInformation, ITransactionPoolObserver {
   virtual bool isPruned() const override;
 
   virtual std::time_t getStartTime() const;
+  virtual uint64_t uptime() const override;
 
   // ICoreInformation
   const ITransactionPool& transactionPool() const override;

@@ -650,6 +650,10 @@ void Xi::App::Application::initializeRpcServer() {
       }
     }
 
+    if (const auto sslConfig = ssl()) {
+      m_rpcServer->setSSLConfiguration(*sslConfig);
+    }
+
     m_rpcServer->setHandler(m_rpcServer);
     m_rpcServer->start(config.bind(), config.port());
   }

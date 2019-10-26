@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include "Xi/Blockchain/Explorer/Data/NodeStatus.hpp"
 #include "Xi/Blockchain/Explorer/Data/CurrencyInfo.hpp"
 #include "Xi/Blockchain/Explorer/Data/ShortBlockInfo.hpp"
 #include "Xi/Blockchain/Explorer/Data/BlockInfo.hpp"

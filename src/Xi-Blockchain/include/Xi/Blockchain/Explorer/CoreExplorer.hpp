@@ -28,6 +28,8 @@
 
 #include <Xi/Concurrent/ReadersWriterLock.h>
 #include <CryptoNoteCore/ICore.h>
+#include <P2p/NetNode.h>
+#include <CryptoNoteProtocol/CryptoNoteProtocolHandler.h>
 #include <CryptoNoteCore/Transactions/ITransactionPoolObserver.h>
 
 #include "Xi/Blockchain/Explorer/IExplorer.hpp"
@@ -38,13 +40,15 @@ namespace Explorer {
 
 class CoreExplorer : public IExplorer, private CryptoNote::IBlockchainObserver, CryptoNote::ITransactionPoolObserver {
  public:
-  explicit CoreExplorer(CryptoNote::ICore& core);
+  explicit CoreExplorer(CryptoNote::ICore& core, CryptoNote::ICryptoNoteProtocolHandler& protocol,
+                        CryptoNote::NodeServer& nodeServer);
   ~CoreExplorer() override;
 
   // IExplorer
  public:
   // General
   Result<CurrencyInfo> queryCurrencyInfo() override;
+  Result<NodeStatus> queryNodeStatus() override;
   Result<Block::Height> mainChainHeight() override;
 
   // Blocks
@@ -128,6 +132,8 @@ class CoreExplorer : public IExplorer, private CryptoNote::IBlockchainObserver, 
 
  private:
   CryptoNote::ICore& m_core;
+  CryptoNote::ICryptoNoteProtocolHandler& m_protocol;
+  CryptoNote::NodeServer& m_nodeServer;
 
   using guard_type = Xi::Concurrent::ReadersWriterLock;
 

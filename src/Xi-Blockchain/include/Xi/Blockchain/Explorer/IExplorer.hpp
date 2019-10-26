@@ -47,6 +47,7 @@ class IExplorer {
 
   // General
   virtual Result<CurrencyInfo> queryCurrencyInfo() = 0;
+  virtual Result<NodeStatus> queryNodeStatus() = 0;
   virtual Result<Block::Height> mainChainHeight() = 0;
 
   // Blocks

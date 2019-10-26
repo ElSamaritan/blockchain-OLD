@@ -41,7 +41,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::Core& core, CryptoNote:
                                              CryptoNote::CryptoNoteProtocolHandler& protocol,
                                              Logging::LoggerManager& log, Logging::CommonLogger& clogger)
     : m_core(core), m_srv(srv), m_protocol{protocol}, m_logManager(log), m_consoleLogger{clogger} {
-  m_explorer = std::make_shared<Xi::Blockchain::Explorer::CoreExplorer>(core);
+  m_explorer = std::make_shared<Xi::Blockchain::Explorer::CoreExplorer>(core, protocol, srv);
   m_explorerService = Xi::Blockchain::Services::BlockExplorer::BlockExplorer::create(m_explorer, log);
 
   DAEMON_COMMAND_DEFINE(help, "Show this help");

@@ -41,6 +41,7 @@ namespace BlockExplorer {
 // clang-format off
 using InfoLimitsService = Rpc::TypedServiceProvider<CryptoNote::Null, Limits>;
 using InfoCurrencyService = Rpc::TypedServiceProvider<CryptoNote::Null, Explorer::CurrencyInfo>;
+using InfoNodeStatusService = Rpc::TypedServiceProvider<CryptoNote::Null, Explorer::NodeStatus>;
 
 using ShortBlockInfoService = Rpc::TypedServiceProvider<std::optional<GetBlockRequest>, std::optional<Explorer::ShortBlockInfo>>;
 using BlockInfoService = Rpc::TypedServiceProvider<std::optional<GetBlockRequest>, std::optional<Explorer::BlockInfo>>;
@@ -66,6 +67,7 @@ class BlockExplorer
       public Rpc::GenericServiceProviderCollection<
         InfoLimitsService,
         InfoCurrencyService,
+        InfoNodeStatusService,
 
         ShortBlockInfoService,
         BlockInfoService,
@@ -101,6 +103,7 @@ class BlockExplorer
   // clang-format off
   Rpc::ServiceError process(std::string_view command, const CryptoNote::Null&, Limits& response) override;
   Rpc::ServiceError process(std::string_view command, const CryptoNote::Null&, Explorer::CurrencyInfo& response) override;
+  Rpc::ServiceError process(std::string_view command, const CryptoNote::Null&, Explorer::NodeStatus& response) override;
 
   Rpc::ServiceError process(std::string_view command, const std::optional<GetBlockRequest>& request, std::optional<Explorer::ShortBlockInfo>& response) override;
   Rpc::ServiceError process(std::string_view command, const std::optional<GetBlockRequest>& request, std::optional<Explorer::BlockInfo>& response) override;

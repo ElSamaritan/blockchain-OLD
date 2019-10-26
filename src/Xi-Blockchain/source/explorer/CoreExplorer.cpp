@@ -30,6 +30,7 @@
 #include <algorithm>
 
 #include <Xi/Exceptions.hpp>
+#include <Xi/Version/Version.h>
 #include <CryptoNoteCore/CryptoNoteFormatUtils.h>
 #include <CryptoNoteCore/Transactions/ITransactionPool.h>
 
@@ -37,8 +38,14 @@ namespace Xi {
 namespace Blockchain {
 namespace Explorer {
 
-CoreExplorer::CoreExplorer(CryptoNote::ICore &core)
-    : m_core{core}, m_mainChainHeight{0}, m_topBlock{nullptr}, m_poolInfo{nullptr} {
+CoreExplorer::CoreExplorer(CryptoNote::ICore &core, CryptoNote::ICryptoNoteProtocolHandler &protocol,
+                           CryptoNote::NodeServer &nodeServer)
+    : m_core{core},
+      m_protocol{protocol},
+      m_nodeServer{nodeServer},
+      m_mainChainHeight{0},
+      m_topBlock{nullptr},
+      m_poolInfo{nullptr} {
   m_core.addObserver(this);
   m_core.transactionPool().addObserver(this);
   m_mainChainHeight.store(m_core.getTopBlockIndex());
@@ -57,13 +64,53 @@ Result<CurrencyInfo> CoreExplorer::queryCurrencyInfo() {
   reval.ticker = currency.coin().ticker();
   reval.address_prefix = currency.coin().prefix().text();
   reval.total_supply = currency.coin().totalSupply();
-  ;
+
   reval.premine = currency.coin().premine();
   reval.emission_speed = currency.emissionSpeedFactor();
 
   reval.homepage = currency.general().homepage();
   reval.description = currency.general().description();
   reval.copyright = currency.general().copyright();
+
+  return success(std::move(reval));
+  XI_ERROR_CATCH();
+}
+
+Result<NodeStatus> CoreExplorer::queryNodeStatus() {
+  XI_ERROR_TRY();
+  NodeStatus reval{};
+
+  reval.node.version.major = APP_VER_MAJOR;
+  reval.node.version.minor = APP_VER_MINOR;
+  reval.node.version.review = APP_VER_REV;
+
+  reval.chain.top_hash = m_core.getTopBlockHash();
+  reval.chain.top_height = Block::Height::fromIndex(m_core.getTopBlockIndex());
+  reval.chain.top_version = m_core.getTopBlockVersion();
+  reval.chain.hashrate =
+      static_cast<uint32_t>(round(m_core.getDifficultyForNextBlock() / m_core.currency().coin().blockTime()));
+  reval.chain.network = m_core.currency().network().type();
+
+  const auto totalConnections = m_nodeServer.get_connections_count();
+  reval.p2p.outgoing_count = static_cast<uint32_t>(m_nodeServer.get_outgoing_connections_count());
+  reval.p2p.incoming_count = static_cast<uint32_t>(totalConnections) - reval.p2p.outgoing_count;
+  if (totalConnections != 0) {
+    reval.p2p.height = m_protocol.getObservedHeight();
+  } else {
+    reval.p2p.height = std::nullopt;
+  }
+
+  reval.node.uptime = m_core.uptime();
+  reval.node.type = m_core.isPruned() ? NodeType::Light : NodeType::Full;
+  if (totalConnections == 0) {
+    reval.node.sync = SyncStatus::Disconnected;
+  } else if (reval.chain.top_height > reval.p2p.height->next(1)) {
+    reval.node.sync = SyncStatus::Detached;
+  } else if (!m_protocol.isSynchronized()) {
+    reval.node.sync = SyncStatus::Syncing;
+  } else {
+    reval.node.sync = SyncStatus::Synced;
+  }
 
   return success(std::move(reval));
   XI_ERROR_CATCH();

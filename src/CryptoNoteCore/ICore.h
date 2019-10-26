@@ -157,6 +157,7 @@ class ICore : public IBlockchain {
 
   virtual CoreStatistics getCoreStatistics() const = 0;
   virtual bool isPruned() const = 0;
+  virtual uint64_t uptime() const = 0;
 
   [[nodiscard]] virtual bool save() = 0;
   [[nodiscard]] virtual bool load() = 0;

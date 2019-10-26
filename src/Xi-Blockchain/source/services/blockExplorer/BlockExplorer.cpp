@@ -47,6 +47,7 @@ std::shared_ptr<BlockExplorer> BlockExplorer::create(std::shared_ptr<Explorer::I
   std::shared_ptr<BlockExplorer> reval{new BlockExplorer{explorer, logger}};
   reval->addService("info.limits", std::static_pointer_cast<InfoLimitsService>(reval));
   reval->addService("info.currency", std::static_pointer_cast<InfoCurrencyService>(reval));
+  reval->addService("info.node", std::static_pointer_cast<InfoNodeStatusService>(reval));
 
   reval->addService("block.short", std::static_pointer_cast<ShortBlockInfoService>(reval));
   reval->addService("block.batch.short", std::static_pointer_cast<BatchShortBlockInfoService>(reval));
@@ -88,6 +89,11 @@ Rpc::ServiceError BlockExplorer::process(std::string_view, const CryptoNote::Nul
 
 Rpc::ServiceError BlockExplorer::process(std::string_view, const CryptoNote::Null &, Explorer::CurrencyInfo &response) {
   response = m_explorer->queryCurrencyInfo().takeOrThrow();
+  return Error::Success;
+}
+
+Rpc::ServiceError BlockExplorer::process(std::string_view, const CryptoNote::Null &, Explorer::NodeStatus &response) {
+  response = m_explorer->queryNodeStatus().takeOrThrow();
   return Error::Success;
 }
 
