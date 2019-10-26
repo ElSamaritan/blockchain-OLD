@@ -455,4 +455,14 @@ struct NodeFeeInfo {
   };
 };
 
+struct Shutdown {
+  struct Request {
+    bool serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response {
+    bool serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
 }  // namespace PaymentService

@@ -331,4 +331,14 @@ bool NodeFeeInfo::Response::serialize(CryptoNote::ISerializer& serializer) {
   return true;
 }
 
+bool Shutdown::Request::serialize(CryptoNote::ISerializer& serializer) {
+  XI_UNUSED(serializer);
+  return true;
+}
+
+bool Shutdown::Response::serialize(CryptoNote::ISerializer& serializer) {
+  XI_UNUSED(serializer);
+  return true;
+}
+
 }  // namespace PaymentService

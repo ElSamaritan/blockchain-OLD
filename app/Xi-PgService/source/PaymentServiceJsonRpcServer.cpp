@@ -29,6 +29,7 @@ PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys
                                                          WalletService& service, Logging::ILogger& loggerGroup,
                                                          PaymentService::ConfigurationManager& _config)
     : JsonRpcServer(sys, stopEvent, loggerGroup, _config.serviceConfig.ssl),
+      m_stopEvent(stopEvent),
       service(service),
       logger(loggerGroup, "PaymentServiceJsonRpcServer"),
       config{_config} {
@@ -120,6 +121,9 @@ PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys
   handlers.emplace("getNodeFeeInfo", jsonHandler<NodeFeeInfo::Request, NodeFeeInfo::Response>(
                                          std::bind(&PaymentServiceJsonRpcServer::handleNodeFeeInfo, this,
                                                    std::placeholders::_1, std::placeholders::_2)));
+  handlers.emplace("shutdown", jsonHandler<Shutdown::Request, Shutdown::Response>(
+                                   std::bind(&PaymentServiceJsonRpcServer::handleShutdown, this, std::placeholders::_1,
+                                             std::placeholders::_2)));
 }
 
 void PaymentServiceJsonRpcServer::processJsonRpcRequest(const Common::JsonValue& req, Common::JsonValue& resp) {
@@ -345,6 +349,13 @@ std::error_code PaymentServiceJsonRpcServer::handleNodeFeeInfo(const NodeFeeInfo
                                                                NodeFeeInfo::Response& response) {
   XI_UNUSED(request);
   return service.getFeeInfo(response.address, response.amount);
+}
+
+std::error_code PaymentServiceJsonRpcServer::handleShutdown(const Shutdown::Request& request,
+                                                            Shutdown::Response& response) {
+  XI_UNUSED(request, response);
+  m_stopEvent.set();
+  return std::error_code{/* */};
 }
 
 }  // namespace PaymentService

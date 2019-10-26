@@ -32,6 +32,7 @@ class PaymentServiceJsonRpcServer : public CryptoNote::JsonRpcServer {
   virtual void processJsonRpcRequest(const Common::JsonValue& req, Common::JsonValue& resp) override;
 
  private:
+  System::Event& m_stopEvent;
   WalletService& service;
   Logging::LoggerRef logger;
   ConfigurationManager& config;
@@ -109,6 +110,8 @@ class PaymentServiceJsonRpcServer : public CryptoNote::JsonRpcServer {
   std::error_code handleCreateIntegratedAddress(const CreateIntegratedAddress::Request& request,
                                                 CreateIntegratedAddress::Response& response);
   std::error_code handleNodeFeeInfo(const NodeFeeInfo::Request& request, NodeFeeInfo::Response& response);
+
+  std::error_code handleShutdown(const Shutdown::Request& request, Shutdown::Response& response);
 };
 
 }  // namespace PaymentService
