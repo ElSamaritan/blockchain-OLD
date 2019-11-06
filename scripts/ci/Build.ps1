@@ -75,18 +75,35 @@ $(ConvertTo-Json $BuildEnvironment)
 
     Push-Location $CMakeBuildPath
     try {
-        Invoke-Command { 
-            cmake `
-                -G $CMakeGenerator `
-                -DCMAKE_BUILD_TYPE=Release `
-                -DCMAKE_INSTALL_PREFIX:PATH=$CMakeInstallPath `
-                -DXI_BUILD_CHANNEL="$($BuildEnvironment.Channel)" `
-                -DXI_BUILD_BREAKPAD=ON `
-                -DXI_BUILD_EXECUTABLES=ON `
-                -DXI_BUILD_TESTSUITE=ON `
-                -DXI_BUILD_TOOLS=ON `
-                $CMakeSourcePath 
+        if ($IsWindows) {
+            Invoke-Command { 
+                cmake `
+                    -G $CMakeGenerator `
+                    -A x64 `
+                    -DCMAKE_BUILD_TYPE=Release `
+                    -DCMAKE_INSTALL_PREFIX:PATH=$CMakeInstallPath `
+                    -DXI_BUILD_CHANNEL="$($BuildEnvironment.Channel)" `
+                    -DXI_BUILD_BREAKPAD=ON `
+                    -DXI_BUILD_EXECUTABLES=ON `
+                    -DXI_BUILD_TESTSUITE=ON `
+                    -DXI_BUILD_TOOLS=ON `
+                    $CMakeSourcePath 
+            }
+        } else {
+            Invoke-Command { 
+                cmake `
+                    -G $CMakeGenerator `
+                    -DCMAKE_BUILD_TYPE=Release `
+                    -DCMAKE_INSTALL_PREFIX:PATH=$CMakeInstallPath `
+                    -DXI_BUILD_CHANNEL="$($BuildEnvironment.Channel)" `
+                    -DXI_BUILD_BREAKPAD=ON `
+                    -DXI_BUILD_EXECUTABLES=ON `
+                    -DXI_BUILD_TESTSUITE=ON `
+                    -DXI_BUILD_TOOLS=ON `
+                    $CMakeSourcePath 
+            }
         }
+        
         if ($IsWindows) {
             Invoke-Command {
                 cmake --build . --target install --config Release

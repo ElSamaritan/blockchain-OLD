@@ -24,7 +24,7 @@
 function Get-Generator {
     if($IsWindows)
     {
-        return "Visual Studio 15 2017 Win64"
+        return "Visual Studio 16 2019"
     }
     else
     {
