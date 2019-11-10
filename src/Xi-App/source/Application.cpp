@@ -615,8 +615,8 @@ void Xi::App::Application::initializeSsl() {
   m_sslConfig = std::make_unique<Http::SSLConfiguration>();
   m_sslOptions->configure(*m_sslConfig);
 
-  if (m_sslServerOptions) {
-    m_sslServerOptions->configure(*m_sslConfig);
+  if (m_sslClientOptions) {
+    m_sslClientOptions->configure(*m_sslConfig);
   }
 
   if (m_sslServerOptions) {
