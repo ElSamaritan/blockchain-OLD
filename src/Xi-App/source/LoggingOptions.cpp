@@ -24,6 +24,7 @@
 #include "Xi/App/LoggingOptions.h"
 
 #include <Xi/Global.hh>
+#include <Xi/FileSystem.h>
 
 void Xi::App::LoggingOptions::loadEnvironment(Xi::App::Environment &env) {
   std::string defaultLogLevel{};
@@ -113,6 +114,12 @@ bool Xi::App::LoggingOptions::evaluateParsedOptions(const cxxopts::Options &opti
       throw cxxopts::invalid_option_format_error{result["log-discord-level"].as<std::string>() + " not recognized."};
     } else {
       DiscordLogLevel = *logLevel;
+    }
+  }
+  if (!LogFilePath.empty()) {
+    auto directory = FileSystem::fileDirectory(LogFilePath);
+    if (!directory.isError() && !directory->empty()) {
+      FileSystem::ensureDirectoryExists(*directory).throwOnError();
     }
   }
   return false;

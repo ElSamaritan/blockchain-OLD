@@ -132,3 +132,12 @@ Xi::Result<std::string> Xi::FileSystem::searchFile(const std::string &filepath, 
                              dataDir);
   XI_ERROR_CATCH();
 }
+
+Xi::Result<std::string> Xi::FileSystem::fileDirectory(const std::string &path) {
+  XI_ERROR_TRY();
+
+  boost::filesystem::path bpath{path};
+  return success(bpath.parent_path().string());
+
+  XI_ERROR_CATCH();
+}

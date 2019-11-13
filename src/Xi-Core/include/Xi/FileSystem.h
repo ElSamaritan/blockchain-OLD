@@ -43,10 +43,10 @@ XI_DECLARE_EXCEPTIONAL_INSTANCE(InsufficientSpace, "your hard drive has insuffic
                                 FileSystem)
 XI_DECLARE_EXCEPTIONAL_INSTANCE(InvalidType, "request encountered a file type that were not expected", FileSystem)
 
-Xi::Result<boost::filesystem::space_info> availableSpace(const std::string& directory);
+Xi::Result<boost::filesystem::space_info> availableSpace(const std::string& fileDirectory);
 Xi::Result<boost::tribool> isRotationalDrive(const std::string& path);
-Xi::Result<void> ensureDirectoryExists(const std::string& directory);
-Xi::Result<void> removeDircetoryIfExists(const std::string& directory);
+Xi::Result<void> ensureDirectoryExists(const std::string& fileDirectory);
+Xi::Result<void> removeDircetoryIfExists(const std::string& fileDirectory);
 Xi::Result<bool> exists(const std::string& path);
 Xi::Result<void> removeFileIfExists(const std::string& path);
 
@@ -59,6 +59,8 @@ Xi::Result<void> removeFileIfExists(const std::string& path);
  */
 Xi::Result<std::string> searchFile(const std::string& filepath, const std::string& fileEnding = "",
                                    const std::string& dataDir = "");
+
+Xi::Result<std::string> fileDirectory(const std::string& path);
 
 }  // namespace FileSystem
 }  // namespace Xi
