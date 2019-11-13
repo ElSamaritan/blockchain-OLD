@@ -29,10 +29,11 @@
 
 #include "Xi/Crypto/Hash/TreeHash.hh"
 
-#include <alloca.h>
 #include <assert.h>
 #include <stddef.h>
 #include <string.h>
+
+#include <Xi/Memory/Aligned.hh>
 
 #include "Xi/Crypto/Hash/Keccak.hh"
 
@@ -68,23 +69,28 @@ int xi_crypto_hash_tree_hash(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE], 
       cnt |= cnt >> i;
     }
     cnt &= ~(cnt >> 1);
-    ints = alloca(cnt * XI_HASH_FAST_HASH_SIZE);
+    ints = xi_memory_aligned_alloc(cnt * XI_HASH_FAST_HASH_SIZE, XI_HASH_FAST_HASH_SIZE);
+    XI_RETURN_EC_IF(ints == NULL, XI_RETURN_CODE_NO_SUCCESS);
     memcpy(ints, hashes, (2 * cnt - count) * XI_HASH_FAST_HASH_SIZE);
+
     for (i = 2 * cnt - count, j = 2 * cnt - count; j < cnt; i += 2, ++j) {
       ec = xi_crypto_hash_keccak_256(hashes[i], 2 * XI_HASH_FAST_HASH_SIZE, ints[j]);
-      XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
+      if(ec != XI_RETURN_CODE_SUCCESS) goto __label_xi_crypto_hash_tree_hash_return;
     }
+    if(ec != XI_RETURN_CODE_SUCCESS) goto __label_xi_crypto_hash_tree_hash_return;
     assert(i == count);
     while (cnt > 2) {
       cnt >>= 1;
       for (i = 0, j = 0; j < cnt; i += 2, ++j) {
         ec = xi_crypto_hash_keccak_256(ints[i], 2 * XI_HASH_FAST_HASH_SIZE, ints[j]);
-        XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
+        if(ec != XI_RETURN_CODE_SUCCESS) goto __label_xi_crypto_hash_tree_hash_return;
       }
     }
     ec = xi_crypto_hash_keccak_256(ints[0], 2 * XI_HASH_FAST_HASH_SIZE, rootHash);
-    XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
-    return XI_RETURN_CODE_SUCCESS;
+
+  __label_xi_crypto_hash_tree_hash_return:
+    xi_memory_aligned_free(ints);
+    return ec;
   }
 }
 
@@ -103,25 +109,31 @@ int xi_crypto_hash_tree_branch(const xi_byte_t (*hashes)[XI_HASH_FAST_HASH_SIZE]
   }
   XI_RETURN_EC_IF_NOT(cnt == 1ULL << depth, XI_RETURN_CODE_NO_SUCCESS);
   XI_RETURN_EC_IF_NOT(depth == xi_crypto_hash_tree_depth(count), XI_RETURN_CODE_NO_SUCCESS);
-  ints = alloca((cnt - 1) * XI_HASH_FAST_HASH_SIZE);
+  ints = xi_memory_aligned_alloc((cnt - 1) * XI_HASH_FAST_HASH_SIZE, XI_HASH_FAST_HASH_SIZE);
+  XI_RETURN_EC_IF(ints == NULL, XI_RETURN_CODE_NO_SUCCESS);
+
   memcpy(ints, hashes + 1, (2 * cnt - count - 1) * XI_HASH_FAST_HASH_SIZE);
   int ec = XI_RETURN_CODE_SUCCESS;
   for (i = 2 * cnt - count, j = 2 * cnt - count - 1; j < cnt - 1; i += 2, ++j) {
     ec = xi_crypto_hash_keccak_256(hashes[i], 2 * XI_HASH_FAST_HASH_SIZE, ints[j]);
-    XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
+    if(ec != XI_RETURN_CODE_SUCCESS) goto __label_xi_crypto_hash_tree_branch_return;
   }
-  XI_RETURN_EC_IF_NOT(i == count, XI_RETURN_CODE_NO_SUCCESS);
+
+  if(i != count) goto __label_xi_crypto_hash_tree_branch_return;
   while (depth > 0) {
-    XI_RETURN_EC_IF_NOT(cnt == 1ULL << depth, XI_RETURN_CODE_NO_SUCCESS);
+    if(cnt != (1ULL << depth)) goto __label_xi_crypto_hash_tree_branch_return;
     cnt >>= 1;
     --depth;
     memcpy(branch[depth], ints[0], XI_HASH_FAST_HASH_SIZE);
     for (i = 1, j = 0; j < cnt - 1; i += 2, ++j) {
       ec = xi_crypto_hash_keccak_256(ints[i], 2 * XI_HASH_FAST_HASH_SIZE, ints[j]);
-      XI_RETURN_EC_IF_NOT(ec == XI_RETURN_CODE_SUCCESS, ec);
+      if(ec != XI_RETURN_CODE_SUCCESS) goto __label_xi_crypto_hash_tree_branch_return;
     }
   }
-  return XI_RETURN_CODE_SUCCESS;
+
+__label_xi_crypto_hash_tree_branch_return:
+  xi_memory_aligned_free(ints);
+  return ec;
 }
 
 int xi_crypto_hashtree_hash_from_branch(const xi_byte_t (*branch)[XI_HASH_FAST_HASH_SIZE], size_t depth,
