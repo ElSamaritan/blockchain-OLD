@@ -23,7 +23,7 @@
 
 #include "Xi/Memory/Aligned.hh"
 
-#include <malloc.h>
+#include <stdlib.h>
 
 #if ((defined __QNXNTO__) || (defined _GNU_SOURCE) ||        \
      ((defined _XOPEN_SOURCE) && (_XOPEN_SOURCE >= 600))) && \
