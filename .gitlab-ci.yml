@@ -24,6 +24,7 @@
 stages:
   - build
   - analyze
+  - package
   - deploy
 
 variables:
@@ -159,6 +160,25 @@ CppLint:
   only:
     - develop
     - master
+
+# ================================================================================================================== #
+#                                                                                                                    #
+#                                                       DOCKER                                                       #
+#                                                                                                                    #
+# ================================================================================================================== #
+
+Docker:
+  stage: package
+  image: docker:stable
+  tags:
+    - dind
+  before_script:
+    ["docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com"]
+  script:
+    - /bin/sh ./scripts/ci/Docker.sh
+  dependencies:
+    - "Ubuntu Bionic - Build"
+
 
 # ================================================================================================================== #
 #                                                                                                                    #

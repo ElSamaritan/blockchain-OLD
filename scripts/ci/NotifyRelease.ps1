@@ -74,7 +74,12 @@ $Payload = "{
     ""url"": ""$Url"",
     ""description"": """",
     ""fields"": [
-        $([String]::Join(",", $Packages))
+        $([String]::Join(",", $Packages)),
+        {
+            ""name"": ""Docker"",
+            ""value"": ""[``Registry``](https://gitlab.com/galaxia-project/blockchain/container_registry)"",
+            ""inline"": false
+        }
     ],
     ""timestamp"": ""$Timestamp""
   } ]

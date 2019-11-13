@@ -4,6 +4,7 @@
 .site/
 .packages/
 .vscode/
+.docker/
 .directory
 cpplint.xml
 cppcheck.xml
