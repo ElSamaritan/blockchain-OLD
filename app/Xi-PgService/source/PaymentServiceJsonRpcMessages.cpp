@@ -201,6 +201,37 @@ bool GetTransaction::Response::serialize(CryptoNote::ISerializer& serializer) {
   return serializer(transaction, "transaction");
 }
 
+bool GetTransactionsCount::Request::serialize(CryptoNote::ISerializer& serializer) {
+  XI_UNUSED(serializer);
+  return true;
+}
+
+bool GetTransactionsCount::Response::serialize(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(count, "count"), false);
+  return true;
+}
+
+bool GetTransactionHashesByRange::Request::serialize(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(offset, "offset"), false);
+  XI_RETURN_EC_IF_NOT(serializer(count, "count"), false);
+  return true;
+}
+
+bool GetTransactionHashesByRange::Response::serialize(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(hashes, "hashes"), false);
+  return true;
+}
+
+bool GetTransactionsByHash::Request::serialize(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(hashes, "hashes"), false);
+  return true;
+}
+
+bool GetTransactionsByHash::Response::serialize(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(transactions, "transactions"), false);
+  return true;
+}
+
 bool TransactionsInBlockRpcInfo::serialize(CryptoNote::ISerializer& serializer) {
   XI_RETURN_EC_IF_NOT(serializer(blockHash, "block_hash"), false);
   XI_RETURN_EC_IF_NOT(serializer(transactions, "transactions"), false);
@@ -338,6 +369,28 @@ bool Shutdown::Request::serialize(CryptoNote::ISerializer& serializer) {
 
 bool Shutdown::Response::serialize(CryptoNote::ISerializer& serializer) {
   XI_UNUSED(serializer);
+  return true;
+}
+
+bool GeneratePaymentId::Request::serialize(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(seed, "seed"), false);
+  return true;
+}
+
+bool GeneratePaymentId::Response::serialize(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(paymentId, "payment_id"), false);
+  XI_RETURN_EC_IF_NOT(serializer(secretKey, "secretKey"), false);
+  return true;
+}
+
+bool ValidatePaymentId::Request::serialize(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(value, "value"), false);
+  return true;
+}
+
+bool ValidatePaymentId::Response::serialize(CryptoNote::ISerializer& serializer) {
+  XI_RETURN_EC_IF_NOT(serializer(isValid, "is_valid"), false);
+  XI_RETURN_EC_IF_NOT(serializer(errorMessage, "error_message"), false);
   return true;
 }
 

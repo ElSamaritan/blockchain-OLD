@@ -841,6 +841,49 @@ std::error_code WalletService::getTransactionHashes(const std::vector<std::strin
   return std::error_code();
 }
 
+std::error_code WalletService::getTransactionsCount(size_t& out) {
+  try {
+    System::EventLock lk(readyEvent);
+    out = wallet.getTransactionCount();
+
+  } catch (std::system_error& x) {
+    logger(Logging::Warning) << "Error while getting transactions count: " << x.what();
+    return x.code();
+  } catch (std::exception& x) {
+    logger(Logging::Warning) << "Error while getting transactions count: " << x.what();
+    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+  }
+
+  return std::error_code();
+}
+
+std::error_code WalletService::getTransactionHashes(uint64_t offset, uint64_t count,
+                                                    std::vector<CryptoNote::TransactionHash>& transactionHashes) {
+  if (count > 100) {
+    return make_error_code(CryptoNote::error::BATCH_SIZE_TOO_BIG);
+  }
+  try {
+    System::EventLock lk(readyEvent);
+    transactionHashes.reserve(transactionHashes.size() + count);
+    const size_t totalCount = wallet.getTransactionCount();
+    if (offset + count > totalCount) {
+      return make_error_code(CryptoNote::error::INDEX_OUT_OF_RANGE);
+    }
+    for (size_t i = offset; i < offset + count && i < totalCount; ++i) {
+      auto iTransaction = wallet.getTransaction(i);
+      transactionHashes.emplace_back(std::move(iTransaction.hash));
+    }
+  } catch (std::system_error& x) {
+    logger(Logging::Warning) << "Error while getting transactions count: " << x.what();
+    return x.code();
+  } catch (std::exception& x) {
+    logger(Logging::Warning) << "Error while getting transactions count: " << x.what();
+    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+  }
+
+  return std::error_code();
+}
+
 std::error_code WalletService::getTransactions(const std::vector<std::string>& addresses,
                                                const std::string& blockHashString, uint32_t blockCount,
                                                const std::optional<CryptoNote::PaymentId>& paymentId,
@@ -908,6 +951,34 @@ std::error_code WalletService::getTransaction(const std::string& transactionHash
     }
 
     transaction = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
+  } catch (std::system_error& x) {
+    logger(Logging::Warning) << "Error while getting transaction: " << x.what();
+    return x.code();
+  } catch (std::exception& x) {
+    logger(Logging::Warning) << "Error while getting transaction: " << x.what();
+    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+  }
+
+  return std::error_code();
+}
+
+std::error_code WalletService::getTransactions(const Crypto::HashVector& hashes,
+                                               std::vector<std::optional<TransactionRpcInfo>>& transactions) {
+  if (hashes.size() > 100) {
+    return make_error_code(CryptoNote::error::BATCH_SIZE_TOO_BIG);
+  }
+  try {
+    System::EventLock lk(readyEvent);
+    transactions.reserve(transactions.size() + hashes.size());
+
+    for (const auto& hash : hashes) {
+      auto iTransaction = wallet.searchTransaction(hash);
+      if (!iTransaction.has_value() || iTransaction->transaction.state == CryptoNote::WalletTransactionState::DELETED) {
+        transactions.emplace_back(std::nullopt);
+      } else {
+        transactions.emplace_back(convertTransactionWithTransfersToTransactionRpcInfo(*iTransaction));
+      }
+    }
   } catch (std::system_error& x) {
     logger(Logging::Warning) << "Error while getting transaction: " << x.what();
     return x.code();

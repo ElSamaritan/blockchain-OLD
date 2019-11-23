@@ -98,6 +98,8 @@ class WalletGreen : public IWallet,
   virtual WalletTransfer getTransactionTransfer(size_t transactionIndex, size_t transferIndex) const override;
 
   virtual WalletTransactionWithTransfers getTransaction(const Crypto::Hash& transactionHash) const override;
+  virtual std::optional<WalletTransactionWithTransfers> searchTransaction(
+      const Crypto::Hash& transactionHash) const override;
   virtual std::vector<TransactionsInBlockInfo> getTransactions(const Crypto::Hash& blockHash,
                                                                size_t count) const override;
   virtual std::vector<TransactionsInBlockInfo> getTransactions(BlockHeight blockHeight, size_t count) const override;

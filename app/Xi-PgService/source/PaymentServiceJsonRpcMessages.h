@@ -275,6 +275,46 @@ struct GetTransaction {
   };
 };
 
+struct GetTransactionsCount {
+  struct Request {
+    bool serialize(CryptoNote::ISerializer& serializer);
+  };
+  struct Response {
+    size_t count;
+
+    bool serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
+struct GetTransactionHashesByRange {
+  struct Request {
+    size_t offset = 0;
+    size_t count = 0;
+
+    bool serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response {
+    std::vector<CryptoNote::TransactionHash> hashes;
+
+    bool serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
+struct GetTransactionsByHash {
+  struct Request {
+    std::vector<Crypto::Hash> hashes;
+
+    bool serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response {
+    std::vector<std::optional<TransactionRpcInfo>> transactions;
+
+    bool serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
 struct TransactionsInBlockRpcInfo {
   std::string blockHash;
   std::vector<TransactionRpcInfo> transactions;
@@ -457,11 +497,41 @@ struct NodeFeeInfo {
 
 struct Shutdown {
   struct Request {
-    bool serialize(CryptoNote::ISerializer& serializer);
+    [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
   };
 
   struct Response {
     bool serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
+struct GeneratePaymentId {
+  struct Request {
+    std::optional<std::string> seed;
+
+    [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response {
+    CryptoNote::PaymentId paymentId;
+    Crypto::SecretKey secretKey;
+
+    [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
+struct ValidatePaymentId {
+  struct Request {
+    std::string value;
+
+    [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response {
+    bool isValid;
+    std::optional<std::string> errorMessage;
+
+    [[nodiscard]] bool serialize(CryptoNote::ISerializer& serializer);
   };
 };
 

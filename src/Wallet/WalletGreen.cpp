@@ -2708,6 +2708,23 @@ WalletTransactionWithTransfers WalletGreen::getTransaction(const Crypto::Hash& t
   return walletTransaction;
 }
 
+std::optional<WalletTransactionWithTransfers> WalletGreen::searchTransaction(const Hash& transactionHash) const {
+  throwIfNotInitialized();
+  throwIfStopped();
+
+  auto& hashIndex = m_transactions.get<TransactionIndex>();
+  auto it = hashIndex.find(transactionHash);
+  if (it == hashIndex.end()) {
+    return std::nullopt;
+  }
+
+  WalletTransactionWithTransfers walletTransaction;
+  walletTransaction.transaction = *it;
+  walletTransaction.transfers = getTransactionTransfers(*it);
+
+  return std::move(walletTransaction);
+}
+
 std::vector<TransactionsInBlockInfo> WalletGreen::getTransactions(const Crypto::Hash& blockHash, size_t count) const {
   throwIfNotInitialized();
   throwIfStopped();

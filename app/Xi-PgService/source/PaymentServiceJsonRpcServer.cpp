@@ -124,6 +124,25 @@ PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys
   handlers.emplace("shutdown", jsonHandler<Shutdown::Request, Shutdown::Response>(
                                    std::bind(&PaymentServiceJsonRpcServer::handleShutdown, this, std::placeholders::_1,
                                              std::placeholders::_2)));
+
+  handlers.emplace("generatePaymentId", jsonHandler<GeneratePaymentId::Request, GeneratePaymentId::Response>(
+                                            std::bind(&PaymentServiceJsonRpcServer::handleGeneratePaymentId, this,
+                                                      std::placeholders::_1, std::placeholders::_2)));
+  handlers.emplace("validatePaymentId", jsonHandler<ValidatePaymentId::Request, ValidatePaymentId::Response>(
+                                            std::bind(&PaymentServiceJsonRpcServer::handleValidatePaymentId, this,
+                                                      std::placeholders::_1, std::placeholders::_2)));
+
+  handlers.emplace("getTransactionsCount", jsonHandler<GetTransactionsCount::Request, GetTransactionsCount::Response>(
+                                               std::bind(&PaymentServiceJsonRpcServer::handleGetTransactionsCount, this,
+                                                         std::placeholders::_1, std::placeholders::_2)));
+  handlers.emplace("getTransactionHashesByRange",
+                   jsonHandler<GetTransactionHashesByRange::Request, GetTransactionHashesByRange::Response>(
+                       std::bind(&PaymentServiceJsonRpcServer::handleGetTransactionHashesByRange, this,
+                                 std::placeholders::_1, std::placeholders::_2)));
+  handlers.emplace("getTransactionsByHash",
+                   jsonHandler<GetTransactionsByHash::Request, GetTransactionsByHash::Response>(
+                       std::bind(&PaymentServiceJsonRpcServer::handleGetTransactionsByHash, this, std::placeholders::_1,
+                                 std::placeholders::_2)));
 }
 
 void PaymentServiceJsonRpcServer::processJsonRpcRequest(const Common::JsonValue& req, Common::JsonValue& resp) {
@@ -356,6 +375,50 @@ std::error_code PaymentServiceJsonRpcServer::handleShutdown(const Shutdown::Requ
   XI_UNUSED(request, response);
   m_stopEvent.set();
   return std::error_code{/* */};
+}
+
+std::error_code PaymentServiceJsonRpcServer::handleGeneratePaymentId(const GeneratePaymentId::Request& request,
+                                                                     GeneratePaymentId::Response& response) {
+  if (request.seed.has_value()) {
+    Crypto::generate_deterministic_keys(response.secretKey, Xi::asConstByteSpan(*request.seed));
+  } else {
+    Crypto::generate_keys(response.secretKey);
+  }
+  response.paymentId = response.secretKey.toPublicKey();
+  return std::error_code{/* */};
+}
+
+std::error_code PaymentServiceJsonRpcServer::handleValidatePaymentId(const ValidatePaymentId::Request& request,
+                                                                     ValidatePaymentId::Response& response) {
+  auto parsed = CryptoNote::PaymentId::fromString(request.value);
+  if (parsed.isError()) {
+    response.isValid = false;
+    response.errorMessage = parsed.error().message();
+  } else if (!parsed->isValid()) {
+    response.isValid = false;
+    response.errorMessage =
+        "syntax correct but does not encode a valid payment id (must be a valid elliptic curve point).";
+  } else {
+    response.isValid = true;
+    response.errorMessage = std::nullopt;
+  }
+  return std::error_code{/* */};
+}
+
+std::error_code PaymentServiceJsonRpcServer::handleGetTransactionsCount(const GetTransactionsCount::Request& request,
+                                                                        GetTransactionsCount::Response& response) {
+  XI_UNUSED(request);
+  return service.getTransactionsCount(response.count);
+}
+
+std::error_code PaymentServiceJsonRpcServer::handleGetTransactionHashesByRange(
+    const GetTransactionHashesByRange::Request& request, GetTransactionHashesByRange::Response& response) {
+  return service.getTransactionHashes(request.offset, request.count, response.hashes);
+}
+
+std::error_code PaymentServiceJsonRpcServer::handleGetTransactionsByHash(const GetTransactionsByHash::Request& request,
+                                                                         GetTransactionsByHash::Response& response) {
+  return service.getTransactions(request.hashes, response.transactions);
 }
 
 }  // namespace PaymentService

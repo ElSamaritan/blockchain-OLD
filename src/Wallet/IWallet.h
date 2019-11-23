@@ -164,6 +164,8 @@ class IWallet {
   virtual WalletTransfer getTransactionTransfer(size_t transactionIndex, size_t transferIndex) const = 0;
 
   virtual WalletTransactionWithTransfers getTransaction(const Crypto::Hash& transactionHash) const = 0;
+  virtual std::optional<WalletTransactionWithTransfers> searchTransaction(
+      const Crypto::Hash& transactionHash) const = 0;
   virtual std::vector<TransactionsInBlockInfo> getTransactions(const Crypto::Hash& blockHash, size_t count) const = 0;
   virtual std::vector<TransactionsInBlockInfo> getTransactions(BlockHeight blockHeight, size_t count) const = 0;
   virtual std::vector<Crypto::Hash> getBlockHashes(BlockHeight blockHeight, size_t count) const = 0;

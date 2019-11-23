@@ -84,6 +84,9 @@ class WalletService {
   std::error_code getTransactionHashes(const std::vector<std::string>& addresses, BlockHeight firstBlockHeight,
                                        uint32_t blockCount, const std::optional<CryptoNote::PaymentId>& paymentId,
                                        std::vector<TransactionHashesInBlockRpcInfo>& transactionHashes);
+  std::error_code getTransactionsCount(size_t& out);
+  std::error_code getTransactionHashes(uint64_t offset, uint64_t count,
+                                       std::vector<CryptoNote::TransactionHash>& transactionHashes);
   std::error_code getTransactions(const std::vector<std::string>& addresses, const std::string& blockHash,
                                   uint32_t blockCount, const std::optional<CryptoNote::PaymentId>& paymentId,
                                   std::vector<TransactionsInBlockRpcInfo>& transactionHashes);
@@ -91,6 +94,8 @@ class WalletService {
                                   uint32_t blockCount, const std::optional<CryptoNote::PaymentId>& paymentId,
                                   std::vector<TransactionsInBlockRpcInfo>& transactionHashes);
   std::error_code getTransaction(const std::string& transactionHash, TransactionRpcInfo& transaction);
+  std::error_code getTransactions(const Crypto::HashVector& hashes,
+                                  std::vector<std::optional<TransactionRpcInfo>>& transactions);
   std::error_code getAddresses(std::vector<std::string>& addresses);
   std::error_code sendTransaction(SendTransaction::Request& request, std::string& transactionHash);
   std::error_code createDelayedTransaction(CreateDelayedTransaction::Request& request, std::string& transactionHash);

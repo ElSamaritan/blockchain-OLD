@@ -112,6 +112,17 @@ class PaymentServiceJsonRpcServer : public CryptoNote::JsonRpcServer {
   std::error_code handleNodeFeeInfo(const NodeFeeInfo::Request& request, NodeFeeInfo::Response& response);
 
   std::error_code handleShutdown(const Shutdown::Request& request, Shutdown::Response& response);
+  std::error_code handleGeneratePaymentId(const GeneratePaymentId::Request& request,
+                                          GeneratePaymentId::Response& response);
+  std::error_code handleValidatePaymentId(const ValidatePaymentId::Request& request,
+                                          ValidatePaymentId::Response& response);
+
+  std::error_code handleGetTransactionsCount(const GetTransactionsCount::Request& request,
+                                             GetTransactionsCount::Response& response);
+  std::error_code handleGetTransactionHashesByRange(const GetTransactionHashesByRange::Request& request,
+                                                    GetTransactionHashesByRange::Response& response);
+  std::error_code handleGetTransactionsByHash(const GetTransactionsByHash::Request& request,
+                                              GetTransactionsByHash::Response& response);
 };
 
 }  // namespace PaymentService

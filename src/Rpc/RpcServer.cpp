@@ -359,7 +359,7 @@ void RpcServer::setIsMinerEndpoint(bool enabled) {
 }
 
 bool RpcServer::isCoreReady() {
-  return (!m_core.getCurrency().network().isMainNet()) || m_p2p.get_payload_object().isSynchronized();
+  return m_p2p.currentState() == NodeServer::State::Running && m_p2p.get_payload_object().isSynchronized();
 }
 
 bool RpcServer::on_options_request(const RpcServer::HttpRequest& request, RpcServer::HttpResponse& response) {

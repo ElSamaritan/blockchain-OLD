@@ -743,10 +743,9 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
     m_logger(Logging::Trace) << context << "-->>NOTIFY_REQUEST_GET_OBJECTS: blocks.size()=" << req.blocks.size()
                              << ", txs.size()=" << req.txs.size();
     post_notify<NOTIFY_REQUEST_GET_OBJECTS>(*m_p2p, req, context);
-  } else if (context.m_last_response_height <
-             context.m_remote_blockchain_height -
-                 BlockOffset::fromNative(1)) {  // we have to fetch more objects ids, request blockchain entry
-
+  } else if (context.m_last_response_height.native() <
+             context.m_remote_blockchain_height
+                 .native()) {  // we have to fetch more objects ids, request blockchain entry
     NOTIFY_REQUEST_CHAIN::request r = boost::value_initialized<NOTIFY_REQUEST_CHAIN::request>();
     r.block_hashes = m_core.buildSparseChain();
     m_logger(Logging::Trace) << context << "-->>NOTIFY_REQUEST_CHAIN: m_block_ids.size()=" << r.block_hashes.size();

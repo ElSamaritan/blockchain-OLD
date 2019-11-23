@@ -60,6 +60,7 @@ enum WalletErrorCodes {
   MIXIN_INSUFFICIENT,
   CONFLICTING_PAYMENT_IDS,
   EXCEPTIONAL,
+  BATCH_SIZE_TOO_BIG,
 };
 
 // custom category:
@@ -145,6 +146,8 @@ class WalletErrorCategory : public std::error_category {
         return "Multiple conflicting payment ID's were specified via the use of integrated addresses";
       case EXCEPTIONAL:
         return "Exception was thrown, this usually indicates an internal bug or missing error code.";
+      case BATCH_SIZE_TOO_BIG:
+        return "Request objects count exceed batch size limit.";
       default:
         return "Unknown error";
     }
