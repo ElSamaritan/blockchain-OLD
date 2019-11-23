@@ -12,6 +12,7 @@
 #include <boost/functional/hash.hpp>
 
 #include <Xi/Global.hh>
+#include <Xi/Algorithm/IsUnique.h>
 #include <Xi/Crypto/Random/Engine.hpp>
 
 #include "Common/StdInputStream.h"
@@ -232,8 +233,9 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
   auto blockIndex = cachedBlock.getBlockIndex();
   assert(blockIndex == blockInfos.size() + startIndex - 1);
 
+  assert(blockIndex == 0 || !checkIfAnySpent(validatorState.spentKeyImages, blockIndex - 1));
   for (const auto& keyImage : validatorState.spentKeyImages) {
-    addSpentKeyImage(keyImage, blockIndex);
+    spentKeyImages.get<BlockIndexTag>().emplace(SpentKeyImage{blockIndex, keyImage});
   }
 
   logger(Logging::Debugging) << "Added " << validatorState.spentKeyImages.size() << " spent key images";
@@ -381,14 +383,6 @@ void BlockchainCache::splitKeyOutputsGlobalIndexes(BlockchainCache& newCache, ui
   logger(Logging::Debugging) << "Key output global indexes split successfully completed";
 }
 
-void BlockchainCache::addSpentKeyImage(const Crypto::KeyImage& keyImage, uint32_t blockIndex) {
-  assert(!checkIfSpent(keyImage, blockIndex - 1));  // Changed from "assert(!checkIfSpent(keyImage, blockIndex));"
-                                                    // to prevent fail when pushing block from DatabaseBlockchainCache.
-                                                    // In case of pushing external block double spend within block
-                                                    // should be checked by Core.
-  spentKeyImages.get<BlockIndexTag>().emplace(SpentKeyImage{blockIndex, keyImage});
-}
-
 std::vector<Crypto::Hash> BlockchainCache::getTransactionHashes() const {
   auto& txInfos = transactions.get<TransactionHashTag>();
   std::vector<Crypto::Hash> hashes;
@@ -491,7 +485,7 @@ bool BlockchainCache::checkIfAnySpent(const Crypto::KeyImageSet& keyImages, uint
   const auto& keyImagesTag = spentKeyImages.get<KeyImageTag>();
   for (const auto& keyImage : keyImages) {
     const auto search = keyImagesTag.find(keyImage);
-    if (search != keyImagesTag.end() && search->blockIndex < blockIndex) {
+    if (search != keyImagesTag.end() && search->blockIndex <= blockIndex) {
       logger(Logging::Debugging) << fmt::format("KeyImage '{}' already spent at {} for index {}", keyImage.toString(),
                                                 search->blockIndex, blockIndex);
       XI_RETURN_EC(true);

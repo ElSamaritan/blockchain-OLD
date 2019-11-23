@@ -232,7 +232,6 @@ class BlockchainCache : public CommonBlockchainCache {
 
   [[nodiscard]] bool serialize(ISerializer& s);
 
-  void addSpentKeyImage(const Crypto::KeyImage& keyImage, uint32_t blockIndex);
   void pushTransaction(const CachedTransaction& tx, uint32_t blockIndex, uint16_t transactionBlockIndex,
                        bool generated);
 
