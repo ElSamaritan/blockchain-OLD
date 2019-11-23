@@ -148,7 +148,7 @@ static void derivation_to_scalar(const KeyDerivation &derivation, size_t output_
   using namespace Xi::Encoding;
   struct {
     KeyDerivation derivation;
-    xi_byte_t output_index[VarInt::maximumEncodingSize<size_t>()];
+    xi_byte_t output_index[XI_VARINT_UINT64_MAX_BYTES];
   } buf;
   buf.derivation = derivation;
   auto encodingSize = VarInt::encode(output_index, buf.output_index).valueOrThrow();
@@ -161,7 +161,7 @@ static void derivation_to_scalar(const KeyDerivation &derivation, size_t output_
   assert(suffixLength <= 32);
   struct {
     KeyDerivation derivation;
-    xi_byte_t output_index[VarInt::maximumEncodingSize<size_t>()];
+    xi_byte_t output_index[XI_VARINT_UINT64_MAX_BYTES];
   } buf;
   buf.derivation = derivation;
   auto encodingSize = VarInt::encode(output_index, buf.output_index).valueOrThrow();
