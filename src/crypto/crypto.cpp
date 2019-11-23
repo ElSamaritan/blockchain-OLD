@@ -146,25 +146,27 @@ bool crypto_ops::generate_key_derivation(const PublicKey &key1, const SecretKey 
 
 static void derivation_to_scalar(const KeyDerivation &derivation, size_t output_index, EllipticCurveScalar &res) {
   using namespace Xi::Encoding;
+  const uint64_t outputIndex = output_index;
   struct {
     KeyDerivation derivation;
     xi_byte_t output_index[XI_VARINT_UINT64_MAX_BYTES];
   } buf;
   buf.derivation = derivation;
-  auto encodingSize = VarInt::encode(output_index, buf.output_index).valueOrThrow();
+  auto encodingSize = VarInt::encode(outputIndex, buf.output_index).valueOrThrow();
   hash_to_scalar(&buf, KeyDerivation::bytes() + encodingSize, res);
 }
 
 static void derivation_to_scalar(const KeyDerivation &derivation, size_t output_index, const uint8_t *suffix,
                                  size_t suffixLength, EllipticCurveScalar &res) {
   using namespace Xi::Encoding;
+  const uint64_t outputIndex = output_index;
   assert(suffixLength <= 32);
   struct {
     KeyDerivation derivation;
     xi_byte_t output_index[XI_VARINT_UINT64_MAX_BYTES];
   } buf;
   buf.derivation = derivation;
-  auto encodingSize = VarInt::encode(output_index, buf.output_index).valueOrThrow();
+  auto encodingSize = VarInt::encode(outputIndex, buf.output_index).valueOrThrow();
   memcpy(buf.output_index + encodingSize, suffix, suffixLength);
   hash_to_scalar(&buf, KeyDerivation::bytes() + encodingSize + suffixLength, res);
 }
