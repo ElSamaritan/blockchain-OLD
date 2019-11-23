@@ -66,7 +66,7 @@ size_t xi_encoding_varint_decode_int8(const xi_byte_t *source, const size_t coun
       }
       const size_t bitsLeft = 7 - shift;
       if (bitsLeft < 8) {
-        if (byte & (0xFF << (8 - bitsLeft))) {
+        if (byte & (0xFF << bitsLeft)) {
           return XI_VARINT_DECODE_NONE_CANONICAL;
         }
       }
@@ -107,7 +107,7 @@ size_t xi_encoding_varint_decode_uint8(const xi_byte_t *source, const size_t cou
     }
     const size_t bitsLeft = 8 - shift;
     if (bitsLeft < 8) {
-      if (byte & (0xFF << (8 - bitsLeft))) {
+      if (byte & (0xFF << bitsLeft)) {
         return XI_VARINT_DECODE_NONE_CANONICAL;
       }
     }
@@ -156,7 +156,7 @@ size_t xi_encoding_varint_decode_int16(const xi_byte_t *source, const size_t cou
       }
       const size_t bitsLeft = 15 - shift;
       if (bitsLeft < 8) {
-        if (byte & (0xFF << (8 - bitsLeft))) {
+        if (byte & (0xFF << bitsLeft)) {
           return XI_VARINT_DECODE_NONE_CANONICAL;
         }
       }
@@ -197,7 +197,7 @@ size_t xi_encoding_varint_decode_uint16(const xi_byte_t *source, const size_t co
     }
     const size_t bitsLeft = 16 - shift;
     if (bitsLeft < 8) {
-      if (byte & (0xFF << (8 - bitsLeft))) {
+      if (byte & (0xFF << bitsLeft)) {
         return XI_VARINT_DECODE_NONE_CANONICAL;
       }
     }
@@ -246,7 +246,7 @@ size_t xi_encoding_varint_decode_int32(const xi_byte_t *source, const size_t cou
       }
       const size_t bitsLeft = 31 - shift;
       if (bitsLeft < 8) {
-        if (byte & (0xFF << (8 - bitsLeft))) {
+        if (byte & (0xFF << bitsLeft)) {
           return XI_VARINT_DECODE_NONE_CANONICAL;
         }
       }
@@ -287,7 +287,7 @@ size_t xi_encoding_varint_decode_uint32(const xi_byte_t *source, const size_t co
     }
     const size_t bitsLeft = 32 - shift;
     if (bitsLeft < 8) {
-      if (byte & (0xFF << (8 - bitsLeft))) {
+      if (byte & (0xFF << bitsLeft)) {
         return XI_VARINT_DECODE_NONE_CANONICAL;
       }
     }
@@ -335,7 +335,7 @@ size_t xi_encoding_varint_decode_int64(const xi_byte_t *source, const size_t cou
       }
       const size_t bitsLeft = 63 - shift;
       if (bitsLeft < 8) {
-        if (byte & (0xFF << (8 - bitsLeft))) {
+        if (byte & (0xFF << bitsLeft)) {
           return XI_VARINT_DECODE_NONE_CANONICAL;
         }
       }
@@ -377,7 +377,7 @@ size_t xi_encoding_varint_decode_uint64(const xi_byte_t *source, const size_t co
     }
     const size_t bitsLeft = 64 - shift;
     if (bitsLeft < 8) {
-      if (byte & (0xFF << (8 - bitsLeft))) {
+      if (byte & (0xFF << bitsLeft)) {
         return XI_VARINT_DECODE_NONE_CANONICAL;
       }
     }
