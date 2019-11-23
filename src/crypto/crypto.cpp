@@ -15,6 +15,7 @@
 #include <mutex>
 
 #include <Xi/Exceptions.hpp>
+#include <Xi/Encoding/VarInt.hh>
 #include <Xi/Crypto/Random/Random.hh>
 #include <Xi/Crypto/Random/Engine.hpp>
 
@@ -144,31 +145,28 @@ bool crypto_ops::generate_key_derivation(const PublicKey &key1, const SecretKey 
 }
 
 static void derivation_to_scalar(const KeyDerivation &derivation, size_t output_index, EllipticCurveScalar &res) {
+  using namespace Xi::Encoding;
   struct {
     KeyDerivation derivation;
-    char output_index[(sizeof(size_t) * 8 + 6) / 7];
+    xi_byte_t output_index[VarInt::maximumEncodingSize<size_t>()];
   } buf;
-  char *end = buf.output_index;
   buf.derivation = derivation;
-  Tools::write_varint(end, output_index);
-  assert(end <= buf.output_index + sizeof buf.output_index);
-  hash_to_scalar(&buf, end - reinterpret_cast<char *>(&buf), res);
+  auto encodingSize = VarInt::encode(output_index, buf.output_index).valueOrThrow();
+  hash_to_scalar(&buf, KeyDerivation::bytes() + encodingSize, res);
 }
 
 static void derivation_to_scalar(const KeyDerivation &derivation, size_t output_index, const uint8_t *suffix,
                                  size_t suffixLength, EllipticCurveScalar &res) {
+  using namespace Xi::Encoding;
   assert(suffixLength <= 32);
   struct {
     KeyDerivation derivation;
-    char output_index[(sizeof(size_t) * 8 + 6) / 7 + 32];
+    xi_byte_t output_index[VarInt::maximumEncodingSize<size_t>()];
   } buf;
-  char *end = buf.output_index;
   buf.derivation = derivation;
-  Tools::write_varint(end, output_index);
-  assert(end <= buf.output_index + sizeof buf.output_index);
-  size_t bufSize = end - reinterpret_cast<char *>(&buf);
-  memcpy(end, suffix, suffixLength);
-  hash_to_scalar(&buf, bufSize + suffixLength, res);
+  auto encodingSize = VarInt::encode(output_index, buf.output_index).valueOrThrow();
+  memcpy(buf.output_index + encodingSize, suffix, suffixLength);
+  hash_to_scalar(&buf, KeyDerivation::bytes() + encodingSize + suffixLength, res);
 }
 
 bool crypto_ops::derive_public_key(const KeyDerivation &derivation, size_t output_index, const PublicKey &base,
